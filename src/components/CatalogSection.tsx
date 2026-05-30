@@ -77,6 +77,8 @@ export default function CatalogSection({
       // Search Match
       const matchesSearch = 
         searchQuery.trim() === "" || 
+        machine.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        machine.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
         machine.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         machine.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
         machine.suitableFor.some(p => p.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -509,7 +511,7 @@ export default function CatalogSection({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowCompareModal(false)}
-              className="absolute inset-0 bg-[#02050b]/85 backdrop-blur-md"
+              className="absolute inset-0 bg-slate-900/40 backdrop-blur-md"
             />
 
             <motion.div
@@ -517,19 +519,19 @@ export default function CatalogSection({
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
               transition={{ type: "spring", stiffness: 350, damping: 26 }}
-              className="w-full max-w-5xl bg-slate-900/95 border border-white/5 rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-2xl relative overflow-hidden z-50 flex flex-col max-h-[90vh]"
+              className="w-full max-w-5xl bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden z-50 flex flex-col max-h-[90vh]"
             >
               {/* Top bar stripe */}
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-teal-500 via-indigo-500 to-amber-500" />
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-teal-500 via-indigo-505 via-indigo-500 to-amber-500" />
 
               <div className="flex justify-between items-start mb-6 shrink-0">
                 <div>
-                  <span className="text-[10px] text-indigo-400 font-mono uppercase tracking-wider block font-bold">Zij-aan-zij Vergelijking</span>
-                  <h3 className="font-display text-2xl font-black text-white tracking-tight">Vloot Specificatievergelijker</h3>
+                  <span className="text-[10px] text-indigo-600 font-mono uppercase tracking-wider block font-bold">Zij-aan-zij Vergelijking</span>
+                  <h3 className="font-display text-2xl font-black text-slate-900 tracking-tight">Vloot Specificatievergelijker</h3>
                 </div>
                 <button
                   onClick={() => setShowCompareModal(false)}
-                  className="p-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                  className="p-1.5 rounded-xl bg-slate-150 hover:bg-slate-200 text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
                 >
                   <X className="h-5 w-5" />
                 </button>
@@ -548,23 +550,23 @@ export default function CatalogSection({
                       const m = machines.find(item => item.id === id);
                       if (!m) return <div key={id} className="col-span-1" />;
                       return (
-                        <div key={id} className="col-span-1 bg-slate-950/40 border border-white/5 p-3 rounded-2xl flex flex-col justify-between space-y-3 relative group">
+                        <div key={id} className="col-span-1 bg-slate-50 border border-slate-200 p-3 rounded-2xl flex flex-col justify-between space-y-3 relative group">
                           <button
                             onClick={() => setCompareIds(compareIds.filter(cid => cid !== id))}
-                            className="absolute top-2 right-2 bg-white/5 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 rounded-lg p-1 transition-colors z-20 cursor-pointer"
+                            className="absolute top-2 right-2 bg-slate-100 hover:bg-rose-100 text-slate-500 hover:text-rose-600 rounded-lg p-1 transition-colors z-20 cursor-pointer"
                           >
                             <X className="h-3 w-3" />
                           </button>
                           
-                          <div className="aspect-video w-full rounded-lg overflow-hidden bg-slate-950">
+                          <div className="aspect-video w-full rounded-lg overflow-hidden bg-slate-200">
                             <img src={m.imageUrl} alt={m.name} className="h-full w-full object-cover" referrerPolicy="no-referrer" />
                           </div>
 
                           <div>
-                            <h4 className="font-sans font-bold text-xs text-white line-clamp-2 leading-tight">
+                            <h4 className="font-sans font-bold text-xs text-slate-800 line-clamp-2 leading-tight">
                               {m.name}
                             </h4>
-                            <span className="text-[9px] font-mono text-indigo-400 block mt-1 uppercase tracking-wider">{m.categoryLabel}</span>
+                            <span className="text-[9px] font-mono text-indigo-600 block mt-1 uppercase tracking-wider">{m.categoryLabel}</span>
                           </div>
                         </div>
                       );
@@ -748,7 +750,7 @@ export default function CatalogSection({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setSelectedDetailMachine(null)}
-              className="absolute inset-0 bg-[#02050b]/85 backdrop-blur-md"
+              className="absolute inset-0 bg-slate-900/40 backdrop-blur-md"
             />
 
             <motion.div
@@ -756,24 +758,24 @@ export default function CatalogSection({
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
               transition={{ type: "spring", stiffness: 350, damping: 26 }}
-              className="w-full max-w-4xl bg-slate-900/95 border border-white/5 rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-2xl relative overflow-hidden z-50 flex flex-col max-h-[90vh]"
+              className="w-full max-w-4xl bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden z-50 flex flex-col max-h-[90vh]"
             >
               {/* Premium Gradient Top Stripe */}
-              <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-teal-400 via-indigo-505 via-indigo-500 to-amber-400" />
+              <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-teal-400 via-indigo-500 to-amber-400" />
 
               {/* Close Button & Header */}
               <div className="flex justify-between items-start mb-6 shrink-0">
                 <div>
-                  <span className="text-[10px] text-teal-400 font-mono uppercase tracking-widest block font-bold">
+                  <span className="text-[10px] text-teal-650 font-mono uppercase tracking-widest block font-bold">
                     {selectedDetailMachine.categoryLabel || "Vloot Details"} • {selectedDetailMachine.powerType}
                   </span>
-                  <h3 className="font-display text-2xl font-black text-white tracking-tight">
+                  <h3 className="font-display text-2xl font-black text-slate-900 tracking-tight">
                     {selectedDetailMachine.name}
                   </h3>
                 </div>
                 <button
                   onClick={() => setSelectedDetailMachine(null)}
-                  className="p-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                  className="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
                 >
                   <X className="h-5 w-5" />
                 </button>
@@ -796,16 +798,16 @@ export default function CatalogSection({
                       <div className="absolute inset-0 bg-gradient-to-t from-slate-950/40 to-transparent pointer-events-none" />
                     </div>
 
-                    <div className="bg-slate-950/60 border border-white/5 p-4 rounded-2xl space-y-3.5">
+                    <div className="bg-slate-50 border border-slate-200 p-4 rounded-2xl space-y-3.5">
                       <div className="flex justify-between items-center text-xs">
-                        <span className="text-slate-400 font-medium">Dagtarief:</span>
-                        <span className="font-mono font-bold text-teal-400 text-base">€{selectedDetailMachine.pricePerDay} / dag</span>
+                        <span className="text-slate-500 font-medium">Dagtarief:</span>
+                        <span className="font-mono font-bold text-teal-600 text-base">€{selectedDetailMachine.pricePerDay} / dag</span>
                       </div>
                       
                       {selectedDetailMachine.weeklyDiscountPercent && (
-                        <div className="flex justify-between items-center text-xs border-t border-white/5 pt-2">
-                          <span className="text-slate-400 font-medium">Weekkorting (7+ dagen):</span>
-                          <span className="font-mono text-emerald-400 font-bold">-{selectedDetailMachine.weeklyDiscountPercent}%</span>
+                        <div className="flex justify-between items-center text-xs border-t border-slate-200 pt-2">
+                          <span className="text-slate-500 font-medium">Weekkorting (7+ dagen):</span>
+                          <span className="font-mono text-emerald-600 font-bold">-{selectedDetailMachine.weeklyDiscountPercent}%</span>
                         </div>
                       )}
 
@@ -815,21 +817,21 @@ export default function CatalogSection({
                           setSelectedDetailMachine(null);
                           onSelectMachineForBooking(selectedDetailMachine);
                         }}
-                        className="w-full relative overflow-hidden flex items-center justify-center space-x-2 px-4 py-3 rounded-xl border border-indigo-500/25 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-all shadow-[0_4px_12px_rgba(79,70,229,0.3)] cursor-pointer"
+                        className="w-full relative overflow-hidden flex items-center justify-center space-x-2 px-4 py-3 rounded-xl border border-indigo-500/25 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-all shadow-md cursor-pointer"
                       >
-                        <ShoppingBag className="h-4 w-4 text-teal-300" />
+                        <ShoppingBag className="h-4 w-4 text-white" />
                         <span>Huur Nu Direct</span>
                       </button>
                     </div>
 
                     {/* Suitability guidelines */}
-                    <div className="p-4 rounded-2xl bg-white/2 border border-white/5">
-                      <h4 className="text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-2 font-bold">Perfect Geschikt Voor:</h4>
+                    <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+                      <h4 className="text-[10px] font-mono text-slate-500 uppercase tracking-wider mb-2 font-bold">Perfect Geschikt Voor:</h4>
                       <div className="flex flex-wrap gap-1.5">
                         {selectedDetailMachine.suitableFor.map((tag, idx) => (
                           <span 
                             key={idx} 
-                            className="bg-indigo-500/10 border border-indigo-500/25 text-indigo-300 px-2.5 py-1 rounded-md text-[10px] font-semibold"
+                            className="bg-indigo-50 border border-indigo-100 text-indigo-700 px-2.5 py-1 rounded-md text-[10px] font-semibold"
                           >
                             {tag}
                           </span>
@@ -844,18 +846,18 @@ export default function CatalogSection({
                     
                     {/* Rich description */}
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-mono text-indigo-300 uppercase tracking-widest block font-bold">Omschrijving & Toepassing</label>
-                      <p className="text-slate-300 text-xs leading-relaxed font-sans">
+                      <label className="text-[10px] font-mono text-indigo-700 uppercase tracking-widest block font-bold">Omschrijving & Toepassing</label>
+                      <p className="text-slate-600 text-xs leading-relaxed font-sans">
                         {selectedDetailMachine.description}
                       </p>
                     </div>
 
                     {/* Package Included Contents Section! (Extremely important for Sets) */}
-                    <div className="p-5 rounded-2xl bg-indigo-950/30 border border-indigo-500/15 space-y-3.5 relative overflow-hidden">
+                    <div className="p-5 rounded-2xl bg-indigo-50/40 border border-indigo-100 space-y-3.5 relative overflow-hidden">
                       <div className="absolute top-0 right-0 w-24 h-24 bg-teal-500/5 blur-xl rounded-full pointer-events-none" />
                       <div className="flex items-center space-x-2">
-                        <ShoppingBag className="h-4 w-4 text-teal-400" />
-                        <h4 className="text-xs font-extrabold text-white uppercase tracking-wider">
+                        <ShoppingBag className="h-4 w-4 text-teal-600" />
+                        <h4 className="text-xs font-extrabold text-slate-900 uppercase tracking-wider">
                           Inbegrepen Pakketinhoud ({selectedDetailMachine.id.startsWith("set-") ? "Klusgids Set" : "Standaard inspectie"})
                         </h4>
                       </div>
@@ -943,8 +945,8 @@ export default function CatalogSection({
                               ];
                           }
                         })(selectedDetailMachine.id).map((item, idx) => (
-                          <div key={idx} className="flex items-start space-x-1.5 text-xs text-slate-300">
-                            <span className="text-teal-400 font-bold shrink-0 mt-0.5 font-mono">✓</span>
+                          <div key={idx} className="flex items-start space-x-1.5 text-xs text-slate-700">
+                            <span className="text-teal-600 font-bold shrink-0 mt-0.5 font-mono">✓</span>
                             <span>{item}</span>
                           </div>
                         ))}
@@ -953,38 +955,38 @@ export default function CatalogSection({
 
                     {/* Detailed Specifications Listing */}
                     <div className="space-y-3">
-                      <h4 className="text-[10px] font-mono text-slate-400 uppercase tracking-widest block font-bold">Technische Specificaties</h4>
+                      <h4 className="text-[10px] font-mono text-slate-500 uppercase tracking-widest block font-bold">Technische Specificaties</h4>
                       
                       <div className="grid grid-cols-2 gap-3 font-sans">
-                        <div className="p-3 bg-slate-950/40 border border-white/5 rounded-xl flex items-center justify-between">
-                          <span className="text-[11px] text-slate-400">Werkhoogte:</span>
-                          <span className="font-mono text-xs font-bold text-white">{selectedDetailMachine.height} meter</span>
+                        <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between">
+                          <span className="text-[11px] text-slate-500">Werkhoogte:</span>
+                          <span className="font-mono text-xs font-bold text-slate-900">{selectedDetailMachine.height} meter</span>
                         </div>
 
-                        <div className="p-3 bg-slate-950/40 border border-white/5 rounded-xl flex items-center justify-between">
-                          <span className="text-[11px] text-slate-400">Zijdelings bereik:</span>
-                          <span className="font-mono text-xs font-bold text-white">{selectedDetailMachine.reach} meter</span>
+                        <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between">
+                          <span className="text-[11px] text-slate-500">Zijdelings bereik:</span>
+                          <span className="font-mono text-xs font-bold text-slate-900">{selectedDetailMachine.reach} meter</span>
                         </div>
 
-                        <div className="p-3 bg-slate-950/40 border border-white/5 rounded-xl flex items-center justify-between">
-                          <span className="text-[11px] text-slate-400">Totaal gewicht:</span>
-                          <span className="font-mono text-xs font-bold text-white">{selectedDetailMachine.weight.toLocaleString('nl-NL')} kg</span>
+                        <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between">
+                          <span className="text-[11px] text-slate-500">Totaal gewicht:</span>
+                          <span className="font-mono text-xs font-bold text-slate-900">{selectedDetailMachine.weight.toLocaleString('nl-NL')} kg</span>
                         </div>
 
-                        <div className="p-3 bg-slate-950/40 border border-white/5 rounded-xl flex items-center justify-between">
-                          <span className="text-[11px] text-slate-400">Aandrijving:</span>
-                          <span className="text-xs font-bold text-slate-200">{selectedDetailMachine.powerType}</span>
+                        <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between">
+                          <span className="text-[11px] text-slate-500">Aandrijving:</span>
+                          <span className="text-xs font-bold text-slate-800">{selectedDetailMachine.powerType}</span>
                         </div>
                       </div>
                     </div>
 
                     {/* Safety compliance guarantees */}
-                    <div className="flex flex-col sm:flex-row justify-between items-center bg-slate-950/40 border border-white/5 p-4 rounded-xl text-[10.5px] text-slate-400 gap-3">
+                    <div className="flex flex-col sm:flex-row justify-between items-center bg-slate-50 border border-slate-200 p-4 rounded-xl text-[10.5px] text-slate-605 text-slate-600 gap-3">
                       <div className="flex items-center space-x-2">
-                        <span className="bg-amber-500/10 border border-amber-500/20 text-amber-400 px-2 py-0.5 rounded text-[9px] uppercase tracking-wider font-extrabold font-mono">BMWT</span>
+                        <span className="bg-amber-100 border border-amber-200 text-amber-900 px-2 py-0.5 rounded text-[9px] uppercase tracking-wider font-extrabold font-mono">BMWT</span>
                         <span>Jaarlijks veilig geverifieerd</span>
                       </div>
-                      <span className="text-indigo-400 font-mono">Art. ID: {selectedDetailMachine.id}</span>
+                      <span className="text-indigo-600 font-mono">Art. ID: {selectedDetailMachine.id}</span>
                     </div>
 
                   </div>
@@ -994,10 +996,10 @@ export default function CatalogSection({
               </div>
               
               {/* Footer */}
-              <div className="pt-4 border-t border-white/5 flex justify-end shrink-0 mt-3">
+              <div className="pt-4 border-t border-slate-200 flex justify-end shrink-0 mt-3">
                 <button
                   onClick={() => setSelectedDetailMachine(null)}
-                  className="px-5 py-2 hover:bg-white/5 border border-white/10 text-neutral-300 hover:text-white rounded-xl text-xs font-bold transition-all cursor-pointer"
+                  className="px-5 py-2 hover:bg-slate-150 bg-slate-55 bg-slate-100 border border-slate-200 text-slate-600 hover:text-slate-800 rounded-xl text-xs font-bold transition-all cursor-pointer"
                 >
                   Sluiten
                 </button>

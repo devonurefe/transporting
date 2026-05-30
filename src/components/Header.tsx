@@ -88,7 +88,7 @@ export default function Header({
               setActiveTab("home");
             }
           }} 
-          className="flex cursor-pointer items-center space-x-2.5 hover:opacity-90 active:scale-95 transition-all"
+          className="flex cursor-pointer items-center space-x-2.5 hover:opacity-90 active:scale-95 transition-all shrink-0"
         >
           <div className={`relative flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br transition-all ${
             isAdminMode 
@@ -130,7 +130,7 @@ export default function Header({
         </div>
 
         {/* Dynamic Desktop Navigation */}
-        <nav className="hidden md:flex items-center space-x-5 lg:space-x-7 bg-slate-100 border border-slate-200/60 rounded-full px-2 py-1">
+        <nav className="hidden md:flex items-center space-x-4 lg:space-x-6 bg-slate-100 border border-slate-200/60 rounded-full px-2 py-1 md:ml-6 lg:ml-12 shrink-0">
           {isAdminMode ? (
             // Admin Mode Navigation Indicator (Simple, informative)
             <div className="flex items-center space-x-2 bg-amber-550/10 border border-amber-500/20 px-4 py-2 rounded-xl text-xs text-amber-900 font-semibold my-0.5">
@@ -198,7 +198,7 @@ export default function Header({
                 setIsAdminMode(false);
                 setActiveTab("home");
               }}
-              className="inline-flex items-center space-x-1.5 bg-rose-650 hover:bg-rose-600 px-4.5 py-2 rounded-xl text-xs font-bold text-white transition-all hover:scale-[1.03] active:scale-97 hover:shadow-[0_0_15px_rgba(225,29,72,0.3)] cursor-pointer"
+              className="inline-flex items-center space-x-1.5 bg-rose-600 hover:bg-rose-700 px-4.5 py-2 rounded-xl text-xs font-bold text-white transition-all hover:scale-[1.03] active:scale-97 hover:shadow-md cursor-pointer"
             >
               <LogOut className="h-3.5 w-3.5" />
               <span>Console Sluiten (Uitloggen)</span>

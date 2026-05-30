@@ -293,7 +293,7 @@ export default function HomeSection({
 
               <button 
                 type="submit"
-                className="flex items-center justify-center space-x-1.5 font-bold hover:opacity-90 active:scale-97 bg-gradient-to-r from-indigo-650 to-blue-650 hover:from-indigo-700 hover:to-blue-700 text-white text-xs px-6 py-3.5 rounded-xl transition-all font-display"
+                className="flex items-center justify-center space-x-1.5 font-bold hover:opacity-90 active:scale-97 bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-6 py-3.5 rounded-xl transition-all font-display"
               >
                 <span>Huren</span>
                 <ArrowRight className="h-4 w-4" />
@@ -313,9 +313,9 @@ export default function HomeSection({
               <div className="absolute -inset-1 rounded-3xl bg-gradient-to-tr from-indigo-500/20 via-blue-500/10 to-teal-500/5 blur-md -z-10" />
 
               <img 
-                src="https://images.unsplash.com/photo-1579684389782-64d84b5e901a?q=80&w=700&auto=format&fit=crop" 
+                src="https://images.unsplash.com/photo-1541625602330-2277a4c46182?q=80&w=700&auto=format&fit=crop" 
                 alt="HoogwerkerHub Premium Equipment" 
-                className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-700 brightness-85 saturate-110"
+                className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-700 brightness-95 saturate-110"
                 referrerPolicy="no-referrer"
               />
 

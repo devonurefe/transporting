@@ -389,19 +389,19 @@ export default function AdminSection({
       <div className="mx-auto max-w-7xl">
         
         {/* Workspace Title bar */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-amber-500/10 pb-5 mb-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-amber-200 pb-5 mb-8">
           <div>
-            <h1 className="font-display text-3xl sm:text-4xl font-extrabold tracking-tight text-white flex items-center space-x-2.5">
-              <FolderLock className="h-6.5 w-6.5 text-amber-400" />
+            <h1 className="font-display text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 flex items-center space-x-2.5">
+              <FolderLock className="h-6.5 w-6.5 text-amber-500" />
               <span>HubAdmin Command Center</span>
             </h1>
-            <p className="text-[11px] text-amber-400 font-mono uppercase tracking-wider mt-1 block">
+            <p className="text-[11px] text-amber-700 font-mono font-bold uppercase tracking-wider mt-1 block">
               Gecentraliseerd Vloot- en Gebruikersdashboard (Eigenaar Portaal)
             </p>
           </div>
 
-          <div className="flex items-center space-x-2 mt-3 sm:mt-0 bg-amber-500/10 border border-amber-500/20 px-4 py-2 rounded-xl text-xs text-amber-200 font-bold">
-            <ShieldCheck className="h-4 w-4 text-amber-400" />
+          <div className="flex items-center space-x-2 mt-3 sm:mt-0 bg-amber-50 border border-amber-200 px-4 py-2 rounded-xl text-xs text-amber-800 font-bold">
+            <ShieldCheck className="h-4 w-4 text-amber-600" />
             <span>Secure Admin Control • Active Connection</span>
           </div>
         </div>
@@ -430,16 +430,16 @@ export default function AdminSection({
                     onClick={() => setSubTab(sub.id as any)}
                     className={`flex items-center justify-between px-4 py-2.5 rounded-xl text-left text-xs font-bold transition-all whitespace-nowrap lg:whitespace-normal flex-1 lg:flex-initial cursor-pointer ${
                       isSel 
-                        ? "bg-amber-550 bg-amber-600 text-slate-950 border border-amber-500/20 shadow-[0_0_15px_rgba(245,158,11,0.25)]" 
-                        : "text-slate-400 hover:text-slate-200 hover:bg-white/4 border border-transparent"
+                        ? "bg-amber-500 hover:bg-amber-600 text-slate-950 border border-amber-500/20 shadow-[0_4px_12px_rgba(245,158,11,0.25)]" 
+                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent"
                     }`}
                   >
                     <div className="flex items-center space-x-2.5">
-                      <Icon className={`h-4.5 w-4.5 ${isSel ? "text-slate-950" : "text-amber-400/80"}`} />
+                      <Icon className={`h-4.5 w-4.5 ${isSel ? "text-slate-950" : "text-amber-500/80"}`} />
                       <span>{sub.label}</span>
                     </div>
                     {sub.count !== undefined && (
-                      <span className={`hidden lg:inline-block font-mono text-[9px] px-2 py-0.5 rounded-full ${isSel ? "bg-slate-950 text-amber-400" : "bg-white/10 text-slate-300"}`}>
+                      <span className={`hidden lg:inline-block font-mono text-[9px] px-2 py-0.5 rounded-full ${isSel ? "bg-slate-950 text-amber-400" : "bg-slate-100 text-slate-600"}`}>
                         {sub.count}
                       </span>
                     )}
@@ -451,22 +451,22 @@ export default function AdminSection({
 
             {/* Live website indicators */}
             <div className="glass-panel p-4.5 rounded-2xl hidden lg:block space-y-3">
-              <h4 className="font-display font-bold text-[10px] uppercase text-slate-400 tracking-wider">BMWT Status</h4>
+              <h4 className="font-display font-bold text-[10px] uppercase text-slate-500 tracking-wider">BMWT Status</h4>
               <div className="space-y-2 text-xs">
-                <div className="flex items-center justify-between text-slate-300">
+                <div className="flex items-center justify-between text-slate-600">
                   <span>Server Gateway</span>
-                  <span className="text-teal-400 font-semibold flex items-center space-x-1">
-                    <span className="h-1.5 w-1.5 rounded-full bg-teal-400 animate-ping" />
+                  <span className="text-teal-600 font-semibold flex items-center space-x-1">
+                    <span className="h-1.5 w-1.5 rounded-full bg-teal-500" />
                     <span className="font-mono">ONLINE</span>
                   </span>
                 </div>
-                <div className="flex items-center justify-between text-slate-300">
+                <div className="flex items-center justify-between text-slate-600">
                   <span>SSL Handshake</span>
-                  <span className="text-teal-400 font-semibold font-mono">SECURE</span>
+                  <span className="text-teal-600 font-semibold font-mono">SECURE</span>
                 </div>
-                <div className="flex items-center justify-between text-slate-300">
+                <div className="flex items-center justify-between text-slate-600">
                   <span>Fleet Availability</span>
-                  <span className="text-white font-mono font-bold">100% Gecertificeerd</span>
+                  <span className="text-slate-800 font-mono font-bold">100% Gecertificeerd</span>
                 </div>
               </div>
             </div>
@@ -489,25 +489,25 @@ export default function AdminSection({
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     
                     {[
-                      { title: "Cumulatieve Omzet", value: `€ ${totalEarnings.toFixed(2)}`, trend: "+14.2% deze maand", color: "from-amber-650 to-orange-650 bg-amber-900/30 border border-amber-500/20", kpiGlow: "" },
-                      { title: "Actieve Huren", value: `${activeRentals} machines`, trend: "Planners onderweg", color: "border border-white/5 bg-slate-900/60" },
-                      { title: "Vloot Bezetting", value: `${Math.round((activeRentals / machines.length) * 100)}% bezet`, trend: `${machines.length} units totaal`, color: "border border-white/5 bg-slate-900/60" },
-                      { title: "Ter Beoordeling", value: `${pendingRegistrations} aanvragen`, trend: "Eigenaar goedkeuring", color: pendingRegistrations > 0 ? "border border-amber-500/40 bg-amber-500/10 text-amber-300 shadow-[0_0_15px_rgba(245,158,11,0.1)]" : "border border-white/5 bg-slate-900/60 text-slate-400" }
+                      { title: "Cumulatieve Omzet", value: `€ ${totalEarnings.toFixed(2)}`, trend: "+14.2% deze maand", color: "bg-amber-50 border border-amber-200 text-amber-900 shadow-sm" },
+                      { title: "Actieve Huren", value: `${activeRentals} machines`, trend: "Planners onderweg", color: "border border-slate-200 bg-slate-50 text-slate-800 shadow-sm" },
+                      { title: "Vloot Bezetting", value: `${Math.round((activeRentals / machines.length) * 100)}% bezet`, trend: `${machines.length} units totaal`, color: "border border-slate-200 bg-slate-50 text-slate-800 shadow-sm" },
+                      { title: "Ter Beoordeling", value: `${pendingRegistrations} aanvragen`, trend: "Eigenaar goedkeuring", color: pendingRegistrations > 0 ? "border border-amber-200 bg-amber-50 text-amber-950 shadow-sm" : "border border-slate-200 bg-slate-50 text-slate-500 shadow-sm" }
                     ].map((card, idx) => {
                       return (
                         <div 
                           key={idx} 
-                          className={`p-5 rounded-2xl flex flex-col justify-between min-h-[140px] ${card.color} ${card.kpiGlow || ""}`}
+                          className={`p-5 rounded-2xl flex flex-col justify-between min-h-[140px] ${card.color}`}
                         >
                           <div>
-                            <span className="text-[10px] uppercase font-bold text-slate-400 font-mono tracking-wider block leading-none">
+                            <span className="text-[10px] uppercase font-bold text-slate-500 font-mono tracking-wider block leading-none">
                               {card.title}
                             </span>
-                            <span className="text-xl font-display font-extrabold text-white mt-3.5 block">
+                            <span className="text-xl font-display font-extrabold text-slate-900 mt-3.5 block">
                               {card.value}
                             </span>
                           </div>
-                          <span className="text-[10px] font-mono text-slate-400 block mt-auto leading-none pt-4">
+                          <span className="text-[10px] font-mono text-slate-500 block mt-auto leading-none pt-4">
                             {card.trend}
                           </span>
                         </div>
@@ -521,13 +521,13 @@ export default function AdminSection({
                     {/* Panel 1: Revenue by Industry/Profile */}
                     <div className="glass-panel p-6 rounded-3xl space-y-4">
                       <div>
-                        <h4 className="font-display font-bold text-xs uppercase text-slate-400 tracking-wider">Huur-omzet per Doelgroep</h4>
+                        <h4 className="font-display font-bold text-xs uppercase text-slate-500 tracking-wider">Huur-omzet per Doelgroep</h4>
                         <p className="text-[10px] text-slate-500 font-mono mt-0.5">Live overzicht gesegmenteerd op schilders, groenverzorgers e.a.</p>
                       </div>
 
                       <div className="space-y-4">
-                        <div className="h-44 flex items-end justify-between px-2 pt-4 border-b border-white/5 relative">
-                          <div className="absolute right-2 top-0 flex flex-col text-right text-[9px] font-mono text-slate-500">
+                        <div className="h-44 flex items-end justify-between px-2 pt-4 border-b border-slate-205 border-slate-200 relative">
+                          <div className="absolute right-2 top-0 flex flex-col text-right text-[9px] font-mono text-slate-505 text-slate-500">
                             <span>Max: € {Math.max(...Object.values(profileEarnings), 100).toFixed(0)}</span>
                             <span>Midden: € {(Math.max(...Object.values(profileEarnings), 100) / 2).toFixed(0)}</span>
                           </div>
@@ -539,11 +539,11 @@ export default function AdminSection({
                             
                             // Assign unique sector style parameters
                             const colors: Record<string, string> = {
-                              Schilder: "bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.3)]",
-                              Hovenier: "bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.3)]",
-                              Glazenwasser: "bg-teal-500 shadow-[0_0_15px_rgba(20,184,166,0.3)]",
-                              Aannemer: "bg-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.3)]",
-                              Particulier: "bg-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.3)]"
+                              Schilder: "bg-blue-500 shadow-[0_4px_12px_rgba(59,130,246,0.2)]",
+                              Hovenier: "bg-emerald-500 shadow-[0_4px_12px_rgba(16,185,129,0.2)]",
+                              Glazenwasser: "bg-teal-500 shadow-[0_4px_12px_rgba(20,184,166,0.2)]",
+                              Aannemer: "bg-amber-500 shadow-[0_4px_12px_rgba(245,158,11,0.2)]",
+                              Particulier: "bg-indigo-500 shadow-[0_4px_12px_rgba(99,102,241,0.2)]"
                             };
 
                             return (
@@ -555,21 +555,21 @@ export default function AdminSection({
                               >
                                 {/* Tooltip wrapper */}
                                 <div className={`absolute -top-4 transition-all duration-250 ease-out flex flex-col items-center pointer-events-none ${isHovered ? "opacity-100 scale-100" : "opacity-0 scale-90 translate-y-1"}`}>
-                                  <span className="bg-slate-950/95 border border-white/10 px-2 py-1 rounded-lg text-[10px] text-white font-black font-mono shadow-xl">
+                                  <span className="bg-slate-900 border border-slate-200 px-2 py-1 rounded-lg text-[10px] text-white font-black font-mono shadow-xl">
                                     € {val.toFixed(2)}
                                   </span>
-                                  <div className="w-1.5 h-1.5 bg-slate-950 border-r border-b border-white/10 rotate-45 -mt-1" />
+                                  <div className="w-1.5 h-1.5 bg-slate-900 border-r border-b border-slate-200 rotate-45 -mt-1" />
                                 </div>
 
                                 {/* Rounded Bar with custom height */}
-                                <div className="w-10 sm:w-12 bg-white/5 rounded-t-xl overflow-hidden h-32 flex items-end">
+                                <div className="w-10 sm:w-12 bg-slate-100 rounded-t-xl overflow-hidden h-32 flex items-end">
                                   <div
                                     style={{ height: `${Math.max(percent, 4)}%` }}
                                     className={`w-full rounded-t-lg transition-all duration-500 ease-out origin-bottom ${colors[sector] || "bg-slate-400"} ${isHovered ? "brightness-125 scale-x-[1.04]" : "brightness-100"}`}
                                   />
                                 </div>
 
-                                <span className={`text-[9px] font-mono mt-2 transition-colors ${isHovered ? "text-white font-bold" : "text-slate-400"}`}>
+                                <span className={`text-[9px] font-mono mt-2 transition-colors ${isHovered ? "text-slate-900 font-bold" : "text-slate-500"}`}>
                                   {sector}
                                 </span>
                               </div>
@@ -579,7 +579,7 @@ export default function AdminSection({
 
                         <div className="grid grid-cols-2 gap-2 pt-2 text-[10px]">
                           {Object.entries(profileEarnings).map(([sector, val]) => (
-                            <div key={sector} className="flex items-center space-x-1.5 text-slate-300">
+                            <div key={sector} className="flex items-center space-x-1.5 text-slate-655 text-slate-600">
                               <span className={`h-2 w-2 rounded-full ${
                                 sector === "Schilder" ? "bg-blue-500" :
                                 sector === "Hovenier" ? "bg-emerald-500" :
@@ -587,7 +587,7 @@ export default function AdminSection({
                                 sector === "Aannemer" ? "bg-amber-500" : "bg-indigo-500"
                               }`} />
                               <span className="font-medium">{sector}:</span>
-                              <span className="font-mono font-bold text-white ml-auto">€ {val.toFixed(0)}</span>
+                              <span className="font-mono font-bold text-slate-800 ml-auto">€ {val.toFixed(0)}</span>
                             </div>
                           ))}
                         </div>
@@ -597,24 +597,24 @@ export default function AdminSection({
                     {/* Panel 2: Fleet Composition Linear scale */}
                     <div className="glass-panel p-6 rounded-3xl space-y-4">
                       <div>
-                        <h4 className="font-display font-bold text-xs uppercase text-slate-400 tracking-wider">Actieve Vloot Samenstelling</h4>
+                        <h4 className="font-display font-bold text-xs uppercase text-slate-500 tracking-wider">Actieve Vloot Samenstelling</h4>
                         <p className="text-[10px] text-slate-500 font-mono mt-0.5">Volledige inventaris verdeeld over productgroepen</p>
                       </div>
 
                       <div className="space-y-6">
                         {/* Interactive multi-segmented bar meter representing composition */}
                         <div className="space-y-2">
-                          <div className="flex h-5 w-full rounded-full overflow-hidden bg-white/5 p-0.5 border border-white/10">
+                          <div className="flex h-5 w-full rounded-full overflow-hidden bg-slate-100 p-0.5 border border-slate-205 border-slate-200">
                             {Object.entries(categoryCount).map(([group, val], idx) => {
                               const totalUnits = Object.values(categoryCount).reduce((a, b) => a + b, 0);
                               const segmentPercent = (val / totalUnits) * 100;
 
                               const segmentColors = [
-                                "bg-amber-450 bg-amber-500 shadow-[0_0_12px_rgba(245,158,11,0.25)]",
-                                "bg-blue-500 shadow-[0_0_12px_rgba(59,130,246,0.25)]",
-                                "bg-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.25)]",
-                                "bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.25)]",
-                                "bg-teal-500 shadow-[0_0_12px_rgba(20,184,166,0.25)]",
+                                "bg-amber-500 shadow-[0_2px_6px_rgba(245,158,11,0.15)]",
+                                "bg-blue-500 shadow-[0_2px_6px_rgba(59,130,246,0.15)]",
+                                "bg-rose-500 shadow-[0_2px_6px_rgba(244,63,94,0.15)]",
+                                "bg-emerald-500 shadow-[0_2px_6px_rgba(16,185,129,0.15)]",
+                                "bg-teal-500 shadow-[0_2px_6px_rgba(20,184,166,0.15)]",
                               ];
                               const colorClass = segmentColors[idx % segmentColors.length];
 
@@ -625,7 +625,7 @@ export default function AdminSection({
                                   className={`h-full first:rounded-l-full last:rounded-r-full transition-all duration-300 relative group cursor-pointer ${colorClass}`}
                                 >
                                   {/* Inline tooltip */}
-                                  <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-950 border border-white/10 text-[9px] text-white px-2 py-0.5 rounded pointer-events-none whitespace-nowrap z-30 shadow-2xl">
+                                  <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900 border border-slate-200 text-[9px] text-white px-2 py-0.5 rounded pointer-events-none whitespace-nowrap z-30 shadow-2xl">
                                     {group}: {val} {val === 1 ? "unit" : "units"} ({Math.round(segmentPercent)}%)
                                   </div>
                                 </div>
@@ -633,7 +633,7 @@ export default function AdminSection({
                             })}
                           </div>
 
-                          <div className="flex justify-between text-[10px] font-mono text-slate-400">
+                          <div className="flex justify-between text-[10px] font-mono text-slate-505 text-slate-500">
                             <span>Vloot-omvang: {machines.length} Geregistreerd</span>
                             <span>BMWT Inspectienorm 2026</span>
                           </div>
@@ -650,10 +650,10 @@ export default function AdminSection({
                             return (
                               <div key={group} className="space-y-1">
                                 <div className="flex items-center justify-between text-[10.5px]">
-                                  <span className="text-slate-300 font-bold">{group}</span>
-                                  <span className="text-slate-400 font-mono text-[10px]">{val} {val === 1 ? "machine" : "machines"} ({Math.round(valPercent)}%)</span>
+                                  <span className="text-slate-700 font-extrabold">{group}</span>
+                                  <span className="text-slate-500 font-mono text-[10px]">{val} {val === 1 ? "machine" : "machines"} ({Math.round(valPercent)}%)</span>
                                 </div>
-                                <div className="h-1.5 w-full bg-slate-950/80 rounded-full overflow-hidden">
+                                <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
                                   <div style={{ width: `${valPercent}%` }} className={`h-full rounded-full ${colorClass}`} />
                                 </div>
                               </div>
@@ -666,11 +666,11 @@ export default function AdminSection({
 
                   {/* Orders Summary lists */}
                   <div className="glass-panel p-6 rounded-3xl space-y-4">
-                    <div className="flex justify-between items-center border-b border-white/5 pb-3">
-                      <h3 className="font-display font-bold text-sm text-white">Inkomende Aanvragen & Huren</h3>
+                    <div className="flex justify-between items-center border-b border-slate-200 pb-3">
+                      <h3 className="font-display font-bold text-sm text-slate-900">Inkomende Aanvragen & Huren</h3>
                       <button 
                         onClick={() => setSubTab("orders")}
-                        className="text-xs text-amber-400 hover:text-white font-semibold flex items-center space-x-1 cursor-pointer"
+                        className="text-xs text-amber-600 hover:text-amber-800 font-bold flex items-center space-x-1 cursor-pointer"
                       >
                         <span>Bekijk alle</span>
                         <ArrowUpRight className="h-3.5 w-3.5" />
@@ -680,7 +680,7 @@ export default function AdminSection({
                     <div className="overflow-x-auto">
                       <table className="w-full text-left text-xs border-collapse">
                         <thead>
-                          <tr className="border-b border-white/5 text-slate-400">
+                          <tr className="border-b border-slate-200 text-slate-500">
                             <th className="pb-2.5 font-bold">Ref No.</th>
                             <th className="pb-2.5 font-bold">Klant</th>
                             <th className="pb-2.5 font-bold">Machine</th>
@@ -689,7 +689,7 @@ export default function AdminSection({
                             <th className="pb-2.5 font-bold text-center">Status</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-white/4">
+                        <tbody className="divide-y divide-slate-100">
                           {orders.length === 0 ? (
                             <tr>
                               <td colSpan={6} className="py-6 text-center text-slate-500">
@@ -699,15 +699,15 @@ export default function AdminSection({
                           ) : (
                             orders.slice(0, 4).map((o) => {
                               return (
-                                <tr key={o.id} className="hover:bg-white/2 transition-colors">
-                                  <td className="py-3 font-mono font-bold text-indigo-300">{o.id}</td>
-                                  <td className="py-3 font-medium text-white">
+                                <tr key={o.id} className="hover:bg-slate-50 transition-colors">
+                                  <td className="py-3 font-mono font-bold text-indigo-600">{o.id}</td>
+                                  <td className="py-3 font-medium text-slate-800">
                                     {o.customerName}
                                     <span className="block text-[10px] text-slate-500 font-normal">{o.customerProfile}</span>
                                   </td>
-                                  <td className="py-3 text-slate-300">{o.machineName}</td>
-                                  <td className="py-3 font-mono">{o.rentalDays}d</td>
-                                  <td className="py-3 font-mono text-teal-400 font-bold">€ {o.totalAmount.toFixed(2)}</td>
+                                  <td className="py-3 text-slate-600">{o.machineName}</td>
+                                  <td className="py-3 font-mono text-slate-600">{o.rentalDays}d</td>
+                                  <td className="py-3 font-mono text-teal-600 font-bold">€ {o.totalAmount.toFixed(2)}</td>
                                   <td className="py-3 text-center">
                                     <span className={`inline-block text-[9px] font-mono px-2 py-0.5 rounded-full font-extrabold uppercase ${
                                       o.status === "In behandeling" 
@@ -743,15 +743,15 @@ export default function AdminSection({
                   className="space-y-6"
                 >
                   <div className="glass-panel p-6 rounded-3xl space-y-4">
-                    <div className="border-b border-white/5 pb-3">
-                      <h3 className="font-display font-bold text-sm text-white">Alle Actieve & Historische Contracten</h3>
+                    <div className="border-b border-slate-200 pb-3">
+                      <h3 className="font-display font-bold text-sm text-slate-900">Alle Actieve & Historische Contracten</h3>
                       <p className="text-[11px] text-slate-500 mt-0.5">Hier accordeert u inkomende reserveringen en past u de logistieke status aan van klanten.</p>
                     </div>
 
                     <div className="overflow-x-auto scrollbar-thin">
                       <table className="w-full text-left text-xs border-collapse">
                         <thead>
-                          <tr className="border-b border-white/5 text-slate-400">
+                          <tr className="border-b border-slate-200 text-slate-500">
                             <th className="pb-3.5 font-bold font-mono">ID</th>
                             <th className="pb-3.5 font-bold">Huurder Details</th>
                             <th className="pb-3.5 font-bold">Besteld Object</th>
@@ -761,7 +761,7 @@ export default function AdminSection({
                             <th className="pb-3.5 font-bold text-center">Accordering & Acties</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-white/5">
+                        <tbody className="divide-y divide-slate-100">
                           {orders.length === 0 ? (
                             <tr>
                               <td colSpan={7} className="py-8 text-center text-slate-500">
@@ -771,19 +771,19 @@ export default function AdminSection({
                           ) : (
                             orders.map((o) => {
                               return (
-                                <tr key={o.id} className="hover:bg-white/2 transition-colors">
-                                  <td className="py-4 font-mono font-bold text-indigo-300">{o.id}</td>
-                                  <td className="py-4 font-medium text-white col-span-1">
+                                <tr key={o.id} className="hover:bg-slate-50 transition-colors">
+                                  <td className="py-4 font-mono font-bold text-indigo-600">{o.id}</td>
+                                  <td className="py-4 font-medium text-slate-800 col-span-1">
                                     <div>{o.customerName}</div>
-                                    <span className="block text-[10px] text-slate-400 font-mono mt-0.5">{o.customerPhone}</span>
+                                    <span className="block text-[10px] text-slate-500 font-mono mt-0.5">{o.customerPhone}</span>
                                     <span className="block text-[9.5px] text-slate-500 truncate max-w-[120px]">{o.customerEmail}</span>
                                   </td>
                                   <td className="py-4">
-                                    <div className="font-bold text-slate-200">{o.machineName}</div>
-                                    <span className="block text-[10px] text-slate-500 mt-0.5">{o.customerProfile}</span>
+                                    <div className="font-bold text-slate-800">{o.machineName}</div>
+                                    <span className="block text-[10px] text-slate-550 text-slate-500 mt-0.5">{o.customerProfile}</span>
                                   </td>
                                   <td className="py-4">
-                                    <span className="text-[11px] text-slate-350 block">
+                                    <span className="text-[11px] text-slate-600 block">
                                       {o.deliveryType === "self_pickup" ? "Zelf Afhalen (Gratis)" : "Bezorgservice"}
                                     </span>
                                     {o.deliveryAddress && (
@@ -793,10 +793,10 @@ export default function AdminSection({
                                     )}
                                   </td>
                                   <td className="py-4 whitespace-nowrap">
-                                    <div className="text-white">{o.startDate}</div>
+                                    <div className="text-slate-800">{o.startDate}</div>
                                     <span className="text-[10px] text-slate-500 block font-mono mt-0.5">({o.rentalDays}d)</span>
                                   </td>
-                                  <td className="py-4 font-mono font-bold text-teal-400">€ {o.totalAmount.toFixed(2)}</td>
+                                  <td className="py-4 font-mono font-bold text-teal-600">€ {o.totalAmount.toFixed(2)}</td>
                                   <td className="py-4 text-center">
                                     <div className="flex flex-col gap-1.5 justify-center items-center">
                                       <span className={`inline-block text-[9px] font-mono px-2 py-0.5 rounded-full font-extrabold uppercase ${
@@ -868,14 +868,14 @@ export default function AdminSection({
                   className="space-y-6"
                 >
                   <div className="glass-panel p-6 rounded-3xl space-y-4">
-                    <div className="flex justify-between items-center border-b border-white/5 pb-3">
+                    <div className="flex justify-between items-center border-b border-slate-200 pb-3">
                       <div>
-                        <h3 className="font-display font-bold text-sm text-white">Actuele Machine Pool</h3>
+                        <h3 className="font-display font-bold text-sm text-slate-900">Actuele Machine Pool</h3>
                         <p className="text-[11px] text-slate-500 mt-0.5">Overzicht van geverifieerde units beschikbaar op het netwerk.</p>
                       </div>
                       <button
                         onClick={() => setSubTab("add")}
-                        className="bg-amber-500/25 hover:bg-amber-500 text-amber-300 hover:text-slate-950 text-xs font-bold px-3 py-1.5 rounded-lg transition-all flex items-center space-x-1 cursor-pointer"
+                        className="bg-amber-500 hover:bg-amber-600 text-white text-xs font-extrabold px-3.5 py-1.5 rounded-lg shadow-sm hover:shadow-md transition-all flex items-center space-x-1 cursor-pointer"
                       >
                         <Plus className="h-4 w-4" />
                         <span>Toevoegen</span>
@@ -885,7 +885,7 @@ export default function AdminSection({
                     <div className="overflow-x-auto scrollbar-thin">
                       <table className="w-full text-left text-xs border-collapse">
                         <thead>
-                          <tr className="border-b border-white/5 text-slate-400">
+                          <tr className="border-b border-slate-200 text-slate-500">
                             <th className="pb-2.5 font-bold">Machine</th>
                             <th className="pb-2.5 font-bold">Onderdeel</th>
                             <th className="pb-2.5 font-bold">Werkhoogte</th>
@@ -895,22 +895,22 @@ export default function AdminSection({
                             <th className="pb-2.5 font-bold">Totaalprijs/dag</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-white/5">
+                        <tbody className="divide-y divide-slate-100">
                           {machines.map((m) => {
                             return (
-                              <tr key={m.id} className="hover:bg-white/2 transition-colors">
-                                <td className="py-3 font-bold text-white flex items-center space-x-2.5">
-                                  <div className="h-8 w-11 rounded-lg overflow-hidden shrink-0 border border-white/5 bg-slate-950">
+                               <tr key={m.id} className="hover:bg-slate-50 transition-colors">
+                                <td className="py-3 font-bold text-slate-800 flex items-center space-x-2.5">
+                                  <div className="h-8 w-11 rounded-lg overflow-hidden shrink-0 border border-slate-200 bg-slate-100">
                                     <img src={m.imageUrl} alt="" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
                                   </div>
                                   <span>{m.name}</span>
                                 </td>
-                                <td className="py-3 uppercase font-mono text-[9px] text-slate-400 font-extrabold">{m.category}</td>
-                                <td className="py-3 text-slate-350 font-mono">{m.height} m</td>
-                                <td className="py-3 text-slate-350 font-mono">{m.reach || "--"} m</td>
-                                <td className="py-3 text-slate-350 font-mono">{m.weight || "--"} kg</td>
-                                <td className="py-3 text-slate-350">{m.powerType || "Elektrisch"}</td>
-                                <td className="py-3 font-mono text-teal-400 font-bold">€ {m.pricePerDay}</td>
+                                <td className="py-3 uppercase font-mono text-[9px] text-slate-500 font-extrabold">{m.category}</td>
+                                <td className="py-3 text-slate-700 font-mono">{m.height} m</td>
+                                <td className="py-3 text-slate-700 font-mono">{m.reach || "--"} m</td>
+                                <td className="py-3 text-slate-700 font-mono">{m.weight || "--"} kg</td>
+                                <td className="py-3 text-slate-700">{m.powerType || "Elektrisch"}</td>
+                                <td className="py-3 font-mono text-teal-600 font-bold">€ {m.pricePerDay}</td>
                               </tr>
                             );
                           })}
@@ -927,12 +927,11 @@ export default function AdminSection({
                   key="add-tab"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="glass-panel p-6 rounded-3xl space-y-6"
+                            className="glass-panel p-6 rounded-3xl space-y-6"
                 >
-                  <div className="border-b border-white/5 pb-3">
-                    <h3 className="font-display font-bold text-sm text-white flex items-center space-x-2">
-                      <PlusCircle className="h-5 w-5 text-amber-400" />
+                  <div className="border-b border-slate-200 pb-3">
+                    <h3 className="font-display font-bold text-sm text-slate-900 flex items-center space-x-2">
+                      <PlusCircle className="h-5 w-5 text-amber-600" />
                       <span>Voeg een Nieuwe Hoogwerker toe aan de Vloot</span>
                     </h3>
                     <p className="text-[11px] text-slate-500 mt-0.5">Na toevoeging is deze machine direct doorzoekbaar en boekbaar op de website.</p>
@@ -942,23 +941,23 @@ export default function AdminSection({
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       
                       <div className="space-y-1">
-                        <label className="text-xs text-slate-300 block font-semibold">Titel / Modelnaam</label>
+                        <label className="text-xs text-slate-700 block font-bold">Titel / Modelnaam</label>
                         <input
                           type="text"
                           required
                           value={newName}
                           onChange={(e) => setNewName(e.target.value)}
                           placeholder="Bijv. Elektrische Schaarlift Pro 140"
-                          className="w-full bg-slate-950/60 border border-white/5 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-amber-500"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
                         />
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-xs text-slate-300 block font-semibold">Machine Categorie</label>
+                        <label className="text-xs text-slate-700 block font-bold">Machine Categorie</label>
                         <select
                           value={newCategory}
                           onChange={(e) => setNewCategory(e.target.value as any)}
-                          className="w-full bg-[#080d17] border border-white/5 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-amber-500 cursor-pointer h-9.5"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white cursor-pointer h-9.5"
                         >
                           <option value="schaarlift">Schaarlift (schaarlift)</option>
                           <option value="knikarm">Knikarmhoogwerker (knikarm)</option>
@@ -969,53 +968,53 @@ export default function AdminSection({
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-xs text-slate-300 block font-semibold">Werkhoogte (in meters)</label>
+                        <label className="text-xs text-slate-700 block font-bold">Werkhoogte (in meters)</label>
                         <input
                           type="number"
                           required
                           value={newHeight}
                           onChange={(e) => setNewHeight(e.target.value)}
                           placeholder="Bijv. 16"
-                          className="w-full bg-slate-950/60 border border-white/5 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-amber-500"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
                         />
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-xs text-slate-300 block font-semibold">Zijwaarts Bereik (in meters, optioneel)</label>
+                        <label className="text-xs text-slate-700 block font-bold">Zijwaarts Bereik (in meters, optioneel)</label>
                         <input
                           type="number"
                           value={newReach}
                           onChange={(e) => setNewReach(e.target.value)}
                           placeholder="Bijv. 12"
-                          className="w-full bg-slate-950/60 border border-white/5 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-amber-500"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
                         />
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-xs text-slate-300 block font-semibold">Eigen Gewicht (in kg, optioneel)</label>
+                        <label className="text-xs text-slate-700 block font-bold">Eigen Gewicht (in kg, optioneel)</label>
                         <input
                           type="number"
                           value={newWeight}
                           onChange={(e) => setNewWeight(e.target.value)}
                           placeholder="Bijv. 3200"
-                          className="w-full bg-slate-950/60 border border-white/5 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-amber-500"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
                         />
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-xs text-slate-300 block font-semibold">Huurtarief (Euro per Dag)</label>
+                        <label className="text-xs text-slate-700 block font-bold">Huurtarief (Euro per Dag)</label>
                         <input
                           type="number"
                           required
                           value={newPrice}
                           onChange={(e) => setNewPrice(e.target.value)}
                           placeholder="Bijv. 150"
-                          className="w-full bg-slate-950/60 border border-white/5 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-amber-500"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
                         />
                       </div>
 
                       <div className="space-y-1 col-span-2">
-                        <label className="text-xs text-slate-300 block font-semibold">Aandrijving</label>
+                        <label className="text-xs text-slate-700 block font-bold">Aandrijving</label>
                         <div className="flex space-x-4">
                           {["Elektrisch", "Diesel", "Hybride"].map((power) => (
                             <label key={power} className="flex items-center space-x-2 cursor-pointer text-xs">
@@ -1026,20 +1025,20 @@ export default function AdminSection({
                                   onChange={() => setNewPower(power as any)}
                                   className="accent-amber-500"
                                 />
-                              <span className="text-slate-300">{power}</span>
+                              <span className="text-slate-705 text-slate-700">{power}</span>
                             </label>
                           ))}
                         </div>
                       </div>
 
                       <div className="space-y-1 col-span-2">
-                        <label className="text-xs text-slate-300 block font-semibold">Doelgroepen (komma gescheiden)</label>
+                        <label className="text-xs text-slate-700 block font-bold">Doelgroepen (komma gescheiden)</label>
                         <input
                           type="text"
                           value={suitableInput}
                           onChange={(e) => setSuitableInput(e.target.value)}
                           placeholder="Bijv. Schilder, Aannemer, Glazenwasser, Hovenier"
-                          className="w-full bg-slate-950/60 border border-white/5 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-amber-500"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
                         />
                       </div>
 
@@ -1050,26 +1049,26 @@ export default function AdminSection({
                           value={newDescription}
                           onChange={(e) => setNewDescription(e.target.value)}
                           placeholder="Korte beschrijving van de toepasbaarheid..."
-                          className="w-full bg-slate-950/60 border border-white/5 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-amber-500 resize-none"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white resize-none"
                         />
                       </div>
 
                     </div>
 
-                    <div className="flex justify-end pt-4 border-t border-white/5">
+                    <div className="flex justify-end pt-4 border-t border-slate-200">
                       <button
                         type="submit"
                         disabled={isAdding}
-                        className="bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-slate-950 font-extrabold text-xs px-6 py-2.5 rounded-xl transition-all shadow-[0_0_15px_rgba(245,158,11,0.25)] shrink-0 flex items-center space-x-1.5 cursor-pointer"
+                        className="bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-slate-900 font-extrabold text-xs px-6 py-2.5 rounded-xl transition-all shadow-sm hover:shadow-md shrink-0 flex items-center space-x-1.5 cursor-pointer"
                       >
                         {isAdding ? (
                           <>
-                            <div className="h-4 w-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
+                            <div className="h-4 w-4 border-2 border-slate-900 border-t-transparent rounded-full animate-spin" />
                             <span>Opslaan...</span>
                           </>
                         ) : (
                           <>
-                            <Sparkles className="h-4 w-4 text-slate-950" />
+                            <Sparkles className="h-4 w-4 text-slate-900" />
                             <span>Vloot Opslaan</span>
                           </>
                         )}
@@ -1093,15 +1092,15 @@ export default function AdminSection({
                     
                     {/* Log entries feed column */}
                     <div className="md:col-span-7 glass-panel p-5.5 rounded-3xl space-y-4">
-                      <div className="flex items-center justify-between border-b border-white/5 pb-3">
+                      <div className="flex items-center justify-between border-b border-slate-200 pb-3">
                         <div className="flex items-center space-x-2">
-                          <Terminal className="h-4 w-4 text-amber-400" />
-                          <h3 className="font-display font-bold text-sm text-white">Systeemactiviteit (In- & Uitlog Logs)</h3>
+                          <Terminal className="h-4 w-4 text-amber-600" />
+                          <h3 className="font-display font-bold text-sm text-slate-900">Systeemactiviteit (In- & Uitlog Logs)</h3>
                         </div>
                         {systemLogs.length > 0 && (
                           <button
                             onClick={onClearSystemLogs}
-                            className="text-[10px] font-bold text-slate-500 hover:text-rose-400 flex items-center space-x-1 border border-white/5 hover:border-rose-400/20 bg-white/3 py-1 px-2 rounded-lg transition-colors cursor-pointer"
+                            className="text-[10px] font-extrabold text-slate-600 hover:text-rose-600 flex items-center space-x-1 border border-slate-200 bg-slate-50 hover:bg-rose-50 py-1.5 px-2.5 rounded-lg transition-colors cursor-pointer"
                           >
                             <Trash2 className="h-3 w-3" />
                             <span>Schoonmaken</span>
@@ -1109,7 +1108,7 @@ export default function AdminSection({
                         )}
                       </div>
 
-                      <div className="bg-slate-950/80 p-3 sm:p-4 rounded-2xl border border-white/5 space-y-3 font-mono text-[10px] sm:text-[11px] max-h-120 overflow-y-auto scrollbar-thin">
+                      <div className="bg-slate-900 p-3 sm:p-4 rounded-2xl border border-slate-950 space-y-3 font-mono text-[10px] sm:text-[11px] max-h-120 overflow-y-auto scrollbar-thin">
                         {systemLogs.length === 0 ? (
                           <div className="py-12 text-center text-slate-500">
                             Geen logdata beschikbaar. Simuleer acties rechts!
@@ -1148,24 +1147,24 @@ export default function AdminSection({
                     {/* Active accounts status controller */}
                     <div className="md:col-span-5 glass-panel p-5 rounded-3xl space-y-4">
                       <div>
-                        <h4 className="font-display font-bold text-xs text-white uppercase tracking-wider flex items-center space-x-1">
-                          <Users className="h-4 w-4 text-amber-400" />
+                        <h4 className="font-display font-bold text-xs text-slate-900 uppercase tracking-wider flex items-center space-x-1">
+                          <Users className="h-4 w-4 text-amber-600" />
                           <span>Ziyaretçi & Klant Controllers</span>
                         </h4>
-                        <p className="text-[10px] text-slate-400 mt-1 leading-normal">
+                        <p className="text-[10px] text-slate-505 text-slate-500 mt-1 leading-normal">
                           Als eigenaar kunt u direct loggebeurtenissen simuleren om uw verbindingen te testen. Klik op de in-/uitlog triggers hieronder om direct de live logs feed te injecteren conform uw specificatie!
                         </p>
                       </div>
 
-                      <div className="space-y-2.5 pt-2 border-t border-white/5">
+                      <div className="space-y-2.5 pt-2 border-t border-slate-200">
                         {userProfiles.map((p) => {
                           return (
-                            <div key={p.id} className="p-3 bg-slate-950/40 rounded-xl space-y-2.5 border border-white/3">
+                            <div key={p.id} className="p-3 bg-slate-50 rounded-xl space-y-2.5 border border-slate-200/80 shadow-sm">
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center space-x-2">
                                   <img src={p.avatarUrl} alt="" className="h-6 w-6 rounded-full object-cover" referrerPolicy="no-referrer" />
                                   <div>
-                                    <h5 className="text-[11px] font-bold text-white leading-none">{p.name}</h5>
+                                    <h5 className="text-[11px] font-bold text-slate-800 leading-none">{p.name}</h5>
                                     <span className="text-[9px] text-slate-500 mt-0.5 inline-block">{p.profileType}</span>
                                   </div>
                                 </div>
@@ -1176,7 +1175,7 @@ export default function AdminSection({
                                   onClick={() => {
                                     onAddSystemLog("login", p.name, `Klant heeft ingelogd op de website (Gezamenlijke sessie geopend via IP-check).`);
                                   }}
-                                  className="py-1.5 bg-blue-600/10 hover:bg-blue-600 hover:text-white border border-blue-500/20 text-[9.5px] font-bold text-blue-300 rounded-lg transition-colors cursor-pointer flex items-center justify-center space-x-1"
+                                  className="py-1.5 bg-blue-50 hover:bg-blue-600 hover:text-white border border-blue-200 text-[9.5px] font-bold text-blue-700 rounded-lg transition-colors cursor-pointer flex items-center justify-center space-x-1"
                                 >
                                   <UserCheck className="h-3 w-3 shrink-0" />
                                   <span>Inlog Log</span>
@@ -1186,7 +1185,7 @@ export default function AdminSection({
                                   onClick={() => {
                                     onAddSystemLog("logout", p.name, `Klant heeft zich uitgelogd (Sessie vernietigd, koekboodschappen verwijderd).`);
                                   }}
-                                  className="py-1.5 bg-rose-600/10 hover:bg-rose-500 hover:text-white border border-rose-500/20 text-[9.5px] font-bold text-rose-300 rounded-lg transition-colors cursor-pointer flex items-center justify-center space-x-1"
+                                  className="py-1.5 bg-rose-50 hover:bg-rose-600 hover:text-white border border-rose-200 text-[9.5px] font-bold text-rose-700 rounded-lg transition-colors cursor-pointer flex items-center justify-center space-x-1"
                                 >
                                   <UserX className="h-3 w-3 shrink-0" />
                                   <span>Uitlog Log</span>
@@ -1212,9 +1211,9 @@ export default function AdminSection({
                   className="space-y-6"
                 >
                   <div className="glass-panel p-6 rounded-3xl space-y-6">
-                    <div className="border-b border-white/5 pb-3">
-                      <h3 className="font-display font-bold text-sm text-white flex items-center space-x-2">
-                        <Settings className="h-5 w-5 text-amber-400" />
+                    <div className="border-b border-slate-200 pb-3">
+                      <h3 className="font-display font-bold text-sm text-slate-900 flex items-center space-x-2">
+                        <Settings className="h-5 w-5 text-amber-600" />
                         <span>Beheer Storefront & Customizer</span>
                       </h3>
                       <p className="text-[11px] text-slate-500 mt-0.5">Pas logo's, banners, menu-namen of product-categorieën direct aan op de website.</p>
@@ -1223,92 +1222,92 @@ export default function AdminSection({
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       
                       {/* Store Details Form */}
-                      <div className="space-y-4 p-5 rounded-2xl bg-white/3 border border-white/5">
-                        <h4 className="text-xs font-bold text-amber-400 uppercase tracking-wider">Algemene Storefront Copywriting</h4>
+                      <div className="space-y-4 p-5 rounded-2xl bg-slate-50 border border-slate-200/80 shadow-sm">
+                        <h4 className="text-xs font-bold text-amber-600 uppercase tracking-wider">Algemene Storefront Copywriting</h4>
                         
                         <div className="space-y-1">
-                          <label className="text-xs text-slate-300 block font-semibold">Store Naam (Logo)</label>
+                          <label className="text-xs text-slate-700 block font-bold">Store Naam (Logo)</label>
                           <input
                             type="text"
                             value={siteConfig.siteName}
                             onChange={(e) => setSiteConfig(prev => ({ ...prev, siteName: e.target.value }))}
-                            className="w-full bg-slate-950/60 border border-white/5 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-amber-500"
+                            className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
                           />
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-xs text-slate-300 block font-semibold">Hero Tagline Banner</label>
+                          <label className="text-xs text-slate-700 block font-bold">Hero Tagline Banner</label>
                           <input
                             type="text"
                             value={siteConfig.heroTagline}
                             onChange={(e) => setSiteConfig(prev => ({ ...prev, heroTagline: e.target.value }))}
-                            className="w-full bg-slate-950/60 border border-white/5 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-amber-500"
+                            className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
                           />
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-xs text-slate-300 block font-semibold">Hero Grote Titel</label>
+                          <label className="text-xs text-slate-700 block font-bold">Hero Grote Titel</label>
                           <input
                             type="text"
                             value={siteConfig.heroTitle}
                             onChange={(e) => setSiteConfig(prev => ({ ...prev, heroTitle: e.target.value }))}
-                            className="w-full bg-slate-950/60 border border-white/5 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-amber-500"
+                            className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
                           />
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-xs text-slate-300 block font-semibold">Hero Korte Paragraaf (Subtitle)</label>
+                          <label className="text-xs text-slate-700 block font-bold">Hero Korte Paragraaf (Subtitle)</label>
                           <textarea
                             rows={3}
                             value={siteConfig.heroSubtitle}
                             onChange={(e) => setSiteConfig(prev => ({ ...prev, heroSubtitle: e.target.value }))}
-                            className="w-full bg-slate-950/60 border border-white/5 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-amber-500 resize-none animate-none"
+                            className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 resize-none font-sans"
                           />
                         </div>
 
                       </div>
 
                       {/* Header Menu Labels Form */}
-                      <div className="space-y-4 p-5 rounded-2xl bg-white/3 border border-white/5">
-                        <h4 className="text-xs font-bold text-amber-400 uppercase tracking-wider">Navigatiemenu Aanpassen</h4>
+                      <div className="space-y-4 p-5 rounded-2xl bg-slate-50 border border-slate-200/80 shadow-sm">
+                        <h4 className="text-xs font-bold text-amber-600 uppercase tracking-wider">Navigatiemenu Aanpassen</h4>
 
                         <div className="space-y-1">
-                          <label className="text-xs text-slate-300 block font-semibold">Labels - Homepagina</label>
+                          <label className="text-xs text-slate-705 text-slate-700 block font-bold">Labels - Homepagina</label>
                           <input
                             type="text"
                             value={siteConfig.menuHomeLabel}
                             onChange={(e) => setSiteConfig(prev => ({ ...prev, menuHomeLabel: e.target.value }))}
-                            className="w-full bg-slate-950/60 border border-white/5 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-amber-500"
+                            className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
                           />
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-xs text-slate-300 block font-semibold">Labels - Catalogus</label>
+                          <label className="text-xs text-slate-705 text-slate-700 block font-bold">Labels - Catalogus</label>
                           <input
                             type="text"
                             value={siteConfig.menuCatalogLabel}
                             onChange={(e) => setSiteConfig(prev => ({ ...prev, menuCatalogLabel: e.target.value }))}
-                            className="w-full bg-slate-950/60 border border-white/5 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-amber-500"
+                            className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
                           />
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-xs text-slate-300 block font-semibold">Labels - AI Vloot Adviseur</label>
+                          <label className="text-xs text-slate-705 text-slate-700 block font-bold">Labels - AI Vloot Adviseur</label>
                           <input
                             type="text"
                             value={siteConfig.menuAdvisorLabel}
                             onChange={(e) => setSiteConfig(prev => ({ ...prev, menuAdvisorLabel: e.target.value }))}
-                            className="w-full bg-slate-950/60 border border-white/5 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-amber-500"
+                            className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
                           />
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-xs text-slate-300 block font-semibold">Labels - Mijn Account</label>
+                          <label className="text-xs text-slate-705 text-slate-700 block font-bold">Labels - Mijn Account</label>
                           <input
                             type="text"
                             value={siteConfig.menuOrdersLabel}
                             onChange={(e) => setSiteConfig(prev => ({ ...prev, menuOrdersLabel: e.target.value }))}
-                            className="w-full bg-slate-950/60 border border-white/5 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-amber-400"
+                            className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
                           />
                         </div>
 
@@ -1320,16 +1319,16 @@ export default function AdminSection({
                           type="button"
                           onClick={handleSaveSiteConfig}
                           disabled={isSavingConfig}
-                          className="flex items-center space-x-1.5 px-5 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-extrabold text-xs rounded-xl shadow-md transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+                          className="flex items-center space-x-1.5 px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-xs rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
                         >
                           {isSavingConfig ? (
                             <>
-                              <span className="h-3.5 w-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin mr-1" />
+                              <span className="h-3.5 w-3.5 border-2 border-slate-900 border-t-transparent rounded-full animate-spin mr-1" />
                               <span>Opslaan...</span>
                             </>
                           ) : (
                             <>
-                              <Check className="h-4.5 w-4.5 shrink-0" />
+                              <Check className="h-4.5 w-4.5 shrink-0 text-white" />
                               <span>Storefront Instellingen Opslaan</span>
                             </>
                           )}
@@ -1339,16 +1338,16 @@ export default function AdminSection({
                     </div>
 
                     {/* Category Manager */}
-                    <div className="p-5 rounded-2xl bg-white/3 border border-white/5 space-y-4">
-                      <h4 className="text-xs font-bold text-amber-400 uppercase tracking-wider">Actuele Groep Categoriseringen & Filter Opties</h4>
+                    <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200/80 shadow-sm space-y-4">
+                      <h4 className="text-xs font-bold text-amber-600 uppercase tracking-wider">Actuele Groep Categoriseringen & Filter Opties</h4>
                       
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                         {customCategories.map((cat) => (
-                          <div key={cat.id} className="p-3 bg-slate-950/60 border border-white/5 rounded-xl text-xs space-y-1">
+                          <div key={cat.id} className="p-3.5 bg-white border border-slate-200 shadow-sm rounded-2xl text-xs space-y-1">
                             <div className="flex justify-between items-center">
-                              <span className="font-bold text-white">{cat.label}</span>
+                              <span className="font-bold text-slate-800">{cat.label}</span>
                               <div className="flex items-center space-x-1">
-                                <span className="text-[9px] font-mono text-amber-400 uppercase bg-amber-500/10 px-1.5 py-0.5 rounded font-extrabold">{cat.id}</span>
+                                <span className="text-[9px] font-mono text-amber-700 uppercase bg-amber-500/10 px-1.5 py-0.5 rounded font-extrabold">{cat.id}</span>
                                 <button
                                   type="button"
                                   onClick={() => {
@@ -1365,14 +1364,14 @@ export default function AdminSection({
                                       });
                                     }
                                   }}
-                                  className="text-rose-450 hover:text-rose-400 font-extrabold px-1 cursor-pointer transition-colors"
+                                  className="text-rose-650 text-rose-600 hover:text-rose-700 font-extrabold px-1 cursor-pointer transition-colors"
                                   title="Verwijder Categorie"
                                 >
                                   ×
                                 </button>
                               </div>
                             </div>
-                            <p className="text-[10.5px] text-slate-400 line-clamp-2 leading-relaxed">{cat.desc}</p>
+                            <p className="text-[10.5px] text-slate-650 text-slate-600 line-clamp-2 leading-relaxed">{cat.desc}</p>
                             <div className="flex justify-between text-[10px] text-slate-500 pt-1 font-mono">
                               <span>Hoogten: {cat.heights}</span>
                               <span>Prijzen: {cat.price}</span>
@@ -1400,20 +1399,20 @@ export default function AdminSection({
                   className="lg:col-span-9 space-y-6 animate-fade-in"
                 >
                   <div className="glass-panel p-6 rounded-3xl space-y-6">
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-white/5 pb-4">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-200 pb-4">
                       <div>
-                        <h3 className="font-display font-black text-lg text-white flex items-center space-x-2">
-                          <Calendar className="h-5.5 w-5.5 text-amber-400" />
+                        <h3 className="font-display font-black text-lg text-slate-900 flex items-center space-x-2">
+                          <Calendar className="h-5.5 w-5.5 text-amber-600" />
                           <span>Kalender Blokkades & Systeemsluitingen</span>
                         </h3>
-                        <p className="text-xs text-slate-400 mt-1">
+                        <p className="text-xs text-slate-500 mt-1">
                           Blokkeer specifiek materieel of pakketten voor onderhoud, keuringen of feestdagen om realtime boekingen te voorkomen.
                         </p>
                       </div>
                       <button
                         type="button"
                         onClick={fetchBlockedDates}
-                        className="text-[11px] font-mono text-amber-400 hover:text-white mt-2 sm:mt-0 flex items-center space-x-1.5 px-2.5 py-1 rounded bg-amber-500/10 border border-amber-500/20 cursor-pointer"
+                        className="text-[11px] font-mono text-slate-700 hover:text-slate-900 mt-2 sm:mt-0 flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 cursor-pointer"
                       >
                         <RefreshCw className="h-3 w-3 shrink-0" />
                         <span>Ververs kalender</span>
@@ -1423,16 +1422,16 @@ export default function AdminSection({
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                       
                       {/* Left: block a date form */}
-                      <form onSubmit={handleBlockDateSubmit} className="lg:col-span-5 p-5 rounded-2xl bg-white/3 border border-white/5 space-y-4">
-                        <h4 className="text-xs font-bold text-amber-400 uppercase tracking-wider">Selecteer om te Blokkeren</h4>
+                      <form onSubmit={handleBlockDateSubmit} className="lg:col-span-5 p-5 rounded-2xl bg-slate-55 bg-slate-50 border border-slate-200 shadow-sm space-y-4">
+                        <h4 className="text-xs font-bold text-amber-600 uppercase tracking-wider">Selecteer om te Blokkeren</h4>
                         
                         <div className="space-y-1">
-                          <label className="text-xs text-slate-300 block font-semibold">Kies Machine of Set/Pakket *</label>
+                          <label className="text-xs text-slate-700 block font-bold">Kies Machine of Set/Pakket *</label>
                           <select
                             required
                             value={selectedBlockMachineId}
                             onChange={(e) => setSelectedBlockMachineId(e.target.value)}
-                            className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-amber-500 cursor-pointer"
+                            className="bg-white border border-slate-200 text-slate-800 w-full rounded-xl px-3 py-2 text-xs outline-none focus:border-amber-500 cursor-pointer"
                           >
                             <option value="">-- Maak uw vlootkeuze --</option>
                             {machines.map(m => (
@@ -1442,32 +1441,32 @@ export default function AdminSection({
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-xs text-slate-300 block font-semibold">Geplande Sluitingsdatum *</label>
+                          <label className="text-xs text-slate-705 text-slate-700 block font-bold">Geplande Sluitingsdatum *</label>
                           <input
                             type="date"
                             required
                             value={blockDate}
                             onChange={(e) => setBlockDate(e.target.value)}
-                            className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-amber-500 cursor-pointer"
+                            className="bg-white border border-slate-200 text-slate-800 w-full rounded-xl px-3 py-2 text-xs outline-none focus:border-amber-500 cursor-pointer"
                           />
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-xs text-slate-300 block font-semibold">Reden voor de Blokkade *</label>
+                          <label className="text-xs text-slate-705 text-slate-700 block font-bold">Reden voor de Blokkade *</label>
                           <input
                             type="text"
                             required
                             value={blockReason}
                             onChange={(e) => setBlockReason(e.target.value)}
                             placeholder="bijv: TÜV Keuring / Periodiek onderhoud / Demo"
-                            className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-amber-500"
+                            className="bg-white border border-slate-200 text-slate-800 w-full rounded-xl px-3 py-2 text-xs outline-none focus:border-amber-500"
                           />
                         </div>
 
                         <button
                           type="submit"
                           disabled={isSubmittingBlock || !selectedBlockMachineId}
-                          className="w-full py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 disabled:opacity-50 text-slate-950 font-extrabold text-xs rounded-xl transition-all border-none cursor-pointer flex items-center justify-center space-x-1.5"
+                          className="w-full py-2.5 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white font-extrabold text-xs rounded-xl transition-all border-none cursor-pointer flex items-center justify-center space-x-1.5"
                         >
                           <Plus className="h-4 w-4 shrink-0" />
                           <span>{isSubmittingBlock ? "Sluiten..." : "Sluit deze datum"}</span>
@@ -1476,40 +1475,40 @@ export default function AdminSection({
 
                       {/* Right: show active blocked list */}
                       <div className="lg:col-span-7 space-y-4">
-                        <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+                        <h4 className="text-xs font-bold text-slate-705 text-slate-700 uppercase tracking-wider flex items-center justify-between">
                           <span>Actieve Systeemsluitingen ({blockedDates.length})</span>
-                          <span className="text-[10px] lowercase font-normal font-mono text-slate-500">gebaseerd op realtime database</span>
+                          <span className="text-[10px] lowercase font-normal font-mono text-slate-505 text-slate-500">gebaseerd op realtime database</span>
                         </h4>
 
                         <div className="space-y-3 max-h-[400px] overflow-y-auto pr-1">
                           {blockedDates.length === 0 ? (
-                            <div className="p-8 rounded-2xl bg-white/2 border border-white/3 text-center text-slate-500 space-y-2">
-                              <Calendar className="h-8 w-8 text-slate-600 mx-auto" />
+                            <div className="p-8 rounded-2xl bg-slate-50 border border-slate-200 text-center text-slate-500 space-y-2">
+                              <Calendar className="h-8 w-8 text-slate-400 mx-auto" />
                               <p className="text-xs font-medium">Alle datums zijn momenteel open voor boekingen.</p>
                             </div>
                           ) : (
                             blockedDates.map((block) => {
                               const relatedMachine = machines.find(m => m.id === block.machineId);
                               return (
-                                <div key={block.id} className="p-3.5 rounded-xl bg-amber-500/5 hover:bg-amber-500/8 border border-amber-500/15 transition-all flex justify-between items-start">
+                                <div key={block.id} className="p-3.5 rounded-xl bg-amber-500/5 hover:bg-amber-500/8 border border-amber-200/80 transition-all flex justify-between items-start">
                                   <div className="space-y-1 min-w-0">
                                     <div className="flex items-center space-x-1.5">
                                       <span className="h-1.5 w-1.5 rounded-full bg-amber-500 shrink-0" />
-                                      <h4 className="text-xs font-extrabold text-white truncate leading-none">
+                                      <h4 className="text-xs font-extrabold text-slate-800 truncate leading-none">
                                         {relatedMachine ? relatedMachine.name : block.machineId}
                                       </h4>
                                     </div>
-                                    <p className="text-[10px] font-mono text-amber-300 leading-none">
+                                    <p className="text-[10px] font-mono text-amber-700 leading-none">
                                       Datum: {block.date}
                                     </p>
-                                    <p className="text-[10.5px] text-slate-400 leading-normal">
-                                      Reden: <span className="text-slate-200 font-semibold">{block.reason || "Geen opgegeven reden"}</span>
+                                    <p className="text-[10.5px] text-slate-650 text-slate-600 leading-normal">
+                                      Reden: <span className="text-slate-800 font-bold">{block.reason || "Geen opgegeven reden"}</span>
                                     </p>
                                   </div>
                                   <button
                                     type="button"
                                     onClick={() => handleUnblockDate(block.machineId, block.date)}
-                                    className="text-[10px] font-bold text-rose-450 hover:text-rose-300 bg-rose-500/10 hover:bg-rose-500/15 px-2.5 py-1 rounded-lg border border-rose-500/20 cursor-pointer transition-colors"
+                                    className="text-[10px] font-bold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 px-2.5 py-1 rounded-lg border border-rose-200 cursor-pointer transition-colors"
                                   >
                                     Vrijgeven
                                   </button>
@@ -1523,14 +1522,14 @@ export default function AdminSection({
                     </div>
 
                     {/* Google Calendar Linkage Card */}
-                    <div className="border-t border-white/5 pt-6 mt-6 space-y-4">
+                    <div className="border-t border-slate-200 pt-6 mt-6 space-y-4">
                       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                         <div className="space-y-0.5">
-                          <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center space-x-2">
+                          <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center space-x-2">
                             <span className={`inline-block h-2 w-2 rounded-full ${isGoogleCalendarConnected ? 'bg-emerald-500 shadow-[0_0_8px_#10b981]' : 'bg-rose-500 animate-pulse'} shrink-0`} />
                             <span>Google Calendar Realtime Synchronisatie (API)</span>
                           </h4>
-                          <p className="text-[11px] text-slate-400">
+                          <p className="text-[11px] text-slate-500">
                             Integreer uw vlootagenda met Google Agenda voor automatische updates op mobiel en tablet.
                           </p>
                         </div>
@@ -1541,13 +1540,13 @@ export default function AdminSection({
                           disabled={isConnectingGCal}
                           className={`px-4 py-2 rounded-xl text-xs font-bold font-sans transition-all flex items-center space-x-2 cursor-pointer ${
                             isGoogleCalendarConnected 
-                              ? "bg-slate-950 border border-white/10 text-rose-450 hover:bg-slate-900" 
-                              : "bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-650/10"
+                              ? "bg-rose-50 border border-rose-200 text-rose-600 hover:bg-rose-100" 
+                              : "bg-indigo-600 hover:bg-indigo-750 hover:bg-indigo-700 text-white shadow-sm hover:shadow-md"
                           }`}
                         >
                           {isConnectingGCal ? (
                             <>
-                              <span className="h-3 w-3 border-2 border-white border-t-transparent rounded-full animate-spin mr-1" />
+                              <span className="h-3 w-3 border-2 border-slate-300 border-t-transparent rounded-full animate-spin mr-1" />
                               <span>Verbinding maken...</span>
                             </>
                           ) : isGoogleCalendarConnected ? (
@@ -1565,35 +1564,35 @@ export default function AdminSection({
                         <motion.div 
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
-                          className="p-5 rounded-2xl bg-emerald-500/5 border border-emerald-500/15 grid grid-cols-1 md:grid-cols-12 gap-5"
+                          className="p-5 rounded-2xl bg-emerald-500/5 border border-emerald-500/20 grid grid-cols-1 md:grid-cols-12 gap-5"
                         >
                           {/* Sync Options Panel */}
                           <div className="md:col-span-12 lg:col-span-5 space-y-3">
-                            <h5 className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider font-mono">Synchronisatie Instellingen</h5>
-                            <div className="space-y-2 text-xs text-slate-300">
-                              <label className="flex items-center space-x-2.5 cursor-pointer hover:text-white">
-                                <input type="checkbox" defaultChecked className="rounded bg-slate-950 accent-emerald-500" />
+                            <h5 className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider font-mono">Synchronisatie Instellingen</h5>
+                            <div className="space-y-2 text-xs text-slate-700 font-medium">
+                              <label className="flex items-center space-x-2.5 cursor-pointer hover:text-slate-900">
+                                <input type="checkbox" defaultChecked className="rounded accent-emerald-500" />
                                 <span>Randevus & huurovereenkomsten push</span>
                               </label>
-                              <label className="flex items-center space-x-2.5 cursor-pointer hover:text-white">
-                                <input type="checkbox" defaultChecked className="rounded bg-slate-950 accent-emerald-500" />
+                              <label className="flex items-center space-x-2.5 cursor-pointer hover:text-slate-900">
+                                <input type="checkbox" defaultChecked className="rounded accent-emerald-500" />
                                 <span>BMWT Keuringen/blokkades push</span>
                               </label>
-                              <label className="flex items-center space-x-2.5 cursor-pointer hover:text-white">
-                                <input type="checkbox" defaultChecked className="rounded bg-slate-950 accent-emerald-500" />
+                              <label className="flex items-center space-x-2.5 cursor-pointer hover:text-slate-900">
+                                <input type="checkbox" defaultChecked className="rounded accent-emerald-500" />
                                 <span>Logistiek transport schema's push</span>
                               </label>
                             </div>
                             <p className="text-[10px] text-slate-500 leading-relaxed pt-1">
-                              Status: <span className="text-emerald-400 font-semibold font-mono">LIVE ACTIEF</span> • Gekoppeld aan <b>info@hoogwerkerhub.nl</b>. Herinneringen ingesteld op 24 uur vooraf.
+                              Status: <span className="text-emerald-700 font-semibold font-mono">LIVE ACTIEF</span> • Gekoppeld aan <b>info@hoogwerkerhub.nl</b>. Herinneringen ingesteld op 24 uur vooraf.
                             </p>
                           </div>
 
                           {/* Synced Event Feeds */}
                           <div className="md:col-span-12 lg:col-span-7 space-y-3.5">
-                            <h5 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider font-mono flex justify-between items-center">
+                            <h5 className="text-[10px] font-bold text-slate-800 uppercase tracking-wider font-mono flex justify-between items-center">
                               <span>Recente kalender synchronisatielogboek</span>
-                              <span className="text-emerald-500 text-[9px] bg-emerald-500/10 px-1 rounded font-extrabold font-mono flex items-center space-x-1">
+                              <span className="text-emerald-600 text-[9px] bg-emerald-500/10 px-1 rounded font-extrabold font-mono flex items-center space-x-1">
                                 <span className="h-1.5 w-1.5 bg-emerald-500 rounded-full animate-pulse" />
                                 <span>LIVE</span>
                               </span>
@@ -1601,28 +1600,28 @@ export default function AdminSection({
 
                             <div className="space-y-2 text-[11px] font-mono">
                               {blockedDates.length === 0 && orders.length === 0 && (
-                                <div className="text-slate-500 text-xs py-2 italic font-sans">Geen actieve data om te synchroniseren.</div>
+                                <div className="text-slate-550 text-slate-500 text-xs py-2 italic font-sans" style={{ color: '#64748b' }}>Geen actieve data om te synchroniseren.</div>
                               )}
                               {blockedDates.slice(0, 2).map((block, bIdx) => {
                                 const mOption = machines.find((m) => m.id === block.machineId);
                                 return (
-                                  <div key={`gcal-block-${bIdx}`} className="p-2 bg-slate-950/60 border border-white/5 rounded-lg flex justify-between items-center text-slate-300">
+                                  <div key={`gcal-block-${bIdx}`} className="p-2 bg-white border border-slate-200 rounded-lg flex justify-between items-center text-slate-700 shadow-xs">
                                     <span className="truncate">🔧 [Keuring] {mOption ? mOption.name : block.machineId} ({block.date})</span>
-                                    <span className="text-[9px] text-emerald-400 shrink-0 ml-1 bg-emerald-400/10 px-1.5 py-0.5 rounded uppercase font-bold font-mono">gesynchroniseerd</span>
+                                    <span className="text-[9px] text-emerald-650 text-emerald-600 shrink-0 ml-1 bg-emerald-500/15 px-1.5 py-0.5 rounded uppercase font-bold font-mono">gesynchroniseerd</span>
                                   </div>
                                 );
                               })}
                               {orders.slice(0, 2).map((ord, oIdx) => (
-                                <div key={`gcal-ord-${oIdx}`} className="p-2 bg-slate-950/60 border border-white/5 rounded-lg flex justify-between items-center text-slate-300">
+                                <div key={`gcal-ord-${oIdx}`} className="p-2 bg-white border border-slate-200 rounded-lg flex justify-between items-center text-slate-700 shadow-xs">
                                   <span className="truncate">🎯 [Huur] {ord.id} - {ord.customerName} ({ord.machineName})</span>
-                                  <span className="text-[9px] text-emerald-400 shrink-0 ml-1 bg-emerald-400/10 px-1.5 py-0.5 rounded uppercase font-bold font-mono">gesynchroniseerd</span>
+                                  <span className="text-[9px] text-emerald-650 text-emerald-600 shrink-0 ml-1 bg-emerald-500/15 px-1.5 py-0.5 rounded uppercase font-bold font-mono">gesynchroniseerd</span>
                                 </div>
                               ))}
                             </div>
                           </div>
                         </motion.div>
                       ) : (
-                        <div className="p-4 rounded-xl bg-slate-950/60 border border-white/5 text-xs text-slate-400 flex items-center space-x-3">
+                        <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-650 text-slate-600 flex items-center space-x-3">
                           <span className="text-xl">💡</span>
                           <span>
                             <b>Google Agenda</b> koppeling is momenteel gedeactiveerd. Klik hierboven om uw account veilig te autoriseren. Zo worden nieuwe orders direct weggeschreven en inspectie-blokkades gesynchroniseerd.
@@ -1710,8 +1709,8 @@ function AddCategoryForm({
   };
 
   return (
-    <form onSubmit={handleAdd} className="mt-4 p-4 rounded-xl bg-amber-500/5 border border-amber-500/15 space-y-3">
-      <h5 className="text-[10.5px] font-bold text-amber-200 uppercase tracking-tight">Voeg Nieuwe Categorie Toe</h5>
+    <form onSubmit={handleAdd} className="mt-4 p-4 rounded-xl bg-amber-500/5 border border-amber-500/25 space-y-3">
+      <h5 className="text-[10.5px] font-bold text-amber-750 text-amber-700 uppercase tracking-tight">Voeg Nieuwe Categorie Toe</h5>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <input 
           type="text" 
@@ -1719,7 +1718,7 @@ function AddCategoryForm({
           onChange={(e) => setId(e.target.value)} 
           required 
           placeholder="Groep ID (bijv: rupslift)" 
-          className="bg-slate-950 border border-white/10 rounded-lg p-2 text-xs text-white outline-none focus:border-amber-500" 
+          className="bg-white border border-slate-200 rounded-lg p-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white" 
         />
         <input 
           type="text" 
@@ -1727,41 +1726,41 @@ function AddCategoryForm({
           onChange={(e) => setLabel(e.target.value)} 
           required 
           placeholder="Groep Label (bijv: Rupslift)" 
-          className="bg-slate-950 border border-white/10 rounded-lg p-2 text-xs text-white outline-none focus:border-amber-500" 
+          className="bg-white border border-slate-200 rounded-lg p-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white" 
         />
         <input 
           type="text" 
           value={listLabel} 
           onChange={(e) => setListLabel(e.target.value)} 
           placeholder="Meervoud (bijv: Rupsliften)" 
-          className="bg-slate-950 border border-white/10 rounded-lg p-2 text-xs text-white outline-none focus:border-amber-500" 
+          className="bg-white border border-slate-200 rounded-lg p-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white" 
         />
         <input 
           type="text" 
           value={heights} 
           onChange={(e) => setHeights(e.target.value)} 
           placeholder="Hoogte bereik (bijv: 12m - 18m)" 
-          className="bg-slate-950 border border-white/10 rounded-lg p-2 text-xs text-white outline-none focus:border-amber-500" 
+          className="bg-white border border-slate-200 rounded-lg p-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white" 
         />
         <input 
           type="text" 
           value={price} 
           onChange={(e) => setPrice(e.target.value)} 
           placeholder="Startprijs (bijv: v.a. €190/dag)" 
-          className="bg-slate-950 border border-white/10 rounded-lg p-2 text-xs text-white outline-none focus:border-amber-500" 
+          className="bg-white border border-slate-200 rounded-lg p-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white" 
         />
         <input 
           type="text" 
           value={desc} 
           onChange={(e) => setDesc(e.target.value)} 
           placeholder="Korte omschrijving van de groep..." 
-          className="bg-slate-950 border border-white/10 rounded-lg p-2 text-xs text-white outline-none focus:border-amber-500" 
+          className="bg-white border border-slate-200 rounded-lg p-2 text-xs text-slate-800 outline-none focus:border-amber-500" 
         />
       </div>
       <div className="flex justify-end pt-1">
         <button 
           type="submit" 
-          className="px-4 py-1.5 bg-amber-500 hover:bg-amber-600 font-bold text-xs text-slate-950 rounded-lg transition-all cursor-pointer border-none shadow-sm"
+          className="px-4 py-1.5 bg-amber-500 hover:bg-amber-600 font-bold text-xs text-white rounded-lg transition-all cursor-pointer border-none shadow-sm"
         >
           Categorie Toevoegen
         </button>

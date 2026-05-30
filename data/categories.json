@@ -1,0 +1,58 @@
+[
+  {
+    "id": "schaarlift",
+    "label": "Schaarlift",
+    "listLabel": "Schaarliften",
+    "desc": "Ideaal voor loodsen, schilder- en rechtlijnig montagewerk.",
+    "heights": "8m - 14m",
+    "price": "v.a. €120/dag"
+  },
+  {
+    "id": "knikarm",
+    "label": "Knikarmhoogwerker",
+    "listLabel": "Knikarmhoogwerkers",
+    "desc": "Uiterst flexibel om over vaste obstakels heen te reiken.",
+    "heights": "12m - 20m",
+    "price": "v.a. €210/dag"
+  },
+  {
+    "id": "telescoop",
+    "label": "Telescoophoogwerker",
+    "listLabel": "Telescoophoogwerkers",
+    "desc": "Gigantisch bereik op ruw bouwterrein.",
+    "heights": "16m - 40m",
+    "price": "v.a. €340/dag"
+  },
+  {
+    "id": "auto",
+    "label": "Autohoogwerker",
+    "listLabel": "Autohoogwerkers",
+    "desc": "Zelf rijden met B-rijbewijs. Snel op locatie operationeel.",
+    "heights": "18m - 24m",
+    "price": "v.a. €250/dag"
+  },
+  {
+    "id": "spin",
+    "label": "Spinhoogwerker",
+    "listLabel": "Spinhoogwerkers",
+    "desc": "Kruipt door binnendeuren en over zachte grasvelden.",
+    "heights": "12m - 22m",
+    "price": "v.a. €180/dag"
+  },
+  {
+    "id": "klussensets",
+    "label": "Kluspakket",
+    "listLabel": "Kluspakketten",
+    "desc": "Kant-en-klaar editie voor schilder, zonnepaneel of snoeiwerk.",
+    "heights": "10m - 26m",
+    "price": "v.a. €110/dag"
+  },
+  {
+    "id": "aanhanger",
+    "label": "Aanhangerhoogwerker",
+    "listLabel": "Aanhangerhoogwerkers",
+    "desc": "Eenvoudig te transporteren en direct achter de auto te koppelen.",
+    "heights": "12m - 17m",
+    "price": "v.a. €95/dag"
+  }
+]

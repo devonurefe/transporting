@@ -25,22 +25,35 @@ import { Machine } from "../types";
 
 interface CatalogSectionProps {
   machines: Machine[];
+  customCategories?: {
+    id: string;
+    label: string;
+    listLabel?: string;
+    desc: string;
+    heights: string;
+    price: string;
+  }[];
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   selectedCategory: string;
   setSelectedCategory: (category: string) => void;
   onSelectMachineForBooking: (machine: Machine) => void;
   aiRecommendedMachineIds: string[]; // Machine IDs suggested by the advisor
+  onAddSystemLog?: (type: "login" | "logout" | "signup" | "booking" | "fleet" | "status" | "system", user: string, description: string) => void;
+  currentUser?: { name: string } | null;
 }
 
 export default function CatalogSection({
   machines,
+  customCategories = [],
   searchQuery,
   setSearchQuery,
   selectedCategory,
   setSelectedCategory,
   onSelectMachineForBooking,
   aiRecommendedMachineIds,
+  onAddSystemLog,
+  currentUser,
 }: CatalogSectionProps) {
   // Filters state
   const [maxHeight, setMaxHeight] = useState<number>(40);
@@ -67,6 +80,14 @@ export default function CatalogSection({
     setMaxPrice(500);
     setSelectedPowerTypes(["Elektrisch", "Diesel", "Hybride"]);
   };
+
+  const categoryTabs = useMemo(() => [
+    { id: "all", label: "Alle Types" },
+    ...customCategories.map((category) => ({
+      id: category.id,
+      label: category.listLabel || category.label
+    }))
+  ], [customCategories]);
 
   // Filtered Machines
   const filteredMachines = useMemo(() => {
@@ -157,6 +178,24 @@ export default function CatalogSection({
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && searchQuery.trim()) {
+                        onAddSystemLog?.(
+                          "system",
+                          currentUser ? currentUser.name : "Gast",
+                          `Zoekt in catalogus naar: "${searchQuery}"`
+                        );
+                      }
+                    }}
+                    onBlur={() => {
+                      if (searchQuery.trim()) {
+                        onAddSystemLog?.(
+                          "system",
+                          currentUser ? currentUser.name : "Gast",
+                          `Zoekt in catalogus naar: "${searchQuery}"`
+                        );
+                      }
+                    }}
                     placeholder="Schilder, 15m, rups..."
                     className="w-full text-xs bg-transparent border-none outline-none text-slate-800 placeholder-slate-400"
                   />
@@ -242,20 +281,19 @@ export default function CatalogSection({
             
             {/* Horizontal Category Nav Switcher */}
             <div className="flex items-center space-x-1.5 overflow-x-auto pb-2 border-b border-slate-200 scrollbar-none">
-              {[
-                { id: "all", label: "Alle Types" },
-                { id: "schaarlift", label: "Schaarliften" },
-                { id: "knikarm", label: "Knikarmen" },
-                { id: "telescoop", label: "Telescoop" },
-                { id: "auto", label: "Autohoogwerker" },
-                { id: "spin", label: "Spinhoogwerker" },
-                { id: "klussensets", label: "Kluspakketten" }
-              ].map((tab) => {
+              {categoryTabs.map((tab) => {
                 const isActive = selectedCategory === tab.id;
                 return (
                   <button
                     key={tab.id}
-                    onClick={() => setSelectedCategory(tab.id)}
+                    onClick={() => {
+                      setSelectedCategory(tab.id);
+                      onAddSystemLog?.(
+                        "system",
+                        currentUser ? currentUser.name : "Gast",
+                        `Filtert catalogus op categorie: "${tab.label}"`
+                      );
+                    }}
                     className={`px-4 py-2 text-xs font-bold rounded-lg whitespace-nowrap transition-all duration-300 border ${
                       isActive 
                         ? "bg-indigo-50 text-indigo-700 border-indigo-200 shadow-sm" 
@@ -355,6 +393,9 @@ export default function CatalogSection({
                           alt={machine.imageAlt}
                           className="h-full w-full object-cover group-hover:scale-106 transition-transform duration-500"
                           referrerPolicy="no-referrer"
+                          onError={(e) => {
+                            e.currentTarget.src = "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=600&auto=format&fit=crop";
+                          }}
                         />
                         {/* Shimmer overlay gradient */}
                         <div className="absolute inset-0 bg-gradient-to-t from-white/10 to-transparent pointer-events-none" />
@@ -413,7 +454,14 @@ export default function CatalogSection({
 
                           <div className="flex items-center space-x-1.5">
                             <button
-                              onClick={() => setSelectedDetailMachine(machine)}
+                              onClick={() => {
+                                setSelectedDetailMachine(machine);
+                                onAddSystemLog?.(
+                                  "system",
+                                  currentUser ? currentUser.name : "Gast",
+                                  `Bekijkt technische specificaties van: "${machine.name}"`
+                                );
+                              }}
                               className="px-3 py-2.5 rounded-xl border border-slate-200 hover:border-slate-300 bg-slate-50 hover:bg-slate-100 text-slate-700 hover:text-slate-900 text-[11px] font-bold transition-all active:scale-97 cursor-pointer"
                               title="Bekijk alle details & specificaties"
                             >
@@ -469,7 +517,15 @@ export default function CatalogSection({
                   if (!m) return null;
                   return (
                     <div key={id} className="relative group/thumb shrink-0">
-                      <img src={m.imageUrl} alt={m.name} className="h-8 w-12 object-cover rounded-md border border-slate-200" referrerPolicy="no-referrer" />
+                      <img 
+                        src={m.imageUrl} 
+                        alt={m.name} 
+                        className="h-8 w-12 object-cover rounded-md border border-slate-200" 
+                        referrerPolicy="no-referrer" 
+                        onError={(e) => {
+                          e.currentTarget.src = "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=600&auto=format&fit=crop";
+                        }}
+                      />
                       <button
                         onClick={() => setCompareIds(compareIds.filter(cid => cid !== id))}
                         className="absolute -top-1.5 -right-1.5 bg-rose-500 hover:bg-rose-600 text-white rounded-full p-0.5 transition-colors cursor-pointer z-10"
@@ -559,7 +615,15 @@ export default function CatalogSection({
                           </button>
                           
                           <div className="aspect-video w-full rounded-lg overflow-hidden bg-slate-200">
-                            <img src={m.imageUrl} alt={m.name} className="h-full w-full object-cover" referrerPolicy="no-referrer" />
+                            <img 
+                              src={m.imageUrl} 
+                              alt={m.name} 
+                              className="h-full w-full object-cover" 
+                              referrerPolicy="no-referrer" 
+                              onError={(e) => {
+                                e.currentTarget.src = "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=600&auto=format&fit=crop";
+                              }}
+                            />
                           </div>
 
                           <div>
@@ -794,6 +858,9 @@ export default function CatalogSection({
                         alt={selectedDetailMachine.name} 
                         className="w-full h-full object-cover" 
                         referrerPolicy="no-referrer" 
+                        onError={(e) => {
+                          e.currentTarget.src = "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=600&auto=format&fit=crop";
+                        }}
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-slate-950/40 to-transparent pointer-events-none" />
                     </div>

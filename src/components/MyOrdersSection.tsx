@@ -31,10 +31,13 @@ import {
   Info,
   UserPlus,
   LogOut,
-  ShieldCheck
+  ShieldCheck,
+  Lock,
+  MessageSquare
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Order, UserProfile } from "../types";
+import { useAuthStore } from "../store/authStore";
 
 interface MyOrdersSectionProps {
   orders: Order[];
@@ -61,15 +64,19 @@ export default function MyOrdersSection({
   
   // Custom login forms state
   const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
   const [loginCompany, setLoginCompany] = useState("");
   const [isRegistering, setIsRegistering] = useState(false);
   
   // Registration state
   const [regName, setRegName] = useState("");
   const [regEmail, setRegEmail] = useState("");
+  const [regPassword, setRegPassword] = useState("");
   const [regPhone, setRegPhone] = useState("");
   const [regCompany, setRegCompany] = useState("");
   const [regProfile, setRegProfile] = useState("Schilder");
+
+  const { login, register } = useAuthStore();
 
   // Custom simulator states
   const [simulatedEmail, setSimulatedEmail] = useState<{
@@ -81,6 +88,45 @@ export default function MyOrdersSection({
 
   const [emailSubscription, setEmailSubscription] = useState(true);
   const [smsSubscription, setSmsSubscription] = useState(false);
+
+  // Profile settings form state
+  const [profileName, setProfileName] = useState("");
+  const [profilePhone, setProfilePhone] = useState("");
+  const [profileCompany, setProfileCompany] = useState("");
+  const [profileSector, setProfileSector] = useState("Particulier");
+  const [profileAddress, setProfileAddress] = useState("");
+  const [profileAvatarUrl, setProfileAvatarUrl] = useState("");
+
+  // Sync profile details when currentUser changes
+  React.useEffect(() => {
+    if (currentUser) {
+      setProfileName(currentUser.name || "");
+      setProfilePhone(currentUser.phone || "");
+      setProfileCompany(currentUser.companyName || "");
+      setProfileSector(currentUser.profileType || "Particulier");
+      setProfileAddress(currentUser.address || "");
+      setProfileAvatarUrl(currentUser.avatarUrl || "");
+    }
+  }, [currentUser]);
+
+  const handleSaveProfile = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentUser) return;
+    
+    const updatedUser: UserProfile = {
+      ...currentUser,
+      name: profileName.trim(),
+      phone: profilePhone.trim(),
+      companyName: profileCompany.trim() || undefined,
+      profileType: profileSector,
+      address: profileAddress.trim() || undefined,
+      avatarUrl: profileAvatarUrl.trim() || undefined
+    };
+    
+    setCurrentUser(updatedUser);
+    onTriggerNotification("Profiel Opgeslagen", "Uw profielgegevens zijn succesvol bijgewerkt! Deze worden voortaan automatisch ingevuld bij uw boekingen.", "success");
+    onAddSystemLog?.("system", currentUser.name, `Klant heeft profielgegevens bijgewerkt.`);
+  };
 
   const handleRateOrder = (orderId: string, stars: number) => {
     setRatings(prev => ({
@@ -154,64 +200,77 @@ BMWT / TÜV CO-VERZEKERD CONTRACT. Gecertificeerd conform NEN-EN 280 normering.
     }, 450);
   };
 
-  const handleManualLogin = (e: React.FormEvent) => {
+  const handleManualLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!loginEmail.trim()) return;
+    if (!loginEmail.trim() || !loginPassword.trim()) {
+      onTriggerNotification("Inloggen Mislukt", "E-mail en wachtwoord zijn verplicht.", "warning");
+      return;
+    }
 
-    // See if matches any mock profiles
-    const found = userProfiles.find(p => p.email.toLowerCase() === loginEmail.trim().toLowerCase());
-    if (found) {
-      setCurrentUser(found);
-      onAddSystemLog?.("login", found.name, "Klant heeft handmatig ingelogd met bestaand e-mailadres.");
-      onTriggerNotification(
-        "Klant Ingelogd",
-        `Welkom terug ${found.name}! Uw lopende huren zijn direct ingeladen.`,
-        "success"
-      );
+    const success = await login(loginEmail, loginPassword);
+    if (success) {
+      const user = useAuthStore.getState().user;
+      if (user) {
+        setCurrentUser({
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          phone: user.phone || "",
+          profileType: user.profile || "Particulier",
+          companyName: loginCompany.trim() || undefined,
+          pastRentalsCount: 0
+        });
+        onAddSystemLog?.("login", user.name, "Klant is succesvol ingelogd met beveiligd account.");
+        onTriggerNotification(
+          "Klant Ingelogd",
+          `Welkom terug ${user.name}! Uw lopende huren zijn ingeladen.`,
+          "success"
+        );
+      }
     } else {
-      // Log in as a newly created customer
-      const guestUser: UserProfile = {
-        id: `user-${Date.now()}`,
-        name: loginEmail.split('@')[0],
-        email: loginEmail.trim(),
-        phone: "+31 6 55432109",
-        companyName: loginCompany.trim() || undefined,
-        profileType: "Klant / Bedrijf",
-        pastRentalsCount: 0,
-        avatarUrl: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=200&auto=format&fit=crop"
-      };
-      setCurrentUser(guestUser);
-      onAddSystemLog?.("login", guestUser.name, "Nieuwe klant heeft gast-inlog geactiveerd.");
-      onTriggerNotification(
-        "Klant Sessie Geopend",
-        `Welkom! U bent ingelogd met e-mailadres ${loginEmail}.`,
-        "success"
-      );
+      const errorMsg = useAuthStore.getState().error || "Ongeldige inloggegevens.";
+      onTriggerNotification("Inloggen Mislukt", errorMsg, "warning");
     }
   };
 
-  const handleManualRegister = (e: React.FormEvent) => {
+  const handleManualRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!regName.trim() || !regEmail.trim()) return;
+    if (!regName.trim() || !regEmail.trim() || !regPassword.trim()) {
+      onTriggerNotification("Registratie Mislukt", "Naam, e-mail en wachtwoord zijn verplicht.", "warning");
+      return;
+    }
 
-    const newUser: UserProfile = {
-      id: `user-${Date.now()}`,
-      name: regName.trim(),
+    const success = await register({
       email: regEmail.trim(),
-      phone: regPhone.trim() || "+31 6 12345678",
-      companyName: regCompany.trim() || undefined,
-      profileType: regProfile,
-      pastRentalsCount: 0,
-      avatarUrl: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=200&auto=format&fit=crop"
-    };
+      password: regPassword.trim(),
+      name: regName.trim(),
+      phone: regPhone.trim() || undefined,
+      profile: regProfile
+    });
 
-    setCurrentUser(newUser);
-    onAddSystemLog?.("signup", newUser.name, `Geregistreerd en ingelogd als nieuwe klantspecialist (${newUser.profileType}).`);
-    onTriggerNotification(
-      "Registratie Voltooid",
-      `Hartelijk welkom bij HoogwerkerHub, ${regName}!`,
-      "success"
-    );
+    if (success) {
+      const user = useAuthStore.getState().user;
+      if (user) {
+        setCurrentUser({
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          phone: user.phone || "",
+          profileType: user.profile || "Particulier",
+          companyName: regCompany.trim() || undefined,
+          pastRentalsCount: 0
+        });
+        onAddSystemLog?.("signup", user.name, `Nieuw account geregistreerd en geopend.`);
+        onTriggerNotification(
+          "Registratie Voltooid",
+          `Welkom bij HoogwerkerHub, ${user.name}!`,
+          "success"
+        );
+      }
+    } else {
+      const errorMsg = useAuthStore.getState().error || "Registratie mislukt.";
+      onTriggerNotification("Registratie Mislukt", errorMsg, "warning");
+    }
   };
 
   // Action simulators for logged in customer
@@ -326,7 +385,7 @@ BMWT / TÜV CO-VERZEKERD CONTRACT. Gecertificeerd conform NEN-EN 280 normering.
           {/* Header block */}
           <div className="text-center space-y-3">
             <h1 className="font-display text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900">
-              Welkom op het <span className="text-indigo-650 text-indigo-600">Klant Portaal</span>
+              Welkom op het <span className="text-indigo-600">Klant Portaal</span>
             </h1>
             <p className="text-xs sm:text-sm text-slate-550 text-slate-600 max-w-xl mx-auto leading-relaxed">
               Log in om uw actieve huurcontracten te beheren, transportstatussen te volgen, live BMWT-certificaten te downloaden en facturen in te zien.
@@ -361,7 +420,7 @@ BMWT / TÜV CO-VERZEKERD CONTRACT. Gecertificeerd conform NEN-EN 280 normering.
                 <form onSubmit={handleManualLogin} className="space-y-4">
                   <div className="space-y-1.5">
                     <label className="text-xs text-slate-600 block font-semibold">Geregistreerd E-mailadres</label>
-                    <div className="relative flex items-center bg-white rounded-xl border border-slate-200 px-3 py-2.5 focus-within:border-indigo-505 focus-within:border-indigo-500 transition-colors shadow-sm">
+                    <div className="relative flex items-center bg-white rounded-xl border border-slate-200 px-3 py-2.5 focus-within:border-indigo-500 transition-colors shadow-sm">
                       <Mail className="h-4 w-4 text-slate-450 shrink-0 mr-2.5" />
                       <input
                         type="email"
@@ -375,8 +434,23 @@ BMWT / TÜV CO-VERZEKERD CONTRACT. Gecertificeerd conform NEN-EN 280 normering.
                   </div>
 
                   <div className="space-y-1.5">
+                    <label className="text-xs text-slate-600 block font-semibold">Beveiligd Wachtwoord</label>
+                    <div className="relative flex items-center bg-white rounded-xl border border-slate-200 px-3 py-2.5 focus-within:border-indigo-500 transition-colors shadow-sm">
+                      <Lock className="h-4 w-4 text-slate-450 shrink-0 mr-2.5" />
+                      <input
+                        type="password"
+                        required
+                        value={loginPassword}
+                        onChange={(e) => setLoginPassword(e.target.value)}
+                        placeholder="••••••••"
+                        className="w-full text-xs bg-transparent border-none outline-none text-slate-800 placeholder-slate-450 font-medium"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
                     <label className="text-xs text-slate-600 block font-semibold">Bedrijfsnaam <span className="text-slate-400 font-normal">(Optioneel)</span></label>
-                    <div className="relative flex items-center bg-white rounded-xl border border-slate-200 px-3 py-2.5 focus-within:border-indigo-505 focus-within:border-indigo-500 transition-colors shadow-sm">
+                    <div className="relative flex items-center bg-white rounded-xl border border-slate-200 px-3 py-2.5 focus-within:border-indigo-500 transition-colors shadow-sm">
                       <Building2 className="h-4 w-4 text-slate-450 shrink-0 mr-2.5" />
                       <input
                         type="text"
@@ -390,9 +464,9 @@ BMWT / TÜV CO-VERZEKERD CONTRACT. Gecertificeerd conform NEN-EN 280 normering.
 
                   <button
                     type="submit"
-                    className="w-full py-3 bg-indigo-650 hover:bg-indigo-600 text-white font-bold text-xs rounded-xl transition-all shadow-md hover:scale-[1.01] active:opacity-95 cursor-pointer flex items-center justify-center space-x-1.5 border-none"
+                    className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl transition-all shadow-md hover:scale-[1.01] active:opacity-95 cursor-pointer flex items-center justify-center space-x-1.5 border-none"
                   >
-                    <CheckCircle className="h-4 w-4 text-emerald-300 text-emerald-400" />
+                    <CheckCircle className="h-4 w-4 text-emerald-450" />
                     <span>Beveiligd Inloggen</span>
                   </button>
                 </form>
@@ -407,7 +481,7 @@ BMWT / TÜV CO-VERZEKERD CONTRACT. Gecertificeerd conform NEN-EN 280 normering.
                       value={regName}
                       onChange={(e) => setRegName(e.target.value)}
                       placeholder="Jan de Vries"
-                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 outline-none focus:border-indigo-505 focus:border-indigo-500 h-10 placeholder-slate-400 font-medium shadow-sm transition-colors"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 outline-none focus:border-indigo-500 h-10 placeholder-slate-400 font-medium shadow-sm transition-colors"
                     />
                   </div>
 
@@ -419,8 +493,23 @@ BMWT / TÜV CO-VERZEKERD CONTRACT. Gecertificeerd conform NEN-EN 280 normering.
                       value={regEmail}
                       onChange={(e) => setRegEmail(e.target.value)}
                       placeholder="jan@schilder.nl"
-                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 outline-none focus:border-indigo-505 focus:border-indigo-500 h-10 placeholder-slate-400 shadow-sm transition-colors"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 outline-none focus:border-indigo-500 h-10 placeholder-slate-400 shadow-sm transition-colors"
                     />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-slate-600 block font-semibold">Beveiligd Wachtwoord</label>
+                    <div className="relative flex items-center bg-white rounded-xl border border-slate-200 px-3 py-2.5 focus-within:border-indigo-500 transition-colors shadow-sm">
+                      <Lock className="h-4 w-4 text-slate-450 shrink-0 mr-2.5" />
+                      <input
+                        type="password"
+                        required
+                        value={regPassword}
+                        onChange={(e) => setRegPassword(e.target.value)}
+                        placeholder="Minimaal 6 tekens"
+                        className="w-full text-xs bg-transparent border-none outline-none text-slate-800 placeholder-slate-450 font-medium"
+                      />
+                    </div>
                   </div>
 
                   <div className="space-y-1.5">
@@ -430,7 +519,7 @@ BMWT / TÜV CO-VERZEKERD CONTRACT. Gecertificeerd conform NEN-EN 280 normering.
                       value={regPhone}
                       onChange={(e) => setRegPhone(e.target.value)}
                       placeholder="+31 6 12345678"
-                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 outline-none focus:border-indigo-505 focus:border-indigo-500 h-10 placeholder-slate-400 shadow-sm transition-colors"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 outline-none focus:border-indigo-500 h-10 placeholder-slate-400 shadow-sm transition-colors"
                     />
                   </div>
 
@@ -441,7 +530,7 @@ BMWT / TÜV CO-VERZEKERD CONTRACT. Gecertificeerd conform NEN-EN 280 normering.
                       value={regCompany}
                       onChange={(e) => setRegCompany(e.target.value)}
                       placeholder="Zelfstandige of B.V."
-                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 outline-none focus:border-indigo-505 focus:border-indigo-500 h-10 placeholder-slate-400 shadow-sm transition-colors"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 outline-none focus:border-indigo-500 h-10 placeholder-slate-400 shadow-sm transition-colors"
                     />
                   </div>
 
@@ -451,13 +540,17 @@ BMWT / TÜV CO-VERZEKERD CONTRACT. Gecertificeerd conform NEN-EN 280 normering.
                       <select
                         value={regProfile}
                         onChange={(e) => setRegProfile(e.target.value)}
-                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-indigo-505 focus:border-indigo-500 h-10 cursor-pointer shadow-sm font-bold"
+                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-indigo-500 h-10 cursor-pointer shadow-sm font-bold"
                       >
                         <option value="Schilder">Schilder</option>
                         <option value="Hovenier / Groenverzorging">Hovenier / Groenverzorging</option>
-                        <option value="Glazenwasser / Gevelreiniger">Glazenwasser</option>
+                        <option value="Glazenwasser / Gevelreiniger">Glazenwasser / Gevelreiniger</option>
                         <option value="Aannemer">Aannemer / Renovatie</option>
+                        <option value="Installateur / Elektricien">Installateur / Elektricien</option>
+                        <option value="Dakdekker / Gevelwerker">Dakdekker / Gevelwerker</option>
+                        <option value="Industrieel Onderhoud">Industrieel Onderhoud</option>
                         <option value="Particulier">Particulier</option>
+                        <option value="Overig / Anders">Overig / Anders</option>
                       </select>
                     </div>
                     <div className="flex items-end">
@@ -479,7 +572,7 @@ BMWT / TÜV CO-VERZEKERD CONTRACT. Gecertificeerd conform NEN-EN 280 normering.
               <div className="bg-white border border-slate-250 border-slate-200 shadow-sm p-5 rounded-3xl space-y-4">
                 <div className="flex items-center space-x-2 border-b border-slate-105 border-slate-100 pb-2.5">
                   <SlidersHorizontal className="h-4 w-4 text-indigo-600" />
-                  <h3 className="font-display font-black text-xs uppercase text-slate-800 tracking-wider">Snelle Demo Inloggen</h3>
+                  <h3 className="font-display font-black text-xs uppercase text-slate-800 tracking-wider">Snel Inloggen</h3>
                 </div>
                 
                 <p className="text-[11px] text-slate-600 leading-relaxed font-semibold">
@@ -542,12 +635,18 @@ BMWT / TÜV CO-VERZEKERD CONTRACT. Gecertificeerd conform NEN-EN 280 normering.
           
           <div className="flex items-center space-x-4">
             <div className="relative">
-              <img 
-                src={currentUser.avatarUrl || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=200&auto=format&fit=crop"} 
-                alt={currentUser.name} 
-                className="h-16 w-16 rounded-2xl object-cover border-2 border-indigo-500/40 shadow-inner"
-                referrerPolicy="no-referrer"
-              />
+              {currentUser.avatarUrl ? (
+                <img 
+                  src={currentUser.avatarUrl} 
+                  alt={currentUser.name} 
+                  className="h-16 w-16 rounded-2xl object-cover border-2 border-indigo-500/40 shadow-inner"
+                  referrerPolicy="no-referrer"
+                />
+              ) : (
+                <div className="h-16 w-16 rounded-2xl bg-gradient-to-tr from-indigo-500 to-indigo-650 text-white font-black text-xl flex items-center justify-center border-2 border-indigo-500/40 shadow-md uppercase select-none font-display">
+                  {currentUser.name.charAt(0)}
+                </div>
+              )}
               <span className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full bg-emerald-500 ring-4 ring-white flex items-center justify-center text-[8px] font-bold text-white">✓</span>
             </div>
             <div>
@@ -776,6 +875,101 @@ BMWT / TÜV CO-VERZEKERD CONTRACT. Gecertificeerd conform NEN-EN 280 normering.
           {/* Right Notifications Controls Sidebar */}
           <div className="lg:col-span-4 space-y-6 animate-fade-in">
             
+            {/* Customer Profile Customizer Settings */}
+            <div className="bg-white border border-slate-200 shadow-sm p-5 rounded-3xl space-y-4">
+              <h4 className="font-display font-black text-xs text-slate-850 uppercase tracking-wider flex items-center space-x-2">
+                <User className="h-4 w-4 text-indigo-650 text-indigo-600" />
+                <span>Profiel & Standaardgegevens</span>
+              </h4>
+              <p className="text-[11px] text-slate-500 leading-relaxed font-semibold">
+                Beheer uw gegevens. Deze worden bij nieuwe bestellingen automatisch voor u klaargezet.
+              </p>
+              
+              <form onSubmit={handleSaveProfile} className="space-y-3 pt-2 border-t border-slate-100 text-xs">
+                <div>
+                  <label className="text-[10px] text-slate-500 font-bold block mb-1">Volledige Naam</label>
+                  <input
+                    type="text"
+                    value={profileName}
+                    onChange={(e) => setProfileName(e.target.value)}
+                    required
+                    className="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white text-slate-805 text-slate-800 outline-none focus:ring-1 focus:ring-indigo-500"
+                    placeholder="bijv. Jan de Vries"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[10px] text-slate-500 font-bold block mb-1">Telefoonnummer</label>
+                  <input
+                    type="text"
+                    value={profilePhone}
+                    onChange={(e) => setProfilePhone(e.target.value)}
+                    className="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white text-slate-805 text-slate-800 outline-none focus:ring-1 focus:ring-indigo-500"
+                    placeholder="bijv. +31 6 12345678"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[10px] text-slate-500 font-bold block mb-1">Bedrijfsnaam (Optioneel)</label>
+                  <input
+                    type="text"
+                    value={profileCompany}
+                    onChange={(e) => setProfileCompany(e.target.value)}
+                    className="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white text-slate-805 text-slate-800 outline-none focus:ring-1 focus:ring-indigo-500"
+                    placeholder="bijv. De Vries Schilderwerken B.V."
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[10px] text-slate-500 font-bold block mb-1">Sectorklasse / Profiel</label>
+                  <select
+                    value={profileSector}
+                    onChange={(e) => setProfileSector(e.target.value)}
+                    className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-slate-805 text-slate-800 outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer"
+                  >
+                    <option value="Schilder">🎨 Schilder</option>
+                    <option value="Hovenier / Groenverzorging">🌳 Hovenier / Groenverzorging</option>
+                    <option value="Glazenwasser / Gevelreiniger">🧼 Glazenwasser / Gevelreiniger</option>
+                    <option value="Aannemer">🏗️ Aannemer</option>
+                    <option value="Installateur / Elektricien">⚡ Installateur / Elektricien</option>
+                    <option value="Dakdekker / Gevelwerker">🏠 Dakdekker & Gevelwerker</option>
+                    <option value="Industrieel Onderhoud">⚙️ Industrieel Onderhoud</option>
+                    <option value="Particulier">👤 Particulier</option>
+                    <option value="Overig / Anders">❓ Overig / Anders</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-[10px] text-slate-500 font-bold block mb-1">Standaard Bezorgadres</label>
+                  <textarea
+                    value={profileAddress}
+                    onChange={(e) => setProfileAddress(e.target.value)}
+                    rows={2}
+                    className="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white text-slate-805 text-slate-800 outline-none focus:ring-1 focus:ring-indigo-500 resize-none font-sans"
+                    placeholder="bijv. Keizersgracht 420, Amsterdam"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[10px] text-slate-500 font-bold block mb-1">Profielafbeelding URL (Optioneel)</label>
+                  <input
+                    type="text"
+                    value={profileAvatarUrl}
+                    onChange={(e) => setProfileAvatarUrl(e.target.value)}
+                    className="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white text-slate-805 text-slate-800 outline-none focus:ring-1 focus:ring-indigo-500"
+                    placeholder="Laat leeg voor initialen badge"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold cursor-pointer border-none shadow-sm transition-colors text-center"
+                >
+                  Profiel Opslaan
+                </button>
+              </form>
+            </div>
+
             {/* Live Updates Preferences */}
             <div className="bg-white border border-slate-200 shadow-sm p-5 rounded-3xl space-y-4">
               <h4 className="font-display font-black text-xs text-slate-850 uppercase tracking-wider flex items-center space-x-2">
@@ -920,6 +1114,30 @@ BMWT / TÜV CO-VERZEKERD CONTRACT. Gecertificeerd conform NEN-EN 280 normering.
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* WhatsApp Help Banner */}
+        <div className="mt-8 flex flex-col sm:flex-row justify-between items-center bg-emerald-500/5 hover:bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4.5 transition-all text-left gap-4 shadow-sm">
+          <div className="flex items-start space-x-3.5">
+            <div className="h-9 w-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+              <MessageSquare className="h-5 w-5" />
+            </div>
+            <div>
+              <h4 className="font-display font-semibold text-slate-800 text-xs sm:text-sm">Vragen over uw bestelling of transportstatus?</h4>
+              <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5 leading-relaxed font-medium">
+                Heeft u specifieke logistieke vragen over de levering, wilt u een wijziging doorgeven of staat de chauffeur niet op tijd op locatie? Stuur ons direct een WhatsApp-bericht voor directe opheldering van onze planningsdesk.
+              </p>
+            </div>
+          </div>
+          <a
+            href="https://wa.me/31645617283"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center space-x-1.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition-all hover:scale-[1.02] active:scale-98 shadow-sm cursor-pointer whitespace-nowrap border-none"
+          >
+            <span>Stuur een Bericht</span>
+            <span>💬</span>
+          </a>
+        </div>
 
       </div>
     </div>

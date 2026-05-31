@@ -1,0 +1,18 @@
+{
+  "short_name": "HoogwerkerHub",
+  "name": "HoogwerkerHub Premium Platform",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏗️</text></svg>",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#0f172a",
+  "theme_color": "#4f46e5",
+  "display": "standalone",
+  "orientation": "portrait",
+  "description": "Smart Verhuur van Hoogwerkers in Nederland. Premium gekeurde en direct leverbare hoogwerkers."
+}

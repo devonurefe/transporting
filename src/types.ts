@@ -45,7 +45,7 @@ export interface Order {
   driverCost: number;
   vatAmount: number;
   totalAmount: number;
-  status: "In behandeling" | "Goedgekeurd" | "Onderweg" | "Voltooid";
+  status: "In behandeling" | "Goedgekeurd" | "Onderweg" | "Voltooid" | "Geannuleerd";
   createdAt: string;
   addons?: { id: string; name: string; price: number; billing: "daily" | "flat" }[];
 }
@@ -76,6 +76,7 @@ export interface UserProfile {
   profileType: string; // e.g., "Schilder", "Hovenier", "Glazenwasser", "Aannemer", "Particulier"
   pastRentalsCount: number;
   avatarUrl?: string;
+  address?: string;
   historyRecommendedIds?: string[];
 }
 

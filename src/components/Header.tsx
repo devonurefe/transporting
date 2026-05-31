@@ -23,6 +23,7 @@ import {
   ShieldAlert
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import { useLanguageStore } from "../store/languageStore";
 import { AppNotification, UserProfile, CartItem } from "../types";
 
 interface HeaderProps {
@@ -66,12 +67,16 @@ export default function Header({
     heroSubtitle: "Van schilderwerk binnen tot zware industriebouw buiten; HoogwerkerHub levert direct de juiste machines op locatie. Met of zonder vakbekwame chauffeur, gecontroleerd door onze slimme AI-assistent.",
     menuHomeLabel: "Home",
     menuCatalogLabel: "Catalogus",
-    menuAdvisorLabel: "Vloot Adviseur",
+    menuAdvisorLabel: "Adviseur",
     menuOrdersLabel: "Mijn Account"
   }
 }: HeaderProps) {
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
   const unreadCount = notifications.filter((n) => !n.read).length;
+  const language = useLanguageStore((state) => state.language);
+  const toggleLanguage = useLanguageStore((state) => state.toggleLanguage);
+  const t = useLanguageStore((state) => state.t);
+
 
   return (
     <header className={`sticky top-0 z-50 w-full border-b transition-all duration-300 ${
@@ -127,24 +132,22 @@ export default function Header({
               )}
             </div>
           </div>
-        </div>
-
-        {/* Dynamic Desktop Navigation */}
-        <nav className="hidden md:flex items-center space-x-4 lg:space-x-6 bg-slate-100 border border-slate-200/60 rounded-full px-2 py-1 md:ml-6 lg:ml-12 shrink-0">
+        </div>        {/* Dynamic Desktop Navigation */}
+        <nav className="hidden md:flex items-center space-x-1 lg:space-x-2 shrink">
           {isAdminMode ? (
             // Admin Mode Navigation Indicator (Simple, informative)
-            <div className="flex items-center space-x-2 bg-amber-550/10 border border-amber-500/20 px-4 py-2 rounded-xl text-xs text-amber-900 font-semibold my-0.5">
+            <div className="flex items-center space-x-2 bg-amber-500/10 border border-amber-500/20 px-3.5 py-1.5 rounded-xl text-xs text-amber-900 font-semibold my-0.5">
               <ShieldAlert className="h-4 w-4 text-amber-600 shrink-0" />
-              <span>Systeem Beheer & Vloot Dashboard (Şirket Sahibi Konsolu)</span>
+              <span>Systeembeheer & Vloot Dashboard</span>
             </div>
           ) : (
             // Clean Visitor Navigation Links
             [
-              { id: "home", label: siteConfig.menuHomeLabel, icon: Home },
-              { id: "catalog", label: siteConfig.menuCatalogLabel, icon: Layers },
-              { id: "advisor", label: siteConfig.menuAdvisorLabel, icon: Sparkles, badge: "Smart" },
-              { id: "booking", label: "Boeken", icon: ClipboardList },
-              { id: "orders", label: siteConfig.menuOrdersLabel, icon: User },
+              { id: "home", label: siteConfig.menuHomeLabel || t("menuHome"), icon: Home },
+              { id: "catalog", label: siteConfig.menuCatalogLabel || t("menuCatalog"), icon: Layers },
+              { id: "advisor", label: siteConfig.menuAdvisorLabel || t("menuAdvisor"), icon: Sparkles, badge: "Smart" },
+              { id: "booking", label: t("stepLogistics"), icon: ClipboardList },
+              { id: "orders", label: siteConfig.menuOrdersLabel || t("menuOrders"), icon: User },
             ].map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -155,23 +158,23 @@ export default function Header({
                     setActiveTab(tab.id);
                     setShowNotifDropdown(false);
                   }}
-                  className={`relative flex items-center space-x-1.5 px-5 py-2.5 rounded-full text-sm font-semibold tracking-wide transition-all duration-300 ${
+                  className={`relative flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs lg:text-sm font-semibold tracking-wide transition-all duration-350 ${
                     isActive 
-                      ? "text-indigo-700 bg-white shadow-sm" 
+                      ? "text-indigo-600 bg-indigo-50/60 shadow-[0_1px_2px_rgba(79,70,229,0.05)]" 
                       : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
                   }`}
                 >
-                  <Icon className={`h-4.5 w-4.5 ${isActive ? "text-indigo-600" : ""}`} />
+                  <Icon className={`h-4 w-4 ${isActive ? "text-indigo-600" : "text-slate-450"}`} />
                   <span>{tab.label}</span>
                   
                   {tab.badge && (
-                    <span className="ml-1 text-[9px] font-black bg-indigo-50 text-indigo-600 border border-indigo-100 px-2 py-0.5 rounded-full">
+                    <span className="ml-1 text-[8.5px] font-black bg-indigo-50 text-indigo-600 border border-indigo-100 px-1.5 py-0.5 rounded-full">
                       {tab.badge}
                     </span>
                   )}
 
                   {tab.id === "booking" && cartItems.length > 0 && (
-                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-emerald-500 px-1.5 text-[9.5px] font-black text-slate-950 shadow-[0_0_12px_rgba(16,185,129,0.5)] animate-pulse">
+                    <span className="flex h-4.5 min-w-[18px] items-center justify-center rounded-full bg-emerald-500 px-1 text-[9px] font-black text-slate-950 shadow-[0_0_12px_rgba(16,185,129,0.5)] animate-pulse">
                       {cartItems.length}
                     </span>
                   )}
@@ -179,7 +182,7 @@ export default function Header({
                   {isActive && (
                     <motion.div
                       layoutId="activeTabUnderline"
-                      className="absolute bottom-0 left-4 right-4 h-[2px] bg-gradient-to-r from-indigo-500 to-teal-400 rounded-full"
+                      className="absolute bottom-0 left-3 right-3 h-[2px] bg-gradient-to-r from-indigo-500 to-teal-400 rounded-full"
                       transition={{ type: "spring", stiffness: 380, damping: 30 }}
                     />
                   )}
@@ -190,15 +193,16 @@ export default function Header({
         </nav>
 
         {/* Dynamic Right Utility Tray */}
-        <div className="flex items-center space-x-5 md:space-x-6">
+        <div className="flex items-center space-x-2.5 md:space-x-3.5">
           {isAdminMode ? (
             // Owner Logout Button (Exits back to the website)
             <button
               onClick={() => {
                 setIsAdminMode(false);
+                onCustomerLogout();
                 setActiveTab("home");
               }}
-              className="inline-flex items-center space-x-1.5 bg-rose-600 hover:bg-rose-700 px-4.5 py-2 rounded-xl text-xs font-bold text-white transition-all hover:scale-[1.03] active:scale-97 hover:shadow-md cursor-pointer"
+              className="inline-flex items-center space-x-1.5 bg-rose-600 hover:bg-rose-700 px-4 py-2 rounded-xl text-xs font-bold text-white transition-all hover:scale-[1.03] active:scale-97 hover:shadow-md cursor-pointer"
             >
               <LogOut className="h-3.5 w-3.5" />
               <span>Console Sluiten (Uitloggen)</span>
@@ -206,6 +210,14 @@ export default function Header({
           ) : (
             // Public Visitors Utilities
             <>
+              {/* Language Switcher */}
+              <button
+                onClick={toggleLanguage}
+                className="flex items-center space-x-1 px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-bold text-slate-700 transition-all cursor-pointer select-none shrink-0 shadow-xs"
+              >
+                <span className="font-mono uppercase">{language}</span>
+              </button>
+
               {/* Notification Button */}
               <div className="relative">
                 <button
@@ -302,12 +314,18 @@ export default function Header({
                   onClick={() => setActiveTab("orders")}
                   className="flex items-center space-x-2 bg-indigo-50 hover:bg-indigo-100 border border-indigo-100 py-1.5 px-3.5 rounded-xl cursor-pointer transition-all active:scale-95"
                 >
-                  <img 
-                     src={currentUser.avatarUrl || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=200&auto=format&fit=crop"} 
-                     alt="" 
-                     className="h-6 w-6 rounded-full object-cover border border-indigo-200" 
-                     referrerPolicy="no-referrer"
-                  />
+                  {currentUser.avatarUrl ? (
+                    <img 
+                       src={currentUser.avatarUrl} 
+                       alt="" 
+                       className="h-6 w-6 rounded-full object-cover border border-indigo-200" 
+                       referrerPolicy="no-referrer"
+                    />
+                  ) : (
+                    <div className="h-6 w-6 rounded-full bg-gradient-to-tr from-indigo-500 to-indigo-650 text-white font-extrabold text-[10px] flex items-center justify-center border border-indigo-200 uppercase font-display select-none shrink-0 shadow-inner">
+                      {currentUser.name.charAt(0)}
+                    </div>
+                  )}
                   <span className="hidden lg:inline-block text-xs font-bold text-indigo-700 truncate max-w-[100px]" title={currentUser.name}>
                     {currentUser.name.split(' ')[0]}
                   </span>

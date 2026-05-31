@@ -4,6 +4,7 @@
  */
 
 import React, { useState } from "react";
+import { useLanguageStore } from "../store/languageStore";
 import { 
   Search, 
   Sparkles, 
@@ -140,7 +141,7 @@ export default function HomeSection({
     heroSubtitle: "Van schilderwerk binnen tot zware industriebouw buiten; HoogwerkerHub levert direct de juiste machines op locatie. Met of zonder vakbekwame chauffeur, gecontroleerd door onze slimme AI-assistent.",
     menuHomeLabel: "Home",
     menuCatalogLabel: "Catalogus",
-    menuAdvisorLabel: "Vloot Adviseur AI",
+    menuAdvisorLabel: "Adviseur",
     menuOrdersLabel: "Mijn Sessies"
   },
   customCategories = [
@@ -153,6 +154,9 @@ export default function HomeSection({
 }: HomeSectionProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCat, setSelectedCat] = useState("all");
+  const language = useLanguageStore((state) => state.language);
+  const t = useLanguageStore((state) => state.t);
+
 
   const categories = customCategories.map((c, idx) => {
     const iconColors = ["text-blue-400", "text-indigo-400", "text-rose-400", "text-teal-400", "text-amber-400", "text-emerald-400"];
@@ -165,11 +169,11 @@ export default function HomeSection({
       "from-emerald-600/10 to-teal-600/10 hover:border-emerald-500/40"
     ];
     const defaultImages = [
+      "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=400&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1608220179550-e128cc63979e?q=80&w=400&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1504307651254-35680f356dfd?q=80&w=400&auto=format&fit=crop",
       "https://images.unsplash.com/photo-1541625602330-2277a4c46182?q=80&w=400&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1579684389782-64d84b5e901a?q=80&w=400&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1581094794329-c8112a89af12?q=80&w=400&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?q=80&w=400&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1504307651254-35680f356dfd?q=80&w=400&auto=format&fit=crop"
+      "https://images.unsplash.com/photo-1541888946425-d81bb19240f5?q=80&w=400&auto=format&fit=crop"
     ];
 
     return {
@@ -211,9 +215,9 @@ export default function HomeSection({
               className="inline-flex items-center space-x-2 rounded-full border border-indigo-150 bg-indigo-50/80 px-3.5 py-1.5 text-xs font-semibold text-indigo-700"
             >
               <Sparkles className="h-3.5 w-3.5 text-indigo-600" />
-              <span>{siteConfig.heroTagline}</span>
+              <span>{t("heroTagline")}</span>
             </motion.div>
-
+ 
             {/* Title */}
             <motion.h1 
               initial={{ opacity: 0, y: 20 }}
@@ -221,9 +225,9 @@ export default function HomeSection({
               transition={{ duration: 0.6, delay: 0.1 }}
               className="font-display text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-slate-900 leading-[1.1]"
             >
-              {siteConfig.heroTitle}
+              {t("heroTitle")}
             </motion.h1>
-
+ 
             {/* Subtext */}
             <motion.p 
               initial={{ opacity: 0 }}
@@ -231,9 +235,9 @@ export default function HomeSection({
               transition={{ duration: 0.6, delay: 0.2 }}
               className="text-base sm:text-lg text-slate-600 leading-relaxed max-w-2xl"
             >
-              {siteConfig.heroSubtitle}
+              {t("heroSubtitle")}
             </motion.p>
-
+ 
             {/* FLOTATING KPI BADGES */}
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
@@ -258,7 +262,7 @@ export default function HomeSection({
                 );
               })}
             </motion.div>
-
+ 
             {/* INSTANT SEARCH WIDGET (Hovering glass bar) */}
             <motion.form 
               onSubmit={handleSearchSubmit}
@@ -273,29 +277,29 @@ export default function HomeSection({
                   type="text" 
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Bijv. schilderwerk, 15m werkhoogte, rupsband..." 
+                  placeholder={t("searchPlaceholder")} 
                   className="w-full py-3.5 text-sm bg-transparent outline-none focus:ring-0 text-slate-800 placeholder-slate-400"
                 />
               </div>
-
+ 
               <select 
                 value={selectedCat}
                 onChange={(e) => setSelectedCat(e.target.value)}
                 className="px-4 py-3.5 text-xs text-slate-700 font-semibold bg-white rounded-xl border border-slate-200 outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer min-w-[150px]"
               >
-                <option value="all">Alle Categorieën</option>
+                <option value="all">{t("filterAll")}</option>
                 <option value="schaarlift">Schaarliften</option>
                 <option value="knikarm">Knikarmhoogwerkers</option>
                 <option value="telescoop">Telescoophoogwerkers</option>
                 <option value="auto">Autohoogwerkers</option>
                 <option value="spin">Spinhoogwerkers</option>
               </select>
-
+ 
               <button 
                 type="submit"
-                className="flex items-center justify-center space-x-1.5 font-bold hover:opacity-90 active:scale-97 bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-6 py-3.5 rounded-xl transition-all font-display"
+                className="flex items-center justify-center space-x-1.5 font-bold hover:opacity-90 active:scale-97 bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-6 py-3.5 rounded-xl transition-all font-display border-none cursor-pointer"
               >
-                <span>Huren</span>
+                <span>{t("searchButton")}</span>
                 <ArrowRight className="h-4 w-4" />
               </button>
             </motion.form>
@@ -313,7 +317,7 @@ export default function HomeSection({
               <div className="absolute -inset-1 rounded-3xl bg-gradient-to-tr from-indigo-500/20 via-blue-500/10 to-teal-500/5 blur-md -z-10" />
 
               <img 
-                src="https://images.unsplash.com/photo-1541625602330-2277a4c46182?q=80&w=700&auto=format&fit=crop" 
+                src="https://images.unsplash.com/photo-1504307651254-35680f356dfd?q=80&w=700&auto=format&fit=crop" 
                 alt="HoogwerkerHub Premium Equipment" 
                 className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-700 brightness-95 saturate-110"
                 referrerPolicy="no-referrer"

@@ -3,17 +3,33 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect, useCallback } from "react";
-import { Sparkles, Bell, Info, CheckCircle, AlertTriangle, X, MapPin, Phone, Mail, Clock, MessageSquare } from "lucide-react";
+import React, { useState, useEffect, useCallback, lazy, Suspense } from "react";
+import { Sparkles, Bell, Info, CheckCircle, AlertTriangle, X, MapPin, Phone, Mail, Clock, MessageSquare, Loader2, Lock } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import Header from "./components/Header";
-import HomeSection from "./components/HomeSection";
-import CatalogSection from "./components/CatalogSection";
-import AdvisorSection from "./components/AdvisorSection";
-import BookingSection from "./components/BookingSection";
-import AdminSection from "./components/AdminSection";
-import MyOrdersSection from "./components/MyOrdersSection";
 import { Machine, Order, AppNotification, ChatMessage, UserProfile, CartItem } from "./types";
+import { useAuthStore } from "./store/authStore";
+import { useAppStore } from "./store/appStore";
+
+
+// Dynamic Code Splitting (React.lazy)
+const HomeSection = lazy(() => import("./components/HomeSection"));
+const CatalogSection = lazy(() => import("./components/CatalogSection"));
+const AdvisorSection = lazy(() => import("./components/AdvisorSection"));
+const BookingSection = lazy(() => import("./components/BookingSection"));
+const AdminSection = lazy(() => import("./components/AdminSection"));
+const MyOrdersSection = lazy(() => import("./components/MyOrdersSection"));
+
+// Premium Loading Indicator Component
+function LoadingSpinner() {
+  return (
+    <div className="min-h-[60vh] flex flex-col items-center justify-center space-y-4">
+      <Loader2 className="h-10 w-10 text-indigo-650 text-indigo-600 animate-spin" />
+      <span className="text-xs text-slate-500 font-mono tracking-wider uppercase font-semibold">Laden van premium module...</span>
+    </div>
+  );
+}
 
 const mockUserProfiles: UserProfile[] = [
   {
@@ -73,36 +89,56 @@ const mockUserProfiles: UserProfile[] = [
 ];
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<string>("home");
-  const [machines, setMachines] = useState<Machine[]>([]);
-  const [orders, setOrders] = useState<Order[]>([]);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const activeTab = location.pathname === "/" ? "home" : location.pathname.substring(1);
+  const setActiveTab = (tab: string) => {
+    navigate(tab === "home" ? "/" : `/${tab}`);
+  };
+
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [selectedMachine, setSelectedMachine] = useState<Machine | null>(null);
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [isAdminMode, setIsAdminMode] = useState<boolean>(false);
-
-  // Manageable storefront elements
-  const [siteConfig, setSiteConfig] = useState({
-    siteName: "HoogwerkerHub",
-    heroTagline: "Smart Verhuur van Hoogwerkers in Nederland",
-    heroTitle: "Uitzonderlijk bereik. Volledig ontzorgd.",
-    heroSubtitle: "Van schilderwerk binnen tot zware industriebouw buiten; HoogwerkerHub levert direct de juiste machines op locatie. Met of zonder vakbekwame chauffeur, gecontroleerd door onze slimme AI-assistent.",
-    menuHomeLabel: "Home",
-    menuCatalogLabel: "Catalogus",
-    menuAdvisorLabel: "Vloot Adviseur",
-    menuOrdersLabel: "Mijn Account",
-    menuAdminLabel: "Portaal"
+  const [isAdminMode, setIsAdminModeState] = useState<boolean>(() => {
+    return localStorage.getItem("hwh_admin_mode") === "true";
   });
 
-  const [customCategories, setCustomCategories] = useState([
-    { id: "schaarlift", label: "Schaarlift", listLabel: "Schaarliften", desc: "Ideaal voor loodsen, schilder- en rechtlijnig montagewerk.", heights: "8m - 14m", price: "v.a. €120/dag" },
-    { id: "knikarm", label: "Knikarmhoogwerker", listLabel: "Knikarmhoogwerkers", desc: "Uiterst flexibel om over vaste obstakels heen te reiken.", heights: "12m - 20m", price: "v.a. €210/dag" },
-    { id: "telescoop", label: "Telescoophoogwerker", listLabel: "Telescoophoogwerkers", desc: "Gigantisch bereik op ruw bouwterrein.", heights: "16m - 40m", price: "v.a. €340/dag" },
-    { id: "auto", label: "Autohoogwerker", listLabel: "Autohoogwerkers", desc: "Zelf rijden met B-rijbewijs. Snel op locatie operationeel.", heights: "18m - 24m", price: "v.a. €250/dag" },
-    { id: "spin", label: "Spinhoogwerker", listLabel: "Spinhoogwerkers", desc: "Kruipt door binnendeuren en over zachte grasvelden.", heights: "12m - 22m", price: "v.a. €180/dag" },
-    { id: "klussensets", label: "Kluspakket", listLabel: "Kluspakketten", desc: "Kant-en-klaar editie voor schilder, zonnepaneel of snoeiwerk.", heights: "10m - 26m", price: "v.a. €110/dag" },
-    { id: "aanhanger", label: "Aanhangerhoogwerker", listLabel: "Aanhangerhoogwerkers", desc: "Eenvoudig te transporteren en direct achter de auto te koppelen.", heights: "12m - 17m", price: "v.a. €95/dag" }
-  ]);
+  const setIsAdminMode = useCallback((val: boolean) => {
+    localStorage.setItem("hwh_admin_mode", String(val));
+    setIsAdminModeState(val);
+  }, []);
+
+  const checkAuth = useAuthStore((state) => state.checkAuth);
+  const storeUser = useAuthStore((state) => state.user);
+
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
+
+  useEffect(() => {
+    if (storeUser) {
+      if (storeUser.role === "admin") {
+        setCurrentUser(null);
+        if (localStorage.getItem("hwh_admin_mode") === null) {
+          setIsAdminMode(true);
+        }
+      } else {
+        setCurrentUser({
+          id: storeUser.id,
+          name: storeUser.name,
+          email: storeUser.email,
+          phone: storeUser.phone || "",
+          profileType: storeUser.profile || "Particulier",
+          companyName: storeUser.profile !== "Particulier" ? "Firma " + storeUser.name : undefined,
+          pastRentalsCount: 0
+        });
+        setIsAdminMode(false);
+      }
+    } else {
+      setCurrentUser(null);
+      setIsAdminMode(false);
+    }
+  }, [storeUser, setIsAdminMode]);
 
   // System and Activity Logs
   const [systemLogs, setSystemLogs] = useState<any[]>([
@@ -136,6 +172,32 @@ export default function App() {
   const handleClearSystemLogs = useCallback(() => {
     setSystemLogs([]);
   }, []);
+
+  // Auto-log page visits for visitors live activity tracking
+  useEffect(() => {
+    const tabName = location.pathname === "/" ? "home" : location.pathname.substring(1);
+    // Avoid double logging on initial mount or empty paths
+    if (tabName !== "admin" && tabName !== "logs") {
+      handleAddSystemLog(
+        "system",
+        currentUser ? currentUser.name : "Gast",
+        `Navigeert naar pagina/sectie: "${tabName.toUpperCase()}"`
+      );
+    }
+  }, [location.pathname, currentUser, handleAddSystemLog]);
+
+  // Bridge setters to Zustand useAppStore
+  const setSiteConfig = (updateFn: any) => {
+    const current = useAppStore.getState().siteConfig;
+    const next = typeof updateFn === "function" ? updateFn(current) : updateFn;
+    useAppStore.getState().updateSiteConfig(next);
+  };
+
+  const setCustomCategories = (updateFn: any) => {
+    const current = useAppStore.getState().customCategories;
+    const next = typeof updateFn === "function" ? updateFn(current) : updateFn;
+    useAppStore.getState().updateCategories(next);
+  };
   
   // Highlighting state: keeps track of machine IDs suggested by the AI advisor
   const [aiRecommendedMachineIds, setAiRecommendedMachineIds] = useState<string[]>([]);
@@ -163,6 +225,33 @@ export default function App() {
     message: string;
     type: "info" | "success" | "warning";
   } | null>(null);
+
+  // PWA Install Prompt State
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [showInstallBanner, setShowInstallBanner] = useState<boolean>(false);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setShowInstallBanner(true);
+    };
+
+    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    console.log(`User response to install prompt: ${outcome}`);
+    setDeferredPrompt(null);
+    setShowInstallBanner(false);
+  };
 
   // Triggering notifications dynamically
   const triggerNotification = useCallback((title: string, message: string, type: "info" | "success" | "warning") => {
@@ -207,6 +296,7 @@ export default function App() {
     if (currentUser) {
       handleAddSystemLog("logout", currentUser.name, "Klant heeft de sessie handmatig beëindigd.");
     }
+    useAuthStore.getState().logout();
     setCurrentUser(null);
     triggerNotification("Afgemeld", "U bent nu veilig afgemeld uit uw account.", "info");
   }, [currentUser, handleAddSystemLog, triggerNotification]);
@@ -221,60 +311,30 @@ export default function App() {
     }
   ]);
 
+  const fetchAllData = useAppStore((state) => state.fetchAllData);
+  const machines = useAppStore((state) => state.machines);
+  const orders = useAppStore((state) => state.orders);
+  const customCategories = useAppStore((state) => state.customCategories);
+  const siteConfig = useAppStore((state) => state.siteConfig);
+  const cartItems = useAppStore((state) => state.cartItems);
+  
+  const addToCart = useAppStore((state) => state.addToCart);
+  const removeFromCart = useAppStore((state) => state.removeFromCart);
+  const updateCartItemDates = useAppStore((state) => state.updateCartItemDates);
+  const clearCart = useAppStore((state) => state.clearCart);
+
+  const addMachine = useAppStore((state) => state.addMachine);
+  const updateOrderStatus = useAppStore((state) => state.updateOrderStatus);
+
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem("hwh_token");
+    return token ? { "Authorization": `Bearer ${token}` } : {};
+  };
+
   // Initial Rest sync with developer Express APIs
   useEffect(() => {
-    // Fetch site config
-    fetch("/api/site-config")
-      .then((res) => {
-        if (!res.ok) throw new Error("Site config fetch failed");
-        return res.json();
-      })
-      .then((data) => {
-        if (data) setSiteConfig(data);
-      })
-      .catch((err) => {
-        console.warn("Using default client-side storefront branding config...");
-      });
-
-    // Fetch custom categories
-    fetch("/api/categories")
-      .then((res) => {
-        if (!res.ok) throw new Error("Categories fetch failed");
-        return res.json();
-      })
-      .then((data) => {
-        if (data && Array.isArray(data)) setCustomCategories(data);
-      })
-      .catch((err) => {
-        console.warn("Using default client-side categorizations...");
-      });
-
-    // Fetch machines
-    fetch("/api/machines")
-      .then((res) => {
-        if (!res.ok) throw new Error("Catalog fetch failed");
-        return res.json();
-      })
-      .then((data) => {
-        setMachines(data);
-      })
-      .catch((err) => {
-        console.warn("REST API client-fallback loaded due to development build pipeline connection...");
-      });
-
-    // Fetch orders
-    fetch("/api/orders")
-      .then((res) => {
-        if (!res.ok) throw new Error("Order fetch failed");
-        return res.json();
-      })
-      .then((data) => {
-        setOrders(data);
-      })
-      .catch((err) => {
-        console.warn("In-memory fallback orders initialized successfully...");
-      });
-  }, []);
+    fetchAllData();
+  }, [fetchAllData]);
 
   // Triggered when search is executed from landing hero
   const handleLandingPageSearch = (query: string, category: string) => {
@@ -290,23 +350,16 @@ export default function App() {
   // Action: Select machine for booking & support cart
   const handleSelectMachineForBooking = (machine: Machine) => {
     setSelectedMachine(machine);
-    
-    // Add to cart if not already present
-    setCartItems((prev) => {
-      const exists = prev.some((item) => item.machine.id === machine.id);
-      if (exists) return prev;
-      return [
-        ...prev,
-        {
-          id: `cart-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-          machine,
-          startDate: "2026-06-05",
-          endDate: "2026-06-08"
-        }
-      ];
-    });
-
+    addToCart(machine, "2026-06-05", "2026-06-08");
     setActiveTab("booking");
+    
+    // Live visitor logging
+    handleAddSystemLog(
+      "booking", 
+      currentUser ? currentUser.name : "Gast", 
+      `Voegt machine toe aan winkelwagen: "${machine.name}" (Tarief: €${machine.pricePerDay}/dag)`
+    );
+
     triggerNotification(
       "Machine geselecteerd",
       `"${machine.name}" is toegevoegd aan uw boekinglijst.`,
@@ -315,7 +368,16 @@ export default function App() {
   };
 
   const handleRemoveCartItem = (id: string) => {
-    setCartItems((prev) => prev.filter((item) => item.id !== id));
+    const item = cartItems.find(c => c.id === id);
+    removeFromCart(id);
+    
+    // Live visitor logging
+    handleAddSystemLog(
+      "booking",
+      currentUser ? currentUser.name : "Gast",
+      `Verwijdert machine uit winkelwagen: "${item ? item.machine.name : 'Hoogwerker'}"`
+    );
+
     triggerNotification(
       "Machine Verwijderd",
       "De gekozen machine is verwijderd uit uw selectie.",
@@ -324,13 +386,18 @@ export default function App() {
   };
 
   const handleUpdateCartItemDates = (id: string, start: string, end: string) => {
-    setCartItems((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, startDate: start, endDate: end } : item))
+    updateCartItemDates(id, start, end);
+    const item = cartItems.find(c => c.id === id);
+    handleAddSystemLog(
+      "booking",
+      currentUser ? currentUser.name : "Gast",
+      `Wijzigt huurperiode voor "${item ? item.machine.name : 'hoogwerker'}": ${start} t/m ${end}`
     );
   };
 
   const handleClearCart = () => {
-    setCartItems([]);
+    clearCart();
+    handleAddSystemLog("booking", currentUser ? currentUser.name : "Gast", "Winkelwagen volledig leeggemaakt.");
   };
 
   // Action: Submit reservation checkout
@@ -338,7 +405,10 @@ export default function App() {
     try {
       const response = await fetch("/api/orders", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          ...getAuthHeaders()
+        },
         body: JSON.stringify(orderData)
       });
 
@@ -347,7 +417,7 @@ export default function App() {
       }
 
       const freshOrder: Order = await response.json();
-      setOrders((prev) => [freshOrder, ...prev]);
+      useAppStore.setState((state) => ({ orders: [freshOrder, ...state.orders] }));
 
       triggerNotification(
         "Betaling Geverifieerd",
@@ -358,106 +428,34 @@ export default function App() {
       return freshOrder;
     } catch (err) {
       console.error(err);
-      
-      // Fallback implementation for maximum safety
-      const simulatedOrder: Order = {
-        id: `HWH-${Math.floor(1000 + Math.random() * 9000)}`,
-        machineId: orderData.machineId || "demo",
-        machineName: orderData.machineName || "Demomachine",
-        machinePrice: Number(orderData.machinePrice || 100),
-        startDate: orderData.startDate || "2026-06-05",
-        endDate: orderData.endDate || "2026-06-08",
-        rentalDays: Number(orderData.rentalDays || 3),
-        deliveryType: orderData.deliveryType || "self_pickup",
-        deliveryAddress: orderData.deliveryAddress || "",
-        customerName: orderData.customerName || "Jan Demo",
-        customerEmail: orderData.customerEmail || "demo@demo.nl",
-        customerPhone: orderData.customerPhone || "06",
-        customerProfile: orderData.customerProfile || "Particulier",
-        subtotal: Number(orderData.subtotal || 0),
-        transportCost: Number(orderData.transportCost || 0),
-        driverCost: Number(orderData.driverCost || 0),
-        vatAmount: Number(orderData.vatAmount || 0),
-        totalAmount: Number(orderData.totalAmount || 0),
-        status: "In behandeling",
-        createdAt: new Date().toISOString()
-      };
-
-      setOrders((prev) => [simulatedOrder, ...prev]);
-      triggerNotification(
-        "Gereserveerd (Local Offline Mode)",
-        `Uw reservation ${simulatedOrder.id} is offline opgeslagen in uw lokale sessie.`,
-        "success"
-      );
-      return simulatedOrder;
+      return null;
     }
   };
 
   // Action: Add machinery from Admin portal
   const handleAddMachine = async (machData: Partial<Machine>): Promise<boolean> => {
-    try {
-      const response = await fetch("/api/machines", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(machData)
-      });
-
-      if (!response.ok) throw new Error("Machinery creation failed");
-
-      const created: Machine = await response.json();
-      setMachines((prev) => [...prev, created]);
-
+    const success = await addMachine(machData);
+    if (success) {
       triggerNotification(
         "Vloot Uitgebreid",
-        `Model "${created.name}" is succesvol toegevoegd aan de actieve verhuurbasis.`,
-        "success"
-      );
-      return true;
-    } catch (err) {
-      console.error(err);
-      
-      // Fallback
-      const fallbackMach: Machine = {
-        id: `custom-${Date.now()}`,
-        name: machData.name || "Custom Unit Pro",
-        category: machData.category || "schaarlift",
-        categoryLabel: (machData.category || "schaarlift").toUpperCase(),
-        height: Number(machData.height || 12),
-        reach: Number(machData.reach || 0),
-        weight: Number(machData.weight || 2000),
-        pricePerDay: Number(machData.pricePerDay || 100),
-        powerType: machData.powerType || "Elektrisch",
-        imageUrl: "https://images.unsplash.com/photo-1541625602330-2277a4c46182?q=80&w=400&auto=format&fit=crop",
-        imageAlt: "Custom Unit",
-        description: machData.description || "Toegevoegd via handmatige admin procedure.",
-        suitableFor: machData.suitableFor || ["Algemeen"]
-      };
-
-      setMachines((prev) => [...prev, fallbackMach]);
-      triggerNotification(
-        "Vloot Toegevoegd (Offline)",
-        `Model "${fallbackMach.name}" is lokaal toegevoegd aan uw vloot.`,
+        `Model "${machData.name}" is succesvol toegevoegd aan de actieve verhuurbasis.`,
         "success"
       );
       return true;
     }
+    return false;
   };
 
   // Action: Progress order status in Admin table
-  const handleUpdateOrderStatus = (orderId: string, nextStatus: any) => {
-    setOrders((prev) =>
-      prev.map((o) => {
-        if (o.id === orderId) {
-          triggerNotification(
-            "Contract Geüpdatet",
-            `Aanvraag ${o.id} is veranderd naar status: "${nextStatus}".`,
-            "info"
-          );
-          return { ...o, status: nextStatus };
-        }
-        return o;
-      })
-    );
+  const handleUpdateOrderStatus = async (orderId: string, nextStatus: any) => {
+    const success = await updateOrderStatus(orderId, nextStatus);
+    if (success) {
+      triggerNotification(
+        "Contract Geüpdatet",
+        `Aanvraag ${orderId} is veranderd naar status: "${nextStatus}".`,
+        "info"
+      );
+    }
   };
 
   // AI Advisor recommendations callback: Highlights items in Catalog
@@ -491,146 +489,136 @@ export default function App() {
         cartItems={cartItems}
       />
 
-      {/* Top Banner indicating preview condition */}
-      <div className="bg-gradient-to-r from-slate-100/80 via-white to-slate-100/80 border-b border-slate-200/80 py-2 px-4 text-center text-[11px] text-slate-600 flex items-center justify-center space-x-1 font-mono">
-        <Sparkles className="h-3.5 w-3.5 text-indigo-600" />
-        <span>Ontwikkeld als premium high-fidelity mockup conform Stripe / Apple / Linear standaarden.</span>
-      </div>
+
 
       {/* Primary Workspace Sections */}
       <main className="flex-grow">
-        <AnimatePresence mode="wait">
-          {activeTab === "home" && (
-            <motion.div
-              key="home"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              <HomeSection 
-                onSearch={handleLandingPageSearch} 
-                setActiveTab={setActiveTab} 
-                siteConfig={siteConfig}
-                customCategories={customCategories}
-              />
-            </motion.div>
-          )}
+        <Suspense fallback={<LoadingSpinner />}>
+          <AnimatePresence mode="wait">
+            <Routes location={location}>
+              <Route path="/" element={
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <HomeSection 
+                    onSearch={handleLandingPageSearch} 
+                    setActiveTab={setActiveTab} 
+                    siteConfig={siteConfig}
+                    customCategories={customCategories}
+                  />
+                </motion.div>
+              } />
 
-          {activeTab === "catalog" && (
-            <motion.div
-              key="catalog"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              <CatalogSection 
-                machines={machines}
-                searchQuery={searchQuery}
-                setSearchQuery={setSearchQuery}
-                selectedCategory={selectedCategory}
-                setSelectedCategory={setSelectedCategory}
-                onSelectMachineForBooking={handleSelectMachineForBooking}
-                aiRecommendedMachineIds={aiRecommendedMachineIds}
-              />
-            </motion.div>
-          )}
+              <Route path="/catalog" element={
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <CatalogSection 
+                    machines={machines}
+                    customCategories={customCategories}
+                    searchQuery={searchQuery}
+                    setSearchQuery={setSearchQuery}
+                    selectedCategory={selectedCategory}
+                    setSelectedCategory={setSelectedCategory}
+                    onSelectMachineForBooking={handleSelectMachineForBooking}
+                    aiRecommendedMachineIds={aiRecommendedMachineIds}
+                    onAddSystemLog={handleAddSystemLog}
+                    currentUser={currentUser}
+                  />
+                </motion.div>
+              } />
 
-          {activeTab === "advisor" && (
-            <motion.div
-              key="advisor"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              <AdvisorSection 
-                machines={machines}
-                messages={chatMessages}
-                setMessages={setChatMessages}
-                onRecommendMachines={handleRecommendMachinesFromAdvisor}
-                onSelectMachineForBooking={handleSelectMachineForBooking}
-                currentUser={currentUser}
-              />
-            </motion.div>
-          )}
+              <Route path="/advisor" element={
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <AdvisorSection 
+                    machines={machines}
+                    messages={chatMessages}
+                    setMessages={setChatMessages}
+                    onRecommendMachines={handleRecommendMachinesFromAdvisor}
+                    onSelectMachineForBooking={handleSelectMachineForBooking}
+                    currentUser={currentUser}
+                    onAddSystemLog={handleAddSystemLog}
+                  />
+                </motion.div>
+              } />
 
-          {activeTab === "booking" && (
-            <motion.div
-              key="booking"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              <BookingSection 
-                selectedMachine={selectedMachine}
-                onCreateReservation={handleCreateReservation}
-                setActiveTab={setActiveTab}
-                machines={machines}
-                onSelectMachine={setSelectedMachine}
-                currentUser={currentUser}
-                cartItems={cartItems}
-                onRemoveCartItem={handleRemoveCartItem}
-                onUpdateCartItemDates={handleUpdateCartItemDates}
-                onClearCart={handleClearCart}
-              />
-            </motion.div>
-          )}
+              <Route path="/booking" element={
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <BookingSection 
+                    selectedMachine={selectedMachine}
+                    onCreateReservation={handleCreateReservation}
+                    setActiveTab={setActiveTab}
+                    machines={machines}
+                    onSelectMachine={setSelectedMachine}
+                    currentUser={currentUser}
+                    cartItems={cartItems}
+                    onRemoveCartItem={handleRemoveCartItem}
+                    onUpdateCartItemDates={handleUpdateCartItemDates}
+                    onClearCart={handleClearCart}
+                  />
+                </motion.div>
+              } />
 
-          {activeTab === "orders" && (
-            <motion.div
-              key="orders"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              <MyOrdersSection 
-                orders={orders} 
-                onTriggerNotification={triggerNotification} 
-                currentUser={currentUser}
-                setCurrentUser={setCurrentUser}
-                userProfiles={mockUserProfiles}
-                onUpdateOrderStatus={handleUpdateOrderStatus}
-                onAddSystemLog={handleAddSystemLog}
-              />
-            </motion.div>
-          )}
+              <Route path="/orders" element={
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <MyOrdersSection 
+                    orders={orders} 
+                    onTriggerNotification={triggerNotification} 
+                    currentUser={currentUser}
+                    setCurrentUser={setCurrentUser}
+                    userProfiles={mockUserProfiles}
+                    onUpdateOrderStatus={handleUpdateOrderStatus}
+                    onAddSystemLog={handleAddSystemLog}
+                  />
+                </motion.div>
+              } />
 
-          {activeTab === "admin" && (
-            <motion.div
-              key="admin"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              <AdminSection 
-                machines={machines}
-                orders={orders}
-                onAddMachine={handleAddMachine}
-                onUpdateOrderStatus={handleUpdateOrderStatus}
-                isAdminMode={isAdminMode}
-                setIsAdminMode={setIsAdminMode}
-                userProfiles={mockUserProfiles}
-                systemLogs={systemLogs}
-                onAddSystemLog={handleAddSystemLog}
-                onClearSystemLogs={handleClearSystemLogs}
-                siteConfig={siteConfig}
-                setSiteConfig={setSiteConfig as any}
-                customCategories={customCategories}
-                setCustomCategories={setCustomCategories}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
+              <Route path="/admin" element={
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <AdminSection 
+                    isAdminMode={isAdminMode}
+                    setIsAdminMode={setIsAdminMode}
+                    userProfiles={mockUserProfiles}
+                    systemLogs={systemLogs}
+                    onAddSystemLog={handleAddSystemLog}
+                    onClearSystemLogs={handleClearSystemLogs}
+                  />
+                </motion.div>
+              } />
+            </Routes>
+          </AnimatePresence>
+        </Suspense>
       </main>
 
       {/* Bottom Footer block */}
-      <footer className="border-t border-slate-200 bg-white pt-14 pb-10 text-xs text-slate-600 font-normal shadow-sm">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-10">
+      <footer className="border-t border-slate-150 bg-slate-50/50 pt-16 pb-12 text-[12.5px] text-slate-500 font-normal shadow-sm">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-12">
           
           {/* Main 4-Column Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-10 text-left animate-fade-in">
@@ -639,16 +627,16 @@ export default function App() {
             <div className="space-y-4">
               <div className="flex items-center space-x-2">
                 <span className="font-display text-lg font-black tracking-tight text-slate-900">{siteConfig.siteName}</span>
-                <span className="text-[10px] text-teal-700 font-mono font-bold bg-teal-50 px-1.5 py-0.5 rounded border border-teal-150">B.V.</span>
+                <span className="text-[9.5px] text-indigo-700 font-semibold bg-indigo-50/70 px-2 py-0.5 rounded-full border border-indigo-100/50">B.V.</span>
               </div>
-              <p className="text-slate-500 text-xs leading-relaxed max-w-xs">
+              <p className="text-slate-500 text-[12px] leading-relaxed max-w-xs">
                 Premium hoogwerker verhuur in heel Nederland. Onze slimme AI-assistent helpt u direct bij het selecteren van de juiste machines op locatie.
               </p>
               <div className="pt-2 flex flex-wrap gap-2">
-                <span className="bg-amber-50 border border-amber-200 text-amber-800 text-[10px] uppercase font-mono font-bold px-2 py-0.5 rounded">
+                <span className="bg-amber-50/80 border border-amber-200/50 text-amber-800 text-[9.5px] uppercase font-semibold tracking-wider px-2.5 py-0.5 rounded-full">
                   BMWT-Lid
                 </span>
-                <span className="bg-indigo-50 border border-indigo-200 text-indigo-700 text-[10px] uppercase font-mono font-bold px-2 py-0.5 rounded">
+                <span className="bg-indigo-50/80 border border-indigo-200/50 text-indigo-800 text-[9.5px] uppercase font-semibold tracking-wider px-2.5 py-0.5 rounded-full">
                   Cat. 1-3B Co-Verzekerd
                 </span>
               </div>
@@ -656,29 +644,29 @@ export default function App() {
 
             {/* Column 2: Direct Contact details */}
             <div className="space-y-4">
-              <h4 className="text-[10px] font-mono text-indigo-700 uppercase tracking-wider font-extrabold pb-1 border-b border-slate-100">
+              <h4 className="font-display font-semibold tracking-wider text-[11px] uppercase text-slate-800 pb-1.5 border-b border-slate-100/80">
                 Direct Contact
               </h4>
-              <div className="space-y-2.5">
+              <div className="space-y-3">
                 <a 
                   href="tel:+31172456789" 
-                  className="flex items-center space-x-2.5 text-slate-600 hover:text-indigo-600 transition-colors group cursor-pointer"
+                  className="flex items-center space-x-2.5 text-slate-650 hover:text-indigo-600 transition-colors group cursor-pointer"
                 >
-                  <Phone className="h-4 w-4 text-teal-600 shrink-0 group-hover:scale-110 transition-transform" />
-                  <span className="font-mono font-bold text-slate-850 text-[12.5px]">+31 (0)172 456 789</span>
+                  <Phone className="h-4 w-4 text-slate-400 group-hover:text-indigo-650 shrink-0 group-hover:scale-110 transition-all duration-200" />
+                  <span className="font-sans font-medium text-slate-750 text-[13px] tracking-tight">+31 (0)172 456 789</span>
                 </a>
                 <a 
                   href="mailto:support@hoogwerkerhub.nl" 
-                  className="flex items-center space-x-2.5 text-slate-600 hover:text-indigo-600 transition-colors group cursor-pointer"
+                  className="flex items-center space-x-2.5 text-slate-650 hover:text-indigo-600 transition-colors group cursor-pointer"
                 >
-                  <Mail className="h-4 w-4 text-indigo-600 shrink-0 group-hover:scale-110 transition-transform" />
-                  <span className="font-mono break-all text-slate-700 text-[11.5px]">support@hoogwerkerhub.nl</span>
+                  <Mail className="h-4 w-4 text-slate-400 group-hover:text-indigo-650 shrink-0 group-hover:scale-110 transition-all duration-200" />
+                  <span className="font-sans font-medium break-all text-slate-700 text-[12.5px] tracking-tight">support@hoogwerkerhub.nl</span>
                 </a>
                 <div className="flex items-start space-x-2.5 text-slate-600 pt-1">
-                  <MapPin className="h-4.5 w-4.5 text-rose-500 shrink-0 mt-0.5" />
+                  <MapPin className="h-4.5 w-4.5 text-slate-400 shrink-0 mt-0.5" />
                   <div>
-                    <span className="font-semibold text-slate-850 block">Hoofdkantoor Hub</span>
-                    <span className="text-[11px] leading-tight text-slate-500">Edisonweg 14, 2408 AB<br />Alphen aan den Rijn</span>
+                    <span className="font-medium text-slate-800 text-[13px] block">Hoofdkantoor Hub</span>
+                    <span className="text-[12px] leading-relaxed text-slate-500 block mt-0.5">Edisonweg 14, 2408 AB<br />Alphen aan den Rijn</span>
                   </div>
                 </div>
               </div>
@@ -686,16 +674,16 @@ export default function App() {
 
             {/* Column 3: Logistics & Working Hours */}
             <div className="space-y-4">
-              <h4 className="text-[10px] font-mono text-indigo-700 uppercase tracking-wider font-extrabold pb-1 border-b border-slate-100">
+              <h4 className="font-display font-semibold tracking-wider text-[11px] uppercase text-slate-800 pb-1.5 border-b border-slate-100/80">
                 Logistiek & Openingstijden
               </h4>
               <div className="space-y-3">
                 <div className="flex items-start space-x-2.5">
-                  <Clock className="h-4.5 w-4.5 text-teal-650 shrink-0 mt-0.5" />
+                  <Clock className="h-4.5 w-4.5 text-slate-400 shrink-0 mt-0.5" />
                   <div>
-                    <span className="font-semibold text-slate-800 block">Maandag t/m Zaterdag</span>
-                    <span className="font-mono text-teal-700 font-bold">07:00 – 18:00 uur</span>
-                    <p className="text-[10.5px] text-slate-500 mt-1 leading-snug">
+                    <span className="font-medium text-slate-800 text-[13px] block">Maandag t/m Zaterdag</span>
+                    <span className="text-[11.5px] font-semibold text-indigo-650 bg-indigo-50/60 border border-indigo-100/80 rounded px-2 py-0.5 mt-1.5 inline-block">07:00 – 18:00 uur</span>
+                    <p className="text-[12px] text-slate-500 mt-1.5 leading-relaxed">
                       Zondagsgesloten in overeenstemming met BMWT-rustregels voor logistiek transport.
                     </p>
                   </div>
@@ -705,42 +693,43 @@ export default function App() {
 
             {/* Column 4: Quick Navigation & Admin Console */}
             <div className="space-y-4">
-              <h4 className="text-[10px] font-mono text-indigo-700 uppercase tracking-wider font-extrabold pb-1 border-b border-slate-100">
+              <h4 className="font-display font-semibold tracking-wider text-[11px] uppercase text-slate-800 pb-1.5 border-b border-slate-100/80">
                 Snelkoppelingen
               </h4>
               <nav className="flex flex-col space-y-2 text-left">
                 <button 
                   onClick={() => { setActiveTab("home"); window.scrollTo({ top: 0, behavior: "smooth" }); }} 
-                  className="hover:text-indigo-650 text-slate-500 transition-colors cursor-pointer text-left font-semibold"
+                  className="text-[12.5px] font-medium text-slate-650 hover:text-indigo-600 transition-colors cursor-pointer text-left py-0.5"
                 >
                   Home
                 </button>
                 <button 
                   onClick={() => { setActiveTab("catalog"); window.scrollTo({ top: 0, behavior: "smooth" }); }} 
-                  className="hover:text-indigo-650 text-slate-500 transition-colors cursor-pointer text-left font-semibold"
+                  className="text-[12.5px] font-medium text-slate-650 hover:text-indigo-600 transition-colors cursor-pointer text-left py-0.5"
                 >
-                  Catalogus verhuur vloot
+                  Catalog
                 </button>
                 <button 
                   onClick={() => { setActiveTab("advisor"); window.scrollTo({ top: 0, behavior: "smooth" }); }} 
-                  className="hover:text-indigo-650 text-slate-500 transition-colors cursor-pointer text-left font-semibold"
+                  className="text-[12.5px] font-medium text-slate-650 hover:text-indigo-600 transition-colors cursor-pointer text-left py-0.5"
                 >
-                  Vloot Smart Adviseur
+                  Adviseur
                 </button>
                 <button 
                   onClick={() => setShowContactModal(true)} 
-                  className="hover:text-indigo-650 text-slate-500 transition-colors cursor-pointer text-left font-semibold"
+                  className="text-[12.5px] font-medium text-slate-650 hover:text-indigo-600 transition-colors cursor-pointer text-left py-0.5"
                 >
-                  Systeeminformatie & Contact
+                  Contact
                 </button>
                 
-                <div className="pt-2">
+                <div className="pt-2.5">
                   <button 
                     onClick={() => { setActiveTab("admin"); window.scrollTo({ top: 0, behavior: "smooth" }); }} 
-                    className="w-full text-center text-amber-700 hover:text-amber-800 font-mono text-[10.5px] font-black border border-amber-500/20 hover:border-amber-500/30 bg-amber-500/5 px-2.5 py-1.5 rounded-lg transition-all cursor-pointer hover:scale-[1.02]"
+                    className="w-full inline-flex items-center justify-center space-x-1.5 text-[11.5px] font-semibold text-amber-800 hover:text-amber-900 bg-amber-50 hover:bg-amber-100/80 border border-amber-200/50 hover:border-amber-300 px-3 py-2 rounded-lg transition-all cursor-pointer shadow-sm hover:shadow"
                     title="Systeembeheerder Console Log"
                   >
-                    ⚿ Eigenaar Portaal [AdminMode]
+                    <Lock className="h-3.5 w-3.5 text-amber-600 shrink-0" />
+                    <span>Eigenaar Portaal</span>
                   </button>
                 </div>
               </nav>
@@ -749,10 +738,10 @@ export default function App() {
           </div>
 
           {/* Bottom Copyright & KvK Bar */}
-          <div className="flex flex-col sm:flex-row justify-between items-center pt-8 border-t border-slate-200 text-[11px] text-slate-500 gap-3">
-            <span>© 2026 HoogwerkerHub B.V. Alle rechten voorbehouden. KvK Alphen a/d Rijn 8849201. Geregistreerd BMWT-lid.</span>
-            <span className="font-mono text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded border border-slate-200">
-              Veiligheidsklasse Categorie 1-3B Co-Verzekerd.
+          <div className="flex flex-col sm:flex-row justify-between items-center pt-8 border-t border-slate-200 text-[11.5px] text-slate-500 gap-3">
+            <span>© 2026 {siteConfig.siteName} B.V. Alle rechten voorbehouden. KvK Alphen a/d Rijn 8849201. Geregistreerd BMWT-lid.</span>
+            <span className="text-[10px] font-semibold bg-slate-50 text-slate-600 px-2.5 py-0.5 rounded-full border border-slate-200/60">
+              Veiligheidsklasse Categorie 1-3B Co-Verzekerd
             </span>
           </div>
 
@@ -776,15 +765,15 @@ export default function App() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
               transition={{ type: "spring", stiffness: 350, damping: 26 }}
-              className="w-full max-w-xl bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden z-10 space-y-6 text-slate-800"
+              className="w-full max-w-2xl bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden z-10 space-y-6 text-slate-800 animate-fade-in"
             >
               {/* Top ambient header bar */}
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-teal-500 via-indigo-650 to-amber-500" />
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-teal-500 via-indigo-600 to-amber-500" />
               
               <div className="flex justify-between items-start">
                 <div className="space-y-1">
-                  <span className="text-[10px] text-teal-650 font-mono uppercase tracking-wider block font-bold">Regionale Aanwezigheid</span>
-                  <h3 className="font-display text-2xl font-black text-slate-900 tracking-tight">Klantenservice & Hub</h3>
+                  <span className="text-[10px] text-indigo-600 font-display uppercase tracking-wider block font-bold">Klantenservice en Ondersteuning</span>
+                  <h3 className="font-display text-2xl font-black text-slate-905 text-slate-900 tracking-tight">Support & Live Advies Center</h3>
                 </div>
                 <button
                   onClick={() => setShowContactModal(false)}
@@ -794,90 +783,138 @@ export default function App() {
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-                {/* Left pane: Hub Coordinates */}
-                <div className="space-y-5">
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-mono text-slate-400 uppercase tracking-widest block font-bold">Hoofdkantoor & Hub</label>
-                    <div className="flex items-start space-x-2.5">
-                      <MapPin className="h-5 w-5 text-rose-500 shrink-0 mt-0.5" />
-                      <div className="text-xs text-slate-600">
-                        <p className="font-bold text-slate-800">HoogwerkerHub B.V.</p>
-                        <p>Edisonweg 14</p>
-                        <p>2408 AB Alphen aan den Rijn</p>
-                        <p className="text-[11px] text-slate-500 font-mono mt-1">(Zuid-Holland • Routebeheer)</p>
-                      </div>
-                    </div>
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-stretch">
+                {/* Left Pane: Direct WhatsApp & Call channels */}
+                <div className="md:col-span-5 flex flex-col justify-between space-y-5 bg-slate-50 p-4.5 rounded-2xl border border-slate-150">
+                  <div className="space-y-3">
+                    <span className="text-[10px] font-display font-semibold text-indigo-650 uppercase tracking-wider block">Directe Communicatie</span>
+                    <p className="text-[11.5px] leading-relaxed text-slate-500 font-medium">
+                      Heeft u direct antwoord of advies nodig over de inzetbaarheid van een hoogwerker? Start direct een gesprek of bel ons hoofdkantoor.
+                    </p>
                   </div>
-
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-mono text-slate-400 uppercase tracking-widest block font-bold">Openingstijden Logistiek</label>
-                    <div className="flex items-start space-x-2.5">
-                      <Clock className="h-4.5 w-4.5 text-teal-605 text-teal-600 shrink-0" />
-                      <div className="text-xs text-slate-650">
-                        <p className="font-semibold text-slate-800">Maandag t/m Zaterdag</p>
-                        <p className="font-mono text-teal-700 font-bold">07:00 – 18:00 uur</p>
-                        <p className="text-[10px] text-slate-500 mt-1 leading-snug">Zondagen gesloten i.v.m. BMWT-rustregels.</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Right Pane: Direct Action list */}
-                <div className="space-y-3 bg-slate-50 p-4.5 rounded-2xl border border-slate-150">
-                  <span className="text-[10px] font-mono text-indigo-650 uppercase tracking-wider block font-bold">Direct contact opnemen</span>
                   
                   <div className="space-y-2.5">
+                    {/* WhatsApp link (Prominent green card) */}
+                    <a
+                      href="https://wa.me/31645617283"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full flex items-center p-3 rounded-xl bg-emerald-500 text-white hover:bg-emerald-600 transition-all text-xs cursor-pointer gap-3 shadow-sm hover:shadow group"
+                    >
+                      <div className="h-7 w-7 rounded-lg bg-white/20 text-white flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                        <MessageSquare className="h-4 w-4" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <span className="text-[8.5px] text-emerald-100 block font-bold leading-none mb-0.5 uppercase tracking-wide">WhatsApp Expert</span>
+                        <span className="font-bold text-white text-[11.5px] block truncate">Start Live Chat 💬</span>
+                      </div>
+                    </a>
+
                     {/* Phone button */}
                     <a
                       href="tel:+31172456789"
-                      className="w-full flex items-center p-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 hover:border-indigo-305 transition-all text-xs cursor-pointer gap-3 text-slate-705 group"
+                      className="w-full flex items-center p-3 rounded-xl bg-white hover:bg-slate-100/50 border border-slate-205 border-slate-200 transition-all text-xs cursor-pointer gap-3 text-slate-700 group shadow-sm"
                     >
-                      <div className="h-8 w-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                      <div className="h-7 w-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                         <Phone className="h-4 w-4" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <span className="text-[9px] text-slate-400 block font-medium leading-none mb-0.5">Bellen regionaal</span>
-                        <span className="font-mono font-bold text-slate-800 text-[12.5px]">+31 (0)172 456 789</span>
+                        <span className="text-[8.5px] text-slate-400 block font-bold leading-none mb-0.5 uppercase tracking-wide">Bellen Regionaal</span>
+                        <span className="font-sans font-semibold text-slate-800 text-[11.5px]">+31 (0)172 456 789</span>
                       </div>
                     </a>
 
                     {/* Email Link */}
                     <a
                       href="mailto:support@hoogwerkerhub.nl"
-                      className="w-full flex items-center p-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 hover:border-indigo-305 transition-all text-xs cursor-pointer gap-3 text-slate-705 group"
+                      className="w-full flex items-center p-3 rounded-xl bg-white hover:bg-slate-100/50 border border-slate-205 border-slate-200 transition-all text-xs cursor-pointer gap-3 text-slate-700 group shadow-sm"
                     >
-                      <div className="h-8 w-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                      <div className="h-7 w-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                         <Mail className="h-4 w-4" />
                       </div>
-                      <div className="flex-1 min-w-0 font-mono">
-                        <span className="text-[9px] text-slate-400 block font-medium leading-none mb-0.5 font-sans">Stuur e-mail</span>
-                        <span className="text-slate-800 text-[11px] block break-all font-bold">support@hoogwerkerhub.nl</span>
-                      </div>
-                    </a>
-
-                    {/* WhatsApp link */}
-                    <a
-                      href="https://wa.me/31645617283"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-full flex items-center p-3 rounded-xl bg-emerald-500/5 hover:bg-emerald-500/10 border border-emerald-500/20 hover:border-emerald-500/35 transition-all text-xs cursor-pointer gap-3 text-slate-705 group"
-                    >
-                      <div className="h-8 w-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                        <MessageSquare className="h-4 w-4" />
-                      </div>
                       <div className="flex-1 min-w-0">
-                        <span className="text-[9px] text-emerald-600 block font-medium leading-none mb-0.5">WhatsApp Direct</span>
-                        <span className="font-bold text-slate-800 block text-[12px]">Directe Chat Starten 💬</span>
+                        <span className="text-[8.5px] text-slate-400 block font-bold leading-none mb-0.5 uppercase tracking-wide">E-mail Servicedesk</span>
+                        <span className="text-slate-800 text-[11px] block break-all font-semibold truncate">support@hoogwerkerhub.nl</span>
                       </div>
                     </a>
                   </div>
                 </div>
+
+                {/* Right Pane: Support Ticket Form */}
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const formData = new FormData(e.currentTarget);
+                    const name = formData.get("ticketName") as string;
+                    const contact = formData.get("ticketContact") as string;
+                    const topic = formData.get("ticketTopic") as string;
+                    const message = formData.get("ticketMsg") as string;
+                    
+                    if (name && contact && message) {
+                      setShowContactModal(false);
+                      setActiveToast({
+                        id: `support-${Date.now()}`,
+                        title: "Supportvraag Ontvangen",
+                        message: `Beste ${name}, uw vraag over '${topic}' is in behandeling. We nemen binnen 15 minuten contact op!`,
+                        type: "success"
+                      });
+                      handleAddSystemLog("system", name, `Supportvraag [${topic}]: ${message} (Contact: ${contact})`);
+                    }
+                  }}
+                  className="md:col-span-7 flex flex-col justify-between space-y-3"
+                >
+                  <span className="text-[10px] font-display font-semibold text-slate-500 uppercase tracking-wider block">Direct een support-vraag stellen</span>
+                  
+                  <div className="space-y-2">
+                    <input
+                      type="text"
+                      name="ticketName"
+                      required
+                      placeholder="Uw Volledige Naam (of Bedrijfsnaam)"
+                      className="w-full bg-slate-50 border border-slate-200 focus:border-indigo-500 rounded-xl px-3 py-2 text-xs text-slate-800 placeholder-slate-400 outline-none focus:ring-1 focus:ring-indigo-500 font-medium"
+                    />
+
+                    <input
+                      type="text"
+                      name="ticketContact"
+                      required
+                      placeholder="E-mail of telefoonnummer"
+                      className="w-full bg-slate-50 border border-slate-200 focus:border-indigo-500 rounded-xl px-3 py-2 text-xs text-slate-800 placeholder-slate-400 outline-none focus:ring-1 focus:ring-indigo-500 font-medium"
+                    />
+
+                    <select
+                      name="ticketTopic"
+                      className="w-full bg-slate-50 border border-slate-200 focus:border-indigo-500 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:ring-1 focus:ring-indigo-500 font-semibold cursor-pointer"
+                    >
+                      <option value="Klantenservice">Klantenservice & Hulp</option>
+                      <option value="AI Advies">Hulp bij AI Adviseur</option>
+                      <option value="Transport & Logistiek">Transport & Logistieke Vraag</option>
+                      <option value="Vloot & Tarieven">Zakelijke Vloot Aanvraag</option>
+                      <option value="Overig">Overig / Technisch probleem</option>
+                    </select>
+
+                    <textarea
+                      name="ticketMsg"
+                      required
+                      rows={3}
+                      placeholder="Wat is uw specifieke vraag over de inzetbaarheid van ons materieel?"
+                      className="w-full bg-slate-50 border border-slate-200 focus:border-indigo-500 rounded-xl px-3 py-2 text-xs text-slate-800 placeholder-slate-400 outline-none focus:ring-1 focus:ring-indigo-500 resize-none font-sans font-medium"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="w-full py-2.5 bg-gradient-to-r from-teal-600 to-indigo-600 hover:from-teal-700 hover:to-indigo-700 text-white font-semibold text-xs rounded-xl shadow-sm hover:shadow transition-all cursor-pointer font-display shrink-0 border-none flex items-center justify-center space-x-1.5"
+                  >
+                    <CheckCircle className="h-4 w-4 text-emerald-350 shrink-0" />
+                    <span>Verstuur Bericht</span>
+                  </button>
+                </form>
               </div>
 
               {/* Dynamic Callback request section */}
-              <div className="pt-4 border-t border-slate-100 space-y-3">
-                <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest block font-bold">Wilt u dat onze Hub u terugbelt?</span>
+              <div className="pt-3.5 border-t border-slate-100 space-y-3.5">
+                <span className="text-[10px] font-display font-semibold text-slate-550 text-slate-500 uppercase tracking-widest block">Liever direct telefonisch advies? Bel-mij-terug formulier:</span>
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
@@ -886,6 +923,7 @@ export default function App() {
                     if (phone) {
                       setShowContactModal(false);
                       setActiveToast({
+                        id: `callback-${Date.now()}`,
                         title: "Belaanvraag Ontvangen",
                         message: `Onze logistieke adviseur belt u binnen 10 minuten terug op ${phone}. Hartelijk dank!`,
                         type: "success"
@@ -900,11 +938,11 @@ export default function App() {
                     name="callbackPhone"
                     required
                     placeholder="Uw telefoonnummer (bijv. +31 6 ...)"
-                    className="flex-1 bg-slate-50 border border-slate-200 focus:border-indigo-500 rounded-xl px-4 py-2.5 text-xs text-slate-800 placeholder-slate-400 outline-none focus:ring-1 focus:ring-indigo-500"
+                    className="flex-1 bg-slate-50 border border-slate-200 focus:border-indigo-500 rounded-xl px-4 py-2.5 text-xs text-slate-800 placeholder-slate-400 outline-none focus:ring-1 focus:ring-indigo-500 font-medium"
                   />
                   <button
                     type="submit"
-                    className="px-5 py-2.5 bg-gradient-to-r from-teal-600 to-indigo-600 hover:from-teal-700 hover:to-indigo-700 text-white font-semibold text-xs rounded-xl shadow-sm hover:shadow transition-all cursor-pointer font-display shrink-0"
+                    className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs rounded-xl shadow-sm hover:shadow transition-all cursor-pointer font-display shrink-0 border-none"
                   >
                     Bel mij terug
                   </button>
@@ -950,6 +988,42 @@ export default function App() {
             >
               <X className="h-3.5 w-3.5" />
             </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* PWA INSTALL FLOATING BANNER */}
+      <AnimatePresence>
+        {showInstallBanner && (
+          <motion.div
+            initial={{ opacity: 0, y: 100, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 100, scale: 0.9 }}
+            className="fixed bottom-16 md:bottom-6 left-4 z-50 max-w-sm p-4 rounded-3xl bg-slate-900 border border-slate-800 text-white shadow-2xl flex items-start space-x-3.5"
+          >
+            <div className="text-xl p-2 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 shrink-0">
+              🏗️
+            </div>
+            <div className="flex-1 min-w-0">
+              <h4 className="text-xs font-bold font-display leading-tight">HoogwerkerHub installeren?</h4>
+              <p className="text-[10px] text-slate-400 mt-1 leading-snug">
+                Installeer onze PWA voor snellere laadtijden, realtime push-notificaties en offline kalenderinzicht.
+              </p>
+              <div className="flex items-center space-x-2 mt-3">
+                <button
+                  onClick={handleInstallClick}
+                  className="bg-indigo-650 bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-extrabold px-3.5 py-1.5 rounded-xl border-none cursor-pointer shadow-sm active:scale-95 transition-all"
+                >
+                  Nu installeren
+                </button>
+                <button
+                  onClick={() => setShowInstallBanner(false)}
+                  className="bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white text-[10px] font-bold px-3 py-1.5 rounded-xl border-none cursor-pointer transition-all"
+                >
+                  Later
+                </button>
+              </div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

@@ -1,0 +1,40 @@
+version: "3.8"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hoogwerkerhub-app
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - JWT_SECRET=${JWT_SECRET:?Set a strong JWT_SECRET before starting production}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - EMAIL_FROM=${EMAIL_FROM:-onboarding@resend.dev}
+      - ADMIN_EMAIL=${ADMIN_EMAIL:-info@hoogwerkerhub.nl}
+    volumes:
+      # Persistent volume for the SQLite database so state is retained permanently
+      - sqlite-data:/app/prisma
+
+  nginx:
+    image: nginx:alpine
+    container_name: hoogwerkerhub-proxy
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    depends_on:
+      - app
+
+volumes:
+  sqlite-data:
+    driver: local

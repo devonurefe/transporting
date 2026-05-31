@@ -1,0 +1,367 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import { Resend } from "resend";
+
+// Initialize Resend with env key
+// In local development, if RESEND_API_KEY is not defined, we fallback to mocking
+const resendApiKey = process.env.RESEND_API_KEY || "";
+const resend = resendApiKey && resendApiKey !== "MY_RESEND_API_KEY" ? new Resend(resendApiKey) : null;
+
+// Standard sender email (if domain is verified, use verified domain. Otherwise Resend sandbox uses onboarding@resend.dev)
+const SENDER_EMAIL = process.env.EMAIL_FROM || "onboarding@resend.dev";
+const ADMIN_ALERT_EMAIL = process.env.ADMIN_EMAIL || "info@hoogwerkerhub.nl";
+
+interface EmailOrderData {
+  id: string;
+  machineName: string;
+  startDate: string;
+  endDate: string;
+  rentalDays: number;
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  customerProfile?: string | null;
+  deliveryType: string;
+  deliveryAddress: string | null;
+  totalAmount: number;
+  status: string;
+}
+
+export const emailService = {
+  /**
+   * Send Order Confirmation Email to the Customer
+   */
+  sendOrderConfirmation: async (order: EmailOrderData) => {
+    const isPickup = order.deliveryType === "self_pickup";
+    const deliveryMethodText = isPickup ? "Zelf Afhalen (Gratis)" : "Bezorgservice op locatie";
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Reserveringsbevestiging HoogwerkerHub</title>
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f8fafc; color: #1e293b; margin: 0; padding: 20px; }
+          .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 24px; border: 1px border-slate-200; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+          .header { background: linear-gradient(135deg, #4f46e5, #3b82f6); padding: 40px 30px; text-align: center; color: #ffffff; }
+          .header h1 { margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.025em; }
+          .header p { margin: 8px 0 0 0; font-size: 14px; opacity: 0.9; }
+          .content { padding: 40px 30px; }
+          .order-id { font-mono; display: inline-block; background: #f1f5f9; padding: 6px 12px; border-radius: 9999px; font-weight: bold; color: #4f46e5; font-size: 13px; margin-bottom: 20px; }
+          .details-grid { display: grid; grid-template-columns: 1fr; gap: 16px; margin: 24px 0; background: #f8fafc; padding: 20px; border-radius: 16px; }
+          .details-item { border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; }
+          .details-item:last-child { border-bottom: none; padding-bottom: 0; }
+          .label { font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: bold; letter-spacing: 0.05em; }
+          .value { font-size: 14px; font-weight: 600; color: #0f172a; margin-top: 4px; }
+          .price-block { text-align: center; margin: 30px 0; padding: 20px; border: 2px dashed #e2e8f0; border-radius: 16px; }
+          .price-amount { font-size: 28px; font-weight: 800; color: #10b981; margin-top: 4px; }
+          .footer { background: #f1f5f9; padding: 20px 30px; text-align: center; font-size: 11px; color: #64748b; }
+          .btn { display: inline-block; background: #4f46e5; color: #ffffff; text-decoration: none; padding: 12px 30px; border-radius: 12px; font-weight: bold; font-size: 14px; margin-top: 20px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>HoogwerkerHub</h1>
+            <p>Uw reserveringsbevestiging is succesvol verwerkt</p>
+          </div>
+          <div class="content">
+            <span class="order-id">Reservering ID: ${order.id}</span>
+            <p>Beste <strong>${order.customerName}</strong>,</p>
+            <p>Hartelijk dank voor uw reservering bij HoogwerkerHub. Onze logistieke afdeling en AI-planner hebben uw reservering direct gereserveerd en in behandeling genomen. Hieronder vindt u de specificaties:</p>
+            
+            <div class="details-grid">
+              <div class="details-item">
+                <div class="label">Gereserveerd Object</div>
+                <div class="value">${order.machineName}</div>
+              </div>
+              <div class="details-item">
+                <div class="label">Huurperiode</div>
+                <div class="value">${order.startDate} t/m ${order.endDate} (${order.rentalDays} dagen)</div>
+              </div>
+              <div class="details-item">
+                <div class="label">Leveringsmethode</div>
+                <div class="value">${deliveryMethodText}</div>
+              </div>
+              ${!isPickup && order.deliveryAddress ? `
+              <div class="details-item">
+                <div class="label">Bezorgadres</div>
+                <div class="value">${order.deliveryAddress}</div>
+              </div>
+              ` : ''}
+              <div class="details-item">
+                <div class="label">Status</div>
+                <div class="value" style="color: #d97706;">In behandeling (Accordering eigenaar vereist)</div>
+              </div>
+            </div>
+
+            <div class="price-block">
+              <div class="label">Totaal Overeenkomst (incl. BTW)</div>
+              <div class="price-amount">€ ${order.totalAmount.toFixed(2)}</div>
+            </div>
+
+            <p style="font-size: 13px; line-height: 1.6; color: #475569;">
+              Wij nemen zo snel mogelijk contact met u op zodra de definitieve logistieke accordering door Onur (Eigenaar) is bevestigd. Meestal gebeurt dit binnen 1 uur.
+            </p>
+
+            <div style="text-align: center;">
+              <a href="https://hoogwerkerhub.nl/account" class="btn" style="color: #ffffff;">Mijn Reserveringen Bekijken</a>
+            </div>
+          </div>
+          <div class="footer">
+            © ${new Date().getFullYear()} HoogwerkerHub B.V. • BMWT-gecertificeerd verhuurnetwerk • Alphen aan den Rijn, Nederland
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    console.log(`[EmailService] Attempting to send confirmation email for ${order.id} to ${order.customerEmail}`);
+    
+    if (!resend) {
+      console.log(`[EmailService] [MOCK] Resend NOT configured. Simulated email sent successfully.`);
+      return true;
+    }
+
+    try {
+      const { data, error } = await resend.emails.send({
+        from: SENDER_EMAIL,
+        to: order.customerEmail,
+        subject: `Bevestiging van uw reservering ${order.id} - HoogwerkerHub`,
+        html: htmlContent,
+      });
+
+      if (error) {
+        console.error("[EmailService] Resend API error:", error);
+        return false;
+      }
+
+      console.log("[EmailService] Email sent successfully via Resend:", data?.id);
+      return true;
+    } catch (e) {
+      console.error("[EmailService] Failed to send email via Resend:", e);
+      return false;
+    }
+  },
+
+  /**
+   * Send Alert Email to Admin when a new order is received
+   */
+  sendAdminAlert: async (order: EmailOrderData) => {
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Nieuwe Reservering Ontvangen</title>
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f8fafc; color: #1e293b; margin: 0; padding: 20px; }
+          .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 24px; border: 1px solid #e2e8f0; overflow: hidden; }
+          .header { background: #0f172a; padding: 30px; text-align: center; color: #ffffff; }
+          .header h1 { margin: 0; font-size: 22px; font-weight: 800; color: #f59e0b; }
+          .content { padding: 40px 30px; }
+          .details-grid { display: grid; grid-template-columns: 1fr; gap: 14px; margin: 24px 0; background: #f8fafc; padding: 20px; border-radius: 16px; border: 1px solid #edf2f7; }
+          .details-item { border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; }
+          .details-item:last-child { border-bottom: none; padding-bottom: 0; }
+          .label { font-size: 10px; text-transform: uppercase; color: #64748b; font-weight: bold; }
+          .value { font-size: 13px; font-weight: 600; color: #0f172a; margin-top: 2px; }
+          .btn { display: inline-block; background: #f59e0b; color: #0f172a; text-decoration: none; padding: 12px 30px; border-radius: 12px; font-weight: 800; font-size: 14px; margin-top: 20px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>🚨 NIEUWE RESERVERING</h1>
+            <p>Admin alert voor HoogwerkerHub.nl</p>
+          </div>
+          <div class="content">
+            <h3 style="margin-top: 0; font-size: 16px; font-weight: 800; color: #0f172a;">Beste Onur (Eigenaar),</h3>
+            <p>Er is zojuist een nieuwe online reservering binnengekomen via het storefront portaal. Deze vereist directe accordering in uw HubAdmin dashboard:</p>
+            
+            <div class="details-grid">
+              <div class="details-item">
+                <div class="label">Reservering ID</div>
+                <div class="value" style="color: #4f46e5; font-family: monospace; font-size: 14px;">${order.id}</div>
+              </div>
+              <div class="details-item">
+                <div class="label">Klant Details</div>
+                <div class="value">${order.customerName} (${order.customerProfile})<br><span style="font-weight: normal; font-size: 11px; font-family: monospace;">${order.customerEmail} | ${order.customerPhone || ''}</span></div>
+              </div>
+              <div class="details-item">
+                <div class="label">Gevraagd Materieel</div>
+                <div class="value">${order.machineName}</div>
+              </div>
+              <div class="details-item">
+                <div class="label">Huurperiode</div>
+                <div class="value">${order.startDate} t/m ${order.endDate} (${order.rentalDays}d)</div>
+              </div>
+              <div class="details-item">
+                <div class="label">Huurcontract Waarde</div>
+                <div class="value" style="color: #10b981; font-size: 15px;">€ ${order.totalAmount.toFixed(2)}</div>
+              </div>
+            </div>
+
+            <div style="text-align: center;">
+              <a href="https://hoogwerkerhub.nl/admin" class="btn">Naar HubAdmin Dashboard</a>
+            </div>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    console.log(`[EmailService] Attempting to send Admin Alert for ${order.id} to ${ADMIN_ALERT_EMAIL}`);
+    
+    if (!resend) {
+      console.log(`[EmailService] [MOCK] Resend NOT configured. Simulated admin alert sent.`);
+      return true;
+    }
+
+    try {
+      const { data, error } = await resend.emails.send({
+        from: SENDER_EMAIL,
+        to: ADMIN_ALERT_EMAIL,
+        subject: `🚨 Nieuwe Reservering ${order.id} - €${order.totalAmount.toFixed(2)} - ${order.customerName}`,
+        html: htmlContent,
+      });
+
+      if (error) {
+        console.error("[EmailService] Resend Admin alert error:", error);
+        return false;
+      }
+
+      console.log("[EmailService] Admin alert sent successfully:", data?.id);
+      return true;
+    } catch (e) {
+      console.error("[EmailService] Failed to send admin alert email:", e);
+      return false;
+    }
+  },
+
+  /**
+   * Send Order Status Update Email to Customer (e.g. Approved, Out for delivery)
+   */
+  sendStatusUpdate: async (order: EmailOrderData) => {
+    let statusTitle = "Status bijgewerkt";
+    let statusDescription = `De status van uw reservering ${order.id} is bijgewerkt naar: <strong>${order.status}</strong>.`;
+    let headerColor = "linear-gradient(135deg, #4f46e5, #3b82f6)";
+
+    if (order.status === "Goedgekeurd") {
+      statusTitle = "🎉 Reservering Goedgekeurd!";
+      statusDescription = "Onze verhuurplanner heeft uw reservering officieel goedgekeurd. De hoogwerker is gereserveerd in onze vlootagenda.";
+      headerColor = "linear-gradient(135deg, #10b981, #059669)";
+    } else if (order.status === "Onderweg") {
+      statusTitle = "🚚 Uw Hoogwerker is Onderweg!";
+      statusDescription = "De transporteur heeft de machine geladen en is onderweg naar uw afleveradres. Zorg ervoor dat de opstelplaats vrij is voor levering.";
+      headerColor = "linear-gradient(135deg, #3b82f6, #1d4ed8)";
+    } else if (order.status === "Voltooid") {
+      statusTitle = "Huurcontract Voltooid";
+      statusDescription = "De huurperiode is beëindigd en het materieel is succesvol retour ontvangen. Bedankt voor uw vertrouwen in HoogwerkerHub!";
+      headerColor = "linear-gradient(135deg, #64748b, #475569)";
+    }
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Statusupdate reservering HoogwerkerHub</title>
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f8fafc; color: #1e293b; margin: 0; padding: 20px; }
+          .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 24px; border: 1px solid #e2e8f0; overflow: hidden; }
+          .header { background: ${headerColor}; padding: 40px 30px; text-align: center; color: #ffffff; }
+          .header h1 { margin: 0; font-size: 22px; font-weight: 800; }
+          .content { padding: 40px 30px; }
+          .status-badge { display: inline-block; background: #f1f5f9; padding: 6px 16px; border-radius: 9999px; font-weight: bold; color: #4f46e5; font-size: 13px; margin-bottom: 20px; text-transform: uppercase; }
+          .details-grid { display: grid; grid-template-columns: 1fr; gap: 14px; margin: 24px 0; background: #f8fafc; padding: 20px; border-radius: 16px; }
+          .details-item { border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; }
+          .details-item:last-child { border-bottom: none; padding-bottom: 0; }
+          .label { font-size: 10px; text-transform: uppercase; color: #64748b; font-weight: bold; }
+          .value { font-size: 13px; font-weight: 600; color: #0f172a; margin-top: 2px; }
+          .footer { background: #f1f5f9; padding: 20px 30px; text-align: center; font-size: 11px; color: #64748b; }
+          .btn { display: inline-block; background: #4f46e5; color: #ffffff; text-decoration: none; padding: 12px 30px; border-radius: 12px; font-weight: bold; font-size: 14px; margin-top: 20px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>HoogwerkerHub</h1>
+            <p>Update over uw reservering ${order.id}</p>
+          </div>
+          <div class="content">
+            <div style="text-align: center;">
+              <span class="status-badge" style="color: #4f46e5;">Status: ${order.status}</span>
+            </div>
+            <p>Beste <strong>${order.customerName}</strong>,</p>
+            <p>${statusDescription}</p>
+            
+            <h4 style="margin-top: 24px; font-size: 14px; border-bottom: 1px solid #edf2f7; padding-bottom: 8px;">Reservering details</h4>
+            <div class="details-grid">
+              <div class="details-item">
+                <div class="label">Machine</div>
+                <div class="value">${order.machineName}</div>
+              </div>
+              <div class="details-item">
+                <div class="label">Huurperiode</div>
+                <div class="value">${order.startDate} t/m ${order.endDate}</div>
+              </div>
+              ${order.deliveryAddress ? `
+              <div class="details-item">
+                <div class="label">Bezorgadres</div>
+                <div class="value">${order.deliveryAddress}</div>
+              </div>
+              ` : ''}
+              <div class="details-item">
+                <div class="label">Totaalsom</div>
+                <div class="value" style="color: #10b981;">€ ${order.totalAmount.toFixed(2)}</div>
+              </div>
+            </div>
+
+            <p style="font-size: 13px; line-height: 1.6; color: #475569; margin-top: 20px;">
+              Mocht u nog vragen of wijzigingen hebben, neem dan gerust direct contact op met onze planners via de website.
+            </p>
+
+            <div style="text-align: center;">
+              <a href="https://hoogwerkerhub.nl/account" class="btn" style="color: #ffffff;">Mijn Account Openen</a>
+            </div>
+          </div>
+          <div class="footer">
+            © ${new Date().getFullYear()} HoogwerkerHub B.V. • BMWT-gecertificeerd verhuurnetwerk • Alphen aan den Rijn, Nederland
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    console.log(`[EmailService] Attempting to send status update (${order.status}) for ${order.id} to ${order.customerEmail}`);
+    
+    if (!resend) {
+      console.log(`[EmailService] [MOCK] Resend NOT configured. Simulated status update email sent.`);
+      return true;
+    }
+
+    try {
+      const { data, error } = await resend.emails.send({
+        from: SENDER_EMAIL,
+        to: order.customerEmail,
+        subject: `Update van uw reservering ${order.id}: ${order.status} - HoogwerkerHub`,
+        html: htmlContent,
+      });
+
+      if (error) {
+        console.error("[EmailService] Resend status update error:", error);
+        return false;
+      }
+
+      console.log("[EmailService] Status update email sent successfully:", data?.id);
+      return true;
+    } catch (e) {
+      console.error("[EmailService] Failed to send status update email:", e);
+      return false;
+    }
+  }
+};

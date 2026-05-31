@@ -691,8 +691,8 @@ export default function App() {
               </div>
             </div>
 
-            {/* Column 4: Quick Navigation & Admin Console */}
-            <div className="space-y-4">
+            {/* Column 4: Quick Navigation (Hidden on mobile) */}
+            <div className="space-y-4 hidden sm:block">
               <h4 className="font-display font-semibold tracking-wider text-[11px] uppercase text-slate-800 pb-1.5 border-b border-slate-100/80">
                 Snelkoppelingen
               </h4>
@@ -721,17 +721,6 @@ export default function App() {
                 >
                   Contact
                 </button>
-                
-                <div className="pt-2.5">
-                  <button 
-                    onClick={() => { setActiveTab("admin"); window.scrollTo({ top: 0, behavior: "smooth" }); }} 
-                    className="w-full inline-flex items-center justify-center space-x-1.5 text-[11.5px] font-semibold text-amber-800 hover:text-amber-900 bg-amber-50 hover:bg-amber-100/80 border border-amber-200/50 hover:border-amber-300 px-3 py-2 rounded-lg transition-all cursor-pointer shadow-sm hover:shadow"
-                    title="Systeembeheerder Console Log"
-                  >
-                    <Lock className="h-3.5 w-3.5 text-amber-600 shrink-0" />
-                    <span>Eigenaar Portaal</span>
-                  </button>
-                </div>
               </nav>
             </div>
 

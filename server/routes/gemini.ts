@@ -142,7 +142,8 @@ geminiRouter.post("/autofill", requireAdmin as any, async (req: AuthenticatedReq
         - Voor telescoop: "https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?q=80&w=600&auto=format&fit=crop"
         - Voor auto: "https://images.unsplash.com/photo-1542385151-efd9000785a0?q=80&w=600&auto=format&fit=crop"
         - Voor spin: "https://images.unsplash.com/photo-1563986768609-322da13575f3?q=80&w=600&auto=format&fit=crop"
-      )
+      ),
+      "packageContents": "item1; item2; item3; item4" (genereer een puntkomma-gescheiden lijst van 4 tot 6 inbegrepen items of services die typisch bij dit model horen, zoals verlengsnoeren, harnas, rijplaten, handleiding, etc. in het Nederlands, max 200 tekens)
     }
 
     Geef GEEN andere tekst, markdown-blokken (zoals \`\`\`json) of uitleg buiten de geldige JSON.
@@ -184,7 +185,8 @@ geminiRouter.post("/autofill", requireAdmin as any, async (req: AuthenticatedReq
     powerType: "Elektrisch",
     suitableFor: ["Schilder", "Installateur"],
     description: `De ${machineName} is een uitstekende en betrouwbare keuze voor al uw onderhouds- en installatiewerkzaamheden op hoogte. Dankzij de stille en emissievrije aandrijving is deze machine ideaal voor gebruik in magazijnen, kantoorpanden en andere binnenlocaties. De non-marking banden voorkomen strepen op kwetsbare vloeren.`,
-    imageUrl: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=600&auto=format&fit=crop"
+    imageUrl: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=600&auto=format&fit=crop",
+    packageContents: "1x Gecertificeerde Elektrische Schaarlift (12m werkhoogte);2x 20m zware verlengkabels (230V / IP44);1x Handige gereedschapsbak gemonteerd op het werkplatform;1x Luxe comfort-veiligheidsharnas (EN-361 gekeurd);4x Non-marking witte banden (geen sporen op luxe vloeren)"
   };
 
   if (lowerName.includes("knik") || lowerName.includes("articulated") || lowerName.includes("jlg 450") || lowerName.includes("genie z")) {
@@ -197,7 +199,8 @@ geminiRouter.post("/autofill", requireAdmin as any, async (req: AuthenticatedReq
       powerType: "Elektrisch",
       suitableFor: ["Glazenwasser", "Schilder", "Aannemer"],
       description: `De ${machineName} knikarmhoogwerker biedt maximale flexibiliteit dankzij het ingenieuze knikarmontwerp. Hiermee reikt u eenvoudig over obstakels en daken heen. Perfect voor schilderwerk, gevelreiniging of zonnepaneelinstallaties op wisselend terrein.`,
-      imageUrl: "https://images.unsplash.com/photo-1579684389782-64d84b5e901a?q=80&w=600&auto=format&fit=crop"
+      imageUrl: "https://images.unsplash.com/photo-1579684389782-64d84b5e901a?q=80&w=600&auto=format&fit=crop",
+      packageContents: "1x Knikarmhoogwerker (18m werkhoogte, 16m zijdelings bereik);2x Heavy-duty materiaalgordels met verstelbare karbijnhaakjes;1x Premium valbeveiligingsset Pro met schokdemper;1x Geïntegreerde 230V stroomaansluiting rechtstreeks in de werkbak;All-Risk Casco schadeverzekering"
     };
   } else if (lowerName.includes("tele") || lowerName.includes("jlg 600") || lowerName.includes("genie s")) {
     fallback = {
@@ -209,7 +212,8 @@ geminiRouter.post("/autofill", requireAdmin as any, async (req: AuthenticatedReq
       powerType: "Diesel",
       suitableFor: ["Aannemer", "Staalbouwer"],
       description: `Met de ${machineName} telescopische hoogwerker haalt u brute kracht en een enorm horizontaal bereik in huis. Uitermate geschikt voor grote industriële projecten, staalbouw en buitengebruik op onverharde, ruwe bouwterreinen.`,
-      imageUrl: "https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?q=80&w=600&auto=format&fit=crop"
+      imageUrl: "https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?q=80&w=600&auto=format&fit=crop",
+      packageContents: "1x Telescoophoogwerker Diesel (26m werkhoogte) - 4x4 aangedreven;2x Slanghaspel mastklemmen voor hogedrukslangen tot korf;1x Geïntegreerde generator unit (stroom & hogedrukwatertoevoer);1x Volledige All-Risk Casco dekking zonder eigen risico;2x Waterdichte mouwbeschermers & vizierbrillen"
     };
   } else if (lowerName.includes("truck") || lowerName.includes("auto") || lowerName.includes("rijbewijs")) {
     fallback = {
@@ -221,7 +225,8 @@ geminiRouter.post("/autofill", requireAdmin as any, async (req: AuthenticatedReq
       powerType: "Diesel",
       suitableFor: ["Glazenwasser", "Hovenier"],
       description: `De ${machineName} autohoogwerker is de ideale partner voor klussen op meerdere locaties per dag. Met uw standaard B-rijbewijs mag u zelf met deze truck de weg op. Ideaal voor snel en mobiel werk aan gevels, bomen of lantaarnpalen.`,
-      imageUrl: "https://images.unsplash.com/photo-1542385151-efd9000785a0?q=80&w=600&auto=format&fit=crop"
+      imageUrl: "https://images.unsplash.com/photo-1542385151-efd9000785a0?q=80&w=600&auto=format&fit=crop",
+      packageContents: "1x Autohoogwerker (22m werkhoogte, B-Rijbewijs vereist);1x Telescopische dakgootschep & telescopische trekker/bezem set;1x Geïntegreerde 230V stroomaansluiting in de korf;1x Geperforeerde aluminium werkbak voor emmers en afval;1x Set van 4 wegafzetting pionnen met reflecterende strips"
     };
   } else if (lowerName.includes("spin") || lowerName.includes("spider") || lowerName.includes("rups")) {
     fallback = {
@@ -233,7 +238,8 @@ geminiRouter.post("/autofill", requireAdmin as any, async (req: AuthenticatedReq
       powerType: "Hybride",
       suitableFor: ["Hovenier", "Schilder"],
       description: `Dankzij de compacte spinhoogwerker stempels en rupsbanden manoeuvreert de ${machineName} moeiteloos door smalle poorten of over zachte grasvelden. Het lage gewicht verdeelt de druk uitstekend, waardoor de machine perfect is voor tuinen en binnenpleinen met kwetsbare bestrating.`,
-      imageUrl: "https://images.unsplash.com/photo-1563986768609-322da13575f3?q=80&w=600&auto=format&fit=crop"
+      imageUrl: "https://images.unsplash.com/photo-1563986768609-322da13575f3?q=80&w=600&auto=format&fit=crop",
+      packageContents: "1x Spinhoogwerker Spider (15m werkhoogte) op smalle rupsbanden;4x Heavy-duty kunststof rijplaten (voorkomt sporen in gazons);1x Gecertificeerde bosbouwer snoeihelm met vizier en oorkappen;1x Magnetische relingtray voor snoeigereedschappen;1x spanbandenset"
     };
   }
 

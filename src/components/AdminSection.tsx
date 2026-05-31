@@ -203,9 +203,8 @@ export default function AdminSection({
         {/* Outer Split layout: Left sidebar switch, right tables/workspaces */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
-          {/* Navigation Sidebar panel */}
           <div className="lg:col-span-3 space-y-4">
-            <div className="glass-panel p-4 rounded-2xl flex flex-row lg:flex-col lg:space-y-1 overflow-x-auto lg:overflow-x-visible gap-1 pb-3 lg:pb-4 scrollbar-thin">
+            <div className="glass-panel p-4 rounded-2xl flex flex-row lg:flex-col lg:space-y-1 overflow-x-auto lg:overflow-x-visible gap-1 pb-3 lg:pb-4 scrollbar-none flex-nowrap scroll-smooth">
               
               {[
                 { id: "dashboard", label: tAdmin("adminTabDashboard"), icon: BarChart3 },

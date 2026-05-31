@@ -26,6 +26,7 @@ model Machine {
   campaignText            String?
   campaignDiscountPercent Float?
   campaignDiscountAmount  Float?
+  packageContents         String?
   blockedDates            BlockedDate[]
 }
 

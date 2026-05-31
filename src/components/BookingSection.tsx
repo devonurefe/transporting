@@ -12,7 +12,8 @@ import {
   CreditCard,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { Machine, Order, DeliveryType, UserProfile, CartItem } from "../types";
+import { Machine, Order, DeliveryType, UserProfile, CartItem, CampaignRule } from "../types";
+import { useAppStore } from "../store/appStore";
 
 // Import modular Step components
 import BookingStep1 from "./booking/BookingStep1";
@@ -49,8 +50,46 @@ export default function BookingSection({
   onClearCart = () => {}
 }: BookingSectionProps) {
   // Booking Stepper state
+  const campaignRules = useAppStore((state) => state.campaignRules);
   const [step, setStep] = useState<number>(1);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+
+  const evaluateDiscountPercent = (machine: Machine, days: number, profile: string, rules: CampaignRule[]) => {
+    let highestDiscount = 0;
+    
+    // 1. Weekly/Monthly volume discounts
+    if (days >= 30 && machine.monthlyDiscountPercent) {
+      highestDiscount = Math.max(highestDiscount, machine.monthlyDiscountPercent);
+    } else if (days >= 7 && machine.weeklyDiscountPercent) {
+      highestDiscount = Math.max(highestDiscount, machine.weeklyDiscountPercent);
+    }
+
+    // 2. Active custom campaign rules
+    const activeRules = rules.filter(r => r.isActive);
+    for (const rule of activeRules) {
+      let matches = false;
+      if (rule.scope === "global") {
+        matches = true;
+      } else if (rule.scope === "category") {
+        matches = machine.category.toLowerCase() === rule.scopeValue.toLowerCase();
+      } else if (rule.scope === "product") {
+        matches = machine.id === rule.scopeValue;
+      } else if (rule.scope === "role") {
+        matches = profile.toLowerCase() === rule.scopeValue.toLowerCase();
+      }
+
+      if (matches) {
+        highestDiscount = Math.max(highestDiscount, rule.discountPercent);
+      }
+    }
+
+    // 3. Fallback to default machine campaignDiscountPercent
+    if (machine.campaignDiscountPercent) {
+      highestDiscount = Math.max(highestDiscount, machine.campaignDiscountPercent);
+    }
+
+    return highestDiscount;
+  };
   const [successOrder, setSuccessOrder] = useState<Order | null>(null);
 
   // Address lookup & Inline validation states
@@ -267,20 +306,11 @@ export default function BookingSection({
         totalDays += days;
 
         const itemRaw = item.machine.pricePerDay * days;
-        let itemDisc = 0;
+        const discountPercent = evaluateDiscountPercent(item.machine, days, customerProfile, campaignRules);
+        let itemDisc = itemRaw * (discountPercent / 100);
 
-        if (days >= 30 && item.machine.monthlyDiscountPercent) {
-          itemDisc = itemRaw * (item.machine.monthlyDiscountPercent / 100);
-        } else if (days >= 7 && item.machine.weeklyDiscountPercent) {
-          itemDisc = itemRaw * (item.machine.weeklyDiscountPercent / 100);
-        }
-
-        if (item.machine.campaignText) {
-          if (item.machine.campaignDiscountPercent) {
-            itemDisc += itemRaw * (item.machine.campaignDiscountPercent / 100);
-          } else if (item.machine.campaignDiscountAmount) {
-            itemDisc += item.machine.campaignDiscountAmount;
-          }
+        if (item.machine.campaignDiscountAmount) {
+          itemDisc += item.machine.campaignDiscountAmount;
         }
 
         const itemSub = Math.max(0, itemRaw - itemDisc);
@@ -318,7 +348,21 @@ export default function BookingSection({
       if (leadItem) {
         if (totalDays >= 30) discountLabel = "Maandkorting";
         else if (totalDays >= 7) discountLabel = "Weekkorting";
-        if (leadItem.campaignText) discountLabel = `${discountLabel} + ${leadItem.campaignText}`;
+
+        const activeRules = campaignRules.filter(r => r.isActive);
+        const matchingRuleName = activeRules.find(rule => {
+          if (rule.scope === "global") return true;
+          if (rule.scope === "category" && leadItem.category.toLowerCase() === rule.scopeValue.toLowerCase()) return true;
+          if (rule.scope === "product" && leadItem.id === rule.scopeValue) return true;
+          if (rule.scope === "role" && customerProfile.toLowerCase() === rule.scopeValue.toLowerCase()) return true;
+          return false;
+        })?.name;
+
+        if (matchingRuleName) {
+          discountLabel = `${discountLabel} + ${matchingRuleName}`;
+        } else if (leadItem.campaignText) {
+          discountLabel = `${discountLabel} + ${leadItem.campaignText}`;
+        }
       }
 
       return {
@@ -347,23 +391,32 @@ export default function BookingSection({
     const days = Math.max(1, Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1);
 
     const rawSubtotal = selectedMachine.pricePerDay * days;
-    let discountAmount = 0;
-    let discountLabel = "Korting";
+    const discountPercent = evaluateDiscountPercent(selectedMachine, days, customerProfile, campaignRules);
+    let discountAmount = rawSubtotal * (discountPercent / 100);
 
-    if (days >= 30 && selectedMachine.monthlyDiscountPercent) {
-      discountAmount = rawSubtotal * (selectedMachine.monthlyDiscountPercent / 100);
+    if (selectedMachine.campaignDiscountAmount) {
+      discountAmount += selectedMachine.campaignDiscountAmount;
+    }
+
+    let discountLabel = "Korting";
+    if (days >= 30) {
       discountLabel = "Maandkorting";
-    } else if (days >= 7 && selectedMachine.weeklyDiscountPercent) {
-      discountAmount = rawSubtotal * (selectedMachine.weeklyDiscountPercent / 100);
+    } else if (days >= 7) {
       discountLabel = "Weekkorting";
     }
 
-    if (selectedMachine.campaignText) {
-      if (selectedMachine.campaignDiscountPercent) {
-        discountAmount += rawSubtotal * (selectedMachine.campaignDiscountPercent / 100);
-      } else if (selectedMachine.campaignDiscountAmount) {
-        discountAmount += selectedMachine.campaignDiscountAmount;
-      }
+    const activeRules = campaignRules.filter(r => r.isActive);
+    const matchingRuleName = activeRules.find(rule => {
+      if (rule.scope === "global") return true;
+      if (rule.scope === "category" && selectedMachine.category.toLowerCase() === rule.scopeValue.toLowerCase()) return true;
+      if (rule.scope === "product" && selectedMachine.id === rule.scopeValue) return true;
+      if (rule.scope === "role" && customerProfile.toLowerCase() === rule.scopeValue.toLowerCase()) return true;
+      return false;
+    })?.name;
+
+    if (matchingRuleName) {
+      discountLabel = `${discountLabel} + ${matchingRuleName}`;
+    } else if (selectedMachine.campaignText) {
       discountLabel = `${discountLabel} + ${selectedMachine.campaignText}`;
     }
 

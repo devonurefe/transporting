@@ -22,6 +22,7 @@ export interface Machine {
   campaignText?: string; // campaign tag, e.g., "LenteKorting"
   campaignDiscountPercent?: number; // campaign discount %
   campaignDiscountAmount?: number; // campaign discount EUR amount
+  packageContents?: string; // Semicolon separated included items checklist
 }
 
 export type DeliveryType = "self_pickup" | "delivery_with_driver";
@@ -86,4 +87,14 @@ export interface CartItem {
   startDate: string;
   endDate: string;
 }
+
+export interface CampaignRule {
+  id: string;
+  name: string;
+  scope: "global" | "category" | "product" | "role";
+  scopeValue: string; // e.g., category ID, machine ID, or role name
+  discountPercent: number;
+  isActive: boolean;
+}
+
 

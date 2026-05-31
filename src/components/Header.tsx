@@ -202,10 +202,11 @@ export default function Header({
                 onCustomerLogout();
                 setActiveTab("home");
               }}
-              className="inline-flex items-center space-x-1.5 bg-rose-600 hover:bg-rose-700 px-4 py-2 rounded-xl text-xs font-bold text-white transition-all hover:scale-[1.03] active:scale-97 hover:shadow-md cursor-pointer"
+              className="inline-flex items-center space-x-1.5 bg-rose-600 hover:bg-rose-700 px-3 py-2 sm:px-4 rounded-xl text-xs font-bold text-white transition-all hover:scale-[1.03] active:scale-97 hover:shadow-md cursor-pointer shrink-0"
             >
               <LogOut className="h-3.5 w-3.5" />
-              <span>Console Sluiten (Uitloggen)</span>
+              <span className="hidden sm:inline">Console Sluiten (Uitloggen)</span>
+              <span className="inline sm:hidden">Uitloggen</span>
             </button>
           ) : (
             // Public Visitors Utilities

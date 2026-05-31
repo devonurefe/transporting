@@ -1101,88 +1101,91 @@ export default function AdvisorSection({
                       </div>
 
                       <div className="grid grid-cols-1 gap-2">
-                        {((machineId: string) => {
-                          switch (machineId) {
-                            case "set-paint-comfort":
-                              return [
-                                "1x Gecertificeerde Elektrische Schaarlift (12m werkhoogte)",
-                                "2x 20m zware rubberen verlengkabels (230V / IP44)",
-                                "1x Handige gereedschapsbak gemonteerd op het werkplatform",
-                                "1x Luxe comfort-veiligheidsharnas (EN-361 gekeurd)",
-                                "4x Non-marking witte banden (geen sporen op luxe vloeren)",
-                                "10m Vloerbeschermingsvlies (gratis meegeleverd)"
-                              ];
-                            case "set-solar-pro":
-                              return [
-                                "1x Knikarmhoogwerker (18m werkhoogte, 16m zijdelings bereik)",
-                                "2x Heavy-duty materiaalgordels met verstelbare karbijnhaakjes",
-                                "1x Speciaal ontworpen zonnepaneel-draagbeugel aan de korf",
-                                "1x Alleenstaand EN-361 Premium valbeveiligingsset Pro met schokdemper",
-                                "1x Geïntegreerde 230V stroomaansluiting rechtstreeks in de werkbak",
-                                "All-Risk Casco schadeverzekering (geen eigen risico op dakschade)"
-                              ];
-                            case "set-prune-compact":
-                              return [
-                                "1x Spinhoogwerker Spider (15m werkhoogte) op smalle rupsbanden",
-                                "4x Heavy-duty kunststof rijplaten (voorkomt sporen in gazons)",
-                                "1x Gecertificeerde bosbouwer snoeihelm met vizier en oorkappen",
-                                "1x Magnetische relingtray voor snoeigereedschappen",
-                                "1x Biologische kettingzaag olie (1 Liter)",
-                                "1x Spanbandenset voor extra stempelfixatie op hellingen"
-                              ];
-                            case "set-gutter-fast":
-                              return [
-                                "1x Autohoogwerker (22m werkhoogte, B-Rijbewijs vereist)",
-                                "1x Telescopische dakgootschep & telescopische trekker/bezem set",
-                                "1x Geïntegreerde 230V stroomaansluiting in de korf",
-                                "1x Geperforeerde aluminium werkbak voor emmers en afval",
-                                "1x Set van 4 wegafzetting pionnen met reflecterende strips",
-                                "1x Veiligheidshesje en handschoenen (maat L)"
-                              ];
-                            case "set-facade-heavy":
-                              return [
-                                "1x Telescoophoogwerker Diesel (26m werkhoogte) - 4x4 aangedreven",
-                                "2x Slanghaspel mastklemmen voor hogedrukslangen tot korf",
-                                "1x Geïntegreerde generator unit (stroom & hogedrukwatertoevoer)",
-                                "1x Volledige All-Risk Casco dekking zonder eigen risico",
-                                "2x Waterdichte mouwbeschermers & vizierbrillen voor gevelspuiten",
-                                "1x RVS werkbakorganizer voor spuitlansen"
-                              ];
-                            case "set-window-premium":
-                              return [
-                                "1x Autohoogwerker (22m werkhoogte, B-Rijbewijs vereist)",
-                                "1x Osmose watertank montagebeugels aan de werkbak",
-                                "1x Extra brede 2-persoons platformbak (gondel)",
-                                "4x Stempelschotels om wegzakken in zachte straatstenen te voorkomen",
-                                "1x Ruitenwisserset Pro (trekkers, inwasmoffen & telescoopsteel)",
-                                "1x Waterbestendige opbergtas aan de korf"
-                              ];
-                            case "set-diy-weekend":
-                              return [
-                                "1x Compacte Elektrische Schaarlift (12m werkhoogte)",
-                                "1x Comfort EN-361 gecertificeerd veiligheidsharnas",
-                                "1x Premium klushelm met kinband",
-                                "1x Stap-voor-stap gedrukte handleiding 'Veilig Werken op Hoogte'",
-                                "Voorrangstoegang tot onze 24/7 telefonische hulplijn (WhatsApp)"
-                              ];
-                            case "set-light-install":
-                              return [
-                                "1x Spinhoogwerker Hybrid (15m werkhoogte) op rupsen",
-                                "1x Automatische veertrommel haspelkit voor mastbekabeling",
-                                "1x Magnetische bak voor schroeven, klemmen en zekeringen",
-                                "2x Comfort harnassen met snelgespen",
-                                "1x Professionele laser nevelmeter (te leen)"
-                              ];
-                            default:
-                              return [
-                                "1x Professionele en gekeurde machine",
-                                "1x Volle tank brandstof of 100% opgeladen accupakket",
-                                "1x Hub service inspectie voorafgaand aan aflevering",
-                                "BMWT Veiligheidscertificaat handleiding in de werkbak",
-                                "24/7 Technische storingshulp & backup service"
-                              ];
-                          }
-                        })(selectedDetailMachine.id).map((item, idx) => (
+                        {(selectedDetailMachine.packageContents && selectedDetailMachine.packageContents.trim()
+                          ? selectedDetailMachine.packageContents.split(";").map(s => s.trim()).filter(s => s.length > 0)
+                          : ((machineId: string) => {
+                              switch (machineId) {
+                                case "set-paint-comfort":
+                                  return [
+                                    "1x Gecertificeerde Elektrische Schaarlift (12m werkhoogte)",
+                                    "2x 20m zware rubberen verlengkabels (230V / IP44)",
+                                    "1x Handige gereedschapsbak gemonteerd op het werkplatform",
+                                    "1x Luxe comfort-veiligheidsharnas (EN-361 gekeurd)",
+                                    "4x Non-marking witte banden (geen sporen op luxe vloeren)",
+                                    "10m Vloerbeschermingsvlies (gratis meegeleverd)"
+                                  ];
+                                case "set-solar-pro":
+                                  return [
+                                    "1x Knikarmhoogwerker (18m werkhoogte, 16m zijdelings bereik)",
+                                    "2x Heavy-duty materiaalgordels met verstelbare karbijnhaakjes",
+                                    "1x Speciaal ontworpen zonnepaneel-draagbeugel aan de korf",
+                                    "1x Alleenstaand EN-361 Premium valbeveiligingsset Pro met schokdemper",
+                                    "1x Geïntegreerde 230V stroomaansluiting rechtstreeks in de werkbak",
+                                    "All-Risk Casco schadeverzekering (geen eigen risico op dakschade)"
+                                  ];
+                                case "set-prune-compact":
+                                  return [
+                                    "1x Spinhoogwerker Spider (15m werkhoogte) op smalle rupsbanden",
+                                    "4x Heavy-duty kunststof rijplaten (voorkomt sporen in gazons)",
+                                    "1x Gecertificeerde bosbouwer snoeihelm met vizier en oorkappen",
+                                    "1x Magnetische relingtray voor snoeigereedschappen",
+                                    "1x Biologische kettingzaag olie (1 Liter)",
+                                    "1x Spanbandenset voor extra stempelfixatie op hellingen"
+                                  ];
+                                case "set-gutter-fast":
+                                  return [
+                                    "1x Autohoogwerker (22m werkhoogte, B-Rijbewijs vereist)",
+                                    "1x Telescopische dakgootschep & telescopische trekker/bezem set",
+                                    "1x Geïntegreerde 230V stroomaansluiting in de korf",
+                                    "1x Geperforeerde aluminium werkbak voor emmers en afval",
+                                    "1x Set van 4 wegafzetting pionnen met reflecterende strips",
+                                    "1x Veiligheidshesje en handschoenen (maat L)"
+                                  ];
+                                case "set-facade-heavy":
+                                  return [
+                                    "1x Telescoophoogwerker Diesel (26m werkhoogte) - 4x4 aangedreven",
+                                    "2x Slanghaspel mastklemmen voor hogedrukslangen tot korf",
+                                    "1x Geïntegreerde generator unit (stroom & hogedrukwatertoevoer)",
+                                    "1x Volledige All-Risk Casco dekking zonder eigen risico",
+                                    "2x Waterdichte mouwbeschermers & vizierbrillen voor gevelspuiten",
+                                    "1x RVS werkbakorganizer voor spuitlansen"
+                                  ];
+                                case "set-window-premium":
+                                  return [
+                                    "1x Autohoogwerker (22m werkhoogte, B-Rijbewijs vereist)",
+                                    "1x Osmose watertank montagebeugels aan de werkbak",
+                                    "1x Extra brede 2-persoons platformbak (gondel)",
+                                    "4x Stempelschotels om wegzakken in zachte straatstenen te voorkomen",
+                                    "1x Ruitenwisserset Pro (trekkers, inwasmoffen & telescoopsteel)",
+                                    "1x Waterbestendige opbergtas aan de korf"
+                                  ];
+                                case "set-diy-weekend":
+                                  return [
+                                    "1x Compacte Elektrische Schaarlift (12m werkhoogte)",
+                                    "1x Comfort EN-361 gecertificeerd veiligheidsharnas",
+                                    "1x Premium klushelm met kinband",
+                                    "1x Stap-voor-stap gedrukte handleiding 'Veilig Werken op Hoogte'",
+                                    "Voorrangstoegang tot onze 24/7 telefonische hulplijn (WhatsApp)"
+                                  ];
+                                case "set-light-install":
+                                  return [
+                                    "1x Spinhoogwerker Hybrid (15m werkhoogte) op rupsen",
+                                    "1x Automatische veertrommel haspelkit voor mastbekabeling",
+                                    "1x Magnetische bak voor schroeven, klemmen en zekeringen",
+                                    "2x Comfort harnassen met snelgespen",
+                                    "1x Professionele laser nevelmeter (te leen)"
+                                  ];
+                                default:
+                                  return [
+                                    "1x Professionele en gekeurde machine",
+                                    "1x Volle tank brandstof of 100% opgeladen accupakket",
+                                    "1x Hub service inspectie voorafgaand aan aflevering",
+                                    "BMWT Veiligheidscertificaat handleiding in de werkbak",
+                                    "24/7 Technische storingshulp & backup service"
+                                  ];
+                              }
+                            })(selectedDetailMachine.id)
+                        ).map((item, idx) => (
                           <div key={idx} className="flex items-start space-x-1.5 text-xs text-slate-700">
                             <span className="text-teal-600 font-bold shrink-0 mt-0.5 font-mono">✓</span>
                             <span>{item}</span>

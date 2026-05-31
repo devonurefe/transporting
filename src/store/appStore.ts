@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { Machine, Order, CartItem } from "../types";
+import { Machine, Order, CartItem, CampaignRule } from "../types";
 
 interface Category {
   id: string;
@@ -62,6 +62,9 @@ interface AppState {
   removeFromCart: (itemId: string) => void;
   updateCartItemDates: (itemId: string, startDate: string, endDate: string) => void;
   clearCart: () => void;
+
+  campaignRules: CampaignRule[];
+  updateCampaignRules: (rules: CampaignRule[]) => void;
 }
 
 const defaultCategories: Category[] = [
@@ -96,6 +99,18 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
   blockedDates: [],
   cartItems: [],
+  campaignRules: (() => {
+    try {
+      const stored = localStorage.getItem("hwh_campaign_rules");
+      if (stored) return JSON.parse(stored);
+    } catch (e) {
+      console.warn("Failed to load campaign rules from localStorage");
+    }
+    return [
+      { id: "rule-1", name: "Schilder Lente Korting", scope: "role", scopeValue: "Schilder", discountPercent: 12, isActive: true },
+      { id: "rule-2", name: "Magazijn Schaarlift Deal", scope: "category", scopeValue: "schaarlift", discountPercent: 10, isActive: true }
+    ];
+  })(),
   isLoading: false,
   error: null,
 
@@ -354,5 +369,15 @@ export const useAppStore = create<AppState>((set, get) => ({
     }));
   },
 
-  clearCart: () => set({ cartItems: [] })
+  clearCart: () => set({ cartItems: [] }),
+
+  updateCampaignRules: (rules) => {
+    try {
+      localStorage.setItem("hwh_campaign_rules", JSON.stringify(rules));
+    } catch (e) {
+      console.warn("Failed to save campaign rules to localStorage");
+    }
+    set({ campaignRules: rules });
+  }
 }));
+

@@ -44,6 +44,7 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
   const [imageUrl, setImageUrl] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const [isAutofilling, setIsAutofilling] = useState(false);
+  const [packageContents, setPackageContents] = useState("");
 
   const handleImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -108,6 +109,7 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
         if (data.pricePerDay !== undefined) setNewPrice(String(data.pricePerDay));
         if (data.powerType) setNewPower(data.powerType);
         if (data.description) setNewDescription(data.description);
+        if (data.packageContents) setPackageContents(data.packageContents);
         if (data.suitableFor && Array.isArray(data.suitableFor)) {
           setSuitableInput(data.suitableFor.join(", "));
         }
@@ -168,7 +170,8 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
       monthlyDiscountPercent: monthlyDiscountPercent ? Number(monthlyDiscountPercent) : undefined,
       campaignText: campaignText.trim() || undefined,
       campaignDiscountPercent: campaignDiscountPercent ? Number(campaignDiscountPercent) : undefined,
-      campaignDiscountAmount: campaignDiscountAmount ? Number(campaignDiscountAmount) : undefined
+      campaignDiscountAmount: campaignDiscountAmount ? Number(campaignDiscountAmount) : undefined,
+      packageContents: packageContents.trim() || undefined
     });
 
     setIsAdding(false);
@@ -189,6 +192,7 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
       setCampaignDiscountPercent("");
       setCampaignDiscountAmount("");
       setImageUrl("");
+      setPackageContents("");
       setSubTab("machines");
     } else {
       alert(t("Fout bij opslaan.", "Error saving.", "Kaydetme hatası."));
@@ -344,6 +348,23 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
               value={newDescription}
               onChange={(e) => setNewDescription(e.target.value)}
               placeholder={t("Professionele producttekst: toepassing, ondergrond, binnen/buiten, plus belangrijkste voordeel.", "Professional product text: application, surface, indoor/outdoor, plus main benefit.", "Profesyonel ürün metni: uygulama alanı, zemin, iç/dış mekan ve en önemli avantajı.")}
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white resize-none"
+            />
+          </div>
+
+          <div className="space-y-1 col-span-2">
+            <label className="text-xs text-slate-700 block font-bold">
+              {t("Inbegrepen Pakketinhoud (Klusgids Set - puntkomma gescheiden)", "Included Package Contents (Semicolon separated)", "Dahil Olan Paket İçeriği (Noktalı virgülle ayrılmış)")}
+            </label>
+            <textarea
+              rows={3}
+              value={packageContents}
+              onChange={(e) => setPackageContents(e.target.value)}
+              placeholder={t(
+                "Bijv. 1x Gecertificeerde Elektrische Schaarlift (12m werkhoogte); 2x 20m zware verlengkabels; 1x Luxe comfort-veiligheidsharnas",
+                "e.g., 1x Certified Electric Scissor Lift (12m); 2x 20m heavy extension cables; 1x Comfort safety harness",
+                "örn: 1x Sertifikalı Elektrikli Makaslı Platform (12m); 2x 20m ağır hizmet uzatma kablosu; 1x Emniyet kemeri"
+              )}
               className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white resize-none"
             />
           </div>

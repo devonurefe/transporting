@@ -44,7 +44,8 @@ machinesRouter.post("/", requireAdmin as any, async (req: AuthenticatedRequest, 
     monthlyDiscountPercent,
     campaignText,
     campaignDiscountPercent,
-    campaignDiscountAmount
+    campaignDiscountAmount,
+    packageContents
   } = req.body;
   
   if (!name || !category || !height || !pricePerDay) {
@@ -72,7 +73,8 @@ machinesRouter.post("/", requireAdmin as any, async (req: AuthenticatedRequest, 
         monthlyDiscountPercent: monthlyDiscountPercent ? Number(monthlyDiscountPercent) : null,
         campaignText: campaignText || null,
         campaignDiscountPercent: campaignDiscountPercent ? Number(campaignDiscountPercent) : null,
-        campaignDiscountAmount: campaignDiscountAmount ? Number(campaignDiscountAmount) : null
+        campaignDiscountAmount: campaignDiscountAmount ? Number(campaignDiscountAmount) : null,
+        packageContents: packageContents || null
       }
     });
 
@@ -104,7 +106,8 @@ machinesRouter.put("/:id", requireAdmin as any, async (req: AuthenticatedRequest
     monthlyDiscountPercent,
     campaignText,
     campaignDiscountPercent,
-    campaignDiscountAmount
+    campaignDiscountAmount,
+    packageContents
   } = req.body;
   
   if (!name || !category || !height || !pricePerDay) {
@@ -132,7 +135,8 @@ machinesRouter.put("/:id", requireAdmin as any, async (req: AuthenticatedRequest
         monthlyDiscountPercent: monthlyDiscountPercent !== undefined && monthlyDiscountPercent !== null ? Number(monthlyDiscountPercent) : null,
         campaignText: campaignText || null,
         campaignDiscountPercent: campaignDiscountPercent !== undefined && campaignDiscountPercent !== null ? Number(campaignDiscountPercent) : null,
-        campaignDiscountAmount: campaignDiscountAmount !== undefined && campaignDiscountAmount !== null ? Number(campaignDiscountAmount) : null
+        campaignDiscountAmount: campaignDiscountAmount !== undefined && campaignDiscountAmount !== null ? Number(campaignDiscountAmount) : null,
+        packageContents: packageContents !== undefined ? packageContents : null
       }
     });
 

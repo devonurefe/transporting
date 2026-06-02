@@ -129,7 +129,9 @@ export default function App() {
           email: storeUser.email,
           phone: storeUser.phone || "",
           profileType: storeUser.profile || "Particulier",
-          companyName: storeUser.profile !== "Particulier" ? "Firma " + storeUser.name : undefined,
+          companyName: storeUser.companyName || undefined,
+          address: storeUser.address || undefined,
+          avatarUrl: storeUser.avatarUrl || undefined,
           pastRentalsCount: 0
         });
         setIsAdminMode(false);

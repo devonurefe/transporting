@@ -11,7 +11,10 @@ const registerSchema = z.object({
   password: z.string().min(6, "Wachtwoord moet minimaal 6 tekens bevatten"),
   name: z.string().min(2, "Naam is verplicht"),
   phone: z.string().optional(),
-  profile: z.string().optional()
+  profile: z.string().optional(),
+  companyName: z.string().optional(),
+  address: z.string().optional(),
+  avatarUrl: z.string().optional()
 });
 
 const loginSchema = z.object({
@@ -45,7 +48,10 @@ authRouter.post("/register", async (req: AuthenticatedRequest, res: Response) =>
         passwordHash,
         name: validated.name,
         phone: validated.phone || null,
-        profile: validated.profile || "Particulier"
+        profile: validated.profile || "Particulier",
+        companyName: validated.companyName || null,
+        address: validated.address || null,
+        avatarUrl: validated.avatarUrl || null
       }
     });
 
@@ -63,6 +69,9 @@ authRouter.post("/register", async (req: AuthenticatedRequest, res: Response) =>
         name: customer.name,
         phone: customer.phone,
         profile: customer.profile,
+        companyName: customer.companyName,
+        address: customer.address,
+        avatarUrl: customer.avatarUrl,
         role: "customer"
       }
     });
@@ -133,6 +142,9 @@ authRouter.post("/login", async (req: AuthenticatedRequest, res: Response) => {
           name: customer.name,
           phone: customer.phone,
           profile: customer.profile,
+          companyName: customer.companyName,
+          address: customer.address,
+          avatarUrl: customer.avatarUrl,
           role: "customer"
         }
       });
@@ -182,6 +194,9 @@ authRouter.get("/me", authenticateToken, requireAuth, async (req: AuthenticatedR
           name: customer.name,
           phone: customer.phone,
           profile: customer.profile,
+          companyName: customer.companyName,
+          address: customer.address,
+          avatarUrl: customer.avatarUrl,
           role: "customer"
         }
       });
@@ -189,5 +204,45 @@ authRouter.get("/me", authenticateToken, requireAuth, async (req: AuthenticatedR
   } catch (error) {
     console.error("Get me error:", error);
     res.status(500).json({ error: "Kon gebruikersgegevens niet ophalen" });
+  }
+});
+
+// PUT /api/auth/profile
+authRouter.put("/profile", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
+  const { name, phone, profile, companyName, address, avatarUrl } = req.body;
+  if (!name || !name.trim()) {
+    return res.status(400).json({ error: "Naam is verplicht" });
+  }
+
+  try {
+    const updatedCustomer = await prisma.customer.update({
+      where: { id: req.user!.id },
+      data: {
+        name: name.trim(),
+        phone: phone ? phone.trim() : null,
+        profile: profile || "Particulier",
+        companyName: companyName ? companyName.trim() : null,
+        address: address ? address.trim() : null,
+        avatarUrl: avatarUrl ? avatarUrl.trim() : null
+      }
+    });
+
+    res.json({
+      success: true,
+      user: {
+        id: updatedCustomer.id,
+        email: updatedCustomer.email,
+        name: updatedCustomer.name,
+        phone: updatedCustomer.phone,
+        profile: updatedCustomer.profile,
+        companyName: updatedCustomer.companyName,
+        address: updatedCustomer.address,
+        avatarUrl: updatedCustomer.avatarUrl,
+        role: "customer"
+      }
+    });
+  } catch (error) {
+    console.error("Profile update error:", error);
+    res.status(500).json({ error: "Profiel bijwerken mislukt" });
   }
 });

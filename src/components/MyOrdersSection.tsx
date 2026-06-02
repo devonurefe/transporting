@@ -77,7 +77,7 @@ export default function MyOrdersSection({
   const [regCompany, setRegCompany] = useState("");
   const [regProfile, setRegProfile] = useState("Schilder");
 
-  const { login, register } = useAuthStore();
+  const { login, register, updateProfile } = useAuthStore();
 
   // Custom simulator states
   const [simulatedEmail, setSimulatedEmail] = useState<{
@@ -90,7 +90,7 @@ export default function MyOrdersSection({
   const [emailSubscription, setEmailSubscription] = useState(true);
   const [smsSubscription, setSmsSubscription] = useState(false);
 
-  // Profile settings form state
+  // Form profile edits state
   const [profileName, setProfileName] = useState("");
   const [profilePhone, setProfilePhone] = useState("");
   const [profileCompany, setProfileCompany] = useState("");
@@ -110,23 +110,42 @@ export default function MyOrdersSection({
     }
   }, [currentUser]);
 
-  const handleSaveProfile = (e: React.FormEvent) => {
+  const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentUser) return;
     
-    const updatedUser: UserProfile = {
-      ...currentUser,
+    if (!profileName.trim()) {
+      onTriggerNotification("Fout", "Naam is verplicht.", "warning");
+      return;
+    }
+
+    const success = await updateProfile({
       name: profileName.trim(),
       phone: profilePhone.trim(),
-      companyName: profileCompany.trim() || undefined,
-      profileType: profileSector,
-      address: profileAddress.trim() || undefined,
-      avatarUrl: profileAvatarUrl.trim() || undefined
-    };
-    
-    setCurrentUser(updatedUser);
-    onTriggerNotification("Profiel Opgeslagen", "Uw profielgegevens zijn succesvol bijgewerkt! Deze worden voortaan automatisch ingevuld bij uw boekingen.", "success");
-    onAddSystemLog?.("system", currentUser.name, `Klant heeft profielgegevens bijgewerkt.`);
+      profile: profileSector,
+      companyName: profileCompany.trim(),
+      address: profileAddress.trim(),
+      avatarUrl: profileAvatarUrl.trim()
+    });
+
+    if (success) {
+      const updatedUser: UserProfile = {
+        ...currentUser,
+        name: profileName.trim(),
+        phone: profilePhone.trim(),
+        companyName: profileCompany.trim() || undefined,
+        profileType: profileSector,
+        address: profileAddress.trim() || undefined,
+        avatarUrl: profileAvatarUrl.trim() || undefined
+      };
+      
+      setCurrentUser(updatedUser);
+      onTriggerNotification("Profiel Opgeslagen", "Uw profielgegevens zijn succesvol bijgewerkt! Deze zijn nu veilig opgeslagen in onze database.", "success");
+      onAddSystemLog?.("system", currentUser.name, `Klant heeft profielgegevens permanent bijgewerkt.`);
+    } else {
+      const errorMsg = useAuthStore.getState().error || "Fout bij profiel opslaan.";
+      onTriggerNotification("Profiel Fout", `Bijwerken mislukt: ${errorMsg}`, "warning");
+    }
   };
 
   const handleRateOrder = (orderId: string, stars: number) => {

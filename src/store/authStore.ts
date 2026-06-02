@@ -6,6 +6,9 @@ export interface User {
   name: string;
   phone?: string;
   profile?: string;
+  companyName?: string;
+  address?: string;
+  avatarUrl?: string;
   role: string;
 }
 
@@ -18,6 +21,7 @@ interface AuthState {
   error: string | null;
   login: (email: string, password: string) => Promise<boolean>;
   register: (data: { email: string; password?: string; name: string; phone?: string; profile?: string }) => Promise<boolean>;
+  updateProfile: (data: { name: string; phone?: string; profile?: string; companyName?: string; address?: string; avatarUrl?: string }) => Promise<boolean>;
   logout: () => void;
   checkAuth: () => Promise<void>;
   clearError: () => void;
@@ -124,6 +128,35 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } catch (err) {
       localStorage.removeItem("hwh_token");
       set({ token: null, user: null, isAuthenticated: false, isAdmin: false, isLoading: false });
+    }
+  },
+
+  updateProfile: async (profileData) => {
+    set({ isLoading: true, error: null });
+    try {
+      const token = get().token;
+      const res = await fetch("/api/auth/profile", {
+        method: "PUT",
+        headers: { 
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify(profileData)
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Profiel bijwerken mislukt");
+      }
+
+      set({
+        user: data.user,
+        isLoading: false
+      });
+      return true;
+    } catch (err: any) {
+      set({ error: err.message, isLoading: false });
+      return false;
     }
   }
 }));

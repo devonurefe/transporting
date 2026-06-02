@@ -55,6 +55,9 @@ model Customer {
   name         String
   phone        String?
   profile      String?
+  companyName  String?
+  address      String?
+  avatarUrl    String?
   createdAt    DateTime @default(now())
   orders       Order[]
 }

@@ -167,6 +167,57 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
       return;
     }
 
+    const numHeight = Number(editHeight);
+    const numReach = Number(editReach || 0);
+    const numWeight = Number(editWeight || 1500);
+    const numPrice = Number(editPrice);
+
+    if (isNaN(numHeight) || numHeight <= 0) {
+      alert(t("Werkhoogte moet een positief getal groter dan 0 zijn.", "Working height must be a positive number greater than 0.", "Çalışma yüksekliği 0'dan büyük pozitif bir sayı olmalıdır."));
+      return;
+    }
+    if (isNaN(numReach) || numReach < 0) {
+      alert(t("Zijwaarts bereik moet 0 of groter zijn.", "Horizontal reach must be 0 or greater.", "Yatay erişim 0 veya daha büyük olmalıdır."));
+      return;
+    }
+    if (isNaN(numWeight) || numWeight <= 0) {
+      alert(t("Gewicht moet een positief getal groter dan 0 zijn.", "Weight must be a positive number greater than 0.", "Ağırlık 0'dan büyük pozitif bir sayı olmalıdır."));
+      return;
+    }
+    if (isNaN(numPrice) || numPrice <= 0) {
+      alert(t("Huurtarief moet een positief getal groter dan 0 zijn.", "Rental rate must be a positive number greater than 0.", "Kiralama ücreti 0'dan büyük pozitif bir sayı olmalıdır."));
+      return;
+    }
+
+    if (editWeeklyDiscountPercent) {
+      const numWeekly = Number(editWeeklyDiscountPercent);
+      if (isNaN(numWeekly) || numWeekly < 0 || numWeekly > 100) {
+        alert(t("Weekkorting moet tussen 0% en 100% liggen.", "Weekly discount must be between 0% and 100%.", "Haftalık indirim %0 ile %100 arasında olmalıdır."));
+        return;
+      }
+    }
+    if (editMonthlyDiscountPercent) {
+      const numMonthly = Number(editMonthlyDiscountPercent);
+      if (isNaN(numMonthly) || numMonthly < 0 || numMonthly > 100) {
+        alert(t("Maandkorting moet tussen 0% en 100% liggen.", "Monthly discount must be between 0% and 100%.", "Aylık indirim %0 ile %100 arasında olmalıdır."));
+        return;
+      }
+    }
+    if (editCampaignDiscountPercent) {
+      const numCampPercent = Number(editCampaignDiscountPercent);
+      if (isNaN(numCampPercent) || numCampPercent < 0 || numCampPercent > 100) {
+        alert(t("Campagne kortingspercentage moet tussen 0% en 100% liggen.", "Campaign discount percentage must be between 0% and 100%.", "Kampanya indirim oranı %0 ile %100 arasında olmalıdır."));
+        return;
+      }
+    }
+    if (editCampaignDiscountAmount) {
+      const numCampAmt = Number(editCampaignDiscountAmount);
+      if (isNaN(numCampAmt) || numCampAmt < 0) {
+        alert(t("Campagne kortingsbedrag moet 0 of groter zijn.", "Campaign discount amount must be 0 or greater.", "Kampanya indirim tutarı 0 veya daha büyük olmalıdır."));
+        return;
+      }
+    }
+
     setIsUpdating(true);
     const parsedSuitable = editSuitable.split(",").map(s => s.trim()).filter(s => s.length > 0);
 
@@ -377,6 +428,8 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                     <input
                       type="number"
                       required
+                      min="0.1"
+                      step="any"
                       value={editHeight}
                       onChange={(e) => setEditHeight(e.target.value)}
                       className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
@@ -387,6 +440,8 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                     <label className="text-xs text-slate-700 block font-bold">{t("Zijwaarts Bereik (m)", "Horizontal Reach (m)", "Yatay Erişim (m)")}</label>
                     <input
                       type="number"
+                      min="0"
+                      step="any"
                       value={editReach}
                       onChange={(e) => setEditReach(e.target.value)}
                       className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
@@ -397,6 +452,8 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                     <label className="text-xs text-slate-700 block font-bold">{t("Eigen Gewicht (kg)", "Weight (kg)", "Ağırlık (kg)")}</label>
                     <input
                       type="number"
+                      min="1"
+                      step="any"
                       value={editWeight}
                       onChange={(e) => setEditWeight(e.target.value)}
                       className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
@@ -408,6 +465,8 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                     <input
                       type="number"
                       required
+                      min="0.1"
+                      step="any"
                       value={editPrice}
                       onChange={(e) => setEditPrice(e.target.value)}
                       className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"

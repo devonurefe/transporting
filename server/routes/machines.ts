@@ -54,6 +54,49 @@ machinesRouter.post("/", requireAdmin as any, async (req: AuthenticatedRequest, 
     return res.status(400).json({ error: "Missing required machine fields" });
   }
 
+  const numHeight = Number(height);
+  const numReach = Number(reach || 0);
+  const numWeight = Number(weight || 1500);
+  const numPrice = Number(pricePerDay);
+
+  if (isNaN(numHeight) || numHeight <= 0) {
+    return res.status(400).json({ error: "Werkhoogte moet een positief getal groter dan 0 zijn." });
+  }
+  if (isNaN(numReach) || numReach < 0) {
+    return res.status(400).json({ error: "Zijwaarts bereik moet 0 of groter zijn." });
+  }
+  if (isNaN(numWeight) || numWeight <= 0) {
+    return res.status(400).json({ error: "Gewicht moet een positief getal groter dan 0 zijn." });
+  }
+  if (isNaN(numPrice) || numPrice <= 0) {
+    return res.status(400).json({ error: "Huurtarief moet een positief getal groter dan 0 zijn." });
+  }
+
+  if (weeklyDiscountPercent !== undefined && weeklyDiscountPercent !== null && weeklyDiscountPercent !== "") {
+    const numWeekly = Number(weeklyDiscountPercent);
+    if (isNaN(numWeekly) || numWeekly < 0 || numWeekly > 100) {
+      return res.status(400).json({ error: "Weekkorting moet tussen 0% en 100% liggen." });
+    }
+  }
+  if (monthlyDiscountPercent !== undefined && monthlyDiscountPercent !== null && monthlyDiscountPercent !== "") {
+    const numMonthly = Number(monthlyDiscountPercent);
+    if (isNaN(numMonthly) || numMonthly < 0 || numMonthly > 100) {
+      return res.status(400).json({ error: "Maandkorting moet tussen 0% en 100% liggen." });
+    }
+  }
+  if (campaignDiscountPercent !== undefined && campaignDiscountPercent !== null && campaignDiscountPercent !== "") {
+    const numCampPercent = Number(campaignDiscountPercent);
+    if (isNaN(numCampPercent) || numCampPercent < 0 || numCampPercent > 100) {
+      return res.status(400).json({ error: "Campagne kortingspercentage moet tussen 0% en 100% liggen." });
+    }
+  }
+  if (campaignDiscountAmount !== undefined && campaignDiscountAmount !== null && campaignDiscountAmount !== "") {
+    const numCampAmt = Number(campaignDiscountAmount);
+    if (isNaN(numCampAmt) || numCampAmt < 0) {
+      return res.status(400).json({ error: "Campagne kortingsbedrag moet 0 of groter zijn." });
+    }
+  }
+
   try {
     const categoryLabel = await getCategoryLabel(category);
     const newMachine = await prisma.machine.create({
@@ -117,6 +160,49 @@ machinesRouter.put("/:id", requireAdmin as any, async (req: AuthenticatedRequest
   
   if (!name || !category || !height || !pricePerDay) {
     return res.status(400).json({ error: "Missing required machine fields" });
+  }
+
+  const numHeight = Number(height);
+  const numReach = Number(reach || 0);
+  const numWeight = Number(weight || 1500);
+  const numPrice = Number(pricePerDay);
+
+  if (isNaN(numHeight) || numHeight <= 0) {
+    return res.status(400).json({ error: "Werkhoogte moet een positief getal groter dan 0 zijn." });
+  }
+  if (isNaN(numReach) || numReach < 0) {
+    return res.status(400).json({ error: "Zijwaarts bereik moet 0 of groter zijn." });
+  }
+  if (isNaN(numWeight) || numWeight <= 0) {
+    return res.status(400).json({ error: "Gewicht moet een positief getal groter dan 0 zijn." });
+  }
+  if (isNaN(numPrice) || numPrice <= 0) {
+    return res.status(400).json({ error: "Huurtarief moet een positief getal groter dan 0 zijn." });
+  }
+
+  if (weeklyDiscountPercent !== undefined && weeklyDiscountPercent !== null && weeklyDiscountPercent !== "") {
+    const numWeekly = Number(weeklyDiscountPercent);
+    if (isNaN(numWeekly) || numWeekly < 0 || numWeekly > 100) {
+      return res.status(400).json({ error: "Weekkorting moet tussen 0% en 100% liggen." });
+    }
+  }
+  if (monthlyDiscountPercent !== undefined && monthlyDiscountPercent !== null && monthlyDiscountPercent !== "") {
+    const numMonthly = Number(monthlyDiscountPercent);
+    if (isNaN(numMonthly) || numMonthly < 0 || numMonthly > 100) {
+      return res.status(400).json({ error: "Maandkorting moet tussen 0% en 100% liggen." });
+    }
+  }
+  if (campaignDiscountPercent !== undefined && campaignDiscountPercent !== null && campaignDiscountPercent !== "") {
+    const numCampPercent = Number(campaignDiscountPercent);
+    if (isNaN(numCampPercent) || numCampPercent < 0 || numCampPercent > 100) {
+      return res.status(400).json({ error: "Campagne kortingspercentage moet tussen 0% en 100% liggen." });
+    }
+  }
+  if (campaignDiscountAmount !== undefined && campaignDiscountAmount !== null && campaignDiscountAmount !== "") {
+    const numCampAmt = Number(campaignDiscountAmount);
+    if (isNaN(numCampAmt) || numCampAmt < 0) {
+      return res.status(400).json({ error: "Campagne kortingsbedrag moet 0 of groter zijn." });
+    }
   }
 
   try {

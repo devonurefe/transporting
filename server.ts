@@ -18,6 +18,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
+app.set("trust proxy", 1);
 const PORT = Number(process.env.PORT || 3000);
 
 // Helmet with relaxed CSP to ensure local Vite development works
@@ -71,6 +72,35 @@ async function startServer() {
     console.log(`\n======================================================`);
     console.log(`🚀 HoogwerkerHub Server Running on http://localhost:${PORT}`);
     console.log(`🤖 Serving full-stack React SPA with Dutch AI Advisor`);
+    console.log(`======================================================`);
+
+    // Diagnostics checks
+    console.log(`\n🩺 [DIAGNOSTICS] Auditing environment parameters...`);
+    
+    // JWT Secret Check
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret || jwtSecret === "dev-only-hoogwerkerhub-jwt-secret") {
+      console.log(`⚠️  [JWT_SECRET]: USING DEVELOPMENT DEFAULT KEY. Please set a secure key in production.`);
+    } else {
+      console.log(`✅ [JWT_SECRET]: Configured securely.`);
+    }
+
+    // Gemini API Key Check
+    const geminiKey = process.env.GEMINI_API_KEY;
+    if (!geminiKey || geminiKey === "MY_GEMINI_API_KEY" || geminiKey === "") {
+      console.log(`⚠️  [GEMINI_API_KEY]: UNCONFIGURED. AI Advisor will operate in mock fallback mode.`);
+    } else {
+      console.log(`✅ [GEMINI_API_KEY]: Configured successfully.`);
+    }
+
+    // Resend API Key Check
+    const resendKey = process.env.RESEND_API_KEY;
+    if (!resendKey || resendKey === "MY_RESEND_API_KEY" || resendKey === "") {
+      console.log(`⚠️  [RESEND_API_KEY]: UNCONFIGURED. Transactional emails will log in mock simulation mode.`);
+    } else {
+      console.log(`✅ [RESEND_API_KEY]: Configured successfully.`);
+    }
+
     console.log(`======================================================\n`);
   });
 }

@@ -41,6 +41,8 @@ export default function BookingStep1({
   handleNextStep,
   setActiveTab
 }: BookingStep1Props) {
+  const todayStr = new Date().toISOString().split('T')[0];
+
   return (
     <div className="bg-white border border-slate-200 shadow-sm p-6 rounded-3xl space-y-6">
       <div className="flex justify-between items-center border-b border-slate-100 pb-4">
@@ -115,6 +117,7 @@ export default function BookingStep1({
                       <Calendar className="h-4 w-4 text-slate-400 mr-2 shrink-0" />
                       <input
                         type="date"
+                        min={todayStr}
                         value={item.startDate}
                         onChange={(e) => onUpdateCartItemDates(item.id, e.target.value, item.endDate || "")}
                         className="bg-transparent border-none text-xs text-slate-800 outline-none w-full cursor-pointer font-bold focus:ring-0"
@@ -128,6 +131,7 @@ export default function BookingStep1({
                       <Calendar className="h-4 w-4 text-slate-400 mr-2 shrink-0" />
                       <input
                         type="date"
+                        min={item.startDate || todayStr}
                         value={item.endDate}
                         onChange={(e) => onUpdateCartItemDates(item.id, item.startDate || "", e.target.value)}
                         className="bg-transparent border-none text-xs text-slate-880 text-slate-800 outline-none w-full cursor-pointer font-bold focus:ring-0"

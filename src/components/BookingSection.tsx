@@ -175,6 +175,20 @@ export default function BookingSection({
 
       const requestedStart = new Date(start).getTime();
       const requestedEnd = new Date(end).getTime();
+      const todayStr = new Date().toISOString().split('T')[0];
+      const todayTime = new Date(todayStr).getTime();
+
+      if (requestedStart > requestedEnd) {
+        setIsAvailable(false);
+        setValidationError("De retourdatum moet na de begindatum liggen.");
+        return;
+      }
+
+      if (requestedStart < todayTime) {
+        setIsAvailable(false);
+        setValidationError("De begindatum kan niet in het verleden liggen.");
+        return;
+      }
 
       const overlaps = activeOrders.filter(o => {
         if (o.machineId !== machineId) return false;
@@ -234,6 +248,16 @@ export default function BookingSection({
 
     const requestedStart = new Date(start).getTime();
     const requestedEnd = new Date(end).getTime();
+    const todayStr = new Date().toISOString().split('T')[0];
+    const todayTime = new Date(todayStr).getTime();
+
+    if (requestedStart > requestedEnd) {
+      return { available: false, blocked: false, overlap: false, reason: "De retourdatum moet na de begindatum liggen." };
+    }
+
+    if (requestedStart < todayTime) {
+      return { available: false, blocked: false, overlap: false, reason: "De begindatum kan niet in het verleden liggen." };
+    }
 
     // Check overlaps
     const overlaps = allOrders.filter(o => {

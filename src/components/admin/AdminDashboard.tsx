@@ -294,6 +294,16 @@ export default function AdminDashboard({ setSubTab, adminLanguage }: AdminDashbo
         </div>
 
         <div className="relative pt-3 select-none">
+          {orders.length === 0 && (
+            <div className="absolute inset-0 bg-slate-50/50 backdrop-blur-xs flex flex-col items-center justify-center text-center p-6 rounded-2xl z-40 border border-slate-200/50 shadow-inner">
+              <span className="text-xs font-black text-slate-800 uppercase tracking-wider font-mono">
+                {t("Geen Transactiehistorie", "No Transaction History", "İşlem Geçmişi Yok")}
+              </span>
+              <p className="text-[10px] text-slate-500 mt-1.5 max-w-xs leading-normal">
+                {t("Er zijn momenteel geen actieve of voltooide reserveringen geregistreerd in het systeem.", "There are currently no active or completed reservations registered in the system.", "Sistemde kayıtlı aktif veya tamamlanmış herhangi bir rezervasyon bulunmamaktadır.")}
+              </p>
+            </div>
+          )}
           {/* Interactive HTML Tooltips */}
           {(() => {
             const maxTrendRevenue = Math.max(...monthlyRevenue.map((m) => m.revenue), 100);

@@ -199,6 +199,57 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
       return;
     }
 
+    const numHeight = Number(newHeight);
+    const numReach = Number(newReach || 0);
+    const numWeight = Number(newWeight || 1500);
+    const numPrice = Number(newPrice);
+
+    if (isNaN(numHeight) || numHeight <= 0) {
+      alert(t("Werkhoogte moet een positief getal groter dan 0 zijn.", "Working height must be a positive number greater than 0.", "Çalışma yüksekliği 0'dan büyük pozitif bir sayı olmalıdır."));
+      return;
+    }
+    if (isNaN(numReach) || numReach < 0) {
+      alert(t("Zijwaarts bereik moet 0 of groter zijn.", "Horizontal reach must be 0 or greater.", "Yatay erişim 0 veya daha büyük olmalıdır."));
+      return;
+    }
+    if (isNaN(numWeight) || numWeight <= 0) {
+      alert(t("Gewicht moet een positief getal groter dan 0 zijn.", "Weight must be a positive number greater than 0.", "Ağırlık 0'dan büyük pozitif bir sayı olmalıdır."));
+      return;
+    }
+    if (isNaN(numPrice) || numPrice <= 0) {
+      alert(t("Huurtarief moet een positief getal groter dan 0 zijn.", "Rental rate must be a positive number greater than 0.", "Kiralama ücreti 0'dan büyük pozitif bir sayı olmalıdır."));
+      return;
+    }
+
+    if (weeklyDiscountPercent) {
+      const numWeekly = Number(weeklyDiscountPercent);
+      if (isNaN(numWeekly) || numWeekly < 0 || numWeekly > 100) {
+        alert(t("Weekkorting moet tussen 0% en 100% liggen.", "Weekly discount must be between 0% and 100%.", "Haftalık indirim %0 ile %100 arasında olmalıdır."));
+        return;
+      }
+    }
+    if (monthlyDiscountPercent) {
+      const numMonthly = Number(monthlyDiscountPercent);
+      if (isNaN(numMonthly) || numMonthly < 0 || numMonthly > 100) {
+        alert(t("Maandkorting moet tussen 0% en 100% liggen.", "Monthly discount must be between 0% and 100%.", "Aylık indirim %0 ile %100 arasında olmalıdır."));
+        return;
+      }
+    }
+    if (campaignDiscountPercent) {
+      const numCampPercent = Number(campaignDiscountPercent);
+      if (isNaN(numCampPercent) || numCampPercent < 0 || numCampPercent > 100) {
+        alert(t("Campagne kortingspercentage moet tussen 0% en 100% liggen.", "Campaign discount percentage must be between 0% and 100%.", "Kampanya indirim oranı %0 ile %100 arasında olmalıdır."));
+        return;
+      }
+    }
+    if (campaignDiscountAmount) {
+      const numCampAmt = Number(campaignDiscountAmount);
+      if (isNaN(numCampAmt) || numCampAmt < 0) {
+        alert(t("Campagne kortingsbedrag moet 0 of groter zijn.", "Campaign discount amount must be 0 or greater.", "Kampanya indirim tutarı 0 veya daha büyük olmalıdır."));
+        return;
+      }
+    }
+
     setIsAdding(true);
     
     const parsedSuitable = suitableInput.split(",").map(s => s.trim()).filter(s => s.length > 0);
@@ -321,6 +372,8 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
             <input
               type="number"
               required
+              min="0.1"
+              step="any"
               value={newHeight}
               onChange={(e) => setNewHeight(e.target.value)}
               placeholder={t("Bijv. 16", "e.g., 16", "örn: 16")}
@@ -332,6 +385,8 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
             <label className="text-xs text-slate-700 block font-bold">{t("Zijwaarts Bereik (in meters, optioneel)", "Horizontal Reach (in meters, optional)", "Yatay Erişim (metre cinsinden, isteğe bağlı)")}</label>
             <input
               type="number"
+              min="0"
+              step="any"
               value={newReach}
               onChange={(e) => setNewReach(e.target.value)}
               placeholder={t("Bijv. 12", "e.g., 12", "örn: 12")}
@@ -343,6 +398,8 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
             <label className="text-xs text-slate-700 block font-bold">{t("Eigen Gewicht (in kg, optioneel)", "Weight (in kg, optional)", "Ağırlık (kg cinsinden, isteğe bağlı)")}</label>
             <input
               type="number"
+              min="1"
+              step="any"
               value={newWeight}
               onChange={(e) => setNewWeight(e.target.value)}
               placeholder={t("Bijv. 3200", "e.g., 3200", "örn: 3200")}
@@ -355,6 +412,8 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
             <input
               type="number"
               required
+              min="0.1"
+              step="any"
               value={newPrice}
               onChange={(e) => setNewPrice(e.target.value)}
               placeholder={t("Bijv. 150", "e.g., 150", "örn: 150")}

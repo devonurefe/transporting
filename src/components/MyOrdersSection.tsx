@@ -38,6 +38,7 @@ import {
 import { motion, AnimatePresence } from "motion/react";
 import { Order, UserProfile } from "../types";
 import { useAuthStore } from "../store/authStore";
+import { printInvoice } from "../utils/invoice";
 
 interface MyOrdersSectionProps {
   orders: Order[];
@@ -142,62 +143,11 @@ export default function MyOrdersSection({
 
   const handleDownloadInvoice = (order: Order) => {
     onTriggerNotification(
-      "Factuur Downloaden",
-      `Factuur ${order.id} wordt gegenereerd onder BMWT certificaat.`,
-      "info"
+      "Factuur Genereren",
+      `Factuur ${order.id} wordt klaargemaakt voor PDF download...`,
+      "success"
     );
-
-    setTimeout(() => {
-      const receiptContent = `
-========================================
-HOOGWERKERHUB NEDERLAND - HUUROVEREENKOMST
-========================================
-Referentie No:  ${order.id}
-Factuurdatum:   ${new Date().toLocaleDateString("nl-NL")}
-Vervaldatum:    Binnen 14 dagen netto
-Betaalmethode:  Stripe / Mollie Zakelijk (iDEAL)
-Transactie-ID:  mollie_trx_${Math.random().toString(36).substring(2, 10).toUpperCase()}
-
-Klant:          ${order.customerName}
-Bedrijf:        ${currentUser ? (currentUser.companyName || "N.v.t.") : "Gastklant"}
-Profiel:        ${order.customerProfile}
-Telefoon:       ${order.customerPhone}
-E-mail:         ${order.customerEmail}
-
-----------------------------------------
-MATERIEEL SPECIFICATIE
-----------------------------------------
-Hoogwerker:     ${order.machineName}
-Huurperiode:    ${order.startDate} tot ${order.endDate}
-Aantal Dagen:   ${order.rentalDays} dag(en)
-Logistiek:      ${order.deliveryType === "self_pickup" ? "Zelf afhalen bij de HoogwerkerHub" : "Bezorgd inclusief Chauffeur & BMWT instructies"}
-Bezorgadres:    ${order.deliveryAddress || "N.v.t. (Afhalen op locatie)"}
-
-----------------------------------------
-FINANCIËLE SPECIFICATIE (EUR)
-----------------------------------------
-Machine Subtotaal:   € ${order.subtotal.toFixed(2)}
-Transport & Chauffeur:€ ${(order.transportCost + order.driverCost).toFixed(2)}
-BTW / Belasting (21%): € ${order.vatAmount.toFixed(2)}
-========================================
-TOTAALBEDRAG:         € ${order.totalAmount.toFixed(2)}
-========================================
-Status Betaling:      BETAALD (Geverifieerd via Mollie Gateway)
-Status Overeenkomst:  ${order.status}
-
-Bedankt voor uw vertrouwen in de hoogste kwaliteit veilig werken van HoogwerkerHub!
-BMWT / TÜV CO-VERZEKERD CONTRACT. Gecertificeerd conform NEN-EN 280 normering.
-      `;
-
-      const blob = new Blob([receiptContent], { type: "text/plain" });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `Factuur-Hub-${order.id}.txt`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }, 450);
+    printInvoice(order, currentUser?.companyName);
   };
 
   const handleManualLogin = async (e: React.FormEvent) => {
@@ -842,7 +792,7 @@ BMWT / TÜV CO-VERZEKERD CONTRACT. Gecertificeerd conform NEN-EN 280 normering.
                             className="flex items-center space-x-1 font-black text-[10px] bg-white hover:bg-slate-50 transition-colors text-slate-705 text-slate-700 px-3 py-1.5 rounded-lg border border-slate-205 border-slate-250 border-slate-200 shadow-sm cursor-pointer"
                           >
                             <Download className="h-3 w-3 text-indigo-600" />
-                            <span>Factuur Downloaden</span>
+                            <span>Factuur / Teklif PDF</span>
                           </button>
 
                           {o.status === "Voltooid" && (

@@ -19,6 +19,38 @@ export default function AdminDashboard({ setSubTab, adminLanguage }: AdminDashbo
   const orders = useAppStore((state) => state.orders);
   
   const [hoveredSector, setHoveredSector] = useState<string | null>(null);
+  const [hoveredTrendMonth, setHoveredTrendMonth] = useState<string | null>(null);
+
+  // Dynamic 6-month earnings trend calculations
+  const getLast6Months = () => {
+    const months = [];
+    const now = new Date();
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      months.push({
+        monthIndex: d.getMonth(),
+        year: d.getFullYear(),
+        label: d.toLocaleDateString(adminLanguage === "tr" ? "tr-TR" : (adminLanguage === "en" ? "en-US" : "nl-NL"), { month: "short", year: "2-digit" }),
+        key: `${d.getFullYear()}-${d.getMonth()}`
+      });
+    }
+    return months;
+  };
+  const last6Months = getLast6Months();
+
+  const monthlyRevenue = last6Months.map((m) => {
+    const amount = orders.reduce((sum, order) => {
+      const orderDate = new Date(order.createdAt);
+      if (orderDate.getMonth() === m.monthIndex && orderDate.getFullYear() === m.year) {
+        return sum + order.totalAmount;
+      }
+      return sum;
+    }, 0);
+    return {
+      ...m,
+      revenue: amount
+    };
+  });
 
   const t = (nl: string, en: string, tr: string) => {
     if (adminLanguage === "tr") return tr;
@@ -245,8 +277,159 @@ export default function AdminDashboard({ setSubTab, adminLanguage }: AdminDashbo
         </div>
       </div>
 
+      {/* Panel 3: Monthly Revenue Spline Area Chart */}
+      <div className="glass-panel p-6 rounded-3xl space-y-4 bg-white border border-slate-200 shadow-sm">
+        <div className="flex justify-between items-center border-b border-slate-200 pb-3">
+          <div>
+            <h4 className="font-display font-bold text-xs uppercase text-slate-500 tracking-wider">
+              {t("Huur-omzet Trend (Laatste 6 Maanden)", "Rental Revenue Trend (Last 6 Months)", "Kiralama Ciro Trendi (Son 6 Ay)")}
+            </h4>
+            <p className="text-[10px] text-slate-500 font-mono mt-0.5">
+              {t("Dinamische omzetontwikkeling gebaseerd op alle contracten", "Dynamic revenue development based on all contracts", "Tüm sözleşmelere dayalı dinamik ciro gelişimi")}
+            </p>
+          </div>
+          <div className="text-[10px] font-mono font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-xl border border-indigo-200/30 shadow-inner">
+            {t("Totaal", "Total", "Toplam")}: € {totalEarnings.toFixed(2)}
+          </div>
+        </div>
+
+        <div className="relative pt-3 select-none">
+          {/* Interactive HTML Tooltips */}
+          {(() => {
+            const maxTrendRevenue = Math.max(...monthlyRevenue.map((m) => m.revenue), 100);
+            const trendPoints = monthlyRevenue.map((m, i) => {
+              const x = 50 + i * 100;
+              const y = 160 - (m.revenue / Math.max(maxTrendRevenue, 1)) * 110;
+              return { x, y, label: m.label, revenue: m.revenue, key: m.key };
+            });
+
+            return (
+              <>
+                {trendPoints.map((p) => {
+                  const isHovered = hoveredTrendMonth === p.key;
+                  return (
+                    <div
+                      key={p.key}
+                      style={{
+                        left: `${(p.x / 600) * 100}%`,
+                        top: `${(p.y / 200) * 100}%`,
+                      }}
+                      className={`absolute -translate-x-1/2 -translate-y-12 transition-all duration-200 pointer-events-none ${
+                        isHovered ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-90 translate-y-1"
+                      } z-40`}
+                    >
+                      <div className="bg-slate-900 border border-slate-700 px-2.5 py-1 rounded-xl text-[10px] text-white font-extrabold font-mono shadow-2xl flex flex-col items-center">
+                        <span className="text-[8.5px] uppercase tracking-wider text-slate-400 font-black">{p.label}</span>
+                        <span className="mt-0.5 text-teal-400">€ {p.revenue.toFixed(2)}</span>
+                      </div>
+                      <div className="w-2 h-2 bg-slate-900 border-r border-b border-slate-700 rotate-45 mx-auto -mt-1" />
+                    </div>
+                  );
+                })}
+
+                <svg viewBox="0 0 600 200" className="w-full h-auto overflow-visible select-none">
+                  <defs>
+                    <linearGradient id="trendLineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#4f46e5" />
+                      <stop offset="100%" stopColor="#8b5cf6" />
+                    </linearGradient>
+
+                    <linearGradient id="trendAreaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#4f46e5" stopOpacity="0.22" />
+                      <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.0" />
+                    </linearGradient>
+                  </defs>
+
+                  {/* Horizontal Grid lines */}
+                  {[0, 0.25, 0.5, 0.75, 1].map((ratio, idx) => {
+                    const y = 160 - ratio * 110;
+                    return (
+                      <g key={idx}>
+                        <line
+                          x1="45"
+                          y1={y}
+                          x2="555"
+                          y2={y}
+                          stroke="#e2e8f0"
+                          strokeWidth="1"
+                          strokeDasharray="4 4"
+                        />
+                        <text
+                          x="35"
+                          y={y + 3.5}
+                          textAnchor="end"
+                          className="text-[8.5px] font-mono fill-slate-400 font-bold"
+                        >
+                          € {Math.round(ratio * maxTrendRevenue)}
+                        </text>
+                      </g>
+                    );
+                  })}
+
+                  {/* Shaded Area path */}
+                  <path
+                    d={`${trendPoints.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ")} L ${
+                      trendPoints[trendPoints.length - 1].x
+                    } 160 L ${trendPoints[0].x} 160 Z`}
+                    fill="url(#trendAreaGradient)"
+                  />
+
+                  {/* Polyline Spline */}
+                  <path
+                    d={trendPoints.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ")}
+                    fill="none"
+                    stroke="url(#trendLineGradient)"
+                    strokeWidth="3.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+
+                  {/* Interactive Nodes */}
+                  {trendPoints.map((p) => {
+                    const isHovered = hoveredTrendMonth === p.key;
+                    return (
+                      <g key={p.key}>
+                        <circle
+                          cx={p.x}
+                          cy={p.y}
+                          r="15"
+                          fill="transparent"
+                          className="cursor-pointer"
+                          onMouseEnter={() => setHoveredTrendMonth(p.key)}
+                          onMouseLeave={() => setHoveredTrendMonth(null)}
+                        />
+                        <circle
+                          cx={p.x}
+                          cy={p.y}
+                          r={isHovered ? "6.5" : "4.5"}
+                          className={`transition-all duration-150 fill-white cursor-pointer ${
+                            isHovered ? "stroke-purple-500 stroke-[3.5]" : "stroke-indigo-600 stroke-2"
+                          }`}
+                          onMouseEnter={() => setHoveredTrendMonth(p.key)}
+                          onMouseLeave={() => setHoveredTrendMonth(null)}
+                        />
+                        <text
+                          x={p.x}
+                          y="182"
+                          textAnchor="middle"
+                          className={`text-[9px] font-mono font-bold transition-colors ${
+                            isHovered ? "fill-slate-900 font-extrabold" : "fill-slate-500"
+                          }`}
+                        >
+                          {p.label}
+                        </text>
+                      </g>
+                    );
+                  })}
+                </svg>
+              </>
+            );
+          })()}
+        </div>
+      </div>
+
       {/* Orders Summary lists */}
-      <div className="glass-panel p-6 rounded-3xl space-y-4">
+      <div className="glass-panel p-6 rounded-3xl space-y-4 bg-white border border-slate-200 shadow-sm">
         <div className="flex justify-between items-center border-b border-slate-200 pb-3">
           <h3 className="font-display font-bold text-sm text-slate-900">{t("Inkomende Aanvragen & Huren", "Incoming Requests & Rentals", "Gelen Talepler & Kiralamalar")}</h3>
           <button 

@@ -1,9 +1,4 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { 
   ArrowUpToLine, 
   ArrowRightLeft, 
@@ -18,7 +13,9 @@ import {
   RotateCcw,
   ShoppingBag,
   Info,
-  X
+  X,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Machine } from "../types";
@@ -59,11 +56,17 @@ export default function CatalogSection({
   const [maxHeight, setMaxHeight] = useState<number>(40);
   const [maxPrice, setMaxPrice] = useState<number>(500);
   const [selectedPowerTypes, setSelectedPowerTypes] = useState<string[]>(["Elektrisch", "Diesel", "Hybride"]);
+  const [sortBy, setSortBy] = useState<string>("default");
 
   // Compare state
   const [compareIds, setCompareIds] = useState<string[]>([]);
   const [showCompareModal, setShowCompareModal] = useState<boolean>(false);
   const [selectedDetailMachine, setSelectedDetailMachine] = useState<Machine | null>(null);
+  const [activeDetailImageIndex, setActiveDetailImageIndex] = useState<number>(0);
+
+  useEffect(() => {
+    setActiveDetailImageIndex(0);
+  }, [selectedDetailMachine]);
 
   const togglePowerType = (type: string) => {
     if (selectedPowerTypes.includes(type)) {
@@ -79,6 +82,7 @@ export default function CatalogSection({
     setMaxHeight(40);
     setMaxPrice(500);
     setSelectedPowerTypes(["Elektrisch", "Diesel", "Hybride"]);
+    setSortBy("default");
   };
 
   const categoryTabs = useMemo(() => [
@@ -89,9 +93,9 @@ export default function CatalogSection({
     }))
   ], [customCategories]);
 
-  // Filtered Machines
+  // Filtered & Sorted Machines
   const filteredMachines = useMemo(() => {
-    return machines.filter((machine) => {
+    const filtered = machines.filter((machine) => {
       // Category Match
       const matchesCategory = selectedCategory === "all" || machine.category === selectedCategory;
       
@@ -115,7 +119,20 @@ export default function CatalogSection({
 
       return matchesCategory && matchesSearch && matchesHeight && matchesPrice && matchesPower;
     });
-  }, [machines, selectedCategory, searchQuery, maxHeight, maxPrice, selectedPowerTypes]);
+
+    // Apply Sorting logic
+    if (sortBy === "price_asc") {
+      return [...filtered].sort((a, b) => a.pricePerDay - b.pricePerDay);
+    } else if (sortBy === "price_desc") {
+      return [...filtered].sort((a, b) => b.pricePerDay - a.pricePerDay);
+    } else if (sortBy === "height_asc") {
+      return [...filtered].sort((a, b) => a.height - b.height);
+    } else if (sortBy === "height_desc") {
+      return [...filtered].sort((a, b) => b.height - a.height);
+    }
+
+    return filtered;
+  }, [machines, selectedCategory, searchQuery, maxHeight, maxPrice, selectedPowerTypes, sortBy]);
 
   return (
     <div className="relative min-h-[calc(100vh-4.5rem)] py-10 px-4 sm:px-6 lg:px-8">
@@ -142,14 +159,32 @@ export default function CatalogSection({
             </p>
           </div>
 
-          {/* Reset Filters button if dirty */}
-          <button
-            onClick={resetFilters}
-            className="mt-3 md:mt-0 flex items-center space-x-1 text-xs text-slate-500 hover:text-slate-800 transition-colors py-1 px-2 rounded hover:bg-slate-100"
-          >
-            <RotateCcw className="h-3.5 w-3.5" />
-            <span>Filters Herstellen</span>
-          </button>
+          <div className="mt-3 md:mt-0 flex flex-wrap items-center gap-3">
+            {/* Premium Sorteer Op Dropdown */}
+            <div className="flex items-center space-x-2 bg-white border border-slate-200 shadow-sm rounded-xl py-1.5 px-3 hover:border-indigo-400 transition-colors">
+              <span className="text-xs text-slate-500 font-medium whitespace-nowrap">Sorteer op:</span>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="text-xs font-semibold bg-transparent focus:outline-none cursor-pointer text-slate-800 border-none p-0 pr-1 select-none"
+              >
+                <option value="default">Standaard</option>
+                <option value="price_asc">Laagste prijs</option>
+                <option value="price_desc">Hoogste prijs</option>
+                <option value="height_asc">Minimale hoogte</option>
+                <option value="height_desc">Maximale hoogte</option>
+              </select>
+            </div>
+
+            {/* Reset Filters button if dirty */}
+            <button
+              onClick={resetFilters}
+              className="flex items-center space-x-1.5 text-xs text-slate-500 hover:text-slate-800 transition-all py-1.5 px-3 rounded-xl hover:bg-slate-100 border border-slate-200 hover:border-slate-300 shadow-sm bg-white font-medium"
+            >
+              <RotateCcw className="h-3.5 w-3.5" />
+              <span>Filters Herstellen</span>
+            </button>
+          </div>
         </div>
 
         {/* Outer Split Wrapper (Filters left, Grid right) */}
@@ -852,18 +887,94 @@ export default function CatalogSection({
                   
                   {/* LEFT COLUMN: Image & Quick Details */}
                   <div className="md:col-span-12 lg:col-span-5 space-y-4">
-                    <div className="aspect-video w-full rounded-2xl overflow-hidden bg-slate-950 border border-white/5 relative">
-                      <img 
-                        src={selectedDetailMachine.imageUrl} 
-                        alt={selectedDetailMachine.name} 
-                        className="w-full h-full object-cover" 
-                        referrerPolicy="no-referrer" 
-                        onError={(e) => {
-                          e.currentTarget.src = "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=600&auto=format&fit=crop";
-                        }}
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/40 to-transparent pointer-events-none" />
-                    </div>
+                    {(() => {
+                      const allDetailImages = [
+                        selectedDetailMachine.imageUrl,
+                        ...(selectedDetailMachine.additionalImages || [])
+                      ].filter(Boolean);
+
+                      return (
+                        <>
+                          {/* Main Image Slider */}
+                          <div className="aspect-video w-full rounded-2xl overflow-hidden bg-slate-950 border border-slate-200 shadow-sm relative group">
+                            <AnimatePresence mode="wait">
+                              <motion.img 
+                                key={activeDetailImageIndex}
+                                src={allDetailImages[activeDetailImageIndex] || "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=600&auto=format&fit=crop"} 
+                                alt={`${selectedDetailMachine.name} - ${activeDetailImageIndex}`} 
+                                className="w-full h-full object-cover"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 0.2 }}
+                                referrerPolicy="no-referrer"
+                                onError={(e) => {
+                                  e.currentTarget.src = "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=600&auto=format&fit=crop";
+                                }}
+                              />
+                            </AnimatePresence>
+                            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/45 via-transparent to-transparent pointer-events-none" />
+
+                            {allDetailImages.length > 1 && (
+                              <>
+                                {/* Navigation Chevrons */}
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setActiveDetailImageIndex((prev) => (prev === 0 ? allDetailImages.length - 1 : prev - 1));
+                                  }}
+                                  className="absolute left-2.5 top-1/2 -translate-y-1/2 p-2 rounded-xl bg-slate-900/60 hover:bg-slate-900/80 text-white transition-all opacity-0 group-hover:opacity-100 cursor-pointer flex items-center justify-center shadow-lg"
+                                  title="Vorige"
+                                >
+                                  <ChevronLeft className="h-4.5 w-4.5" />
+                                </button>
+                                
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setActiveDetailImageIndex((prev) => (prev === allDetailImages.length - 1 ? 0 : prev + 1));
+                                  }}
+                                  className="absolute right-2.5 top-1/2 -translate-y-1/2 p-2 rounded-xl bg-slate-900/60 hover:bg-slate-900/80 text-white transition-all opacity-0 group-hover:opacity-100 cursor-pointer flex items-center justify-center shadow-lg"
+                                  title="Volgende"
+                                >
+                                  <ChevronRight className="h-4.5 w-4.5" />
+                                </button>
+
+                                {/* Dots overlay */}
+                                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex space-x-1.5 z-10 bg-slate-950/40 px-2.5 py-1 rounded-full backdrop-blur-sm">
+                                  {allDetailImages.map((_, i) => (
+                                    <button
+                                      key={i}
+                                      type="button"
+                                      onClick={() => setActiveDetailImageIndex(i)}
+                                      className={`h-1.5 rounded-full transition-all cursor-pointer ${i === activeDetailImageIndex ? 'bg-indigo-400 w-3.5' : 'bg-white/60 hover:bg-white'}`}
+                                    />
+                                  ))}
+                                </div>
+                              </>
+                            )}
+                          </div>
+
+                          {/* Thumbnails Row */}
+                          {allDetailImages.length > 1 && (
+                            <div className="flex gap-2 overflow-x-auto py-1 px-0.5 scrollbar-none animate-fade-in justify-center">
+                              {allDetailImages.map((url, i) => (
+                                <button
+                                  key={i}
+                                  type="button"
+                                  onClick={() => setActiveDetailImageIndex(i)}
+                                  className={`relative h-12 w-20 rounded-xl overflow-hidden border-2 shrink-0 transition-all cursor-pointer shadow-sm ${i === activeDetailImageIndex ? 'border-indigo-650 border-indigo-600 scale-95 ring-2 ring-indigo-500/10' : 'border-slate-200 hover:border-slate-400 hover:scale-102'}`}
+                                >
+                                  <img src={url} alt={`Thumbnail ${i}`} className="w-full h-full object-cover" />
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </>
+                      );
+                    })()}
 
                     <div className="bg-slate-50 border border-slate-200 p-4 rounded-2xl space-y-3.5">
                       <div className="flex justify-between items-center text-xs">

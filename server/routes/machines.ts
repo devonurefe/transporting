@@ -18,7 +18,8 @@ machinesRouter.get("/", async (req: AuthenticatedRequest, res: Response) => {
     const dbMachines = await prisma.machine.findMany();
     const formatted = dbMachines.map(m => ({
       ...m,
-      suitableFor: m.suitableFor ? m.suitableFor.split(";") : []
+      suitableFor: m.suitableFor ? m.suitableFor.split(";") : [],
+      additionalImages: m.additionalImages ? m.additionalImages.split(";") : []
     }));
     res.json(formatted);
   } catch (error) {
@@ -45,7 +46,8 @@ machinesRouter.post("/", requireAdmin as any, async (req: AuthenticatedRequest, 
     campaignText,
     campaignDiscountPercent,
     campaignDiscountAmount,
-    packageContents
+    packageContents,
+    additionalImages
   } = req.body;
   
   if (!name || !category || !height || !pricePerDay) {
@@ -74,13 +76,15 @@ machinesRouter.post("/", requireAdmin as any, async (req: AuthenticatedRequest, 
         campaignText: campaignText || null,
         campaignDiscountPercent: campaignDiscountPercent ? Number(campaignDiscountPercent) : null,
         campaignDiscountAmount: campaignDiscountAmount ? Number(campaignDiscountAmount) : null,
-        packageContents: packageContents || null
+        packageContents: packageContents || null,
+        additionalImages: Array.isArray(additionalImages) ? additionalImages.join(";") : null
       }
     });
 
     res.status(201).json({
       ...newMachine,
-      suitableFor: newMachine.suitableFor ? newMachine.suitableFor.split(";") : []
+      suitableFor: newMachine.suitableFor ? newMachine.suitableFor.split(";") : [],
+      additionalImages: newMachine.additionalImages ? newMachine.additionalImages.split(";") : []
     });
   } catch (error) {
     console.error("Error creating machine:", error);
@@ -107,7 +111,8 @@ machinesRouter.put("/:id", requireAdmin as any, async (req: AuthenticatedRequest
     campaignText,
     campaignDiscountPercent,
     campaignDiscountAmount,
-    packageContents
+    packageContents,
+    additionalImages
   } = req.body;
   
   if (!name || !category || !height || !pricePerDay) {
@@ -136,13 +141,15 @@ machinesRouter.put("/:id", requireAdmin as any, async (req: AuthenticatedRequest
         campaignText: campaignText || null,
         campaignDiscountPercent: campaignDiscountPercent !== undefined && campaignDiscountPercent !== null ? Number(campaignDiscountPercent) : null,
         campaignDiscountAmount: campaignDiscountAmount !== undefined && campaignDiscountAmount !== null ? Number(campaignDiscountAmount) : null,
-        packageContents: packageContents !== undefined ? packageContents : null
+        packageContents: packageContents !== undefined ? packageContents : null,
+        additionalImages: Array.isArray(additionalImages) ? additionalImages.join(";") : null
       }
     });
 
     res.json({
       ...updatedMachine,
-      suitableFor: updatedMachine.suitableFor ? updatedMachine.suitableFor.split(";") : []
+      suitableFor: updatedMachine.suitableFor ? updatedMachine.suitableFor.split(";") : [],
+      additionalImages: updatedMachine.additionalImages ? updatedMachine.additionalImages.split(";") : []
     });
   } catch (error: any) {
     console.error("Error updating machine:", error);

@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from "react";
-import { PlusCircle, Sparkles } from "lucide-react";
+import { PlusCircle, Sparkles, Trash2 } from "lucide-react";
 import { motion } from "motion/react";
 import { useAppStore } from "../../store/appStore";
 
@@ -43,8 +43,56 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
   const [isAdding, setIsAdding] = useState<boolean>(false);
   const [imageUrl, setImageUrl] = useState("");
   const [isUploading, setIsUploading] = useState(false);
+  const [additionalImages, setAdditionalImages] = useState<string[]>([]);
+  const [isUploadingAdditional, setIsUploadingAdditional] = useState(false);
   const [isAutofilling, setIsAutofilling] = useState(false);
   const [packageContents, setPackageContents] = useState("");
+
+  const handleAdditionalImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setIsUploadingAdditional(true);
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const reader = new FileReader();
+      const uploadPromise = new Promise<void>((resolve) => {
+        reader.onload = async (uploadEvent) => {
+          const base64 = uploadEvent.target?.result as string;
+          try {
+            const token = localStorage.getItem("hwh_token");
+            const res = await fetch("/api/upload", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                ...(token ? { Authorization: `Bearer ${token}` } : {})
+              },
+              body: JSON.stringify({
+                fileName: file.name,
+                base64Data: base64
+              })
+            });
+
+            if (res.ok) {
+              const data = await res.json();
+              setAdditionalImages((prev) => [...prev, data.url]);
+              onAddSystemLog("fleet", "Beheerder", t("Extra afbeelding geüpload: ", "Extra image uploaded: ", "Ek resim yüklendi: ") + file.name);
+            } else {
+              alert(t("Uploaden mislukt voor: ", "Upload failed for: ", "Yükleme başarısız: ") + file.name);
+            }
+          } catch (err) {
+            console.error(err);
+            alert(t("Fout bij uploaden afbeelding.", "Error uploading image.", "Resim yükleme hatası."));
+          } finally {
+            resolve();
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+      await uploadPromise;
+    }
+    setIsUploadingAdditional(false);
+  };
 
   const handleImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -171,7 +219,8 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
       campaignText: campaignText.trim() || undefined,
       campaignDiscountPercent: campaignDiscountPercent ? Number(campaignDiscountPercent) : undefined,
       campaignDiscountAmount: campaignDiscountAmount ? Number(campaignDiscountAmount) : undefined,
-      packageContents: packageContents.trim() || undefined
+      packageContents: packageContents.trim() || undefined,
+      additionalImages: additionalImages
     });
 
     setIsAdding(false);
@@ -192,6 +241,7 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
       setCampaignDiscountPercent("");
       setCampaignDiscountAmount("");
       setImageUrl("");
+      setAdditionalImages([]);
       setPackageContents("");
       setSubTab("machines");
     } else {
@@ -476,6 +526,45 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
                   </div>
                 </div>
               )}
+
+              {/* Additional Images Section */}
+              <div className="col-span-1 sm:col-span-2 border-t border-slate-200/80 pt-4 mt-2 space-y-3">
+                <span className="text-xs text-slate-700 block font-bold">
+                  {t("Ek Resim Galerisi (Çoklu Slayt Gösterisi)", "Additional Image Gallery (Slideshow)", "Ek Resim Galerisi (Çoklu Slayt)")}
+                </span>
+                
+                <div className="relative">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    disabled={isUploadingAdditional}
+                    onChange={handleAdditionalImageFileChange}
+                    className="w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-[10.5px] file:font-black file:bg-indigo-50 file:text-indigo-700 file:cursor-pointer hover:file:bg-indigo-100 transition-all border border-dashed border-slate-350 rounded-xl p-3 bg-white"
+                  />
+                  {isUploadingAdditional && (
+                    <div className="absolute right-6 top-5 h-5 w-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+                  )}
+                </div>
+
+                {additionalImages.length > 0 && (
+                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3 mt-3 animate-fade-in">
+                    {additionalImages.map((url, idx) => (
+                      <div key={idx} className="relative aspect-video rounded-xl overflow-hidden border border-slate-200 bg-slate-105 group shadow-sm">
+                        <img src={url} alt={`Extra ${idx}`} className="w-full h-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => setAdditionalImages(prev => prev.filter((_, i) => i !== idx))}
+                          className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-lg opacity-90 hover:opacity-100 transition-opacity shadow cursor-pointer flex items-center justify-center"
+                          title={t("Verwijderen", "Delete", "Sil")}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
 
             </div>
           </div>

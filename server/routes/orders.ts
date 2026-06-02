@@ -57,6 +57,16 @@ ordersRouter.post("/", async (req: AuthenticatedRequest, res: Response) => {
   }
 
   try {
+    let resolvedCustomerId: string | null = null;
+    if (req.user && req.user.role !== "admin") {
+      const customer = await prisma.customer.findUnique({
+        where: { id: req.user.id }
+      });
+      if (customer) {
+        resolvedCustomerId = req.user.id;
+      }
+    }
+
     const newOrder = await prisma.order.create({
       data: {
         id: `HWH-${Math.floor(1000 + Math.random() * 9000)}`,
@@ -78,7 +88,7 @@ ordersRouter.post("/", async (req: AuthenticatedRequest, res: Response) => {
         vatAmount: Number(orderData.vatAmount),
         totalAmount: Number(orderData.totalAmount),
         status: "In behandeling",
-        customerId: req.user ? req.user.id : null,
+        customerId: resolvedCustomerId,
         addons: JSON.stringify(orderData.addons || [])
       }
     });

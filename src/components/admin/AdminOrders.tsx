@@ -17,9 +17,11 @@ import {
   Check, 
   DollarSign, 
   Clock,
-  Briefcase
+  Briefcase,
+  Printer
 } from "lucide-react";
 import { useAppStore } from "../../store/appStore";
+import { printInvoice } from "../../utils/invoice";
 
 interface AdminOrdersProps {
   key?: string;
@@ -116,53 +118,53 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage }: AdminOrde
                     <tr key={o.id} className="hover:bg-slate-50 transition-colors group">
                       <td 
                         onClick={() => { setSelectedDetailOrder(o); setIsProposingDate(false); }}
-                        className="py-4 font-mono font-bold text-indigo-600 cursor-pointer hover:underline"
+                        className="py-6 px-3 font-mono font-bold text-indigo-600 cursor-pointer hover:underline text-xs"
                         title={t("Klik om contract details in te zien", "Click to view contract details", "Sözleşme detaylarını görmek için tıklayın")}
                       >
                         {o.id}
                       </td>
                       <td 
                         onClick={() => { setSelectedDetailOrder(o); setIsProposingDate(false); }}
-                        className="py-4 font-medium text-slate-800 cursor-pointer"
+                        className="py-6 px-3 font-medium text-slate-800 cursor-pointer"
                         title={t("Klik om klantgegevens in te zien", "Click to view customer details", "Müşteri bilgilerini görmek için tıklayın")}
                       >
-                        <div className="font-bold group-hover:text-indigo-650 group-hover:text-indigo-600 transition-colors">{o.customerName}</div>
-                        <span className="block text-[10px] text-slate-500 font-mono mt-0.5">{o.customerPhone}</span>
-                        <span className="block text-[9.5px] text-slate-500 truncate max-w-[120px]">{o.customerEmail}</span>
+                        <div className="font-bold text-slate-950 group-hover:text-indigo-650 group-hover:text-indigo-600 transition-colors mb-1 text-xs">{o.customerName}</div>
+                        <span className="block text-[10px] text-slate-450 text-slate-500 font-mono mt-0.5 leading-none">{o.customerPhone}</span>
+                        <span className="block text-[10px] text-slate-400 font-sans mt-1.5 truncate max-w-[180px] leading-none" title={o.customerEmail}>{o.customerEmail}</span>
                       </td>
-                      <td className="py-4">
-                        <div className="font-bold text-slate-800">{o.machineName}</div>
-                        <span className="block text-[10px] text-slate-500 mt-0.5">{o.customerProfile}</span>
+                      <td className="py-6 px-3">
+                        <div className="font-bold text-slate-850 text-slate-800 text-xs mb-1">{o.machineName}</div>
+                        <span className="inline-block bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-[9.5px] font-bold">{o.customerProfile}</span>
                       </td>
-                      <td className="py-4">
-                        <span className="text-[11px] text-slate-600 block">
+                      <td className="py-6 px-3">
+                        <span className="text-[11px] font-semibold text-slate-700 block">
                           {o.deliveryType === "self_pickup" 
                             ? t("Zelf Afhalen (Gratis)", "Self Pickup (Free)", "Kendim Teslim Alacağım (Ücretsiz)") 
                             : t("Bezorgservice", "Delivery Service", "Adrese Teslimat")}
                         </span>
                         {o.deliveryAddress && (
-                          <span className="block text-[9px] text-slate-500 truncate max-w-[150px] mt-0.5 leading-none" title={o.deliveryAddress}>
+                          <span className="block text-[9.5px] text-slate-450 text-slate-500 truncate max-w-[200px] mt-1.5 leading-tight" title={o.deliveryAddress}>
                             {o.deliveryAddress}
                           </span>
                         )}
                       </td>
-                      <td className="py-4 whitespace-nowrap">
-                        <div className="text-slate-800">{o.startDate}</div>
-                        <span className="text-[10px] text-slate-500 block font-mono mt-0.5">({o.rentalDays}d)</span>
+                      <td className="py-6 px-3 whitespace-nowrap">
+                        <div className="text-slate-850 text-slate-800 font-semibold text-xs">{o.startDate}</div>
+                        <span className="text-[10px] text-slate-450 text-slate-500 block font-mono mt-1.5">({o.rentalDays}d)</span>
                       </td>
-                      <td className="py-4 font-mono font-bold text-teal-600 font-mono">€ {o.totalAmount.toFixed(2)}</td>
-                      <td className="py-4 text-center">
-                        <div className="flex flex-col gap-1.5 justify-center items-center">
-                          <span className={`inline-block text-[9px] font-mono px-2 py-0.5 rounded-full font-extrabold uppercase ${
+                      <td className="py-6 px-3 font-mono font-bold text-teal-600 text-xs">€ {o.totalAmount.toFixed(2)}</td>
+                      <td className="py-6 px-3 text-center">
+                        <div className="flex flex-col gap-2.5 justify-center items-center">
+                          <span className={`inline-block text-[9.5px] font-mono px-3 py-1 rounded-full font-extrabold uppercase tracking-wider ${
                             o.status === "In behandeling" 
-                              ? "bg-amber-400/20 text-amber-400" 
+                              ? "bg-amber-400/20 text-amber-500 border border-amber-300/30" 
                               : o.status === "Goedgekeurd"
-                                ? "bg-teal-500/20 text-teal-400"
+                                ? "bg-teal-500/20 text-teal-500 border border-teal-400/30"
                                 : o.status === "Onderweg"
-                                  ? "bg-blue-500/20 text-blue-400"
+                                  ? "bg-blue-500/20 text-blue-500 border border-blue-400/30"
                                   : o.status === "Geannuleerd"
-                                    ? "bg-rose-500/20 text-rose-500"
-                                    : "bg-slate-700/30 text-slate-400"
+                                    ? "bg-rose-500/20 text-rose-500 border border-rose-450/30"
+                                    : "bg-slate-700/30 text-slate-400 border border-slate-500/30"
                           }`}>
                             {o.status === "In behandeling" 
                               ? t("In behandeling", "Pending", "Beklemede") 
@@ -174,15 +176,23 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage }: AdminOrde
                                     ? t("Geannuleerd", "Cancelled", "İptal Edildi")
                                     : t("Voltooid", "Completed", "Tamamlandı")}
                           </span>
-
-                          <div className="flex space-x-1">
+ 
+                          <div className="flex space-x-1.5 mt-0.5">
                             <button
                               onClick={() => { setSelectedDetailOrder(o); setIsProposingDate(false); }}
-                              className="text-[9px] font-bold px-2 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors border-none cursor-pointer"
+                              className="text-[10px] font-extrabold px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors border border-slate-200/60 shadow-sm cursor-pointer hover:scale-[1.02] active:scale-98"
                             >
                               {t("Bekijken", "View", "Detaylar")}
                             </button>
-
+ 
+                            <button
+                              onClick={() => printInvoice(o)}
+                              className="text-[10px] font-extrabold px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors border border-slate-200/60 shadow-sm cursor-pointer flex items-center justify-center hover:scale-[1.02] active:scale-98"
+                              title={t("Factuur Afdrukken", "Print Invoice", "Faturayı Yazdır")}
+                            >
+                              <Printer className="h-4 w-4 text-indigo-600" />
+                            </button>
+ 
                             {/* Handle action buttons */}
                             {o.status === "In behandeling" && (
                               <button
@@ -191,7 +201,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage }: AdminOrde
                                   "Goedgekeurd", 
                                   `Bestelling goedgekeurd: ${o.id} voor ${o.customerName}.`
                                 )}
-                                className="bg-teal-500 hover:bg-teal-600 text-slate-950 text-[9px] font-black px-2.5 py-1 rounded cursor-pointer leading-none transition-transform active:scale-95 border-none"
+                                className="bg-teal-500 hover:bg-teal-600 text-slate-950 text-[10px] font-black px-3.5 py-1.5 rounded-xl cursor-pointer leading-none transition-all hover:scale-[1.02] active:scale-95 border-none shadow-md"
                               >
                                 {t("Accorderen", "Approve", "Onayla")}
                               </button>
@@ -203,7 +213,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage }: AdminOrde
                                   "Onderweg", 
                                   `Chauffeur ingepland & machine onderweg: ${o.id}.`
                                 )}
-                                className="bg-blue-600 hover:bg-blue-500 text-white text-[9px] font-bold px-2.5 py-1 rounded cursor-pointer leading-none transition-transform active:scale-95 border-none"
+                                className="bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-black px-3.5 py-1.5 rounded-xl cursor-pointer leading-none transition-all hover:scale-[1.02] active:scale-95 border-none shadow-md"
                               >
                                 {t("Versturen", "Dispatch", "Yola Çıkar")}
                               </button>
@@ -215,7 +225,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage }: AdminOrde
                                   "Voltooid", 
                                   `Verhuurcontract succesvol afgerond: ${o.id}.`
                                 )}
-                                className="bg-indigo-600 hover:bg-indigo-500 text-white text-[9px] font-bold px-2.5 py-1 rounded cursor-pointer leading-none transition-transform active:scale-95 border-none"
+                                className="bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-black px-3.5 py-1.5 rounded-xl cursor-pointer leading-none transition-all hover:scale-[1.02] active:scale-95 border-none shadow-md"
                               >
                                 {t("Voltooien", "Complete", "Tamamla")}
                               </button>
@@ -467,6 +477,15 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage }: AdminOrde
                 </div>
 
                 <div className="flex items-center space-x-2">
+                  <button
+                    type="button"
+                    onClick={() => printInvoice(selectedDetailOrder)}
+                    className="px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center space-x-1.5"
+                  >
+                    <Printer className="h-3.5 w-3.5 shrink-0 text-indigo-600" />
+                    <span>{t("Afdrukken / PDF", "Print / PDF", "Yazdır / PDF")}</span>
+                  </button>
+
                   <button
                     type="button"
                     onClick={() => setSelectedDetailOrder(null)}

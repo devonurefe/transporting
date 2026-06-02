@@ -27,6 +27,7 @@ model Machine {
   campaignDiscountPercent Float?
   campaignDiscountAmount  Float?
   packageContents         String?
+  additionalImages        String?
   blockedDates            BlockedDate[]
 }
 

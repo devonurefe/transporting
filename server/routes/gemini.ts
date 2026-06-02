@@ -69,9 +69,9 @@ Gedragsregels:
 
   if (client) {
     try {
-      console.log("Sending prompt to Gemini API ('gemini-3.5-flash')...");
+      console.log("Sending prompt to Gemini API ('gemini-2.5-flash')...");
       const response = await client.models.generateContent({
-        model: "gemini-3.5-flash",
+        model: "gemini-2.5-flash",
         contents: formattedContents,
         config: {
           systemInstruction,
@@ -155,7 +155,7 @@ geminiRouter.post("/autofill", requireAdmin as any, async (req: AuthenticatedReq
     try {
       console.log(`Querying Gemini for autofill specs of: ${machineName}...`);
       const response = await client.models.generateContent({
-        model: "gemini-3.5-flash",
+        model: "gemini-2.5-flash",
         contents: `Genereer specificaties voor hoogwerker model: "${machineName}"`,
         config: {
           systemInstruction,

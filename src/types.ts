@@ -23,6 +23,7 @@ export interface Machine {
   campaignDiscountPercent?: number; // campaign discount %
   campaignDiscountAmount?: number; // campaign discount EUR amount
   packageContents?: string; // Semicolon separated included items checklist
+  additionalImages?: string[];
 }
 
 export type DeliveryType = "self_pickup" | "delivery_with_driver";

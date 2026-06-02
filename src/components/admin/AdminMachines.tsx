@@ -49,7 +49,55 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
   const [editCampaignDiscountPercent, setEditCampaignDiscountPercent] = useState("");
   const [editCampaignDiscountAmount, setEditCampaignDiscountAmount] = useState("");
   const [isUploadingEditImage, setIsUploadingEditImage] = useState(false);
+  const [editAdditionalImages, setEditAdditionalImages] = useState<string[]>([]);
+  const [isUploadingEditAdditional, setIsUploadingEditAdditional] = useState(false);
   const [editPackageContents, setEditPackageContents] = useState("");
+
+  const handleEditAdditionalImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setIsUploadingEditAdditional(true);
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const reader = new FileReader();
+      const uploadPromise = new Promise<void>((resolve) => {
+        reader.onload = async (uploadEvent) => {
+          const base64 = uploadEvent.target?.result as string;
+          try {
+            const token = localStorage.getItem("hwh_token");
+            const res = await fetch("/api/upload", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                ...(token ? { Authorization: `Bearer ${token}` } : {})
+              },
+              body: JSON.stringify({
+                fileName: file.name,
+                base64Data: base64
+              })
+            });
+
+            if (res.ok) {
+              const data = await res.json();
+              setEditAdditionalImages((prev) => [...prev, data.url]);
+              onAddSystemLog("fleet", "Beheerder", t("Ek resim eklendi: ", "Extra image added: ", "Ek resim eklendi: ") + file.name);
+            } else {
+              alert(t("Uploaden mislukt voor: ", "Upload failed for: ", "Yükleme başarısız: ") + file.name);
+            }
+          } catch (err) {
+            console.error(err);
+            alert(t("Fout bij uploaden afbeelding.", "Error uploading image.", "Resim yükleme hatası."));
+          } finally {
+            resolve();
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+      await uploadPromise;
+    }
+    setIsUploadingEditAdditional(false);
+  };
 
   const handleStartEdit = (m: Machine) => {
     setEditingMachine(m);
@@ -68,6 +116,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
     setEditCampaignText(m.campaignText || "");
     setEditCampaignDiscountPercent(m.campaignDiscountPercent ? String(m.campaignDiscountPercent) : "");
     setEditCampaignDiscountAmount(m.campaignDiscountAmount ? String(m.campaignDiscountAmount) : "");
+    setEditAdditionalImages(m.additionalImages || []);
     setEditPackageContents(m.packageContents || "");
   };
 
@@ -137,7 +186,8 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
       campaignText: editCampaignText.trim() || undefined,
       campaignDiscountPercent: editCampaignDiscountPercent ? Number(editCampaignDiscountPercent) : undefined,
       campaignDiscountAmount: editCampaignDiscountAmount ? Number(editCampaignDiscountAmount) : undefined,
-      packageContents: editPackageContents.trim() || undefined
+      packageContents: editPackageContents.trim() || undefined,
+      additionalImages: editAdditionalImages
     });
 
     setIsUpdating(false);
@@ -424,6 +474,45 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                           )}
                         </div>
                       </div>
+                    </div>
+
+                    {/* Additional Images Section */}
+                    <div className="col-span-2 border-t border-slate-200/80 pt-4 space-y-3">
+                      <span className="text-xs text-slate-700 block font-bold">
+                        {t("Ek Resim Galerisi (Çoklu Slayt Gösterisi)", "Additional Image Gallery (Slideshow)", "Ek Resim Galerisi (Çoklu Slayt)")}
+                      </span>
+                      
+                      <div className="relative">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          disabled={isUploadingEditAdditional}
+                          onChange={handleEditAdditionalImageFileChange}
+                          className="w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-[10.5px] file:font-black file:bg-indigo-50 file:text-indigo-700 file:cursor-pointer hover:file:bg-indigo-100 transition-all border border-dashed border-slate-350 rounded-xl p-3 bg-white"
+                        />
+                        {isUploadingEditAdditional && (
+                          <div className="absolute right-6 top-5 h-5 w-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+                        )}
+                      </div>
+
+                      {editAdditionalImages.length > 0 && (
+                        <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mt-3 animate-fade-in">
+                          {editAdditionalImages.map((url, idx) => (
+                            <div key={idx} className="relative aspect-video rounded-xl overflow-hidden border border-slate-200 bg-slate-105 group shadow-sm">
+                              <img src={url} alt={`Extra ${idx}`} className="w-full h-full object-cover" />
+                              <button
+                                type="button"
+                                onClick={() => setEditAdditionalImages(prev => prev.filter((_, i) => i !== idx))}
+                                className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-lg opacity-90 hover:opacity-100 transition-opacity shadow cursor-pointer flex items-center justify-center"
+                                title={t("Verwijderen", "Delete", "Sil")}
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
 

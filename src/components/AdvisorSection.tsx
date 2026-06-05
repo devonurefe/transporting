@@ -1198,7 +1198,7 @@ export default function AdvisorSection({
                     <div className="space-y-3">
                       <h4 className="text-[10px] font-mono text-slate-500 uppercase tracking-widest block font-bold">Technische Specificaties</h4>
                       
-                      <div className="grid grid-cols-2 gap-3 font-sans">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 font-sans">
                         <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between">
                           <span className="text-[11px] text-slate-500">Werkhoogte:</span>
                           <span className="font-mono text-xs font-bold text-slate-900">{selectedDetailMachine.height} meter</span>

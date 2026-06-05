@@ -457,7 +457,7 @@ export default function MyOrdersSection({
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3.5 pt-1">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
                     <div className="space-y-1.5">
                       <label className="text-xs text-slate-600 block font-semibold">Vakgebied / Profiel</label>
                       <select

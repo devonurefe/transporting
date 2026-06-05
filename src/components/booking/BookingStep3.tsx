@@ -52,7 +52,7 @@ export default function BookingStep3({
       {/* Choose gateway simulation standard */}
       <div className="space-y-2">
         <span className="text-[10px] text-slate-500 font-mono font-extrabold uppercase block">Kies Payment Gateway SDK</span>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <button
             onClick={() => setPaymentGateway("mollie")}
             className={`p-3 rounded-xl border flex flex-col items-center justify-center cursor-pointer transition-all border-none ${

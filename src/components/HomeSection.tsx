@@ -243,7 +243,7 @@ export default function HomeSection({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.3 }}
-              className="grid grid-cols-2 sm:grid-cols-3 gap-3.5"
+              className="grid grid-cols-1 sm:grid-cols-3 gap-3.5"
             >
               {[
                 { label: "100% Gekeurd", desc: "TÜV & BMWT", icon: ShieldCheck, color: "text-teal-650" },
@@ -493,7 +493,7 @@ export default function HomeSection({
 
         {/* TRUST BANNER - HOLLAND PREMIER VENDOR */}
         <div className="mt-20 border-t border-slate-200/80 pt-12 text-center">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
             <div>
               <span className="text-2xl md:text-3xl font-extrabold text-slate-900 font-display">Alphen a/d Rijn</span>
               <p className="text-[10px] text-slate-500 font-mono uppercase mt-1">Hoofdkantoor & Hub</p>

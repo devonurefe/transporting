@@ -879,31 +879,31 @@ export default function AdvisorSection({
               <div className="border border-indigo-100 bg-indigo-50/50 p-5 rounded-3xl space-y-3 shadow-sm">
                 <h4 className="font-display font-bold text-xs text-slate-900 flex items-center space-x-1.5">
                   <Layers className="h-4 w-4 text-teal-650 text-teal-600 animate-pulse" />
-                  <span>Onze Vloot Bereik Checklist</span>
+                  <span>Onze Compacte Vloot Checklist</span>
                 </h4>
                 <p className="text-[10.5px] text-slate-600 leading-relaxed">
-                  Onze vloot herbergt gecertificeerde typen die binnenshuis fluisterstil en buitenshuis ruw-terrein bestendig zijn.
+                  Onze compacte vloot herbergt stille, lichtgewicht typen die uitermate geschikt zijn voor doe-het-zelvers en ZZP-klussen binnenshuis of in de tuin.
                 </p>
                 <div className="space-y-2 pt-2 text-[10px] font-mono text-slate-500">
                   <div className="flex justify-between border-b border-slate-100 pb-1">
-                    <span>Schaarlift (Schilderen, loods)</span>
+                    <span>Schaarlift (Schilderen, binnen)</span>
+                    <span className="text-slate-800 font-bold">v.a. 6m</span>
+                  </div>
+                  <div className="flex justify-between border-b border-slate-100 pb-1">
+                    <span>Knikarm (Over obstakels/serre)</span>
                     <span className="text-slate-800 font-bold">v.a. 12m</span>
                   </div>
                   <div className="flex justify-between border-b border-slate-100 pb-1">
-                    <span>Knikarm (Obstakels gevels)</span>
-                    <span className="text-slate-800 font-bold">v.a. 18m</span>
+                    <span>Telescoop (Snoeien & gevel)</span>
+                    <span className="text-slate-800 font-bold">v.a. 14m</span>
                   </div>
                   <div className="flex justify-between border-b border-slate-100 pb-1">
-                    <span>Telescoop (Zware bouw)</span>
-                    <span className="text-slate-800 font-bold">v.a. 26m</span>
-                  </div>
-                  <div className="flex justify-between border-b border-slate-100 pb-1">
-                    <span>Autohoogwerker (Mobiliteit)</span>
-                    <span className="text-slate-800 font-bold">v.a. 22m</span>
+                    <span>Autohoogwerker (Snel op weg B)</span>
+                    <span className="text-slate-800 font-bold">v.a. 16m</span>
                   </div>
                   <div className="flex justify-between pb-1">
-                    <span>Spinhoogwerker (Krappe tuin)</span>
-                    <span className="text-slate-800 font-bold">v.a. 15m</span>
+                    <span>Spinhoogwerker (Krappe tuinpoort)</span>
+                    <span className="text-slate-800 font-bold">v.a. 12m</span>
                   </div>
                 </div>
               </div>

@@ -28,82 +28,82 @@ import { motion } from "motion/react";
 const klusPakketten = [
   {
     id: "set-paint-comfort",
-    title: "Schilderskit Comfort (12m)",
+    title: "Schilderskit Comfort (10m)",
     sub: "Binnenschilderwerk & wanden",
     desc: "Inclusief 2x 20m verlengkabels, veiligheidsharnas, non-marking banden en extra vloerbeschermers.",
-    price: "€140/dag",
-    height: "12m",
+    price: "€115/dag",
+    height: "10m",
     suit: "Schilders & Klussers",
     color: "from-amber-500/10 via-amber-600/5 to-white border-amber-300 text-amber-900 shadow-sm"
   },
   {
     id: "set-solar-pro",
-    title: "Solar Pro Montage set (18m)",
-    sub: "Zonnepanelen montage & daken",
-    desc: "Inclusief knikarm hoogwerker, uitschuifbare materiaalhaken, helm en kasko-allrisk dekking.",
-    price: "€240/dag",
-    height: "18m",
+    title: "Solar Pro Montage set (12m)",
+    sub: "Zonnepanelen installatie & daken",
+    desc: "Inclusief compacte hybride knikarmhoogwerker, handige materiaalhaken en all-risk kasko dekking.",
+    price: "€185/dag",
+    height: "12m",
     suit: "Zonnepaneel Teams",
     color: "from-blue-500/10 via-blue-600/5 to-white border-blue-200 text-blue-900 shadow-sm"
   },
   {
     id: "set-prune-compact",
-    title: "Tuin Snoeisets compact (15m)",
+    title: "Tuin Snoeisets compact (12m)",
     sub: "Snoeien & boomverzorging",
-    desc: "Compacte Spinhoogwerker op rupsbanden met 4x gazonbeschermplaat en helm met gehoorbescherming.",
-    price: "€195/dag",
-    height: "15m",
-    suit: "Hoveniers & Groen",
+    desc: "Compacte Spinhoogwerker op rupsbanden met 4x plastic rijplaten en helm met gehoorbescherming.",
+    price: "€170/dag",
+    height: "12m",
+    suit: "Particulieren & Hoveniers",
     color: "from-emerald-500/10 via-emerald-600/5 to-white border-emerald-300 text-emerald-900 shadow-sm"
   },
   {
     id: "set-gutter-fast",
-    title: "Dakgootschep Snelstart (22m)",
+    title: "Dakgootschep Snelstart (16m)",
     sub: "Gootreiniging & inspectie",
-    desc: "Zelf rijden met B-rijbewijs. Gemonteerd met platformvak voor gereedschappen en stroomhaspel kit.",
-    price: "€265/dag",
-    height: "22m",
+    desc: "Zelf rijden met rijbewijs B. Inclusief platformvak voor gereedschappen, dakgootschep en 230V stroom in werkbak.",
+    price: "€215/dag",
+    height: "16m",
     suit: "Glazenwassers & DHZ",
     color: "from-rose-500/10 via-rose-600/5 to-white border-rose-300 text-rose-900 shadow-sm"
   },
   {
     id: "set-facade-heavy",
-    title: "Heavy Gevelreiniger Set (26m)",
-    sub: "Gevelwas & restauratie",
-    desc: "Telescoop set voor professionele buitenwas. Inclusief hogedruk generator module op de machine.",
-    price: "€375/dag",
-    height: "26m",
-    suit: "Glazenwasserij & Bouw",
+    title: "Gevelreiniger Compact (14m)",
+    sub: "Gevelreiniging & voegwerk",
+    desc: "Compacte telescoophoogwerker met uitstekend bereik. Inclusief hogedrukspuit haspelmontage.",
+    price: "€195/dag",
+    height: "14m",
+    suit: "Schilders & Klussers",
     color: "from-purple-500/10 via-indigo-600/5 to-white border-purple-300 text-violet-900 shadow-sm"
   },
   {
     id: "set-window-premium",
-    title: "Glazenwasser Pro-Kit (22m)",
+    title: "Glazenwasser Pro-Kit (16m)",
     sub: "Glasbewassing op hoogte",
-    desc: "Truckhoogwerker (rijbewijs B) voorzien van speciaal gemonteerde osmose-watertank frame klemmen.",
-    price: "€270/dag",
-    height: "22m",
+    desc: "Truckhoogwerker (rijbewijs B) voorzien van osmose-watertank frame klemmen en brede platformbak.",
+    price: "€220/dag",
+    height: "16m",
     suit: "Glazenwasserbedrijven",
     color: "from-teal-500/10 via-teal-600/5 to-white border-teal-300 text-teal-900 shadow-sm"
   },
   {
     id: "set-diy-weekend",
-    title: "Weekend Deal DHZ (12m)",
-    sub: "Kluswerk rondom huis & stal",
-    desc: "12m favoriet incl. helm, tuigje & gratis 24/7 telefonische coaching van onze AI-coördinator.",
-    price: "€110/dag",
-    height: "12m",
+    title: "Weekend Deal DHZ (10m)",
+    sub: "Kluswerk rondom huis & schuur",
+    desc: "10m trailerhoogwerker incl. helm, tuigje & gratis 24/7 telefonische coaching van onze AI-coördinator.",
+    price: "€90/dag",
+    height: "10m",
     suit: "Particulieren & DHZ",
     color: "from-cyan-500/10 via-blue-600/5 to-white border-cyan-300 text-cyan-900 shadow-sm"
   },
   {
     id: "set-light-install",
-    title: "Licht & Camera Installatieset (15m)",
+    title: "Licht & Camera Installatieset (12m)",
     sub: "Beveiligingssystemen & spotlights",
     desc: "Spinhoogwerker met stroomhaspel-onderbouw en een brede platformbak voor gereedschapskisten.",
-    price: "€190/dag",
-    height: "15m",
-    suit: "Elektriciëns & Tech",
+    price: "€175/dag",
+    height: "12m",
+    suit: "Elektriciëns & ZZP",
     color: "from-amber-500/10 via-amber-600/5 to-white border-amber-300 text-amber-900 shadow-sm"
   }
 ];
@@ -135,21 +135,23 @@ export default function HomeSection({
   onSearch, 
   setActiveTab,
   siteConfig = {
-    siteName: "HoogwerkerHub",
-    heroTagline: "Smart Verhuur van Hoogwerkers in Nederland",
-    heroTitle: "Uitzonderlijk bereik. Volledig ontzorgd.",
-    heroSubtitle: "Van schilderwerk binnen tot zware industriebouw buiten; HoogwerkerHub levert direct de juiste machines op locatie. Met of zonder vakbekwame chauffeur, gecontroleerd door onze slimme AI-assistent.",
+    siteName: "HuurGo",
+    heroTagline: "Snel & Makkelijk Hoogwerkers Huren",
+    heroTitle: "Huur uw hoogwerker in een handomdraai.",
+    heroSubtitle: "HuurGo is er voor ZZP'ers en particulieren. Geen gedoe, direct online geregeld. Vind binnen 1 minuut de perfecte machine voor uw schilderklus, tuinonderhoud of gevelwerk met onze slimme AI-assistent.",
     menuHomeLabel: "Home",
     menuCatalogLabel: "Catalogus",
-    menuAdvisorLabel: "Adviseur",
-    menuOrdersLabel: "Mijn Sessies"
+    menuAdvisorLabel: "AI Adviseur",
+    menuOrdersLabel: "Mijn Account"
   },
   customCategories = [
-    { id: "schaarlift", label: "Schaarlift", listLabel: "Schaarliften", desc: "Ideaal voor loodsen, schilder- en rechtlijnig montagewerk.", heights: "8m - 14m", price: "v.a. €120/dag" },
-    { id: "knikarm", label: "Knikarmhoogwerker", listLabel: "Knikarmhoogwerkers", desc: "Uiterst flexibel om over vaste obstakels heen te reiken.", heights: "12m - 20m", price: "v.a. €210/dag" },
-    { id: "telescoop", label: "Telescoophoogwerker", listLabel: "Telescoophoogwerkers", desc: "Gigantisch bereik op ruw bouwterrein.", heights: "16m - 40m", price: "v.a. €340/dag" },
-    { id: "auto", label: "Autohoogwerker", listLabel: "Autohoogwerkers", desc: "Zelf rijden met B-rijbewijs. Snel op locatie operationeel.", heights: "18m - 24m", price: "v.a. €250/dag" },
-    { id: "spin", label: "Spinhoogwerker", listLabel: "Spinhoogwerkers", desc: "Kruipt door binnendeuren en over zachte grasvelden.", heights: "12m - 22m", price: "v.a. €180/dag" }
+    { id: "schaarlift", label: "Schaarlift", listLabel: "Schaarliften", desc: "Ideaal voor binnen- en buitengebruik op vlakke ondergronden. Past door deuren.", heights: "6m - 10m", price: "v.a. €80/dag" },
+    { id: "knikarm", label: "Knikarmhoogwerker", listLabel: "Knikarmhoogwerkers", desc: "Uiterst flexibel om over serres, schuttingen of daken heen te reiken.", heights: "12m - 16m", price: "v.a. €155/dag" },
+    { id: "telescoop", label: "Telescoophoogwerker", listLabel: "Telescoophoogwerkers", desc: "Groot zijdelings bereik, ideaal voor boomverzorging en gevels.", heights: "14m - 16m", price: "v.a. €175/dag" },
+    { id: "auto", label: "Autohoogwerker", listLabel: "Autohoogwerkers", desc: "Zelf rijden naar uw klus met autorijbewijs B. Snel op- en afstellen.", heights: "16m", price: "v.a. €195/dag" },
+    { id: "spin", label: "Spinhoogwerker", listLabel: "Spinhoogwerkers", desc: "Compact op rupsbanden. Past door een standaard tuinpoort van 80cm.", heights: "12m - 16m", price: "v.a. €160/dag" },
+    { id: "klussensets", label: "Kluspakket", listLabel: "Kluspakketten", desc: "Complete sets speciaal samengesteld voor schilder-, snoei- of dakgootklus.", heights: "10m - 16m", price: "v.a. €90/dag" },
+    { id: "aanhanger", label: "Aanhangerhoogwerker", listLabel: "Aanhangerhoogwerkers", desc: "Eenvoudig zelf te vervoeren achter uw auto met rijbewijs B.", heights: "12m", price: "v.a. €80/dag" }
   ]
 }: HomeSectionProps) {
   const [searchQuery, setSearchQuery] = useState("");

@@ -20,7 +20,8 @@ import {
   LogOut,
   User,
   Lock,
-  ShieldAlert
+  ShieldAlert,
+  Zap
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useLanguageStore } from "../store/languageStore";
@@ -61,13 +62,13 @@ export default function Header({
   setIsAdminMode,
   cartItems = [],
   siteConfig = {
-    siteName: "HoogwerkerHub",
-    heroTagline: "Smart Verhuur van Hoogwerkers in Nederland",
-    heroTitle: "Uitzonderlijk bereik. Volledig ontzorgd.",
-    heroSubtitle: "Van schilderwerk binnen tot zware industriebouw buiten; HoogwerkerHub levert direct de juiste machines op locatie. Met of zonder vakbekwame chauffeur, gecontroleerd door onze slimme AI-assistent.",
+    siteName: "HuurGo",
+    heroTagline: "Snel & Makkelijk Hoogwerkers Huren",
+    heroTitle: "Huur uw hoogwerker in een handomdraai.",
+    heroSubtitle: "HuurGo is er voor ZZP'ers en particulieren. Geen gedoe, direct online geregeld. Vind binnen 1 minuut de perfecte machine voor uw schilderklus, tuinonderhoud of gevelwerk met onze slimme AI-assistent.",
     menuHomeLabel: "Home",
     menuCatalogLabel: "Catalogus",
-    menuAdvisorLabel: "Adviseur",
+    menuAdvisorLabel: "AI Adviseur",
     menuOrdersLabel: "Mijn Account"
   }
 }: HeaderProps) {
@@ -103,7 +104,7 @@ export default function Header({
             {isAdminMode ? (
               <Lock className="h-5 w-5 text-slate-950 font-bold" />
             ) : (
-              <Building2 className="h-5.5 w-5.5 text-white" />
+              <Zap className="h-5.5 w-5.5 text-white fill-white/10" />
             )}
             <motion.div 
               layoutId="glowCircle" 

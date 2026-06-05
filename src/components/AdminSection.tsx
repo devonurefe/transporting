@@ -15,7 +15,8 @@ import {
   LogIn,
   Terminal,
   ShieldCheck,
-  Calendar
+  Calendar,
+  Database
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { UserProfile } from "../types";
@@ -32,6 +33,7 @@ import AdminAddMachine from "./admin/AdminAddMachine";
 import AdminCustomizer from "./admin/AdminCustomizer";
 import AdminLogs from "./admin/AdminLogs";
 import AdminDiagnostics from "./admin/AdminDiagnostics";
+import AdminAccounting from "./admin/AdminAccounting";
 
 interface AdminSectionProps {
   isAdminMode: boolean;
@@ -58,7 +60,7 @@ export default function AdminSection({
       .then(data => setDynamicUserProfiles(data))
       .catch(() => {});
   }, []);
-  const [subTab, setSubTab] = useState<"dashboard" | "orders" | "machines" | "calendar" | "add" | "logs" | "customizer" | "diagnostics">("dashboard");
+  const [subTab, setSubTab] = useState<"dashboard" | "orders" | "machines" | "calendar" | "add" | "logs" | "customizer" | "diagnostics" | "accounting">("dashboard");
   const { login, logout } = useAuthStore();
   const machines = useAppStore((state) => state.machines);
   const orders = useAppStore((state) => state.orders);
@@ -69,7 +71,7 @@ export default function AdminSection({
   const tAdmin = useLanguageStore((state) => state.tAdmin);
 
   // Admin login credentials (pre-loaded)
-  const [adminEmail, setAdminEmail] = useState("admin@hoogwerkerhub.nl");
+  const [adminEmail, setAdminEmail] = useState("admin@huurgo.nl");
   const [adminPassword, setAdminPassword] = useState("");
 
   const handleAdminVerifyLogin = async (e: React.FormEvent) => {
@@ -86,7 +88,7 @@ export default function AdminSection({
         setIsAdminMode(true);
         onAddSystemLog(
           "login", 
-          "HoogwerkerHub Admin", 
+          "HuurGo Admin", 
           "Beheersessie verbonden met beveiligd beheerderstoken."
         );
       } else {
@@ -221,6 +223,7 @@ export default function AdminSection({
                 { id: "calendar", label: tAdmin("adminTabCalendar"), icon: Calendar, count: blockedDates.length },
                 { id: "add", label: tAdmin("adminTabAdd"), icon: PlusCircle },
                 { id: "customizer", label: tAdmin("adminTabCustomizer"), icon: Settings },
+                { id: "accounting", label: adminLanguage === "tr" ? "Muhasebe (Exact)" : adminLanguage === "en" ? "Accounting (Exact)" : "Boekhouding (Exact)", icon: Database },
                 { id: "diagnostics", label: adminLanguage === "tr" ? "Sistem Teşhisi" : adminLanguage === "en" ? "System Diagnostics" : "Systeemdiagnose", icon: ShieldAlert },
                 { id: "logs", label: tAdmin("adminTabLogs"), icon: Terminal, count: systemLogs.length }
               ].map((sub) => {
@@ -294,6 +297,9 @@ export default function AdminSection({
               )}
               {subTab === "customizer" && (
                 <AdminCustomizer key="customizer" onAddSystemLog={onAddSystemLog} adminLanguage={adminLanguage} />
+              )}
+              {subTab === "accounting" && (
+                <AdminAccounting key="accounting" adminLanguage={adminLanguage} />
               )}
               {subTab === "diagnostics" && (
                 <AdminDiagnostics 

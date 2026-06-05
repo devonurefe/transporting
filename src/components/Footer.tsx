@@ -27,7 +27,7 @@ export default function Footer({ siteName, setActiveTab, setShowContactModal }: 
               <span className="text-[9.5px] text-indigo-700 font-semibold bg-indigo-50/70 px-2 py-0.5 rounded-full border border-indigo-100/50">B.V.</span>
             </div>
             <p className="text-slate-500 text-[12px] leading-relaxed max-w-xs">
-              Premium hoogwerker verhuur in heel Nederland. Onze slimme AI-assistent helpt u direct bij het selecteren van de juiste machines op locatie.
+              Snel en simpel compacte hoogwerkers huren voor ZZP'ers en particulieren. Onze slimme AI-assistent helpt u direct online de juiste machine te kiezen.
             </p>
             <div className="pt-2 flex flex-wrap gap-2">
               <span className="bg-amber-50/80 border border-amber-200/50 text-amber-800 text-[9.5px] uppercase font-semibold tracking-wider px-2.5 py-0.5 rounded-full">
@@ -125,7 +125,7 @@ export default function Footer({ siteName, setActiveTab, setShowContactModal }: 
 
         {/* Bottom Copyright & KvK Bar */}
         <div className="flex flex-col sm:flex-row justify-between items-center pt-8 border-t border-slate-200 text-[11.5px] text-slate-500 gap-3">
-          <span>© 2026 {siteName} B.V. Alle rechten voorbehouden. KvK Alphen a/d Rijn 8849201. Geregistreerd BMWT-lid.</span>
+          <span>© 2026 {siteName} B.V. Alle rechten voorbehouden. KvK Alphen a/d Rijn 8849201. Geregistreerd lid.</span>
           <span className="text-[10px] font-semibold bg-slate-50 text-slate-600 px-2.5 py-0.5 rounded-full border border-slate-200/60">
             Veiligheidsklasse Categorie 1-3B Co-Verzekerd
           </span>

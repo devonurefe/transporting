@@ -628,13 +628,13 @@ export default function CatalogSection({
       {/* Comparison Modal Overlay */}
       <AnimatePresence>
         {showCompareModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-50 overflow-y-auto flex items-start sm:items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowCompareModal(false)}
-              className="absolute inset-0 bg-slate-900/40 backdrop-blur-md"
+              className="fixed inset-0 bg-slate-900/40 backdrop-blur-md"
             />
 
             <motion.div
@@ -642,7 +642,7 @@ export default function CatalogSection({
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
               transition={{ type: "spring", stiffness: 350, damping: 26 }}
-              className="w-full max-w-5xl bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden z-50 flex flex-col max-h-[90vh]"
+              className="w-full max-w-5xl bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden z-50 flex flex-col max-h-[90vh] my-8"
             >
               {/* Top bar stripe */}
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-teal-500 via-indigo-505 via-indigo-500 to-amber-500" />
@@ -875,13 +875,13 @@ export default function CatalogSection({
       {/* Specifications & Bundle Contents Modal */}
       <AnimatePresence>
         {selectedDetailMachine && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-50 overflow-y-auto flex items-start sm:items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setSelectedDetailMachine(null)}
-              className="absolute inset-0 bg-slate-900/40 backdrop-blur-md"
+              className="fixed inset-0 bg-slate-900/40 backdrop-blur-md"
             />
 
             <motion.div
@@ -889,7 +889,7 @@ export default function CatalogSection({
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
               transition={{ type: "spring", stiffness: 350, damping: 26 }}
-              className="w-full max-w-4xl bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden z-50 flex flex-col max-h-[90vh]"
+              className="w-full max-w-4xl bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden z-50 flex flex-col max-h-[90vh] my-8"
             >
               {/* Premium Gradient Top Stripe */}
               <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-teal-400 via-indigo-500 to-amber-400" />

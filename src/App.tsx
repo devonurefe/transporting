@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect, useCallback, lazy, Suspense } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, ArrowUp } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import Header from "./components/Header";
@@ -44,6 +44,26 @@ export default function App() {
   const activeTab = location.pathname === "/" ? "home" : location.pathname.substring(1);
   const setActiveTab = (tab: string) => {
     navigate(tab === "home" ? "/" : `/${tab}`);
+  };
+
+  // Global scroll-to-top on route changes
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
+
+  // Back to Top button show/hide tracking
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 400);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
@@ -592,6 +612,22 @@ export default function App() {
 
       {/* PWA INSTALL FLOATING BANNER */}
       <PWAInstallBanner />
+
+      {/* FLOATING ACTION BACK-TO-TOP BUTTON */}
+      <AnimatePresence>
+        {showScrollTop && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            onClick={scrollToTop}
+            className="fixed bottom-16 sm:bottom-6 right-4 sm:right-6 z-40 p-3.5 rounded-full bg-slate-900/90 text-white shadow-xl backdrop-blur-md border border-white/10 hover:bg-slate-800 hover:scale-105 active:scale-95 transition-all cursor-pointer flex items-center justify-center border-none"
+            title="Omhoog scrollen"
+          >
+            <ArrowUp className="h-5 w-5" />
+          </motion.button>
+        )}
+      </AnimatePresence>
 
     </div>
   );

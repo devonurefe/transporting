@@ -612,12 +612,12 @@ export default function AdvisorSection({
                       </div>
 
                       {/* Interactive click actions (Huur Direct) */}
-                      <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pt-3 border-t border-slate-100 gap-3">
                         <span className="text-xs font-mono font-extrabold text-teal-700">
                           €{m.pricePerDay}/dag <small className="text-slate-500 font-normal">incl. HubVerzekering</small>
                         </span>
 
-                        <div className="flex items-center space-x-2 shrink-0">
+                        <div className="flex items-center space-x-2 w-full sm:w-auto">
                           <button
                             onClick={() => {
                               setSelectedDetailMachine(m);
@@ -627,7 +627,7 @@ export default function AdvisorSection({
                                 `Specificaties van ${m.name} ingezien via de Slimme Selectiehulp Wizard`
                               );
                             }}
-                            className="text-xs font-semibold px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition-all hover:scale-[1.02] active:scale-98 cursor-pointer"
+                            className="flex-1 sm:flex-none text-center text-xs font-semibold px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition-all hover:scale-[1.02] active:scale-98 cursor-pointer"
                           >
                             Details
                           </button>
@@ -635,13 +635,18 @@ export default function AdvisorSection({
                           <button
                             onClick={() => onSelectMachineForBooking(m)}
                             disabled={isExcluded}
-                            className={`text-xs font-bold px-4 py-2 rounded-xl transition-all border-none ${
+                            className={`flex-1 sm:flex-none text-center text-xs font-bold px-4 py-2 rounded-xl transition-all border-none ${
                               isExcluded 
                                 ? "bg-slate-100 text-slate-400 cursor-not-allowed" 
                                 : "bg-indigo-600 hover:bg-indigo-700 text-white hover:scale-[1.03] active:scale-97 cursor-pointer"
                             }`}
                           >
-                            {isExcluded ? "Onveilig voor deze klus" : "Direct Boeken & Verhuren"}
+                            {isExcluded ? "Onveilig" : (
+                              <>
+                                <span className="inline sm:hidden">Huur Nu</span>
+                                <span className="hidden sm:inline">Direct Boeken & Verhuren</span>
+                              </>
+                            )}
                           </button>
                         </div>
                       </div>
@@ -727,23 +732,23 @@ export default function AdvisorSection({
                                 if (!foundMachine) return null;
                                 return (
                                   <div 
-                                    key={recId}
-                                    className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200 hover:border-indigo-400 transition-all group shadow-sm"
+                                    key={recId} 
+                                    className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-2.5 rounded-xl bg-white border border-slate-200 shadow-sm gap-2.5"
                                   >
-                                    <div className="flex items-center space-x-2.5">
-                                      <div className="h-10 w-10 rounded-lg overflow-hidden bg-slate-100 border border-slate-200 shrink-0">
+                                    <div className="flex items-center space-x-2.5 w-full sm:w-auto">
+                                      <div className="h-10 w-10 bg-slate-100 border border-slate-200 rounded-lg overflow-hidden shrink-0">
                                         <img 
-                                          src={foundMachine.imageUrl} 
-                                          alt="" 
-                                          className="h-full w-full object-cover group-hover:scale-105 transition-transform" 
-                                          referrerPolicy="no-referrer" 
+                                          src={foundMachine.imageUrl || "/api/placeholder/100/100"} 
+                                          alt={foundMachine.name}
+                                          className="h-full w-full object-cover"
+                                          referrerPolicy="no-referrer"
                                           onError={(e) => {
                                             e.currentTarget.src = "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=600&auto=format&fit=crop";
                                           }}
                                         />
                                       </div>
-                                      <div>
-                                        <h4 className="text-xs font-bold text-slate-900 leading-none">
+                                      <div className="min-w-0 flex-1 sm:flex-initial">
+                                        <h4 className="text-xs font-bold text-slate-900 leading-none truncate">
                                           {foundMachine.name}
                                         </h4>
                                         <span className="text-[10px] text-teal-600 mt-1 block font-mono">
@@ -751,7 +756,7 @@ export default function AdvisorSection({
                                         </span>
                                       </div>
                                     </div>
-                                    <div className="flex items-center space-x-1.5 shrink-0">
+                                    <div className="flex items-center space-x-1.5 w-full sm:w-auto justify-end sm:justify-start">
                                       <button
                                         onClick={() => {
                                           setSelectedDetailMachine(foundMachine);
@@ -761,13 +766,13 @@ export default function AdvisorSection({
                                             `Bekijkt specificaties van AI aanbevolen machine: "${foundMachine.name}"`
                                           );
                                         }}
-                                        className="px-2.5 py-1.5 rounded-lg border border-slate-200 hover:border-slate-350 bg-white hover:bg-slate-100 text-slate-700 hover:text-slate-900 text-[10px] font-bold transition-all cursor-pointer"
+                                        className="flex-1 sm:flex-none text-center px-2.5 py-1.5 rounded-lg border border-slate-200 hover:border-slate-350 bg-white hover:bg-slate-100 text-slate-700 hover:text-slate-900 text-[10px] font-bold transition-all cursor-pointer"
                                       >
                                         Details
                                       </button>
                                       <button
                                         onClick={() => onSelectMachineForBooking(foundMachine)}
-                                        className="bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white text-[10px] font-bold px-3 py-1.5 rounded-lg transition-all cursor-pointer border-none"
+                                        className="flex-1 sm:flex-none text-center bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white text-[10px] font-bold px-3 py-1.5 rounded-lg transition-all cursor-pointer border-none"
                                       >
                                         Direct Huren
                                       </button>
@@ -979,13 +984,13 @@ export default function AdvisorSection({
       {/* Specifications & Bundle Contents Modal */}
       <AnimatePresence>
         {selectedDetailMachine && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-50 overflow-y-auto flex items-start sm:items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setSelectedDetailMachine(null)}
-              className="absolute inset-0 bg-slate-900/40 backdrop-blur-md"
+              className="fixed inset-0 bg-slate-900/40 backdrop-blur-md"
             />
 
             <motion.div
@@ -993,7 +998,7 @@ export default function AdvisorSection({
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
               transition={{ type: "spring", stiffness: 350, damping: 26 }}
-              className="w-full max-w-4xl bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden z-50 flex flex-col max-h-[90vh]"
+              className="w-full max-w-4xl bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden z-50 flex flex-col max-h-[90vh] my-8"
             >
               {/* Premium Gradient Top Stripe */}
               <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-teal-400 via-indigo-500 to-amber-400" />

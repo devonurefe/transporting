@@ -937,6 +937,7 @@ export default function BookingSection({
               setStep={setStep}
               setSuccessOrder={setSuccessOrder}
               setActiveTab={setActiveTab}
+              currentUser={currentUser}
             />
           )}
         </AnimatePresence>

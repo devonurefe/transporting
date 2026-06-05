@@ -5,7 +5,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: hoogwerkerhub-app
+    container_name: huurgo-app
     restart: always
     ports:
       - "3000:3000"
@@ -16,7 +16,7 @@ services:
       - GEMINI_API_KEY=${GEMINI_API_KEY}
       - RESEND_API_KEY=${RESEND_API_KEY}
       - EMAIL_FROM=${EMAIL_FROM:-onboarding@resend.dev}
-      - ADMIN_EMAIL=${ADMIN_EMAIL:-info@hoogwerkerhub.nl}
+      - ADMIN_EMAIL=${ADMIN_EMAIL:-info@huurgo.nl}
       - DATABASE_URL=file:/app/database/dev.db
     volumes:
       # Persistent volume for the SQLite database so state is retained permanently
@@ -24,7 +24,7 @@ services:
 
   nginx:
     image: nginx:alpine
-    container_name: hoogwerkerhub-proxy
+    container_name: huurgo-proxy
     restart: always
     ports:
       - "80:80"

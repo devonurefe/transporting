@@ -12,7 +12,7 @@ const resend = resendApiKey && resendApiKey !== "MY_RESEND_API_KEY" ? new Resend
 
 // Standard sender email (if domain is verified, use verified domain. Otherwise Resend sandbox uses onboarding@resend.dev)
 const SENDER_EMAIL = process.env.EMAIL_FROM || "onboarding@resend.dev";
-const ADMIN_ALERT_EMAIL = process.env.ADMIN_EMAIL || "info@hoogwerkerhub.nl";
+const ADMIN_ALERT_EMAIL = process.env.ADMIN_EMAIL || "info@huurgo.nl";
 
 interface EmailOrderData {
   id: string;
@@ -43,7 +43,7 @@ export const emailService = {
       <html>
       <head>
         <meta charset="utf-8">
-        <title>Reserveringsbevestiging HoogwerkerHub</title>
+        <title>Reserveringsbevestiging HuurGo</title>
         <style>
           body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f8fafc; color: #1e293b; margin: 0; padding: 20px; }
           .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 24px; border: 1px border-slate-200; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
@@ -66,13 +66,13 @@ export const emailService = {
       <body>
         <div class="container">
           <div class="header">
-            <h1>HoogwerkerHub</h1>
+            <h1>HuurGo</h1>
             <p>Uw reserveringsbevestiging is succesvol verwerkt</p>
           </div>
           <div class="content">
             <span class="order-id">Reservering ID: ${order.id}</span>
             <p>Beste <strong>${order.customerName}</strong>,</p>
-            <p>Hartelijk dank voor uw reservering bij HoogwerkerHub. Onze logistieke afdeling en AI-planner hebben uw reservering direct gereserveerd en in behandeling genomen. Hieronder vindt u de specificaties:</p>
+            <p>Hartelijk dank voor uw reservering bij HuurGo. Onze logistieke afdeling en AI-planner hebben uw reservering direct gereserveerd en in behandeling genomen. Hieronder vindt u de specificaties:</p>
             
             <div class="details-grid">
               <div class="details-item">
@@ -109,11 +109,11 @@ export const emailService = {
             </p>
 
             <div style="text-align: center;">
-              <a href="https://hoogwerkerhub.nl/account" class="btn" style="color: #ffffff;">Mijn Reserveringen Bekijken</a>
+              <a href="https://huurgo.nl/account" class="btn" style="color: #ffffff;">Mijn Reserveringen Bekijken</a>
             </div>
           </div>
           <div class="footer">
-            © ${new Date().getFullYear()} HoogwerkerHub B.V. • BMWT-gecertificeerd verhuurnetwerk • Alphen aan den Rijn, Nederland
+            © ${new Date().getFullYear()} HuurGo B.V. • BMWT-gecertificeerd verhuurnetwerk • Alphen aan den Rijn, Nederland
           </div>
         </div>
       </body>
@@ -131,7 +131,7 @@ export const emailService = {
       const { data, error } = await resend.emails.send({
         from: SENDER_EMAIL,
         to: order.customerEmail,
-        subject: `Bevestiging van uw reservering ${order.id} - HoogwerkerHub`,
+        subject: `Bevestiging van uw reservering ${order.id} - HuurGo`,
         html: htmlContent,
       });
 
@@ -176,7 +176,7 @@ export const emailService = {
         <div class="container">
           <div class="header">
             <h1>🚨 NIEUWE RESERVERING</h1>
-            <p>Admin alert voor HoogwerkerHub.nl</p>
+            <p>Admin alert voor HuurGo.nl</p>
           </div>
           <div class="content">
             <h3 style="margin-top: 0; font-size: 16px; font-weight: 800; color: #0f172a;">Beste Onur (Eigenaar),</h3>
@@ -206,7 +206,7 @@ export const emailService = {
             </div>
 
             <div style="text-align: center;">
-              <a href="https://hoogwerkerhub.nl/admin" class="btn">Naar HubAdmin Dashboard</a>
+              <a href="https://huurgo.nl/admin" class="btn">Naar HubAdmin Dashboard</a>
             </div>
           </div>
         </div>
@@ -260,7 +260,7 @@ export const emailService = {
       headerColor = "linear-gradient(135deg, #3b82f6, #1d4ed8)";
     } else if (order.status === "Voltooid") {
       statusTitle = "Huurcontract Voltooid";
-      statusDescription = "De huurperiode is beëindigd en het materieel is succesvol retour ontvangen. Bedankt voor uw vertrouwen in HoogwerkerHub!";
+      statusDescription = "De huurperiode is beëindigd en het materieel is succesvol retour ontvangen. Bedankt voor uw vertrouwen in HuurGo!";
       headerColor = "linear-gradient(135deg, #64748b, #475569)";
     }
 
@@ -269,7 +269,7 @@ export const emailService = {
       <html>
       <head>
         <meta charset="utf-8">
-        <title>Statusupdate reservering HoogwerkerHub</title>
+        <title>Statusupdate reservering HuurGo</title>
         <style>
           body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f8fafc; color: #1e293b; margin: 0; padding: 20px; }
           .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 24px; border: 1px solid #e2e8f0; overflow: hidden; }
@@ -289,7 +289,7 @@ export const emailService = {
       <body>
         <div class="container">
           <div class="header">
-            <h1>HoogwerkerHub</h1>
+            <h1>HuurGo</h1>
             <p>Update over uw reservering ${order.id}</p>
           </div>
           <div class="content">
@@ -326,11 +326,11 @@ export const emailService = {
             </p>
 
             <div style="text-align: center;">
-              <a href="https://hoogwerkerhub.nl/account" class="btn" style="color: #ffffff;">Mijn Account Openen</a>
+              <a href="https://huurgo.nl/account" class="btn" style="color: #ffffff;">Mijn Account Openen</a>
             </div>
           </div>
           <div class="footer">
-            © ${new Date().getFullYear()} HoogwerkerHub B.V. • BMWT-gecertificeerd verhuurnetwerk • Alphen aan den Rijn, Nederland
+            © ${new Date().getFullYear()} HuurGo B.V. • BMWT-gecertificeerd verhuurnetwerk • Alphen aan den Rijn, Nederland
           </div>
         </div>
       </body>
@@ -348,7 +348,7 @@ export const emailService = {
       const { data, error } = await resend.emails.send({
         from: SENDER_EMAIL,
         to: order.customerEmail,
-        subject: `Update van uw reservering ${order.id}: ${order.status} - HoogwerkerHub`,
+        subject: `Update van uw reservering ${order.id}: ${order.status} - HuurGo`,
         html: htmlContent,
       });
 
@@ -376,7 +376,7 @@ export const emailService = {
       <html>
       <head>
         <meta charset="utf-8">
-        <title>Activeer uw HoogwerkerHub Account</title>
+        <title>Activeer uw HuurGo Account</title>
         <style>
           body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f8fafc; color: #1e293b; margin: 0; padding: 20px; }
           .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 24px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
@@ -395,13 +395,13 @@ export const emailService = {
       <body>
         <div class="container">
           <div class="header">
-            <h1>HoogwerkerHub</h1>
+            <h1>HuurGo</h1>
             <p>Bevestig uw e-mailadres om uw account te activeren</p>
           </div>
           <div class="content">
             <p class="welcome-text">Beste <strong>${customer.name}</strong>,</p>
             <p class="info-text">
-              Welkom bij HoogwerkerHub! U heeft succesvol een account aangemaakt. Om te kunnen inloggen op het Klant Portaal en uw reserveringen te beheren, dient u eerst uw e-mailadres te verifiëren door op de onderstaande knop te klikken:
+              Welkom bij HuurGo! U heeft succesvol een account aangemaakt. Om te kunnen inloggen op het Klant Portaal en uw reserveringen te beheren, dient u eerst uw e-mailadres te verifiëren door op de onderstaande knop te klikken:
             </p>
             
             <div class="btn-container">
@@ -419,7 +419,7 @@ export const emailService = {
             </div>
           </div>
           <div class="footer">
-            © ${new Date().getFullYear()} HoogwerkerHub B.V. • BMWT-gecertificeerd verhuurnetwerk • Alphen aan den Rijn, Nederland
+            © ${new Date().getFullYear()} HuurGo B.V. • BMWT-gecertificeerd verhuurnetwerk • Alphen aan den Rijn, Nederland
           </div>
         </div>
       </body>
@@ -438,7 +438,7 @@ export const emailService = {
       const { data, error } = await resend.emails.send({
         from: SENDER_EMAIL,
         to: customer.email,
-        subject: "Activeer uw HoogwerkerHub account",
+        subject: "Activeer uw HuurGo account",
         html: htmlContent,
       });
 

@@ -7,7 +7,7 @@ import { Order } from "../types";
 
 /**
  * Utility to generate and print a professional Dutch rental invoice/agreement
- * for a HoogwerkerHub order using native browser print capability.
+ * for a HuurGo order using native browser print capability.
  */
 export function printInvoice(order: Order, clientCompanyName?: string) {
   const escapeHtml = (str: string): string => {
@@ -37,8 +37,8 @@ export function printInvoice(order: Order, clientCompanyName?: string) {
 
   // Delivery details display
   const logisticsText = order.deliveryType === "self_pickup"
-    ? "Zelf afhalen bij vestiging HoogwerkerHub"
-    : "Bezorging door HoogwerkerHub logistieke dienst";
+    ? "Zelf afhalen bij vestiging HuurGo"
+    : "Bezorging door HuurGo logistieke dienst";
 
   const customerCompany = clientCompanyName || "Particulier";
 
@@ -56,7 +56,7 @@ export function printInvoice(order: Order, clientCompanyName?: string) {
     <html lang="nl">
     <head>
       <meta charset="UTF-8">
-      <title>${invoiceNumber} - HoogwerkerHub Nederland</title>
+      <title>${invoiceNumber} - HuurGo Nederland</title>
       <!-- Premium Fonts -->
       <link rel="preconnect" href="https://fonts.googleapis.com">
       <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -354,13 +354,13 @@ export function printInvoice(order: Order, clientCompanyName?: string) {
               <path d="M29 6V15L27 13" stroke="#D97706" stroke-width="1.5" stroke-linejoin="round"/>
               <circle cx="29" cy="17" r="1.5" fill="#4F46E5"/>
             </svg>
-            <span class="logo-text">Hoogwerker<span class="logo-accent">Hub</span></span>
+            <span class="logo-text">Huur<span class="logo-accent">Go</span></span>
           </div>
           
           <div class="issuer-info">
-            <div class="issuer-name">HoogwerkerHub Nederland B.V.</div>
+            <div class="issuer-name">HuurGo Nederland B.V.</div>
             <div>Distributieweg 12, 1047 JC Amsterdam</div>
-            <div>E: administratie@hoogwerkerhub.nl | T: +31 (0)20 783 9102</div>
+            <div>E: administratie@huurgo.nl | T: +31 (0)20 783 9102</div>
             <div>KvK-nummer: 72839102 | BTW-nummer: NL82039401B01</div>
             <div>Bank: NL91 ABNA 0412 8391 02 (BIC: ABNANL2A)</div>
           </div>
@@ -498,7 +498,7 @@ export function printInvoice(order: Order, clientCompanyName?: string) {
         <footer class="footer-terms">
           <p>Op alle huurovereenkomsten zijn de algemene <span class="footer-highlight">BMWT-verhuurvoorwaarden 2026</span> van toepassing.</p>
           <p>Betalingswijze: Online voldaan via iDEAL / Stripe Secure Gateway. Transactiereferentie: mollie_secure_${Math.random().toString(36).substring(2, 8).toUpperCase()}</p>
-          <p style="margin-top: 8px;">Dank u voor uw vertrouwen in de hoogste en veiligste kwaliteit van <strong>HoogwerkerHub Nederland</strong>.</p>
+          <p style="margin-top: 8px;">Dank u voor uw vertrouwen in de hoogste en veiligste kwaliteit van <strong>HuurGo Nederland</strong>.</p>
         </footer>
         
       </div>

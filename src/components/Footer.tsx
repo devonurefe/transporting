@@ -53,11 +53,11 @@ export default function Footer({ siteName, setActiveTab, setShowContactModal }: 
                 <span className="font-sans font-medium text-slate-750 text-[13px] tracking-tight">+31 (0)172 456 789</span>
               </a>
               <a 
-                href="mailto:support@hoogwerkerhub.nl" 
+                href="mailto:support@huurgo.nl" 
                 className="flex items-center space-x-2.5 text-slate-650 hover:text-indigo-600 transition-colors group cursor-pointer"
               >
                 <Mail className="h-4 w-4 text-slate-400 group-hover:text-indigo-650 shrink-0 group-hover:scale-110 transition-all duration-200" />
-                <span className="font-sans font-medium break-all text-slate-700 text-[12.5px] tracking-tight">support@hoogwerkerhub.nl</span>
+                <span className="font-sans font-medium break-all text-slate-700 text-[12.5px] tracking-tight">support@huurgo.nl</span>
               </a>
               <div className="flex items-start space-x-2.5 text-slate-600 pt-1">
                 <MapPin className="h-4.5 w-4.5 text-slate-400 shrink-0 mt-0.5" />

@@ -7,13 +7,13 @@ export const siteConfigRouter = Router();
 
 const defaultSiteConfig = {
   id: "default",
-  siteName: "HoogwerkerHub",
-  heroTagline: "Smart Verhuur van Hoogwerkers in Nederland",
-  heroTitle: "Uitzonderlijk bereik. Volledig ontzorgd.",
-  heroSubtitle: "Van schilderwerk binnen tot zware industriebouw buiten; HoogwerkerHub levert direct de juiste machines op locatie. Met of zonder vakbekwame chauffeur, gecontroleerd door onze slimme AI-assistent.",
+  siteName: "HuurGo",
+  heroTagline: "Snel & Makkelijk Hoogwerkers Huren",
+  heroTitle: "Wat heeft u nodig?",
+  heroSubtitle: "Kies uw categorie en huur direct. Simpel, snel, all-in.",
   menuHomeLabel: "Home",
   menuCatalogLabel: "Catalogus",
-  menuAdvisorLabel: "Adviseur",
+  menuAdvisorLabel: "AI Adviseur",
   menuOrdersLabel: "Mijn Account",
   menuAdminLabel: "Portaal"
 };

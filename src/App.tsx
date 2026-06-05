@@ -119,7 +119,7 @@ export default function App() {
       id: "log-1",
       type: "system",
       user: "Systeem",
-      description: "HoogwerkerHub B.V. vlootbeheersysteem geïnitialiseerd. BMWT verbinding stabiel.",
+      description: "HuurGo B.V. vlootbeheersysteem geïnitialiseerd. BMWT verbinding stabiel.",
       timestamp: new Date(Date.now() - 3600 * 1000 * 4).toISOString()
     },
     {
@@ -183,7 +183,7 @@ export default function App() {
   const [notifications, setNotifications] = useState<AppNotification[]>([
     {
       id: "notif-1",
-      title: "Welkom bij HoogwerkerHub!",
+      title: "Welkom bij HuurGo!",
       message: "Ontdek premium gekeurde en direct leverbare hoogwerkers voor heel Nederland.",
       type: "success",
       read: false,

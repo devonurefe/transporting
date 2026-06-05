@@ -26,7 +26,7 @@ export default class ErrorBoundary extends React.Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error("Uncaught error inside HoogwerkerHub frontend:", error, errorInfo);
+    console.error("Uncaught error inside HuurGo frontend:", error, errorInfo);
   }
 
   private handleReset = () => {

@@ -43,7 +43,7 @@ export default function AdminDiagnostics({ systemLogs, userProfiles, onAddSystem
   const [dbLatency, setDbLatency] = useState(1.8); // ms
   const [isAuditing, setIsAuditing] = useState(false);
   const [auditLogs, setAuditLogs] = useState<string[]>([
-    `[INFO] [2026-05-31 13:29:00] ` + t("HoogwerkerHub Daemon v2.1.4 succesvol gestart.", "HoogwerkerHub Daemon v2.1.4 started successfully.", "HoogwerkerHub Daemon v2.1.4 başarıyla başlatıldı."),
+    `[INFO] [2026-05-31 13:29:00] ` + t("HuurGo Daemon v2.1.4 succesvol gestart.", "HuurGo Daemon v2.1.4 started successfully.", "HuurGo Daemon v2.1.4 başarıyla başlatıldı."),
     `[INFO] [2026-05-31 13:29:02] ` + t("SQLite database bestandspool tot stand gebracht.", "SQLite database file pool established.", "SQLite veri tabanı dosya havuzu kuruldu."),
     `[SEC]  [2026-05-31 13:29:05] ` + t("CSRF en XSS beveiligingsheaders geïnjecteerd.", "CSRF and XSS protection headers injected.", "CSRF ve XSS koruma başlıkları enjekte edildi."),
     `[INFO] [2026-05-31 13:29:10] ` + t("Verbinding met Gemini API gateway pool gevalideerd.", "Connection to Gemini API gateway pool validated.", "Gemini API geçidi havuzuna bağlantı doğrulandı."),

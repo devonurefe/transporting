@@ -331,7 +331,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage }: AdminOrde
                           <MapPin className="h-4 w-4 text-indigo-500 shrink-0 mt-0.5" />
                           <div>
                             <span className="font-semibold block">
-                              {selectedDetailOrder.deliveryType === "self_pickup" ? "Zelf Afhalen in Vestiging" : "Bezorging door HoogwerkerHub"}
+                              {selectedDetailOrder.deliveryType === "self_pickup" ? "Zelf Afhalen in Vestiging" : "Bezorging door HuurGo"}
                             </span>
                             {selectedDetailOrder.deliveryAddress && (
                               <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed font-mono">

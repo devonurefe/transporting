@@ -28,9 +28,9 @@ const dictionary: TranslationDictionary = {
   heroTagline: { nl: "Smart Verhuur van Hoogwerkers in Nederland", en: "Smart High-Lift Rentals in the Netherlands", tr: "Hollanda'da Akıllı Sepetli Platform Kiralama" },
   heroTitle: { nl: "Uitzonderlijk bereik. Volledig ontzorgd.", en: "Exceptional Reach. Completely Hassle-Free.", tr: "Olağanüstü Erişim. Tamamen Zahmetsiz." },
   heroSubtitle: { 
-    nl: "Van schilderwerk binnen tot zware industriebouw buiten; HoogwerkerHub levert direct de juiste machines op locatie. Met of zonder vakbekwame chauffeur, gecontroleerd door onze slimme AI-assistent.",
-    en: "From indoor painting to heavy outdoor industrial construction; HoogwerkerHub delivers the right machinery directly to your location. With or without a skilled driver, monitored by our smart AI assistant.",
-    tr: "İç mekan boya işlerinden ağır dış sanayi inşaatlarına kadar; HoogwerkerHub doğru makineleri doğrudan adresinize teslim eder. Uzman operatörlü veya operatörsüz kiralama seçenekleriyle, yapay zeka asistanımız kontrolünde."
+    nl: "Van schilderwerk binnen tot zware industriebouw buiten; HuurGo levert direct de juiste machines op locatie. Met of zonder vakbekwame chauffeur, gecontroleerd door onze slimme AI-assistent.",
+    en: "From indoor painting to heavy outdoor industrial construction; HuurGo delivers the right machinery directly to your location. With or without a skilled driver, monitored by our smart AI assistant.",
+    tr: "İç mekan boya işlerinden ağır dış sanayi inşaatlarına kadar; HuurGo doğru makineleri doğrudan adresinize teslim eder. Uzman operatörlü veya operatörsüz kiralama seçenekleriyle, yapay zeka asistanımız kontrolünde."
   },
   searchPlaceholder: { nl: "Waar gaat u werken? (bijv. 15 meter, schilder)", en: "Where will you work? (e.g. 15 meters, painting)", tr: "Nerede çalışacaksınız? (örn. 15 metre, boyacı)" },
   searchButton: { nl: "Vloot Zoeken", en: "Search Fleet", tr: "Filoda Ara" },

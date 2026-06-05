@@ -4,9 +4,10 @@
  */
 
 import React from "react";
-import { Calendar, Building2, X, Truck, Sparkles, ShieldAlert, ArrowRight } from "lucide-react";
+import { Calendar, Building2, X, Truck, Sparkles, ShieldAlert, ArrowRight, MessageCircle } from "lucide-react";
 import { motion } from "motion/react";
 import { CartItem, DeliveryType } from "../../types";
+import { buildWhatsAppUrl } from "../../utils/whatsapp";
 
 interface BookingStep1Props {
   cartItems: CartItem[];
@@ -346,7 +347,18 @@ export default function BookingStep1({
       )}
 
       {/* Step control */}
-      <div className="flex justify-end pt-4 border-t border-slate-100">
+      <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-slate-100">
+        {cartItems.length > 0 && (
+          <a
+            href={buildWhatsAppUrl(cartItems, deliveryType)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center space-x-2 font-semibold text-xs px-5 py-3 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white transition-all shadow-md active:scale-95 no-underline cursor-pointer"
+          >
+            <MessageCircle className="h-4 w-4" />
+            <span>WhatsApp Sipariş</span>
+          </a>
+        )}
         <button
           onClick={handleNextStep}
           disabled={!isAvailable || cartItems.length === 0}

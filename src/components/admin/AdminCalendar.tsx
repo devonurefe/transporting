@@ -269,7 +269,7 @@ export default function AdminCalendar({ onAddSystemLog, adminLanguage }: AdminCa
                   </label>
                 </div>
                 <p className="text-[10px] text-slate-500 leading-relaxed pt-1">
-                  {t("Status: ", "Status: ", "Durum: ")}<span className="text-emerald-700 font-semibold font-mono">{t("LIVE ACTIEF", "LIVE ACTIVE", "CANLI AKTİF")}</span> • {t("Gekoppeld aan", "Linked to", "Şuna bağlı")} <b>info@hoogwerkerhub.nl</b>. {t("Herinneringen ingesteld op 24 uur vooraf.", "Reminders set to 24 hours prior.", "Hatırlatıcılar 24 saat öncesine ayarlandı.")}
+                  {t("Status: ", "Status: ", "Durum: ")}<span className="text-emerald-700 font-semibold font-mono">{t("LIVE ACTIEF", "LIVE ACTIVE", "CANLI AKTİF")}</span> • {t("Gekoppeld aan", "Linked to", "Şuna bağlı")} <b>info@huurgo.nl</b>. {t("Herinneringen ingesteld op 24 uur vooraf.", "Reminders set to 24 hours prior.", "Hatırlatıcılar 24 saat öncesine ayarlandı.")}
                 </p>
               </div>
 

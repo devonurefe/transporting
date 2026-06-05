@@ -30,7 +30,7 @@ app.use(helmet({
 }));
 // Environment-aware CORS: restrict origins in production
 const corsOptions = process.env.NODE_ENV === "production"
-  ? { origin: ["https://hoogwerkerhub.nl", "https://www.hoogwerkerhub.nl"], credentials: true }
+  ? { origin: ["https://huurgo.nl", "https://www.huurgo.nl"], credentials: true }
   : { origin: true, credentials: true };
 app.use(cors(corsOptions));
 
@@ -84,7 +84,7 @@ async function startServer() {
 
   app.listen(PORT, "0.0.0.0", () => {
     console.log(`\n======================================================`);
-    console.log(`🚀 HoogwerkerHub Server Running on http://localhost:${PORT}`);
+    console.log(`🚀 HuurGo Server Running on http://localhost:${PORT}`);
     console.log(`🤖 Serving full-stack React SPA with Dutch AI Advisor`);
     console.log(`======================================================`);
 
@@ -93,7 +93,7 @@ async function startServer() {
     
     // JWT Secret Check
     const jwtSecret = process.env.JWT_SECRET;
-    if (!jwtSecret || jwtSecret === "dev-only-hoogwerkerhub-jwt-secret") {
+    if (!jwtSecret || jwtSecret === "dev-only-huurgo-jwt-secret") {
       console.log(`⚠️  [JWT_SECRET]: USING DEVELOPMENT DEFAULT KEY. Please set a secure key in production.`);
     } else {
       console.log(`✅ [JWT_SECRET]: Configured securely.`);

@@ -53,7 +53,7 @@ export default function PWAInstallBanner() {
             🏗️
           </div>
           <div className="flex-1 min-w-0">
-            <h4 className="text-xs font-bold font-display leading-tight">HoogwerkerHub installeren?</h4>
+            <h4 className="text-xs font-bold font-display leading-tight">HuurGo installeren?</h4>
             <p className="text-[10px] text-slate-400 mt-1 leading-snug">
               Installeer onze PWA voor snellere laadtijden, realtime push-notificaties en offline kalenderinzicht.
             </p>

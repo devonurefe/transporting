@@ -23,7 +23,7 @@ View your app in AI Studio: https://ai.studio/apps/e4837672-9d13-4016-b8fc-7f5a8
 
 ## 🏗️ Production Deployment & Scalability Hardening
 
-When deploying **HoogwerkerHub** to cloud providers (e.g., AWS, GCP, Vercel, Heroku, or Render), follow these architectural guidelines:
+When deploying **HuurGo** to cloud providers (e.g., AWS, GCP, Vercel, Heroku, or Render), follow these architectural guidelines:
 
 ### 1. Database Engine Decoupling (SQLite to PostgreSQL/MySQL)
 SQLite (`dev.db`) is file-based and runs inside local storage. For containerized or serverless deployments with ephemeral/stateless storage:

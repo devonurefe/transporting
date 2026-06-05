@@ -5,7 +5,7 @@ if (process.env.NODE_ENV === "production" && !process.env.JWT_SECRET) {
   throw new Error("JWT_SECRET must be configured in production.");
 }
 
-const JWT_SECRET = process.env.JWT_SECRET || "dev-only-hoogwerkerhub-jwt-secret";
+const JWT_SECRET = process.env.JWT_SECRET || "dev-only-huurgo-jwt-secret";
 
 export function generateToken(payload: { id: string; email: string; role: string }): string {
   return jwt.sign(payload, JWT_SECRET, { expiresIn: "7d" });

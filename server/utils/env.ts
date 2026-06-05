@@ -12,11 +12,11 @@ interface EnvCheck {
 
 const ENV_CHECKS: EnvCheck[] = [
   { key: "DATABASE_URL", required: true, defaultValue: "file:./dev.db", description: "Prisma database connection string" },
-  { key: "JWT_SECRET", required: false, defaultValue: "dev-only-hoogwerkerhub-jwt-secret", description: "JWT signing secret (required in production)" },
+  { key: "JWT_SECRET", required: false, defaultValue: "dev-only-huurgo-jwt-secret", description: "JWT signing secret (required in production)" },
   { key: "GEMINI_API_KEY", required: false, description: "Google Gemini AI API key" },
   { key: "RESEND_API_KEY", required: false, description: "Resend email API key" },
   { key: "EMAIL_FROM", required: false, defaultValue: "onboarding@resend.dev", description: "Sender email address" },
-  { key: "ADMIN_EMAIL", required: false, defaultValue: "info@hoogwerkerhub.nl", description: "Admin notification email" },
+  { key: "ADMIN_EMAIL", required: false, defaultValue: "info@huurgo.nl", description: "Admin notification email" },
   { key: "PORT", required: false, defaultValue: "3000", description: "Server listening port" }
 ];
 
@@ -42,7 +42,7 @@ export function validateEnvironment(): void {
 
   // Production-specific checks
   if (process.env.NODE_ENV === "production") {
-    if (!process.env.JWT_SECRET || process.env.JWT_SECRET === "dev-only-hoogwerkerhub-jwt-secret") {
+    if (!process.env.JWT_SECRET || process.env.JWT_SECRET === "dev-only-huurgo-jwt-secret") {
       console.error("❌ [ENV] JWT_SECRET must be set to a strong value in production!");
       hasErrors = true;
     }

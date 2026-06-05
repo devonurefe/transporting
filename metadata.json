@@ -1,5 +1,5 @@
 {
-  "name": "HoogwerkerHub",
+  "name": "HuurGo",
   "description": "Premium Dutch aerial platform rental marketplace with an AI-guided assistant, secure booking, delivery options, and an admin console.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]

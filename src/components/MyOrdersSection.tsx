@@ -91,13 +91,7 @@ export default function MyOrdersSection({
 
   const { login, register, updateProfile, resendVerification } = useAuthStore();
 
-  // Custom simulator states
-  const [simulatedEmail, setSimulatedEmail] = useState<{
-    subject: string;
-    body: string;
-    sender: string;
-    time: string;
-  } | null>(null);
+
 
   const [emailSubscription, setEmailSubscription] = useState(true);
   const [smsSubscription, setSmsSubscription] = useState(false);
@@ -276,105 +270,7 @@ export default function MyOrdersSection({
     }
   };
 
-  // Action simulators for logged in customer
-  const triggerApprovedSimulator = () => {
-    if (!currentUser) return;
-    const userFilteredOrders = orders.filter(o => o.customerEmail.toLowerCase() === currentUser.email.toLowerCase());
-    const myInBehandelingOrder = userFilteredOrders.find(o => o.status === "In behandeling");
-    const targetOrder = myInBehandelingOrder || userFilteredOrders[0];
 
-    if (!targetOrder) {
-      onTriggerNotification("Simulator Fout", "U moet eerst een raming of bestelling plaatsen om dit te kunnen simuleren.", "warning");
-      return;
-    }
-
-    onUpdateOrderStatus(targetOrder.id, "Goedgekeurd");
-    onAddSystemLog?.("status", currentUser.name, `Reservering goedgekeurd (via simulator): ${targetOrder.id}`);
-    onTriggerNotification(
-      "Reservering Goedgekeurd!",
-      `Uw reservering ${targetOrder.id} is officieel geaccepteerd en ingeroosterd.`,
-      "success"
-    );
-
-    if (emailSubscription) {
-      setSimulatedEmail({
-        sender: "bevestiging@hoogwerkerhub.nl",
-        subject: `✓ Reservering ${targetOrder.id} Geaccepteerd - HoogwerkerHub`,
-        time: new Date().toLocaleTimeString("nl-NL"),
-        body: `Geachte ${currentUser.name},<br/><br/>
-        We hebben fantastisch nieuws! Onze logistieke planners hebben uw reservering <strong>${targetOrder.id}</strong> voor de <strong>${targetOrder.machineName}</strong> geaccordeerd.<br/><br/>
-        <strong>Details:</strong><br/>
-        - Model: ${targetOrder.machineName}<br/>
-        - Periode: ${targetOrder.startDate} tot ${targetOrder.endDate} (${targetOrder.rentalDays} dagen)<br/>
-        - Transportmethode: ${targetOrder.deliveryType === "self_pickup" ? "Zelf ophalen bij de Hub" : "Bezorging door HoogwerkerHub"}<br/>
-        <br/>
-        Uw transactie van €${targetOrder.totalAmount.toFixed(2)} is veilig geautoriseerd via de Stripe/Mollie betaalgateway.<br/><br/>
-        Met vriendelijke groet,<br/>
-        <strong>Logistiek Team HoogwerkerHub Nederland</strong>`
-      });
-    }
-  };
-
-  const triggerDeliverySimulator = () => {
-    if (!currentUser) return;
-    const userFilteredOrders = orders.filter(o => o.customerEmail.toLowerCase() === currentUser.email.toLowerCase());
-    const myApprovedOrder = userFilteredOrders.find(o => o.status === "Goedgekeurd" || o.status === "In behandeling");
-    const targetOrder = myApprovedOrder || userFilteredOrders[0];
-
-    if (!targetOrder) {
-      onTriggerNotification("Simulator Fout", "U heeft geen actieve bestelling om te leveren.", "warning");
-      return;
-    }
-
-    onUpdateOrderStatus(targetOrder.id, "Onderweg");
-    onAddSystemLog?.("status", currentUser.name, `Levering onderweg (via simulator): ${targetOrder.id}`);
-    onTriggerNotification(
-      "Levering Gestart!",
-      `Onze gecertificeerde chauffeur is onderweg naar uw locatie met de ${targetOrder.machineName}.`,
-      "info"
-    );
-
-    if (emailSubscription) {
-      setSimulatedEmail({
-        sender: "logistiek@hoogwerkerhub.nl",
-        subject: `🚚 Chauffeur onderweg met uw machine - ${targetOrder.id}`,
-        time: new Date().toLocaleTimeString("nl-NL"),
-        body: `Beste ${currentUser.name},<br/><br/>
-        Onze transportwagen is zojuist vertrokken vanaf het distributiecentrum. Chauffeur 'Marco' is onderweg naar uw locatie met de <strong>${targetOrder.machineName}</strong>.<br/><br/>
-        Hij zal de machine direct op uw werklocatie stallen en u voorzien van een grondige veiligheidsbriefing en instructiecertificaat (BMWT richtlijnen).<br/><br/>
-        Zorg dat er iemand aanwezig is om te tekenen voor ontvangst.<br/><br/>
-        Fijne en veilige klus gewenst!<br/>
-        <strong>HoogwerkerHub Leveringstracking</strong>`
-      });
-    }
-  };
-
-  const triggerSpecialDealSimulator = () => {
-    if (!currentUser) return;
-    onAddSystemLog?.("system", currentUser.name, `Speciale partnerdeal SPIDERSPRINGNL gegenereerd.`);
-    onTriggerNotification(
-      "Speciale Aanbieding Ontvangen",
-      "Er is een exclusieve partnerdeal naar uw e-mailadres verzonden!",
-      "success"
-    );
-
-    setSimulatedEmail({
-      sender: "promotions@hoogwerkerhub.nl",
-      subject: "🔒 Exclusieve HubDeal: 15% Korting op Spinhoogwerkers!",
-      time: new Date().toLocaleTimeString("nl-NL"),
-      body: `Beste ${currentUser.name},<br/><br/>
-      Als gewaardeerd partner van HoogwerkerHub (Specialisatie: <strong>${currentUser.profileType}</strong>) we willen u graag ondersteunen bij uw aankomende projecten.<br/><br/>
-      Daarom ontvangt u deze week een exclusieve partnerkorting:<br/>
-      <div style="background: rgba(79, 70, 229, 0.1); border: 1px dashed #4F46E5; padding: 15px; border-radius: 8px; text-align: center; margin: 15px 0;">
-        <span style="font-size: 11px; text-transform: uppercase;">Actiecode voor 15% korting:</span><br/>
-        <strong><span style="font-size: 18px; color: #818CF8; letter-spacing: 2px;">SPIDERSPRINGNL</span></strong>
-      </div>
-      Geldig op al onze spinhoogwerkers met compacte rupsbanden, perfect voor smalle poorten en uitdagende binnenvloeren.<br/><br/>
-      <small>*Code geldig t/m 15 juni 2026. Niet cumulatief met andere lopende kortingen.</small><br/><br/>
-      Hartelijke groet,<br/>
-      Het Marketingteam van HoogwerkerHub B.V.`
-    });
-  };
 
   // If NOT LOGGED IN: Render a beautiful Customer Login Experience (Visitor UI only)
   if (!currentUser) {
@@ -395,10 +291,10 @@ export default function MyOrdersSection({
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
+          <div className="flex justify-center items-start">
             
             {/* Login form */}
-            <div className="md:col-span-7 bg-white border border-slate-200 shadow-sm p-6 sm:p-8 rounded-3xl space-y-6">
+            <div className="w-full max-w-lg bg-white border border-slate-200 shadow-sm p-6 sm:p-8 rounded-3xl space-y-6">
               <div className="flex border-b border-slate-200 pb-1">
                 <button
                   onClick={() => setIsRegistering(false)}
@@ -594,45 +490,10 @@ export default function MyOrdersSection({
               )}
             </div>
 
-            {/* Quick-simulate account panel (for testing) */}
-            <div className="md:col-span-5 space-y-5">
-              <div className="bg-white border border-slate-250 border-slate-200 shadow-sm p-5 rounded-3xl space-y-4">
-                <div className="flex items-center space-x-2 border-b border-slate-105 border-slate-100 pb-2.5">
-                  <SlidersHorizontal className="h-4 w-4 text-indigo-600" />
-                  <h3 className="font-display font-black text-xs uppercase text-slate-800 tracking-wider">Snel Inloggen</h3>
-                </div>
-                
-                <p className="text-[11px] text-slate-600 leading-relaxed font-semibold">
-                  Kies een van de gecertificeerde profielen om direct in te loggen met hun fictieve account. U ziet dan direct de bijbehorende bestelhistorie!
-                </p>
-
-                <div className="space-y-2 pt-1">
-                  {dynamicUserProfiles.map(p => (
-                    <button
-                      key={p.id}
-                      onClick={() => {
-                        setCurrentUser(p);
-                        onTriggerNotification("Inloggen Geslaagd", `Ingelogd met testprofiel: ${p.name}`, "success");
-                      }}
-                      className="w-full flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200 hover:border-slate-350 hover:bg-slate-100 transition-all text-left cursor-pointer text-slate-600 hover:text-slate-900 shadow-sm"
-                    >
-                      <div className="flex items-center space-x-2.5">
-                        <img src={p.avatarUrl} alt="" className="h-7 w-7 rounded-lg object-cover" referrerPolicy="no-referrer" />
-                        <div>
-                          <div className="text-xs font-black leading-none">{p.name}</div>
-                          <span className="text-[9px] text-slate-500 font-bold">{p.profileType}</span>
-                        </div>
-                      </div>
-                      <span className="text-[10px] text-indigo-600 font-extrabold font-mono">{p.pastRentalsCount} huren</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
           </div>
 
         </div>
+
       </div>
     );
   }
@@ -756,7 +617,7 @@ export default function MyOrdersSection({
                   <div>
                     <h4 className="font-display font-bold text-xs text-slate-800 uppercase tracking-wider font-sans">Geen reserveringen gevonden</h4>
                     <p className="text-[11px] text-slate-500 mt-1 max-w-sm font-semibold">
-                      Dit account ({currentUser.email}) heeft momenteel geen actieve contracten binnen het gekozen filter. Gebruik de simulator rechts of boek een machine.
+                      Dit account ({currentUser.email}) heeft momenteel geen actieve contracten binnen het gekozen filter. Boek een machine via de catalogus om uw eerste bestelling te plaatsen.
                     </p>
                   </div>
                 </div>
@@ -1046,101 +907,11 @@ export default function MyOrdersSection({
               </div>
             </div>
 
-            {/* Simulated Live Actions Controls (For client status flow simulation) */}
-            <div className="bg-indigo-50 border border-indigo-200/80 shadow-sm p-5 rounded-3xl space-y-4">
-              <div className="flex items-center space-x-1.5">
-                <Sparkles className="h-4 w-4 text-indigo-605 text-indigo-605 text-indigo-600" />
-                <h4 className="font-display font-black text-xs text-indigo-950 uppercase tracking-wider">Order Status Pro-Simulator</h4>
-              </div>
-              <p className="text-[11px] text-indigo-905 text-indigo-900 leading-relaxed font-semibold">
-                Gebruik deze opties om live de goedkeuring en voortgang door de Hub te simuleren. Dit simuleert de reactie van de eigenaar op de raming.
-              </p>
-
-              <div className="space-y-2.5 pt-1">
-                <button
-                  onClick={triggerApprovedSimulator}
-                  className="w-full text-left text-xs bg-white hover:bg-slate-50 border border-indigo-100 text-indigo-950 p-3 rounded-xl transition-all flex items-center justify-between cursor-pointer active:scale-98 shadow-sm font-semibold"
-                >
-                  <span className="font-black flex items-center space-x-1.5">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-505 bg-emerald-500" />
-                    <span>✓ Reservering Goedkeuren</span>
-                  </span>
-                  <span className="text-[9px] text-slate-450 text-indigo-500">Volgende stap</span>
-                </button>
-
-                <button
-                  onClick={triggerDeliverySimulator}
-                  className="w-full text-left text-xs bg-white hover:bg-slate-50 border border-indigo-100 text-indigo-950 p-3 rounded-xl transition-all flex items-center justify-between cursor-pointer active:scale-98 shadow-sm font-semibold"
-                >
-                  <span className="font-black flex items-center space-x-1.5">
-                    <span className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse" />
-                    <span>🚚 Chauffeur Vertrekt</span>
-                  </span>
-                  <span className="text-[9px] text-indigo-500 font-bold">Bezorging</span>
-                </button>
-
-                <button
-                  onClick={triggerSpecialDealSimulator}
-                  className="w-full text-left text-xs bg-white hover:bg-slate-50 border border-indigo-100 text-indigo-950 p-3 rounded-xl transition-all flex items-center justify-between cursor-pointer active:scale-98 shadow-sm font-semibold"
-                >
-                  <span className="font-black flex items-center space-x-1.5">
-                    <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-                    <span>🔒 Ontvang Partnerdeal 15%</span>
-                  </span>
-                  <span className="text-[9px] text-indigo-505 text-indigo-500">Campagnes</span>
-                </button>
-              </div>
-            </div>
-
           </div>
 
         </section>
 
-        {/* MOCKED EMAIL POPUP IN CUSTOMER PORTAL */}
-        <AnimatePresence>
-          {simulatedEmail && (
-            <motion.div
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white border border-slate-300 shadow-2xl p-6 rounded-3xl space-y-4 relative"
-            >
-              <button
-                onClick={() => setSimulatedEmail(null)}
-                className="absolute top-4 right-4 text-xs font-bold text-slate-550 hover:text-slate-900 transition-colors bg-slate-100 px-2 py-1 rounded-lg cursor-pointer hover:bg-slate-200 border-none"
-              >
-                Sluiten
-              </button>
-              
-              <div className="flex items-center space-x-2 border-b border-slate-100 pb-3">
-                <Bell className="h-5 w-5 text-indigo-600 shrink-0" />
-                <div>
-                  <h3 className="text-xs font-black uppercase tracking-wider text-indigo-700 font-mono">Simulatie Mailbox Ontvangen</h3>
-                  <p className="text-[10px] text-slate-500 leading-none">Dit is hoe de e-mail eruit ziet voor uw klant</p>
-                </div>
-              </div>
 
-              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3 font-sans text-xs shadow-inner">
-                <div className="space-y-1 text-slate-600 border-b border-slate-200 pb-2 text-[11px]">
-                  <div><strong>Van:</strong> {simulatedEmail.sender}</div>
-                  <div><strong>Aan:</strong> {currentUser.email}</div>
-                  <div><strong>Onderwerp:</strong> {simulatedEmail.subject}</div>
-                  <div><strong>Ontvangen:</strong> {simulatedEmail.time} (Zojuist)</div>
-                </div>
-
-                <div 
-                  className="text-slate-800 text-[11px] leading-relaxed pt-2 font-medium"
-                  dangerouslySetInnerHTML={{ __html: simulatedEmail.body }}
-                />
-              </div>
-
-              <div className="text-[10px] text-slate-500 flex items-center space-x-1 font-mono justify-end">
-                <Info className="h-3.5 w-3.5" />
-                <span>Simulatie e-mail verzonden op basis van uw notificatie-instellingen.</span>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
 
         {/* WhatsApp Help Banner */}
         <div className="mt-8 flex flex-col sm:flex-row justify-between items-center bg-emerald-500/5 hover:bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4.5 transition-all text-left gap-4 shadow-sm">

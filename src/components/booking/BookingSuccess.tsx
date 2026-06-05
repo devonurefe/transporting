@@ -53,7 +53,8 @@ export default function BookingSuccess({
       if (success) {
         setRegisterSuccess(true);
       } else {
-        setRegisterError("Registratie mislukt. Mogelijk bestaat er al een account met dit e-mailadres.");
+        const storeError = useAuthStore.getState().error;
+        setRegisterError(storeError || "Registratie mislukt. Mogelijk bestaat er al een account met dit e-mailadres.");
       }
     } catch (err) {
       setRegisterError("Er is een netwerkfout opgetreden. Probeer het opnieuw.");

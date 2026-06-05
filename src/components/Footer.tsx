@@ -93,7 +93,7 @@ export default function Footer({ siteName, setActiveTab, setShowContactModal }: 
             <h4 className="font-display font-semibold tracking-wider text-[11px] uppercase text-slate-800 pb-1.5 border-b border-slate-100/80">
               Snelkoppelingen
             </h4>
-            <nav className="flex flex-col space-y-2 items-center sm:items-start">
+            <nav className="flex flex-row flex-wrap justify-center gap-x-6 gap-y-2 sm:flex-col sm:space-y-2 sm:items-start">
               <button 
                 onClick={() => { setActiveTab("home"); window.scrollTo({ top: 0, behavior: "smooth" }); }} 
                 className="text-[12.5px] font-medium text-slate-650 hover:text-indigo-600 transition-colors cursor-pointer text-center sm:text-left py-0.5 border-none bg-transparent"

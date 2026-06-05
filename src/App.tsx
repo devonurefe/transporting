@@ -68,9 +68,7 @@ export default function App() {
     if (storeUser) {
       if (storeUser.role === "admin") {
         setCurrentUser(null);
-        if (localStorage.getItem("hwh_admin_mode") === null) {
-          setIsAdminMode(true);
-        }
+        setIsAdminMode(true);
       } else {
         setCurrentUser({
           id: storeUser.id,

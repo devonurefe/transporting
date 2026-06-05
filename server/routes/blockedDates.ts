@@ -9,7 +9,11 @@ export const blockedDatesRouter = Router();
 blockedDatesRouter.get("/", async (req: AuthenticatedRequest, res: Response) => {
   try {
     const blocked = await prisma.blockedDate.findMany();
-    res.json(blocked);
+    const formatted = blocked.map(b => ({
+      ...b,
+      date: b.date.toISOString().split("T")[0]
+    }));
+    res.json(formatted);
   } catch (error) {
     console.error("Error fetching blocked dates:", error);
     res.status(500).json({ error: "Failed to fetch blocked dates" });
@@ -23,21 +27,26 @@ blockedDatesRouter.post("/", requireAdmin as any, async (req: AuthenticatedReque
     return res.status(400).json({ error: "Onvolledige invoer" });
   }
 
+  const parsedDate = new Date(date);
+  if (isNaN(parsedDate.getTime())) {
+    return res.status(400).json({ error: "Ongeldige datum" });
+  }
+
   try {
     if (action === "unblock") {
       await prisma.blockedDate.deleteMany({
-        where: { machineId, date }
+        where: { machineId, date: parsedDate }
       });
       res.json({ success: true, message: "Datum gedeblokkeerd" });
     } else {
       const exists = await prisma.blockedDate.findFirst({
-        where: { machineId, date }
+        where: { machineId, date: parsedDate }
       });
       if (!exists) {
         await prisma.blockedDate.create({
           data: {
             machineId,
-            date,
+            date: parsedDate,
             reason: reason || "Handmatig geblokkeerd door beheerder"
           }
         });

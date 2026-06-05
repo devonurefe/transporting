@@ -42,10 +42,10 @@ import { printInvoice } from "../utils/invoice";
 
 interface MyOrdersSectionProps {
   orders: Order[];
-  onTriggerNotification: (title: string, message: string, type: "info" | "success" | "warning") => void;
+  onTriggerNotification: (title: string, message: string, type: "info" | "success" | "warning", persist?: boolean) => void;
   currentUser: UserProfile | null;
   setCurrentUser: (user: UserProfile | null) => void;
-  userProfiles: UserProfile[];
+  userProfiles?: UserProfile[];
   onUpdateOrderStatus: (orderId: string, nextStatus: any) => void;
   onAddSystemLog?: (type: "login" | "logout" | "signup" | "booking" | "fleet" | "status" | "system", user: string, description: string) => void;
 }
@@ -59,6 +59,15 @@ export default function MyOrdersSection({
   onUpdateOrderStatus,
   onAddSystemLog
 }: MyOrdersSectionProps) {
+  const [dynamicUserProfiles, setDynamicUserProfiles] = useState<UserProfile[]>([]);
+
+  React.useEffect(() => {
+    fetch("/api/auth/mock-profiles")
+      .then(res => (res.ok ? res.json() : []))
+      .then(data => setDynamicUserProfiles(data))
+      .catch(() => {});
+  }, []);
+
   // Star rating memory map
   const [ratings, setRatings] = useState<Record<string, number>>({});
   const [activeFilter, setActiveFilter] = useState<string>("all");
@@ -77,7 +86,10 @@ export default function MyOrdersSection({
   const [regCompany, setRegCompany] = useState("");
   const [regProfile, setRegProfile] = useState("Schilder");
 
-  const { login, register, updateProfile } = useAuthStore();
+  const [resendEmailAddress, setResendEmailAddress] = useState<string | null>(null);
+  const [isResending, setIsResending] = useState(false);
+
+  const { login, register, updateProfile, resendVerification } = useAuthStore();
 
   // Custom simulator states
   const [simulatedEmail, setSimulatedEmail] = useState<{
@@ -156,7 +168,8 @@ export default function MyOrdersSection({
     onTriggerNotification(
       "Waardering Opgeslagen",
       `Bedankt! Uw waardering van ${stars} sterren is gekoppeld aan de order en doorgegeven aan onze logistieke afdeling.`,
-      "success"
+      "success",
+      false
     );
   };
 
@@ -164,9 +177,29 @@ export default function MyOrdersSection({
     onTriggerNotification(
       "Factuur Genereren",
       `Factuur ${order.id} wordt klaargemaakt voor PDF download...`,
-      "success"
+      "success",
+      false
     );
     printInvoice(order, currentUser?.companyName);
+  };
+
+  const handleResendVerification = async () => {
+    if (!resendEmailAddress) return;
+    setIsResending(true);
+    const success = await resendVerification(resendEmailAddress);
+    setIsResending(false);
+    
+    if (success) {
+      onTriggerNotification(
+        "Verificatie-e-mail Verzonden",
+        `Er is een nieuwe verificatielink verzonden naar ${resendEmailAddress}. Controleer uw inbox.`,
+        "success"
+      );
+      setResendEmailAddress(null);
+    } else {
+      const errorMsg = useAuthStore.getState().error || "Kan verificatiemail niet verzenden.";
+      onTriggerNotification("Verzenden Mislukt", errorMsg, "warning");
+    }
   };
 
   const handleManualLogin = async (e: React.FormEvent) => {
@@ -180,6 +213,7 @@ export default function MyOrdersSection({
     if (success) {
       const user = useAuthStore.getState().user;
       if (user) {
+        setResendEmailAddress(null);
         setCurrentUser({
           id: user.id,
           name: user.name,
@@ -197,7 +231,13 @@ export default function MyOrdersSection({
         );
       }
     } else {
+      const isUnverified = useAuthStore.getState().isUnverified;
       const errorMsg = useAuthStore.getState().error || "Ongeldige inloggegevens.";
+      if (isUnverified) {
+        setResendEmailAddress(loginEmail.trim());
+      } else {
+        setResendEmailAddress(null);
+      }
       onTriggerNotification("Inloggen Mislukt", errorMsg, "warning");
     }
   };
@@ -218,24 +258,18 @@ export default function MyOrdersSection({
     });
 
     if (success) {
-      const user = useAuthStore.getState().user;
-      if (user) {
-        setCurrentUser({
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          phone: user.phone || "",
-          profileType: user.profile || "Particulier",
-          companyName: regCompany.trim() || undefined,
-          pastRentalsCount: 0
-        });
-        onAddSystemLog?.("signup", user.name, `Nieuw account geregistreerd en geopend.`);
-        onTriggerNotification(
-          "Registratie Voltooid",
-          `Welkom bij HoogwerkerHub, ${user.name}!`,
-          "success"
-        );
-      }
+      onAddSystemLog?.("signup", regName.trim(), `Nieuw account geregistreerd, wacht op e-mailverificatie.`);
+      onTriggerNotification(
+        "Registratie Voltooid",
+        `Registratie succesvol! Controleer uw e-mail (${regEmail}) om uw account te activeren.`,
+        "success"
+      );
+      setRegName("");
+      setRegEmail("");
+      setRegPassword("");
+      setRegPhone("");
+      setRegCompany("");
+      setIsRegistering(false);
     } else {
       const errorMsg = useAuthStore.getState().error || "Registratie mislukt.";
       onTriggerNotification("Registratie Mislukt", errorMsg, "warning");
@@ -438,6 +472,30 @@ export default function MyOrdersSection({
                     <CheckCircle className="h-4 w-4 text-emerald-450" />
                     <span>Beveiligd Inloggen</span>
                   </button>
+
+                  {resendEmailAddress && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: 5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="bg-amber-50 border border-amber-200/85 rounded-2xl p-4.5 mt-3 space-y-2.5 text-left border-dashed"
+                    >
+                      <p className="text-[11px] text-amber-900 leading-normal font-semibold">
+                        Uw e-mailadres is nog niet geverifieerd. Heeft u geen e-mail ontvangen? Klik hieronder om de verificatielink opnieuw te verzenden naar <strong>{resendEmailAddress}</strong>.
+                      </p>
+                      <button
+                        type="button"
+                        disabled={isResending}
+                        onClick={handleResendVerification}
+                        className="w-full py-2 bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs rounded-xl transition-all shadow-sm cursor-pointer border-none flex items-center justify-center space-x-1 disabled:opacity-50"
+                      >
+                        {isResending ? (
+                          <span>Verzenden...</span>
+                        ) : (
+                          <span>Verificatie-e-mail opnieuw verzenden</span>
+                        )}
+                      </button>
+                    </motion.div>
+                  )}
                 </form>
               ) : (
                 // Register Form
@@ -549,7 +607,7 @@ export default function MyOrdersSection({
                 </p>
 
                 <div className="space-y-2 pt-1">
-                  {userProfiles.map(p => (
+                  {dynamicUserProfiles.map(p => (
                     <button
                       key={p.id}
                       onClick={() => {

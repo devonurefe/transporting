@@ -41,11 +41,20 @@ apiRouter.use("/gemini", geminiRouter);
 import fs from "fs";
 import path from "path";
 
-// POST /api/upload - Local base64 file uploader (zero third-party dependency)
+// POST /api/upload - Local base64 file uploader with security controls
+const MAX_UPLOAD_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
+const ALLOWED_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp", ".gif", ".svg"];
+
 apiRouter.post("/upload", requireAdmin as any, async (req, res) => {
   const { fileName, base64Data } = req.body;
   if (!fileName || !base64Data) {
     return res.status(400).json({ error: "fileName and base64Data parameters are required" });
+  }
+
+  // Validate file extension
+  const ext = path.extname(fileName).toLowerCase();
+  if (!ALLOWED_EXTENSIONS.includes(ext)) {
+    return res.status(400).json({ error: `Niet-ondersteund bestandstype. Toegestaan: ${ALLOWED_EXTENSIONS.join(", ")}` });
   }
 
   try {
@@ -59,6 +68,11 @@ apiRouter.post("/upload", requireAdmin as any, async (req, res) => {
     const base64Content = base64Data.replace(/^data:image\/\w+;base64,/, "");
     const buffer = Buffer.from(base64Content, "base64");
 
+    // Validate file size
+    if (buffer.length > MAX_UPLOAD_SIZE_BYTES) {
+      return res.status(400).json({ error: `Bestand te groot. Maximum grootte: ${MAX_UPLOAD_SIZE_BYTES / (1024 * 1024)}MB` });
+    }
+
     // Clean filename to prevent path traversal
     const safeFileName = Date.now() + "_" + path.basename(fileName).replace(/[^a-zA-Z0-9.-]/g, "_");
     const filePath = path.join(uploadsDir, safeFileName);
@@ -67,7 +81,7 @@ apiRouter.post("/upload", requireAdmin as any, async (req, res) => {
     fs.writeFileSync(filePath, buffer);
 
     const relativeUrl = `/uploads/${safeFileName}`;
-    console.log(`[Upload] Image saved successfully to ${filePath}`);
+    console.log(`[Upload] Image saved successfully to ${filePath} (${(buffer.length / 1024).toFixed(1)}KB)`);
 
     res.json({
       success: true,

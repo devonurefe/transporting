@@ -10,6 +10,16 @@ import { Order } from "../types";
  * for a HoogwerkerHub order using native browser print capability.
  */
 export function printInvoice(order: Order, clientCompanyName?: string) {
+  const escapeHtml = (str: string): string => {
+    if (!str) return "";
+    return str
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  };
+
   const invoiceNumber = `INV-${order.id.toUpperCase()}`;
   const todayDate = new Date().toLocaleDateString("nl-NL");
   const dueDateStr = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toLocaleDateString("nl-NL");
@@ -31,6 +41,15 @@ export function printInvoice(order: Order, clientCompanyName?: string) {
     : "Bezorging door HoogwerkerHub logistieke dienst";
 
   const customerCompany = clientCompanyName || "Particulier";
+
+  // Escape user input fields to prevent XSS / HTML Injection
+  const escCustomerName = escapeHtml(order.customerName);
+  const escCustomerCompany = escapeHtml(customerCompany);
+  const escCustomerProfile = escapeHtml(order.customerProfile || "Particulier");
+  const escCustomerPhone = escapeHtml(order.customerPhone || "");
+  const escCustomerEmail = escapeHtml(order.customerEmail);
+  const escDeliveryAddress = escapeHtml(order.deliveryAddress || "");
+  const escMachineName = escapeHtml(order.machineName);
 
   const htmlContent = `
     <!DOCTYPE html>
@@ -359,11 +378,11 @@ export function printInvoice(order: Order, clientCompanyName?: string) {
           <div class="party-box">
             <h3 class="party-title">Huurder / Klant</h3>
             <div class="party-detail">
-              <strong>${order.customerName}</strong><br/>
-              ${order.customerProfile === 'Particulier' ? '' : `<span>Bedrijf: ${customerCompany}</span><br/>`}
-              <span>Vakgebied: ${order.customerProfile}</span><br/>
-              <span>Telefoon: ${order.customerPhone}</span><br/>
-              <span>E-mail: ${order.customerEmail}</span>
+              <strong>${escCustomerName}</strong><br/>
+              ${order.customerProfile === 'Particulier' ? '' : `<span>Bedrijf: ${escCustomerCompany}</span><br/>`}
+              <span>Vakgebied: ${escCustomerProfile}</span><br/>
+              <span>Telefoon: ${escCustomerPhone}</span><br/>
+              <span>E-mail: ${escCustomerEmail}</span>
             </div>
           </div>
           
@@ -373,7 +392,7 @@ export function printInvoice(order: Order, clientCompanyName?: string) {
             <div class="party-detail">
               <strong>${order.deliveryType === 'self_pickup' ? 'Afhalen' : 'Adreslevering'}</strong><br/>
               <span>${logisticsText}</span><br/>
-              ${order.deliveryAddress ? `<span style="font-family: monospace; font-size:11px; display:inline-block; margin-top:5px; color:#475569;">${order.deliveryAddress}</span>` : '<span>Afhaallocatie: Distributieweg 12, Amsterdam</span>'}
+              ${order.deliveryAddress ? `<span style="font-family: monospace; font-size:11px; display:inline-block; margin-top:5px; color:#475569;">${escDeliveryAddress}</span>` : '<span>Afhaallocatie: Distributieweg 12, Amsterdam</span>'}
             </div>
           </div>
         </div>
@@ -412,7 +431,7 @@ export function printInvoice(order: Order, clientCompanyName?: string) {
             <!-- Line 1: Machine rental -->
             <tr>
               <td>
-                <strong>${order.machineName}</strong>
+                <strong>${escMachineName}</strong>
                 <div class="item-spec">Huurperiode: ${order.startDate} t/m ${order.endDate}</div>
                 <div style="font-size: 10px; color: #64748b; margin-top: 2px;">Inclusief BMWT machine-verzekering & klusgids checklist pakket.</div>
               </td>

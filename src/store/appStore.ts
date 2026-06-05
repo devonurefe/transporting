@@ -62,6 +62,7 @@ interface AppState {
   removeFromCart: (itemId: string) => void;
   updateCartItemDates: (itemId: string, startDate: string, endDate: string) => void;
   clearCart: () => void;
+  clearError: () => void;
 
   campaignRules: CampaignRule[];
   updateCampaignRules: (rules: CampaignRule[]) => void;
@@ -117,9 +118,15 @@ export const useAppStore = create<AppState>((set, get) => ({
   fetchMachines: async () => {
     try {
       const res = await fetch("/api/machines");
-      if (res.ok) set({ machines: await res.json() });
-    } catch (e) {
-      console.warn("Machines fetch failed, using fallback in appStore.");
+      if (res.ok) {
+        set({ machines: await res.json(), error: null });
+      } else {
+        const data = await res.json().catch(() => ({}));
+        set({ error: data.error || "Fout bij ophalen machines." });
+      }
+    } catch (e: any) {
+      console.warn("Machines fetch failed.");
+      set({ error: e.message || "Netwerkfout bij ophalen machines." });
     }
   },
 
@@ -129,44 +136,66 @@ export const useAppStore = create<AppState>((set, get) => ({
         headers: getAuthHeaders()
       });
       if (res.ok) {
-        set({ orders: await res.json() });
+        set({ orders: await res.json(), error: null });
       } else if (res.status === 401 || res.status === 403) {
-        set({ orders: [] });
+        set({ orders: [], error: null });
+      } else {
+        const data = await res.json().catch(() => ({}));
+        set({ error: data.error || "Fout bij ophalen bestellingen." });
       }
-    } catch (e) {
+    } catch (e: any) {
       console.warn("Orders fetch failed.");
+      set({ error: e.message || "Netwerkfout bij ophalen bestellingen." });
     }
   },
 
   fetchCategories: async () => {
     try {
       const res = await fetch("/api/categories");
-      if (res.ok) set({ customCategories: await res.json() });
-    } catch (e) {
+      if (res.ok) {
+        set({ customCategories: await res.json(), error: null });
+      } else {
+        const data = await res.json().catch(() => ({}));
+        set({ error: data.error || "Fout bij ophalen categorieën." });
+      }
+    } catch (e: any) {
       console.warn("Categories fetch failed.");
+      set({ error: e.message || "Netwerkfout bij ophalen categorieën." });
     }
   },
 
   fetchSiteConfig: async () => {
     try {
       const res = await fetch("/api/site-config");
-      if (res.ok) set({ siteConfig: await res.json() });
-    } catch (e) {
+      if (res.ok) {
+        set({ siteConfig: await res.json(), error: null });
+      } else {
+        const data = await res.json().catch(() => ({}));
+        set({ error: data.error || "Fout bij ophalen site configuratie." });
+      }
+    } catch (e: any) {
       console.warn("Site config fetch failed.");
+      set({ error: e.message || "Netwerkfout bij ophalen site configuratie." });
     }
   },
 
   fetchBlockedDates: async () => {
     try {
       const res = await fetch("/api/blocked-dates");
-      if (res.ok) set({ blockedDates: await res.json() });
-    } catch (e) {
+      if (res.ok) {
+        set({ blockedDates: await res.json(), error: null });
+      } else {
+        const data = await res.json().catch(() => ({}));
+        set({ error: data.error || "Fout bij ophalen geblokkeerde datums." });
+      }
+    } catch (e: any) {
       console.warn("Blocked dates fetch failed.");
+      set({ error: e.message || "Netwerkfout bij ophalen geblokkeerde datums." });
     }
   },
 
   fetchAllData: async () => {
-    set({ isLoading: true });
+    set({ isLoading: true, error: null });
     await Promise.all([
       get().fetchMachines(),
       get().fetchOrders(),
@@ -190,9 +219,13 @@ export const useAppStore = create<AppState>((set, get) => ({
       if (res.ok) {
         await get().fetchMachines();
         return true;
+      } else {
+        const data = await res.json().catch(() => ({}));
+        set({ error: data.error || "Fout bij toevoegen machine." });
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
+      set({ error: e.message || "Netwerkfout bij toevoegen machine." });
     }
     return false;
   },
@@ -210,9 +243,13 @@ export const useAppStore = create<AppState>((set, get) => ({
       if (res.ok) {
         await get().fetchMachines();
         return true;
+      } else {
+        const data = await res.json().catch(() => ({}));
+        set({ error: data.error || "Fout bij bijwerken machine." });
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
+      set({ error: e.message || "Netwerkfout bij bijwerken machine." });
     }
     return false;
   },
@@ -226,9 +263,13 @@ export const useAppStore = create<AppState>((set, get) => ({
       if (res.ok) {
         await get().fetchMachines();
         return true;
+      } else {
+        const data = await res.json().catch(() => ({}));
+        set({ error: data.error || "Fout bij verwijderen machine." });
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
+      set({ error: e.message || "Netwerkfout bij verwijderen machine." });
     }
     return false;
   },
@@ -370,6 +411,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   clearCart: () => set({ cartItems: [] }),
+
+  clearError: () => set({ error: null }),
 
   updateCampaignRules: (rules) => {
     try {

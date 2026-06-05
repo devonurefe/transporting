@@ -4,7 +4,7 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = "file:./dev.db"
+  url      = env("DATABASE_URL")
 }
 
 model Machine {
@@ -20,14 +20,14 @@ model Machine {
   imageUrl                String
   imageAlt                String
   description             String
-  suitableFor             String
+  suitableFor             Json
   weeklyDiscountPercent   Float?
   monthlyDiscountPercent  Float?
   campaignText            String?
   campaignDiscountPercent Float?
   campaignDiscountAmount  Float?
   packageContents         String?
-  additionalImages        String?
+  additionalImages        Json?
   blockedDates            BlockedDate[]
 }
 
@@ -43,23 +43,25 @@ model Category {
 model BlockedDate {
   id        String  @id @default(uuid())
   machineId String
-  date      String
+  date      DateTime
   reason    String
   machine   Machine @relation(fields: [machineId], references: [id], onDelete: Cascade)
 }
 
 model Customer {
-  id           String   @id @default(uuid())
-  email        String   @unique
-  passwordHash String
-  name         String
-  phone        String?
-  profile      String?
-  companyName  String?
-  address      String?
-  avatarUrl    String?
-  createdAt    DateTime @default(now())
-  orders       Order[]
+  id                String   @id @default(uuid())
+  email             String   @unique
+  passwordHash      String
+  name              String
+  phone             String?
+  profile           String?
+  companyName       String?
+  address           String?
+  avatarUrl         String?
+  isEmailVerified   Boolean  @default(false)
+  verificationToken String?
+  createdAt         DateTime @default(now())
+  orders            Order[]
 }
 
 model Admin {
@@ -76,8 +78,8 @@ model Order {
   machineId       String
   machineName     String
   machinePrice    Float
-  startDate       String
-  endDate         String
+  startDate       DateTime
+  endDate         DateTime
   rentalDays      Int
   deliveryType    String
   deliveryAddress String?

@@ -7,6 +7,7 @@ import React, { useState } from "react";
 import { PlusCircle, Sparkles, Trash2 } from "lucide-react";
 import { motion } from "motion/react";
 import { useAppStore } from "../../store/appStore";
+import { resizeImage } from "../../utils/image";
 
 interface AdminAddMachineProps {
   key?: string;
@@ -55,54 +56,8 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
     setIsUploadingAdditional(true);
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      const reader = new FileReader();
-      const uploadPromise = new Promise<void>((resolve) => {
-        reader.onload = async (uploadEvent) => {
-          const base64 = uploadEvent.target?.result as string;
-          try {
-            const token = localStorage.getItem("hwh_token");
-            const res = await fetch("/api/upload", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                ...(token ? { Authorization: `Bearer ${token}` } : {})
-              },
-              body: JSON.stringify({
-                fileName: file.name,
-                base64Data: base64
-              })
-            });
-
-            if (res.ok) {
-              const data = await res.json();
-              setAdditionalImages((prev) => [...prev, data.url]);
-              onAddSystemLog("fleet", "Beheerder", t("Extra afbeelding geüpload: ", "Extra image uploaded: ", "Ek resim yüklendi: ") + file.name);
-            } else {
-              alert(t("Uploaden mislukt voor: ", "Upload failed for: ", "Yükleme başarısız: ") + file.name);
-            }
-          } catch (err) {
-            console.error(err);
-            alert(t("Fout bij uploaden afbeelding.", "Error uploading image.", "Resim yükleme hatası."));
-          } finally {
-            resolve();
-          }
-        };
-        reader.readAsDataURL(file);
-      });
-      await uploadPromise;
-    }
-    setIsUploadingAdditional(false);
-  };
-
-  const handleImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setIsUploading(true);
-    const reader = new FileReader();
-    reader.onload = async (uploadEvent) => {
-      const base64 = uploadEvent.target?.result as string;
       try {
+        const base64 = await resizeImage(file);
         const token = localStorage.getItem("hwh_token");
         const res = await fetch("/api/upload", {
           method: "POST",
@@ -118,19 +73,52 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
 
         if (res.ok) {
           const data = await res.json();
-          setImageUrl(data.url);
-          onAddSystemLog("fleet", "Beheerder", t("Afbeelding lokaal geüpload: ", "Image uploaded locally: ", "Resim yerel olarak yüklendi: ") + file.name);
+          setAdditionalImages((prev) => [...prev, data.url]);
+          onAddSystemLog("fleet", "Beheerder", t("Extra afbeelding geüpload: ", "Extra image uploaded: ", "Ek resim yüklendi: ") + file.name);
         } else {
-          alert(t("Uploaden mislukt.", "Upload failed.", "Yükleme başarısız."));
+          alert(t("Uploaden mislukt voor: ", "Upload failed for: ", "Yükleme başarısız: ") + file.name);
         }
       } catch (err) {
         console.error(err);
         alert(t("Fout bij uploaden afbeelding.", "Error uploading image.", "Resim yükleme hatası."));
-      } finally {
-        setIsUploading(false);
       }
-    };
-    reader.readAsDataURL(file);
+    }
+    setIsUploadingAdditional(false);
+  };
+
+  const handleImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      const base64 = await resizeImage(file);
+      const token = localStorage.getItem("hwh_token");
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({
+          fileName: file.name,
+          base64Data: base64
+        })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setImageUrl(data.url);
+        onAddSystemLog("fleet", "Beheerder", t("Afbeelding lokaal geüpload: ", "Image uploaded locally: ", "Resim yerel olarak yüklendi: ") + file.name);
+      } else {
+        alert(t("Uploaden mislukt.", "Upload failed.", "Yükleme başarısız."));
+      }
+    } catch (err) {
+      console.error(err);
+      alert(t("Fout bij uploaden afbeelding.", "Error uploading image.", "Resim yükleme hatası."));
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const handleAIAutofill = async () => {

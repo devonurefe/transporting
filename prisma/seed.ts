@@ -27,7 +27,7 @@ const defaultMachines = [
     imageUrl: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=600&auto=format&fit=crop",
     imageAlt: "Gele elektrische schaarlift voor binnengebruik en schilderwerk",
     description: "Perfect geschikt voor binnenwerkzaamheden, installatiewerk, en schilderwerk in sporthallen of magazijnen. Emissievrij en voorzien van non-marking banden.",
-    suitableFor: "Schilder;Installateur;Magazijn;Particulier",
+    suitableFor: ["Schilder", "Installateur", "Magazijn", "Particulier"],
     weeklyDiscountPercent: 10,
     monthlyDiscountPercent: 25,
     campaignText: "Lente Actie",
@@ -46,7 +46,7 @@ const defaultMachines = [
     imageUrl: "https://images.unsplash.com/photo-1608220179550-e128cc63979e?q=80&w=600&auto=format&fit=crop",
     imageAlt: "Knikarmhoogwerker werkzaam op bouwterrein",
     description: "Uiterst flexibele hoogwerker met knik-telescoop constructie. Ideaal om over obstakels heen te reiken bij gevelreiniging of renovatie.",
-    suitableFor: "Glazenwasser;Aannemer;Gevelreiniger",
+    suitableFor: ["Glazenwasser", "Aannemer", "Gevelreiniger"],
     weeklyDiscountPercent: 15,
     monthlyDiscountPercent: 30,
     campaignText: "GevelSpecial",
@@ -65,7 +65,7 @@ const defaultMachines = [
     imageUrl: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?q=80&w=600&auto=format&fit=crop",
     imageAlt: "Grote telescoophoogwerker op ruw terrein",
     description: "Maximale reikwijdte and werkhoogte op uitdagende bouwterreinen. 4WD aangedreven met krachtige prestaties voor zware industriële projecten.",
-    suitableFor: "Aannemer;Industriebouw;Dakdekker",
+    suitableFor: ["Aannemer", "Industriebouw", "Dakdekker"],
     weeklyDiscountPercent: 12,
     monthlyDiscountPercent: 28
   },
@@ -82,7 +82,7 @@ const defaultMachines = [
     imageUrl: "https://images.unsplash.com/photo-1541625602330-2277a4c46182?q=80&w=600&auto=format&fit=crop",
     imageAlt: "Autohoogwerker gemonteerd op busje voor openbare verlichting",
     description: "Zelf rijden naar uw klus met een standaard autorijbewijs B. Snel operationeel met hydraulische stempels, perfect voor straatverlichting en boomverzorging.",
-    suitableFor: "Gemeente;Boomverzorging;Schilder;Particulier",
+    suitableFor: ["Gemeente", "Boomverzorging", "Schilder", "Particulier"],
     weeklyDiscountPercent: 10,
     monthlyDiscountPercent: 25,
     campaignText: "LenteKorting",
@@ -100,8 +100,8 @@ const defaultMachines = [
     powerType: "Hybride",
     imageUrl: "https://images.unsplash.com/photo-1541888946425-d81bb19240f5?q=80&w=600&auto=format&fit=crop",
     imageAlt: "Spinhoogwerker op rubberen rupsbanden manoeuvrerend in smalle tuin",
-    description: "Uiterst compacte spinhoogwerker op rubberen rupsbanden. Past door een standaard binnendeur, beschadigt kwetsbare vloeren niet, en stempelt overal af.",
-    suitableFor: "Hovenier;Schilder;Restauratie;Binnenwerk",
+    description: "Uiterst compacte spinhoogwerker op rubberen rupsbanden. Past door een standaard binnendeur, beschadigt kwetsbare vloeren niet, and stempelt overal af.",
+    suitableFor: ["Hovenier", "Schilder", "Restauratie", "Binnenwerk"],
     weeklyDiscountPercent: 12,
     monthlyDiscountPercent: 28
   },
@@ -118,7 +118,7 @@ const defaultMachines = [
     imageUrl: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=600&auto=format&fit=crop",
     imageAlt: "Schilderskit Combiset",
     description: "Kant-en-klaar editie speciaal voor schilderwerk binnen. Inclusief 2x 20m verlengkabels, 1x luxe veiligheidsharnas, non-marking banden en vloerbeschermers.",
-    suitableFor: "Schilder;Particulier",
+    suitableFor: ["Schilder", "Particulier"],
     weeklyDiscountPercent: 10,
     campaignText: "SchilderDeal",
     campaignDiscountPercent: 5
@@ -136,7 +136,7 @@ const defaultMachines = [
     imageUrl: "https://images.unsplash.com/photo-1508514177221-188b1cf16e9d?q=80&w=600&auto=format&fit=crop",
     imageAlt: "Solar Montage set",
     description: "Perfect samengestelde set voor snelle zonnepaneelinstallatie op daken. Inclusief knikarmhoogwerker, handige materiaalgorrel/haken en all-risk kasko dekking.",
-    suitableFor: "Aannemer;Installateur",
+    suitableFor: ["Aannemer", "Installateur"],
     weeklyDiscountPercent: 15,
     campaignText: "EcoGarant",
     campaignDiscountAmount: 30
@@ -154,7 +154,7 @@ const defaultMachines = [
     imageUrl: "https://images.unsplash.com/photo-1541888946425-d81bb19240f5?q=80&w=600&auto=format&fit=crop",
     imageAlt: "Tuin Snoei compact set",
     description: "Compacte kit voor boomonderhoud of snoeiwerk. Inclusief Spinhoogwerker op rupsbanden, 4x plastic rijplaten tegen gazonbeschadiging en helm met gehoorbescherming.",
-    suitableFor: "Hovenier;Boomverzorging",
+    suitableFor: ["Hovenier", "Boomverzorging"],
     weeklyDiscountPercent: 12
   },
   {
@@ -170,7 +170,7 @@ const defaultMachines = [
     imageUrl: "https://images.unsplash.com/photo-1542385151-efd9000785a0?q=80&w=600&auto=format&fit=crop",
     imageAlt: "Dakgoot kit",
     description: "Zelf rijden met B-rijbewijs. Gemonteerd met een speciaal platformvak voor gereedschappen, dakgootschep-set and 230V stroomaansluiting in het platform.",
-    suitableFor: "Particulier;Glazenwasser",
+    suitableFor: ["Particulier", "Glazenwasser"],
     weeklyDiscountPercent: 10,
     campaignText: "GootDeal",
     campaignDiscountPercent: 8
@@ -188,7 +188,7 @@ const defaultMachines = [
     imageUrl: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?q=80&w=600&auto=format&fit=crop",
     imageAlt: "Gevel kit",
     description: "Robuust telescooppakket voor veeleisende buitenreiniging. Inclusief slanghaspel-gevelextensie klemmen, hogedruk generator module and all-risk kasko dekking.",
-    suitableFor: "Glazenwasser;Gevelreiniger",
+    suitableFor: ["Glazenwasser", "Gevelreiniger"],
     weeklyDiscountPercent: 15
   },
   {
@@ -204,7 +204,7 @@ const defaultMachines = [
     imageUrl: "https://images.unsplash.com/photo-1608220179550-e128cc63979e?q=80&w=600&auto=format&fit=crop",
     imageAlt: "Glasbewassing",
     description: "Zelfrijdende truck hoogwerker (rijbewijs B) voorzien van osmose-watertank montage klemmen and brede platformbak voor veilig glasbewassing op hoogte.",
-    suitableFor: "Glazenwasser",
+    suitableFor: ["Glazenwasser"],
     weeklyDiscountPercent: 12
   },
   {
@@ -220,7 +220,7 @@ const defaultMachines = [
     imageUrl: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=600&auto=format&fit=crop",
     imageAlt: "Particuliere weekendset",
     description: "De ultieme doe-het-zelf favoriet voor schilderen of lampen vervangen. Inclusief veiligheidsharnas, helm and gratis telefonische advieslijn via onze AI-coördinator.",
-    suitableFor: "Particulier",
+    suitableFor: ["Particulier"],
     campaignText: "WeekendSpecial",
     campaignDiscountPercent: 10
   },
@@ -237,7 +237,7 @@ const defaultMachines = [
     imageUrl: "https://images.unsplash.com/photo-1541888946425-d81bb19240f5?q=80&w=600&auto=format&fit=crop",
     imageAlt: "Licht installatieset",
     description: "Ideaal voor installateurs van beveiligingscamera's, straatverlichting and sportveld armaturen. Inclusief spinhoogwerker, geactiveerde stroomhaspel kit and gemonteerde materiaalkorf.",
-    suitableFor: "Installateur",
+    suitableFor: ["Installateur"],
     weeklyDiscountPercent: 12
   },
   {
@@ -253,7 +253,7 @@ const defaultMachines = [
     imageUrl: "https://images.unsplash.com/photo-1541625602330-2277a4c46182?q=80&w=600&auto=format&fit=crop",
     imageAlt: "Compacte aanhanger hoogwerker",
     description: "Zeer lichte and stabiele aanhangerhoogwerker. Eenvoudig zelf te transporteren met een standaard B/BE rijbewijs and uiterst compact wendbaar op locatie.",
-    suitableFor: "Particulier;Schilder;Installateur",
+    suitableFor: ["Particulier", "Schilder", "Installateur"],
     weeklyDiscountPercent: 12,
     monthlyDiscountPercent: 28
   },
@@ -270,17 +270,17 @@ const defaultMachines = [
     imageUrl: "https://images.unsplash.com/photo-1569003339405-ea396a5a8a90?q=80&w=600&auto=format&fit=crop",
     imageAlt: "Super-reach telescoophoogwerker",
     description: "Onze allerhoogste telescoophoogwerker voor professionele megaprojecten. Voorzien van 4WD terreinaandrijving, uiterst robuuste mast and maximale klasse C-beveiliging.",
-    suitableFor: "Aannemer;Industriebouw",
+    suitableFor: ["Aannemer", "Industriebouw"],
     weeklyDiscountPercent: 15,
     monthlyDiscountPercent: 35
   }
 ];
 
 const defaultBlockedDates = [
-  { id: "b1", machineId: "schaar-elek", date: "2026-06-15", reason: "Onderhoud BMWT" },
-  { id: "b2", machineId: "schaar-elek", date: "2026-06-16", reason: "Onderhoud BMWT" },
-  { id: "b3", machineId: "knik-diesel", date: "2026-06-20", reason: "Calibratie keuring" },
-  { id: "b4", machineId: "set-paint-comfort", date: "2026-06-10", reason: "Gereserveerd voor demo" }
+  { id: "b1", machineId: "schaar-elek", date: new Date("2026-06-15"), reason: "Onderhoud BMWT" },
+  { id: "b2", machineId: "schaar-elek", date: new Date("2026-06-16"), reason: "Onderhoud BMWT" },
+  { id: "b3", machineId: "knik-diesel", date: new Date("2026-06-20"), reason: "Calibratie keuring" },
+  { id: "b4", machineId: "set-paint-comfort", date: new Date("2026-06-10"), reason: "Gereserveerd voor demo" }
 ];
 
 const defaultSiteConfig = {
@@ -296,6 +296,49 @@ const defaultSiteConfig = {
   menuAdminLabel: "Portaal"
 };
 
+const mockCustomers = [
+  {
+    email: "jan@devriesschilderwerken.nl",
+    name: "Jan de Vries",
+    phone: "+31 6 12345678",
+    companyName: "De Vries Schilderwerken B.V.",
+    profile: "Schilder",
+    avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=150&auto=format&fit=crop"
+  },
+  {
+    email: "sven@meer-groen.nl",
+    name: "Sven van der Meer",
+    phone: "+31 6 87654321",
+    companyName: "MeerGroen Boomverzorging",
+    profile: "Hovenier / Groenverzorging",
+    avatarUrl: "https://images.unsplash.com/photo-1628157582853-a796fa650a6a?q=80&w=150&auto=format&fit=crop"
+  },
+  {
+    email: "l.bakker@bakkerclean.nl",
+    name: "Lieke Bakker",
+    phone: "+31 6 49201837",
+    companyName: "Bakker Glazenwasserij & Gevelonderhoud",
+    profile: "Glazenwasser / Gevelreiniger",
+    avatarUrl: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=150&auto=format&fit=crop"
+  },
+  {
+    email: "daan@huizingabouwtech.nl",
+    name: "Daan Huizinga",
+    phone: "+31 6 38402174",
+    companyName: "Huizinga Bouw & Renovatie",
+    profile: "Aannemer",
+    avatarUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=150&auto=format&fit=crop"
+  },
+  {
+    email: "mila.v@xs4all.nl",
+    name: "Mila Visser",
+    phone: "+31 6 77281944",
+    companyName: "",
+    profile: "Particulier",
+    avatarUrl: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=150&auto=format&fit=crop"
+  }
+];
+
 async function main() {
   console.log("Cleaning database...");
   await prisma.notification.deleteMany();
@@ -303,6 +346,8 @@ async function main() {
   await prisma.machine.deleteMany();
   await prisma.category.deleteMany();
   await prisma.siteConfig.deleteMany();
+  await prisma.order.deleteMany();
+  await prisma.customer.deleteMany();
 
   console.log("Seeding categories...");
   for (const cat of defaultCategories) {
@@ -326,7 +371,9 @@ async function main() {
   const adminEmail = "admin@hoogwerkerhub.nl";
   const existingAdmin = await prisma.admin.findUnique({ where: { email: adminEmail } });
   if (!existingAdmin) {
-    const adminPasswordHash = await bcrypt.hash("admin123", 10);
+    const adminPassword = process.env.ADMIN_DEFAULT_PASSWORD || 
+      Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2).toUpperCase() + "!1";
+    const adminPasswordHash = await bcrypt.hash(adminPassword, 10);
     await prisma.admin.create({
       data: {
         email: adminEmail,
@@ -335,22 +382,35 @@ async function main() {
         role: "admin"
       }
     });
+    if (!process.env.ADMIN_DEFAULT_PASSWORD) {
+      console.log(`\n⚠️  ADMIN ACCOUNT CREATED WITH GENERATED PASSWORD:`);
+      console.log(`   Email: ${adminEmail}`);
+      console.log(`   Password: ${adminPassword}`);
+      console.log(`   ⚠️  Please change this password immediately after first login!\n`);
+    } else {
+      console.log(`✅ Admin account created with ADMIN_DEFAULT_PASSWORD env variable.`);
+    }
   }
 
-  console.log("Seeding default customer...");
-  const customerEmail = "jan@devriesschilderwerken.nl";
-  let customer = await prisma.customer.findUnique({ where: { email: customerEmail } });
-  if (!customer) {
-    const customerPasswordHash = await bcrypt.hash("customer123", 10);
-    customer = await prisma.customer.create({
+  console.log("Seeding customer profiles...");
+  const customerPasswordHash = await bcrypt.hash("customer123", 10);
+  const createdCustomers: Record<string, string> = {};
+
+  for (const customerData of mockCustomers) {
+    const cust = await prisma.customer.create({
       data: {
-        email: customerEmail,
+        email: customerData.email,
         passwordHash: customerPasswordHash,
-        name: "Jan de Vries",
-        phone: "+31 6 12345678",
-        profile: "Schilder"
+        name: customerData.name,
+        phone: customerData.phone || null,
+        profile: customerData.profile,
+        companyName: customerData.companyName || null,
+        avatarUrl: customerData.avatarUrl || null,
+        isEmailVerified: true,
+        verificationToken: null
       }
     });
+    createdCustomers[cust.email] = cust.id;
   }
 
   console.log("Seeding default orders...");
@@ -363,8 +423,8 @@ async function main() {
         machineId: "schaar-elek",
         machineName: "Elektrische Schaarlift (12m)",
         machinePrice: 120,
-        startDate: "2026-06-05",
-        endDate: "2026-06-08",
+        startDate: new Date("2026-06-05"),
+        endDate: new Date("2026-06-08"),
         rentalDays: 3,
         deliveryType: "delivery_with_driver",
         deliveryAddress: "Keizersgracht 420, 1016 EK Amsterdam",
@@ -378,7 +438,7 @@ async function main() {
         vatAmount: 132.3,
         totalAmount: 762.3,
         status: "Goedgekeurd",
-        customerId: customer.id,
+        customerId: createdCustomers["jan@devriesschilderwerken.nl"],
         addons: JSON.stringify([])
       }
     });
@@ -393,12 +453,12 @@ async function main() {
         machineId: "spin-crawl",
         machineName: "Spinhoogwerker Spider (15m)",
         machinePrice: 180,
-        startDate: "2026-06-12",
-        endDate: "2026-06-13",
+        startDate: new Date("2026-06-12"),
+        endDate: new Date("2026-06-13"),
         rentalDays: 1,
         deliveryType: "self_pickup",
-        customerName: "Sven van der Berg",
-        customerEmail: "sven@vanderberggroen.nl",
+        customerName: "Sven van der Meer",
+        customerEmail: "sven@meer-groen.nl",
         customerPhone: "+31 6 87654321",
         customerProfile: "Hovenier / Groenverzorging",
         subtotal: 180,
@@ -407,6 +467,7 @@ async function main() {
         vatAmount: 37.8,
         totalAmount: 217.8,
         status: "In behandeling",
+        customerId: createdCustomers["sven@meer-groen.nl"],
         addons: JSON.stringify([])
       }
     });

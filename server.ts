@@ -11,8 +11,10 @@ import { authRouter } from "./server/routes/auth.js";
 import { authenticateToken } from "./server/middleware/auth.js";
 import { requestLogger } from "./server/middleware/logger.js";
 import { errorHandler } from "./server/middleware/errorHandler.js";
+import { validateEnvironment } from "./server/utils/env.js";
 
 dotenv.config();
+validateEnvironment();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -26,7 +28,11 @@ app.use(helmet({
   contentSecurityPolicy: false,
   crossOriginEmbedderPolicy: false,
 }));
-app.use(cors());
+// Environment-aware CORS: restrict origins in production
+const corsOptions = process.env.NODE_ENV === "production"
+  ? { origin: ["https://hoogwerkerhub.nl", "https://www.hoogwerkerhub.nl"], credentials: true }
+  : { origin: true, credentials: true };
+app.use(cors(corsOptions));
 
 // Request logger for observability
 app.use(requestLogger);
@@ -38,6 +44,14 @@ const limiter = rateLimit({
   message: { error: "Te veel verzoeken van dit IP. Probeer het later opnieuw." }
 });
 app.use("/api/", limiter);
+
+// Stricter rate limit for AI endpoints (10 requests per minute to control cost)
+const geminiLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+  message: { error: "Te veel AI-verzoeken. Probeer het over een minuut opnieuw." }
+});
+app.use("/api/gemini/", geminiLimiter);
 
 app.use(express.json({ limit: "10mb" })); // Enable larger base64 payloads for image uploads
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));

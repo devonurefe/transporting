@@ -363,5 +363,95 @@ export const emailService = {
       console.error("[EmailService] Failed to send status update email:", e);
       return false;
     }
+  },
+
+  /**
+   * Send Email Verification Link to the Customer
+   */
+  sendVerificationEmail: async (customer: { name: string; email: string }, token: string, origin: string) => {
+    const verificationUrl = `${origin}/api/auth/verify?token=${token}`;
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Activeer uw HoogwerkerHub Account</title>
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f8fafc; color: #1e293b; margin: 0; padding: 20px; }
+          .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 24px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+          .header { background: linear-gradient(135deg, #4f46e5, #3b82f6); padding: 40px 30px; text-align: center; color: #ffffff; }
+          .header h1 { margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.025em; }
+          .header p { margin: 8px 0 0 0; font-size: 14px; opacity: 0.9; }
+          .content { padding: 40px 30px; text-align: center; }
+          .welcome-text { font-size: 16px; color: #0f172a; text-align: left; line-height: 1.6; }
+          .info-text { font-size: 14px; color: #475569; text-align: left; line-height: 1.6; margin-top: 16px; }
+          .btn-container { margin: 35px 0; }
+          .btn { display: inline-block; background: #4f46e5; color: #ffffff !important; text-decoration: none; padding: 14px 35px; border-radius: 12px; font-weight: bold; font-size: 14px; box-shadow: 0 4px 6px rgba(79, 70, 229, 0.15); transition: all 0.2s; }
+          .link-fallback { font-size: 11px; color: #64748b; word-break: break-all; margin-top: 25px; padding: 15px; background: #f8fafc; border-radius: 8px; border: 1px solid #edf2f7; text-align: left; }
+          .footer { background: #f1f5f9; padding: 20px 30px; text-align: center; font-size: 11px; color: #64748b; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>HoogwerkerHub</h1>
+            <p>Bevestig uw e-mailadres om uw account te activeren</p>
+          </div>
+          <div class="content">
+            <p class="welcome-text">Beste <strong>${customer.name}</strong>,</p>
+            <p class="info-text">
+              Welkom bij HoogwerkerHub! U heeft succesvol een account aangemaakt. Om te kunnen inloggen op het Klant Portaal en uw reserveringen te beheren, dient u eerst uw e-mailadres te verifiëren door op de onderstaande knop te klikken:
+            </p>
+            
+            <div class="btn-container">
+              <a href="${verificationUrl}" class="btn" target="_blank">E-mailadres Verifiëren</a>
+            </div>
+
+            <p class="info-text" style="font-size: 12px;">
+              Deze link is 24 uur geldig. Heeft u dit account niet zelf aangemaakt? Dan kunt u deze e-mail gerust negeren.
+            </p>
+
+            <div class="link-fallback">
+              <strong>Werkt de knop niet?</strong><br/>
+              Kopieer en plak de volgende URL direct in uw internetbrowser:<br/>
+              <a href="${verificationUrl}" style="color: #4f46e5; text-decoration: underline;">${verificationUrl}</a>
+            </div>
+          </div>
+          <div class="footer">
+            © ${new Date().getFullYear()} HoogwerkerHub B.V. • BMWT-gecertificeerd verhuurnetwerk • Alphen aan den Rijn, Nederland
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    console.log(`[EmailService] Attempting to send verification email to ${customer.email}`);
+    console.log(`[EmailService] Verification Link: ${verificationUrl}`);
+
+    if (!resend) {
+      console.log(`[EmailService] [MOCK] Resend NOT configured. Simulated verification email sent.`);
+      return true;
+    }
+
+    try {
+      const { data, error } = await resend.emails.send({
+        from: SENDER_EMAIL,
+        to: customer.email,
+        subject: "Activeer uw HoogwerkerHub account",
+        html: htmlContent,
+      });
+
+      if (error) {
+        console.error("[EmailService] Resend Verification API error:", error);
+        return false;
+      }
+
+      console.log("[EmailService] Verification email sent successfully:", data?.id);
+      return true;
+    } catch (e) {
+      console.error("[EmailService] Failed to send verification email:", e);
+      return false;
+    }
   }
 };

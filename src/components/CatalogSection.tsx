@@ -206,10 +206,11 @@ export default function CatalogSection({
 
               {/* Text Search Input */}
               <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-700 block">Snel Zoeken</label>
-                <div className="relative flex items-center bg-slate-50 rounded-xl border border-slate-200/80 px-2.5 py-2 focus-within:border-indigo-500 transition-colors">
+                <label htmlFor="catalog-search" className="text-xs font-bold text-slate-700 block">Snel Zoeken</label>
+                <div className="relative flex items-center bg-slate-50 rounded-xl border border-slate-200/80 px-2.5 py-2 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-colors">
                   <Search className="h-4 w-4 text-slate-400 shrink-0 mr-2" />
                   <input
+                    id="catalog-search"
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -240,16 +241,17 @@ export default function CatalogSection({
               {/* Slider: Working Height */}
               <div className="space-y-2">
                 <div className="flex justify-between items-center text-xs">
-                  <label className="font-bold text-slate-700">Min. Werkhoogte</label>
+                  <label htmlFor="height-range" className="font-bold text-slate-700">Min. Werkhoogte</label>
                   <span className="font-mono font-bold text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded">{maxHeight} meter</span>
                 </div>
                 <input
+                  id="height-range"
                   type="range"
                   min="10"
                   max="40"
                   value={maxHeight}
                   onChange={(e) => setMaxHeight(Number(e.target.value))}
-                  className="w-full h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                  className="w-full h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
                 />
                 <div className="flex justify-between text-[9px] text-slate-400 font-mono">
                   <span>10m</span>
@@ -261,17 +263,18 @@ export default function CatalogSection({
               {/* Slider: Max Tarief / Dag */}
               <div className="space-y-2">
                 <div className="flex justify-between items-center text-xs">
-                  <label className="font-bold text-slate-700">Max. Huurtarief/dag</label>
+                  <label htmlFor="price-range" className="font-bold text-slate-700">Max. Huurtarief/dag</label>
                   <span className="font-mono font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded">€{maxPrice}</span>
                 </div>
                 <input
+                  id="price-range"
                   type="range"
                   min="100"
                   max="500"
                   step="20"
                   value={maxPrice}
                   onChange={(e) => setMaxPrice(Number(e.target.value))}
-                  className="w-full h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-teal-600"
+                  className="w-full h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-500/50"
                 />
                 <div className="flex justify-between text-[9px] text-slate-400 font-mono">
                   <span>€100</span>
@@ -289,17 +292,22 @@ export default function CatalogSection({
                     return (
                       <label
                         key={power}
-                        onClick={() => togglePowerType(power)}
                         className="flex items-center space-x-2.5 cursor-pointer select-none group"
                       >
-                        <div className={`h-4 w-4 rounded flex items-center justify-center border transition-all ${
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => togglePowerType(power)}
+                          className="sr-only"
+                        />
+                        <div className={`h-4 w-4 rounded flex items-center justify-center border transition-all ring-offset-1 focus-within:ring-2 focus-within:ring-indigo-500/50 ${
                           isChecked 
                             ? "bg-indigo-600 border-indigo-700 text-white" 
                             : "bg-slate-50 border-slate-200 group-hover:border-slate-350 group-hover:border-slate-300"
                         }`}>
                           {isChecked && <Check className="h-3 w-3 text-white" />}
                         </div>
-                        <span className="text-xs font-medium text-slate-600 group-hover:text-slate-800 transition-colors">
+                        <span className="text-xs font-medium text-slate-650 group-hover:text-slate-800 transition-colors">
                           {power}
                         </span>
                       </label>
@@ -315,7 +323,10 @@ export default function CatalogSection({
           <div className="lg:col-span-9 space-y-6">
             
             {/* Horizontal Category Nav Switcher */}
-            <div className="flex items-center space-x-1.5 overflow-x-auto pb-2 border-b border-slate-200 scrollbar-none">
+            <nav 
+              aria-label="Categorie filter" 
+              className="flex items-center space-x-1.5 overflow-x-auto pb-2 border-b border-slate-200 scrollbar-none"
+            >
               {categoryTabs.map((tab) => {
                 const isActive = selectedCategory === tab.id;
                 return (
@@ -329,7 +340,10 @@ export default function CatalogSection({
                         `Filtert catalogus op categorie: "${tab.label}"`
                       );
                     }}
-                    className={`px-4 py-2 text-xs font-bold rounded-lg whitespace-nowrap transition-all duration-300 border ${
+                    aria-selected={isActive ? "true" : "false"}
+                    aria-label={`Toon ${tab.label}`}
+                    role="tab"
+                    className={`px-4 py-2 text-xs font-bold rounded-lg whitespace-nowrap transition-all duration-300 border focus:outline-none focus:ring-2 focus:ring-indigo-500/50 ${
                       isActive 
                         ? "bg-indigo-50 text-indigo-700 border-indigo-200 shadow-sm" 
                         : "bg-white text-slate-600 border-slate-200 hover:text-slate-800 hover:bg-slate-50"
@@ -339,7 +353,7 @@ export default function CatalogSection({
                   </button>
                 );
               })}
-            </div>
+            </nav>
 
             {/* Micro Warning if list is empty */}
             {filteredMachines.length === 0 && (

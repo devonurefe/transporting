@@ -15,21 +15,90 @@ async function getCategoryLabel(categoryId: string) {
 // GET machines
 machinesRouter.get("/", async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const dbMachines = await prisma.machine.findMany();
-    const formatted = dbMachines.map(m => ({
-      ...m,
-      suitableFor: m.suitableFor ? m.suitableFor.split(";") : [],
-      additionalImages: m.additionalImages ? m.additionalImages.split(";") : []
-    }));
-    res.json(formatted);
+    const pageQuery = req.query.page;
+    const limitQuery = req.query.limit;
+
+    if (pageQuery || limitQuery) {
+      const page = Number(pageQuery) || 1;
+      const limit = Number(limitQuery) || 20;
+      const skip = (page - 1) * limit;
+
+      const totalCount = await prisma.machine.count();
+      const totalPages = Math.ceil(totalCount / limit);
+
+      res.setHeader("X-Total-Pages", String(totalPages));
+      res.setHeader("X-Total-Count", String(totalCount));
+
+      const dbMachines = await prisma.machine.findMany({
+        skip,
+        take: limit
+      });
+      const formatted = dbMachines.map(m => ({
+        ...m,
+        suitableFor: Array.isArray(m.suitableFor) ? m.suitableFor : [],
+        additionalImages: Array.isArray(m.additionalImages) ? m.additionalImages : []
+      }));
+      return res.json(formatted);
+    } else {
+      const dbMachines = await prisma.machine.findMany();
+      const formatted = dbMachines.map(m => ({
+        ...m,
+        suitableFor: Array.isArray(m.suitableFor) ? m.suitableFor : [],
+        additionalImages: Array.isArray(m.additionalImages) ? m.additionalImages : []
+      }));
+      return res.json(formatted);
+    }
   } catch (error) {
     console.error("Error fetching machines:", error);
     res.status(500).json({ error: "Failed to fetch machines" });
   }
 });
 
+// Shared validation for machine input (used by both POST and PUT)
+function validateMachineInput(body: any): { valid: boolean; error?: string } {
+  const { name, category, height, pricePerDay, reach, weight, weeklyDiscountPercent, monthlyDiscountPercent, campaignDiscountPercent, campaignDiscountAmount } = body;
+
+  if (!name || !category || !height || !pricePerDay) {
+    return { valid: false, error: "Missing required machine fields" };
+  }
+
+  const numHeight = Number(height);
+  const numReach = Number(reach || 0);
+  const numWeight = Number(weight || 1500);
+  const numPrice = Number(pricePerDay);
+
+  if (isNaN(numHeight) || numHeight <= 0) return { valid: false, error: "Werkhoogte moet een positief getal groter dan 0 zijn." };
+  if (isNaN(numReach) || numReach < 0) return { valid: false, error: "Zijwaarts bereik moet 0 of groter zijn." };
+  if (isNaN(numWeight) || numWeight <= 0) return { valid: false, error: "Gewicht moet een positief getal groter dan 0 zijn." };
+  if (isNaN(numPrice) || numPrice <= 0) return { valid: false, error: "Huurtarief moet een positief getal groter dan 0 zijn." };
+
+  if (weeklyDiscountPercent !== undefined && weeklyDiscountPercent !== null && weeklyDiscountPercent !== "") {
+    const v = Number(weeklyDiscountPercent);
+    if (isNaN(v) || v < 0 || v > 100) return { valid: false, error: "Weekkorting moet tussen 0% en 100% liggen." };
+  }
+  if (monthlyDiscountPercent !== undefined && monthlyDiscountPercent !== null && monthlyDiscountPercent !== "") {
+    const v = Number(monthlyDiscountPercent);
+    if (isNaN(v) || v < 0 || v > 100) return { valid: false, error: "Maandkorting moet tussen 0% en 100% liggen." };
+  }
+  if (campaignDiscountPercent !== undefined && campaignDiscountPercent !== null && campaignDiscountPercent !== "") {
+    const v = Number(campaignDiscountPercent);
+    if (isNaN(v) || v < 0 || v > 100) return { valid: false, error: "Campagne kortingspercentage moet tussen 0% en 100% liggen." };
+  }
+  if (campaignDiscountAmount !== undefined && campaignDiscountAmount !== null && campaignDiscountAmount !== "") {
+    const v = Number(campaignDiscountAmount);
+    if (isNaN(v) || v < 0) return { valid: false, error: "Campagne kortingsbedrag moet 0 of groter zijn." };
+  }
+
+  return { valid: true };
+}
+
 // POST new machine
 machinesRouter.post("/", requireAdmin as any, async (req: AuthenticatedRequest, res: Response) => {
+  const validation = validateMachineInput(req.body);
+  if (!validation.valid) {
+    return res.status(400).json({ error: validation.error });
+  }
+
   const { 
     name, 
     category, 
@@ -49,53 +118,6 @@ machinesRouter.post("/", requireAdmin as any, async (req: AuthenticatedRequest, 
     packageContents,
     additionalImages
   } = req.body;
-  
-  if (!name || !category || !height || !pricePerDay) {
-    return res.status(400).json({ error: "Missing required machine fields" });
-  }
-
-  const numHeight = Number(height);
-  const numReach = Number(reach || 0);
-  const numWeight = Number(weight || 1500);
-  const numPrice = Number(pricePerDay);
-
-  if (isNaN(numHeight) || numHeight <= 0) {
-    return res.status(400).json({ error: "Werkhoogte moet een positief getal groter dan 0 zijn." });
-  }
-  if (isNaN(numReach) || numReach < 0) {
-    return res.status(400).json({ error: "Zijwaarts bereik moet 0 of groter zijn." });
-  }
-  if (isNaN(numWeight) || numWeight <= 0) {
-    return res.status(400).json({ error: "Gewicht moet een positief getal groter dan 0 zijn." });
-  }
-  if (isNaN(numPrice) || numPrice <= 0) {
-    return res.status(400).json({ error: "Huurtarief moet een positief getal groter dan 0 zijn." });
-  }
-
-  if (weeklyDiscountPercent !== undefined && weeklyDiscountPercent !== null && weeklyDiscountPercent !== "") {
-    const numWeekly = Number(weeklyDiscountPercent);
-    if (isNaN(numWeekly) || numWeekly < 0 || numWeekly > 100) {
-      return res.status(400).json({ error: "Weekkorting moet tussen 0% en 100% liggen." });
-    }
-  }
-  if (monthlyDiscountPercent !== undefined && monthlyDiscountPercent !== null && monthlyDiscountPercent !== "") {
-    const numMonthly = Number(monthlyDiscountPercent);
-    if (isNaN(numMonthly) || numMonthly < 0 || numMonthly > 100) {
-      return res.status(400).json({ error: "Maandkorting moet tussen 0% en 100% liggen." });
-    }
-  }
-  if (campaignDiscountPercent !== undefined && campaignDiscountPercent !== null && campaignDiscountPercent !== "") {
-    const numCampPercent = Number(campaignDiscountPercent);
-    if (isNaN(numCampPercent) || numCampPercent < 0 || numCampPercent > 100) {
-      return res.status(400).json({ error: "Campagne kortingspercentage moet tussen 0% en 100% liggen." });
-    }
-  }
-  if (campaignDiscountAmount !== undefined && campaignDiscountAmount !== null && campaignDiscountAmount !== "") {
-    const numCampAmt = Number(campaignDiscountAmount);
-    if (isNaN(numCampAmt) || numCampAmt < 0) {
-      return res.status(400).json({ error: "Campagne kortingsbedrag moet 0 of groter zijn." });
-    }
-  }
 
   try {
     const categoryLabel = await getCategoryLabel(category);
@@ -113,21 +135,21 @@ machinesRouter.post("/", requireAdmin as any, async (req: AuthenticatedRequest, 
         imageUrl: imageUrl || "https://images.unsplash.com/photo-1504307651254-35680f356dfd?q=80&w=600&auto=format&fit=crop",
         imageAlt: name,
         description: description || "Gebruiksvriendelijke hoogwerker geschikt voor lichte installatie of inspectie.",
-        suitableFor: Array.isArray(suitableFor) ? suitableFor.join(";") : "Algemeen",
+        suitableFor: Array.isArray(suitableFor) ? suitableFor : ["Algemeen"],
         weeklyDiscountPercent: weeklyDiscountPercent ? Number(weeklyDiscountPercent) : null,
         monthlyDiscountPercent: monthlyDiscountPercent ? Number(monthlyDiscountPercent) : null,
         campaignText: campaignText || null,
         campaignDiscountPercent: campaignDiscountPercent ? Number(campaignDiscountPercent) : null,
         campaignDiscountAmount: campaignDiscountAmount ? Number(campaignDiscountAmount) : null,
         packageContents: packageContents || null,
-        additionalImages: Array.isArray(additionalImages) ? additionalImages.join(";") : null
+        additionalImages: Array.isArray(additionalImages) ? additionalImages : []
       }
     });
 
     res.status(201).json({
       ...newMachine,
-      suitableFor: newMachine.suitableFor ? newMachine.suitableFor.split(";") : [],
-      additionalImages: newMachine.additionalImages ? newMachine.additionalImages.split(";") : []
+      suitableFor: Array.isArray(newMachine.suitableFor) ? newMachine.suitableFor : [],
+      additionalImages: Array.isArray(newMachine.additionalImages) ? newMachine.additionalImages : []
     });
   } catch (error) {
     console.error("Error creating machine:", error);
@@ -138,6 +160,12 @@ machinesRouter.post("/", requireAdmin as any, async (req: AuthenticatedRequest, 
 // PUT update machine
 machinesRouter.put("/:id", requireAdmin as any, async (req: AuthenticatedRequest, res: Response) => {
   const { id } = req.params;
+
+  const validation = validateMachineInput(req.body);
+  if (!validation.valid) {
+    return res.status(400).json({ error: validation.error });
+  }
+
   const { 
     name, 
     category, 
@@ -157,53 +185,6 @@ machinesRouter.put("/:id", requireAdmin as any, async (req: AuthenticatedRequest
     packageContents,
     additionalImages
   } = req.body;
-  
-  if (!name || !category || !height || !pricePerDay) {
-    return res.status(400).json({ error: "Missing required machine fields" });
-  }
-
-  const numHeight = Number(height);
-  const numReach = Number(reach || 0);
-  const numWeight = Number(weight || 1500);
-  const numPrice = Number(pricePerDay);
-
-  if (isNaN(numHeight) || numHeight <= 0) {
-    return res.status(400).json({ error: "Werkhoogte moet een positief getal groter dan 0 zijn." });
-  }
-  if (isNaN(numReach) || numReach < 0) {
-    return res.status(400).json({ error: "Zijwaarts bereik moet 0 of groter zijn." });
-  }
-  if (isNaN(numWeight) || numWeight <= 0) {
-    return res.status(400).json({ error: "Gewicht moet een positief getal groter dan 0 zijn." });
-  }
-  if (isNaN(numPrice) || numPrice <= 0) {
-    return res.status(400).json({ error: "Huurtarief moet een positief getal groter dan 0 zijn." });
-  }
-
-  if (weeklyDiscountPercent !== undefined && weeklyDiscountPercent !== null && weeklyDiscountPercent !== "") {
-    const numWeekly = Number(weeklyDiscountPercent);
-    if (isNaN(numWeekly) || numWeekly < 0 || numWeekly > 100) {
-      return res.status(400).json({ error: "Weekkorting moet tussen 0% en 100% liggen." });
-    }
-  }
-  if (monthlyDiscountPercent !== undefined && monthlyDiscountPercent !== null && monthlyDiscountPercent !== "") {
-    const numMonthly = Number(monthlyDiscountPercent);
-    if (isNaN(numMonthly) || numMonthly < 0 || numMonthly > 100) {
-      return res.status(400).json({ error: "Maandkorting moet tussen 0% en 100% liggen." });
-    }
-  }
-  if (campaignDiscountPercent !== undefined && campaignDiscountPercent !== null && campaignDiscountPercent !== "") {
-    const numCampPercent = Number(campaignDiscountPercent);
-    if (isNaN(numCampPercent) || numCampPercent < 0 || numCampPercent > 100) {
-      return res.status(400).json({ error: "Campagne kortingspercentage moet tussen 0% en 100% liggen." });
-    }
-  }
-  if (campaignDiscountAmount !== undefined && campaignDiscountAmount !== null && campaignDiscountAmount !== "") {
-    const numCampAmt = Number(campaignDiscountAmount);
-    if (isNaN(numCampAmt) || numCampAmt < 0) {
-      return res.status(400).json({ error: "Campagne kortingsbedrag moet 0 of groter zijn." });
-    }
-  }
 
   try {
     const categoryLabel = await getCategoryLabel(category);
@@ -221,21 +202,21 @@ machinesRouter.put("/:id", requireAdmin as any, async (req: AuthenticatedRequest
         imageUrl: imageUrl || "https://images.unsplash.com/photo-1504307651254-35680f356dfd?q=80&w=600&auto=format&fit=crop",
         imageAlt: name,
         description: description || "Gebruiksvriendelijke hoogwerker geschikt voor lichte installatie of inspectie.",
-        suitableFor: Array.isArray(suitableFor) ? suitableFor.join(";") : suitableFor || "Algemeen",
+        suitableFor: Array.isArray(suitableFor) ? suitableFor : suitableFor ? [suitableFor] : ["Algemeen"],
         weeklyDiscountPercent: weeklyDiscountPercent !== undefined && weeklyDiscountPercent !== null ? Number(weeklyDiscountPercent) : null,
         monthlyDiscountPercent: monthlyDiscountPercent !== undefined && monthlyDiscountPercent !== null ? Number(monthlyDiscountPercent) : null,
         campaignText: campaignText || null,
         campaignDiscountPercent: campaignDiscountPercent !== undefined && campaignDiscountPercent !== null ? Number(campaignDiscountPercent) : null,
         campaignDiscountAmount: campaignDiscountAmount !== undefined && campaignDiscountAmount !== null ? Number(campaignDiscountAmount) : null,
         packageContents: packageContents !== undefined ? packageContents : null,
-        additionalImages: Array.isArray(additionalImages) ? additionalImages.join(";") : null
+        additionalImages: Array.isArray(additionalImages) ? additionalImages : []
       }
     });
 
     res.json({
       ...updatedMachine,
-      suitableFor: updatedMachine.suitableFor ? updatedMachine.suitableFor.split(";") : [],
-      additionalImages: updatedMachine.additionalImages ? updatedMachine.additionalImages.split(";") : []
+      suitableFor: Array.isArray(updatedMachine.suitableFor) ? updatedMachine.suitableFor : [],
+      additionalImages: Array.isArray(updatedMachine.additionalImages) ? updatedMachine.additionalImages : []
     });
   } catch (error: any) {
     console.error("Error updating machine:", error);
@@ -247,11 +228,9 @@ machinesRouter.put("/:id", requireAdmin as any, async (req: AuthenticatedRequest
 machinesRouter.delete("/:id", requireAdmin as any, async (req: AuthenticatedRequest, res: Response) => {
   const { id } = req.params;
   try {
-    // Delete potential overlapping blocked dates or dependencies
     await prisma.blockedDate.deleteMany({
       where: { machineId: id }
     });
-    // In our simplified setup, order references can be nullified or left
     await prisma.machine.delete({
       where: { id }
     });

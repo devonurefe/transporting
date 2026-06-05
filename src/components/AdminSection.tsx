@@ -36,7 +36,7 @@ import AdminDiagnostics from "./admin/AdminDiagnostics";
 interface AdminSectionProps {
   isAdminMode: boolean;
   setIsAdminMode: (adminMode: boolean) => void;
-  userProfiles: UserProfile[];
+  userProfiles?: UserProfile[];
   systemLogs: any[];
   onAddSystemLog: (type: "login" | "logout" | "signup" | "booking" | "fleet" | "status" | "system", user: string, description: string) => void;
   onClearSystemLogs: () => void;
@@ -50,6 +50,14 @@ export default function AdminSection({
   onAddSystemLog,
   onClearSystemLogs,
 }: AdminSectionProps) {
+  const [dynamicUserProfiles, setDynamicUserProfiles] = useState<UserProfile[]>([]);
+
+  React.useEffect(() => {
+    fetch("/api/auth/mock-profiles")
+      .then(res => (res.ok ? res.json() : []))
+      .then(data => setDynamicUserProfiles(data))
+      .catch(() => {});
+  }, []);
   const [subTab, setSubTab] = useState<"dashboard" | "orders" | "machines" | "calendar" | "add" | "logs" | "customizer" | "diagnostics">("dashboard");
   const { login, logout } = useAuthStore();
   const machines = useAppStore((state) => state.machines);
@@ -291,7 +299,7 @@ export default function AdminSection({
                 <AdminDiagnostics 
                   key="diagnostics" 
                   systemLogs={systemLogs} 
-                  userProfiles={userProfiles} 
+                  userProfiles={dynamicUserProfiles} 
                   onAddSystemLog={onAddSystemLog} 
                   adminLanguage={adminLanguage}
                 />
@@ -301,7 +309,7 @@ export default function AdminSection({
                   key="logs" 
                   systemLogs={systemLogs} 
                   onClearSystemLogs={onClearSystemLogs} 
-                  userProfiles={userProfiles} 
+                  userProfiles={dynamicUserProfiles} 
                   onAddSystemLog={onAddSystemLog} 
                   adminLanguage={adminLanguage}
                 />

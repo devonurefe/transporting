@@ -1,8 +1,10 @@
-import { Router, Response } from "express";
+import { Router, Request, Response } from "express";
 import { z } from "zod";
+import crypto from "crypto";
 import { prisma } from "../../prisma/client.js";
 import { hashPassword, comparePassword, generateToken } from "../utils/auth.js";
 import { AuthenticatedRequest, authenticateToken, requireAuth } from "../middleware/auth.js";
+import { emailService } from "../services/emailService.js";
 
 export const authRouter = Router();
 
@@ -42,6 +44,8 @@ authRouter.post("/register", async (req: AuthenticatedRequest, res: Response) =>
     }
 
     const passwordHash = await hashPassword(validated.password);
+    const verificationToken = crypto.randomBytes(32).toString("hex");
+
     const customer = await prisma.customer.create({
       data: {
         email: validated.email,
@@ -51,29 +55,26 @@ authRouter.post("/register", async (req: AuthenticatedRequest, res: Response) =>
         profile: validated.profile || "Particulier",
         companyName: validated.companyName || null,
         address: validated.address || null,
-        avatarUrl: validated.avatarUrl || null
+        avatarUrl: validated.avatarUrl || null,
+        isEmailVerified: false,
+        verificationToken
       }
     });
 
-    const token = generateToken({
-      id: customer.id,
-      email: customer.email,
-      role: "customer"
-    });
+    const protocol = req.secure || req.headers["x-forwarded-proto"] === "https" ? "https" : "http";
+    const host = req.get("host") || "localhost:3000";
+    const origin = `${protocol}://${host}`;
+
+    await emailService.sendVerificationEmail(
+      { name: customer.name, email: customer.email },
+      verificationToken,
+      origin
+    );
 
     res.status(201).json({
-      token,
-      user: {
-        id: customer.id,
-        email: customer.email,
-        name: customer.name,
-        phone: customer.phone,
-        profile: customer.profile,
-        companyName: customer.companyName,
-        address: customer.address,
-        avatarUrl: customer.avatarUrl,
-        role: "customer"
-      }
+      success: true,
+      message: "Registratie succesvol! Controleer uw e-mail om uw account te verifiëren.",
+      email: customer.email
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -126,6 +127,13 @@ authRouter.post("/login", async (req: AuthenticatedRequest, res: Response) => {
       const isMatch = await comparePassword(validated.password, customer.passwordHash);
       if (!isMatch) {
         return res.status(400).json({ error: "Ongeldige inloggegevens" });
+      }
+
+      if (!customer.isEmailVerified) {
+        return res.status(403).json({
+          error: "E-mailadres is nog niet geverifieerd. Controleer uw inbox voor de verificatielink.",
+          unverified: true
+        });
       }
 
       const token = generateToken({
@@ -244,5 +252,113 @@ authRouter.put("/profile", requireAuth as any, async (req: AuthenticatedRequest,
   } catch (error) {
     console.error("Profile update error:", error);
     res.status(500).json({ error: "Profiel bijwerken mislukt" });
+  }
+});
+
+// GET /api/auth/verify?token=XYZ
+authRouter.get("/verify", async (req: Request, res: Response) => {
+  const token = req.query.token;
+
+  if (!token || typeof token !== "string") {
+    return res.redirect("/?verified=false&error=" + encodeURIComponent("Ongeldige verificatietoken."));
+  }
+
+  try {
+    const customer = await prisma.customer.findFirst({
+      where: { verificationToken: token }
+    });
+
+    if (!customer) {
+      return res.redirect("/?verified=false&error=" + encodeURIComponent("De verificatielink is ongeldig of verlopen."));
+    }
+
+    await prisma.customer.update({
+      where: { id: customer.id },
+      data: {
+        isEmailVerified: true,
+        verificationToken: null
+      }
+    });
+
+    return res.redirect("/?verified=true&email=" + encodeURIComponent(customer.email));
+  } catch (error) {
+    console.error("Verification error:", error);
+    return res.redirect("/?verified=false&error=" + encodeURIComponent("Er is een interne fout opgetreden bij het verifiëren."));
+  }
+});
+
+// POST /api/auth/resend-verification
+authRouter.post("/resend-verification", async (req: Request, res: Response) => {
+  const { email } = req.body;
+
+  if (!email || typeof email !== "string") {
+    return res.status(400).json({ error: "E-mailadres is verplicht." });
+  }
+
+  try {
+    const customer = await prisma.customer.findUnique({
+      where: { email: email.trim() }
+    });
+
+    if (!customer) {
+      return res.status(404).json({ error: "Gebruiker niet gevonden met dit e-mailadres." });
+    }
+
+    if (customer.isEmailVerified) {
+      return res.status(400).json({ error: "E-mailadres is al geverifieerd." });
+    }
+
+    const newToken = crypto.randomBytes(32).toString("hex");
+    await prisma.customer.update({
+      where: { id: customer.id },
+      data: { verificationToken: newToken }
+    });
+
+    const protocol = req.secure || req.headers["x-forwarded-proto"] === "https" ? "https" : "http";
+    const host = req.get("host") || "localhost:3000";
+    const origin = `${protocol}://${host}`;
+
+    await emailService.sendVerificationEmail(
+      { name: customer.name, email: customer.email },
+      newToken,
+      origin
+    );
+
+    return res.json({
+      success: true,
+      message: "Verificatie-e-mail opnieuw verzonden. Controleer uw inbox."
+    });
+  } catch (error) {
+    console.error("Resend verification error:", error);
+    return res.status(500).json({ error: "Kan verificatiemail niet verzenden." });
+  }
+});
+
+// GET /api/auth/mock-profiles
+authRouter.get("/mock-profiles", async (req: Request, res: Response) => {
+  try {
+    const customers = await prisma.customer.findMany({
+      include: {
+        _count: {
+          select: { orders: true }
+        }
+      }
+    });
+
+    const formatted = customers.map(c => ({
+      id: c.id,
+      name: c.name,
+      email: c.email,
+      phone: c.phone || "",
+      companyName: c.companyName || undefined,
+      profileType: c.profile || "Particulier",
+      pastRentalsCount: c._count.orders,
+      avatarUrl: c.avatarUrl || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=150&auto=format&fit=crop"
+    }));
+
+    res.json(formatted);
+  } catch (error) {
+    console.error("Error fetching mock profiles:", error);
+    res.status(500).json({ error: "Kon testprofielen niet ophalen" });
   }
 });

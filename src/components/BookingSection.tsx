@@ -14,6 +14,7 @@ import {
 import { motion, AnimatePresence } from "motion/react";
 import { Machine, Order, DeliveryType, UserProfile, CartItem, CampaignRule } from "../types";
 import { useAppStore } from "../store/appStore";
+import { checkAvailability } from "../utils/availability";
 
 // Import modular Step components
 import BookingStep1 from "./booking/BookingStep1";
@@ -244,49 +245,7 @@ export default function BookingSection({
   };
 
   const getItemAvailability = (machineId: string, start: string, end: string) => {
-    if (!start || !end) return { available: true, blocked: false, overlap: false, reason: "" };
-
-    const requestedStart = new Date(start).getTime();
-    const requestedEnd = new Date(end).getTime();
-    const todayStr = new Date().toISOString().split('T')[0];
-    const todayTime = new Date(todayStr).getTime();
-
-    if (requestedStart > requestedEnd) {
-      return { available: false, blocked: false, overlap: false, reason: "De retourdatum moet na de begindatum liggen." };
-    }
-
-    if (requestedStart < todayTime) {
-      return { available: false, blocked: false, overlap: false, reason: "De begindatum kan niet in het verleden liggen." };
-    }
-
-    // Check overlaps
-    const overlaps = allOrders.filter(o => {
-      if (o.machineId !== machineId) return false;
-      const orderStart = new Date(o.startDate).getTime();
-      const orderEnd = new Date(o.endDate).getTime();
-      return (requestedStart <= orderEnd && requestedEnd >= orderStart);
-    });
-
-    if (overlaps.length > 0) {
-      return { available: false, blocked: false, overlap: true, reason: `Bezet (overlapping met boekingsnummer: ${overlaps[0].id})` };
-    }
-
-    // Check manual blocked dates
-    const sDate = new Date(start);
-    const eDate = new Date(end);
-    let curr = new Date(sDate);
-    let safetyCounter = 0;
-    while (curr <= eDate && safetyCounter < 100) {
-      safetyCounter++;
-      const currStr = curr.toISOString().split('T')[0];
-      const blockedMatch = blockedDaysList.find(b => b.machineId === machineId && b.date === currStr);
-      if (blockedMatch) {
-        return { available: false, blocked: true, overlap: false, reason: blockedMatch.reason || "Planning gesloten door beheerder" };
-      }
-      curr.setDate(curr.getDate() + 1);
-    }
-
-    return { available: true, blocked: false, overlap: false, reason: "" };
+    return checkAvailability(machineId, start, end, allOrders, blockedDaysList);
   };
 
   // Re-run checking whenever days or machine swap
@@ -488,11 +447,25 @@ export default function BookingSection({
     setValidationError(null);
     setAddressSuccessMsg("");
 
-    const cleanPostcode = postcode.trim().toUpperCase().replace(/\s+/g, "");
+    const cleanPostcode = postcode.trim().replace(/\s+/g, "").toUpperCase();
     const cleanHouse = houseNumber.trim();
 
     if (!cleanPostcode || !cleanHouse) {
-      setValidationError("Voer alstublieft een geldige postcode en huisnummer in.");
+      setValidationError("Voer alstublieft een postcode en huisnummer in.");
+      return;
+    }
+
+    // Validate Dutch postcode format (4 digits, 2 letters)
+    const postcodeRegex = /^[1-9][0-9]{3}[A-Z]{2}$/;
+    if (!postcodeRegex.test(cleanPostcode)) {
+      setValidationError("Voer alstublieft een geldige Nederlandse postcode in (bijv. 1234 AB).");
+      return;
+    }
+
+    // Validate that the house number starts with a digit
+    const houseNumberRegex = /^\d+/;
+    if (!houseNumberRegex.test(cleanHouse)) {
+      setValidationError("Voer alstublieft een geldig huisnummer in (moet beginnen met een getal, bijv. 14 of 14A).");
       return;
     }
 
@@ -605,7 +578,7 @@ export default function BookingSection({
 
     try {
       const response = await fetch(
-        `https://api.pdok.nl/bzk/locatieserver/search/v3_1/free?q=postcode:${cleanPostcode}+AND+huisnummer:${cleanHouse}`
+        `https://api.pdok.nl/bzk/locatieserver/search/v3_1/free?q=${cleanPostcode}+${encodeURIComponent(cleanHouse)}&fq=type:adres`
       );
       
       if (!response.ok) {

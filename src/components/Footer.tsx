@@ -21,7 +21,7 @@ export default function Footer({ siteName, setActiveTab, setShowContactModal }: 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-10 text-left animate-fade-in">
           
           {/* Column 1: Brand Profile & Certifications */}
-          <div className="space-y-4">
+          <div className="space-y-4 hidden sm:block">
             <div className="flex items-center space-x-2">
               <span className="font-display text-lg font-black tracking-tight text-slate-900">{siteName}</span>
               <span className="text-[9.5px] text-indigo-700 font-semibold bg-indigo-50/70 px-2 py-0.5 rounded-full border border-indigo-100/50">B.V.</span>
@@ -40,7 +40,7 @@ export default function Footer({ siteName, setActiveTab, setShowContactModal }: 
           </div>
 
           {/* Column 2: Direct Contact details */}
-          <div className="space-y-4">
+          <div className="space-y-4 hidden sm:block">
             <h4 className="font-display font-semibold tracking-wider text-[11px] uppercase text-slate-800 pb-1.5 border-b border-slate-100/80">
               Direct Contact
             </h4>
@@ -70,7 +70,7 @@ export default function Footer({ siteName, setActiveTab, setShowContactModal }: 
           </div>
 
           {/* Column 3: Logistics & Working Hours */}
-          <div className="space-y-4">
+          <div className="space-y-4 hidden sm:block">
             <h4 className="font-display font-semibold tracking-wider text-[11px] uppercase text-slate-800 pb-1.5 border-b border-slate-100/80">
               Logistiek & Openingstijden
             </h4>
@@ -89,32 +89,32 @@ export default function Footer({ siteName, setActiveTab, setShowContactModal }: 
           </div>
 
           {/* Column 4: Quick Navigation */}
-          <div className="space-y-4 hidden sm:block">
+          <div className="space-y-4 text-center sm:text-left">
             <h4 className="font-display font-semibold tracking-wider text-[11px] uppercase text-slate-800 pb-1.5 border-b border-slate-100/80">
               Snelkoppelingen
             </h4>
-            <nav className="flex flex-col space-y-2 text-left">
+            <nav className="flex flex-col space-y-2 items-center sm:items-start">
               <button 
                 onClick={() => { setActiveTab("home"); window.scrollTo({ top: 0, behavior: "smooth" }); }} 
-                className="text-[12.5px] font-medium text-slate-650 hover:text-indigo-600 transition-colors cursor-pointer text-left py-0.5 border-none bg-transparent"
+                className="text-[12.5px] font-medium text-slate-650 hover:text-indigo-600 transition-colors cursor-pointer text-center sm:text-left py-0.5 border-none bg-transparent"
               >
                 Home
               </button>
               <button 
                 onClick={() => { setActiveTab("catalog"); window.scrollTo({ top: 0, behavior: "smooth" }); }} 
-                className="text-[12.5px] font-medium text-slate-650 hover:text-indigo-600 transition-colors cursor-pointer text-left py-0.5 border-none bg-transparent"
+                className="text-[12.5px] font-medium text-slate-650 hover:text-indigo-600 transition-colors cursor-pointer text-center sm:text-left py-0.5 border-none bg-transparent"
               >
-                Catalog
+                Catalogus
               </button>
               <button 
                 onClick={() => { setActiveTab("advisor"); window.scrollTo({ top: 0, behavior: "smooth" }); }} 
-                className="text-[12.5px] font-medium text-slate-650 hover:text-indigo-600 transition-colors cursor-pointer text-left py-0.5 border-none bg-transparent"
+                className="text-[12.5px] font-medium text-slate-650 hover:text-indigo-600 transition-colors cursor-pointer text-center sm:text-left py-0.5 border-none bg-transparent"
               >
                 Adviseur
               </button>
               <button 
                 onClick={() => setShowContactModal(true)} 
-                className="text-[12.5px] font-medium text-slate-650 hover:text-indigo-600 transition-colors cursor-pointer text-left py-0.5 border-none bg-transparent"
+                className="text-[12.5px] font-medium text-slate-650 hover:text-indigo-600 transition-colors cursor-pointer text-center sm:text-left py-0.5 border-none bg-transparent"
               >
                 Contact
               </button>

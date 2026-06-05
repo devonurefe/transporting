@@ -115,7 +115,7 @@ export default function Header({
             />
           </div>
           <div>
-            <span className="font-display text-lg sm:text-xl font-extrabold tracking-tight bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-800 bg-clip-text text-transparent">
+            <span className="hidden sm:inline-block font-display text-lg sm:text-xl font-extrabold tracking-tight bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-800 bg-clip-text text-transparent">
               {isAdminMode ? "HubAdmin Portal" : siteConfig.siteName}
             </span>
             <div className="hidden sm:flex items-center space-x-1 text-[10px] font-mono tracking-wider uppercase">

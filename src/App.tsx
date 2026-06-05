@@ -444,7 +444,7 @@ export default function App() {
   };
 
   return (
-    <div className="relative min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans antialiased text-sm">
+    <div className="relative min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans antialiased text-sm pb-16 md:pb-0">
       
       {/* Background ambient lighting */}
       <div className="absolute top-0 inset-x-0 h-150 bg-gradient-to-b from-indigo-500/5 to-transparent pointer-events-none -z-10" />

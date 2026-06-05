@@ -348,7 +348,7 @@ export default function Header({
 
       {/* Dynamic Mobile Bottom Bar switcher */}
       {!isAdminMode && (
-        <div className="md:hidden flex h-11 border-t border-slate-200 bg-white justify-around items-center px-2">
+        <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex h-16 border-t border-slate-200/80 bg-white/90 backdrop-blur-lg justify-around items-center px-2 pb-safe shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
           {[
             { id: "home", label: "Home", icon: Home },
             { id: "catalog", label: "Catalogus", icon: Layers },
@@ -362,12 +362,18 @@ export default function Header({
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex flex-col items-center justify-center flex-grow h-full text-center transition-all ${
-                  isActive ? "text-indigo-600 animate-pulse" : "text-slate-500 hover:text-slate-800"
+                className={`relative flex flex-col items-center justify-center flex-grow h-full text-center transition-all ${
+                  isActive ? "text-indigo-600 font-semibold" : "text-slate-500"
                 }`}
               >
-                <Icon className="h-4 w-4" />
-                <span className="text-[9px] mt-0.5 font-medium leading-none">{tab.label}</span>
+                <Icon className={`h-4.5 w-4.5 ${isActive ? "text-indigo-600" : "text-slate-400"}`} />
+                <span className="text-[9.5px] mt-1 font-medium leading-none">{tab.label}</span>
+                
+                {tab.id === "booking" && cartItems.length > 0 && (
+                  <span className="absolute top-1.5 right-1/2 translate-x-5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-emerald-500 px-1 text-[8px] font-black text-slate-950 shadow-[0_0_8px_rgba(16,185,129,0.4)]">
+                    {cartItems.length}
+                  </span>
+                )}
               </button>
             );
           })}

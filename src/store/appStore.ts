@@ -131,6 +131,11 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   fetchOrders: async () => {
+    const token = localStorage.getItem("hwh_token");
+    if (!token) {
+      set({ orders: [], error: null });
+      return;
+    }
     try {
       const res = await fetch("/api/orders", {
         headers: getAuthHeaders()

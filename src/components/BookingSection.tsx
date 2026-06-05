@@ -167,6 +167,7 @@ export default function BookingSection({
   // Real-time capacity and collision checking logic
   const checkRealtimeAvailability = async (machineId: string, start: string, end: string) => {
     if (!start || !end) return;
+    setValidationError(null);
     
     try {
       // 1. Check orders collision
@@ -254,6 +255,19 @@ export default function BookingSection({
       checkRealtimeAvailability(selectedMachine.id, startDate, endDate);
     }
   }, [selectedMachine, startDate, endDate]);
+
+  // Synchronize local startDate and endDate with cart items to trigger availability updates
+  useEffect(() => {
+    if (cartItems.length > 0) {
+      const firstItem = cartItems[0];
+      if (firstItem.startDate && firstItem.startDate !== startDate) {
+        setStartDate(firstItem.startDate);
+      }
+      if (firstItem.endDate && firstItem.endDate !== endDate) {
+        setEndDate(firstItem.endDate);
+      }
+    }
+  }, [cartItems, startDate, endDate]);
 
   // Recalculate invoice specifics with weekly, monthly & campaign discounts
   const calculationSummary = () => {
@@ -851,7 +865,10 @@ export default function BookingSection({
                     setSelectedAddons={setSelectedAddons}
                     validationError={validationError}
                     setValidationError={setValidationError}
-                    isAvailable={isAvailable}
+                    isAvailable={isAvailable && cartItems.every(item => {
+                      const av = getItemAvailability(item.machine.id, item.startDate || "2026-06-05", item.endDate || "2026-06-08");
+                      return av.available;
+                    })}
                     handleNextStep={handleNextStep}
                     setActiveTab={setActiveTab}
                   />

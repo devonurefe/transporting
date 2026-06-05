@@ -316,12 +316,6 @@ export default function App() {
   const handleLandingPageSearch = (query: string, category: string) => {
     setSearchQuery(query);
     setSelectedCategory(category || "all");
-    triggerNotification(
-      "Zoekopdracht Uitgevoerd",
-      `Filteropdracht ingesteld voor category "${category || "Alles"}" met query "${query || "Geen"}".`,
-      "info",
-      false
-    );
   };
 
   // Action: Select machine for booking & support cart
@@ -336,13 +330,6 @@ export default function App() {
       currentUser ? currentUser.name : "Gast", 
       `Voegt machine toe aan winkelwagen: "${machine.name}" (Tarief: €${machine.pricePerDay}/dag)`
     );
-
-    triggerNotification(
-      "Machine geselecteerd",
-      `"${machine.name}" is toegevoegd aan uw boekinglijst.`,
-      "success",
-      false
-    );
   };
 
   const handleRemoveCartItem = (id: string) => {
@@ -354,13 +341,6 @@ export default function App() {
       "booking",
       currentUser ? currentUser.name : "Gast",
       `Verwijdert machine uit winkelwagen: "${item ? item.machine.name : 'Hoogwerker'}"`
-    );
-
-    triggerNotification(
-      "Machine Verwijderd",
-      "De gekozen machine is verwijderd uit uw selectie.",
-      "info",
-      false
     );
   };
 
@@ -440,12 +420,6 @@ export default function App() {
   // AI Advisor recommendations callback: Highlights items in Catalog
   const handleRecommendMachinesFromAdvisor = (suggestedIds: string[]) => {
     setAiRecommendedMachineIds(suggestedIds);
-    triggerNotification(
-      "AI Analyse Voltooid",
-      `De AI adviseur adviseert ${suggestedIds.length} object(en) die perfect matchen met uw activiteit.`,
-      "success",
-      false
-    );
   };
 
   return (

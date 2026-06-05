@@ -259,12 +259,12 @@ export default function AdvisorSection({
         feedBackLogs.push(`OK: Brede rubberen rupsbanden verdelen de wieldruk optimaal`);
       }
     } else if (floorType === "onverhard") {
-      if (machine.category === "telescoop" || machine.category === "knikarm") {
+      if (machine.category === "spin" || machine.category === "aanhanger") {
         score += 15;
-        feedBackLogs.push(`OK: Uitgerust met 4WD ruw-terrein profielbanden`);
-      } else if (machine.category === "schaarlift" && machine.powerType === "Elektrisch") {
+        feedBackLogs.push(`OK: Geschikt voor onverhard of ruwer terrein buiten`);
+      } else if ((machine.category === "schaarlift" || machine.category === "schaarlift-smal" || machine.category === "mastlift" || machine.category === "ecolift") && machine.powerType === "Elektrisch") {
         score -= 20;
-        feedBackLogs.push(`Risico: Elektrische schaarlift heeft gladde banden en kan wegzakken op onverharde grond`);
+        feedBackLogs.push(`Risico: Deze lift heeft gladde banden en kan wegzakken op onverharde grond`);
       }
     }
 
@@ -395,7 +395,7 @@ export default function AdvisorSection({
                   <input
                     type="range"
                     min="5"
-                    max="35"
+                    max="25"
                     step="1"
                     value={requiredHeight}
                     onChange={(e) => setRequiredHeight(Number(e.target.value))}
@@ -403,9 +403,9 @@ export default function AdvisorSection({
                   />
                   <div className="flex justify-between text-[9px] text-slate-400 font-mono">
                     <span>5m</span>
-                    <span>15m</span>
+                    <span>12m</span>
+                    <span>18m</span>
                     <span>25m</span>
-                    <span>35m</span>
                   </div>
                 </div>
 
@@ -886,24 +886,32 @@ export default function AdvisorSection({
                 </p>
                 <div className="space-y-2 pt-2 text-[10px] font-mono text-slate-500">
                   <div className="flex justify-between border-b border-slate-100 pb-1">
-                    <span>Schaarlift (Schilderen, binnen)</span>
-                    <span className="text-slate-800 font-bold">v.a. 6m</span>
-                  </div>
-                  <div className="flex justify-between border-b border-slate-100 pb-1">
-                    <span>Knikarm (Over obstakels/serre)</span>
+                    <span>Aanhangerhoogwerker ("Toe & Go")</span>
                     <span className="text-slate-800 font-bold">v.a. 12m</span>
                   </div>
                   <div className="flex justify-between border-b border-slate-100 pb-1">
-                    <span>Telescoop (Snoeien & gevel)</span>
-                    <span className="text-slate-800 font-bold">v.a. 14m</span>
+                    <span>Rupshoogwerker (Spin)</span>
+                    <span className="text-slate-800 font-bold">v.a. 15m</span>
                   </div>
                   <div className="flex justify-between border-b border-slate-100 pb-1">
-                    <span>Autohoogwerker (Snel op weg B)</span>
-                    <span className="text-slate-800 font-bold">v.a. 16m</span>
+                    <span>Schaarlift (Standaard 8m)</span>
+                    <span className="text-slate-800 font-bold">v.a. 8m</span>
+                  </div>
+                  <div className="flex justify-between border-b border-slate-100 pb-1">
+                    <span>Smal model Schaarlift (10m)</span>
+                    <span className="text-slate-800 font-bold">v.a. 10m</span>
+                  </div>
+                  <div className="flex justify-between border-b border-slate-100 pb-1">
+                    <span>Mastlift (Verticale lift)</span>
+                    <span className="text-slate-800 font-bold">v.a. 5m</span>
+                  </div>
+                  <div className="flex justify-between border-b border-slate-100 pb-1">
+                    <span>Ladderlift / Verhuislift</span>
+                    <span className="text-slate-800 font-bold">v.a. 18m</span>
                   </div>
                   <div className="flex justify-between pb-1">
-                    <span>Spinhoogwerker (Krappe tuinpoort)</span>
-                    <span className="text-slate-800 font-bold">v.a. 12m</span>
+                    <span>Ecolift (Handmatige lift)</span>
+                    <span className="text-slate-800 font-bold">v.a. 4.2m</span>
                   </div>
                 </div>
               </div>

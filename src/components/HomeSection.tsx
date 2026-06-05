@@ -145,13 +145,14 @@ export default function HomeSection({
     menuOrdersLabel: "Mijn Account"
   },
   customCategories = [
-    { id: "schaarlift", label: "Schaarlift", listLabel: "Schaarliften", desc: "Ideaal voor binnen- en buitengebruik op vlakke ondergronden. Past door deuren.", heights: "6m - 10m", price: "v.a. €80/dag" },
-    { id: "knikarm", label: "Knikarmhoogwerker", listLabel: "Knikarmhoogwerkers", desc: "Uiterst flexibel om over serres, schuttingen of daken heen te reiken.", heights: "12m - 16m", price: "v.a. €155/dag" },
-    { id: "telescoop", label: "Telescoophoogwerker", listLabel: "Telescoophoogwerkers", desc: "Groot zijdelings bereik, ideaal voor boomverzorging en gevels.", heights: "14m - 16m", price: "v.a. €175/dag" },
-    { id: "auto", label: "Autohoogwerker", listLabel: "Autohoogwerkers", desc: "Zelf rijden naar uw klus met autorijbewijs B. Snel op- en afstellen.", heights: "16m", price: "v.a. €195/dag" },
-    { id: "spin", label: "Spinhoogwerker", listLabel: "Spinhoogwerkers", desc: "Compact op rupsbanden. Past door een standaard tuinpoort van 80cm.", heights: "12m - 16m", price: "v.a. €160/dag" },
-    { id: "klussensets", label: "Kluspakket", listLabel: "Kluspakketten", desc: "Complete sets speciaal samengesteld voor schilder-, snoei- of dakgootklus.", heights: "10m - 16m", price: "v.a. €90/dag" },
-    { id: "aanhanger", label: "Aanhangerhoogwerker", listLabel: "Aanhangerhoogwerkers", desc: "Eenvoudig zelf te vervoeren achter uw auto met rijbewijs B.", heights: "12m", price: "v.a. €80/dag" }
+    { id: "aanhanger", label: "\"Toe & Go\" Aanhangerhoogwerker", listLabel: "\"Toe & Go\" Aanhangerhoogwerkers", desc: "De meest flexibele oplossing die transportkosten elimineert, ideaal voor elke ZZP'er met een trekhaak.", heights: "12m - 17m", price: "v.a. €80/dag" },
+    { id: "spin", label: "Rupshoogwerker", listLabel: "Rupshoogwerkers", desc: "Ideaal voor kwetsbare ondergronden, smalle tuintoegangen en hoge gevelwerkzaamheden.", heights: "15m - 17m", price: "v.a. €160/dag" },
+    { id: "schaarlift", label: "Schaarlift (8m)", listLabel: "Schaarliften (8m)", desc: "Ideaal voor binnen- en buitengebruik op vlakke ondergronden. Past door deuren.", heights: "8m", price: "v.a. €80/dag" },
+    { id: "schaarlift-smal", label: "Smal Model Schaarlift (10m)", listLabel: "Schaarliften (10m smal)", desc: "Compacte en smalle schaarlift voor nauwe gangpaden en binnenruimtes tot 10 meter werkhoogte.", heights: "10m", price: "v.a. €95/dag" },
+    { id: "mastlift", label: "Mastlift", listLabel: "Mastliften", desc: "Verticale mastliften voor snel, efficiënt en compact werk in magazijnen of kantoren.", heights: "5m - 10m", price: "v.a. €75/dag" },
+    { id: "ladderlift", label: "Ladderlift", listLabel: "Ladderliften / Verhuisliften", desc: "Verhuis- en ladderliften voor veilig transport van zware meubels of bouwmaterialen direct via het raam.", heights: "18m - 21m", price: "v.a. €90/dag" },
+    { id: "ecolift", label: "Ecolift", listLabel: "Ecolift", desc: "Milieuvriendelijk en veilig alternatief voor ladders. Geen batterijen of hydrauliek nodig.", heights: "4.2m", price: "v.a. €45/dag" },
+    { id: "klussensets", label: "Kluspakket", listLabel: "Kluspakketten", desc: "Complete kluspakketten speciaal samengesteld voor specifieke ZZP- en particuliere klussen.", heights: "4m - 21m", price: "v.a. €80/dag" }
   ]
 }: HomeSectionProps) {
   const [searchQuery, setSearchQuery] = useState("");
@@ -290,11 +291,11 @@ export default function HomeSection({
                 className="px-4 py-3.5 text-xs text-slate-700 font-semibold bg-white rounded-xl border border-slate-200 outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer min-w-[150px]"
               >
                 <option value="all">{t("filterAll")}</option>
-                <option value="schaarlift">Schaarliften</option>
-                <option value="knikarm">Knikarmhoogwerkers</option>
-                <option value="telescoop">Telescoophoogwerkers</option>
-                <option value="auto">Autohoogwerkers</option>
-                <option value="spin">Spinhoogwerkers</option>
+                {customCategories.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.listLabel || c.label}
+                  </option>
+                ))}
               </select>
  
               <button 

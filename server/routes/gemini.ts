@@ -98,23 +98,23 @@ Gedragsregels:
   let fallbackReply = "";
 
   if (lastUserMsg.includes("zonnepaneel") || lastUserMsg.includes("zonnepanelen") || lastUserMsg.includes("solar")) {
-    fallbackReply = "Voor zonnepaneel installaties is een knikarmhoogwerker uitermate geschikt om veilig en flexibel over de dakgoot heen te reiken. Ons speciaal samengestelde **Zonnepaneel Montage Pakket (18m)** bevat een hybride knikarmhoogwerker inclusief handige materiaalgordels en haken om panelen veilig te hanteren.\n\n<suggest>set-solar-pro</suggest>\n<suggest>knik-diesel</suggest>\n\nZullen we de beschikbaarheid van deze set bekijken voor uw projectlocatie?";
+    fallbackReply = "Voor zonnepaneel installaties is een aanhangerhoogwerker uitermate geschikt om veilig en flexibel over de dakgoot heen te reiken. Ons speciaal samengestelde **ZZP Zonnepaneel Installatie Set (12m)** bevat een aanhangerhoogwerker inclusief handige materiaalgordels en haken om panelen veilig te hanteren.\n\n<suggest>set-solar-pro</suggest>\n<suggest>nifty-120-1</suggest>\n\nZullen we de beschikbaarheid van deze set bekijken voor uw projectlocatie?";
   } else if (lastUserMsg.includes("dakreparatie") || lastUserMsg.includes("schoorsteen") || lastUserMsg.includes("dakdekker") || lastUserMsg.includes("dakpannen") || lastUserMsg.includes("pannen vervangen")) {
-    fallbackReply = "Bij dakreparaties, schoorsteenvoegen of pannen vervangen op hoogte heeft u een stabiele en betrouwbare machine nodig. Voor zware klussen op ruw terrein raad ik de **Telescoophoogwerker Heavy-Duty (26m)** aan. Als het dak minder makkelijk bereikbaar is of de ondergrond kwetsbaar (bijvoorbeeld een oprit of tuin), is de compacte **Spinhoogwerker Spider (15m)** met stempels de perfecte oplossing.\n\n<suggest>tele-diesel</suggest>\n<suggest>spin-crawl</suggest>\n\nWilt u zelf de machine besturen of wilt u een gecertificeerde machinist erbij huren?";
+    fallbackReply = "Bij dakreparaties, schoorsteenvoegen of pannen vervangen op hoogte heeft u een stabiele en betrouwbare machine nodig. Voor zware klussen op ruw terrein raad ik de **Nifty 170 Aanhangerhoogwerker (17m)** aan. Als de ondergrond kwetsbaar is (bijvoorbeeld een oprit of tuin), is de compacte **Hinowa 15.70 Rupshoogwerker (15.4m)** met stempels de perfecte oplossing.\n\n<suggest>nifty-170</suggest>\n<suggest>hinowa-15-70</suggest>\n\nWilt u zelf de machine besturen of wilt u een gecertificeerde machinist erbij huren?";
   } else if (lastUserMsg.includes("camera") || lastUserMsg.includes("lichtmast") || lastUserMsg.includes("lichten") || lastUserMsg.includes("lichtmasten") || lastUserMsg.includes("beveiligingscamera")) {
-    fallbackReply = "Voor het monteren van camera's of lichtarmaturen binnen of buiten adviseren wij onze specialistische **Licht & Camera Installatieset (15m)** (inclusief spinhoogwerker en stroomhaspel) of de compacte **Elektrische Schaarlift (12m)** met non-marking banden voor strakke gangpaden binnen magazijnen.\n\n<suggest>set-light-install</suggest>\n<suggest>schaar-elek</suggest>\n\nHeeft de werklocatie een vlakke betonvloer of is er sprake van een onverharde ondergrond?";
+    fallbackReply = "Voor het monteren van camera's of lichtarmaturen binnen of buiten adviseren wij onze specialistische **ZZP Schilder Comfort Set (8m)** of de compacte **Haulotte Compact 10N Schaarlift (10m)** met non-marking banden voor strakke gangpaden binnen magazijnen.\n\n<suggest>set-paint-comfort</suggest>\n<suggest>compact-10n-1</suggest>\n\nHeeft de werklocatie een vlakke betonvloer of is er sprake van een onverharde ondergrond?";
   } else if (lastUserMsg.includes("industrie") || lastUserMsg.includes("staalbouw") || lastUserMsg.includes("staalconstructie") || lastUserMsg.includes("industriebouw")) {
-    fallbackReply = "Voor grootschalige industriële projecten, staalbouw en constructiewerk op ruw terrein heeft u brute kracht en maximaal bereik nodig. Onze **Super-Reach Telescoophoogwerker (40m)** biedt een ongekende werkhoogte en reikwijdte met maximale 4WD tractie. Voor iets compactere, maar eveneens zware taken is de **Telescoophoogwerker Heavy-Duty (26m)** de absolute industriestandaard.\n\n<suggest>tele-max</suggest>\n<suggest>tele-diesel</suggest>\n\nWij kunnen het transport met onze eigen diepladers volledig voor u verzorgen. Zullen we een offerte opstellen?";
+    fallbackReply = "Voor industriële projecten, staalbouw en constructiewerk op terrein raad ik de **Hinowa 17.75 Rupshoogwerker (17m)** aan. Voor iets compactere taken is de **Haulotte Star 10 Mastlift (10m)** de absolute standaard.\n\n<suggest>hinowa-17-75</suggest>\n<suggest>star-10</suggest>\n\nWij kunnen het transport met onze eigen diepladers volledig voor u verzorgen. Zullen we een offertetraject starten?";
   } else if (lastUserMsg.includes("schilder") || lastUserMsg.includes("verf") || lastUserMsg.includes("binnen")) {
-    fallbackReply = "Als professionele schilder heeft u waarschijnlijk een stabiele hoogwerker nodig die geschikt is voor binnenwerk en kwetsbare vloeren. Ik raad onze **Elektrische Schaarlift (12m)** aan voor rechte muren of onze uiterst wendbare **Spinhoogwerker Spider (15m)** als u over kasten of tuinen heen moet manoeuvreren. Ze zijn beiden emissievrij en fluisterstil!\n\n<suggest>schaar-elek</suggest>\n<suggest>spin-crawl</suggest>\n\nHeeft u al een idee van de gewenste werkhoogte?";
+    fallbackReply = "Als professionele schilder heeft u waarschijnlijk een stabiele hoogwerker nodig die geschikt is voor binnenwerk en kwetsbare vloeren. Ik raad onze **Haulotte Optimum 8 Schaarlift (8m)** aan voor rechte muren of onze uiterst wendbare **Hinowa 15.70 Rupshoogwerker (15.4m)** als u over kasten of tuinen heen moet manoeuvreren. Ze zijn beiden emissievrij en fluisterstil!\n\n<suggest>optimum-8-1</suggest>\n<suggest>hinowa-15-70</suggest>\n\nHeeft u al een idee van de gewenste werkhoogte?";
   } else if (lastUserMsg.includes("parke") || lastUserMsg.includes("vloer") || lastUserMsg.includes("laminaat") || lastUserMsg.includes("plafond") || lastUserMsg.includes("bouw") || lastUserMsg.includes("klus")) {
-    fallbackReply = "Voor binnenwerkzaamheden zoals het leggen van parket/vloeren, plafondafwerking of renovatie is een stabiele, compacte en emissievrije hoogwerker cruciaal. Onze **Elektrische Schaarlift (12m)** is uitgerust met non-marking banden en extra vloerbescherming, perfect om uw kwetsbare vloer krasvrij te houden! Indien u in krappe hoeken of over obstakels heen moet werken, is de **Spinhoogwerker Spider (15m)** op rubberen rupsbanden een uitstekende keuze.\n\n<suggest>schaar-elek</suggest>\n<suggest>spin-crawl</suggest>\n\nZullen we de logistieke beschikbaarheid voor uw gewenste datums controleren?";
+    fallbackReply = "Voor binnenwerkzaamheden zoals het leggen van parket/vloeren, plafondafwerking of renovatie is een stabiele, compacte en emissievrije hoogwerker cruciaal. Onze **Haulotte Compact 10N Schaarlift (10m)** is uitgerust met non-marking banden en extra vloerbescherming, perfect om uw kwetsbare vloer krasvrij te houden! Indien u in krappe hoeken of over obstakels heen moet werken, is de **Hinowa 15.70 Rupshoogwerker (15.4m)** op rubberen rupsbanden een uitstekende keuze.\n\n<suggest>compact-10n-1</suggest>\n<suggest>hinowa-15-70</suggest>\n\nZullen we de logistieke beschikbaarheid voor uw gewenste datums controleren?";
   } else if (lastUserMsg.includes("hovenier") || lastUserMsg.includes("buiten") || lastUserMsg.includes("boom") || lastUserMsg.includes("ruw")) {
-    fallbackReply = "Voor buitenwerkzaamheden op ruw of onverhard terrein raad ik absoluut onze **Spinhoogwerker Spider (15m)** met rupsbanden aan of de krachtige **Telescoophoogwerker Heavy-Duty (26m)** als u enorme hoogte nodig heeft. Bent u op zoek naar snel transport tussen locaties? Dan is de **Autohoogwerker B-Rijbewijs (22m)** ideaal omdat u hier zelf mee mag rijden!\n\n<suggest>spin-crawl</suggest>\n<suggest>truck-b</suggest>";
+    fallbackReply = "Voor buitenwerkzaamheden op ruw of onverhard terrein raad ik absoluut onze **Hinowa 15.70 Rupshoogwerker (15.4m)** met rupsbanden aan of de krachtige **Nifty 170 \"Toe & Go\" Aanhangerhoogwerker (17m)** als u enorme hoogte nodig heeft.\n\n<suggest>hinowa-15-70</suggest>\n<suggest>nifty-170</suggest>";
   } else if (lastUserMsg.includes("glazenwasser") || lastUserMsg.includes("gevel") || lastUserMsg.includes("reiken")) {
-    fallbackReply = "Voor gevelreiniging of glasbewassing is zijdelings bereik cruciaal. De **Knikarmhoogwerker (18m)** biedt 16 meter horizontaal bereik en kan eenvoudig over geparkeerde auto's of luifels reiken. Indien u snel langs meerdere panden moet reizen, is de **Autohoogwerker B-Rijbewijs (22m)** uw beste vriend!\n\n<suggest>knik-diesel</suggest>\n<suggest>truck-b</suggest>";
+    fallbackReply = "Voor gevelreiniging of glasbewassing is zijdelings bereik cruciaal. De **Nifty 120 \"Toe & Go\" Aanhangerhoogwerker (12m)** biedt uitstekend horizontaal bereik en kan eenvoudig over geparkeerde auto's of luifels reiken.\n\n<suggest>nifty-120-1</suggest>";
   } else {
-    fallbackReply = "Welkom bij HoogwerkerHub! Ik help u graag met het vinden van de beste hoogwerker voor uw specifieke klus. Bent u actief als schilder, installateur, aannemer of particulier? En werkt u hoofdzakelijk binnen of buiten? \n\nLaat me ook gerust weten welke werkhoogte u zoekt, dan sturen we direct de juiste suggestie!\n\nU kunt hieronder ook op een van de snelle opties klikken.";
+    fallbackReply = "Welkom bij HuurGo! Ik help u graag met het vinden van de beste hoogwerker voor uw specifieke klus. Bent u actief als schilder, installateur, aannemer of particulier? En werkt u hoofdzakelijk binnen of buiten? \n\nLaat me ook gerust weten welke werkhoogte u zoekt, dan sturen we direct de juiste suggestie!\n\nU kunt hieronder ook op een van de snelle opties klikken.";
   }
 
   return res.json({ reply: fallbackReply });
@@ -128,27 +128,21 @@ geminiRouter.post("/autofill", requireAdmin as any, async (req: AuthenticatedReq
   }
 
   const systemInstruction = `
-    Je bent de technische specificatie-expert van "HoogwerkerHub".
-    Je taak is om op basis van de ingevoerde modelnaam van een hoogwerker (bijvoorbeeld "Genie GS-1930" of "JLG 450AJ") de exacte technische specificaties te bepalen en een premium marketingomschrijving te genereren.
+    Je bent de technische specificatie-expert van "HuurGo".
+    Je taak is om op basis van de ingevoerde modelnaam van een hoogwerker (bijvoorbeeld "Nifty 120" of "Hinowa 15.70") de exacte technische specificaties te bepalen en een premium marketingomschrijving te genereren.
 
     Je MOET antwoorden in een strikt JSON-formaat dat exact voldoet aan het volgende JSON-schema:
     {
-      "category": "schaarlift" | "knikarm" | "telescoop" | "auto" | "spin", (kies degene die het beste past bij dit model)
-      "height": getal, (werkhoogte in meters, bijvoorbeeld 16)
-      "reach": getal, (zijwaarts bereik in meters, gebruik 0 indien niet van toepassing of onbekend)
-      "weight": getal, (eigen gewicht van de machine in kg, bijvoorbeeld 3200)
-      "pricePerDay": getal, (huurtarief per dag in Euro's, schat een marktconform tarief in, bijv 150)
-      "powerType": "Elektrisch" | "Diesel" | "Hybride", (de aandrijving die dit model standaard heeft)
-      "suitableFor": ["beroep1", "beroep2"], (lijst met doelgroepen zoals "Schilder", "Aannemer", "Glazenwasser", "Hovenier", "Installateur", max 3-4)
-      "description": "Premium omschrijving...", (schrijf een professionele en aantrekkelijke productomschrijving in het Nederlands die de belangrijkste voordelen benadrukt)
-      "imageUrl": "https://..." (geef een passende hoge resolutie Unsplash afbeelding URL die past bij het type hoogwerker, selecteer uit de volgende opties:
-        - Voor schaarlift: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=600&auto=format&fit=crop"
-        - Voor knikarm: "https://images.unsplash.com/photo-1579684389782-64d84b5e901a?q=80&w=600&auto=format&fit=crop"
-        - Voor telescoop: "https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?q=80&w=600&auto=format&fit=crop"
-        - Voor auto: "https://images.unsplash.com/photo-1542385151-efd9000785a0?q=80&w=600&auto=format&fit=crop"
-        - Voor spin: "https://images.unsplash.com/photo-1563986768609-322da13575f3?q=80&w=600&auto=format&fit=crop"
-      ),
-      "packageContents": "item1; item2; item3; item4" (genereer een puntkomma-gescheiden lijst van 4 tot 6 inbegrepen items of services die typisch bij dit model horen, zoals verlengsnoeren, harnas, rijplaten, handleiding, etc. in het Nederlands, max 200 tekens)
+      "category": "aanhanger" | "spin" | "schaarlift" | "schaarlift-smal" | "mastlift" | "ladderlift" | "ecolift",
+      "height": getal,
+      "reach": getal,
+      "weight": getal,
+      "pricePerDay": getal,
+      "powerType": "Elektrisch" | "Diesel" | "Hybride" | "Handmatig",
+      "suitableFor": ["beroep1", "beroep2"],
+      "description": "Premium omschrijving...",
+      "imageUrl": "https://...",
+      "packageContents": "item1; item2; item3; item4"
     }
 
     Geef GEEN andere tekst, markdown-blokken (zoals \`\`\`json) of uitleg buiten de geldige JSON.
@@ -176,75 +170,73 @@ geminiRouter.post("/autofill", requireAdmin as any, async (req: AuthenticatedReq
     } catch (err: any) {
       console.error("Gemini Autofill API error:", err);
     }
-  }
-
-  // Graceful simulated fallback if API Key is not set or errors
+  }  // Graceful simulated fallback if API Key is not set or errors
   console.log("Using smart simulated auto-fill fallback response...");
   const lowerName = machineName.toLowerCase();
   let fallback: any = {
     category: "schaarlift",
-    height: 12,
+    height: 8,
     reach: 0,
-    weight: 2300,
-    pricePerDay: 110,
+    weight: 1520,
+    pricePerDay: 80,
     powerType: "Elektrisch",
     suitableFor: ["Schilder", "Installateur"],
     description: `De ${machineName} is een uitstekende en betrouwbare keuze voor al uw onderhouds- en installatiewerkzaamheden op hoogte. Dankzij de stille en emissievrije aandrijving is deze machine ideaal voor gebruik in magazijnen, kantoorpanden en andere binnenlocaties. De non-marking banden voorkomen strepen op kwetsbare vloeren.`,
     imageUrl: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=600&auto=format&fit=crop",
-    packageContents: "1x Gecertificeerde Elektrische Schaarlift (12m werkhoogte);2x 20m zware verlengkabels (230V / IP44);1x Handige gereedschapsbak gemonteerd op het werkplatform;1x Luxe comfort-veiligheidsharnas (EN-361 gekeurd);4x Non-marking witte banden (geen sporen op luxe vloeren)"
+    packageContents: "1x Gecertificeerde Elektrische Schaarlift (8m werkhoogte);2x 20m zware verlengkabels (230V / IP44);1x Handige gereedschapsbak gemonteerd op het werkplatform;1x Luxe comfort-veiligheidsharnas (EN-361 gekeurd);4x Non-marking witte banden (geen sporen op luxe vloeren)"
   };
 
-  if (lowerName.includes("knik") || lowerName.includes("articulated") || lowerName.includes("jlg 450") || lowerName.includes("genie z")) {
+  if (lowerName.includes("nifty") || lowerName.includes("aanhanger") || lowerName.includes("trailer")) {
     fallback = {
-      category: "knikarm",
-      height: 16,
-      reach: 12,
-      weight: 6500,
-      pricePerDay: 190,
+      category: "aanhanger",
+      height: 12.2,
+      reach: 6.1,
+      weight: 1400,
+      pricePerDay: 80,
       powerType: "Elektrisch",
-      suitableFor: ["Glazenwasser", "Schilder", "Aannemer"],
-      description: `De ${machineName} knikarmhoogwerker biedt maximale flexibiliteit dankzij het ingenieuze knikarmontwerp. Hiermee reikt u eenvoudig over obstakels en daken heen. Perfect voor schilderwerk, gevelreiniging of zonnepaneelinstallaties op wisselend terrein.`,
-      imageUrl: "https://images.unsplash.com/photo-1579684389782-64d84b5e901a?q=80&w=600&auto=format&fit=crop",
-      packageContents: "1x Knikarmhoogwerker (18m werkhoogte, 16m zijdelings bereik);2x Heavy-duty materiaalgordels met verstelbare karbijnhaakjes;1x Premium valbeveiligingsset Pro met schokdemper;1x Geïntegreerde 230V stroomaansluiting rechtstreeks in de werkbak;All-Risk Casco schadeverzekering"
+      suitableFor: ["Schilder", "Particulier", "Installateur"],
+      description: `De ${machineName} aanhangerhoogwerker biedt maximale flexibiliteit en mobiliteit voor al uw buitenklussen. Dankzij de trekhaakkoppeling rijdt u er zelf makkelijk mee weg. Snel af te stempelen en ideaal voor schilder-, snoei- en gevelwerk rondom het huis.`,
+      imageUrl: "https://images.unsplash.com/photo-1541625602330-2277a4c46182?q=80&w=600&auto=format&fit=crop",
+      packageContents: "1x Aanhangerhoogwerker Nifty (12.2m werkhoogte);1x Trekhaakkoppeling met reminrichting;1x Premium valbeveiliging veiligheidsharnas Pro;2x 20m stroomverlengkabels IP44;4x Kunststof stempelplaten"
     };
-  } else if (lowerName.includes("tele") || lowerName.includes("jlg 600") || lowerName.includes("genie s")) {
-    fallback = {
-      category: "telescoop",
-      height: 22,
-      reach: 18,
-      weight: 11200,
-      pricePerDay: 240,
-      powerType: "Diesel",
-      suitableFor: ["Aannemer", "Staalbouwer"],
-      description: `Met de ${machineName} telescopische hoogwerker haalt u brute kracht en een enorm horizontaal bereik in huis. Uitermate geschikt voor grote industriële projecten, staalbouw en buitengebruik op onverharde, ruwe bouwterreinen.`,
-      imageUrl: "https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?q=80&w=600&auto=format&fit=crop",
-      packageContents: "1x Telescoophoogwerker Diesel (26m werkhoogte) - 4x4 aangedreven;2x Slanghaspel mastklemmen voor hogedrukslangen tot korf;1x Geïntegreerde generator unit (stroom & hogedrukwatertoevoer);1x Volledige All-Risk Casco dekking zonder eigen risico;2x Waterdichte mouwbeschermers & vizierbrillen"
-    };
-  } else if (lowerName.includes("truck") || lowerName.includes("auto") || lowerName.includes("rijbewijs")) {
-    fallback = {
-      category: "auto",
-      height: 22,
-      reach: 14,
-      weight: 3450,
-      pricePerDay: 200,
-      powerType: "Diesel",
-      suitableFor: ["Glazenwasser", "Hovenier"],
-      description: `De ${machineName} autohoogwerker is de ideale partner voor klussen op meerdere locaties per dag. Met uw standaard B-rijbewijs mag u zelf met deze truck de weg op. Ideaal voor snel en mobiel werk aan gevels, bomen of lantaarnpalen.`,
-      imageUrl: "https://images.unsplash.com/photo-1542385151-efd9000785a0?q=80&w=600&auto=format&fit=crop",
-      packageContents: "1x Autohoogwerker (22m werkhoogte, B-Rijbewijs vereist);1x Telescopische dakgootschep & telescopische trekker/bezem set;1x Geïntegreerde 230V stroomaansluiting in de korf;1x Geperforeerde aluminium werkbak voor emmers en afval;1x Set van 4 wegafzetting pionnen met reflecterende strips"
-    };
-  } else if (lowerName.includes("spin") || lowerName.includes("spider") || lowerName.includes("rups")) {
+  } else if (lowerName.includes("hinowa") || lowerName.includes("spin") || lowerName.includes("spider") || lowerName.includes("rups")) {
     fallback = {
       category: "spin",
-      height: 15,
-      reach: 8,
-      weight: 1800,
+      height: 15.4,
+      reach: 6.6,
+      weight: 1400,
       pricePerDay: 160,
       powerType: "Hybride",
-      suitableFor: ["Hovenier", "Schilder"],
-      description: `Dankzij de compacte spinhoogwerker stempels en rupsbanden manoeuvreert de ${machineName} moeiteloos door smalle poorten of over zachte grasvelden. Het lage gewicht verdeelt de druk uitstekend, waardoor de machine perfect is voor tuinen en binnenpleinen met kwetsbare bestrating.`,
+      suitableFor: ["Hovenier", "Gevelreiniger", "Schilder"],
+      description: `Dankzij de compacte stempels en rupsbanden manoeuvreert de ${machineName} moeiteloos door smalle poorten of over zachte grasvelden. Het lage gewicht verdeelt de druk uitstekend, waardoor de machine perfect is voor tuinen en binnenpleinen met kwetsbare bestrating.`,
       imageUrl: "https://images.unsplash.com/photo-1563986768609-322da13575f3?q=80&w=600&auto=format&fit=crop",
-      packageContents: "1x Spinhoogwerker Spider (15m werkhoogte) op smalle rupsbanden;4x Heavy-duty kunststof rijplaten (voorkomt sporen in gazons);1x Gecertificeerde bosbouwer snoeihelm met vizier en oorkappen;1x Magnetische relingtray voor snoeigereedschappen;1x spanbandenset"
+      packageContents: "1x Spinhoogwerker Rups (15.4m werkhoogte);4x Heavy-duty kunststof rijplaten (voorkomt sporen);1x Gecertificeerde snoei-veiligheidshelm;1x Magnetische relingtray voor snoeigereedschap"
+    };
+  } else if (lowerName.includes("ladder") || lowerName.includes("verhuis") || lowerName.includes("lift")) {
+    fallback = {
+      category: "ladderlift",
+      height: 21,
+      reach: 0,
+      weight: 1350,
+      pricePerDay: 110,
+      powerType: "Elektrisch",
+      suitableFor: ["Particulier", "Aannemer"],
+      description: `De ${machineName} ladder- en verhuislift helpt u goederen, verhuisdozen en zware materialen efficiënt via het raam of balkon naar boven te transporteren. Eenvoudig op te stellen en uiterst betrouwbaar.`,
+      imageUrl: "https://images.unsplash.com/photo-1542385151-efd9000785a0?q=80&w=600&auto=format&fit=crop",
+      packageContents: "1x Ladderlift Verhuislift 21m;4x Stevige spanbanden;2x Dikke meubel-verhuisdekens;1x Veiligheidsnet"
+    };
+  } else if (lowerName.includes("ecolift") || lowerName.includes("peco")) {
+    fallback = {
+      category: "ecolift",
+      height: 4.2,
+      reach: 0,
+      weight: 305,
+      pricePerDay: 45,
+      powerType: "Handmatig",
+      suitableFor: ["Schilder", "Installateur", "Particulier"],
+      description: `De ${machineName} is een milieuvriendelijk en veilig alternatief voor ladders binnenshuis. Volledig handmatig aangedreven, dus geen batterijen of kabels nodig. Geluidloos en veilig werken tot 4.2m werkhoogte.`,
+      imageUrl: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=600&auto=format&fit=crop",
+      packageContents: "1x Peco Ecolift (4.2m werkhoogte);1x Gebruikershandleiding;1x Rubberen vloerbeschermingsmat"
     };
   }
 

@@ -69,6 +69,9 @@ export default function App() {
       if (storeUser.role === "admin") {
         setCurrentUser(null);
         setIsAdminMode(true);
+        if (location.pathname !== "/admin") {
+          navigate("/admin");
+        }
       } else {
         setCurrentUser({
           id: storeUser.id,
@@ -87,7 +90,7 @@ export default function App() {
       setCurrentUser(null);
       setIsAdminMode(false);
     }
-  }, [storeUser, setIsAdminMode]);
+  }, [storeUser, setIsAdminMode, navigate, location.pathname]);
 
   // System and Activity Logs
   const [systemLogs, setSystemLogs] = useState<any[]>([

@@ -39,9 +39,12 @@ geminiRouter.post("/advisor", async (req: AuthenticatedRequest, res: Response) =
     console.error("Error fetching machines for advisor:", error);
   }
 
-  const machineCatalogContext = dbMachines.map(m => (
-    `- ID: "${m.id}", Naam: "${m.name}", Categorie: "${m.category}", Werkhoogte: ${m.height}m, Horizontaal bereik: ${m.reach}m, Gewicht: ${m.weight}kg, Tarief: €${m.pricePerDay}/dag, Aandrijving: ${m.powerType}, Geschikt voor: ${m.suitableFor ? m.suitableFor.split(";").join(", ") : ""}. Beschrijving: ${m.description}`
-  )).join("\n");
+  const machineCatalogContext = dbMachines.map(m => {
+    const suitableForStr = Array.isArray(m.suitableFor)
+      ? m.suitableFor.join(", ")
+      : (typeof m.suitableFor === "string" ? m.suitableFor.split(";").join(", ") : "");
+    return `- ID: "${m.id}", Naam: "${m.name}", Categorie: "${m.category}", Werkhoogte: ${m.height}m, Horizontaal bereik: ${m.reach}m, Gewicht: ${m.weight}kg, Tarief: €${m.pricePerDay}/dag, Aandrijving: ${m.powerType}, Geschikt voor: ${suitableForStr}. Beschrijving: ${m.description}`;
+  }).join("\n");
 
   const systemInstruction = `
 Je bent de legendarische en gastvrije AI Hoogwerker Adviseur van "HoogwerkerHub" (gevestigd in Nederland).

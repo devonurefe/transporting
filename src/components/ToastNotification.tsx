@@ -22,34 +22,34 @@ export default function ToastNotification({ toast, onClose }: ToastNotificationP
     <AnimatePresence>
       {toast && (
         <motion.div
-          initial={{ opacity: 0, x: 100, y: 0, scale: 0.9 }}
-          animate={{ opacity: 1, x: 0, y: 0, scale: 1 }}
-          exit={{ opacity: 0, x: 100, scale: 0.9 }}
+          initial={{ opacity: 0, y: -30, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: -30, scale: 0.95 }}
           transition={{ type: "spring", stiffness: 350, damping: 25 }}
-          className="fixed top-24 right-4 z-50 w-80 p-4 rounded-2xl glass-panel shadow-2xl flex items-start space-x-3 border-l-4 border-l-indigo-500"
+          className="fixed top-24 left-4 right-4 sm:left-auto sm:right-4 sm:w-85 p-4 rounded-2xl bg-slate-900/95 backdrop-blur-xl border border-white/10 shadow-2xl flex items-start space-x-3 border-l-4 border-l-indigo-500 z-50"
         >
           <div className="mt-0.5 shrink-0">
             {toast.type === "success" ? (
-              <CheckCircle className="h-5 w-5 text-teal-400" />
+              <CheckCircle className="h-5 w-5 text-emerald-400" />
             ) : toast.type === "warning" ? (
-              <AlertTriangle className="h-5 w-5 text-amber-500" />
+              <AlertTriangle className="h-5 w-5 text-amber-400" />
             ) : (
-              <Info className="h-5 w-5 text-blue-400" />
+              <Info className="h-5 w-5 text-sky-400" />
             )}
           </div>
           
-          <div className="flex-1">
-            <h4 className="text-xs font-bold text-white leading-none">
+          <div className="flex-1 min-w-0">
+            <h4 className="text-xs font-bold text-slate-100 leading-none">
               {toast.title}
             </h4>
-            <p className="text-[11px] text-slate-400 mt-1 leading-snug">
+            <p className="text-[11px] text-slate-400 mt-1 leading-snug break-words">
               {toast.message}
             </p>
           </div>
 
           <button
             onClick={onClose}
-            className="p-1 rounded text-slate-500 hover:text-white transition-colors shrink-0 border-none bg-transparent cursor-pointer"
+            className="p-1 rounded text-slate-500 hover:text-slate-300 transition-colors shrink-0 border-none bg-transparent cursor-pointer"
           >
             <X className="h-3.5 w-3.5" />
           </button>

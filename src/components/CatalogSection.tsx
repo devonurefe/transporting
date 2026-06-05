@@ -63,6 +63,7 @@ export default function CatalogSection({
   const [showCompareModal, setShowCompareModal] = useState<boolean>(false);
   const [selectedDetailMachine, setSelectedDetailMachine] = useState<Machine | null>(null);
   const [activeDetailImageIndex, setActiveDetailImageIndex] = useState<number>(0);
+  const [showFiltersMobile, setShowFiltersMobile] = useState<boolean>(false);
 
   useEffect(() => {
     setActiveDetailImageIndex(0);
@@ -191,8 +192,25 @@ export default function CatalogSection({
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
           {/* LEFT: Floating Sticky Filter Controls */}
-          <div className="lg:col-span-3 lg:sticky lg:top-24 space-y-6">
-            <div className="glass-panel p-5 rounded-2xl space-y-6 bg-white border border-slate-200 shadow-sm">
+          <div className="lg:col-span-3 lg:sticky lg:top-24">
+            
+            {/* Mobile Toggle Button */}
+            <button
+              type="button"
+              onClick={() => setShowFiltersMobile(!showFiltersMobile)}
+              className="lg:hidden w-full flex items-center justify-center space-x-2 bg-white border border-slate-200 p-3.5 rounded-2xl text-xs font-bold text-slate-700 shadow-sm mb-4 cursor-pointer"
+            >
+              <Filter className="h-4 w-4 text-indigo-600" />
+              <span>{showFiltersMobile ? "Verberg Filters" : "Toon Filters & Zoeken"}</span>
+              <span className="font-mono text-[10px] bg-indigo-50 text-indigo-700 font-bold px-2 py-0.5 rounded-full ml-1">
+                {filteredMachines.length} vloot
+              </span>
+            </button>
+
+            {/* Filter Content */}
+            <div className={`glass-panel p-5 rounded-2xl space-y-6 bg-white border border-slate-200 shadow-sm ${
+              showFiltersMobile ? "block" : "hidden lg:block"
+            } mb-6 lg:mb-0`}>
               
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div className="flex items-center space-x-2">
@@ -491,17 +509,17 @@ export default function CatalogSection({
 
                         </div>
 
-                        {/* PRICE & HUUR NU BUTTON - Absolute gradient overlays */}
-                        <div className="flex items-center justify-between pt-2">
-                          <div>
+                        {/* PRICE & HUUR NU BUTTON - Responsive layout */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 pt-2 border-t border-slate-100 mt-2">
+                          <div className="flex sm:flex-col items-baseline justify-between sm:justify-start w-full sm:w-auto">
                             <span className="text-[9px] text-slate-500 uppercase font-bold font-mono">Dagtotaal</span>
                             <div className="flex items-baseline space-x-0.5">
                               <span className="text-lg font-bold text-teal-700 font-mono">€{machine.pricePerDay}</span>
-                              <span className="text-[10px] text-slate-505 text-slate-500 font-medium">/dag</span>
+                              <span className="text-[10px] text-slate-500 font-medium">/dag</span>
                             </div>
                           </div>
 
-                          <div className="flex items-center space-x-1.5">
+                          <div className="flex items-center space-x-1.5 w-full sm:w-auto">
                             <button
                               onClick={() => {
                                 setSelectedDetailMachine(machine);
@@ -511,7 +529,7 @@ export default function CatalogSection({
                                   `Bekijkt technische specificaties van: "${machine.name}"`
                                 );
                               }}
-                              className="px-3 py-2.5 rounded-xl border border-slate-200 hover:border-slate-300 bg-slate-50 hover:bg-slate-100 text-slate-700 hover:text-slate-900 text-[11px] font-bold transition-all active:scale-97 cursor-pointer"
+                              className="flex-1 sm:flex-none text-center px-2.5 py-2 rounded-xl border border-slate-200 hover:border-slate-300 bg-slate-50 hover:bg-slate-100 text-slate-700 hover:text-slate-900 text-[11px] font-bold transition-all active:scale-97 cursor-pointer"
                               title="Bekijk alle details & specificaties"
                             >
                               Details
@@ -519,9 +537,9 @@ export default function CatalogSection({
 
                             <button
                               onClick={() => onSelectMachineForBooking(machine)}
-                              className="relative overflow-hidden flex items-center space-x-1.5 px-4 py-2.5 rounded-xl border border-indigo-500/20 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white text-xs font-bold transition-all hover:scale-[1.03] active:scale-97 hover:border-indigo-500/60 shadow-[0_2px_10px_rgba(79,70,229,0.15)] cursor-pointer"
+                              className="flex-[2] sm:flex-none relative overflow-hidden flex items-center justify-center space-x-1.5 px-3.5 py-2 rounded-xl border border-indigo-500/20 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white text-xs font-bold transition-all hover:scale-[1.03] active:scale-97 hover:border-indigo-500/60 shadow-[0_2px_10px_rgba(79,70,229,0.15)] cursor-pointer whitespace-nowrap"
                             >
-                              <ShoppingBag className="h-3.5 w-3.5 text-teal-300" />
+                              <ShoppingBag className="h-3.5 w-3.5 text-teal-350 text-teal-300" />
                               <span>Huur Nu</span>
                             </button>
                           </div>
@@ -1152,7 +1170,7 @@ export default function CatalogSection({
                     <div className="space-y-3">
                       <h4 className="text-[10px] font-mono text-slate-500 uppercase tracking-widest block font-bold">Technische Specificaties</h4>
                       
-                      <div className="grid grid-cols-2 gap-3 font-sans">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 font-sans">
                         <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between">
                           <span className="text-[11px] text-slate-500">Werkhoogte:</span>
                           <span className="font-mono text-xs font-bold text-slate-900">{selectedDetailMachine.height} meter</span>

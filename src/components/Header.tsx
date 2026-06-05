@@ -115,10 +115,10 @@ export default function Header({
             />
           </div>
           <div>
-            <span className="font-display text-xl font-extrabold tracking-tight bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-800 bg-clip-text text-transparent">
+            <span className="font-display text-lg sm:text-xl font-extrabold tracking-tight bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-800 bg-clip-text text-transparent">
               {isAdminMode ? "HubAdmin Portal" : siteConfig.siteName}
             </span>
-            <div className="flex items-center space-x-1 text-[10px] font-mono tracking-wider uppercase">
+            <div className="hidden sm:flex items-center space-x-1 text-[10px] font-mono tracking-wider uppercase">
               {isAdminMode ? (
                 <span className="text-amber-400 font-bold flex items-center space-x-1">
                   <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-ping inline-block mr-1" />
@@ -193,7 +193,7 @@ export default function Header({
         </nav>
 
         {/* Dynamic Right Utility Tray */}
-        <div className="flex items-center space-x-2.5 md:space-x-3.5">
+        <div className="flex items-center space-x-1.5 sm:space-x-3">
           {isAdminMode ? (
             // Owner Logout Button (Exits back to the website)
             <button
@@ -313,7 +313,7 @@ export default function Header({
               {currentUser ? (
                 <div 
                   onClick={() => setActiveTab("orders")}
-                  className="flex items-center space-x-2 bg-indigo-50 hover:bg-indigo-100 border border-indigo-100 py-1.5 px-3.5 rounded-xl cursor-pointer transition-all active:scale-95"
+                  className="flex items-center bg-indigo-50 hover:bg-indigo-100 border border-indigo-100/50 p-1.5 sm:py-1.5 sm:px-3 rounded-xl cursor-pointer transition-all active:scale-95 shrink-0"
                 >
                   {currentUser.avatarUrl ? (
                     <img 
@@ -327,17 +327,18 @@ export default function Header({
                       {currentUser.name.charAt(0)}
                     </div>
                   )}
-                  <span className="hidden lg:inline-block text-xs font-bold text-indigo-700 truncate max-w-[100px]" title={currentUser.name}>
+                  <span className="hidden lg:inline-block text-xs font-bold text-indigo-700 truncate max-w-[100px] ml-2" title={currentUser.name}>
                     {currentUser.name.split(' ')[0]}
                   </span>
                 </div>
               ) : (
                 <button
                   onClick={() => setActiveTab("orders")}
-                  className="inline-flex items-center space-x-1 border border-slate-200 hover:border-slate-300 bg-white px-4 py-2 rounded-lg text-xs font-bold text-slate-700 hover:text-slate-900 transition-all active:scale-97 shrink-0"
+                  className="inline-flex items-center justify-center border border-slate-200 hover:border-slate-300 bg-white p-2 sm:px-4 sm:py-2 rounded-xl text-xs font-bold text-slate-700 hover:text-slate-900 transition-all active:scale-97 shrink-0"
+                  title="Klant Login"
                 >
-                  <User className="h-3.5 w-3.5 text-slate-500" />
-                  <span>Klant Login</span>
+                  <User className="h-4 w-4 text-slate-500" />
+                  <span className="hidden sm:inline-block ml-1.5">Klant Login</span>
                 </button>
               )}
             </>

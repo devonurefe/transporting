@@ -854,7 +854,7 @@ export default function MyOrdersSection({
                                   }`}>
                                     {step.active ? "✓" : idx + 1}
                                   </div>
-                                  <span className={`text-[8.5px] font-black uppercase ${step.active ? "text-emerald-700 font-extrabold" : "text-slate-400 font-semibold"}`}>
+                                  <span className={`hidden sm:inline text-[8.5px] font-black uppercase ${step.active ? "text-emerald-700 font-extrabold" : "text-slate-400"}`}>
                                     {step.label}
                                   </span>
                                 </div>

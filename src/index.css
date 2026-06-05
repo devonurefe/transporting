@@ -8,11 +8,15 @@
 }
 
 @layer base {
+  html, body, #root {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
   body {
     background-color: #f8fafc; /* Premium off-white slate-50 canvas */
     color: #1e293b; /* Dark slate text */
     font-family: var(--font-sans);
-    overflow-x: hidden;
   }
 }
 

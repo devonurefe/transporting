@@ -69,7 +69,8 @@ export default function App() {
       if (storeUser.role === "admin") {
         setCurrentUser(null);
         setIsAdminMode(true);
-        if (location.pathname !== "/admin") {
+        // Only redirect to /admin if trying to access the customer portal
+        if (location.pathname === "/orders" || location.pathname === "/login") {
           navigate("/admin");
         }
       } else {
@@ -437,7 +438,7 @@ export default function App() {
         clearNotifications={clearNotifications}
         currentUser={currentUser}
         onCustomerLogout={handleCustomerLogout}
-        isAdminMode={isAdminMode}
+        isAdminMode={isAdminMode && location.pathname === "/admin"}
         setIsAdminMode={setIsAdminMode}
         siteConfig={siteConfig}
         cartItems={cartItems}

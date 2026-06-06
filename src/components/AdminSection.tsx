@@ -70,8 +70,8 @@ export default function AdminSection({
   const setAdminLanguage = useLanguageStore((state) => state.setAdminLanguage);
   const tAdmin = useLanguageStore((state) => state.tAdmin);
 
-  // Admin login credentials (pre-loaded)
-  const [adminEmail, setAdminEmail] = useState("admin@huurgo.nl");
+  // Admin login credentials
+  const [adminEmail, setAdminEmail] = useState("");
   const [adminPassword, setAdminPassword] = useState("");
 
   const handleAdminVerifyLogin = async (e: React.FormEvent) => {

@@ -80,15 +80,20 @@ export default function BookingSuccess({
       </div>
 
       <div>
-        <span className="text-[10px] font-mono uppercase bg-emerald-50 border border-emerald-200 text-emerald-700 px-3 py-1 rounded-full font-extrabold tracking-wider">
-          Boeking Succesvol Verwerkt
+        <span className="text-xs font-mono uppercase bg-emerald-50 border border-emerald-200 text-emerald-700 px-3.5 py-1.5 rounded-full font-extrabold tracking-wider">
+          Boeking Succesvol Geregistreerd
         </span>
         <h1 className="font-display text-2xl font-black text-slate-900 mt-4">
-          Factuur & Overeenkomst Geaccordeerd!
+          {paymentGateway === "whatsapp" ? "Reservering Aangevraagd!" : "Factuur & Overeenkomst Geaccordeerd!"}
         </h1>
-        <p className="text-xs text-slate-650 font-medium mt-2 max-w-md mx-auto">
+        <p className="text-xs text-slate-600 font-medium mt-2 max-w-md mx-auto">
           Uw hoogwerker is officieel geregistreerd onder referentienummer{" "}
-          <strong className="text-indigo-600 font-mono">{successOrder?.id}</strong>. Inkoop-betaling is met succes voldaan via de beveiligde <strong className="text-teal-700 uppercase">{paymentGateway} Gateway</strong>.
+          <strong className="text-indigo-600 font-mono">{successOrder?.id}</strong>.{" "}
+          {paymentGateway === "whatsapp" ? (
+            <span>Bevestig uw boeking via WhatsApp om uw betaallink te ontvangen.</span>
+          ) : (
+            <span>Inkoop-betaling is met succes voldaan via de beveiligde <strong className="text-teal-700 uppercase">{paymentGateway} Gateway</strong>.</span>
+          )}
         </p>
       </div>
 
@@ -119,7 +124,7 @@ export default function BookingSuccess({
           </div>
         )}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-baseline pt-1.5 gap-1">
-          <span className="text-[9px] font-mono uppercase tracking-wider text-slate-500 font-bold">Betaalbedrag:</span>
+          <span className="text-[11px] font-mono uppercase tracking-wider text-slate-500 font-bold">Betaalbedrag:</span>
           <span className="text-base font-mono font-bold text-teal-700 text-left sm:text-right">€ {successOrder.totalAmount.toFixed(2)}</span>
         </div>
       </div>
@@ -131,14 +136,14 @@ export default function BookingSuccess({
             <UserPlus className="h-5 w-5 text-indigo-600 shrink-0 mt-0.5" />
             <div>
               <h4 className="text-xs font-extrabold text-slate-900">Direct lid worden? Sla uw gegevens op!</h4>
-              <p className="text-[10.5px] text-slate-500 mt-0.5 leading-normal">
+              <p className="text-xs text-slate-500 mt-0.5 leading-normal">
                 U heeft gehuurd als gast. Stel nu een wachtwoord in om direct uw account te activeren. Hiermee kunt u de status van uw levering live volgen en facturen inzien.
               </p>
             </div>
           </div>
 
           {registerSuccess ? (
-            <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-850 text-emerald-800 rounded-xl text-xs flex items-start space-x-2">
+            <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs flex items-start space-x-2">
               <Check className="h-4.5 w-4.5 text-emerald-600 shrink-0 mt-0.5" />
               <div>
                 <strong>Account succesvol aangemaakt!</strong> We hebben een verificatie-e-mail verzonden naar <strong className="font-mono">{successOrder.customerEmail}</strong>. Verifieer uw e-mailadres om in te loggen.
@@ -147,7 +152,7 @@ export default function BookingSuccess({
           ) : (
             <form onSubmit={handleRegister} className="space-y-3 pt-1">
               {registerError && (
-                <div className="p-2.5 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-[11px] leading-snug">
+                <div className="p-2.5 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs leading-snug">
                   {registerError}
                 </div>
               )}
@@ -179,7 +184,7 @@ export default function BookingSuccess({
 
       {whatsappUrl && (
         <div className="p-5 bg-emerald-50/70 border border-emerald-200/80 rounded-2xl max-w-lg mx-auto text-center space-y-3 shadow-xs">
-          <p className="text-[11px] text-emerald-800 font-extrabold leading-normal">
+          <p className="text-xs text-emerald-800 font-extrabold leading-normal">
             Klik op de onderstaande knop om uw boeking te verzenden naar onze planner op WhatsApp en direct uw iDEAL betaallink te ontvangen:
           </p>
           <a

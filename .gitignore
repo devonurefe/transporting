@@ -13,3 +13,7 @@ prisma/dev.db
 *.db-journal
 *.db-shm
 *.db-wal
+
+# PDF guides
+huurgo-iyilestirme-rehberi.pdf
+

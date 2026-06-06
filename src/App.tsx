@@ -613,8 +613,7 @@ export default function App() {
         onClose={() => setActiveToast(null)} 
       />
 
-      {/* PWA INSTALL FLOATING BANNER */}
-      <PWAInstallBanner />
+
 
       {/* FLOATING ACTION BACK-TO-TOP BUTTON */}
       <AnimatePresence>

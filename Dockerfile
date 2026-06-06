@@ -13,6 +13,7 @@ COPY prisma ./prisma/
 RUN npm ci
 
 # Generate Prisma Client
+ENV DATABASE_URL="postgresql://placeholder_user:placeholder_password@localhost:5432/placeholder_db"
 RUN npx prisma generate
 
 # Copy the rest of the source code

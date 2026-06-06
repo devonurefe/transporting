@@ -93,6 +93,7 @@ export default function BookingSection({
     return highestDiscount;
   };
   const [successOrder, setSuccessOrder] = useState<Order | null>(null);
+  const [whatsappUrl, setWhatsappUrl] = useState<string>("");
 
   // Address lookup & Inline validation states
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -758,8 +759,16 @@ export default function BookingSection({
           setIsSubmitting(false);
           if (firstSuccessfulOrder) {
             if (paymentGateway === "whatsapp") {
-              const waUrl = buildWhatsAppUrl(cartItems, deliveryType, customerName, customerEmail, customerPhone);
-              window.open(waUrl, "_blank");
+              const checkoutItems: CartItem[] = cartItems.length > 0 ? cartItems : (selectedMachine ? [{
+                id: selectedMachine.id,
+                machine: selectedMachine,
+                startDate: startDate,
+                endDate: endDate
+              }] : []);
+              const waUrl = buildWhatsAppUrl(checkoutItems, deliveryType, customerName, customerEmail, customerPhone || undefined);
+              setWhatsappUrl(waUrl);
+            } else {
+              setWhatsappUrl("");
             }
             setSuccessOrder(firstSuccessfulOrder);
             onClearCart();
@@ -962,6 +971,7 @@ export default function BookingSection({
               setSuccessOrder={setSuccessOrder}
               setActiveTab={setActiveTab}
               currentUser={currentUser}
+              whatsappUrl={whatsappUrl}
             />
           )}
         </AnimatePresence>

@@ -17,6 +17,7 @@ interface BookingSuccessProps {
   setSuccessOrder: (order: Order | null) => void;
   setActiveTab: (tab: string) => void;
   currentUser: UserProfile | null;
+  whatsappUrl?: string;
 }
 
 export default function BookingSuccess({
@@ -25,7 +26,8 @@ export default function BookingSuccess({
   setStep,
   setSuccessOrder,
   setActiveTab,
-  currentUser
+  currentUser,
+  whatsappUrl
 }: BookingSuccessProps) {
   const [password, setPassword] = useState("");
   const [isRegistering, setIsRegistering] = useState(false);
@@ -172,6 +174,22 @@ export default function BookingSuccess({
               </div>
             </form>
           )}
+        </div>
+      )}
+
+      {whatsappUrl && (
+        <div className="p-5 bg-emerald-50/70 border border-emerald-200/80 rounded-2xl max-w-lg mx-auto text-center space-y-3 shadow-xs">
+          <p className="text-[11px] text-emerald-800 font-extrabold leading-normal">
+            Klik op de onderstaande knop om uw boeking te verzenden naar onze planner op WhatsApp en direct uw iDEAL betaallink te ontvangen:
+          </p>
+          <a
+            href={whatsappUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center space-x-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs px-6 py-3.5 rounded-xl transition-all shadow-md hover:scale-[1.02] active:scale-98 cursor-pointer border-none no-underline"
+          >
+            <span>💬 Open WhatsApp & Zend Bericht</span>
+          </a>
         </div>
       )}
 

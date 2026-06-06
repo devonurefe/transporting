@@ -62,7 +62,7 @@ export default function Footer({ siteName, setActiveTab, setShowContactModal }: 
                 onClick={() => { setActiveTab("advisor"); window.scrollTo({ top: 0, behavior: "smooth" }); }} 
                 className="text-[11px] sm:text-[12px] font-medium text-slate-650 hover:text-indigo-600 transition-colors cursor-pointer text-center sm:text-left py-0.5 border-none bg-transparent"
               >
-                AI Adviseur
+                Snel Advies
               </button>
               <button 
                 onClick={() => setShowContactModal(true)} 

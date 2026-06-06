@@ -95,7 +95,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     heroSubtitle: "Kies uw categorie en huur direct. Simpel, snel, all-in.",
     menuHomeLabel: "Home",
     menuCatalogLabel: "Catalogus",
-    menuAdvisorLabel: "AI Adviseur",
+    menuAdvisorLabel: "Snel Advies",
     menuOrdersLabel: "Mijn Account",
     menuAdminLabel: "Portaal"
   },

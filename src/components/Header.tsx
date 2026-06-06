@@ -118,7 +118,7 @@ export default function Header({
     heroSubtitle: "HuurGo is er voor ZZP'ers en particulieren. Geen gedoe, direct online geregeld. Vind binnen 1 minuut de perfecte machine voor uw schilderklus, tuinonderhoud of gevelwerk met onze slimme AI-assistent.",
     menuHomeLabel: "Home",
     menuCatalogLabel: "Catalogus",
-    menuAdvisorLabel: "AI Adviseur",
+    menuAdvisorLabel: "Snel Advies",
     menuOrdersLabel: "Mijn Account"
   }
 }: HeaderProps) {
@@ -182,7 +182,6 @@ export default function Header({
               { id: "catalog", label: siteConfig.menuCatalogLabel || t("menuCatalog"), icon: Layers },
               { id: "advisor", label: siteConfig.menuAdvisorLabel || t("menuAdvisor"), icon: Sparkles, badge: "Smart" },
               { id: "booking", label: t("stepLogistics"), icon: ClipboardList },
-              { id: "orders", label: siteConfig.menuOrdersLabel || t("menuOrders"), icon: User },
             ].map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;

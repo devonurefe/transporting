@@ -48,7 +48,7 @@ export default function HomeSection({
     heroSubtitle: "Kies uw categorie en huur direct. Simpel, snel, all-in.",
     menuHomeLabel: "Home",
     menuCatalogLabel: "Catalogus",
-    menuAdvisorLabel: "AI Adviseur",
+    menuAdvisorLabel: "Snel Advies",
     menuOrdersLabel: "Mijn Account"
   },
   customCategories = [
@@ -171,7 +171,7 @@ export default function HomeSection({
               className="flex items-center space-x-1 text-xs text-indigo-600 hover:text-indigo-700 font-semibold group transition-colors cursor-pointer"
             >
               <Cpu className="h-3.5 w-3.5" />
-              <span>AI Adviseur</span>
+              <span>{siteConfig.menuAdvisorLabel}</span>
               <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />
             </button>
           </div>

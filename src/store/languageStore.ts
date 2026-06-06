@@ -20,7 +20,7 @@ const dictionary: TranslationDictionary = {
   // Menu navigation
   menuHome: { nl: "Home", en: "Home", tr: "Ana Sayfa" },
   menuCatalog: { nl: "Catalog", en: "Catalog", tr: "Katalog" },
-  menuAdvisor: { nl: "Adviseur", en: "Advisor", tr: "AI Danışman" },
+  menuAdvisor: { nl: "Snel Advies", en: "Fast Advice", tr: "Hızlı Tavsiye" },
   menuOrders: { nl: "Contact", en: "Contact", tr: "İletişim" },
   menuAdmin: { nl: "Portaal", en: "Portal", tr: "Yönetim" },
 

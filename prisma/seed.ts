@@ -489,7 +489,7 @@ const defaultSiteConfig = {
   heroSubtitle: "HuurGo is er voor ZZP'ers en particulieren. Geen gedoe, direct online geregeld. Vind binnen 1 minuut de perfecte machine voor uw schilderklus, tuinonderhoud of gevelwerk met onze slimme AI-assistent.",
   menuHomeLabel: "Home",
   menuCatalogLabel: "Catalogus",
-  menuAdvisorLabel: "AI Adviseur",
+  menuAdvisorLabel: "Snel Advies",
   menuOrdersLabel: "Mijn Account",
   menuAdminLabel: "Portaal"
 };

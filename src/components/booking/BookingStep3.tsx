@@ -55,33 +55,29 @@ export default function BookingStep3({
         <span className="text-[10px] text-slate-500 font-mono font-extrabold uppercase block">Kies betaalmethode</span>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           
-          <button
-            onClick={() => setPaymentGateway("mollie")}
-            className={`p-3 rounded-xl border flex flex-col items-center justify-center cursor-pointer transition-all border-none ${
-              paymentGateway === "mollie" 
-                ? "bg-indigo-50 border-indigo-400 text-indigo-900 shadow-sm" 
-                : "bg-white border-slate-200 text-slate-500 hover:border-slate-350 hover:text-slate-800 hover:bg-slate-50"
-            }`}
+          <div
+            className="p-3 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-400 flex flex-col items-center justify-center relative select-none opacity-75"
           >
             <span className="text-[11px] font-black flex items-center space-x-1">
-              <Sparkle className="h-3.5 w-3.5 text-indigo-600 shrink-0" />
+              <Sparkle className="h-3.5 w-3.5 text-slate-300 shrink-0" />
               <span>Mollie (iDEAL)</span>
             </span>
-          </button>
+            <span className="mt-1 text-[8px] font-extrabold bg-amber-50 text-amber-600 border border-amber-100 px-1.5 py-0.5 rounded-full">
+              Binnenkort beschikbaar
+            </span>
+          </div>
 
-          <button
-            onClick={() => setPaymentGateway("stripe")}
-            className={`p-3 rounded-xl border flex flex-col items-center justify-center cursor-pointer transition-all border-none ${
-              paymentGateway === "stripe" 
-                ? "bg-indigo-50 border-indigo-400 text-indigo-900 shadow-sm" 
-                : "bg-white border-slate-200 text-slate-500 hover:border-slate-350 hover:text-slate-800 hover:bg-slate-50"
-            }`}
+          <div
+            className="p-3 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-400 flex flex-col items-center justify-center relative select-none opacity-75"
           >
             <span className="text-[11px] font-black flex items-center space-x-1">
-              <CreditCard className="h-3.5 w-3.5 text-[#635BFF] shrink-0" />
+              <CreditCard className="h-3.5 w-3.5 text-slate-300 shrink-0" />
               <span>Stripe (Kaart)</span>
             </span>
-          </button>
+            <span className="mt-1 text-[8px] font-extrabold bg-amber-50 text-amber-600 border border-amber-100 px-1.5 py-0.5 rounded-full">
+              Binnenkort beschikbaar
+            </span>
+          </div>
 
           <button
             onClick={() => setPaymentGateway("whatsapp")}

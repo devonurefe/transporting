@@ -4,6 +4,7 @@
  */
 
 import { create } from "zustand";
+import { useAppStore } from "./appStore.js";
 
 type Language = "nl" | "en";
 type AdminLanguage = "nl" | "en" | "tr";
@@ -33,7 +34,7 @@ const dictionary: TranslationDictionary = {
     tr: "İç mekan boya işlerinden ağır dış sanayi inşaatlarına kadar; HuurGo doğru makineleri doğrudan adresinize teslim eder. Uzman operatörlü veya operatörsüz kiralama seçenekleriyle, yapay zeka asistanımız kontrolünde."
   },
   searchPlaceholder: { nl: "Waar gaat u werken? (bijv. 15 meter, schilder)", en: "Where will you work? (e.g. 15 meters, painting)", tr: "Nerede çalışacaksınız? (örn. 15 metre, boyacı)" },
-  searchButton: { nl: "Vloot Zoeken", en: "Search Fleet", tr: "Filoda Ara" },
+  searchButton: { nl: "Zoeken", en: "Search Fleet", tr: "Filoda Ara" },
 
   // Catalog Section
   catalogTitle: { nl: "Professionele Verhuurvloot", en: "Professional Rental Fleet", tr: "Profesyonel Kiralama Filosu" },
@@ -119,9 +120,16 @@ export const useLanguageStore = create<LanguageState>((set, get) => ({
   },
 
   t: (key: string) => {
+    const currentLang = get().language;
+    if (currentLang === "nl") {
+      const siteConfig = useAppStore.getState().siteConfig;
+      if (key === "heroTitle" && siteConfig.heroTitle) return siteConfig.heroTitle;
+      if (key === "heroSubtitle" && siteConfig.heroSubtitle) return siteConfig.heroSubtitle;
+      if (key === "heroTagline" && siteConfig.heroTagline) return siteConfig.heroTagline;
+    }
     const entry = dictionary[key];
     if (!entry) return key;
-    return entry[get().language] || key;
+    return entry[currentLang] || key;
   },
 
   tAdmin: (key: string) => {

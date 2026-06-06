@@ -52,15 +52,15 @@ export default function AdminSection({
   onAddSystemLog,
   onClearSystemLogs,
 }: AdminSectionProps) {
-  const [dynamicUserProfiles, setDynamicUserProfiles] = useState<UserProfile[]>([]);
+  const [subTab, setSubTab] = useState<"dashboard" | "orders" | "machines" | "calendar" | "add" | "logs" | "customizer" | "diagnostics" | "accounting">("dashboard");
+  const [showAdvancedSubmenu, setShowAdvancedSubmenu] = useState<boolean>(false);
 
   React.useEffect(() => {
-    fetch("/api/auth/mock-profiles")
-      .then(res => (res.ok ? res.json() : []))
-      .then(data => setDynamicUserProfiles(data))
-      .catch(() => {});
-  }, []);
-  const [subTab, setSubTab] = useState<"dashboard" | "orders" | "machines" | "calendar" | "add" | "logs" | "customizer" | "diagnostics" | "accounting">("dashboard");
+    if (["add", "customizer", "accounting", "diagnostics", "logs"].includes(subTab)) {
+      setShowAdvancedSubmenu(true);
+    }
+  }, [subTab]);
+
   const { login, logout } = useAuthStore();
   const machines = useAppStore((state) => state.machines);
   const orders = useAppStore((state) => state.orders);
@@ -216,16 +216,12 @@ export default function AdminSection({
           <div className="lg:col-span-3 space-y-4">
             <div className="glass-panel p-2 sm:p-4 rounded-2xl flex flex-row lg:flex-col lg:space-y-1 overflow-x-auto lg:overflow-x-visible gap-1 pb-2 lg:pb-4 scrollbar-none flex-nowrap scroll-smooth">
               
+              {/* MVP Core tabs */}
               {[
                 { id: "dashboard", label: tAdmin("adminTabDashboard"), icon: BarChart3 },
                 { id: "orders", label: tAdmin("adminTabOrders"), icon: Truck, count: orders.length },
                 { id: "machines", label: tAdmin("adminTabMachines"), icon: Layers, count: machines.length },
-                { id: "calendar", label: tAdmin("adminTabCalendar"), icon: Calendar, count: blockedDates.length },
-                { id: "add", label: tAdmin("adminTabAdd"), icon: PlusCircle },
-                { id: "customizer", label: tAdmin("adminTabCustomizer"), icon: Settings },
-                { id: "accounting", label: adminLanguage === "tr" ? "Muhasebe (Exact)" : adminLanguage === "en" ? "Accounting (Exact)" : "Boekhouding (Exact)", icon: Database },
-                { id: "diagnostics", label: adminLanguage === "tr" ? "Sistem Teşhisi" : adminLanguage === "en" ? "System Diagnostics" : "Systeemdiagnose", icon: ShieldAlert },
-                { id: "logs", label: tAdmin("adminTabLogs"), icon: Terminal, count: systemLogs.length }
+                { id: "calendar", label: tAdmin("adminTabCalendar"), icon: Calendar, count: blockedDates.length }
               ].map((sub) => {
                 const Icon = sub.icon;
                 const isSel = subTab === sub.id;
@@ -245,6 +241,56 @@ export default function AdminSection({
                     </div>
                     {sub.count !== undefined && (
                       <span className={`hidden lg:inline-block font-mono text-[9px] px-2 py-0.5 rounded-full ${isSel ? "bg-slate-950 text-amber-400" : "bg-slate-100 text-slate-600"}`}>
+                        {sub.count}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+
+              {/* Geavanceerd Toggle Button */}
+              <button
+                type="button"
+                onClick={() => setShowAdvancedSubmenu(!showAdvancedSubmenu)}
+                className={`flex items-center justify-between px-2.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-left text-[10px] sm:text-xs font-bold transition-all whitespace-nowrap lg:whitespace-normal flex-shrink-0 lg:flex-initial cursor-pointer border-none ${
+                  ["add", "customizer", "accounting", "diagnostics", "logs"].includes(subTab)
+                    ? "bg-slate-100 text-slate-900 border border-slate-200" 
+                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent bg-transparent"
+                }`}
+              >
+                <div className="flex items-center space-x-2.5">
+                  <Settings className="h-4.5 w-4.5 text-amber-500/80" />
+                  <span>Geavanceerd</span>
+                </div>
+                <span className="text-[10px] text-slate-450 ml-1">{showAdvancedSubmenu ? "▼" : "▶"}</span>
+              </button>
+
+              {/* Advanced sub tabs */}
+              {showAdvancedSubmenu && [
+                { id: "add", label: tAdmin("adminTabAdd"), icon: PlusCircle },
+                { id: "customizer", label: tAdmin("adminTabCustomizer"), icon: Settings },
+                { id: "accounting", label: adminLanguage === "tr" ? "Muhasebe (Exact)" : adminLanguage === "en" ? "Accounting (Exact)" : "Boekhouding (Exact)", icon: Database },
+                { id: "diagnostics", label: adminLanguage === "tr" ? "Sistem Teşhisi" : adminLanguage === "en" ? "System Diagnostics" : "Systeemdiagnose", icon: ShieldAlert },
+                { id: "logs", label: tAdmin("adminTabLogs"), icon: Terminal, count: systemLogs.length }
+              ].map((sub) => {
+                const Icon = sub.icon;
+                const isSel = subTab === sub.id;
+                return (
+                  <button
+                    key={sub.id}
+                    onClick={() => setSubTab(sub.id as any)}
+                    className={`flex items-center justify-between px-2.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-left text-[10px] sm:text-xs font-bold transition-all whitespace-nowrap lg:whitespace-normal flex-shrink-0 lg:flex-initial cursor-pointer border-none pl-5 sm:pl-7 ${
+                      isSel 
+                        ? "bg-amber-500 hover:bg-amber-600 text-slate-950 border border-amber-500/20 shadow-[0_4px_12px_rgba(245,158,11,0.25)]" 
+                        : "text-slate-500 hover:text-slate-800 hover:bg-slate-50 border border-transparent bg-transparent"
+                    }`}
+                  >
+                    <div className="flex items-center space-x-2.5">
+                      <Icon className={`h-4.5 w-4.5 ${isSel ? "text-slate-950" : "text-amber-500/60"}`} />
+                      <span>{sub.label}</span>
+                    </div>
+                    {sub.count !== undefined && (
+                      <span className={`hidden lg:inline-block font-mono text-[9px] px-2 py-0.5 rounded-full ${isSel ? "bg-slate-950 text-amber-400" : "bg-slate-100 text-slate-500"}`}>
                         {sub.count}
                       </span>
                     )}
@@ -305,7 +351,7 @@ export default function AdminSection({
                 <AdminDiagnostics 
                   key="diagnostics" 
                   systemLogs={systemLogs} 
-                  userProfiles={dynamicUserProfiles} 
+                  userProfiles={userProfiles || []} 
                   onAddSystemLog={onAddSystemLog} 
                   adminLanguage={adminLanguage}
                 />
@@ -315,7 +361,7 @@ export default function AdminSection({
                   key="logs" 
                   systemLogs={systemLogs} 
                   onClearSystemLogs={onClearSystemLogs} 
-                  userProfiles={dynamicUserProfiles} 
+                  userProfiles={userProfiles || []} 
                   onAddSystemLog={onAddSystemLog} 
                   adminLanguage={adminLanguage}
                 />

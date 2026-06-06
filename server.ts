@@ -53,6 +53,14 @@ const geminiLimiter = rateLimit({
 });
 app.use("/api/gemini/", geminiLimiter);
 
+// Stricter rate limit for Auth endpoints (10 requests per 15 minutes to protect against brute-force)
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { error: "Te veel inlogpogingen. Probeer het over 15 minuten opnieuw." }
+});
+app.use("/api/auth", authLimiter);
+
 app.use(express.json({ limit: "10mb" })); // Enable larger base64 payloads for image uploads
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 app.use(authenticateToken);

@@ -4,7 +4,7 @@
  */
 
 import React from "react";
-import { User, Mail, Phone, MapPin, Search, Check, ShieldAlert, ArrowLeft, ArrowRight, X } from "lucide-react";
+import { User, Mail, Phone, MapPin, Search, Check, ShieldAlert, ArrowLeft, ArrowRight, X, LogIn } from "lucide-react";
 import { motion } from "motion/react";
 import { UserProfile } from "../../types";
 
@@ -32,6 +32,7 @@ interface BookingStep2Props {
   setValidationError: (err: string | null) => void;
   setStep: (step: number) => void;
   handleNextStep: () => void;
+  setActiveTab?: (tab: string) => void;
 }
 
 export default function BookingStep2({
@@ -57,8 +58,79 @@ export default function BookingStep2({
   validationError,
   setValidationError,
   setStep,
-  handleNextStep
+  handleNextStep,
+  setActiveTab
 }: BookingStep2Props) {
+  const [isGuestConfirmed, setIsGuestConfirmed] = React.useState<boolean>(false);
+
+  if (!currentUser && !isGuestConfirmed) {
+    return (
+      <div className="bg-white border border-slate-200 shadow-sm p-6 rounded-3xl space-y-6 animate-fade-in text-center py-10">
+        <h3 className="font-display font-black text-lg text-slate-900 flex items-center justify-center space-x-2">
+          <User className="h-5 w-5 text-indigo-650 text-indigo-600" />
+          <span>Hoe wilt u doorgaan?</span>
+        </h3>
+        <p className="text-xs text-slate-500 max-w-md mx-auto">
+          Kies of u wilt inloggen met uw HuurGo account of snel wilt bestellen als gast.
+        </p>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-xl mx-auto pt-4">
+          {/* Guest Card */}
+          <div 
+            onClick={() => setIsGuestConfirmed(true)}
+            className="p-5 rounded-2xl border border-slate-200 hover:border-indigo-500 bg-slate-50/50 hover:bg-indigo-50/10 cursor-pointer transition-all flex flex-col items-center text-center space-y-3 group"
+          >
+            <div className="h-12 w-12 rounded-xl bg-slate-100 group-hover:bg-indigo-50 flex items-center justify-center text-slate-500 group-hover:text-indigo-600 transition-colors">
+              <User className="h-6 w-6" />
+            </div>
+            <div>
+              <h4 className="font-bold text-sm text-slate-900">Doorgaan als gast</h4>
+              <p className="text-[11px] text-slate-500 mt-1 leading-normal">
+                Snel boeken zonder account. U vult alleen uw contactgegevens in.
+              </p>
+            </div>
+            <button className="text-xs font-bold text-indigo-600 group-hover:text-indigo-700 mt-2 bg-transparent border-none cursor-pointer">
+              Gast Verder &rarr;
+            </button>
+          </div>
+
+          {/* Login Card */}
+          <div 
+            onClick={() => {
+              if (setActiveTab) {
+                setActiveTab("orders");
+              }
+            }}
+            className="p-5 rounded-2xl border border-slate-200 hover:border-indigo-500 bg-slate-50/50 hover:bg-indigo-50/10 cursor-pointer transition-all flex flex-col items-center text-center space-y-3 group"
+          >
+            <div className="h-12 w-12 rounded-xl bg-slate-100 group-hover:bg-indigo-50 flex items-center justify-center text-slate-500 group-hover:text-indigo-600 transition-colors">
+              <LogIn className="h-6 w-6" />
+            </div>
+            <div>
+              <h4 className="font-bold text-sm text-slate-900">Inloggen</h4>
+              <p className="text-[11px] text-slate-500 mt-1 leading-normal">
+                Automatisch uw gegevens invullen en uw huurhistorie bewaren.
+              </p>
+            </div>
+            <button className="text-xs font-bold text-indigo-600 group-hover:text-indigo-700 mt-2 bg-transparent border-none cursor-pointer">
+              Log in &rarr;
+            </button>
+          </div>
+        </div>
+
+        <div className="flex justify-start border-t border-slate-100 pt-4 mt-6">
+          <button
+            onClick={() => setStep(1)}
+            className="flex items-center space-x-1.5 text-xs text-slate-500 hover:text-slate-800 font-bold bg-transparent border-none cursor-pointer"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span>Terug naar Logistiek</span>
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white border border-slate-200 shadow-sm p-6 rounded-3xl space-y-6 animate-fade-in">
       <h3 className="font-display font-black text-base text-slate-900 flex items-center space-x-2">

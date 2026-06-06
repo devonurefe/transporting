@@ -15,8 +15,10 @@ View your app in AI Studio: https://ai.studio/apps/e4837672-9d13-4016-b8fc-7f5a8
 
 1. Install dependencies:
    `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
+2. Copy `.env.example` to `.env` and set your configuration variables (e.g., `DATABASE_URL`, `JWT_SECRET`, `GEMINI_API_KEY`, `VITE_WHATSAPP_NUMBER`).
+3. Run the database migrations and seed:
+   `npx prisma db push && npx prisma db seed`
+4. Run the app:
    `npm run dev`
 
 ---

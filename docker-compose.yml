@@ -17,10 +17,10 @@ services:
       - RESEND_API_KEY=${RESEND_API_KEY}
       - EMAIL_FROM=${EMAIL_FROM:-onboarding@resend.dev}
       - ADMIN_EMAIL=${ADMIN_EMAIL:-info@huurgo.nl}
-      - DATABASE_URL=file:/app/database/dev.db
+      - DATABASE_URL=${DATABASE_URL}
     volumes:
-      # Persistent volume for the SQLite database so state is retained permanently
-      - sqlite-data:/app/database
+      # Persistent volume for uploads so user-uploaded files are retained
+      - ./uploads:/app/uploads
 
   nginx:
     image: nginx:alpine
@@ -36,6 +36,4 @@ services:
     depends_on:
       - app
 
-volumes:
-  sqlite-data:
-    driver: local
+

@@ -59,14 +59,7 @@ export default function MyOrdersSection({
   onUpdateOrderStatus,
   onAddSystemLog
 }: MyOrdersSectionProps) {
-  const [dynamicUserProfiles, setDynamicUserProfiles] = useState<UserProfile[]>([]);
 
-  React.useEffect(() => {
-    fetch("/api/auth/mock-profiles")
-      .then(res => (res.ok ? res.json() : []))
-      .then(data => setDynamicUserProfiles(data))
-      .catch(() => {});
-  }, []);
 
   // Star rating memory map
   const [ratings, setRatings] = useState<Record<string, number>>({});

@@ -148,7 +148,7 @@ export default function BookingSection({
   const [selectedAddons, setSelectedAddons] = useState<string[]>([]);
 
   // Payment channel and inputs
-  const [paymentGateway, setPaymentGateway] = useState<"stripe" | "mollie" | "whatsapp">("mollie");
+  const [paymentGateway, setPaymentGateway] = useState<"stripe" | "mollie" | "whatsapp">("whatsapp");
   const [idealBank, setIdealBank] = useState<string>("rabobank");
   const [cardNumber, setCardNumber] = useState<string>("");
   const [cardName, setCardName] = useState<string>("");
@@ -922,6 +922,7 @@ export default function BookingSection({
                     setValidationError={setValidationError}
                     setStep={setStep}
                     handleNextStep={handleNextStep}
+                    setActiveTab={setActiveTab}
                   />
                 )}
 

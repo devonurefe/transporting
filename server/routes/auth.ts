@@ -336,6 +336,9 @@ authRouter.post("/resend-verification", async (req: Request, res: Response) => {
 
 // GET /api/auth/mock-profiles
 authRouter.get("/mock-profiles", async (req: Request, res: Response) => {
+  if (process.env.NODE_ENV === "production") {
+    return res.status(403).json({ error: "Access denied in production" });
+  }
   try {
     const customers = await prisma.customer.findMany({
       include: {

@@ -49,7 +49,7 @@ export default function BookingStep1({
       <div className="flex justify-between items-center border-b border-slate-100 pb-4">
         <h3 className="font-display font-black text-base text-slate-900 flex items-center space-x-2">
           <Calendar className="h-5 w-5 text-indigo-605 text-indigo-650 text-indigo-600" />
-          <span>Datumselectie & Capaciteitscontrole</span>
+          <span>Wanneer wilt u huren?</span>
         </h3>
         <button
           onClick={() => setActiveTab("catalog")}
@@ -67,7 +67,7 @@ export default function BookingStep1({
           <div>
             <p className="text-slate-900 font-bold text-sm">Uw winkelwagen is leeg</p>
             <p className="text-xs text-slate-500 max-w-sm mx-auto mt-1">
-              Selecteer een of meer specialistische hoogwerkers uit onze catalogus om uw offerte of huur te configureren.
+              Selecteer een of meer machines uit onze catalogus om uw boeking te starten.
             </p>
           </div>
           <button

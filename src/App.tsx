@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect, useCallback, lazy, Suspense } from "react";
-import { Loader2, ArrowUp } from "lucide-react";
+import { Loader2, ArrowUp, Sparkles, MessageCircle } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import Header from "./components/Header";
@@ -15,6 +15,7 @@ import ToastNotification from "./components/ToastNotification";
 import { Machine, Order, AppNotification, ChatMessage, UserProfile, CartItem } from "./types";
 import { useAuthStore } from "./store/authStore";
 import { useAppStore } from "./store/appStore";
+import { buildWhatsAppGeneralUrl } from "./utils/whatsapp";
 
 
 // Dynamic Code Splitting (React.lazy)
@@ -71,6 +72,18 @@ export default function App() {
   const [isAdminMode, setIsAdminModeState] = useState<boolean>(() => {
     return localStorage.getItem("hwh_admin_mode") === "true";
   });
+
+  const [isGeminiEnabled, setIsGeminiEnabled] = useState<boolean>(false);
+  useEffect(() => {
+    fetch("/api/health")
+      .then((res) => (res.ok ? res.json() : {}))
+      .then((data: any) => {
+        if (data?.services?.gemini === "configured") {
+          setIsGeminiEnabled(true);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const setIsAdminMode = useCallback((val: boolean) => {
     localStorage.setItem("hwh_admin_mode", String(val));
@@ -613,7 +626,37 @@ export default function App() {
         onClose={() => setActiveToast(null)} 
       />
 
-
+      {/* FLOATING HELP / ADVISOR BUTTON */}
+      {!isAdminMode && (
+        <div className="fixed bottom-16 sm:bottom-6 right-4 sm:right-6 z-45 flex items-center">
+          <motion.button
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            onClick={() => {
+              if (isGeminiEnabled) {
+                setActiveTab("advisor");
+              } else {
+                window.open(buildWhatsAppGeneralUrl(), "_blank");
+              }
+            }}
+            className={`flex items-center space-x-2 px-4 py-3 rounded-full text-white shadow-2xl hover:scale-105 active:scale-95 transition-all cursor-pointer border-none font-bold ${
+              isGeminiEnabled
+                ? "bg-gradient-to-r from-indigo-600 to-indigo-700 shadow-indigo-500/20"
+                : "bg-gradient-to-r from-emerald-500 to-emerald-600 shadow-emerald-500/20"
+            }`}
+            title={isGeminiEnabled ? "AI Snel Advies" : "WhatsApp Chat"}
+          >
+            {isGeminiEnabled ? (
+              <Sparkles className="h-4 w-4 animate-pulse" />
+            ) : (
+              <MessageCircle className="h-4 w-4" />
+            )}
+            <span className="text-xs uppercase tracking-wider">
+              {isGeminiEnabled ? "Snel Advies" : "Hulp nodig?"}
+            </span>
+          </motion.button>
+        </div>
+      )}
 
       {/* FLOATING ACTION BACK-TO-TOP BUTTON */}
       <AnimatePresence>
@@ -623,7 +666,7 @@ export default function App() {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
             onClick={scrollToTop}
-            className="fixed bottom-16 sm:bottom-6 right-4 sm:right-6 z-40 p-3.5 rounded-full bg-slate-900/90 text-white shadow-xl backdrop-blur-md border border-white/10 hover:bg-slate-800 hover:scale-105 active:scale-95 transition-all cursor-pointer flex items-center justify-center border-none"
+            className="fixed bottom-32 sm:bottom-22 right-4 sm:right-6 z-40 p-3.5 rounded-full bg-slate-900/90 text-white shadow-xl backdrop-blur-md border border-white/10 hover:bg-slate-800 hover:scale-105 active:scale-95 transition-all cursor-pointer flex items-center justify-center border-none"
             title="Omhoog scrollen"
           >
             <ArrowUp className="h-5 w-5" />

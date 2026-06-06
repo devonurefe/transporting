@@ -177,12 +177,13 @@ export default function Header({
             </div>
           ) : (
             // Clean Visitor Navigation Links
-            [
-              { id: "home", label: siteConfig.menuHomeLabel || t("menuHome"), icon: Home },
-              { id: "catalog", label: siteConfig.menuCatalogLabel || t("menuCatalog"), icon: Layers },
-              { id: "advisor", label: siteConfig.menuAdvisorLabel || t("menuAdvisor"), icon: Sparkles, badge: "Smart" },
-              { id: "booking", label: t("stepLogistics"), icon: ClipboardList },
-            ].map((tab) => {
+            (
+              [
+                { id: "home", label: siteConfig.menuHomeLabel || t("menuHome"), icon: Home },
+                { id: "catalog", label: siteConfig.menuCatalogLabel || t("menuCatalog"), icon: Layers },
+                { id: "booking", label: t("stepLogistics"), icon: ClipboardList },
+              ] as { id: string; label: string; icon: any; badge?: string }[]
+            ).map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
               return (
@@ -387,7 +388,6 @@ export default function Header({
           {[
             { id: "home", label: "Home", icon: Home },
             { id: "catalog", label: "Catalogus", icon: Layers },
-            { id: "advisor", label: "Advisor", icon: Sparkles },
             { id: "booking", label: "Boeken", icon: ClipboardList },
             { id: "orders", label: currentUser ? "Mijn Area" : "Inloggen", icon: User },
           ].map((tab) => {

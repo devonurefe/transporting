@@ -98,7 +98,9 @@ export default function CatalogSection({
   const filteredMachines = useMemo(() => {
     const filtered = machines.filter((machine) => {
       // Category Match
-      const matchesCategory = selectedCategory === "all" || machine.category === selectedCategory;
+      const matchesCategory = selectedCategory === "all" 
+        ? machine.category !== "klussensets" 
+        : machine.category === selectedCategory;
       
       // Search Match
       const matchesSearch = 

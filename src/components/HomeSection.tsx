@@ -104,10 +104,10 @@ export default function HomeSection({
           className="text-center mb-6 sm:mb-8 space-y-2 sm:space-y-3"
         >
           <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-slate-900">
-            {siteConfig.heroTitle || "Wat heeft u nodig?"}
+            {t("heroTitle")}
           </h1>
           <p className="text-sm sm:text-base text-slate-500 max-w-lg mx-auto">
-            {siteConfig.heroSubtitle || "Kies uw categorie en huur direct. Simpel, snel, all-in."}
+            {t("heroSubtitle")}
           </p>
         </motion.div>
 

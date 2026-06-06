@@ -179,9 +179,9 @@ export default function Header({
             // Clean Visitor Navigation Links
             (
               [
-                { id: "home", label: siteConfig.menuHomeLabel || t("menuHome"), icon: Home },
-                { id: "catalog", label: siteConfig.menuCatalogLabel || t("menuCatalog"), icon: Layers },
-                { id: "booking", label: t("stepLogistics"), icon: ClipboardList },
+                { id: "home", label: t("menuHome"), icon: Home },
+                { id: "catalog", label: t("menuCatalog"), icon: Layers },
+                { id: "booking", label: t("menuBooking"), icon: ClipboardList },
               ] as { id: string; label: string; icon: any; badge?: string }[]
             ).map((tab) => {
               const Icon = tab.icon;
@@ -386,10 +386,10 @@ export default function Header({
       {!isAdminMode && (
         <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex h-14 border-t border-slate-200/80 bg-white/95 backdrop-blur-lg justify-around items-center px-1 pb-safe shadow-[0_-4px_12px_rgba(0,0,0,0.06)]">
           {[
-            { id: "home", label: "Home", icon: Home },
-            { id: "catalog", label: "Catalogus", icon: Layers },
-            { id: "booking", label: "Boeken", icon: ClipboardList },
-            { id: "orders", label: currentUser ? "Mijn Area" : "Inloggen", icon: User },
+            { id: "home", label: t("menuHome"), icon: Home },
+            { id: "catalog", label: t("menuCatalog"), icon: Layers },
+            { id: "booking", label: t("menuBooking"), icon: ClipboardList },
+            { id: "orders", label: currentUser ? t("menuMyArea") : t("menuLogin"), icon: User },
           ].map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;

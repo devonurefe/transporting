@@ -20,10 +20,13 @@ interface TranslationDictionary {
 const dictionary: TranslationDictionary = {
   // Menu navigation
   menuHome: { nl: "Home", en: "Home", tr: "Ana Sayfa" },
-  menuCatalog: { nl: "Catalog", en: "Catalog", tr: "Katalog" },
+  menuCatalog: { nl: "Catalogus", en: "Catalog", tr: "Katalog" },
   menuAdvisor: { nl: "Snel Advies", en: "Fast Advice", tr: "Hızlı Tavsiye" },
   menuOrders: { nl: "Contact", en: "Contact", tr: "İletişim" },
   menuAdmin: { nl: "Portaal", en: "Portal", tr: "Yönetim" },
+  menuBooking: { nl: "Boeken", en: "Book Now", tr: "Rezervasyon" },
+  menuLogin: { nl: "Inloggen", en: "Login", tr: "Giriş Yap" },
+  menuMyArea: { nl: "Mijn Area", en: "My Account", tr: "Hesabım" },
 
   // Landing page / Hero
   heroTagline: { nl: "Smart Verhuur van Hoogwerkers in Nederland", en: "Smart High-Lift Rentals in the Netherlands", tr: "Hollanda'da Akıllı Sepetli Platform Kiralama" },
@@ -126,6 +129,10 @@ export const useLanguageStore = create<LanguageState>((set, get) => ({
       if (key === "heroTitle" && siteConfig.heroTitle) return siteConfig.heroTitle;
       if (key === "heroSubtitle" && siteConfig.heroSubtitle) return siteConfig.heroSubtitle;
       if (key === "heroTagline" && siteConfig.heroTagline) return siteConfig.heroTagline;
+      if (key === "menuHome" && siteConfig.menuHomeLabel) return siteConfig.menuHomeLabel;
+      if (key === "menuCatalog" && siteConfig.menuCatalogLabel) return siteConfig.menuCatalogLabel;
+      if (key === "menuOrders" && siteConfig.menuOrdersLabel) return siteConfig.menuOrdersLabel;
+      if (key === "menuAdmin" && siteConfig.menuAdminLabel) return siteConfig.menuAdminLabel;
     }
     const entry = dictionary[key];
     if (!entry) return key;

@@ -173,6 +173,10 @@ export default function BookingSection({
     }
   }, [currentUser]);
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   // If no machine selection exists, pre-load first available
   useEffect(() => {
     if (!selectedMachine && machines.length > 0) {
@@ -786,7 +790,7 @@ export default function BookingSection({
   const sums = calculationSummary();
 
   return (
-    <div className="relative min-h-[calc(100vh-4.5rem)] py-10 px-4 sm:px-6 lg:px-8 bg-slate-50/50">
+    <div className="relative min-h-[calc(100vh-4.5rem)] py-10 px-5 sm:px-6 lg:px-8">
       
       {/* Decorative ambient rays */}
       <div className="absolute top-1/5 left-10 h-72 w-72 rounded-full bg-teal-500/5 blur-[100px] -z-10" />

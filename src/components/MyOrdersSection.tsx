@@ -61,6 +61,10 @@ export default function MyOrdersSection({
 }: MyOrdersSectionProps) {
 
 
+  React.useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   // Star rating memory map
   const [ratings, setRatings] = useState<Record<string, number>>({});
   const [activeFilter, setActiveFilter] = useState<string>("all");
@@ -268,7 +272,7 @@ export default function MyOrdersSection({
   // If NOT LOGGED IN: Render a beautiful Customer Login Experience (Visitor UI only)
   if (!currentUser) {
     return (
-      <div className="relative min-h-[calc(100vh-4.5rem)] py-12 px-4 sm:px-6 lg:px-8 bg-slate-50/50 animate-fade-in">
+      <div className="relative min-h-[calc(100vh-4.5rem)] py-12 px-5 sm:px-6 lg:px-8 animate-fade-in">
         <div className="absolute top-1/4 right-5 h-80 w-80 rounded-full bg-indigo-500/5 blur-[120px] -z-10" />
         <div className="absolute bottom-12 left-8 h-96 w-96 rounded-full bg-blue-500/3 blur-[140px] -z-10" />
 
@@ -503,7 +507,7 @@ export default function MyOrdersSection({
   });
 
   return (
-    <div className="relative min-h-[calc(100vh-4.5rem)] py-10 px-4 sm:px-6 lg:px-8 bg-slate-50/50">
+    <div className="relative min-h-[calc(100vh-4.5rem)] py-10 px-5 sm:px-6 lg:px-8">
       {/* Absolute background effects */}
       <div className="absolute top-1/4 right-5 h-80 w-80 rounded-full bg-indigo-500/5 blur-[120px] -z-10" />
       <div className="absolute bottom-12 left-8 h-96 w-96 rounded-full bg-blue-500/3 blur-[140px] -z-10" />

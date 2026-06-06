@@ -66,6 +66,10 @@ export default function CatalogSection({
   const [showFiltersMobile, setShowFiltersMobile] = useState<boolean>(false);
 
   useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
+  useEffect(() => {
     setActiveDetailImageIndex(0);
   }, [selectedDetailMachine]);
 
@@ -138,7 +142,7 @@ export default function CatalogSection({
   }, [machines, selectedCategory, searchQuery, maxHeight, maxPrice, selectedPowerTypes, sortBy]);
 
   return (
-    <div className="relative min-h-[calc(100vh-3.5rem)] py-6 sm:py-10 px-3 sm:px-6 lg:px-8">
+    <div className="relative min-h-[calc(100vh-3.5rem)] py-6 sm:py-10 px-5 sm:px-6 lg:px-8">
       
       {/* Decorative Blur Backgrounds */}
       <div className="absolute top-10 left-5 h-80 w-80 rounded-full bg-blue-600/5 blur-[100px] -z-10" />

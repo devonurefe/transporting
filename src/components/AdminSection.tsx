@@ -105,7 +105,7 @@ export default function AdminSection({
   // If Owner is NOT logged into Admin mode, display secure login gateway
   if (!isAdminMode) {
     return (
-      <div className="relative min-h-[calc(100vh-4.5rem)] py-16 px-4 sm:px-6 lg:px-8 flex items-center justify-center">
+      <div className="relative min-h-[calc(100vh-4.5rem)] py-16 px-5 sm:px-6 lg:px-8 flex items-center justify-center">
         <div className="absolute top-1/4 left-1/4 h-80 w-80 rounded-full bg-amber-500/5 blur-[120px] -z-10" />
         <div className="absolute bottom-1/4 right-1/4 h-80 w-80 rounded-full bg-orange-600/3 blur-[120px] -z-10" />
 
@@ -165,7 +165,7 @@ export default function AdminSection({
   }
 
   return (
-    <div className="relative min-h-[calc(100vh-3.5rem)] py-4 sm:py-8 px-3 sm:px-6 lg:px-8">
+    <div className="relative min-h-[calc(100vh-3.5rem)] py-4 sm:py-8 px-5 sm:px-6 lg:px-8">
       
       {/* Absolute Neon Grid lines decorative */}
       <div className="absolute top-1/2 left-1/3 h-96 w-96 rounded-full bg-amber-500/5 blur-[120px] -z-10" />

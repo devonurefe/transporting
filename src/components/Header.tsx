@@ -136,7 +136,7 @@ export default function Header({
           ? "border-amber-500/30 bg-amber-50/90 shadow-md shadow-amber-500/5 text-slate-800" 
           : "border-slate-200/80 bg-white/80 backdrop-blur-xl shadow-sm text-slate-800"
       }`}>
-        <div className="mx-auto flex max-w-7xl h-14 sm:h-20 items-center justify-between px-3 sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-7xl h-14 sm:h-20 items-center justify-between px-5 sm:px-6 lg:px-8">
         
         {/* Brand Logo & State Indicator */}
         <div 

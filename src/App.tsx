@@ -499,6 +499,7 @@ export default function App() {
                     setActiveTab={setActiveTab} 
                     siteConfig={siteConfig}
                     customCategories={customCategories}
+                    isGeminiEnabled={isGeminiEnabled}
                   />
                 </motion.div>
               } />

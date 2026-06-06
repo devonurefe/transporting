@@ -54,6 +54,10 @@ export default function AdvisorSection({
     }
   }, [messages, isTyping]);
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   // Action chips aligned with HuurGo's compact fleet
   const quickActionChips = [
     { text: "🎨 Schilder Binnenklus (Schaarlift)", prompt: "Ik ben schilder en zoek een compacte elektrische schaarlift voor binnen op 8 meter werkhoogte." },
@@ -153,7 +157,7 @@ export default function AdvisorSection({
   };
 
   return (
-    <div className="relative min-h-[calc(100vh-3.5rem)] py-6 sm:py-8 px-3 sm:px-6 lg:px-8">
+    <div className="relative min-h-[calc(100vh-3.5rem)] py-6 sm:py-8 px-5 sm:px-6 lg:px-8">
       
       {/* Background Radial Glow */}
       <div className="absolute top-1/6 right-10 h-96 w-96 rounded-full bg-indigo-500/5 blur-[120px] -z-10" />

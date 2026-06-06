@@ -36,6 +36,7 @@ interface HomeSectionProps {
     heights: string;
     price: string;
   }[];
+  isGeminiEnabled?: boolean;
 }
 
 export default function HomeSection({ 
@@ -60,11 +61,16 @@ export default function HomeSection({
     { id: "ladderlift", label: "Ladderlift", listLabel: "Ladderliften / Verhuisliften", desc: "Verhuis- en ladderliften voor veilig transport van zware meubels of bouwmaterialen direct via het raam.", heights: "18m - 21m", price: "v.a. €90/dag" },
     { id: "ecolift", label: "Ecolift", listLabel: "Ecolift", desc: "Milieuvriendelijk en veilig alternatief voor ladders. Geen batterijen of hydrauliek nodig.", heights: "4.2m", price: "v.a. €45/dag" },
     { id: "klussensets", label: "Kluspakket", listLabel: "Kluspakketten", desc: "Complete kluspakketten speciaal samengesteld voor specifieke ZZP- en particuliere klussen.", heights: "4m - 21m", price: "v.a. €80/dag" }
-  ]
+  ],
+  isGeminiEnabled = false
 }: HomeSectionProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCat, setSelectedCat] = useState("all");
   const t = useLanguageStore((state) => state.t);
+
+  React.useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   const categoryIcons = [
     "🚛", "🕷️", "✂️", "📐", "🏗️", "🪜", "🌿", "📦"
@@ -88,7 +94,7 @@ export default function HomeSection({
   };
 
   return (
-    <div className="relative min-h-[calc(100vh-3.5rem)] py-6 sm:py-8 px-3 sm:px-6 lg:px-8 overflow-hidden">
+    <div className="relative min-h-[calc(100vh-3.5rem)] py-6 sm:py-8 px-5 sm:px-6 lg:px-8 overflow-hidden">
       
       {/* Subtle ambient background */}
       <div className="absolute top-1/4 left-1/4 h-80 w-80 rounded-full bg-indigo-500/5 blur-[120px] -z-10" />
@@ -166,14 +172,16 @@ export default function HomeSection({
                 Kies uw categorie
               </h2>
             </div>
-            <button 
-              onClick={() => setActiveTab("advisor")}
-              className="flex items-center space-x-1 text-xs text-indigo-600 hover:text-indigo-700 font-semibold group transition-colors cursor-pointer"
-            >
-              <Cpu className="h-3.5 w-3.5" />
-              <span>{siteConfig.menuAdvisorLabel}</span>
-              <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />
-            </button>
+            {isGeminiEnabled && (
+              <button 
+                onClick={() => setActiveTab("advisor")}
+                className="flex items-center space-x-1 text-xs text-indigo-600 hover:text-indigo-700 font-semibold group transition-colors cursor-pointer border-none bg-transparent"
+              >
+                <Cpu className="h-3.5 w-3.5" />
+                <span>{t("menuAdvisor")}</span>
+                <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />
+              </button>
+            )}
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-4">

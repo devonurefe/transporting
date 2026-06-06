@@ -361,7 +361,7 @@ export default function BookingStep1({
               : "bg-slate-100 text-slate-400 cursor-not-allowed"
           }`}
         >
-          <span>Doorgaan — iDeal Pay</span>
+          <span>Doorgaan naar gegevens</span>
           <ArrowRight className="h-4 w-4" />
         </button>
       </div>

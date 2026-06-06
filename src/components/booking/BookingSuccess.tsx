@@ -98,89 +98,45 @@ export default function BookingSuccess({
       </div>
 
       {/* Booking specifications board */}
-      <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-3.5 max-w-lg mx-auto text-xs font-semibold shadow-sm">
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center text-slate-500 pb-2 border-b border-slate-200/60 gap-1">
-          <span>Huurder:</span>
-          <span className="text-slate-800 font-bold text-left sm:text-right">{successOrder.customerName}</span>
+      <div className="bg-slate-50 p-6 rounded-3xl border border-slate-200 space-y-4 max-w-lg mx-auto text-xs font-semibold shadow-sm text-center">
+        
+        <div className="pb-2.5 border-b border-slate-200/60 space-y-0.5">
+          <span className="text-slate-400 font-medium block text-[10px] uppercase tracking-wider">Huurder</span>
+          <span className="text-slate-800 font-bold text-sm block">{successOrder.customerName}</span>
         </div>
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center text-slate-500 pb-2 border-b border-slate-200/60 gap-1">
-          <span>Hoogwerker Model:</span>
-          <span className="text-indigo-700 font-bold text-left sm:text-right">{successOrder.machineName}</span>
+
+        <div className="pb-2.5 border-b border-slate-200/60 space-y-0.5">
+          <span className="text-slate-400 font-medium block text-[10px] uppercase tracking-wider">Hoogwerker Model</span>
+          <span className="text-indigo-700 font-bold text-sm block">{successOrder.machineName}</span>
         </div>
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center text-slate-500 pb-2 border-b border-slate-200/60 gap-1">
-          <span>Gereserveerde Periode:</span>
-          <span className="text-slate-800 font-bold text-left sm:text-right">{successOrder.startDate} t/m {successOrder.endDate} ({successOrder.rentalDays} {successOrder.rentalDays === 1 ? 'dag' : 'dagen'})</span>
+
+        <div className="pb-2.5 border-b border-slate-200/60 space-y-0.5">
+          <span className="text-slate-400 font-medium block text-[10px] uppercase tracking-wider">Gereserveerde Periode</span>
+          <span className="text-slate-800 font-bold text-sm block">
+            {successOrder.startDate} t/m {successOrder.endDate} ({successOrder.rentalDays} {successOrder.rentalDays === 1 ? 'dag' : 'dagen'})
+          </span>
         </div>
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center text-slate-500 pb-2 border-b border-slate-200/60 gap-1">
-          <span>Logistieke Omgang:</span>
-          <span className="text-teal-700 font-bold text-left sm:text-right">
+
+        <div className="pb-2.5 border-b border-slate-200/60 space-y-0.5">
+          <span className="text-slate-400 font-medium block text-[10px] uppercase tracking-wider">Logistieke Omgang</span>
+          <span className="text-teal-700 font-bold text-sm block">
             {successOrder.deliveryType === "self_pickup" ? "Zelf ophalen bij de Hub" : "Transport door Hub Chauffeur"}
           </span>
         </div>
+
         {successOrder.deliveryAddress && (
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start text-slate-500 pb-2 border-b border-slate-200/60 gap-1">
-            <span className="shrink-0">Afleveradres:</span>
-            <span className="text-slate-800 text-left sm:text-right leading-snug">{successOrder.deliveryAddress}</span>
+          <div className="pb-2.5 border-b border-slate-200/60 space-y-0.5">
+            <span className="text-slate-400 font-medium block text-[10px] uppercase tracking-wider">Afleveradres</span>
+            <span className="text-slate-800 font-bold block leading-relaxed">{successOrder.deliveryAddress}</span>
           </div>
         )}
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-baseline pt-1.5 gap-1">
-          <span className="text-[11px] font-mono uppercase tracking-wider text-slate-500 font-bold">Betaalbedrag:</span>
-          <span className="text-base font-mono font-bold text-teal-700 text-left sm:text-right">€ {successOrder.totalAmount.toFixed(2)}</span>
+
+        <div className="pt-2.5 space-y-1">
+          <span className="text-[10px] font-mono uppercase tracking-wider text-slate-450 text-slate-400 font-bold block">Betaalbedrag</span>
+          <span className="text-xl font-mono font-bold text-teal-700 block">€ {successOrder.totalAmount.toFixed(2)}</span>
         </div>
+
       </div>
-
-      {/* Dynamic Account Creation form for Guests */}
-      {!currentUser && (
-        <div className="bg-indigo-50/50 border border-indigo-100 p-5 rounded-2xl text-left max-w-lg mx-auto space-y-3.5 shadow-sm">
-          <div className="flex items-start space-x-2.5">
-            <UserPlus className="h-5 w-5 text-indigo-600 shrink-0 mt-0.5" />
-            <div>
-              <h4 className="text-xs font-extrabold text-slate-900">Direct lid worden? Sla uw gegevens op!</h4>
-              <p className="text-xs text-slate-500 mt-0.5 leading-normal">
-                U heeft gehuurd als gast. Stel nu een wachtwoord in om direct uw account te activeren. Hiermee kunt u de status van uw levering live volgen en facturen inzien.
-              </p>
-            </div>
-          </div>
-
-          {registerSuccess ? (
-            <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs flex items-start space-x-2">
-              <Check className="h-4.5 w-4.5 text-emerald-600 shrink-0 mt-0.5" />
-              <div>
-                <strong>Account succesvol aangemaakt!</strong> We hebben een verificatie-e-mail verzonden naar <strong className="font-mono">{successOrder.customerEmail}</strong>. Verifieer uw e-mailadres om in te loggen.
-              </div>
-            </div>
-          ) : (
-            <form onSubmit={handleRegister} className="space-y-3 pt-1">
-              {registerError && (
-                <div className="p-2.5 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs leading-snug">
-                  {registerError}
-                </div>
-              )}
-              
-              <div className="flex flex-col sm:flex-row gap-2.5">
-                <div className="flex-1 relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
-                  <input
-                    type="password"
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Stel een wachtwoord in..."
-                    className="w-full bg-white border border-slate-200 focus:border-indigo-500 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-800 outline-none h-10 shadow-sm"
-                  />
-                </div>
-                <button
-                  type="submit"
-                  disabled={isRegistering}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs px-5 py-2.5 rounded-xl transition-all shadow-md active:scale-98 disabled:opacity-50 cursor-pointer border-none h-10 flex items-center justify-center space-x-1"
-                >
-                  <span>Registreren</span>
-                </button>
-              </div>
-            </form>
-          )}
-        </div>
-      )}
 
       {whatsappUrl && (
         <div className="p-5 bg-emerald-50/70 border border-emerald-200/80 rounded-2xl max-w-lg mx-auto text-center space-y-3 shadow-xs">

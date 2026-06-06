@@ -54,7 +54,7 @@ export default function Footer({ siteName, setActiveTab, setShowContactModal }: 
           </div>
 
           {/* Column 2: Quick Links */}
-          <div className="space-y-4 flex flex-col items-center md:items-start text-center md:text-left">
+          <div className="hidden md:flex space-y-4 flex-col items-center md:items-start text-center md:text-left">
             <h4 className="font-display font-extrabold tracking-wider text-[11px] uppercase text-white pb-2 border-b border-white/5 w-full">
               Snelkoppelingen
             </h4>

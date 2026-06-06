@@ -91,34 +91,34 @@ export default function BookingSuccess({
       </div>
 
       {/* Booking specifications board */}
-      <div className="bg-slate-50 p-5 rounded-2xl text-left border border-slate-200 space-y-3 max-w-lg mx-auto text-xs font-semibold shadow-sm">
-        <div className="flex justify-between items-center text-slate-500 pb-1.5 border-b border-slate-100">
+      <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-3.5 max-w-lg mx-auto text-xs font-semibold shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center text-slate-500 pb-2 border-b border-slate-200/60 gap-1">
           <span>Huurder:</span>
-          <span className="text-slate-800 font-bold">{successOrder.customerName}</span>
+          <span className="text-slate-800 font-bold text-left sm:text-right">{successOrder.customerName}</span>
         </div>
-        <div className="flex justify-between items-center text-slate-500 pb-1.5 border-b border-slate-100">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center text-slate-500 pb-2 border-b border-slate-200/60 gap-1">
           <span>Hoogwerker Model:</span>
-          <span className="text-indigo-700 font-bold">{successOrder.machineName}</span>
+          <span className="text-indigo-700 font-bold text-left sm:text-right">{successOrder.machineName}</span>
         </div>
-        <div className="flex justify-between items-center text-slate-500 pb-1.5 border-b border-slate-100">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center text-slate-500 pb-2 border-b border-slate-200/60 gap-1">
           <span>Gereserveerde Periode:</span>
-          <span className="text-slate-800 font-bold">{successOrder.startDate} t/m {successOrder.endDate} ({successOrder.rentalDays} {successOrder.rentalDays === 1 ? 'dag' : 'dagen'})</span>
+          <span className="text-slate-800 font-bold text-left sm:text-right">{successOrder.startDate} t/m {successOrder.endDate} ({successOrder.rentalDays} {successOrder.rentalDays === 1 ? 'dag' : 'dagen'})</span>
         </div>
-        <div className="flex justify-between items-center text-slate-500 pb-1.5 border-b border-slate-100">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center text-slate-500 pb-2 border-b border-slate-200/60 gap-1">
           <span>Logistieke Omgang:</span>
-          <span className="text-teal-700 font-bold">
+          <span className="text-teal-700 font-bold text-left sm:text-right">
             {successOrder.deliveryType === "self_pickup" ? "Zelf ophalen bij de Hub" : "Transport door Hub Chauffeur"}
           </span>
         </div>
         {successOrder.deliveryAddress && (
-          <div className="flex justify-between items-start text-slate-500 pb-1.5 border-b border-slate-100">
-            <span className="shrink-0 mr-3">Afleveradres:</span>
-            <span className="text-slate-800 text-right leading-snug">{successOrder.deliveryAddress}</span>
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start text-slate-500 pb-2 border-b border-slate-200/60 gap-1">
+            <span className="shrink-0">Afleveradres:</span>
+            <span className="text-slate-800 text-left sm:text-right leading-snug">{successOrder.deliveryAddress}</span>
           </div>
         )}
-        <div className="flex justify-between items-baseline pt-1">
-          <span className="text-[9px] font-mono uppercase tracking-wider text-slate-500 font-bold">Mollie Betaalbedrag:</span>
-          <span className="text-base font-mono font-bold text-teal-700">€ {successOrder.totalAmount.toFixed(2)}</span>
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-baseline pt-1.5 gap-1">
+          <span className="text-[9px] font-mono uppercase tracking-wider text-slate-500 font-bold">Betaalbedrag:</span>
+          <span className="text-base font-mono font-bold text-teal-700 text-left sm:text-right">€ {successOrder.totalAmount.toFixed(2)}</span>
         </div>
       </div>
 

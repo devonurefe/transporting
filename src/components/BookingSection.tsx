@@ -17,6 +17,7 @@ import { useAppStore } from "../store/appStore";
 import { checkAvailability } from "../utils/availability";
 
 // Import modular Step components
+import { buildWhatsAppUrl } from "../utils/whatsapp";
 import BookingStep1 from "./booking/BookingStep1";
 import BookingStep2 from "./booking/BookingStep2";
 import BookingStep3 from "./booking/BookingStep3";
@@ -101,8 +102,8 @@ export default function BookingSection({
   const [addressSuccessMsg, setAddressSuccessMsg] = useState("");
 
   // Form Fields State
-  const [startDate, setStartDate] = useState<string>("2026-06-05");
-  const [endDate, setEndDate] = useState<string>("2026-06-08");
+  const [startDate, setStartDate] = useState<string>(() => new Date().toISOString().split("T")[0]);
+  const [endDate, setEndDate] = useState<string>(() => new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]);
   const [deliveryType, setDeliveryType] = useState<DeliveryType>("delivery_with_driver");
   const [deliveryAddress, setDeliveryAddress] = useState<string>("");
   const [customerName, setCustomerName] = useState<string>(currentUser ? currentUser.name : "");
@@ -129,11 +130,25 @@ export default function BookingSection({
       .catch(() => {});
   }, []);
 
+  const lastMachineIdRef = React.useRef<string | null>(null);
+
+  useEffect(() => {
+    const leadMachine = cartItems.length > 0 ? cartItems[0].machine : selectedMachine;
+    if (leadMachine && leadMachine.id !== lastMachineIdRef.current) {
+      lastMachineIdRef.current = leadMachine.id;
+      if (leadMachine.category === "aanhanger" || leadMachine.category === "ecolift") {
+        setDeliveryType("self_pickup");
+      } else {
+        setDeliveryType("delivery_with_driver");
+      }
+    }
+  }, [selectedMachine, cartItems]);
+
   // Addon / Shopping Cart Options state
   const [selectedAddons, setSelectedAddons] = useState<string[]>([]);
 
   // Payment channel and inputs
-  const [paymentGateway, setPaymentGateway] = useState<"stripe" | "mollie">("mollie");
+  const [paymentGateway, setPaymentGateway] = useState<"stripe" | "mollie" | "whatsapp">("mollie");
   const [idealBank, setIdealBank] = useState<string>("rabobank");
   const [cardNumber, setCardNumber] = useState<string>("");
   const [cardName, setCardName] = useState<string>("");
@@ -294,8 +309,8 @@ export default function BookingSection({
       let subtotal = 0;
 
       for (const item of cartItems) {
-        const itemStart = item.startDate || "2026-06-05";
-        const itemEnd = item.endDate || "2026-06-08";
+        const itemStart = item.startDate || new Date().toISOString().split("T")[0];
+        const itemEnd = item.endDate || new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
         const start = new Date(itemStart);
         const end = new Date(itemEnd);
         const timeDiff = end.getTime() - start.getTime();
@@ -742,6 +757,10 @@ export default function BookingSection({
 
           setIsSubmitting(false);
           if (firstSuccessfulOrder) {
+            if (paymentGateway === "whatsapp") {
+              const waUrl = buildWhatsAppUrl(cartItems, deliveryType, customerName, customerEmail, customerPhone);
+              window.open(waUrl, "_blank");
+            }
             setSuccessOrder(firstSuccessfulOrder);
             onClearCart();
             setStep(4);
@@ -866,7 +885,11 @@ export default function BookingSection({
                     validationError={validationError}
                     setValidationError={setValidationError}
                     isAvailable={isAvailable && cartItems.every(item => {
-                      const av = getItemAvailability(item.machine.id, item.startDate || "2026-06-05", item.endDate || "2026-06-08");
+                      const av = getItemAvailability(
+                        item.machine.id, 
+                        item.startDate || new Date().toISOString().split("T")[0], 
+                        item.endDate || new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]
+                      );
                       return av.available;
                     })}
                     handleNextStep={handleNextStep}

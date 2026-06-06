@@ -279,7 +279,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
         </div>
 
         <div className="overflow-x-auto scrollbar-thin">
-          <table className="w-full text-left text-xs border-collapse">
+          <table className="w-full text-left text-xs border-collapse whitespace-nowrap">
             <thead>
               <tr className="border-b border-slate-200 text-slate-500">
                 <th className="pb-2.5 font-bold">{t("Machine", "Machine", "Makine")}</th>

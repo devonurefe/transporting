@@ -27,6 +27,56 @@ import { motion, AnimatePresence } from "motion/react";
 import { useLanguageStore } from "../store/languageStore";
 import { AppNotification, UserProfile, CartItem } from "../types";
 
+export function HuurGoLogo({ className = "h-8" }: { className?: string }) {
+  return (
+    <svg 
+      viewBox="0 0 250 80" 
+      className={className} 
+      fill="none" 
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <text 
+        x="10" 
+        y="42" 
+        fontFamily="Outfit, sans-serif" 
+        fontWeight="800" 
+        fontSize="34" 
+        fill="#0f2d59"
+      >
+        Huur
+      </text>
+      <text 
+        x="90" 
+        y="42" 
+        fontFamily="Outfit, sans-serif" 
+        fontWeight="850" 
+        fontSize="34" 
+        fill="#FF7A20"
+      >
+        Go
+      </text>
+      
+      <g transform="translate(138, 17)">
+        <line x1="0" y1="12" x2="22" y2="12" stroke="#0f2d59" strokeWidth="3.5" strokeLinecap="round" />
+        <line x1="0" y1="20" x2="22" y2="20" stroke="#0f2d59" strokeWidth="3.5" strokeLinecap="round" />
+        <line x1="0" y1="28" x2="22" y2="28" stroke="#0f2d59" strokeWidth="3.5" strokeLinecap="round" />
+        <path d="M22 6 L36 20 L22 34 Z" fill="#FF7A20" />
+      </g>
+
+      <text 
+        x="12" 
+        y="68" 
+        fontFamily="Outfit, sans-serif" 
+        fontWeight="500" 
+        fontSize="15" 
+        fill="#0f2d59"
+      >
+        Snel en simpel
+      </text>
+    </svg>
+  );
+}
+
 interface HeaderProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
@@ -80,12 +130,13 @@ export default function Header({
 
 
   return (
-    <header className={`sticky top-0 z-50 w-full border-b transition-all duration-300 ${
-      isAdminMode 
-        ? "border-amber-500/30 bg-amber-50/90 shadow-md shadow-amber-500/5 text-slate-800" 
-        : "border-slate-200/80 bg-white/80 backdrop-blur-xl shadow-sm text-slate-800"
-    }`}>
-      <div className="mx-auto flex max-w-7xl h-20 items-center justify-between px-4 sm:px-6 lg:px-8">
+    <>
+      <header className={`sticky top-0 z-50 w-full border-b transition-all duration-300 ${
+        isAdminMode 
+          ? "border-amber-500/30 bg-amber-50/90 shadow-md shadow-amber-500/5 text-slate-800" 
+          : "border-slate-200/80 bg-white/80 backdrop-blur-xl shadow-sm text-slate-800"
+      }`}>
+        <div className="mx-auto flex max-w-7xl h-14 sm:h-20 items-center justify-between px-3 sm:px-6 lg:px-8">
         
         {/* Brand Logo & State Indicator */}
         <div 
@@ -94,45 +145,28 @@ export default function Header({
               setActiveTab("home");
             }
           }} 
-          className="flex cursor-pointer items-center space-x-2.5 hover:opacity-90 active:scale-95 transition-all shrink-0"
+          className="flex cursor-pointer items-center hover:opacity-90 active:scale-95 transition-all shrink-0"
         >
-          <div className={`relative flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br transition-all ${
-            isAdminMode 
-              ? "from-amber-500 to-orange-600 shadow-[0_0_20px_rgba(245,158,11,0.3)] animate-pulse" 
-              : "from-indigo-500 to-blue-600 shadow-[0_0_20px_rgba(79,70,229,0.3)]"
-          }`}>
-            {isAdminMode ? (
-              <Lock className="h-5 w-5 text-slate-950 font-bold" />
-            ) : (
-              <Zap className="h-5.5 w-5.5 text-white fill-white/10" />
-            )}
-            <motion.div 
-              layoutId="glowCircle" 
-              className={`absolute -inset-1 rounded-xl -z-10 blur-sm ${
-                isAdminMode ? "bg-amber-500/20" : "bg-indigo-500/20"
-              }`}
-              animate={{ opacity: [0.5, 0.8, 0.5] }}
-              transition={{ repeat: Infinity, duration: 2.5 }}
-            />
-          </div>
-          <div>
-            <span className="inline-block font-display text-base sm:text-lg lg:text-xl font-extrabold tracking-tight bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-800 bg-clip-text text-transparent">
-              {isAdminMode ? "HubAdmin Portal" : siteConfig.siteName}
-            </span>
-            <div className="hidden sm:flex items-center space-x-1 text-[10px] font-mono tracking-wider uppercase">
-              {isAdminMode ? (
-                <span className="text-amber-400 font-bold flex items-center space-x-1">
-                  <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-ping inline-block mr-1" />
-                  <span>Beheerder Actief</span>
+          {isAdminMode ? (
+            <div className="flex items-center space-x-2.5">
+              <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 shadow-[0_0_20px_rgba(245,158,11,0.3)] animate-pulse">
+                <Lock className="h-5 w-5 text-slate-950 font-bold" />
+              </div>
+              <div>
+                <span className="inline-block font-display text-sm sm:text-lg lg:text-xl font-extrabold tracking-tight bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-800 bg-clip-text text-transparent">
+                  HubAdmin Portal
                 </span>
-              ) : (
-                <span className="text-teal-400 flex items-center space-x-1">
-                  <span className="h-1.5 w-1.5 rounded-full bg-teal-400 opacity-75 inline-block mr-1" />
-                  <span>Nederland • Premium</span>
-                </span>
-              )}
+                <div className="hidden sm:flex items-center space-x-1 text-[10px] font-mono tracking-wider uppercase">
+                  <span className="text-amber-400 font-bold flex items-center space-x-1">
+                    <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-ping inline-block mr-1" />
+                    <span>Beheerder Actief</span>
+                  </span>
+                </div>
+              </div>
             </div>
-          </div>
+          ) : (
+            <HuurGoLogo className="h-8 sm:h-12 w-auto" />
+          )}
         </div>        {/* Dynamic Desktop Navigation */}
         <nav className="hidden md:flex items-center space-x-1 lg:space-x-2 shrink">
           {isAdminMode ? (
@@ -346,10 +380,11 @@ export default function Header({
           )}
         </div>
       </div>
+    </header>
 
       {/* Dynamic Mobile Bottom Bar switcher */}
       {!isAdminMode && (
-        <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex h-16 border-t border-slate-200/80 bg-white/90 backdrop-blur-lg justify-around items-center px-2 pb-safe shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
+        <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex h-14 border-t border-slate-200/80 bg-white/95 backdrop-blur-lg justify-around items-center px-1 pb-safe shadow-[0_-4px_12px_rgba(0,0,0,0.06)]">
           {[
             { id: "home", label: "Home", icon: Home },
             { id: "catalog", label: "Catalogus", icon: Layers },
@@ -380,6 +415,6 @@ export default function Header({
           })}
         </div>
       )}
-    </header>
+    </>
   );
 }

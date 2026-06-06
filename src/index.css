@@ -8,15 +8,31 @@
 }
 
 @layer base {
-  html, body, #root {
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+  html {
     width: 100%;
-    max-width: 100%;
+    max-width: 100vw;
     overflow-x: hidden;
+    -webkit-text-size-adjust: 100%;
+    touch-action: manipulation;
   }
   body {
-    background-color: #f8fafc; /* Premium off-white slate-50 canvas */
-    color: #1e293b; /* Dark slate text */
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
+    background-color: #f8fafc;
+    color: #1e293b;
     font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  #root {
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
+    min-height: 100vh;
   }
 }
 

@@ -136,7 +136,7 @@ export default function CatalogSection({
   }, [machines, selectedCategory, searchQuery, maxHeight, maxPrice, selectedPowerTypes, sortBy]);
 
   return (
-    <div className="relative min-h-[calc(100vh-4.5rem)] py-10 px-4 sm:px-6 lg:px-8">
+    <div className="relative min-h-[calc(100vh-3.5rem)] py-6 sm:py-10 px-3 sm:px-6 lg:px-8">
       
       {/* Decorative Blur Backgrounds */}
       <div className="absolute top-10 left-5 h-80 w-80 rounded-full bg-blue-600/5 blur-[100px] -z-10" />
@@ -144,32 +144,78 @@ export default function CatalogSection({
       <div className="mx-auto max-w-7xl">
         
         {/* Title Deck */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8">
-          <div>
-            <h1 className="font-display text-3xl font-extrabold tracking-tight text-slate-905 text-slate-900 flex items-center space-x-2">
-              <span>Ons Machinepark</span>
-              {aiRecommendedMachineIds.length > 0 && (
-                <span className="flex items-center space-x-1 text-[11px] font-mono uppercase bg-indigo-50 border border-indigo-200 text-indigo-700 px-2.5 py-1 rounded-full animate-pulse ml-2.5">
-                  <Sparkles className="h-3 w-3 text-indigo-600" />
-                  <span>AI Match Beschikbaar</span>
-                </span>
-              )}
-            </h1>
-            <p className="text-xs text-slate-605 text-slate-600 mt-1 leading-relaxed">
-              Professioneel gekeurde en direct leverbare hoogwerkers voor elk type werkzaamheid in heel Nederland.
-            </p>
+        <div className="mb-6">
+          <h1 className="font-display text-xl sm:text-3xl font-extrabold tracking-tight text-slate-900 flex items-center space-x-2">
+            <span>Ons Machinepark</span>
+            {aiRecommendedMachineIds.length > 0 && (
+              <span className="flex items-center space-x-1 text-[11px] font-mono uppercase bg-indigo-50 border border-indigo-200 text-indigo-700 px-2.5 py-1 rounded-full animate-pulse ml-2.5">
+                <Sparkles className="h-3 w-3 text-indigo-600" />
+                <span>AI Match Beschikbaar</span>
+              </span>
+            )}
+          </h1>
+          <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+            Professioneel gekeurde en direct leverbare hoogwerkers voor elk type werkzaamheid in heel Nederland.
+          </p>
+        </div>
+
+        {/* Clean Unified Control Bar (Responsive) */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-white border border-slate-200 p-3 rounded-2xl shadow-sm mb-6">
+          {/* Left/Main: Category tabs */}
+          <div className="flex-grow min-w-0">
+            <nav 
+              aria-label="Categorie filter" 
+              className="flex items-center space-x-1.5 overflow-x-auto pb-1.5 md:pb-0 scrollbar-none"
+            >
+              {categoryTabs.map((tab) => {
+                const isActive = selectedCategory === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => {
+                      setSelectedCategory(tab.id);
+                      onAddSystemLog?.(
+                        "system",
+                        currentUser ? currentUser.name : "Gast",
+                        `Filtert catalogus op categorie: "${tab.label}"`
+                      );
+                    }}
+                    className={`px-3 py-1.5 text-xs font-bold rounded-lg whitespace-nowrap transition-all border cursor-pointer ${
+                      isActive 
+                        ? "bg-indigo-600 text-white border-indigo-700 shadow-sm" 
+                        : "bg-slate-50 text-slate-600 border-slate-200 hover:text-slate-800 hover:bg-slate-100"
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </nav>
           </div>
 
-          <div className="mt-3 md:mt-0 flex flex-wrap items-center gap-3">
-            {/* Premium Sorteer Op Dropdown */}
-            <div className="flex items-center space-x-2 bg-white border border-slate-200 shadow-sm rounded-xl py-1.5 px-3 hover:border-indigo-400 transition-colors">
-              <span className="text-xs text-slate-500 font-medium whitespace-nowrap">Sorteer op:</span>
+          {/* Right: Actions (Sort, Reset, Mobile Filter Toggle) */}
+          <div className="flex items-center justify-between md:justify-end gap-2 shrink-0 border-t md:border-t-0 pt-2 md:pt-0">
+            {/* Mobile Filter Toggle */}
+            <button
+              type="button"
+              onClick={() => setShowFiltersMobile(!showFiltersMobile)}
+              className="lg:hidden flex items-center space-x-1.5 bg-slate-50 border border-slate-200 py-1.5 px-3 rounded-xl text-xs font-bold text-slate-700 cursor-pointer shadow-sm"
+            >
+              <Filter className="h-3.5 w-3.5 text-indigo-600" />
+              <span>{showFiltersMobile ? "Verberg" : "Filters"}</span>
+              <span className="font-mono text-[9px] bg-indigo-50 text-indigo-700 font-extrabold px-1.5 py-0.2 rounded-full">
+                {filteredMachines.length}
+              </span>
+            </button>
+
+            {/* Sort Dropdown */}
+            <div className="flex items-center space-x-1 bg-slate-50 border border-slate-200 rounded-xl py-1.5 px-2.5 hover:border-indigo-400 transition-colors shadow-sm">
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="text-xs font-semibold bg-transparent focus:outline-none cursor-pointer text-slate-800 border-none p-0 pr-1 select-none"
+                className="text-xs font-bold bg-transparent focus:outline-none cursor-pointer text-slate-800 border-none p-0 pr-1 select-none"
               >
-                <option value="default">Standaard</option>
+                <option value="default">Sorteer: Standaard</option>
                 <option value="price_asc">Laagste prijs</option>
                 <option value="price_desc">Hoogste prijs</option>
                 <option value="height_asc">Minimale hoogte</option>
@@ -177,36 +223,23 @@ export default function CatalogSection({
               </select>
             </div>
 
-            {/* Reset Filters button if dirty */}
+            {/* Reset Button */}
             <button
               onClick={resetFilters}
-              className="flex items-center space-x-1.5 text-xs text-slate-500 hover:text-slate-800 transition-all py-1.5 px-3 rounded-xl hover:bg-slate-100 border border-slate-200 hover:border-slate-300 shadow-sm bg-white font-medium"
+              title="Filters Herstellen"
+              className="flex items-center justify-center text-slate-500 hover:text-rose-600 transition-colors p-2 rounded-xl bg-slate-50 hover:bg-rose-50 border border-slate-200 cursor-pointer shadow-sm"
             >
               <RotateCcw className="h-3.5 w-3.5" />
-              <span>Filters Herstellen</span>
             </button>
           </div>
         </div>
 
         {/* Outer Split Wrapper (Filters left, Grid right) */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-8 items-start">
           
           {/* LEFT: Floating Sticky Filter Controls */}
           <div className="lg:col-span-3 lg:sticky lg:top-24">
             
-            {/* Mobile Toggle Button */}
-            <button
-              type="button"
-              onClick={() => setShowFiltersMobile(!showFiltersMobile)}
-              className="lg:hidden w-full flex items-center justify-center space-x-2 bg-white border border-slate-200 p-3.5 rounded-2xl text-xs font-bold text-slate-700 shadow-sm mb-4 cursor-pointer"
-            >
-              <Filter className="h-4 w-4 text-indigo-600" />
-              <span>{showFiltersMobile ? "Verberg Filters" : "Toon Filters & Zoeken"}</span>
-              <span className="font-mono text-[10px] bg-indigo-50 text-indigo-700 font-bold px-2 py-0.5 rounded-full ml-1">
-                {filteredMachines.length} vloot
-              </span>
-            </button>
-
             {/* Filter Content */}
             <div className={`glass-panel p-5 rounded-2xl space-y-6 bg-white border border-slate-200 shadow-sm ${
               showFiltersMobile ? "block" : "hidden lg:block"
@@ -215,7 +248,7 @@ export default function CatalogSection({
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div className="flex items-center space-x-2">
                   <Filter className="h-4 w-4 text-indigo-600" />
-                  <span className="text-xs font-bold uppercase tracking-wider text-slate-850 text-slate-800">Filters</span>
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-800">Filters</span>
                 </div>
                 <span className="font-mono text-[10px] text-slate-500 font-bold bg-slate-50 px-2 py-0.5 rounded-full">
                   {filteredMachines.length} vloot
@@ -337,41 +370,8 @@ export default function CatalogSection({
             </div>
           </div>
 
-          {/* RIGHT: Grid Machinery Deck with category Selector Tabs */}
+          {/* RIGHT: Grid Machinery Deck */}
           <div className="lg:col-span-9 space-y-6">
-            
-            {/* Horizontal Category Nav Switcher */}
-            <nav 
-              aria-label="Categorie filter" 
-              className="flex items-center space-x-1.5 overflow-x-auto pb-2 border-b border-slate-200 scrollbar-none"
-            >
-              {categoryTabs.map((tab) => {
-                const isActive = selectedCategory === tab.id;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => {
-                      setSelectedCategory(tab.id);
-                      onAddSystemLog?.(
-                        "system",
-                        currentUser ? currentUser.name : "Gast",
-                        `Filtert catalogus op categorie: "${tab.label}"`
-                      );
-                    }}
-                    aria-selected={isActive ? "true" : "false"}
-                    aria-label={`Toon ${tab.label}`}
-                    role="tab"
-                    className={`px-4 py-2 text-xs font-bold rounded-lg whitespace-nowrap transition-all duration-300 border focus:outline-none focus:ring-2 focus:ring-indigo-500/50 ${
-                      isActive 
-                        ? "bg-indigo-50 text-indigo-700 border-indigo-200 shadow-sm" 
-                        : "bg-white text-slate-600 border-slate-200 hover:text-slate-800 hover:bg-slate-50"
-                    }`}
-                  >
-                    {tab.label}
-                  </button>
-                );
-              })}
-            </nav>
 
             {/* Micro Warning if list is empty */}
             {filteredMachines.length === 0 && (

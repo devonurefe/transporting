@@ -80,7 +80,11 @@ export default function BookingStep1({
       ) : (
         <div className="space-y-4">
           {cartItems.map((item) => {
-            const availability = getItemAvailability(item.machine.id, item.startDate || "2026-06-05", item.endDate || "2026-06-08");
+            const availability = getItemAvailability(
+              item.machine.id, 
+              item.startDate || new Date().toISOString().split("T")[0], 
+              item.endDate || new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]
+            );
             return (
               <div key={item.id} className="p-4 rounded-2xl bg-slate-50/50 border border-slate-200 space-y-4 shadow-sm">
                 <div className="flex justify-between items-start gap-4">
@@ -347,28 +351,17 @@ export default function BookingStep1({
       )}
 
       {/* Step control */}
-      <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-slate-100">
-        {cartItems.length > 0 && (
-          <a
-            href={buildWhatsAppUrl(cartItems, deliveryType)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-center space-x-2 font-semibold text-xs px-5 py-3 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white transition-all shadow-md active:scale-95 no-underline cursor-pointer"
-          >
-            <MessageCircle className="h-4 w-4" />
-            <span>WhatsApp Sipariş</span>
-          </a>
-        )}
+      <div className="flex flex-col sm:flex-row sm:justify-end gap-3 pt-4 border-t border-slate-100">
         <button
           onClick={handleNextStep}
           disabled={!isAvailable || cartItems.length === 0}
-          className={`font-semibold text-xs px-6 py-3 rounded-xl transition-all flex items-center space-x-1.5 border-none shadow-md ${
+          className={`font-semibold text-xs w-full sm:w-auto px-6 py-3.5 rounded-xl transition-all flex items-center justify-center space-x-1.5 border-none shadow-md order-1 sm:order-2 ${
             isAvailable && cartItems.length > 0
               ? "bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer active:scale-95 shadow-indigo-200" 
               : "bg-slate-100 text-slate-400 cursor-not-allowed"
           }`}
         >
-          <span>Doorgaan</span>
+          <span>Doorgaan — iDeal Pay</span>
           <ArrowRight className="h-4 w-4" />
         </button>
       </div>

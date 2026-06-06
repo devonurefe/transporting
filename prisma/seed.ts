@@ -26,7 +26,7 @@ const defaultMachines = [
     weight: 1400,
     pricePerDay: 80,
     powerType: "Elektrisch",
-    imageUrl: "https://images.unsplash.com/photo-1541625602330-2277a4c46182?q=80&w=600&auto=format&fit=crop",
+    imageUrl: "https://images.unsplash.com/photo-1581094794329-c8112a89af12?q=80&w=600&auto=format&fit=crop",
     imageAlt: "Nifty 120 aanhangerhoogwerker met trekhaak",
     description: "Uiterst wendbare en compacte aanhangerhoogwerker, eenvoudig zelf mee te nemen met rijbewijs B. Geen transportkosten en binnen 5 minuten stabiel opgesteld voor uw gevel- of schilderklus.",
     suitableFor: ["Schilder", "Particulier", "Installateur"],
@@ -43,7 +43,7 @@ const defaultMachines = [
     weight: 1400,
     pricePerDay: 80,
     powerType: "Elektrisch",
-    imageUrl: "https://images.unsplash.com/photo-1541625602330-2277a4c46182?q=80&w=600&auto=format&fit=crop",
+    imageUrl: "https://images.unsplash.com/photo-1581094794329-c8112a89af12?q=80&w=600&auto=format&fit=crop",
     imageAlt: "Nifty 120 aanhangerhoogwerker met trekhaak",
     description: "Compacte aanhangerhoogwerker (Unit 2). Makkelijk aan te koppelen en te manoeuvreren op uw werkplek.",
     suitableFor: ["Schilder", "Particulier", "Installateur"],
@@ -60,7 +60,7 @@ const defaultMachines = [
     weight: 1400,
     pricePerDay: 80,
     powerType: "Elektrisch",
-    imageUrl: "https://images.unsplash.com/photo-1541625602330-2277a4c46182?q=80&w=600&auto=format&fit=crop",
+    imageUrl: "https://images.unsplash.com/photo-1581094794329-c8112a89af12?q=80&w=600&auto=format&fit=crop",
     imageAlt: "Nifty 120 aanhangerhoogwerker met trekhaak",
     description: "Betrouwbare Nifty 120 aanhangerhoogwerker (Unit 3) met telescooparm.",
     suitableFor: ["Schilder", "Particulier", "Installateur"],
@@ -77,7 +77,7 @@ const defaultMachines = [
     weight: 2160,
     pricePerDay: 120,
     powerType: "Hybride",
-    imageUrl: "https://images.unsplash.com/photo-1541625602330-2277a4c46182?q=80&w=600&auto=format&fit=crop",
+    imageUrl: "https://images.unsplash.com/photo-1581094794329-c8112a89af12?q=80&w=600&auto=format&fit=crop",
     imageAlt: "Nifty 170 zware aanhangerhoogwerker",
     description: "Zware aanhangerhoogwerker met 17.1 meter werkhoogte en een gigantisch zijdelings bereik. Ideaal voor boomverzorging en gevelwerk aan hogere panden.",
     suitableFor: ["Hovenier", "Schilder", "Glazenwasser"],
@@ -538,65 +538,92 @@ const mockCustomers = [
 ];
 
 async function main() {
-  console.log("Cleaning database...");
-  await prisma.notification.deleteMany();
-  await prisma.blockedDate.deleteMany();
-  await prisma.machine.deleteMany();
-  await prisma.category.deleteMany();
-  await prisma.siteConfig.deleteMany();
-  await prisma.order.deleteMany();
-  await prisma.customer.deleteMany();
-
-  console.log("Seeding categories...");
+  console.log("Seeding categories (upsert)...");
   for (const cat of defaultCategories) {
-    await prisma.category.create({ data: cat });
-  }
-
-  console.log("Seeding machines...");
-  for (const mach of defaultMachines) {
-    await prisma.machine.create({ data: mach });
-  }
-
-  console.log("Seeding blocked dates...");
-  for (const bd of defaultBlockedDates) {
-    await prisma.blockedDate.create({ data: bd });
-  }
-
-  console.log("Seeding site config...");
-  await prisma.siteConfig.create({ data: defaultSiteConfig });
-
-  console.log("Seeding admin...");
-  const adminEmail = "admin@huurgo.nl";
-  const existingAdmin = await prisma.admin.findUnique({ where: { email: adminEmail } });
-  if (!existingAdmin) {
-    const adminPassword = process.env.ADMIN_DEFAULT_PASSWORD || 
-      Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2).toUpperCase() + "!1";
-    const adminPasswordHash = await bcrypt.hash(adminPassword, 10);
-    await prisma.admin.create({
-      data: {
-        email: adminEmail,
-        passwordHash: adminPasswordHash,
-        name: "HuurGo Admin",
-        role: "admin"
-      }
+    await prisma.category.upsert({
+      where: { id: cat.id },
+      update: { label: cat.label, listLabel: cat.listLabel, desc: cat.desc, heights: cat.heights, price: cat.price },
+      create: cat
     });
-    if (!process.env.ADMIN_DEFAULT_PASSWORD) {
-      console.log(`\n⚠️  ADMIN ACCOUNT CREATED WITH GENERATED PASSWORD:`);
-      console.log(`   Email: ${adminEmail}`);
-      console.log(`   Password: ${adminPassword}`);
-      console.log(`   ⚠️  Please change this password immediately after first login!\n`);
-    } else {
-      console.log(`✅ Admin account created with ADMIN_DEFAULT_PASSWORD env variable.`);
-    }
   }
 
-  console.log("Seeding customer profiles...");
+  console.log("Seeding machines (upsert)...");
+  for (const mach of defaultMachines) {
+    await prisma.machine.upsert({
+      where: { id: mach.id },
+      update: {
+        name: mach.name,
+        category: mach.category,
+        categoryLabel: mach.categoryLabel,
+        height: mach.height,
+        reach: mach.reach,
+        weight: mach.weight,
+        pricePerDay: mach.pricePerDay,
+        powerType: mach.powerType,
+        imageUrl: mach.imageUrl,
+        imageAlt: mach.imageAlt,
+        description: mach.description,
+        suitableFor: mach.suitableFor,
+        weeklyDiscountPercent: mach.weeklyDiscountPercent ?? null,
+        monthlyDiscountPercent: mach.monthlyDiscountPercent ?? null,
+        campaignText: (mach as any).campaignText ?? null,
+        campaignDiscountPercent: (mach as any).campaignDiscountPercent ?? null,
+        campaignDiscountAmount: (mach as any).campaignDiscountAmount ?? null,
+      },
+      create: mach
+    });
+  }
+
+  console.log("Seeding blocked dates (upsert)...");
+  for (const bd of defaultBlockedDates) {
+    await prisma.blockedDate.upsert({
+      where: { id: bd.id },
+      update: { machineId: bd.machineId, date: bd.date, reason: bd.reason },
+      create: bd
+    });
+  }
+
+  console.log("Seeding site config (upsert)...");
+  await prisma.siteConfig.upsert({
+    where: { id: defaultSiteConfig.id },
+    update: defaultSiteConfig,
+    create: defaultSiteConfig
+  });
+
+  console.log("Seeding admin (upsert)...");
+  const adminEmail = "admin@huurgo.nl";
+  const adminPassword = process.env.ADMIN_DEFAULT_PASSWORD || "admin123";
+  const adminPasswordHash = await bcrypt.hash(adminPassword, 10);
+  await prisma.admin.upsert({
+    where: { email: adminEmail },
+    update: {
+      passwordHash: adminPasswordHash,
+      name: "HuurGo Admin",
+      role: "admin"
+    },
+    create: {
+      email: adminEmail,
+      passwordHash: adminPasswordHash,
+      name: "HuurGo Admin",
+      role: "admin"
+    }
+  });
+
+  console.log("Seeding customer profiles (upsert)...");
   const customerPasswordHash = await bcrypt.hash("customer123", 10);
   const createdCustomers: Record<string, string> = {};
 
   for (const customerData of mockCustomers) {
-    const cust = await prisma.customer.create({
-      data: {
+    const cust = await prisma.customer.upsert({
+      where: { email: customerData.email },
+      update: {
+        name: customerData.name,
+        phone: customerData.phone || null,
+        profile: customerData.profile,
+        companyName: customerData.companyName || null,
+        avatarUrl: customerData.avatarUrl || null,
+      },
+      create: {
         email: customerData.email,
         passwordHash: customerPasswordHash,
         name: customerData.name,

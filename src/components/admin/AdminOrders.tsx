@@ -93,7 +93,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage }: AdminOrde
         </div>
 
         <div className="overflow-x-auto scrollbar-thin">
-          <table className="w-full text-left text-xs border-collapse">
+          <table className="w-full text-left text-xs border-collapse whitespace-nowrap">
             <thead>
               <tr className="border-b border-slate-200 text-slate-500">
                 <th className="pb-3.5 font-bold font-mono">ID</th>

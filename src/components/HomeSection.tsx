@@ -88,7 +88,7 @@ export default function HomeSection({
   };
 
   return (
-    <div className="relative min-h-[calc(100vh-4.5rem)] py-8 px-4 sm:px-6 lg:px-8 overflow-hidden">
+    <div className="relative min-h-[calc(100vh-3.5rem)] py-6 sm:py-8 px-3 sm:px-6 lg:px-8 overflow-hidden">
       
       {/* Subtle ambient background */}
       <div className="absolute top-1/4 left-1/4 h-80 w-80 rounded-full bg-indigo-500/5 blur-[120px] -z-10" />
@@ -101,7 +101,7 @@ export default function HomeSection({
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="text-center mb-8 space-y-3"
+          className="text-center mb-6 sm:mb-8 space-y-2 sm:space-y-3"
         >
           <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-slate-900">
             {siteConfig.heroTitle || "Wat heeft u nodig?"}
@@ -117,7 +117,7 @@ export default function HomeSection({
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="flex flex-col sm:flex-row items-stretch gap-2 p-2 rounded-2xl border border-slate-200 bg-white shadow-sm max-w-2xl mx-auto mb-10"
+          className="flex flex-col sm:flex-row items-stretch gap-2 p-1.5 sm:p-2 rounded-2xl border border-slate-200 bg-white shadow-sm max-w-2xl mx-auto mb-8 sm:mb-10"
         >
           <div className="flex-1 flex items-center px-3 space-x-2 bg-slate-50 rounded-xl border border-slate-100/80">
             <Search className="h-4.5 w-4.5 text-slate-400 shrink-0" />
@@ -176,7 +176,7 @@ export default function HomeSection({
             </button>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-4">
             {customCategories.filter(cat => cat.id !== "klussensets").map((cat, idx) => (
               <div
                 key={cat.id}
@@ -184,7 +184,7 @@ export default function HomeSection({
                   onSearch("", cat.id);
                   setActiveTab("catalog");
                 }}
-                className={`group relative overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br bg-white/95 hover:bg-white shadow-sm hover:shadow-md p-4 sm:p-5 text-left cursor-pointer transition-all duration-300 hover:-translate-y-1 ${bgClasses[idx % bgClasses.length]} flex flex-col justify-between min-h-[180px] sm:min-h-[200px]`}
+                className={`group relative overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br bg-white/95 hover:bg-white shadow-sm hover:shadow-md p-3 sm:p-5 text-left cursor-pointer transition-all duration-300 hover:-translate-y-1 ${bgClasses[idx % bgClasses.length]} flex flex-col justify-between min-h-[150px] sm:min-h-[200px]`}
               >
                 <div className="space-y-2 z-10">
                   <span className="text-2xl select-none">{categoryIcons[idx % categoryIcons.length]}</span>

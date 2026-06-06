@@ -35,7 +35,24 @@ createRoot(document.getElementById('root')!).render(
   </StrictMode>,
 );
 
-if ("serviceWorker" in navigator) {
+if (typeof window !== "undefined" && window.location.hostname === "localhost") {
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.getRegistrations().then((registrations) => {
+      for (const registration of registrations) {
+        registration.unregister().then((success) => {
+          if (success) console.log("Unregistered development service worker");
+        });
+      }
+    });
+  }
+  if (typeof caches !== "undefined") {
+    caches.keys().then((keys) => {
+      keys.forEach((key) => {
+        caches.delete(key).then(() => console.log("Cleared cache:", key));
+      });
+    });
+  }
+} else if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("/sw.js")
       .then((reg) => console.log("Service Worker registered:", reg.scope))

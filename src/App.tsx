@@ -300,7 +300,8 @@ export default function App() {
   const updateOrderStatus = useAppStore((state) => state.updateOrderStatus);
 
   const getAuthHeaders = () => {
-    const token = localStorage.getItem("hwh_token");
+    const isAdminPath = location.pathname.startsWith("/admin");
+    const token = localStorage.getItem(isAdminPath ? "hwh_admin_token" : "hwh_token");
     return token ? { "Authorization": `Bearer ${token}` } : {};
   };
 
@@ -342,7 +343,9 @@ export default function App() {
   // Action: Select machine for booking & support cart
   const handleSelectMachineForBooking = (machine: Machine) => {
     setSelectedMachine(machine);
-    addToCart(machine, "2026-06-05", "2026-06-08");
+    const todayStr = new Date().toISOString().split("T")[0];
+    const endStr = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+    addToCart(machine, todayStr, endStr);
     setActiveTab("booking");
     
     // Live visitor logging
@@ -444,7 +447,7 @@ export default function App() {
   };
 
   return (
-    <div className="relative min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans antialiased text-sm pb-16 md:pb-0">
+    <div className="relative min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans antialiased text-sm pb-14 md:pb-0">
       
       {/* Background ambient lighting */}
       <div className="absolute top-0 inset-x-0 h-150 bg-gradient-to-b from-indigo-500/5 to-transparent pointer-events-none -z-10" />

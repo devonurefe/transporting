@@ -29,6 +29,7 @@ model Machine {
   packageContents         String?
   additionalImages        Json?
   blockedDates            BlockedDate[]
+  updatedAt               DateTime      @updatedAt @default(now())
 }
 
 model Category {

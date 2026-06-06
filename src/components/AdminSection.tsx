@@ -165,7 +165,7 @@ export default function AdminSection({
   }
 
   return (
-    <div className="relative min-h-[calc(100vh-4.5rem)] py-8 px-4 sm:px-6 lg:px-8">
+    <div className="relative min-h-[calc(100vh-3.5rem)] py-4 sm:py-8 px-3 sm:px-6 lg:px-8">
       
       {/* Absolute Neon Grid lines decorative */}
       <div className="absolute top-1/2 left-1/3 h-96 w-96 rounded-full bg-amber-500/5 blur-[120px] -z-10" />
@@ -173,10 +173,10 @@ export default function AdminSection({
       <div className="mx-auto max-w-7xl">
         
         {/* Workspace Title bar */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-amber-200 pb-5 mb-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-amber-200 pb-3 sm:pb-5 mb-4 sm:mb-8">
           <div>
-            <h1 className="font-display text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 flex items-center space-x-2.5">
-              <FolderLock className="h-6.5 w-6.5 text-amber-500" />
+            <h1 className="font-display text-xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-slate-900 flex items-center space-x-2">
+              <FolderLock className="h-5 w-5 sm:h-6.5 sm:w-6.5 text-amber-500" />
               <span>{tAdmin("adminPortalTitle")}</span>
             </h1>
             <p className="text-xs text-slate-500 mt-1 sm:mt-2">
@@ -211,10 +211,10 @@ export default function AdminSection({
         </div>
 
         {/* Outer Split layout: Left sidebar switch, right tables/workspaces */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-8 items-start">
           
           <div className="lg:col-span-3 space-y-4">
-            <div className="glass-panel p-4 rounded-2xl flex flex-row lg:flex-col lg:space-y-1 overflow-x-auto lg:overflow-x-visible gap-1 pb-3 lg:pb-4 scrollbar-none flex-nowrap scroll-smooth">
+            <div className="glass-panel p-2 sm:p-4 rounded-2xl flex flex-row lg:flex-col lg:space-y-1 overflow-x-auto lg:overflow-x-visible gap-1 pb-2 lg:pb-4 scrollbar-none flex-nowrap scroll-smooth">
               
               {[
                 { id: "dashboard", label: tAdmin("adminTabDashboard"), icon: BarChart3 },
@@ -233,7 +233,7 @@ export default function AdminSection({
                   <button
                     key={sub.id}
                     onClick={() => setSubTab(sub.id as any)}
-                    className={`flex items-center justify-between px-4 py-2.5 rounded-xl text-left text-xs font-bold transition-all whitespace-nowrap lg:whitespace-normal flex-1 lg:flex-initial cursor-pointer border-none ${
+                    className={`flex items-center justify-between px-2.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-left text-[10px] sm:text-xs font-bold transition-all whitespace-nowrap lg:whitespace-normal flex-shrink-0 lg:flex-initial cursor-pointer border-none ${
                       isSel 
                         ? "bg-amber-500 hover:bg-amber-600 text-slate-950 border border-amber-500/20 shadow-[0_4px_12px_rgba(245,158,11,0.25)]" 
                         : "text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent bg-transparent"

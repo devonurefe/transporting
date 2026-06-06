@@ -89,7 +89,7 @@ export default function MyOrdersSection({
   const [resendEmailAddress, setResendEmailAddress] = useState<string | null>(null);
   const [isResending, setIsResending] = useState(false);
 
-  const { login, register, updateProfile, resendVerification } = useAuthStore();
+  const { login, register, updateProfile, resendVerification, logout } = useAuthStore();
 
 
 
@@ -562,6 +562,7 @@ export default function MyOrdersSection({
             {/* Logout Customer Profile */}
             <button
               onClick={() => {
+                logout();
                 setCurrentUser(null);
                 onTriggerNotification("Uitgelogd", "U heeft uw klant-sessie beëindigd.", "info");
               }}

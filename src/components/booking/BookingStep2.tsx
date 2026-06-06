@@ -70,7 +70,7 @@ export default function BookingStep2({
         {currentUser ? (
           <>Hieronder staan uw gegevens vooraf ingevuld op basis van uw geactiveerde profiel <strong>{currentUser.name}</strong>. Controleer deze velden voor de BMWT-verhuuromslag.</>
         ) : (
-          <>Vul uw contact- en adresgegevens in voor de BMWT-verhuurovereenkomst en de transportplanning.</>
+          <>U bestelt momenteel als <strong>gast</strong> (geen account vereist). Vul uw contact- en adresgegevens in om direct door te gaan naar de betaling of WhatsApp.</>
         )}
       </p>
 

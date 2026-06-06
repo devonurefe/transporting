@@ -30,7 +30,9 @@ interface AuthState {
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
-  token: localStorage.getItem("hwh_token"),
+  token: localStorage.getItem("hwh_admin_mode") === "true"
+    ? localStorage.getItem("hwh_admin_token")
+    : localStorage.getItem("hwh_token"),
   user: null,
   isAuthenticated: false,
   isAdmin: false,
@@ -42,6 +44,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   logout: () => {
     localStorage.removeItem("hwh_token");
+    localStorage.removeItem("hwh_admin_token");
     localStorage.removeItem("hwh_admin_mode");
     set({ token: null, user: null, isAuthenticated: false, isAdmin: false, isUnverified: false });
   },
@@ -65,7 +68,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         return false;
       }
 
-      localStorage.setItem("hwh_token", data.token);
+      if (data.user.role === "admin") {
+        localStorage.setItem("hwh_admin_token", data.token);
+        localStorage.setItem("hwh_admin_mode", "true");
+        // Clear customer token if any
+        localStorage.removeItem("hwh_token");
+      } else {
+        localStorage.setItem("hwh_token", data.token);
+        localStorage.setItem("hwh_admin_mode", "false");
+        // Clear admin token if any
+        localStorage.removeItem("hwh_admin_token");
+      }
+
       set({
         token: data.token,
         user: data.user,
@@ -126,13 +140,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   checkAuth: async () => {
-    const token = get().token;
+    const isAdminMode = localStorage.getItem("hwh_admin_mode") === "true";
+    const token = isAdminMode
+      ? localStorage.getItem("hwh_admin_token")
+      : localStorage.getItem("hwh_token");
+
     if (!token) {
-      set({ isAuthenticated: false, user: null, isAdmin: false });
+      set({ token: null, isAuthenticated: false, user: null, isAdmin: false });
       return;
     }
 
-    set({ isLoading: true });
+    set({ isLoading: true, token });
     try {
       const res = await fetch("/api/auth/me", {
         headers: { Authorization: `Bearer ${token}` }
@@ -143,14 +161,28 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }
 
       const data = await res.json();
+      
+      if (data.user.role === "admin") {
+        localStorage.setItem("hwh_admin_token", token);
+        localStorage.setItem("hwh_admin_mode", "true");
+      } else {
+        localStorage.setItem("hwh_token", token);
+        localStorage.setItem("hwh_admin_mode", "false");
+      }
+
       set({
+        token,
         user: data.user,
         isAuthenticated: true,
         isAdmin: data.user.role === "admin",
         isLoading: false
       });
     } catch (err) {
-      localStorage.removeItem("hwh_token");
+      if (isAdminMode) {
+        localStorage.removeItem("hwh_admin_token");
+      } else {
+        localStorage.removeItem("hwh_token");
+      }
       set({ token: null, user: null, isAuthenticated: false, isAdmin: false, isLoading: false });
     }
   },

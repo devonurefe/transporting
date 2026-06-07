@@ -30,40 +30,26 @@ import { AppNotification, UserProfile, CartItem } from "../types";
 
 export function HuurGoLogo({ className = "h-8" }: { className?: string }) {
   return (
-    <div className={`flex items-center gap-2.5 ${className}`}>
-      {/* Badge icon — 3 shapes, readable at any size */}
-      <svg viewBox="0 0 38 38" className="h-full w-auto shrink-0" fill="none" xmlns="http://www.w3.org/2000/svg">
-        {/* Green badge */}
-        <rect width="38" height="38" rx="10" fill="#16a34a"/>
-        {/* Shadow layer for depth */}
-        <rect width="38" height="38" rx="10" fill="url(#badgeShadow)"/>
-        {/* Platform base — wide white bar */}
-        <rect x="6" y="27.5" width="26" height="4.5" rx="2.25" fill="white"/>
-        {/* Lift shaft — centered vertical bar */}
-        <rect x="16" y="14" width="6" height="14" rx="2" fill="white"/>
-        {/* Work basket — orange, sits on shaft top */}
-        <rect x="8.5" y="6" width="21" height="10" rx="3.5" fill="#f97316"/>
-        {/* Basket top highlight */}
-        <rect x="8.5" y="6" width="21" height="3.5" rx="3.5" fill="rgba(255,255,255,0.18)"/>
-        {/* Basket railing dots */}
-        <circle cx="13" cy="11" r="1.2" fill="rgba(255,255,255,0.5)"/>
-        <circle cx="19" cy="11" r="1.2" fill="rgba(255,255,255,0.5)"/>
-        <circle cx="25" cy="11" r="1.2" fill="rgba(255,255,255,0.5)"/>
+    <div className={`flex items-center gap-3 ${className}`}>
+      {/* Green accent bar — scales with container height */}
+      <svg viewBox="0 0 8 44" className="h-full w-auto shrink-0" fill="none" xmlns="http://www.w3.org/2000/svg">
         <defs>
-          <linearGradient id="badgeShadow" x1="0" y1="0" x2="0" y2="38">
-            <stop offset="0%" stopColor="white" stopOpacity="0.08"/>
-            <stop offset="100%" stopColor="black" stopOpacity="0.12"/>
+          <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="44" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor="#22c55e"/>
+            <stop offset="100%" stopColor="#15803d"/>
           </linearGradient>
         </defs>
+        <rect width="8" height="44" rx="4" fill="url(#barGrad)"/>
       </svg>
 
       {/* Wordmark */}
       <div className="flex flex-col leading-none select-none">
         <div className="flex items-baseline gap-0">
-          <span className="font-display font-black tracking-tight text-slate-800 text-lg sm:text-xl">Huur</span>
-          <span className="font-display font-black tracking-tight text-orange-500 text-lg sm:text-xl">Go</span>
+          <span className="font-display font-black tracking-tight text-slate-900" style={{ fontSize: '1.25em', letterSpacing: '-0.03em' }}>huur</span>
+          <span className="font-display font-black tracking-tight text-orange-500" style={{ fontSize: '1.25em', letterSpacing: '-0.03em' }}>go</span>
+          <span className="font-display font-black text-emerald-500" style={{ fontSize: '1.25em' }}>.</span>
         </div>
-        <span className="text-[9px] text-slate-400 font-medium tracking-widest uppercase hidden sm:block" style={{ letterSpacing: '0.12em' }}>Hoogwerkers</span>
+        <span className="text-slate-400 font-semibold hidden sm:block" style={{ fontSize: '0.48em', letterSpacing: '0.18em', textTransform: 'uppercase', marginTop: '2px' }}>Simpel en snel</span>
       </div>
     </div>
   );

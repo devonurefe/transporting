@@ -763,11 +763,16 @@ export default function BookingSection({
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -15 }}
-              className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start"
+              className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start"
             >
-              
-              {/* Left Form column */}
-              <div className="lg:col-span-8 space-y-6">
+
+              {/* Price summary — mobile: top (order-1), desktop: right column (order-2) */}
+              <div className="lg:col-span-4 lg:sticky lg:top-24 space-y-4 order-1 lg:order-2">
+                <BookingPriceSummary selectedMachine={cartItems && cartItems.length > 0 ? cartItems[0].machine : null} sums={sums} />
+              </div>
+
+              {/* Form column — mobile: below summary (order-2), desktop: left (order-1) */}
+              <div className="lg:col-span-8 space-y-6 order-2 lg:order-1">
                 
                 {/* Object header helper */}
                 <div className="bg-indigo-50 border border-indigo-100 p-4.5 rounded-2xl flex items-center justify-between shadow-sm">
@@ -853,11 +858,6 @@ export default function BookingSection({
                   />
                 )}
 
-              </div>
-
-              {/* Sticky breakdown card logic */}
-              <div className="lg:col-span-4 lg:sticky lg:top-24 space-y-6">
-                <BookingPriceSummary selectedMachine={cartItems && cartItems.length > 0 ? cartItems[0].machine : null} sums={sums} />
               </div>
 
             </motion.div>

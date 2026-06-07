@@ -195,7 +195,9 @@ ordersRouter.post("/", async (req: AuthenticatedRequest, res: Response) => {
         totalAmount: Number(orderData.totalAmount),
         status: "In behandeling",
         customerId: resolvedCustomerId,
-        addons: JSON.stringify(orderData.addons || [])
+        addons: JSON.stringify(orderData.addons || []),
+        borgsom: Number(orderData.borgsom || 0),
+        borgsomStatus: "pending"
       }
     });
 

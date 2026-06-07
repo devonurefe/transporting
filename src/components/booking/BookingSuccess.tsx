@@ -92,9 +92,9 @@ export default function BookingSuccess({
           Uw hoogwerker is officieel geregistreerd onder referentienummer{" "}
           <strong className="text-indigo-600 font-mono">{successOrder?.id}</strong>.{" "}
           {paymentGateway === "whatsapp" ? (
-            <span>Bevestig uw boeking via WhatsApp om uw betaallink te ontvangen.</span>
+            <span>Bevestig uw boeking via WhatsApp om uw iDEAL-betaallink te ontvangen.</span>
           ) : (
-            <span>Inkoop-aanvraag is succesvol geregistreerd via de beveiligde <strong className="text-teal-700 uppercase">{paymentGateway} Gateway</strong>.</span>
+            <span>Uw aanvraag is succesvol geregistreerd. U ontvangt binnenkort een betalingsbevestiging.</span>
           )}
         </p>
       </div>
@@ -134,9 +134,17 @@ export default function BookingSuccess({
         )}
 
         <div className="pt-2.5 space-y-1">
-          <span className="text-[10px] font-mono uppercase tracking-wider text-slate-450 text-slate-400 font-bold block">Betaalbedrag</span>
+          <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 font-bold block">Huurbedrag (incl. BTW)</span>
           <span className="text-xl font-mono font-bold text-teal-700 block">€ {successOrder.totalAmount.toFixed(2)}</span>
         </div>
+
+        {successOrder.borgsom && successOrder.borgsom > 0 && (
+          <div className="pt-2.5 border-t border-dashed border-amber-200 space-y-0.5">
+            <span className="text-[10px] font-mono uppercase tracking-wider text-amber-600 font-bold block">Borgsom (eenmalig)</span>
+            <span className="text-base font-mono font-bold text-amber-700 block">€ {successOrder.borgsom.toFixed(2)}</span>
+            <span className="text-[10px] text-amber-500 block">Wordt teruggestort na onbeschadigde retour.</span>
+          </div>
+        )}
 
       </div>
 

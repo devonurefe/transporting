@@ -21,6 +21,7 @@ import {
   Printer
 } from "lucide-react";
 import { useAppStore } from "../../store/appStore";
+import { useAuthStore } from "../../store/authStore";
 import { printInvoice } from "../../utils/invoice";
 
 interface AdminOrdersProps {
@@ -32,6 +33,7 @@ interface AdminOrdersProps {
 export default function AdminOrders({ onAddSystemLog, adminLanguage }: AdminOrdersProps) {
   const orders = useAppStore((state) => state.orders);
   const updateOrderStatus = useAppStore((state) => state.updateOrderStatus);
+  const adminUser = useAuthStore((state) => state.user);
 
   const t = (nl: string, en: string, tr: string) => {
     if (adminLanguage === "tr") return tr;
@@ -51,7 +53,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage }: AdminOrde
     const success = await updateOrderStatus(orderId, nextStatus);
     setIsUpdatingStatus(false);
     if (success) {
-      onAddSystemLog("status", "Onur (Eigenaar)", logMsg);
+      onAddSystemLog("status", adminUser?.name ?? "Admin", logMsg);
       // Update local state if modal is open
       if (selectedDetailOrder && selectedDetailOrder.id === orderId) {
         setSelectedDetailOrder((prev: any) => ({ ...prev, status: nextStatus }));
@@ -69,7 +71,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage }: AdminOrde
     // Log proposal activity
     onAddSystemLog(
       "system",
-      "Onur (Eigenaar)",
+      adminUser?.name ?? "Admin",
       `Nieuw datumvoorstel verzonden voor contract ${selectedDetailOrder.id} (${selectedDetailOrder.customerName}). Nieuwe data: ${newStartDate} t/m ${newEndDate}.`
     );
 

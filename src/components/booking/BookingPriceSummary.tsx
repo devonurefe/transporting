@@ -21,6 +21,7 @@ interface BookingPriceSummaryProps {
     addonDetails: { id: string; name: string; price: number }[];
     vat: number;
     total: number;
+    borgsom: number;
   };
 }
 
@@ -131,13 +132,25 @@ export default function BookingPriceSummary({ selectedMachine, sums }: BookingPr
 
         <div className="flex justify-between items-end pt-3 border-t border-slate-100">
           <div>
-            <span className="text-[9px] uppercase font-bold text-slate-500 font-mono tracking-wider block leading-none">Totaal Overeenkomst</span>
+            <span className="text-[9px] uppercase font-bold text-slate-500 font-mono tracking-wider block leading-none">Totaal Huur (incl. BTW)</span>
             <span className="text-[8px] text-slate-400">Inclusief BTW & Training</span>
           </div>
-          <span className="text-xl font-mono font-black text-indigo-650 text-indigo-600 leading-none">
+          <span className="text-xl font-mono font-black text-indigo-600 leading-none">
             € {sums.total.toFixed(2)}
           </span>
         </div>
+
+        {sums.borgsom > 0 && (
+          <div className="border-t border-dashed border-amber-200 pt-3 mt-1 space-y-1 bg-amber-50 -mx-5 px-5 pb-3 rounded-b-2xl">
+            <div className="flex justify-between items-center text-amber-800">
+              <span className="text-xs font-bold">Borgsom (eenmalig):</span>
+              <span className="font-bold font-mono text-sm">€ {sums.borgsom.toFixed(2)}</span>
+            </div>
+            <p className="text-[10px] text-amber-600 leading-snug">
+              Wordt teruggestort na onbeschadigde retour van de machine.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

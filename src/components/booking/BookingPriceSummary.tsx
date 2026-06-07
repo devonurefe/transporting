@@ -58,7 +58,7 @@ export default function BookingPriceSummary({ selectedMachine, sums }: BookingPr
             className="h-full w-full object-cover" 
             referrerPolicy="no-referrer" 
             onError={(e) => {
-              e.currentTarget.src = "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=600&auto=format&fit=crop";
+              e.currentTarget.src = "/placeholder-machine.webp";
             }}
           />
         </div>

@@ -9,7 +9,7 @@ import { Order } from "../types";
  * Utility to generate and print a professional Dutch rental invoice/agreement
  * for a HuurGo order using native browser print capability.
  */
-export function printInvoice(order: Order, clientCompanyName?: string) {
+export function printInvoice(orderOrOrders: Order | Order[], clientCompanyName?: string) {
   const escapeHtml = (str: string): string => {
     if (!str) return "";
     return str
@@ -20,36 +20,128 @@ export function printInvoice(order: Order, clientCompanyName?: string) {
       .replace(/'/g, "&#039;");
   };
 
-  const invoiceNumber = `INV-${order.id.toUpperCase()}`;
+  const orders = Array.isArray(orderOrOrders) ? orderOrOrders : [orderOrOrders];
+  if (orders.length === 0) return;
+
+  const primaryOrder = orders[0];
+  const invoiceNumber = orders.length === 1 
+    ? `INV-${primaryOrder.id.toUpperCase()}`
+    : `INV-${primaryOrder.id.toUpperCase()}-GRP`;
+    
   const todayDate = new Date().toLocaleDateString("nl-NL");
   const dueDateStr = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toLocaleDateString("nl-NL");
-  const subtotalExclVat = order.subtotal + order.transportCost + order.driverCost;
+
+  let totalSubtotal = 0;
+  let totalTransport = 0;
+  let totalDriver = 0;
+  let totalAddonCost = 0;
+  let totalVat = 0;
+  let totalAmount = 0;
+  let maxRentalDays = 0;
+
+  orders.forEach(o => {
+    totalSubtotal += o.subtotal;
+    totalTransport += o.transportCost;
+    totalDriver += o.driverCost;
+    totalVat += o.vatAmount;
+    totalAmount += o.totalAmount;
+    if (o.rentalDays > maxRentalDays) {
+      maxRentalDays = o.rentalDays;
+    }
+    if (o.addons && o.addons.length > 0) {
+      o.addons.forEach(a => {
+        totalAddonCost += a.price;
+      });
+    }
+  });
+
+  const subtotalExclVat = totalSubtotal + totalTransport + totalDriver + totalAddonCost;
   
   // Custom document title based on booking status
   let documentTitle = "FACTUREUREN";
-  if (order.status === "In behandeling") {
+  if (primaryOrder.status === "In behandeling") {
     documentTitle = "PRO-FORMA FACTUUR / HUURRAMING";
-  } else if (order.status === "Geannuleerd") {
+  } else if (primaryOrder.status === "Geannuleerd") {
     documentTitle = "GEANNULEERDE HUUROVEREENKOMST";
   } else {
     documentTitle = "OFFICIËLE HUUROVEREENKOMST & FACTUUR";
   }
 
   // Delivery details display
-  const logisticsText = order.deliveryType === "self_pickup"
+  const logisticsText = primaryOrder.deliveryType === "self_pickup"
     ? "Zelf afhalen bij vestiging HuurGo"
     : "Bezorging door HuurGo logistieke dienst";
 
   const customerCompany = clientCompanyName || "Particulier";
 
   // Escape user input fields to prevent XSS / HTML Injection
-  const escCustomerName = escapeHtml(order.customerName);
+  const escCustomerName = escapeHtml(primaryOrder.customerName);
   const escCustomerCompany = escapeHtml(customerCompany);
-  const escCustomerProfile = escapeHtml(order.customerProfile || "Particulier");
-  const escCustomerPhone = escapeHtml(order.customerPhone || "");
-  const escCustomerEmail = escapeHtml(order.customerEmail);
-  const escDeliveryAddress = escapeHtml(order.deliveryAddress || "");
-  const escMachineName = escapeHtml(order.machineName);
+  const escCustomerProfile = escapeHtml(primaryOrder.customerProfile || "Particulier");
+  const escCustomerPhone = escapeHtml(primaryOrder.customerPhone || "");
+  const escCustomerEmail = escapeHtml(primaryOrder.customerEmail);
+  const escDeliveryAddress = escapeHtml(primaryOrder.deliveryAddress || "");
+
+  // Generate dynamic table rows
+  let tableRowsHtml = "";
+  orders.forEach(o => {
+    const escMachineName = escapeHtml(o.machineName);
+    tableRowsHtml += `
+      <!-- Machine rental -->
+      <tr>
+        <td>
+          <strong>${escMachineName}</strong>
+          <div class="item-spec">Huurperiode: ${o.startDate} t/m ${o.endDate}</div>
+          <div style="font-size: 10px; color: #64748b; margin-top: 2px;">Inclusief BMWT machine-verzekering & klusgids checklist pakket.</div>
+        </td>
+        <td style="text-align: right; font-family: monospace;">€ ${o.machinePrice.toFixed(2)}</td>
+        <td style="text-align: center;">${o.rentalDays}</td>
+        <td style="text-align: right; font-family: monospace;">€ ${o.subtotal.toFixed(2)}</td>
+      </tr>
+      
+      <!-- Addons for this machine -->
+      ${(o.addons || []).map(addon => `
+      <tr>
+        <td>
+          <strong>${escapeHtml(addon.name)}</strong>
+          <div class="item-spec">Type: Extra optie / accessoire (${escMachineName})</div>
+        </td>
+        <td style="text-align: right; font-family: monospace;">€ ${(addon.price / (addon.billing === "daily" ? o.rentalDays : 1)).toFixed(2)}</td>
+        <td style="text-align: center;">${addon.billing === "daily" ? o.rentalDays : 1}</td>
+        <td style="text-align: right; font-family: monospace;">€ ${addon.price.toFixed(2)}</td>
+      </tr>
+      `).join('')}
+    `;
+  });
+
+  // Flat fees (Transport / Driver)
+  if (totalTransport > 0) {
+    tableRowsHtml += `
+      <tr>
+        <td>
+          <strong>Logistieke Transportservice</strong>
+          <div class="item-spec">Heen- en teruglevering op locatie</div>
+        </td>
+        <td style="text-align: right; font-family: monospace;">€ ${totalTransport.toFixed(2)}</td>
+        <td style="text-align: center;">1</td>
+        <td style="text-align: right; font-family: monospace;">€ ${totalTransport.toFixed(2)}</td>
+      </tr>
+    `;
+  }
+
+  if (totalDriver > 0) {
+    tableRowsHtml += `
+      <tr>
+        <td>
+          <strong>Gecertificeerde BMWT Chauffeursassistentie</strong>
+          <div class="item-spec">Inclusief instructiebegeleiding op locatie</div>
+        </td>
+        <td style="text-align: right; font-family: monospace;">€ ${totalDriver.toFixed(2)}</td>
+        <td style="text-align: center;">1</td>
+        <td style="text-align: right; font-family: monospace;">€ ${totalDriver.toFixed(2)}</td>
+      </tr>
+    `;
+  }
 
   const htmlContent = `
     <!DOCTYPE html>
@@ -379,7 +471,7 @@ export function printInvoice(order: Order, clientCompanyName?: string) {
             <h3 class="party-title">Huurder / Klant</h3>
             <div class="party-detail">
               <strong>${escCustomerName}</strong><br/>
-              ${order.customerProfile === 'Particulier' ? '' : `<span>Bedrijf: ${escCustomerCompany}</span><br/>`}
+              ${primaryOrder.customerProfile === 'Particulier' ? '' : `<span>Bedrijf: ${escCustomerCompany}</span><br/>`}
               <span>Vakgebied: ${escCustomerProfile}</span><br/>
               <span>Telefoon: ${escCustomerPhone}</span><br/>
               <span>E-mail: ${escCustomerEmail}</span>
@@ -390,9 +482,9 @@ export function printInvoice(order: Order, clientCompanyName?: string) {
           <div class="party-box">
             <h3 class="party-title">Aflevering & Logistiek</h3>
             <div class="party-detail">
-              <strong>${order.deliveryType === 'self_pickup' ? 'Afhalen' : 'Adreslevering'}</strong><br/>
+              <strong>${primaryOrder.deliveryType === 'self_pickup' ? 'Afhalen' : 'Adreslevering'}</strong><br/>
               <span>${logisticsText}</span><br/>
-              ${order.deliveryAddress ? `<span style="font-family: monospace; font-size:11px; display:inline-block; margin-top:5px; color:#475569;">${escDeliveryAddress}</span>` : '<span>Afhaallocatie: Distributieweg 12, Amsterdam</span>'}
+              ${primaryOrder.deliveryAddress ? `<span style="font-family: monospace; font-size:11px; display:inline-block; margin-top:5px; color:#475569;">${escDeliveryAddress}</span>` : '<span>Afhaallocatie: Distributieweg 12, Amsterdam</span>'}
             </div>
           </div>
         </div>
@@ -401,11 +493,11 @@ export function printInvoice(order: Order, clientCompanyName?: string) {
         <div class="meta-strip">
           <div>
             <div class="meta-item-label">Boekingsdatum</div>
-            <div class="meta-item-value">${new Date(order.createdAt).toLocaleDateString("nl-NL")}</div>
+            <div class="meta-item-value">${new Date(primaryOrder.createdAt).toLocaleDateString("nl-NL")}</div>
           </div>
           <div>
-            <div class="meta-item-label">Huurduur</div>
-            <div class="meta-item-value">${order.rentalDays} dag(en)</div>
+            <div class="meta-item-label">Huurduur (Max)</div>
+            <div class="meta-item-value">${maxRentalDays} dag(en)</div>
           </div>
           <div>
             <div class="meta-item-label">Betalingsstatus</div>
@@ -422,49 +514,13 @@ export function printInvoice(order: Order, clientCompanyName?: string) {
           <thead>
             <tr>
               <th>Omschrijving Verhuurd Materieel & Diensten</th>
-              <th style="text-align: right; width: 120px;">Dagtarief</th>
+              <th style="text-align: right; width: 120px;">Dagtarief / Stukprijs</th>
               <th style="text-align: center; width: 80px;">Aantal</th>
               <th style="text-align: right; width: 140px;">Totaal (Excl. BTW)</th>
             </tr>
           </thead>
           <tbody>
-            <!-- Line 1: Machine rental -->
-            <tr>
-              <td>
-                <strong>${escMachineName}</strong>
-                <div class="item-spec">Huurperiode: ${order.startDate} t/m ${order.endDate}</div>
-                <div style="font-size: 10px; color: #64748b; margin-top: 2px;">Inclusief BMWT machine-verzekering & klusgids checklist pakket.</div>
-              </td>
-              <td style="text-align: right; font-family: monospace;">€ ${order.machinePrice.toFixed(2)}</td>
-              <td style="text-align: center;">${order.rentalDays}</td>
-              <td style="text-align: right; font-family: monospace;">€ ${order.subtotal.toFixed(2)}</td>
-            </tr>
-            
-            <!-- Line 2: Delivery (if any) -->
-            ${order.transportCost > 0 ? `
-            <tr>
-              <td>
-                <strong>Logistieke Transportservice</strong>
-                <div class="item-spec">Heen- en teruglevering op locatie</div>
-              </td>
-              <td style="text-align: right; font-family: monospace;">€ ${order.transportCost.toFixed(2)}</td>
-              <td style="text-align: center;">1</td>
-              <td style="text-align: right; font-family: monospace;">€ ${order.transportCost.toFixed(2)}</td>
-            </tr>
-            ` : ''}
-            
-            <!-- Line 3: Driver/Operator (if any) -->
-            ${order.driverCost > 0 ? `
-            <tr>
-              <td>
-                <strong>Gecertificeerde BMWT Chauffeursassistentie</strong>
-                <div class="item-spec">Inclusief instructiebegeleiding op locatie</div>
-              </td>
-              <td style="text-align: right; font-family: monospace;">€ ${order.driverCost.toFixed(2)}</td>
-              <td style="text-align: center;">1</td>
-              <td style="text-align: right; font-family: monospace;">€ ${order.driverCost.toFixed(2)}</td>
-            </tr>
-            ` : ''}
+            ${tableRowsHtml}
           </tbody>
         </table>
         
@@ -477,11 +533,11 @@ export function printInvoice(order: Order, clientCompanyName?: string) {
             </div>
             <div class="totals-row">
               <span>BTW Belasting (21%)</span>
-              <span style="font-family: monospace;">€ ${order.vatAmount.toFixed(2)}</span>
+              <span style="font-family: monospace;">€ ${totalVat.toFixed(2)}</span>
             </div>
             <div class="totals-row grand-total">
               <span>Eindtotaal (Incl. BTW)</span>
-              <span class="total-amount">€ ${order.totalAmount.toFixed(2)}</span>
+              <span class="total-amount">€ ${totalAmount.toFixed(2)}</span>
             </div>
           </div>
         </div>
@@ -526,3 +582,4 @@ export function printInvoice(order: Order, clientCompanyName?: string) {
     alert("Popup-blocker actief! Gelieve pop-ups toe te staan voor deze website om de PDF factuur te kunnen genereren.");
   }
 }
+

@@ -65,7 +65,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
         reader.onload = async (uploadEvent) => {
           const base64 = uploadEvent.target?.result as string;
           try {
-            const token = localStorage.getItem("hwh_token");
+            const token = localStorage.getItem("hwh_admin_token") || localStorage.getItem("hwh_token");
             const res = await fetch("/api/upload", {
               method: "POST",
               headers: {
@@ -129,7 +129,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
     reader.onload = async (uploadEvent) => {
       const base64 = uploadEvent.target?.result as string;
       try {
-        const token = localStorage.getItem("hwh_token");
+        const token = localStorage.getItem("hwh_admin_token") || localStorage.getItem("hwh_token");
         const res = await fetch("/api/upload", {
           method: "POST",
           headers: {
@@ -304,7 +304,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                           className="h-full w-full object-cover" 
                           referrerPolicy="no-referrer" 
                           onError={(e) => {
-                            e.currentTarget.src = "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=600&auto=format&fit=crop";
+                            e.currentTarget.src = "/placeholder-machine.webp";
                           }}
                         />
                       </div>
@@ -370,7 +370,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
               transition={{ type: "spring", stiffness: 350, damping: 26 }}
-              className="w-full max-w-2xl bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden z-50 flex flex-col max-h-[90vh]"
+              className="w-full max-w-2xl bg-white border border-slate-200 rounded-3xl p-4 md:p-8 shadow-2xl relative overflow-hidden z-50 flex flex-col max-h-[90vh]"
             >
               {/* Premium Top stripe */}
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-500 to-orange-500" />
@@ -395,7 +395,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
 
               {/* Edit form contents */}
               <form onSubmit={handleSaveEdit} className="flex-1 overflow-y-auto pr-1 space-y-4 scrollbar-thin">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   
                   <div className="space-y-1">
                     <label className="text-xs text-slate-700 block font-bold">{t("Titel / Modelnaam", "Title / Model name", "Başlık / Model Adı")}</label>
@@ -503,13 +503,16 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
 
                   <div className="space-y-1 col-span-2">
                     <label className="text-xs text-slate-700 block font-bold">{t("Afbeelding", "Image", "Resim")}</label>
-                    <div className="grid grid-cols-1 sm:grid-cols-[120px_1fr] gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                    <div className="grid grid-cols-1 md:grid-cols-[120px_1fr] gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3">
                       <div className="h-20 w-full overflow-hidden rounded-xl border border-slate-200 bg-white">
                         <img
-                          src={editImageUrl || "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=600&auto=format&fit=crop"}
+                          src={editImageUrl || "/placeholder-machine.webp"}
                           alt={t("Voorbeeld", "Preview", "Önizleme")}
                           className="h-full w-full object-cover"
                           referrerPolicy="no-referrer"
+                          onError={(e) => {
+                            e.currentTarget.src = "/placeholder-machine.webp";
+                          }}
                         />
                       </div>
                       <div className="space-y-2">
@@ -603,7 +606,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                     />
                   </div>
 
-                  <div className="col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-slate-100 pt-3">
+                  <div className="col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-slate-100 pt-3">
                     <div className="space-y-1">
                       <label className="text-xs text-slate-700 block font-bold">{t("Weekkorting (%)", "Weekly Discount (%)", "Haftalık İndirim (%)")}</label>
                       <input

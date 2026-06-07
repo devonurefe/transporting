@@ -5,6 +5,7 @@
 
 import React, { useState } from "react";
 import { useLanguageStore } from "../store/languageStore";
+import { useAppStore } from "../store/appStore";
 import { 
   Search, 
   ArrowRight, 
@@ -42,21 +43,11 @@ interface HomeSectionProps {
 export default function HomeSection({ 
   onSearch, 
   setActiveTab,
-  siteConfig = {
-    siteName: "HuurGo",
-    heroTagline: "Snel & Makkelijk Hoogwerkers Huren",
-    heroTitle: "Wat heeft u nodig?",
-    heroSubtitle: "Kies uw categorie en huur direct. Simpel, snel, all-in.",
-    menuHomeLabel: "Home",
-    menuCatalogLabel: "Catalogus",
-    menuAdvisorLabel: "Snel Advies",
-    menuOrdersLabel: "Mijn Account"
-  },
   customCategories = [
     { id: "aanhanger", label: "\"Toe & Go\" Aanhangerhoogwerker", listLabel: "\"Toe & Go\" Aanhangerhoogwerkers", desc: "De meest flexibele oplossing die transportkosten elimineert, ideaal voor elke ZZP'er met een trekhaak.", heights: "12m - 17m", price: "v.a. €80/dag" },
     { id: "spin", label: "Rupshoogwerker", listLabel: "Rupshoogwerkers", desc: "Ideaal voor kwetsbare ondergronden, smalle tuintoegangen en hoge gevelwerkzaamheden.", heights: "15m - 17m", price: "v.a. €160/dag" },
     { id: "schaarlift", label: "Schaarlift (8m)", listLabel: "Schaarliften (8m)", desc: "Ideaal voor binnen- en buitengebruik op vlakke ondergronden. Past door deuren.", heights: "8m", price: "v.a. €80/dag" },
-    { id: "schaarlift-smal", label: "Smal Model Schaarlift (10m)", listLabel: "Schaarliften (10m smal)", desc: "Compacte en smalle schaarlift voor nauwe gangpaden en binnenruimtes tot 10 meter werkhoogte.", heights: "10m", price: "v.a. €95/dag" },
+    { id: "schaarlift-smal", label: "Smal Model Schaarlift (10m)", listLabel: "Schaarliften (10m smal)", desc: "Compacte en smalle schaarlift voor nauwe gangpaden and binnenruimtes tot 10 meter werkhoogte.", heights: "10m", price: "v.a. €95/dag" },
     { id: "mastlift", label: "Mastlift", listLabel: "Mastliften", desc: "Verticale mastliften voor snel, efficiënt en compact werk in magazijnen of kantoren.", heights: "5m - 10m", price: "v.a. €75/dag" },
     { id: "ladderlift", label: "Ladderlift", listLabel: "Ladderliften / Verhuisliften", desc: "Verhuis- en ladderliften voor veilig transport van zware meubels of bouwmaterialen direct via het raam.", heights: "18m - 21m", price: "v.a. €90/dag" },
     { id: "ecolift", label: "Ecolift", listLabel: "Ecolift", desc: "Milieuvriendelijk en veilig alternatief voor ladders. Geen batterijen of hydrauliek nodig.", heights: "4.2m", price: "v.a. €45/dag" },
@@ -66,6 +57,8 @@ export default function HomeSection({
 }: HomeSectionProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCat, setSelectedCat] = useState("all");
+  const siteConfig = useAppStore((state) => state.siteConfig);
+  const language = useLanguageStore((state) => state.language);
   const t = useLanguageStore((state) => state.t);
 
   React.useEffect(() => {
@@ -110,10 +103,10 @@ export default function HomeSection({
           className="text-center mb-6 sm:mb-8 space-y-2 sm:space-y-3"
         >
           <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-slate-900">
-            {t("heroTitle")}
+            {language === "nl" && siteConfig.heroTitle ? siteConfig.heroTitle : t("heroTitle")}
           </h1>
           <p className="text-sm sm:text-base text-slate-500 max-w-lg mx-auto">
-            {t("heroSubtitle")}
+            {language === "nl" && siteConfig.heroSubtitle ? siteConfig.heroSubtitle : t("heroSubtitle")}
           </p>
         </motion.div>
 
@@ -131,7 +124,7 @@ export default function HomeSection({
               type="text" 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={t("searchPlaceholder")} 
+              placeholder={language === "nl" && siteConfig.heroTagline ? siteConfig.heroTagline : t("searchPlaceholder")} 
               className="w-full py-3 text-sm bg-transparent outline-none focus:ring-0 text-slate-800 placeholder-slate-400"
             />
           </div>

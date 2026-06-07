@@ -145,7 +145,7 @@ export default function Footer({ siteName, setActiveTab, setShowContactModal }: 
 
         {/* Bottom copyright and legal disclaimer */}
         <div className="flex flex-col sm:flex-row justify-between items-center pt-8 border-t border-slate-900 text-[10.5px] text-slate-500 gap-3">
-          <span className="text-center sm:text-left">© 2026 {siteName} B.V. Alle rechten voorbehouden. KvK 8849201.</span>
+          <span className="text-center sm:text-left">© 2026 {siteName} B.V. Alle rechten voorbehouden. KvK 72839102 | BTW NL82039401B01</span>
           <div className="flex items-center space-x-2">
             <span className="text-[9px] font-black bg-slate-900 text-slate-400 border border-slate-800 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
               TÜV Gecertificeerd

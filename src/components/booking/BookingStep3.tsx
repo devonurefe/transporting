@@ -98,7 +98,7 @@ export default function BookingStep3({
           >
             <span className="text-[11px] font-black flex items-center space-x-1">
               <span className={`text-xs ${paymentGateway === "whatsapp" ? "text-white" : "text-[#25D366]"}`}>💬</span>
-              <span>WhatsApp Link</span>
+              <span>WhatsApp Boeking</span>
             </span>
             <span className="mt-1 text-[10px] font-extrabold bg-emerald-500/10 text-emerald-700 border border-emerald-500/20 px-2.5 py-0.5 rounded-full font-mono">
               Nu Beschikbaar (Aanbevolen)
@@ -230,7 +230,7 @@ export default function BookingStep3({
           ) : (
             <>
               {paymentGateway === "whatsapp" ? (
-                <span>Bevestigen via WhatsApp 💬</span>
+                <span>Boeking Afronden via WhatsApp 💬</span>
               ) : (
                 <span>Veilig Betalen</span>
               )}

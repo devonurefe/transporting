@@ -467,7 +467,7 @@ export default function CatalogSection({
                           className="h-full w-full object-cover group-hover:scale-106 transition-transform duration-500"
                           referrerPolicy="no-referrer"
                           onError={(e) => {
-                            e.currentTarget.src = "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=600&auto=format&fit=crop";
+                            e.currentTarget.src = "/placeholder-machine.webp";
                           }}
                         />
                         {/* Shimmer overlay gradient */}
@@ -596,7 +596,7 @@ export default function CatalogSection({
                         className="h-8 w-12 object-cover rounded-md border border-slate-200" 
                         referrerPolicy="no-referrer" 
                         onError={(e) => {
-                          e.currentTarget.src = "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=600&auto=format&fit=crop";
+                          e.currentTarget.src = "/placeholder-machine.webp";
                         }}
                       />
                       <button
@@ -694,7 +694,7 @@ export default function CatalogSection({
                               className="h-full w-full object-cover" 
                               referrerPolicy="no-referrer" 
                               onError={(e) => {
-                                e.currentTarget.src = "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=600&auto=format&fit=crop";
+                                e.currentTarget.src = "/placeholder-machine.webp";
                               }}
                             />
                           </div>
@@ -938,7 +938,7 @@ export default function CatalogSection({
                             <AnimatePresence mode="wait">
                               <motion.img 
                                 key={activeDetailImageIndex}
-                                src={allDetailImages[activeDetailImageIndex] || "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=600&auto=format&fit=crop"} 
+                                src={allDetailImages[activeDetailImageIndex] || "/placeholder-machine.webp"} 
                                 alt={`${selectedDetailMachine.name} - ${activeDetailImageIndex}`} 
                                 className="w-full h-full object-cover"
                                 initial={{ opacity: 0 }}
@@ -947,7 +947,7 @@ export default function CatalogSection({
                                 transition={{ duration: 0.2 }}
                                 referrerPolicy="no-referrer"
                                 onError={(e) => {
-                                  e.currentTarget.src = "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=600&auto=format&fit=crop";
+                                  e.currentTarget.src = "/placeholder-machine.webp";
                                 }}
                               />
                             </AnimatePresence>

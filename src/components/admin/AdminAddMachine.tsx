@@ -58,7 +58,7 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
       const file = files[i];
       try {
         const base64 = await resizeImage(file);
-        const token = localStorage.getItem("hwh_token");
+        const token = localStorage.getItem("hwh_admin_token") || localStorage.getItem("hwh_token");
         const res = await fetch("/api/upload", {
           method: "POST",
           headers: {
@@ -93,7 +93,7 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
     setIsUploading(true);
     try {
       const base64 = await resizeImage(file);
-      const token = localStorage.getItem("hwh_token");
+      const token = localStorage.getItem("hwh_admin_token") || localStorage.getItem("hwh_token");
       const res = await fetch("/api/upload", {
         method: "POST",
         headers: {
@@ -126,7 +126,7 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
 
     setIsAutofilling(true);
     try {
-      const token = localStorage.getItem("hwh_token");
+      const token = localStorage.getItem("hwh_admin_token") || localStorage.getItem("hwh_token");
       const res = await fetch("/api/gemini/autofill", {
         method: "POST",
         headers: {
@@ -304,7 +304,7 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
       </div>
 
       <form onSubmit={handleSubmitNewMachine} className="space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           
           <div className="space-y-1">
             <div className="flex justify-between items-center h-5">
@@ -466,7 +466,7 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
             />
           </div>
 
-          <div className="col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-slate-100 pt-3">
+          <div className="col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-slate-100 pt-3">
             <div className="space-y-1">
               <label className="text-xs text-slate-700 block font-bold">{t("Weekkorting (%)", "Weekly Discount (%)", "Haftalık İndirim (%)")}</label>
               <input
@@ -533,7 +533,7 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
 
           <div className="space-y-2 col-span-2 border-t border-slate-100 pt-3">
             <label className="text-xs block font-bold text-slate-700">{t("Machine Afbeelding (Upload of URL)", "Machine Image (Upload or URL)", "Makine Resmi (Yükleme veya URL)")}</label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center bg-slate-50/50 p-3 rounded-2xl border border-slate-200/60 shadow-inner">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center bg-slate-50/50 p-3 rounded-2xl border border-slate-200/60 shadow-inner">
               
               <div className="space-y-1">
                 <span className="text-[10px] text-slate-500 font-bold block mb-1">{t("Optie A: Lokaal bestand uploaden", "Option A: Upload local file", "Seçenek A: Yerel dosya yükle")}</span>
@@ -563,7 +563,7 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
               </div>
 
               {imageUrl && (
-                <div className="col-span-1 sm:col-span-2 flex items-center space-x-3 bg-white p-2 rounded-xl border border-slate-100 shadow-sm animate-fade-in">
+                <div className="col-span-1 md:col-span-2 flex items-center space-x-3 bg-white p-2 rounded-xl border border-slate-100 shadow-sm animate-fade-in">
                   <div className="h-10 w-16 bg-slate-100 rounded-lg overflow-hidden border border-slate-200 shrink-0">
                     <img src={imageUrl} alt={t("Voorbeeld", "Preview", "Önizleme")} className="h-full w-full object-cover" />
                   </div>
@@ -575,7 +575,7 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
               )}
 
               {/* Additional Images Section */}
-              <div className="col-span-1 sm:col-span-2 border-t border-slate-200/80 pt-4 mt-2 space-y-3">
+              <div className="col-span-1 md:col-span-2 border-t border-slate-200/80 pt-4 mt-2 space-y-3">
                 <span className="text-xs text-slate-700 block font-bold">
                   {t("Ek Resim Galerisi (Çoklu Slayt Gösterisi)", "Additional Image Gallery (Slideshow)", "Ek Resim Galerisi (Çoklu Slayt)")}
                 </span>

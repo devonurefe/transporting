@@ -80,7 +80,10 @@ const defaultCategories: Category[] = [
 ];
 
 const getAuthHeaders = () => {
-  const token = localStorage.getItem("hwh_token");
+  const isAdminMode = localStorage.getItem("hwh_admin_mode") === "true";
+  const token = isAdminMode
+    ? localStorage.getItem("hwh_admin_token")
+    : localStorage.getItem("hwh_token");
   return token ? { "Authorization": `Bearer ${token}` } : {};
 };
 
@@ -132,7 +135,10 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   fetchOrders: async () => {
-    const token = localStorage.getItem("hwh_token");
+    const isAdminMode = localStorage.getItem("hwh_admin_mode") === "true";
+    const token = isAdminMode
+      ? localStorage.getItem("hwh_admin_token")
+      : localStorage.getItem("hwh_token");
     if (!token) {
       set({ orders: [], error: null });
       return;

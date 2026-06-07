@@ -24,16 +24,27 @@ import { useAuthStore } from "../store/authStore";
 import { useAppStore } from "../store/appStore";
 import { useLanguageStore } from "../store/languageStore";
 
-// Import modular sub-components
-import AdminDashboard from "./admin/AdminDashboard";
-import AdminOrders from "./admin/AdminOrders";
-import AdminMachines from "./admin/AdminMachines";
-import AdminCalendar from "./admin/AdminCalendar";
-import AdminAddMachine from "./admin/AdminAddMachine";
-import AdminCustomizer from "./admin/AdminCustomizer";
-import AdminLogs from "./admin/AdminLogs";
-import AdminDiagnostics from "./admin/AdminDiagnostics";
-import AdminAccounting from "./admin/AdminAccounting";
+// Lazy load modular sub-components for code splitting and better initial bundle load performance
+const AdminDashboard = React.lazy(() => import("./admin/AdminDashboard"));
+const AdminOrders = React.lazy(() => import("./admin/AdminOrders"));
+const AdminMachines = React.lazy(() => import("./admin/AdminMachines"));
+const AdminCalendar = React.lazy(() => import("./admin/AdminCalendar"));
+const AdminAddMachine = React.lazy(() => import("./admin/AdminAddMachine"));
+const AdminCustomizer = React.lazy(() => import("./admin/AdminCustomizer"));
+const AdminLogs = React.lazy(() => import("./admin/AdminLogs"));
+const AdminDiagnostics = React.lazy(() => import("./admin/AdminDiagnostics"));
+const AdminAccounting = React.lazy(() => import("./admin/AdminAccounting"));
+
+function AdminLoadingSpinner() {
+  return (
+    <div className="flex flex-col items-center justify-center py-20 space-y-4 bg-white/50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
+      <div className="h-10 w-10 animate-spin rounded-full border-4 border-amber-500 border-t-transparent"></div>
+      <p className="text-xs text-slate-500 font-semibold tracking-wide animate-pulse">
+        Beheerpaneel laden...
+      </p>
+    </div>
+  );
+}
 
 interface AdminSectionProps {
   isAdminMode: boolean;
@@ -54,6 +65,7 @@ export default function AdminSection({
 }: AdminSectionProps) {
   const [subTab, setSubTab] = useState<"dashboard" | "orders" | "machines" | "calendar" | "add" | "logs" | "customizer" | "diagnostics" | "accounting">("dashboard");
   const [showAdvancedSubmenu, setShowAdvancedSubmenu] = useState<boolean>(false);
+  const [showMobileMenu, setShowMobileMenu] = useState<boolean>(false);
 
   React.useEffect(() => {
     if (["add", "customizer", "accounting", "diagnostics", "logs"].includes(subTab)) {
@@ -91,6 +103,8 @@ export default function AdminSection({
           "HuurGo Admin", 
           "Beheersessie verbonden met beveiligd beheerderstoken."
         );
+        // Synchronously fetch all data with the newly set admin token
+        useAppStore.getState().fetchAllData();
       } else {
         logout();
         setIsAdminMode(false);
@@ -214,8 +228,144 @@ export default function AdminSection({
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-8 items-start">
           
           <div className="lg:col-span-3 space-y-4">
-            <div className="glass-panel p-2 sm:p-4 rounded-2xl flex flex-row lg:flex-col lg:space-y-1 overflow-x-auto lg:overflow-x-visible gap-1 pb-2 lg:pb-4 scrollbar-none flex-nowrap scroll-smooth">
-              
+            {/* Mobile Navigation Dropdown */}
+            <div className="lg:hidden relative w-full mb-2 z-20">
+              <button
+                type="button"
+                onClick={() => setShowMobileMenu(!showMobileMenu)}
+                className="w-full flex items-center justify-between px-4 py-3 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-800 shadow-xs cursor-pointer focus:outline-none"
+              >
+                <div className="flex items-center space-x-2.5">
+                  {(() => {
+                    const activeTabInfo = [
+                      { id: "dashboard", label: tAdmin("adminTabDashboard"), icon: BarChart3 },
+                      { id: "orders", label: tAdmin("adminTabOrders"), icon: Truck },
+                      { id: "machines", label: tAdmin("adminTabMachines"), icon: Layers },
+                      { id: "calendar", label: tAdmin("adminTabCalendar"), icon: Calendar },
+                      { id: "add", label: tAdmin("adminTabAdd"), icon: PlusCircle },
+                      { id: "customizer", label: tAdmin("adminTabCustomizer"), icon: Settings },
+                      { id: "accounting", label: adminLanguage === "tr" ? "Muhasebe (Exact)" : adminLanguage === "en" ? "Accounting (Exact)" : "Boekhouding (Exact)", icon: Database },
+                      { id: "diagnostics", label: adminLanguage === "tr" ? "Sistem Teşhisi" : adminLanguage === "en" ? "System Diagnostics" : "Systeemdiagnose", icon: ShieldAlert },
+                      { id: "logs", label: tAdmin("adminTabLogs"), icon: Terminal }
+                    ].find(t => t.id === subTab);
+                    const Icon = activeTabInfo?.icon || Settings;
+                    return (
+                      <>
+                        <Icon className="h-4.5 w-4.5 text-amber-500" />
+                        <span>{activeTabInfo?.label}</span>
+                      </>
+                    );
+                  })()}
+                </div>
+                <span className="text-[10px] text-slate-550">{showMobileMenu ? "▲" : "▼"}</span>
+              </button>
+
+              <AnimatePresence>
+                {showMobileMenu && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute left-0 right-0 mt-1.5 bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden divide-y divide-slate-155 z-30"
+                  >
+                    <div className="p-2 space-y-0.5">
+                      {[
+                        { id: "dashboard", label: tAdmin("adminTabDashboard"), icon: BarChart3 },
+                        { id: "orders", label: tAdmin("adminTabOrders"), icon: Truck, count: orders.length },
+                        { id: "machines", label: tAdmin("adminTabMachines"), icon: Layers, count: machines.length },
+                        { id: "calendar", label: tAdmin("adminTabCalendar"), icon: Calendar, count: blockedDates.length }
+                      ].map((sub) => {
+                        const Icon = sub.icon;
+                        const isSel = subTab === sub.id;
+                        return (
+                          <button
+                            key={sub.id}
+                            type="button"
+                            onClick={() => {
+                              setSubTab(sub.id as any);
+                              setShowMobileMenu(false);
+                            }}
+                            className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left text-xs font-bold transition-all cursor-pointer border-none ${
+                              isSel 
+                                ? "bg-amber-500 text-slate-950" 
+                                : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                            }`}
+                          >
+                            <div className="flex items-center space-x-2.5">
+                              <Icon className={`h-4.5 w-4.5 ${isSel ? "text-slate-950" : "text-amber-500/80"}`} />
+                              <span>{sub.label}</span>
+                            </div>
+                            {sub.count !== undefined && (
+                              <span className={`font-mono text-[9px] px-2 py-0.5 rounded-full ${isSel ? "bg-slate-950 text-amber-450" : "bg-slate-100 text-slate-650"}`}>
+                                {sub.count}
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+
+                      <div className="pt-1.5">
+                        <button
+                          type="button"
+                          onClick={() => setShowAdvancedSubmenu(!showAdvancedSubmenu)}
+                          className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left text-xs font-bold transition-all cursor-pointer border-none bg-slate-50 text-slate-700`}
+                        >
+                          <div className="flex items-center space-x-2.5">
+                            <Settings className="h-4.5 w-4.5 text-amber-500/80" />
+                            <span>Geavanceerd</span>
+                          </div>
+                          <span className="text-[10px] text-slate-500">{showAdvancedSubmenu ? "▼" : "▶"}</span>
+                        </button>
+                        
+                        {showAdvancedSubmenu && (
+                          <div className="mt-1 pl-3 border-l-2 border-slate-100 space-y-0.5">
+                            {[
+                              { id: "add", label: tAdmin("adminTabAdd"), icon: PlusCircle },
+                              { id: "customizer", label: tAdmin("adminTabCustomizer"), icon: Settings },
+                              { id: "accounting", label: adminLanguage === "tr" ? "Muhasebe (Exact)" : adminLanguage === "en" ? "Accounting (Exact)" : "Boekhouding (Exact)", icon: Database },
+                              { id: "diagnostics", label: adminLanguage === "tr" ? "Sistem Teşhisi" : adminLanguage === "en" ? "System Diagnostics" : "Systeemdiagnose", icon: ShieldAlert },
+                              { id: "logs", label: tAdmin("adminTabLogs"), icon: Terminal, count: systemLogs.length }
+                            ].map((sub) => {
+                              const Icon = sub.icon;
+                              const isSel = subTab === sub.id;
+                              return (
+                                <button
+                                  key={sub.id}
+                                  type="button"
+                                  onClick={() => {
+                                    setSubTab(sub.id as any);
+                                    setShowMobileMenu(false);
+                                  }}
+                                  className={`w-full flex items-center justify-between px-3.5 py-2 rounded-xl text-left text-xs font-bold transition-all cursor-pointer border-none ${
+                                    isSel 
+                                      ? "bg-amber-500 text-slate-950" 
+                                      : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                                  }`}
+                                >
+                                  <div className="flex items-center space-x-2.5">
+                                    <Icon className={`h-4.5 w-4.5 ${isSel ? "text-slate-950" : "text-amber-500/60"}`} />
+                                    <span>{sub.label}</span>
+                                  </div>
+                                  {sub.count !== undefined && (
+                                    <span className={`font-mono text-[9px] px-2 py-0.5 rounded-full ${isSel ? "bg-slate-950 text-amber-450" : "bg-slate-100 text-slate-550"}`}>
+                                      {sub.count}
+                                    </span>
+                                  )}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Desktop Navigation */}
+            <div className="hidden lg:flex lg:flex-col lg:space-y-1 glass-panel p-4 rounded-2xl gap-1 pb-4">
               {/* MVP Core tabs */}
               {[
                 { id: "dashboard", label: tAdmin("adminTabDashboard"), icon: BarChart3 },
@@ -229,10 +379,10 @@ export default function AdminSection({
                   <button
                     key={sub.id}
                     onClick={() => setSubTab(sub.id as any)}
-                    className={`flex items-center justify-between px-2.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-left text-[10px] sm:text-xs font-bold transition-all whitespace-nowrap lg:whitespace-normal flex-shrink-0 lg:flex-initial cursor-pointer border-none ${
+                    className={`flex items-center justify-between px-4 py-2.5 rounded-xl text-left text-xs font-bold transition-all cursor-pointer border-none ${
                       isSel 
                         ? "bg-amber-500 hover:bg-amber-600 text-slate-950 border border-amber-500/20 shadow-[0_4px_12px_rgba(245,158,11,0.25)]" 
-                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent bg-transparent"
+                        : "text-slate-650 hover:text-slate-900 hover:bg-slate-100 border border-transparent bg-transparent"
                     }`}
                   >
                     <div className="flex items-center space-x-2.5">
@@ -240,7 +390,7 @@ export default function AdminSection({
                       <span>{sub.label}</span>
                     </div>
                     {sub.count !== undefined && (
-                      <span className={`hidden lg:inline-block font-mono text-[9px] px-2 py-0.5 rounded-full ${isSel ? "bg-slate-950 text-amber-400" : "bg-slate-100 text-slate-600"}`}>
+                      <span className={`font-mono text-[9px] px-2 py-0.5 rounded-full ${isSel ? "bg-slate-950 text-amber-400" : "bg-slate-100 text-slate-600"}`}>
                         {sub.count}
                       </span>
                     )}
@@ -252,10 +402,10 @@ export default function AdminSection({
               <button
                 type="button"
                 onClick={() => setShowAdvancedSubmenu(!showAdvancedSubmenu)}
-                className={`flex items-center justify-between px-2.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-left text-[10px] sm:text-xs font-bold transition-all whitespace-nowrap lg:whitespace-normal flex-shrink-0 lg:flex-initial cursor-pointer border-none ${
+                className={`flex items-center justify-between px-4 py-2.5 rounded-xl text-left text-xs font-bold transition-all cursor-pointer border-none ${
                   ["add", "customizer", "accounting", "diagnostics", "logs"].includes(subTab)
                     ? "bg-slate-100 text-slate-900 border border-slate-200" 
-                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent bg-transparent"
+                    : "text-slate-655 hover:text-slate-900 hover:bg-slate-100 border border-transparent bg-transparent"
                 }`}
               >
                 <div className="flex items-center space-x-2.5">
@@ -279,10 +429,10 @@ export default function AdminSection({
                   <button
                     key={sub.id}
                     onClick={() => setSubTab(sub.id as any)}
-                    className={`flex items-center justify-between px-2.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-left text-[10px] sm:text-xs font-bold transition-all whitespace-nowrap lg:whitespace-normal flex-shrink-0 lg:flex-initial cursor-pointer border-none pl-5 sm:pl-7 ${
+                    className={`flex items-center justify-between px-4 py-2.5 rounded-xl text-left text-xs font-bold transition-all cursor-pointer border-none pl-7 ${
                       isSel 
                         ? "bg-amber-500 hover:bg-amber-600 text-slate-950 border border-amber-500/20 shadow-[0_4px_12px_rgba(245,158,11,0.25)]" 
-                        : "text-slate-500 hover:text-slate-800 hover:bg-slate-50 border border-transparent bg-transparent"
+                        : "text-slate-550 hover:text-slate-800 hover:bg-slate-50 border border-transparent bg-transparent"
                     }`}
                   >
                     <div className="flex items-center space-x-2.5">
@@ -290,14 +440,13 @@ export default function AdminSection({
                       <span>{sub.label}</span>
                     </div>
                     {sub.count !== undefined && (
-                      <span className={`hidden lg:inline-block font-mono text-[9px] px-2 py-0.5 rounded-full ${isSel ? "bg-slate-950 text-amber-400" : "bg-slate-100 text-slate-500"}`}>
+                      <span className={`font-mono text-[9px] px-2 py-0.5 rounded-full ${isSel ? "bg-slate-950 text-amber-400" : "bg-slate-100 text-slate-550"}`}>
                         {sub.count}
                       </span>
                     )}
                   </button>
                 );
               })}
-
             </div>
 
             {/* Live website indicators */}
@@ -325,48 +474,50 @@ export default function AdminSection({
 
           {/* MAIN CONFIG VIEWPORT */}
           <div className="lg:col-span-9">
-            <AnimatePresence mode="wait">
-              {subTab === "dashboard" && (
-                <AdminDashboard key="dashboard" setSubTab={setSubTab} adminLanguage={adminLanguage} />
-              )}
-              {subTab === "orders" && (
-                <AdminOrders key="orders" onAddSystemLog={onAddSystemLog} adminLanguage={adminLanguage} />
-              )}
-              {subTab === "machines" && (
-                <AdminMachines key="machines" setSubTab={setSubTab} onAddSystemLog={onAddSystemLog} adminLanguage={adminLanguage} />
-              )}
-              {subTab === "calendar" && (
-                <AdminCalendar key="calendar" onAddSystemLog={onAddSystemLog} adminLanguage={adminLanguage} />
-              )}
-              {subTab === "add" && (
-                <AdminAddMachine key="add" setSubTab={setSubTab} onAddSystemLog={onAddSystemLog} adminLanguage={adminLanguage} />
-              )}
-              {subTab === "customizer" && (
-                <AdminCustomizer key="customizer" onAddSystemLog={onAddSystemLog} adminLanguage={adminLanguage} />
-              )}
-              {subTab === "accounting" && (
-                <AdminAccounting key="accounting" adminLanguage={adminLanguage} />
-              )}
-              {subTab === "diagnostics" && (
-                <AdminDiagnostics 
-                  key="diagnostics" 
-                  systemLogs={systemLogs} 
-                  userProfiles={userProfiles || []} 
-                  onAddSystemLog={onAddSystemLog} 
-                  adminLanguage={adminLanguage}
-                />
-              )}
-              {subTab === "logs" && (
-                <AdminLogs 
-                  key="logs" 
-                  systemLogs={systemLogs} 
-                  onClearSystemLogs={onClearSystemLogs} 
-                  userProfiles={userProfiles || []} 
-                  onAddSystemLog={onAddSystemLog} 
-                  adminLanguage={adminLanguage}
-                />
-              )}
-            </AnimatePresence>
+            <React.Suspense fallback={<AdminLoadingSpinner />}>
+              <AnimatePresence mode="wait">
+                {subTab === "dashboard" && (
+                  <AdminDashboard key="dashboard" setSubTab={setSubTab} adminLanguage={adminLanguage} />
+                )}
+                {subTab === "orders" && (
+                  <AdminOrders key="orders" onAddSystemLog={onAddSystemLog} adminLanguage={adminLanguage} />
+                )}
+                {subTab === "machines" && (
+                  <AdminMachines key="machines" setSubTab={setSubTab} onAddSystemLog={onAddSystemLog} adminLanguage={adminLanguage} />
+                )}
+                {subTab === "calendar" && (
+                  <AdminCalendar key="calendar" onAddSystemLog={onAddSystemLog} adminLanguage={adminLanguage} />
+                )}
+                {subTab === "add" && (
+                  <AdminAddMachine key="add" setSubTab={setSubTab} onAddSystemLog={onAddSystemLog} adminLanguage={adminLanguage} />
+                )}
+                {subTab === "customizer" && (
+                  <AdminCustomizer key="customizer" onAddSystemLog={onAddSystemLog} adminLanguage={adminLanguage} />
+                )}
+                {subTab === "accounting" && (
+                  <AdminAccounting key="accounting" adminLanguage={adminLanguage} />
+                )}
+                {subTab === "diagnostics" && (
+                  <AdminDiagnostics 
+                    key="diagnostics" 
+                    systemLogs={systemLogs} 
+                    userProfiles={userProfiles || []} 
+                    onAddSystemLog={onAddSystemLog} 
+                    adminLanguage={adminLanguage}
+                  />
+                )}
+                {subTab === "logs" && (
+                  <AdminLogs 
+                    key="logs" 
+                    systemLogs={systemLogs} 
+                    onClearSystemLogs={onClearSystemLogs} 
+                    userProfiles={userProfiles || []} 
+                    onAddSystemLog={onAddSystemLog} 
+                    adminLanguage={adminLanguage}
+                  />
+                )}
+              </AnimatePresence>
+            </React.Suspense>
           </div>
 
         </div>

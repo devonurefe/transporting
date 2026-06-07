@@ -93,6 +93,7 @@ export default function BookingSection({
     return highestDiscount;
   };
   const [successOrder, setSuccessOrder] = useState<Order | null>(null);
+  const [successOrders, setSuccessOrders] = useState<Order[]>([]);
   const [whatsappUrl, setWhatsappUrl] = useState<string>("");
 
   // Address lookup & Inline validation states
@@ -185,83 +186,69 @@ export default function BookingSection({
   }, [selectedMachine, machines]);
 
   // Real-time capacity and collision checking logic
-  const checkRealtimeAvailability = async (machineId: string, start: string, end: string) => {
+  const checkRealtimeAvailability = (machineId: string, start: string, end: string) => {
     if (!start || !end) return;
     setValidationError(null);
     
-    try {
-      // 1. Check orders collision
-      const response = await fetch("/api/orders/availability");
-      if (!response.ok) throw new Error("Could not fetch orders for availability audit");
-      const activeOrders: AvailabilityOrder[] = await response.json();
+    const requestedStart = new Date(start).getTime();
+    const requestedEnd = new Date(end).getTime();
+    const todayStr = new Date().toISOString().split('T')[0];
+    const todayTime = new Date(todayStr).getTime();
 
-      const requestedStart = new Date(start).getTime();
-      const requestedEnd = new Date(end).getTime();
-      const todayStr = new Date().toISOString().split('T')[0];
-      const todayTime = new Date(todayStr).getTime();
+    if (requestedStart > requestedEnd) {
+      setIsAvailable(false);
+      setValidationError("De retourdatum moet na de begindatum liggen.");
+      return;
+    }
 
-      if (requestedStart > requestedEnd) {
-        setIsAvailable(false);
-        setValidationError("De retourdatum moet na de begindatum liggen.");
-        return;
-      }
+    if (requestedStart < todayTime) {
+      setIsAvailable(false);
+      setValidationError("De begindatum kan niet in het verleden liggen.");
+      return;
+    }
 
-      if (requestedStart < todayTime) {
-        setIsAvailable(false);
-        setValidationError("De begindatum kan niet in het verleden liggen.");
-        return;
-      }
-
-      const overlaps = activeOrders.filter(o => {
-        if (o.machineId !== machineId) return false;
-        
-        const orderStart = new Date(o.startDate).getTime();
-        const orderEnd = new Date(o.endDate).getTime();
-
-        return (requestedStart <= orderEnd && requestedEnd >= orderStart);
-      });
-
-      // 2. Check manually blocked dates from Admin
-      const blockRes = await fetch("/api/blocked-dates");
-      const blockedList = blockRes.ok ? await blockRes.json() : [];
-      setBlockedDaysList(blockedList);
-
-      let dateIsBlocked = false;
-      let reasonTxt = "";
-
-      const sDate = new Date(start);
-      const eDate = new Date(end);
-      let curr = new Date(sDate);
+    const overlaps = allOrders.filter(o => {
+      if (o.machineId !== machineId) return false;
       
-      // Limit safety block check to 100 days
-      let safetyCounter = 0;
-      while (curr <= eDate && safetyCounter < 100) {
-        safetyCounter++;
-        const currStr = curr.toISOString().split('T')[0];
-        const blockedMatch = blockedList.find((b: any) => b.machineId === machineId && b.date === currStr);
-        if (blockedMatch) {
-          dateIsBlocked = true;
-          reasonTxt = blockedMatch.reason || "Geblokkeerd door beheerder / Onderhoud";
-          break;
-        }
-        curr.setDate(curr.getDate() + 1);
-      }
+      const orderStart = new Date(o.startDate).getTime();
+      const orderEnd = new Date(o.endDate).getTime();
 
-      setIsDateBlocked(dateIsBlocked);
-      setBlockingReason(reasonTxt);
+      return (requestedStart <= orderEnd && requestedEnd >= orderStart);
+    });
 
-      if (overlaps.length > 0) {
-        setIsAvailable(false);
-        setOverlappingOrders(overlaps);
-      } else if (dateIsBlocked) {
-        setIsAvailable(false);
-        setOverlappingOrders([]);
-      } else {
-        setIsAvailable(true);
-        setOverlappingOrders([]);
+    let dateIsBlocked = false;
+    let reasonTxt = "";
+
+    const sDate = new Date(start);
+    const eDate = new Date(end);
+    let curr = new Date(sDate);
+    
+    // Limit safety block check to 1000 days
+    let safetyCounter = 0;
+    while (curr <= eDate && safetyCounter < 1000) {
+      safetyCounter++;
+      const currStr = curr.toISOString().split('T')[0];
+      const blockedMatch = blockedDaysList.find((b: any) => b.machineId === machineId && b.date === currStr);
+      if (blockedMatch) {
+        dateIsBlocked = true;
+        reasonTxt = blockedMatch.reason || "Geblokkeerd door beheerder / Onderhoud";
+        break;
       }
-    } catch (err) {
+      curr.setDate(curr.getDate() + 1);
+    }
+
+    setIsDateBlocked(dateIsBlocked);
+    setBlockingReason(reasonTxt);
+
+    if (overlaps.length > 0) {
+      setIsAvailable(false);
+      setOverlappingOrders(overlaps);
+    } else if (dateIsBlocked) {
+      setIsAvailable(false);
+      setOverlappingOrders([]);
+    } else {
       setIsAvailable(true);
+      setOverlappingOrders([]);
     }
   };
 
@@ -274,7 +261,7 @@ export default function BookingSection({
     if (selectedMachine) {
       checkRealtimeAvailability(selectedMachine.id, startDate, endDate);
     }
-  }, [selectedMachine, startDate, endDate]);
+  }, [selectedMachine, startDate, endDate, allOrders, blockedDaysList]);
 
   // Synchronize local startDate and endDate with cart items to trigger availability updates
   useEffect(() => {
@@ -572,6 +559,7 @@ export default function BookingSection({
     setTimeout(async () => {
       try {
         let firstSuccessfulOrder: Order | null = null;
+        const placedOrders: Order[] = [];
         
         if (cartItems && cartItems.length > 0) {
           for (let i = 0; i < cartItems.length; i++) {
@@ -641,13 +629,17 @@ export default function BookingSection({
             };
 
             const result = await onCreateReservation(orderObj);
-            if (result && !firstSuccessfulOrder) {
-              firstSuccessfulOrder = result;
+            if (result) {
+              placedOrders.push(result);
+              if (!firstSuccessfulOrder) {
+                firstSuccessfulOrder = result;
+              }
             }
           }
 
           setIsSubmitting(false);
           if (firstSuccessfulOrder) {
+            setSuccessOrders(placedOrders);
             if (paymentGateway === "whatsapp") {
               const checkoutItems: CartItem[] = cartItems.length > 0 ? cartItems : (selectedMachine ? [{
                 id: selectedMachine.id,
@@ -856,6 +848,7 @@ export default function BookingSection({
           ) : (
             <BookingSuccess 
               successOrder={successOrder}
+              successOrders={successOrders}
               paymentGateway={paymentGateway}
               setStep={setStep}
               setSuccessOrder={setSuccessOrder}

@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useLanguageStore } from "../store/languageStore";
+import { useAppStore } from "../store/appStore";
 import { AppNotification, UserProfile, CartItem } from "../types";
 
 export function HuurGoLogo({ className = "h-8" }: { className?: string }) {
@@ -110,20 +111,11 @@ export default function Header({
   onCustomerLogout,
   isAdminMode,
   setIsAdminMode,
-  cartItems = [],
-  siteConfig = {
-    siteName: "HuurGo",
-    heroTagline: "Snel & Makkelijk Hoogwerkers Huren",
-    heroTitle: "Huur uw hoogwerker in een handomdraai.",
-    heroSubtitle: "HuurGo is er voor ZZP'ers en particulieren. Geen gedoe, direct online geregeld. Vind binnen 1 minuut de perfecte machine voor uw schilderklus, tuinonderhoud of gevelwerk met onze slimme AI-assistent.",
-    menuHomeLabel: "Home",
-    menuCatalogLabel: "Catalogus",
-    menuAdvisorLabel: "Snel Advies",
-    menuOrdersLabel: "Mijn Account"
-  }
+  cartItems = []
 }: HeaderProps) {
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
   const unreadCount = notifications.filter((n) => !n.read).length;
+  const siteConfig = useAppStore((state) => state.siteConfig);
   const language = useLanguageStore((state) => state.language);
   const toggleLanguage = useLanguageStore((state) => state.toggleLanguage);
   const t = useLanguageStore((state) => state.t);
@@ -179,8 +171,8 @@ export default function Header({
             // Clean Visitor Navigation Links
             (
               [
-                { id: "home", label: t("menuHome"), icon: Home },
-                { id: "catalog", label: t("menuCatalog"), icon: Layers },
+                { id: "home", label: (language === "nl" && siteConfig.menuHomeLabel) ? siteConfig.menuHomeLabel : t("menuHome"), icon: Home },
+                { id: "catalog", label: (language === "nl" && siteConfig.menuCatalogLabel) ? siteConfig.menuCatalogLabel : t("menuCatalog"), icon: Layers },
                 { id: "booking", label: t("menuBooking"), icon: ClipboardList },
               ] as { id: string; label: string; icon: any; badge?: string }[]
             ).map((tab) => {
@@ -386,10 +378,10 @@ export default function Header({
       {!isAdminMode && (
         <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex h-14 border-t border-slate-200/80 bg-white/95 backdrop-blur-lg justify-around items-center px-1 pb-safe shadow-[0_-4px_12px_rgba(0,0,0,0.06)]">
           {[
-            { id: "home", label: t("menuHome"), icon: Home },
-            { id: "catalog", label: t("menuCatalog"), icon: Layers },
+            { id: "home", label: (language === "nl" && siteConfig.menuHomeLabel) ? siteConfig.menuHomeLabel : t("menuHome"), icon: Home },
+            { id: "catalog", label: (language === "nl" && siteConfig.menuCatalogLabel) ? siteConfig.menuCatalogLabel : t("menuCatalog"), icon: Layers },
             { id: "booking", label: t("menuBooking"), icon: ClipboardList },
-            { id: "orders", label: currentUser ? t("menuMyArea") : t("menuLogin"), icon: User },
+            { id: "orders", label: currentUser ? ((language === "nl" && siteConfig.menuOrdersLabel) ? siteConfig.menuOrdersLabel : t("menuMyArea")) : t("menuLogin"), icon: User },
           ].map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;

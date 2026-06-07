@@ -12,6 +12,7 @@ import { useAuthStore } from "../../store/authStore";
 
 interface BookingSuccessProps {
   successOrder: Order | null;
+  successOrders: Order[];
   paymentGateway: string;
   setStep: (step: number) => void;
   setSuccessOrder: (order: Order | null) => void;
@@ -22,6 +23,7 @@ interface BookingSuccessProps {
 
 export default function BookingSuccess({
   successOrder,
+  successOrders,
   paymentGateway,
   setStep,
   setSuccessOrder,
@@ -92,7 +94,7 @@ export default function BookingSuccess({
           {paymentGateway === "whatsapp" ? (
             <span>Bevestig uw boeking via WhatsApp om uw betaallink te ontvangen.</span>
           ) : (
-            <span>Inkoop-betaling is met succes voldaan via de beveiligde <strong className="text-teal-700 uppercase">{paymentGateway} Gateway</strong>.</span>
+            <span>Inkoop-aanvraag is succesvol geregistreerd via de beveiligde <strong className="text-teal-700 uppercase">{paymentGateway} Gateway</strong>.</span>
           )}
         </p>
       </div>
@@ -157,7 +159,7 @@ export default function BookingSuccess({
       {/* Action routes */}
       <div className="flex flex-col sm:flex-row justify-center gap-3 pt-6 border-t border-slate-200">
         <button
-          onClick={() => printInvoice(successOrder)}
+          onClick={() => printInvoice(successOrders.length > 0 ? successOrders : successOrder)}
           className="bg-teal-600 hover:bg-teal-700 text-white font-extrabold text-xs px-5 py-3 rounded-xl transition-all flex items-center justify-center space-x-1.5 cursor-pointer shadow-md shadow-teal-100 border-none"
         >
           <Download className="h-4 w-4" />

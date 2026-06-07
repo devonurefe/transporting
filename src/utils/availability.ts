@@ -61,7 +61,7 @@ export function checkAvailability(
   const eDate = new Date(end);
   let curr = new Date(sDate);
   let safetyCounter = 0;
-  while (curr <= eDate && safetyCounter < 100) {
+  while (curr <= eDate && safetyCounter < 1000) {
     safetyCounter++;
     const currStr = curr.toISOString().split('T')[0];
     const blockedMatch = blockedDates.find(b => {

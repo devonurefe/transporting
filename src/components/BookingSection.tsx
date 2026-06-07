@@ -703,17 +703,9 @@ export default function BookingSection({
 
       <div className="mx-auto max-w-6xl">
         
-        {/* Step Indicator Header (Hide on Success step) */}
+        {/* Stepper — hide on success */}
         {step < 4 && (
-          <div className="mb-10 text-center space-y-6">
-            <div>
-              <h1 className="font-display text-3xl font-extrabold tracking-tight text-slate-900 flex items-center justify-center space-x-2">
-                <span>Rond uw Reservatie Af</span>
-              </h1>
-              <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto">
-                Configureer uw huurperiode en bezorgwijze. Veilig, vakkundig en direct verbonden met ons vlootbeheer.
-              </p>
-            </div>
+          <div className="mb-8 text-center">
 
             {/* Stepper tracker */}
             <div className="flex items-center justify-center max-w-md mx-auto relative px-6">
@@ -768,13 +760,13 @@ export default function BookingSection({
               className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start"
             >
 
-              {/* Price summary — mobile: top (order-1), desktop: right column (order-2) */}
-              <div className="lg:col-span-4 lg:sticky lg:top-24 space-y-4 order-1 lg:order-2">
+              {/* Price summary — desktop only sticky right column */}
+              <div className="hidden lg:block lg:col-span-4 lg:sticky lg:top-24 space-y-4">
                 <BookingPriceSummary selectedMachine={cartItems && cartItems.length > 0 ? cartItems[0].machine : null} sums={sums} />
               </div>
 
-              {/* Form column — mobile: below summary (order-2), desktop: left (order-1) */}
-              <div className="lg:col-span-8 space-y-6 order-2 lg:order-1">
+              {/* Form column */}
+              <div className="lg:col-span-8 space-y-6">
 
                 {step === 1 && (
                   <BookingStep1 
@@ -799,6 +791,8 @@ export default function BookingSection({
                     })}
                     handleNextStep={handleNextStep}
                     setActiveTab={setActiveTab}
+                    sums={sums}
+                    selectedMachine={cartItems.length > 0 ? cartItems[0].machine : null}
                   />
                 )}
 

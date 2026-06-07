@@ -32,9 +32,9 @@ const dictionary: TranslationDictionary = {
   heroTagline: { nl: "Professionele Hoogwerker Verhuur", en: "Professional Aerial Work Platform Rental", tr: "Profesyonel Yüksek Erişim Platformu Kiralama" },
   heroTitle: { nl: "De juiste machine, snel en veilig geregeld.", en: "The right machine, arranged quickly and safely.", tr: "Doğru makine, hızlı ve güvenli şekilde ayarlandı." },
   heroSubtitle: {
-    nl: "MB Hoogwerkers B.V. verhuurt gecertificeerde hoogwerkers, schaarliften, mastliften en ladderliften aan ZZP'ers, aannemers en particulieren door heel Nederland. Meer dan 50 BMWT-gecertificeerde machines, direct beschikbaar.",
-    en: "MB Hoogwerkers B.V. rents certified aerial work platforms, scissor lifts, mast lifts, and ladder lifts to freelancers, contractors, and private individuals across the Netherlands. Over 50 BMWT-certified machines, immediately available.",
-    tr: "MB Hoogwerkers B.V., Hollanda genelinde serbest çalışanlara, müteahhitlere ve bireylere sertifikalı yüksek erişim platformları, makas platformları, direk asansörler ve merdiven asansörleri kiralamaktadır. 50'den fazla BMWT sertifikalı makine, hemen kullanıma hazır."
+    nl: "HuurGo is er voor ZZP'ers en particulieren. Geen gedoe, direct online geregeld. Vind binnen 1 minuut de perfecte machine voor uw schilderklus, tuinonderhoud of gevelwerk met onze slimme AI-assistent.",
+    en: "HuurGo is for freelancers and individuals. No hassle, arranged directly online. Find the perfect machine for your painting, garden, or facade job within 1 minute with our smart AI assistant.",
+    tr: "HuurGo, serbest çalışanlar ve bireyler içindir. Zahmetsiz, doğrudan çevrimiçi. Akıllı yapay zeka asistanımızla boya, bahçe veya cephe işiniz için 1 dakikada mükemmel makineyi bulun."
   },
   searchPlaceholder: { nl: "Waar gaat u werken? (bijv. 15 meter, schilder)", en: "Where will you work? (e.g. 15 meters, painting)", tr: "Nerede çalışacaksınız? (örn. 15 metre, boyacı)" },
   searchButton: { nl: "Zoeken", en: "Search Fleet", tr: "Filoda Ara" },

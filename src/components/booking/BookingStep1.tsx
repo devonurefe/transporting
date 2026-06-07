@@ -6,8 +6,9 @@
 import React from "react";
 import { Calendar, Building2, X, Truck, Sparkles, ShieldAlert, ArrowRight, MessageCircle } from "lucide-react";
 import { motion } from "motion/react";
-import { CartItem, DeliveryType } from "../../types";
+import { CartItem, DeliveryType, Machine } from "../../types";
 import { buildWhatsAppUrl } from "../../utils/whatsapp";
+import BookingPriceSummary from "./BookingPriceSummary";
 
 interface BookingStep1Props {
   cartItems: CartItem[];
@@ -24,6 +25,12 @@ interface BookingStep1Props {
   isAvailable: boolean;
   handleNextStep: () => void;
   setActiveTab: (tab: string) => void;
+  sums?: {
+    days: number; rawSubtotal: number; subtotal: number; discountAmount: number; discountLabel: string;
+    transport: number; driver: number; addonCost: number; addonDetails: { id: string; name: string; price: number }[];
+    vat: number; total: number; borgsom: number;
+  };
+  selectedMachine?: Machine | null;
 }
 
 export default function BookingStep1({
@@ -40,7 +47,9 @@ export default function BookingStep1({
   setValidationError,
   isAvailable,
   handleNextStep,
-  setActiveTab
+  setActiveTab,
+  sums,
+  selectedMachine
 }: BookingStep1Props) {
   const todayStr = new Date().toISOString().split('T')[0];
 
@@ -352,6 +361,13 @@ export default function BookingStep1({
             <X className="h-3.5 w-3.5" />
           </button>
         </motion.div>
+      )}
+
+      {/* Mobile price summary — shows after all selections, before Doorgaan */}
+      {sums && (
+        <div className="lg:hidden pt-2">
+          <BookingPriceSummary selectedMachine={selectedMachine ?? null} sums={sums} />
+        </div>
       )}
 
       {/* Step control */}

@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Machine } from "../types";
+import { categoryIconMap } from "./icons/CategoryIcons";
 
 const professionIconMap: Record<string, LucideIcon> = {
   Schilder: Paintbrush,
@@ -197,6 +198,10 @@ export default function CatalogSection({
                       : "bg-white text-slate-600 border-slate-200 hover:text-slate-900 hover:border-slate-300 hover:bg-slate-50"
                   }`}
                 >
+                  {(() => {
+                    const Icon = categoryIconMap[tab.id];
+                    return Icon ? <Icon className="h-3.5 w-3.5 shrink-0" /> : null;
+                  })()}
                   {tab.label}
                 </button>
               );

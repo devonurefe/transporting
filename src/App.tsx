@@ -640,21 +640,18 @@ export default function App() {
                 window.open(buildWhatsAppGeneralUrl(), "_blank");
               }
             }}
-            className={`flex items-center space-x-2 px-4 py-3 rounded-full text-white shadow-2xl hover:scale-105 active:scale-95 transition-all cursor-pointer border-none font-bold ${
+            className={`flex items-center justify-center h-11 w-11 rounded-full text-white shadow-lg hover:scale-110 active:scale-95 transition-all cursor-pointer border-none ${
               isGeminiEnabled
-                ? "bg-gradient-to-r from-indigo-600 to-indigo-700 shadow-indigo-500/20"
-                : "bg-gradient-to-r from-emerald-500 to-emerald-600 shadow-emerald-500/20"
+                ? "bg-indigo-600 hover:bg-indigo-700 shadow-indigo-500/25"
+                : "bg-[#25D366] hover:bg-[#1da851] shadow-emerald-500/25"
             }`}
-            title={isGeminiEnabled ? "AI Snel Advies" : "WhatsApp Chat"}
+            title={isGeminiEnabled ? "AI Snel Advies" : "Hulp nodig? Chat via WhatsApp"}
           >
             {isGeminiEnabled ? (
-              <Sparkles className="h-4 w-4 animate-pulse" />
+              <Sparkles className="h-5 w-5" />
             ) : (
-              <MessageCircle className="h-4 w-4" />
+              <MessageCircle className="h-5 w-5" />
             )}
-            <span className="text-xs uppercase tracking-wider">
-              {isGeminiEnabled ? "Snel Advies" : "Hulp nodig?"}
-            </span>
           </motion.button>
         </div>
       )}

@@ -192,6 +192,20 @@ function scheduleDailyReminders() {
   console.log(`[Reminders] Scheduler armed — first run in ${Math.round(msUntil7am / 60000)} minutes`);
 }
 
-startServer().catch(err => {
+async function autoSeedIfEmpty() {
+  try {
+    const machineCount = await prisma.machine.count();
+    if (machineCount > 0) return; // DB already has data
+
+    console.log("[AutoSeed] Database appears empty — running initial seed...");
+    const { execSync } = await import("child_process");
+    execSync("npx prisma db seed", { stdio: "inherit" });
+    console.log("[AutoSeed] Initial seed complete.");
+  } catch (err) {
+    console.warn("[AutoSeed] Could not auto-seed:", err instanceof Error ? err.message : err);
+  }
+}
+
+autoSeedIfEmpty().then(() => startServer()).catch(err => {
   console.error("Failed to start server:", err);
 });

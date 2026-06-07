@@ -623,10 +623,10 @@ async function main() {
     });
   }
 
-  console.log("Seeding site config (upsert)...");
+  console.log("Seeding site config (create only, preserve existing)...");
   await prisma.siteConfig.upsert({
     where: { id: defaultSiteConfig.id },
-    update: defaultSiteConfig,
+    update: {}, // Never overwrite admin-customized settings
     create: defaultSiteConfig
   });
 
@@ -636,11 +636,7 @@ async function main() {
   const adminPasswordHash = await bcrypt.hash(adminPassword, 10);
   await prisma.admin.upsert({
     where: { email: adminEmail },
-    update: {
-      passwordHash: adminPasswordHash,
-      name: "HuurGo Admin",
-      role: "admin"
-    },
+    update: {}, // Preserve existing admin password if already set
     create: {
       email: adminEmail,
       passwordHash: adminPasswordHash,

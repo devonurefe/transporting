@@ -41,6 +41,8 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage }: AdminOrde
     return nl;
   };
 
+  const getBaseName = (name: string) => name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "").trim();
+
   // Modal and custom date proposal state
   const [selectedDetailOrder, setSelectedDetailOrder] = useState<any | null>(null);
   const [isProposingDate, setIsProposingDate] = useState<boolean>(false);
@@ -167,7 +169,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage }: AdminOrde
                     {t(o.status, o.status, o.status)}
                   </span>
                 </div>
-                <div className="text-xs font-semibold text-slate-700">{o.machineName}</div>
+                <div className="text-xs font-semibold text-slate-700">{getBaseName(o.machineName)}</div>
                 <div className="flex justify-between items-center text-xs">
                   <span className="text-slate-500">{o.startDate} · {o.rentalDays}d</span>
                   <span className="font-mono font-bold text-teal-600">€ {o.totalAmount.toFixed(2)}</span>
@@ -233,25 +235,25 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage }: AdminOrde
                     <tr key={o.id} className="hover:bg-slate-50 transition-colors group">
                       <td 
                         onClick={() => { setSelectedDetailOrder(o); setIsProposingDate(false); }}
-                        className="py-6 px-3 font-mono font-bold text-indigo-600 cursor-pointer hover:underline text-xs"
+                        className="py-3 px-3 font-mono font-bold text-indigo-600 cursor-pointer hover:underline text-xs"
                         title={t("Klik om contract details in te zien", "Click to view contract details", "Sözleşme detaylarını görmek için tıklayın")}
                       >
                         {o.id}
                       </td>
                       <td 
                         onClick={() => { setSelectedDetailOrder(o); setIsProposingDate(false); }}
-                        className="py-6 px-3 font-medium text-slate-800 cursor-pointer"
+                        className="py-3 px-3 font-medium text-slate-800 cursor-pointer"
                         title={t("Klik om klantgegevens in te zien", "Click to view customer details", "Müşteri bilgilerini görmek için tıklayın")}
                       >
                         <div className="font-bold text-slate-950 group-hover:text-indigo-650 group-hover:text-indigo-600 transition-colors mb-1 text-xs">{o.customerName}</div>
                         <span className="block text-[10px] text-slate-450 text-slate-500 font-mono mt-0.5 leading-none">{o.customerPhone}</span>
                         <span className="block text-[10px] text-slate-400 font-sans mt-1.5 truncate max-w-[180px] leading-none" title={o.customerEmail}>{o.customerEmail}</span>
                       </td>
-                      <td className="py-6 px-3">
-                        <div className="font-bold text-slate-850 text-slate-800 text-xs mb-1">{o.machineName}</div>
+                      <td className="py-3 px-3">
+                        <div className="font-bold text-slate-850 text-slate-800 text-xs mb-1">{getBaseName(o.machineName)}</div>
                         <span className="inline-block bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-[9.5px] font-bold">{o.customerProfile}</span>
                       </td>
-                      <td className="py-6 px-3">
+                      <td className="py-3 px-3">
                         <span className="text-[11px] font-semibold text-slate-700 block">
                           {o.deliveryType === "self_pickup" 
                             ? t("Zelf Afhalen (Gratis)", "Self Pickup (Free)", "Kendim Teslim Alacağım (Ücretsiz)") 
@@ -263,12 +265,12 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage }: AdminOrde
                           </span>
                         )}
                       </td>
-                      <td className="py-6 px-3 whitespace-nowrap">
+                      <td className="py-3 px-3 whitespace-nowrap">
                         <div className="text-slate-850 text-slate-800 font-semibold text-xs">{o.startDate}</div>
                         <span className="text-[10px] text-slate-450 text-slate-500 block font-mono mt-1.5">({o.rentalDays}d)</span>
                       </td>
-                      <td className="py-6 px-3 font-mono font-bold text-teal-600 text-xs">€ {o.totalAmount.toFixed(2)}</td>
-                      <td className="py-6 px-3 text-center">
+                      <td className="py-3 px-3 font-mono font-bold text-teal-600 text-xs">€ {o.totalAmount.toFixed(2)}</td>
+                      <td className="py-3 px-3 text-center">
                         <div className="flex flex-col gap-2.5 justify-center items-center">
                           <span className={`inline-block text-[9.5px] font-mono px-3 py-1 rounded-full font-extrabold uppercase tracking-wider ${
                             o.status === "In behandeling" 
@@ -469,7 +471,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage }: AdminOrde
                     <div className="space-y-2.5 text-xs">
                       <div className="flex justify-between items-baseline border-b border-slate-200/60 pb-1.5">
                         <span className="text-slate-600">Geselecteerd Model:</span>
-                        <strong className="text-slate-800">{selectedDetailOrder.machineName}</strong>
+                        <strong className="text-slate-800">{getBaseName(selectedDetailOrder.machineName)}</strong>
                       </div>
 
                       <div className="flex justify-between items-baseline">

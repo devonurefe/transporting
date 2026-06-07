@@ -103,7 +103,13 @@ export const useAppStore = create<AppState>((set, get) => ({
     menuAdminLabel: "Portaal"
   },
   blockedDates: [],
-  cartItems: [],
+  cartItems: (() => {
+    try {
+      const stored = localStorage.getItem("hwh_cart");
+      if (stored) return JSON.parse(stored);
+    } catch { /* ignore */ }
+    return [];
+  })(),
   campaignRules: (() => {
     try {
       const stored = localStorage.getItem("hwh_campaign_rules");
@@ -404,25 +410,34 @@ export const useAppStore = create<AppState>((set, get) => ({
         startDate,
         endDate
       };
-      return { cartItems: [...state.cartItems, newItem] };
+      const updated = [...state.cartItems, newItem];
+      try { localStorage.setItem("hwh_cart", JSON.stringify(updated)); } catch { /* ignore */ }
+      return { cartItems: updated };
     });
   },
 
   removeFromCart: (itemId) => {
-    set(state => ({
-      cartItems: state.cartItems.filter(item => item.id !== itemId)
-    }));
+    set(state => {
+      const updated = state.cartItems.filter(item => item.id !== itemId);
+      try { localStorage.setItem("hwh_cart", JSON.stringify(updated)); } catch { /* ignore */ }
+      return { cartItems: updated };
+    });
   },
 
   updateCartItemDates: (itemId, startDate, endDate) => {
-    set(state => ({
-      cartItems: state.cartItems.map(item => 
+    set(state => {
+      const updated = state.cartItems.map(item =>
         item.id === itemId ? { ...item, startDate, endDate } : item
-      )
-    }));
+      );
+      try { localStorage.setItem("hwh_cart", JSON.stringify(updated)); } catch { /* ignore */ }
+      return { cartItems: updated };
+    });
   },
 
-  clearCart: () => set({ cartItems: [] }),
+  clearCart: () => {
+    try { localStorage.removeItem("hwh_cart"); } catch { /* ignore */ }
+    set({ cartItems: [] });
+  },
 
   clearError: () => set({ error: null }),
 

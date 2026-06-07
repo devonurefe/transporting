@@ -4,10 +4,7 @@
  */
 
 import React, { useState, useEffect } from "react";
-import {
-  Building2,
-  RefreshCw,
-} from "lucide-react";
+import {} from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Machine, Order, DeliveryType, UserProfile, CartItem, CampaignRule } from "../types";
 import { useAppStore } from "../store/appStore";
@@ -773,26 +770,6 @@ export default function BookingSection({
 
               {/* Form column — mobile: below summary (order-2), desktop: left (order-1) */}
               <div className="lg:col-span-8 space-y-6 order-2 lg:order-1">
-                
-                {/* Object header helper */}
-                <div className="bg-indigo-50 border border-indigo-100 p-4.5 rounded-2xl flex items-center justify-between shadow-sm">
-                  <div className="flex items-center space-x-3">
-                    <Building2 className="h-5 w-5 text-indigo-600" />
-                    <div>
-                      <span className="text-[9px] text-indigo-600 block uppercase font-mono font-bold">Reserveringsobject</span>
-                      <span className="text-xs sm:text-xs font-extrabold text-slate-900 block mt-0.5">
-                        {selectedMachine ? selectedMachine.name : "Kies een machine uit de catalogus"}
-                      </span>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => setActiveTab("catalog")}
-                    className="text-[11px] text-indigo-600 hover:text-white transition-all bg-indigo-50 hover:bg-indigo-600 border border-indigo-100 hover:border-indigo-600 px-3 py-1.5 rounded-lg cursor-pointer flex items-center gap-1.5 font-semibold"
-                  >
-                    <RefreshCw className="h-3 w-3 shrink-0" />
-                    Ander model
-                  </button>
-                </div>
 
                 {step === 1 && (
                   <BookingStep1 

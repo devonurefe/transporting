@@ -46,17 +46,12 @@ export default function BookingStep1({
 
   return (
     <div className="bg-white border border-slate-200 shadow-sm p-6 rounded-3xl space-y-6">
-      <div className="flex justify-between items-center border-b border-slate-100 pb-4">
+      <div className="border-b border-slate-100 pb-4">
         <h3 className="font-display font-black text-base text-slate-900 flex items-center space-x-2">
-          <Calendar className="h-5 w-5 text-indigo-605 text-indigo-650 text-indigo-600" />
-          <span>Wanneer wilt u huren?</span>
+          <Calendar className="h-5 w-5 text-indigo-600" />
+          <span>Huurperiode &amp; Bezorging</span>
         </h3>
-        <button
-          onClick={() => setActiveTab("catalog")}
-          className="text-xs text-indigo-700 hover:text-indigo-900 font-bold bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-xl border border-indigo-100 shadow-sm animate-fade-in cursor-pointer border-none"
-        >
-          + Voeg machine toe
-        </button>
+        <p className="text-[11px] text-slate-400 mt-1">Kies uw datums en hoe u de machine wilt ontvangen.</p>
       </div>
 
       {cartItems.length === 0 ? (
@@ -105,14 +100,23 @@ export default function BookingStep1({
                       <p className="text-[10px] text-slate-500 font-medium font-mono">Tarief: <span className="text-teal-700 font-bold">€{item.machine.pricePerDay},-</span> / dag</p>
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => onRemoveCartItem(item.id)}
-                    className="p-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 transition-colors border-none cursor-pointer"
-                    title="Verwijderen"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("catalog")}
+                      className="text-[10px] text-slate-400 hover:text-indigo-600 transition-colors border-none bg-transparent cursor-pointer font-medium hidden sm:block"
+                    >
+                      Ander model
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onRemoveCartItem(item.id)}
+                      className="p-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 transition-colors border-none cursor-pointer"
+                      title="Verwijderen"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-2 border-t border-slate-200">

@@ -3,13 +3,28 @@ import {createRoot} from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
 
-// Silence benign HMR / WebSocket connection errors in sandboxed environments
+// Silence benign HMR / WebSocket errors; auto-reload on chunk load failures
 if (typeof window !== "undefined") {
   window.addEventListener("unhandledrejection", (event) => {
     const msg = event?.reason?.message || String(event?.reason);
     if (msg.includes("websocket") || msg.includes("WebSocket") || msg.includes("vite")) {
       event.preventDefault();
       event.stopPropagation();
+      return;
+    }
+    // Chunk load failures after a new deploy — just reload once
+    if (
+      msg.includes("not a valid JavaScript MIME type") ||
+      msg.includes("Failed to fetch dynamically imported") ||
+      msg.includes("ChunkLoadError") ||
+      event?.reason?.name === "ChunkLoadError"
+    ) {
+      event.preventDefault();
+      const reloaded = sessionStorage.getItem("chunk_reload");
+      if (!reloaded) {
+        sessionStorage.setItem("chunk_reload", "1");
+        window.location.reload();
+      }
     }
   });
 

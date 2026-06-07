@@ -74,6 +74,11 @@ model Admin {
   createdAt    DateTime @default(now())
 }
 
+model InvoiceCounter {
+  id         String @id @default("default")
+  lastNumber Int    @default(0)
+}
+
 model Order {
   id              String    @id
   machineId       String
@@ -99,7 +104,17 @@ model Order {
   addons          String
   borgsom         Float     @default(0)
   borgsomStatus   String    @default("pending")
+  invoiceNumber   String?
+  paymentStatus   String    @default("awaiting")
   customer        Customer? @relation(fields: [customerId], references: [id])
+}
+
+model OrderRating {
+  id        String   @id @default(uuid())
+  orderId   String   @unique
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
 }
 
 model SiteConfig {

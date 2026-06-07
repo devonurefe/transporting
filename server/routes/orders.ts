@@ -182,6 +182,15 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
       }
     }
 
+    // Atomic sequential invoice number (Dutch BTW wetgeving)
+    const counter = await prisma.invoiceCounter.upsert({
+      where: { id: "default" },
+      create: { id: "default", lastNumber: 1 },
+      update: { lastNumber: { increment: 1 } }
+    });
+    const invoiceYear = new Date().getFullYear();
+    const invoiceNumber = `INV-${invoiceYear}-${String(counter.lastNumber).padStart(4, "0")}`;
+
     const newOrder = await prisma.order.create({
       data: {
         id: `HWH-${Math.floor(1000 + Math.random() * 9000)}`,
@@ -206,7 +215,9 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
         customerId: resolvedCustomerId,
         addons: JSON.stringify(orderData.addons || []),
         borgsom: Number(orderData.borgsom || 0),
-        borgsomStatus: "pending"
+        borgsomStatus: "pending",
+        invoiceNumber,
+        paymentStatus: "awaiting"
       }
     });
 
@@ -232,6 +243,170 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
   }
 });
 
+// PUT /api/orders/:id/payment — admin marks payment received
+ordersRouter.put("/:id/payment", requireAdmin as any, async (req: AuthenticatedRequest, res: Response) => {
+  const { id } = req.params;
+  const { paymentStatus } = req.body;
+
+  const validStatuses = ["awaiting", "paid", "refunded"];
+  if (!paymentStatus || !validStatuses.includes(paymentStatus)) {
+    return res.status(400).json({ error: "Ongeldige betalingsstatus" });
+  }
+
+  try {
+    const updatedOrder = await prisma.order.update({
+      where: { id },
+      data: { paymentStatus }
+    });
+    res.json({
+      ...updatedOrder,
+      startDate: updatedOrder.startDate.toISOString().split("T")[0],
+      endDate: updatedOrder.endDate.toISOString().split("T")[0],
+      addons: JSON.parse(updatedOrder.addons || "[]")
+    });
+  } catch (error) {
+    console.error("Error updating payment status:", error);
+    res.status(500).json({ error: "Failed to update payment status" });
+  }
+});
+
+// PUT /api/orders/:id/borgsom — admin updates borgsom status
+ordersRouter.put("/:id/borgsom", requireAdmin as any, async (req: AuthenticatedRequest, res: Response) => {
+  const { id } = req.params;
+  const { borgsomStatus } = req.body;
+
+  const validStatuses = ["pending", "returned", "withheld"];
+  if (!borgsomStatus || !validStatuses.includes(borgsomStatus)) {
+    return res.status(400).json({ error: "Ongeldige borgsom status" });
+  }
+
+  try {
+    const updatedOrder = await prisma.order.update({
+      where: { id },
+      data: { borgsomStatus }
+    });
+
+    if (borgsomStatus === "returned") {
+      const emailData = {
+        ...updatedOrder,
+        startDate: updatedOrder.startDate.toISOString().split("T")[0],
+        endDate: updatedOrder.endDate.toISOString().split("T")[0],
+        customerPhone: updatedOrder.customerPhone || ""
+      };
+      emailService.sendBorgsomRefundEmail(emailData).catch(err => console.error("Borgsom refund email error:", err));
+    }
+
+    res.json({
+      ...updatedOrder,
+      startDate: updatedOrder.startDate.toISOString().split("T")[0],
+      endDate: updatedOrder.endDate.toISOString().split("T")[0],
+      addons: JSON.parse(updatedOrder.addons || "[]")
+    });
+  } catch (error) {
+    console.error("Error updating borgsom status:", error);
+    res.status(500).json({ error: "Failed to update borgsom status" });
+  }
+});
+
+// PUT /api/orders/:id/cancel — customer cancels their own order
+ordersRouter.put("/:id/cancel", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
+  const { id } = req.params;
+
+  try {
+    const order = await prisma.order.findUnique({ where: { id } });
+    if (!order) return res.status(404).json({ error: "Bestelling niet gevonden" });
+
+    if (req.user?.role !== "admin" && order.customerId !== req.user?.id) {
+      return res.status(403).json({ error: "U heeft geen toestemming om deze bestelling te annuleren" });
+    }
+
+    if (order.status !== "In behandeling") {
+      return res.status(400).json({ error: "Alleen bestellingen met status 'In behandeling' kunnen worden geannuleerd" });
+    }
+
+    const updatedOrder = await prisma.order.update({
+      where: { id },
+      data: { status: "Geannuleerd" }
+    });
+
+    const emailData = {
+      ...updatedOrder,
+      startDate: updatedOrder.startDate.toISOString().split("T")[0],
+      endDate: updatedOrder.endDate.toISOString().split("T")[0],
+      customerPhone: updatedOrder.customerPhone || ""
+    };
+    emailService.sendStatusUpdate(emailData).catch(err => console.error("Cancel email error:", err));
+
+    res.json({
+      ...updatedOrder,
+      startDate: updatedOrder.startDate.toISOString().split("T")[0],
+      endDate: updatedOrder.endDate.toISOString().split("T")[0],
+      addons: JSON.parse(updatedOrder.addons || "[]")
+    });
+  } catch (error) {
+    console.error("Error cancelling order:", error);
+    res.status(500).json({ error: "Failed to cancel order" });
+  }
+});
+
+// POST /api/orders/:id/rating — customer submits a rating
+ordersRouter.post("/:id/rating", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
+  const { id } = req.params;
+  const { rating, comment } = req.body;
+
+  if (!rating || rating < 1 || rating > 5 || !Number.isInteger(Number(rating))) {
+    return res.status(400).json({ error: "Beoordeling moet een geheel getal tussen 1 en 5 zijn" });
+  }
+
+  try {
+    const order = await prisma.order.findUnique({ where: { id } });
+    if (!order) return res.status(404).json({ error: "Bestelling niet gevonden" });
+
+    if (req.user?.role !== "admin" && order.customerId !== req.user?.id) {
+      return res.status(403).json({ error: "U heeft geen toestemming" });
+    }
+
+    const orderRating = await prisma.orderRating.upsert({
+      where: { orderId: id },
+      create: { orderId: id, rating: Number(rating), comment: comment || null },
+      update: { rating: Number(rating), comment: comment || null }
+    });
+
+    res.json(orderRating);
+  } catch (error) {
+    console.error("Error saving rating:", error);
+    res.status(500).json({ error: "Failed to save rating" });
+  }
+});
+
+// GET /api/orders/:id/rating — fetch an order's rating
+ordersRouter.get("/:id/rating", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
+  const { id } = req.params;
+
+  try {
+    const order = await prisma.order.findUnique({ where: { id } });
+    if (!order) return res.status(404).json({ error: "Bestelling niet gevonden" });
+
+    if (req.user?.role !== "admin" && order.customerId !== req.user?.id) {
+      return res.status(403).json({ error: "U heeft geen toestemming" });
+    }
+
+    const rating = await prisma.orderRating.findUnique({ where: { orderId: id } });
+    res.json(rating || null);
+  } catch (error) {
+    console.error("Error fetching rating:", error);
+    res.status(500).json({ error: "Failed to fetch rating" });
+  }
+});
+
+const VALID_STATUS_TRANSITIONS: Record<string, string[]> = {
+  "In behandeling": ["Goedgekeurd", "Geannuleerd"],
+  "Goedgekeurd": ["Onderweg", "Geannuleerd"],
+  "Onderweg": ["Voltooid"],
+  "Voltooid": [],
+  "Geannuleerd": []
+};
+
 // PUT /api/orders/:id/status
 ordersRouter.put("/:id/status", requireAdmin as any, async (req: AuthenticatedRequest, res: Response) => {
   const { id } = req.params;
@@ -242,6 +417,24 @@ ordersRouter.put("/:id/status", requireAdmin as any, async (req: AuthenticatedRe
   }
 
   try {
+    const order = await prisma.order.findUnique({ where: { id } });
+    if (!order) return res.status(404).json({ error: "Bestelling niet gevonden" });
+
+    // Validate transition is allowed
+    const allowed = VALID_STATUS_TRANSITIONS[order.status] ?? [];
+    if (!allowed.includes(status)) {
+      return res.status(400).json({
+        error: `Overgang van '${order.status}' naar '${status}' is niet toegestaan`
+      });
+    }
+
+    // Require payment received before approving
+    if (status === "Goedgekeurd" && order.paymentStatus !== "paid") {
+      return res.status(400).json({
+        error: "Betaling moet eerst als ontvangen worden gemarkeerd voordat de bestelling kan worden goedgekeurd"
+      });
+    }
+
     const updatedOrder = await prisma.order.update({
       where: { id },
       data: { status }
@@ -265,5 +458,49 @@ ordersRouter.put("/:id/status", requireAdmin as any, async (req: AuthenticatedRe
   } catch (error) {
     console.error("Error updating order status:", error);
     res.status(500).json({ error: "Failed to update order status" });
+  }
+});
+
+// POST /api/orders/send-reminders — sends rental reminders for orders starting tomorrow
+// Protected by REMINDER_SECRET env var so it can be called from a cron service
+ordersRouter.post("/send-reminders", async (req: AuthenticatedRequest, res: Response) => {
+  const secret = process.env.REMINDER_SECRET;
+  const providedKey = req.headers["x-reminder-key"] || req.body?.key;
+
+  if (secret && providedKey !== secret) {
+    return res.status(401).json({ error: "Ongeldige sleutel" });
+  }
+
+  try {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowStr = tomorrow.toISOString().split("T")[0];
+    const tomorrowStart = new Date(tomorrowStr + "T00:00:00.000Z");
+    const tomorrowEnd = new Date(tomorrowStr + "T23:59:59.999Z");
+
+    const orders = await prisma.order.findMany({
+      where: {
+        startDate: { gte: tomorrowStart, lte: tomorrowEnd },
+        status: { in: ["Goedgekeurd", "Onderweg"] }
+      }
+    });
+
+    let sent = 0;
+    for (const order of orders) {
+      const emailData = {
+        ...order,
+        startDate: order.startDate.toISOString().split("T")[0],
+        endDate: order.endDate.toISOString().split("T")[0],
+        customerPhone: order.customerPhone || ""
+      };
+      const ok = await emailService.sendRentalReminder(emailData);
+      if (ok) sent++;
+    }
+
+    console.log(`[Reminders] Sent ${sent}/${orders.length} reminders for ${tomorrowStr}`);
+    res.json({ sent, total: orders.length, date: tomorrowStr });
+  } catch (error) {
+    console.error("Error sending reminders:", error);
+    res.status(500).json({ error: "Failed to send reminders" });
   }
 });

@@ -524,9 +524,14 @@ export default function BookingSection({
       
       if (data && data.response && data.response.docs && data.response.docs.length > 0) {
         const bestDoc = data.response.docs[0];
-        const rawResolved = bestDoc.weergavenaam;
-        setDeliveryAddress(rawResolved);
-        setAddressSuccessMsg(`✓ Gevalideerd adres gevonden: ${rawResolved}`);
+        // Build address using user's house number, not the API's nearest match
+        const street = bestDoc.straatnaam || bestDoc.straatnaam_verkort || "";
+        const city = bestDoc.woonplaatsnaam || bestDoc.woonplaats || "";
+        const resolvedAddress = street && city
+          ? `${street} ${cleanHouse}, ${cleanPostcode} ${city}`
+          : bestDoc.weergavenaam;
+        setDeliveryAddress(resolvedAddress);
+        setAddressSuccessMsg(`✓ Gevalideerd adres gevonden:\n${resolvedAddress}`);
       } else {
         setDeliveryAddress("");
         setAddressSuccessMsg("");

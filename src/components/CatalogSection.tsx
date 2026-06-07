@@ -200,12 +200,12 @@ export default function CatalogSection({
           </div>
 
           {/* Right: Actions (Sort, Reset, Mobile Filter Toggle) */}
-          <div className="flex items-center justify-between md:justify-end gap-2 shrink-0 border-t md:border-t-0 pt-2 md:pt-0">
+          <div className="flex items-center justify-between md:justify-end gap-2 shrink-0 border-t md:border-t-0 pt-2.5 md:pt-0 w-full md:w-auto">
             {/* Mobile Filter Toggle */}
             <button
               type="button"
               onClick={() => setShowFiltersMobile(!showFiltersMobile)}
-              className="lg:hidden flex items-center space-x-1.5 bg-slate-50 border border-slate-200 py-1.5 px-3 rounded-xl text-xs font-bold text-slate-700 cursor-pointer shadow-sm"
+              className="lg:hidden flex items-center space-x-1.5 bg-slate-50 border border-slate-200 py-1.5 px-3 rounded-xl text-xs font-bold text-slate-700 cursor-pointer shadow-sm shrink-0"
             >
               <Filter className="h-3.5 w-3.5 text-indigo-600" />
               <span>{showFiltersMobile ? "Verberg" : "Filters"}</span>
@@ -214,29 +214,32 @@ export default function CatalogSection({
               </span>
             </button>
 
-            {/* Sort Dropdown */}
-            <div className="flex items-center space-x-1 bg-slate-50 border border-slate-200 rounded-xl py-1.5 px-2.5 hover:border-indigo-400 transition-colors shadow-sm">
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="text-xs font-bold bg-transparent focus:outline-none cursor-pointer text-slate-800 border-none p-0 pr-1 select-none"
-              >
-                <option value="default">Sorteer: Standaard</option>
-                <option value="price_asc">Laagste prijs</option>
-                <option value="price_desc">Hoogste prijs</option>
-                <option value="height_asc">Minimale hoogte</option>
-                <option value="height_desc">Maximale hoogte</option>
-              </select>
-            </div>
+            {/* Sort & Reset Group */}
+            <div className="flex items-center gap-2">
+              {/* Sort Dropdown */}
+              <div className="flex items-center space-x-1 bg-slate-50 border border-slate-200 rounded-xl py-1.5 px-2.5 hover:border-indigo-400 transition-colors shadow-sm">
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="text-xs font-bold bg-transparent focus:outline-none cursor-pointer text-slate-800 border-none p-0 pr-1 select-none"
+                >
+                  <option value="default">Sorteer: Standaard</option>
+                  <option value="price_asc">Laagste prijs</option>
+                  <option value="price_desc">Hoogste prijs</option>
+                  <option value="height_asc">Minimale hoogte</option>
+                  <option value="height_desc">Maximale hoogte</option>
+                </select>
+              </div>
 
-            {/* Reset Button */}
-            <button
-              onClick={resetFilters}
-              title="Filters Herstellen"
-              className="flex items-center justify-center text-slate-500 hover:text-rose-600 transition-colors p-2 rounded-xl bg-slate-50 hover:bg-rose-50 border border-slate-200 cursor-pointer shadow-sm"
-            >
-              <RotateCcw className="h-3.5 w-3.5" />
-            </button>
+              {/* Reset Button */}
+              <button
+                onClick={resetFilters}
+                title="Filters Herstellen"
+                className="flex items-center justify-center text-slate-500 hover:text-rose-600 transition-colors p-2 rounded-xl bg-slate-50 hover:bg-rose-50 border border-slate-200 cursor-pointer shadow-sm shrink-0"
+              >
+                <RotateCcw className="h-3.5 w-3.5" />
+              </button>
+            </div>
           </div>
         </div>
 

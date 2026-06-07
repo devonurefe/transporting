@@ -84,20 +84,20 @@ export default function AdminCalendar({ onAddSystemLog, adminLanguage }: AdminCa
       className="lg:col-span-9 space-y-6 animate-fade-in"
     >
       <div className="glass-panel p-6 rounded-3xl space-y-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-200 pb-4">
-          <div>
-            <h3 className="font-display font-black text-lg text-slate-900 flex items-center space-x-2">
-              <Calendar className="h-5.5 w-5.5 text-amber-600" />
-              <span>{t("Kalender Blokkades & Systeemsluitingen", "Calendar Blocks & System Closures", "Takvim Engellemeleri & Sistem Kapatmaları")}</span>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-200 pb-4 gap-3">
+          <div className="space-y-1">
+            <h3 className="font-display font-black text-lg text-slate-900 flex items-start sm:items-center gap-2">
+              <Calendar className="h-5.5 w-5.5 text-amber-600 shrink-0 mt-0.5 sm:mt-0" />
+              <span className="flex-1 min-w-0">{t("Kalender Blokkades & Systeemsluitingen", "Calendar Blocks & System Closures", "Takvim Engellemeleri & Sistem Kapatmaları")}</span>
             </h3>
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-slate-500 leading-normal">
               {t("Blokkeer specifiek materieel of pakketten voor onderhoud, keuringen of feestdagen om realtime boekingen te voorkomen.", "Block specific equipment or packages for maintenance, inspections, or holidays to prevent real-time bookings.", "Gerçek zamanlı rezervasyonları önlemek için bakım, denetim veya resmi tatillerde belirli ekipman veya paketleri engelleyin.")}
             </p>
           </div>
           <button
             type="button"
             onClick={fetchBlockedDates}
-            className="text-[11px] font-mono text-slate-700 hover:text-slate-900 mt-2 sm:mt-0 flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-50 hover:bg-slate-105 hover:bg-slate-100 border border-slate-200 cursor-pointer"
+            className="text-[11px] font-mono text-slate-700 hover:text-slate-900 flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 cursor-pointer shrink-0 self-start sm:self-auto"
           >
             <RefreshCw className="h-3 w-3 shrink-0" />
             <span>{t("Ververs kalender", "Refresh calendar", "Takvimi yenile")}</span>
@@ -175,8 +175,8 @@ export default function AdminCalendar({ onAddSystemLog, adminLanguage }: AdminCa
                 blockedDates.map((block) => {
                   const relatedMachine = machines.find(m => m.id === block.machineId);
                   return (
-                    <div key={block.id} className="p-3.5 rounded-xl bg-amber-500/5 hover:bg-amber-500/8 border border-amber-200/80 transition-all flex justify-between items-start">
-                      <div className="space-y-1 min-w-0">
+                    <div key={block.id} className="p-3.5 rounded-xl bg-amber-500/5 hover:bg-amber-500/8 border border-amber-200/80 transition-all flex justify-between items-start gap-3">
+                      <div className="space-y-1 min-w-0 flex-1">
                         <div className="flex items-center space-x-1.5">
                           <span className="h-1.5 w-1.5 rounded-full bg-amber-500 shrink-0" />
                           <h4 className="text-xs font-extrabold text-slate-800 truncate leading-none">
@@ -193,7 +193,7 @@ export default function AdminCalendar({ onAddSystemLog, adminLanguage }: AdminCa
                       <button
                         type="button"
                         onClick={() => handleUnblockDate(block.machineId, block.date)}
-                        className="text-[10px] font-bold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 px-2.5 py-1 rounded-lg border border-rose-200 cursor-pointer transition-colors border-none"
+                        className="text-[10px] font-bold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 px-2.5 py-1 rounded-lg border border-rose-200 cursor-pointer transition-colors border-none shrink-0"
                       >
                         {t("Vrijgeven", "Release", "Kullanıma Aç")}
                       </button>
@@ -249,10 +249,10 @@ export default function AdminCalendar({ onAddSystemLog, adminLanguage }: AdminCa
             <motion.div 
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="p-5 rounded-2xl bg-emerald-500/5 border border-emerald-500/20 grid grid-cols-1 md:grid-cols-12 gap-5"
+              className="p-5 rounded-2xl bg-emerald-500/5 border border-emerald-500/20 grid grid-cols-1 lg:grid-cols-12 gap-5"
             >
               {/* Sync Options Panel */}
-              <div className="md:col-span-12 lg:col-span-5 space-y-3">
+              <div className="lg:col-span-5 space-y-3">
                 <h5 className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider font-mono">{t("Synchronisatie Instellingen", "Synchronization Settings", "Senkronizasyon Ayarları")}</h5>
                 <div className="space-y-2 text-xs text-slate-700 font-medium">
                   <label className="flex items-center space-x-2.5 cursor-pointer hover:text-slate-900">
@@ -274,7 +274,7 @@ export default function AdminCalendar({ onAddSystemLog, adminLanguage }: AdminCa
               </div>
 
               {/* Synced Event Feeds */}
-              <div className="md:col-span-12 lg:col-span-7 space-y-3.5">
+              <div className="lg:col-span-7 space-y-3.5">
                 <h5 className="text-[10px] font-bold text-slate-800 uppercase tracking-wider font-mono flex justify-between items-center">
                   <span>{t("Recente kalender synchronisatielogboek", "Recent calendar synchronization log", "Son takvim senkronizasyon günlüğü")}</span>
                   <span className="text-emerald-600 text-[9px] bg-emerald-500/10 px-1 rounded font-extrabold font-mono flex items-center space-x-1">
@@ -290,16 +290,16 @@ export default function AdminCalendar({ onAddSystemLog, adminLanguage }: AdminCa
                   {blockedDates.slice(0, 2).map((block, bIdx) => {
                     const mOption = machines.find((m) => m.id === block.machineId);
                     return (
-                      <div key={`gcal-block-${bIdx}`} className="p-2 bg-white border border-slate-200 rounded-lg flex justify-between items-center text-slate-700 shadow-xs">
-                        <span className="truncate">{t("[Keuring] ", "[Inspection] ", "[Denetim] ")}{mOption ? mOption.name : block.machineId} ({block.date})</span>
-                        <span className="text-[9px] text-emerald-650 text-emerald-600 shrink-0 ml-1 bg-emerald-500/15 px-1.5 py-0.5 rounded uppercase font-bold font-mono">{t("gesynchroniseerd", "synced", "senkronize edildi")}</span>
+                      <div key={`gcal-block-${bIdx}`} className="p-2 bg-white border border-slate-200 rounded-lg flex justify-between items-center text-slate-700 shadow-xs gap-3">
+                        <span className="truncate flex-1 min-w-0 pr-1">{t("[Keuring] ", "[Inspection] ", "[Denetim] ")}{mOption ? mOption.name : block.machineId} ({block.date})</span>
+                        <span className="text-[9px] text-emerald-600 shrink-0 bg-emerald-500/15 px-1.5 py-0.5 rounded uppercase font-bold font-mono">{t("gesynchroniseerd", "synced", "senkronize edildi")}</span>
                       </div>
                     );
                   })}
                   {orders.slice(0, 2).map((ord, oIdx) => (
-                    <div key={`gcal-ord-${oIdx}`} className="p-2 bg-white border border-slate-200 rounded-lg flex justify-between items-center text-slate-700 shadow-xs">
-                        <span className="truncate">{t("[Huur] ", "[Rental] ", "[Kiralama] ")}{ord.id} - {ord.customerName} ({ord.machineName})</span>
-                      <span className="text-[9px] text-emerald-650 text-emerald-600 shrink-0 ml-1 bg-emerald-500/15 px-1.5 py-0.5 rounded uppercase font-bold font-mono">{t("gesynchroniseerd", "synced", "senkronize edildi")}</span>
+                    <div key={`gcal-ord-${oIdx}`} className="p-2 bg-white border border-slate-200 rounded-lg flex justify-between items-center text-slate-700 shadow-xs gap-3">
+                      <span className="truncate flex-1 min-w-0 pr-1">{t("[Huur] ", "[Rental] ", "[Kiralama] ")}{ord.id} - {ord.customerName} ({ord.machineName})</span>
+                      <span className="text-[9px] text-emerald-650 text-emerald-600 shrink-0 bg-emerald-500/15 px-1.5 py-0.5 rounded uppercase font-bold font-mono">{t("gesynchroniseerd", "synced", "senkronize edildi")}</span>
                     </div>
                   ))}
                 </div>

@@ -174,9 +174,10 @@ export default function BookingSection({
     }
   }, [currentUser]);
 
+  // Scroll to top of the page when changing steps
   useEffect(() => {
     window.scrollTo(0, 0);
-  }, []);
+  }, [step]);
 
   // If no machine selection exists, pre-load first available
   useEffect(() => {

@@ -356,7 +356,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
       {/* Edit Machine Specs Modal */}
       <AnimatePresence>
         {editingMachine && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -370,7 +370,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
               transition={{ type: "spring", stiffness: 350, damping: 26 }}
-              className="w-full max-w-2xl bg-white border border-slate-200 rounded-3xl p-4 md:p-8 shadow-2xl relative overflow-hidden z-50 flex flex-col max-h-[90vh]"
+              className="w-full h-full sm:h-auto sm:max-h-[90vh] max-w-2xl bg-white border-none sm:border sm:border-slate-200 rounded-none sm:rounded-3xl p-4 sm:p-6 md:p-8 shadow-2xl relative overflow-hidden z-50 flex flex-col"
             >
               {/* Premium Top stripe */}
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-500 to-orange-500" />
@@ -386,6 +386,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                   </h3>
                 </div>
                 <button
+                  type="button"
                   onClick={() => setEditingMachine(null)}
                   className="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 transition-colors cursor-pointer border-none"
                 >
@@ -394,292 +395,297 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
               </div>
 
               {/* Edit form contents */}
-              <form onSubmit={handleSaveEdit} className="flex-1 overflow-y-auto pr-1 space-y-4 scrollbar-thin">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  
-                  <div className="space-y-1">
-                    <label className="text-xs text-slate-700 block font-bold">{t("Titel / Modelnaam", "Title / Model name", "Başlık / Model Adı")}</label>
-                    <input
-                      type="text"
-                      required
-                      value={editName}
-                      onChange={(e) => setEditName(e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-xs text-slate-700 block font-bold">{t("Machine Categorie", "Machine Category", "Makine Kategorisi")}</label>
-                    <select
-                      value={editCategory}
-                      onChange={(e) => setEditCategory(e.target.value as any)}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white cursor-pointer h-9.5"
-                    >
-                      {customCategories.map((category) => (
-                        <option key={category.id} value={category.id}>
-                          {(category.listLabel || category.label)} ({category.id})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-xs text-slate-700 block font-bold">{t("Werkhoogte (m)", "Working Height (m)", "Çalışma Yüksekliği (m)")}</label>
-                    <input
-                      type="number"
-                      required
-                      min="0.1"
-                      step="any"
-                      value={editHeight}
-                      onChange={(e) => setEditHeight(e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-xs text-slate-700 block font-bold">{t("Zijwaarts Bereik (m)", "Horizontal Reach (m)", "Yatay Erişim (m)")}</label>
-                    <input
-                      type="number"
-                      min="0"
-                      step="any"
-                      value={editReach}
-                      onChange={(e) => setEditReach(e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-xs text-slate-700 block font-bold">{t("Eigen Gewicht (kg)", "Weight (kg)", "Ağırlık (kg)")}</label>
-                    <input
-                      type="number"
-                      min="1"
-                      step="any"
-                      value={editWeight}
-                      onChange={(e) => setEditWeight(e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-xs text-slate-700 block font-bold">{t("Huurtarief (€/dag)", "Rental Rate (€/day)", "Kiralama Ücreti (€/gün)")}</label>
-                    <input
-                      type="number"
-                      required
-                      min="0.1"
-                      step="any"
-                      value={editPrice}
-                      onChange={(e) => setEditPrice(e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
-                    />
-                  </div>
-
-                  <div className="space-y-1 col-span-2">
-                    <label className="text-xs text-slate-700 block font-bold">{t("Aandrijving", "Power Type", "Güç Tipi")}</label>
-                    <div className="flex space-x-4">
-                      {["Elektrisch", "Diesel", "Hybride"].map((power) => (
-                        <label key={power} className="flex items-center space-x-2 cursor-pointer text-xs">
-                          <input
-                            type="radio"
-                            name="editPowerRadio"
-                            checked={editPower === power}
-                            onChange={() => setEditPower(power as any)}
-                            className="accent-amber-500"
-                          />
-                          <span className="text-slate-700">{power === "Elektrisch" ? t("Elektrisch", "Electric", "Elektrikli") : power === "Diesel" ? t("Diesel", "Diesel", "Dizel") : t("Hybride", "Hybrid", "Hibrit")}</span>
-                        </label>
-                      ))}
+              <form onSubmit={handleSaveEdit} className="flex-1 flex flex-col overflow-hidden min-h-0">
+                
+                {/* Scrollable Fields Wrapper */}
+                <div className="flex-grow overflow-y-auto pr-1.5 space-y-4 scrollbar-thin pb-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    
+                    <div className="space-y-1">
+                      <label className="text-xs text-slate-700 block font-bold">{t("Titel / Modelnaam", "Title / Model name", "Başlık / Model Adı")}</label>
+                      <input
+                        type="text"
+                        required
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
+                      />
                     </div>
-                  </div>
 
-                  <div className="space-y-1 col-span-2">
-                    <label className="text-xs text-slate-700 block font-bold">{t("Doelgroepen (komma gescheiden)", "Audience (comma separated)", "Hedef Kitle (virgülle ayrılmış)")}</label>
-                    <input
-                      type="text"
-                      value={editSuitable}
-                      onChange={(e) => setEditSuitable(e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
-                    />
-                  </div>
+                    <div className="space-y-1">
+                      <label className="text-xs text-slate-700 block font-bold">{t("Machine Categorie", "Machine Category", "Makine Kategorisi")}</label>
+                      <select
+                        value={editCategory}
+                        onChange={(e) => setEditCategory(e.target.value as any)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white cursor-pointer h-9.5"
+                      >
+                        {customCategories.map((category) => (
+                          <option key={category.id} value={category.id}>
+                            {(category.listLabel || category.label)} ({category.id})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
 
-                  <div className="space-y-1 col-span-2">
-                    <label className="text-xs text-slate-700 block font-bold">{t("Afbeelding", "Image", "Resim")}</label>
-                    <div className="grid grid-cols-1 md:grid-cols-[120px_1fr] gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3">
-                      <div className="h-20 w-full overflow-hidden rounded-xl border border-slate-200 bg-white">
-                        <img
-                          src={editImageUrl || "/placeholder-machine.webp"}
-                          alt={t("Voorbeeld", "Preview", "Önizleme")}
-                          className="h-full w-full object-cover"
-                          referrerPolicy="no-referrer"
-                          onError={(e) => {
-                            e.currentTarget.src = "/placeholder-machine.webp";
-                          }}
-                        />
+                    <div className="space-y-1">
+                      <label className="text-xs text-slate-700 block font-bold">{t("Werkhoogte (m)", "Working Height (m)", "Çalışma Yüksekliği (m)")}</label>
+                      <input
+                        type="number"
+                        required
+                        min="0.1"
+                        step="any"
+                        value={editHeight}
+                        onChange={(e) => setEditHeight(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-xs text-slate-700 block font-bold">{t("Zijwaarts Bereik (m)", "Horizontal Reach (m)", "Yatay Erişim (m)")}</label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="any"
+                        value={editReach}
+                        onChange={(e) => setEditReach(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-xs text-slate-700 block font-bold">{t("Eigen Gewicht (kg)", "Weight (kg)", "Ağırlık (kg)")}</label>
+                      <input
+                        type="number"
+                        min="1"
+                        step="any"
+                        value={editWeight}
+                        onChange={(e) => setEditWeight(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-xs text-slate-700 block font-bold">{t("Huurtarief (€/dag)", "Rental Rate (€/day)", "Kiralama Ücreti (€/gün)")}</label>
+                      <input
+                        type="number"
+                        required
+                        min="0.1"
+                        step="any"
+                        value={editPrice}
+                        onChange={(e) => setEditPrice(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
+                      />
+                    </div>
+
+                    <div className="space-y-1 md:col-span-2">
+                      <label className="text-xs text-slate-700 block font-bold">{t("Aandrijving", "Power Type", "Güç Tipi")}</label>
+                      <div className="flex flex-wrap gap-3 sm:gap-4">
+                        {["Elektrisch", "Diesel", "Hybride"].map((power) => (
+                          <label key={power} className="flex items-center space-x-2 cursor-pointer text-xs">
+                            <input
+                              type="radio"
+                              name="editPowerRadio"
+                              checked={editPower === power}
+                              onChange={() => setEditPower(power as any)}
+                              className="accent-amber-500"
+                            />
+                            <span className="text-slate-700">{power === "Elektrisch" ? t("Elektrisch", "Electric", "Elektrikli") : power === "Diesel" ? t("Diesel", "Diesel", "Dizel") : t("Hybride", "Hybrid", "Hibrit")}</span>
+                          </label>
+                        ))}
                       </div>
-                      <div className="space-y-2">
-                        <input
-                          type="text"
-                          value={editImageUrl}
-                          onChange={(e) => setEditImageUrl(e.target.value)}
-                          placeholder="https://images.unsplash.com/photo-..."
-                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 font-mono"
-                        />
+                    </div>
+
+                    <div className="space-y-1 md:col-span-2">
+                      <label className="text-xs text-slate-700 block font-bold">{t("Doelgroepen (komma gescheiden)", "Audience (comma separated)", "Hedef Kitle (virgülle ayrılmış)")}</label>
+                      <input
+                        type="text"
+                        value={editSuitable}
+                        onChange={(e) => setEditSuitable(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
+                      />
+                    </div>
+
+                    <div className="space-y-1 md:col-span-2">
+                      <label className="text-xs text-slate-700 block font-bold">{t("Afbeelding", "Image", "Resim")}</label>
+                      <div className="grid grid-cols-1 sm:grid-cols-[120px_1fr] gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                        <div className="h-20 w-full overflow-hidden rounded-xl border border-slate-200 bg-white">
+                          <img
+                            src={editImageUrl || "/placeholder-machine.webp"}
+                            alt={t("Voorbeeld", "Preview", "Önizleme")}
+                            className="h-full w-full object-cover"
+                            referrerPolicy="no-referrer"
+                            onError={(e) => {
+                              e.currentTarget.src = "/placeholder-machine.webp";
+                            }}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <input
+                            type="text"
+                            value={editImageUrl}
+                            onChange={(e) => setEditImageUrl(e.target.value)}
+                            placeholder="https://images.unsplash.com/photo-..."
+                            className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 font-mono"
+                          />
+                          <div className="relative">
+                            <input
+                              type="file"
+                              accept="image/*"
+                              disabled={isUploadingEditImage}
+                              onChange={handleEditImageFileChange}
+                              className="w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-[10.5px] file:font-black file:bg-amber-100 file:text-amber-800 file:cursor-pointer hover:file:bg-amber-200 transition-all"
+                            />
+                            {isUploadingEditImage && (
+                              <div className="absolute right-3 top-1.5 h-4 w-4 border-2 border-amber-600 border-t-transparent rounded-full animate-spin" />
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Additional Images Section */}
+                      <div className="border-t border-slate-200/80 pt-4 space-y-3 mt-3">
+                        <span className="text-xs text-slate-700 block font-bold">
+                          {t("Ek Resim Galerisi (Çoklu Slayt Gösterisi)", "Additional Image Gallery (Slideshow)", "Ek Resim Galerisi (Çoklu Slayt)")}
+                        </span>
+                        
                         <div className="relative">
                           <input
                             type="file"
                             accept="image/*"
-                            disabled={isUploadingEditImage}
-                            onChange={handleEditImageFileChange}
-                            className="w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-[10.5px] file:font-black file:bg-amber-100 file:text-amber-800 file:cursor-pointer hover:file:bg-amber-200 transition-all"
+                            multiple
+                            disabled={isUploadingEditAdditional}
+                            onChange={handleEditAdditionalImageFileChange}
+                            className="w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-[10.5px] file:font-black file:bg-indigo-50 file:text-indigo-700 file:cursor-pointer hover:file:bg-indigo-100 transition-all border border-dashed border-slate-350 rounded-xl p-3 bg-white"
                           />
-                          {isUploadingEditImage && (
-                            <div className="absolute right-3 top-1.5 h-4 w-4 border-2 border-amber-600 border-t-transparent rounded-full animate-spin" />
+                          {isUploadingEditAdditional && (
+                            <div className="absolute right-6 top-5 h-5 w-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
                           )}
                         </div>
-                      </div>
-                    </div>
 
-                    {/* Additional Images Section */}
-                    <div className="col-span-2 border-t border-slate-200/80 pt-4 space-y-3">
-                      <span className="text-xs text-slate-700 block font-bold">
-                        {t("Ek Resim Galerisi (Çoklu Slayt Gösterisi)", "Additional Image Gallery (Slideshow)", "Ek Resim Galerisi (Çoklu Slayt)")}
-                      </span>
-                      
-                      <div className="relative">
-                        <input
-                          type="file"
-                          accept="image/*"
-                          multiple
-                          disabled={isUploadingEditAdditional}
-                          onChange={handleEditAdditionalImageFileChange}
-                          className="w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-[10.5px] file:font-black file:bg-indigo-50 file:text-indigo-700 file:cursor-pointer hover:file:bg-indigo-100 transition-all border border-dashed border-slate-350 rounded-xl p-3 bg-white"
-                        />
-                        {isUploadingEditAdditional && (
-                          <div className="absolute right-6 top-5 h-5 w-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+                        {editAdditionalImages.length > 0 && (
+                          <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mt-3 animate-fade-in">
+                            {editAdditionalImages.map((url, idx) => (
+                              <div key={idx} className="relative aspect-video rounded-xl overflow-hidden border border-slate-200 bg-slate-105 group shadow-sm">
+                                <img src={url} alt={`Extra ${idx}`} className="w-full h-full object-cover" />
+                                <button
+                                  type="button"
+                                  onClick={() => setEditAdditionalImages(prev => prev.filter((_, i) => i !== idx))}
+                                  className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-lg opacity-90 hover:opacity-100 transition-opacity shadow cursor-pointer flex items-center justify-center"
+                                  title={t("Verwijderen", "Delete", "Sil")}
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
                         )}
                       </div>
-
-                      {editAdditionalImages.length > 0 && (
-                        <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mt-3 animate-fade-in">
-                          {editAdditionalImages.map((url, idx) => (
-                            <div key={idx} className="relative aspect-video rounded-xl overflow-hidden border border-slate-200 bg-slate-105 group shadow-sm">
-                              <img src={url} alt={`Extra ${idx}`} className="w-full h-full object-cover" />
-                              <button
-                                type="button"
-                                onClick={() => setEditAdditionalImages(prev => prev.filter((_, i) => i !== idx))}
-                                className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-lg opacity-90 hover:opacity-100 transition-opacity shadow cursor-pointer flex items-center justify-center"
-                                title={t("Verwijderen", "Delete", "Sil")}
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
                     </div>
-                  </div>
 
-                  <div className="space-y-1 col-span-2">
-                    <label className="text-xs text-slate-700 block font-bold">{t("Omschrijving", "Description", "Açıklama")}</label>
-                    <textarea
-                      rows={4}
-                      value={editDescription}
-                      onChange={(e) => setEditDescription(e.target.value)}
-                      placeholder={t("Professionele producttekst: toepassing, ondergrond, binnen/buiten, plus belangrijkste voordeel.", "Professional product text: application, surface, indoor/outdoor, plus main benefit.", "Profesyonel ürün metni: uygulama alanı, zemin, iç/dış mekan ve en önemli avantajı.")}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white resize-none"
-                    />
-                  </div>
-
-                  <div className="space-y-1 col-span-2">
-                    <label className="text-xs text-slate-700 block font-bold">
-                      {t("Inbegrepen Pakketinhoud (Klusgids Set - puntkomma gescheiden)", "Included Package Contents (Semicolon separated)", "Dahil Olan Paket İçeriği (Noktalı virgülle ayrılmış)")}
-                    </label>
-                    <textarea
-                      rows={3}
-                      value={editPackageContents}
-                      onChange={(e) => setEditPackageContents(e.target.value)}
-                      placeholder={t(
-                        "Bijv. 1x Gecertificeerde Elektrische Schaarlift (12m werkhoogte); 2x 20m zware verlengkabels; 1x Luxe comfort-veiligheidsharnas",
-                        "e.g., 1x Certified Electric Scissor Lift (12m); 2x 20m heavy extension cables; 1x Comfort safety harness",
-                        "örn: 1x Sertifikalı Elektrikli Makaslı Platform (12m); 2x 20m ağır hizmet uzatma kablosu; 1x Emniyet kemeri"
-                      )}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white resize-none"
-                    />
-                  </div>
-
-                  <div className="col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-slate-100 pt-3">
-                    <div className="space-y-1">
-                      <label className="text-xs text-slate-700 block font-bold">{t("Weekkorting (%)", "Weekly Discount (%)", "Haftalık İndirim (%)")}</label>
-                      <input
-                        type="number"
-                        min="0"
-                        max="100"
-                        value={editWeeklyDiscountPercent}
-                        onChange={(e) => setEditWeeklyDiscountPercent(e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
+                    <div className="space-y-1 md:col-span-2">
+                      <label className="text-xs text-slate-700 block font-bold">{t("Omschrijving", "Description", "Açıklama")}</label>
+                      <textarea
+                        rows={4}
+                        value={editDescription}
+                        onChange={(e) => setEditDescription(e.target.value)}
+                        placeholder={t("Professionele producttekst: toepassing, ondergrond, binnen/buiten, plus belangrijkste voordeel.", "Professional product text: application, surface, indoor/outdoor, plus main benefit.", "Profesyonel ürün metni: uygulama alanı, zemin, iç/dış mekan ve en önemli avantajı.")}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white resize-none"
                       />
                     </div>
 
-                    <div className="space-y-1">
-                      <label className="text-xs text-slate-700 block font-bold">{t("Maandkorting (%)", "Monthly Discount (%)", "Aylık İndirim (%)")}</label>
-                      <input
-                        type="number"
-                        min="0"
-                        max="100"
-                        value={editMonthlyDiscountPercent}
-                        onChange={(e) => setEditMonthlyDiscountPercent(e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
+                    <div className="space-y-1 md:col-span-2">
+                      <label className="text-xs text-slate-700 block font-bold">
+                        {t("Inbegrepen Pakketinhoud (Klusgids Set - puntkomma gescheiden)", "Included Package Contents (Semicolon separated)", "Dahil Olan Paket İçeriği (Noktalı virgülle ayrılmış)")}
+                      </label>
+                      <textarea
+                        rows={3}
+                        value={editPackageContents}
+                        onChange={(e) => setEditPackageContents(e.target.value)}
+                        placeholder={t(
+                          "Bijv. 1x Gecertificeerde Elektrische Schaarlift (12m werkhoogte); 2x 20m zware verlengkabels; 1x Luxe comfort-veiligheidsharnas",
+                          "e.g., 1x Certified Electric Scissor Lift (12m); 2x 20m heavy extension cables; 1x Comfort safety harness",
+                          "örn: 1x Sertifikalı Elektrikli Makaslı Platform (12m); 2x 20m ağır hizmet uzatma kablosu; 1x Emniyet kemeri"
+                        )}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white resize-none"
                       />
                     </div>
 
-                    <div className="space-y-1">
-                      <label className="text-xs text-slate-700 block font-bold">{t("Campagne label", "Campaign Label", "Kampanya Etiketi")}</label>
-                      <input
-                        type="text"
-                        value={editCampaignText}
-                        onChange={(e) => setEditCampaignText(e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-slate-100 pt-3">
                       <div className="space-y-1">
-                        <label className="text-xs text-slate-700 block font-bold">{t("Campagne %", "Campaign %", "Kampanya %")}</label>
+                        <label className="text-xs text-slate-700 block font-bold">{t("Weekkorting (%)", "Weekly Discount (%)", "Haftalık İndirim (%)")}</label>
                         <input
                           type="number"
                           min="0"
                           max="100"
-                          value={editCampaignDiscountPercent}
-                          onChange={(e) => setEditCampaignDiscountPercent(e.target.value)}
+                          value={editWeeklyDiscountPercent}
+                          onChange={(e) => setEditWeeklyDiscountPercent(e.target.value)}
                           className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
                         />
                       </div>
+
                       <div className="space-y-1">
-                        <label className="text-xs text-slate-700 block font-bold">{t("Campagne €", "Campaign €", "Kampanya €")}</label>
+                        <label className="text-xs text-slate-700 block font-bold">{t("Maandkorting (%)", "Monthly Discount (%)", "Aylık İndirim (%)")}</label>
                         <input
                           type="number"
                           min="0"
-                          value={editCampaignDiscountAmount}
-                          onChange={(e) => setEditCampaignDiscountAmount(e.target.value)}
+                          max="100"
+                          value={editMonthlyDiscountPercent}
+                          onChange={(e) => setEditMonthlyDiscountPercent(e.target.value)}
                           className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
                         />
                       </div>
-                    </div>
-                  </div>
 
+                      <div className="space-y-1">
+                        <label className="text-xs text-slate-700 block font-bold">{t("Campagne label", "Campaign Label", "Kampanya Etiketi")}</label>
+                        <input
+                          type="text"
+                          value={editCampaignText}
+                          onChange={(e) => setEditCampaignText(e.target.value)}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <label className="text-xs text-slate-700 block font-bold">{t("Campagne %", "Campaign %", "Kampanya %")}</label>
+                          <input
+                            type="number"
+                            min="0"
+                            max="100"
+                            value={editCampaignDiscountPercent}
+                            onChange={(e) => setEditCampaignDiscountPercent(e.target.value)}
+                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-xs text-slate-700 block font-bold">{t("Campagne €", "Campaign €", "Kampanya €")}</label>
+                          <input
+                            type="number"
+                            min="0"
+                            value={editCampaignDiscountAmount}
+                            onChange={(e) => setEditCampaignDiscountAmount(e.target.value)}
+                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                  </div>
                 </div>
 
-                <div className="flex justify-end space-x-2 pt-4 border-t border-slate-100">
+                {/* Persistent Sticky Action Buttons Footer */}
+                <div className="flex justify-end space-x-2 pt-4 border-t border-slate-100 shrink-0">
                   <button
                     type="button"
                     onClick={() => setEditingMachine(null)}
-                    className="px-4 py-2 hover:bg-slate-100 bg-slate-100 border border-slate-200 text-slate-600 rounded-lg text-xs font-bold transition-all cursor-pointer border-none"
+                    className="px-4 py-2.5 hover:bg-slate-100 bg-slate-100 border border-slate-200 text-slate-650 rounded-xl text-xs font-bold transition-all cursor-pointer border-none"
                   >
                     {t("Sluiten", "Close", "Kapat")}
                   </button>
                   <button
                     type="submit"
                     disabled={isUpdating}
-                    className="bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-slate-950 font-extrabold text-xs px-5 py-2 rounded-lg transition-all shadow-sm hover:shadow-md flex items-center space-x-1.5 cursor-pointer border-none"
+                    className="bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-slate-950 font-extrabold text-xs px-5 py-2.5 rounded-xl transition-all shadow-sm hover:shadow-md flex items-center space-x-1.5 cursor-pointer border-none"
                   >
                     {isUpdating ? (
                       <>

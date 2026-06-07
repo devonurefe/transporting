@@ -141,26 +141,48 @@ export default function BookingSuccess({
       </div>
 
       {whatsappUrl && (
-        <div className="p-5 bg-emerald-50/70 border border-emerald-200/80 rounded-2xl max-w-lg mx-auto text-center space-y-3 shadow-xs">
+        <div className="p-6 bg-gradient-to-br from-emerald-50 via-white to-emerald-50/30 border border-emerald-200 shadow-md rounded-3xl max-w-lg mx-auto text-center space-y-4 relative overflow-hidden">
+          {/* Subtle green glow ornament */}
+          <div className="absolute -top-10 -right-10 w-24 h-24 bg-emerald-400/10 rounded-full blur-xl pointer-events-none" />
+          
           <p className="text-xs text-emerald-800 font-extrabold leading-normal">
             Klik op de onderstaande knop om uw boeking te verzenden naar onze planner op WhatsApp en direct uw iDEAL betaallink te ontvangen:
           </p>
-          <a
+          <motion.a
             href={whatsappUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center space-x-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs px-6 py-3.5 rounded-xl transition-all shadow-md hover:scale-[1.02] active:scale-98 cursor-pointer border-none no-underline"
+            animate={{ 
+              scale: [1, 1.02, 1],
+              boxShadow: [
+                "0 10px 25px -5px rgba(16, 185, 129, 0.4)",
+                "0 20px 35px 5px rgba(16, 185, 129, 0.6)",
+                "0 10px 25px -5px rgba(16, 185, 129, 0.4)"
+              ]
+            }}
+            transition={{
+              duration: 1.8,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.98 }}
+            className="inline-flex items-center justify-center space-x-3 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white font-black text-base px-8 py-4.5 rounded-2xl cursor-pointer border-none no-underline w-full max-w-md mx-auto shadow-xl"
           >
-            <span>💬 Open WhatsApp & Zend Bericht</span>
-          </a>
+            <span className="relative flex h-3 w-3 mr-1">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-85"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
+            </span>
+            <span className="tracking-wide">💬 Open WhatsApp & Bevestig Boeking</span>
+          </motion.a>
         </div>
       )}
 
       {/* Action routes */}
-      <div className="flex flex-col sm:flex-row justify-center gap-3 pt-6 border-t border-slate-200">
+      <div className="flex flex-col sm:flex-row justify-center items-center gap-3 pt-6 border-t border-slate-200 w-full">
         <button
           onClick={() => printInvoice(successOrders.length > 0 ? successOrders : successOrder)}
-          className="bg-teal-600 hover:bg-teal-700 text-white font-extrabold text-xs px-5 py-3 rounded-xl transition-all flex items-center justify-center space-x-1.5 cursor-pointer shadow-md shadow-teal-100 border-none"
+          className="w-full sm:w-auto bg-teal-600 hover:bg-teal-700 text-white font-extrabold text-xs px-5 py-3 rounded-xl transition-all flex items-center justify-center space-x-1.5 cursor-pointer shadow-md shadow-teal-100 border-none"
         >
           <Download className="h-4 w-4" />
           <span>Factuur Downloaden (PDF)</span>
@@ -172,7 +194,7 @@ export default function BookingSuccess({
             setSuccessOrder(null);
             setActiveTab("home");
           }}
-          className="bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold text-xs px-5 py-3 rounded-xl transition-all border border-slate-200 cursor-pointer shadow-sm border-none"
+          className="w-full sm:w-auto bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold text-xs px-5 py-3 rounded-xl transition-all border border-slate-200 cursor-pointer shadow-sm border-none"
         >
           Terug naar Home
         </button>
@@ -183,7 +205,7 @@ export default function BookingSuccess({
             setSuccessOrder(null);
             setActiveTab("orders");
           }}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-6 py-3 rounded-xl transition-all shadow-md shadow-indigo-100 cursor-pointer border-none"
+          className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-6 py-3 rounded-xl transition-all shadow-md shadow-indigo-100 cursor-pointer border-none"
         >
           Mijn Bestellingen
         </button>

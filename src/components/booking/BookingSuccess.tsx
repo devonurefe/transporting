@@ -82,11 +82,11 @@ export default function BookingSuccess({
       </div>
 
       <div>
-        <span className="text-xs font-mono uppercase bg-emerald-50 border border-emerald-200 text-emerald-700 px-3.5 py-1.5 rounded-full font-extrabold tracking-wider">
-          Boeking Succesvol Geregistreerd
+        <span className="text-xs font-mono uppercase bg-amber-50 border border-amber-200 text-amber-700 px-3.5 py-1.5 rounded-full font-extrabold tracking-wider">
+          Aanvraag Ontvangen — Nog niet bevestigd
         </span>
         <h1 className="font-display text-2xl font-black text-slate-900 mt-4">
-          {paymentGateway === "whatsapp" ? "Reservering Aangevraagd!" : "Factuur & Overeenkomst Geaccordeerd!"}
+          Reservering Aangevraagd!
         </h1>
         <p className="text-xs text-slate-600 font-medium mt-2 max-w-md mx-auto">
           Uw hoogwerker is officieel geregistreerd onder referentienummer{" "}
@@ -152,9 +152,23 @@ export default function BookingSuccess({
         <div className="p-6 bg-gradient-to-br from-emerald-50 via-white to-emerald-50/30 border border-emerald-200 shadow-md rounded-3xl max-w-lg mx-auto text-center space-y-4 relative overflow-hidden">
           {/* Subtle green glow ornament */}
           <div className="absolute -top-10 -right-10 w-24 h-24 bg-emerald-400/10 rounded-full blur-xl pointer-events-none" />
-          
+
+          <div className="text-left space-y-1.5 p-3 bg-white/60 rounded-xl border border-emerald-100">
+            <p className="text-[10px] font-mono font-bold text-emerald-700 uppercase tracking-wider mb-2">Volgende stappen:</p>
+            {[
+              "Klik hieronder om uw aanvraag te bevestigen via WhatsApp.",
+              "U ontvangt binnen 2 uur een beveiligde iDEAL-betaallink van onze planner.",
+              "Na betaling is uw boeking definitief bevestigd."
+            ].map((step, i) => (
+              <div key={i} className="flex items-start space-x-2 text-xs text-emerald-800">
+                <span className="font-bold font-mono shrink-0 text-emerald-600">{i + 1}.</span>
+                <span>{step}</span>
+              </div>
+            ))}
+          </div>
+
           <p className="text-xs text-emerald-800 font-extrabold leading-normal">
-            Klik op de onderstaande knop om uw boeking te verzenden naar onze planner op WhatsApp en direct uw iDEAL betaallink te ontvangen:
+            Klik op de onderstaande knop om uw aanvraag te bevestigen:
           </p>
           <motion.a
             href={whatsappUrl}

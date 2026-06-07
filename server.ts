@@ -8,6 +8,8 @@ import cors from "cors";
 import rateLimit from "express-rate-limit";
 import { apiRouter } from "./server/routes/api.js";
 import { authRouter } from "./server/routes/auth.js";
+import { prisma } from "./prisma/client.js";
+import { emailService } from "./server/services/emailService.js";
 import { authenticateToken } from "./server/middleware/auth.js";
 import { requestLogger } from "./server/middleware/logger.js";
 import { errorHandler } from "./server/middleware/errorHandler.js";
@@ -135,7 +137,59 @@ async function startServer() {
     }
 
     console.log(`======================================================\n`);
+
+    // Daily rental reminder scheduler — fires at 07:00 server time each day
+    scheduleDailyReminders();
   });
+}
+
+function scheduleDailyReminders() {
+  const fireReminders = async () => {
+    try {
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const tomorrowStr = tomorrow.toISOString().split("T")[0];
+      const tomorrowStart = new Date(tomorrowStr + "T00:00:00.000Z");
+      const tomorrowEnd = new Date(tomorrowStr + "T23:59:59.999Z");
+
+      const orders = await prisma.order.findMany({
+        where: {
+          startDate: { gte: tomorrowStart, lte: tomorrowEnd },
+          status: { in: ["Goedgekeurd", "Onderweg"] }
+        }
+      });
+
+      let sent = 0;
+      for (const order of orders) {
+        const ok = await emailService.sendRentalReminder({
+          ...order,
+          startDate: order.startDate.toISOString().split("T")[0],
+          endDate: order.endDate.toISOString().split("T")[0],
+          customerPhone: order.customerPhone || ""
+        });
+        if (ok) sent++;
+      }
+
+      if (orders.length > 0) {
+        console.log(`[Reminders] Sent ${sent}/${orders.length} reminders for ${tomorrowStr}`);
+      }
+    } catch (err) {
+      console.error("[Reminders] Failed to send daily reminders:", err);
+    }
+
+    // Schedule next run in 24 hours
+    setTimeout(fireReminders, 24 * 60 * 60 * 1000);
+  };
+
+  // First fire: calculate ms until 07:00 today/tomorrow
+  const now = new Date();
+  const next7am = new Date(now);
+  next7am.setHours(7, 0, 0, 0);
+  if (next7am <= now) next7am.setDate(next7am.getDate() + 1);
+  const msUntil7am = next7am.getTime() - now.getTime();
+
+  setTimeout(fireReminders, msUntil7am);
+  console.log(`[Reminders] Scheduler armed — first run in ${Math.round(msUntil7am / 60000)} minutes`);
 }
 
 startServer().catch(err => {

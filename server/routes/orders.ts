@@ -399,6 +399,14 @@ ordersRouter.get("/:id/rating", requireAuth as any, async (req: AuthenticatedReq
   }
 });
 
+const VALID_STATUS_TRANSITIONS: Record<string, string[]> = {
+  "In behandeling": ["Goedgekeurd", "Geannuleerd"],
+  "Goedgekeurd": ["Onderweg", "Geannuleerd"],
+  "Onderweg": ["Voltooid"],
+  "Voltooid": [],
+  "Geannuleerd": []
+};
+
 // PUT /api/orders/:id/status
 ordersRouter.put("/:id/status", requireAdmin as any, async (req: AuthenticatedRequest, res: Response) => {
   const { id } = req.params;
@@ -409,6 +417,24 @@ ordersRouter.put("/:id/status", requireAdmin as any, async (req: AuthenticatedRe
   }
 
   try {
+    const order = await prisma.order.findUnique({ where: { id } });
+    if (!order) return res.status(404).json({ error: "Bestelling niet gevonden" });
+
+    // Validate transition is allowed
+    const allowed = VALID_STATUS_TRANSITIONS[order.status] ?? [];
+    if (!allowed.includes(status)) {
+      return res.status(400).json({
+        error: `Overgang van '${order.status}' naar '${status}' is niet toegestaan`
+      });
+    }
+
+    // Require payment received before approving
+    if (status === "Goedgekeurd" && order.paymentStatus !== "paid") {
+      return res.status(400).json({
+        error: "Betaling moet eerst als ontvangen worden gemarkeerd voordat de bestelling kan worden goedgekeurd"
+      });
+    }
+
     const updatedOrder = await prisma.order.update({
       where: { id },
       data: { status }
@@ -432,5 +458,49 @@ ordersRouter.put("/:id/status", requireAdmin as any, async (req: AuthenticatedRe
   } catch (error) {
     console.error("Error updating order status:", error);
     res.status(500).json({ error: "Failed to update order status" });
+  }
+});
+
+// POST /api/orders/send-reminders — sends rental reminders for orders starting tomorrow
+// Protected by REMINDER_SECRET env var so it can be called from a cron service
+ordersRouter.post("/send-reminders", async (req: AuthenticatedRequest, res: Response) => {
+  const secret = process.env.REMINDER_SECRET;
+  const providedKey = req.headers["x-reminder-key"] || req.body?.key;
+
+  if (secret && providedKey !== secret) {
+    return res.status(401).json({ error: "Ongeldige sleutel" });
+  }
+
+  try {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowStr = tomorrow.toISOString().split("T")[0];
+    const tomorrowStart = new Date(tomorrowStr + "T00:00:00.000Z");
+    const tomorrowEnd = new Date(tomorrowStr + "T23:59:59.999Z");
+
+    const orders = await prisma.order.findMany({
+      where: {
+        startDate: { gte: tomorrowStart, lte: tomorrowEnd },
+        status: { in: ["Goedgekeurd", "Onderweg"] }
+      }
+    });
+
+    let sent = 0;
+    for (const order of orders) {
+      const emailData = {
+        ...order,
+        startDate: order.startDate.toISOString().split("T")[0],
+        endDate: order.endDate.toISOString().split("T")[0],
+        customerPhone: order.customerPhone || ""
+      };
+      const ok = await emailService.sendRentalReminder(emailData);
+      if (ok) sent++;
+    }
+
+    console.log(`[Reminders] Sent ${sent}/${orders.length} reminders for ${tomorrowStr}`);
+    res.json({ sent, total: orders.length, date: tomorrowStr });
+  } catch (error) {
+    console.error("Error sending reminders:", error);
+    res.status(500).json({ error: "Failed to send reminders" });
   }
 });

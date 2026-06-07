@@ -276,7 +276,7 @@ export default function Header({
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
                         transition={{ duration: 0.2 }}
-                        className="absolute right-0 mt-3.5 w-85 origin-top-right rounded-xl border border-slate-200 bg-white p-4 shadow-xl z-20"
+                        className="absolute right-0 mt-3.5 w-72 sm:w-80 origin-top-right rounded-xl border border-slate-200 bg-white p-4 shadow-xl z-20"
                       >
                         <div className="flex items-center justify-between border-b border-slate-100 pb-2.5 mb-2.5">
                           <div className="flex items-center space-x-1.5">

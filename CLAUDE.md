@@ -55,7 +55,9 @@ This is a **single-package full-stack monorepo** — one `package.json` covers b
 
 ### Database (`prisma/`)
 
-- ORM: Prisma 6 with SQLite in development (`DATABASE_URL=file:./dev.db`), PostgreSQL-compatible for production.
+- ORM: Prisma 6 with **PostgreSQL** (provider is `postgresql` — SQLite is no longer supported).
+- Local development: run `docker-compose up postgres` to start a local PostgreSQL container, then set `DATABASE_URL=postgresql://huurgo:huurgo_dev_pass@localhost:5432/huurgo`.
+- Production (Render): set `DATABASE_URL` to the managed PostgreSQL connection string provided by Render.
 - Schema models: `Machine`, `Category`, `BlockedDate`, `Order`, `Customer`, `Admin`, `SiteConfig`, `Notification`.
 - Use `prisma db push` (not `migrate`) during development to avoid migration files.
 

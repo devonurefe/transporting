@@ -1,26 +1,31 @@
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 
-if (process.env.NODE_ENV === "production" && !process.env.JWT_SECRET) {
-  throw new Error("JWT_SECRET must be configured in production.");
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET) {
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("JWT_SECRET is not set. Server cannot start in production without it.");
+  }
+  console.warn("[AUTH] JWT_SECRET not set — using insecure dev default. Set JWT_SECRET before deploying.");
 }
 
-const JWT_SECRET = process.env.JWT_SECRET || "dev-only-huurgo-jwt-secret";
+const EFFECTIVE_JWT_SECRET = JWT_SECRET || "dev-only-huurgo-jwt-secret-do-not-use-in-prod";
 
 export function generateToken(payload: { id: string; email: string; role: string }): string {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: "7d" });
+  return jwt.sign(payload, EFFECTIVE_JWT_SECRET, { expiresIn: "7d" });
 }
 
 export function verifyToken(token: string): any {
   try {
-    return jwt.verify(token, JWT_SECRET);
+    return jwt.verify(token, EFFECTIVE_JWT_SECRET);
   } catch (err) {
     return null;
   }
 }
 
 export async function hashPassword(password: string): Promise<string> {
-  return bcrypt.hash(password, 10);
+  return bcrypt.hash(password, 12);
 }
 
 export async function comparePassword(password: string, hash: string): Promise<boolean> {

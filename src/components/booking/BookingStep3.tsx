@@ -23,6 +23,7 @@ interface BookingStep3Props {
   setStep: (step: number) => void;
   handleCreateBooking: () => void;
   whatsappUrl?: string;
+  bookingError?: string | null;
 }
 
 export default function BookingStep3({
@@ -40,7 +41,8 @@ export default function BookingStep3({
   setCardCVC,
   isSubmitting,
   setStep,
-  handleCreateBooking
+  handleCreateBooking,
+  bookingError
 }: BookingStep3Props) {
   return (
     <div className="bg-white border border-slate-200 shadow-sm p-6 rounded-3xl space-y-6 animate-fade-in">
@@ -203,6 +205,12 @@ export default function BookingStep3({
           <strong>BMWT Class-C Verzekeringsdekking:</strong> Uw betaling accrediteert direct de verzekeringsdekking voor windvlagen tot windkracht 6 Beaufort en mechanische schade-indemniteit.
         </div>
       </div>
+
+      {bookingError && (
+        <div className="bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold px-4 py-3 rounded-xl leading-relaxed">
+          {bookingError}
+        </div>
+      )}
 
       <div className="flex flex-col-reverse sm:flex-row sm:justify-between pt-4 border-t border-slate-200 gap-3">
         <button

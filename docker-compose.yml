@@ -1,6 +1,24 @@
 version: "3.8"
 
 services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: huurgo-db
+    restart: always
+    environment:
+      POSTGRES_DB: huurgo
+      POSTGRES_USER: huurgo
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-huurgo_dev_pass}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U huurgo"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   app:
     build:
       context: .
@@ -9,6 +27,9 @@ services:
     restart: always
     ports:
       - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
     environment:
       - NODE_ENV=production
       - PORT=3000
@@ -17,9 +38,8 @@ services:
       - RESEND_API_KEY=${RESEND_API_KEY}
       - EMAIL_FROM=${EMAIL_FROM:-onboarding@resend.dev}
       - ADMIN_EMAIL=${ADMIN_EMAIL:-info@huurgo.nl}
-      - DATABASE_URL=${DATABASE_URL}
+      - DATABASE_URL=${DATABASE_URL:-postgresql://huurgo:huurgo_dev_pass@postgres:5432/huurgo}
     volumes:
-      # Persistent volume for uploads so user-uploaded files are retained
       - ./uploads:/app/uploads
 
   nginx:
@@ -35,5 +55,8 @@ services:
       - ./certbot/www:/var/www/certbot
     depends_on:
       - app
+
+volumes:
+  postgres_data:
 
 

@@ -55,6 +55,7 @@ export default function BookingSection({
   const campaignRules = useAppStore((state) => state.campaignRules);
   const [step, setStep] = useState<number>(1);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [bookingError, setBookingError] = useState<string | null>(null);
 
   const evaluateDiscountPercent = (machine: Machine, days: number, profile: string, rules: CampaignRule[]) => {
     let highestDiscount = 0;
@@ -562,6 +563,7 @@ export default function BookingSection({
 
   const handleCreateBooking = async () => {
     setIsSubmitting(true);
+    setBookingError(null);
     try {
       let firstSuccessfulOrder: Order | null = null;
       const placedOrders: Order[] = [];
@@ -662,11 +664,17 @@ export default function BookingSection({
             onClearCart();
             setStep(4);
           } else {
-            alert("Er is een fout opgetreden. Probeer het over een paar momenten opnieuw.");
+            setBookingError("Er is een fout opgetreden bij het verwerken van uw boeking. Controleer uw gegevens en probeer het opnieuw.");
           }
         }
-      } catch (err) {
+      } catch (err: any) {
         setIsSubmitting(false);
+        const msg = err?.message || "";
+        if (msg.includes("409") || msg.toLowerCase().includes("conflict")) {
+          setBookingError("Deze machine is helaas niet meer beschikbaar op de geselecteerde datums. Kies andere datums.");
+        } else {
+          setBookingError("Er is een technische fout opgetreden. Probeer het over een paar momenten opnieuw.");
+        }
       }
   };
 
@@ -823,7 +831,7 @@ export default function BookingSection({
                 )}
 
                 {step === 3 && (
-                  <BookingStep3 
+                  <BookingStep3
                     paymentGateway={paymentGateway}
                     setPaymentGateway={setPaymentGateway}
                     idealBank={idealBank}
@@ -839,6 +847,7 @@ export default function BookingSection({
                     isSubmitting={isSubmitting}
                     setStep={setStep}
                     handleCreateBooking={handleCreateBooking}
+                    bookingError={bookingError}
                   />
                 )}
 

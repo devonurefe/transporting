@@ -94,7 +94,71 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage }: AdminOrde
           <p className="text-[11px] text-slate-500 mt-0.5">{t("Hier accordeert u inkomende reserveringen en past u de logistieke status aan van klanten.", "Here you approve incoming reservations and adjust the logistics status.", "Buradan gelen rezervasyonları onaylar ve müşterilerin lojistik durumlarını düzenlersiniz.")}</p>
         </div>
 
-        <div className="overflow-x-auto scrollbar-thin">
+        {/* Mobile card layout */}
+        <div className="md:hidden space-y-3">
+          {orders.length === 0 ? (
+            <div className="py-8 text-center text-slate-500 text-xs">
+              {t("Geen contracten beschikbaar.", "No contracts available.", "Kullanılabilir sözleşme yok.")}
+            </div>
+          ) : (
+            orders.map((o) => (
+              <div key={o.id} className="bg-white rounded-2xl border border-slate-200 p-4 space-y-3 shadow-sm">
+                <div className="flex justify-between items-start gap-2">
+                  <div className="min-w-0">
+                    <div className="font-bold text-sm text-slate-900 truncate">{o.customerName}</div>
+                    <div className="text-[10px] text-slate-400 font-mono mt-0.5">{o.id}</div>
+                  </div>
+                  <span className={`flex-shrink-0 text-[9px] font-mono px-2.5 py-1 rounded-full font-extrabold uppercase ${
+                    o.status === "In behandeling" ? "bg-amber-100 text-amber-600 border border-amber-200"
+                    : o.status === "Goedgekeurd" ? "bg-teal-100 text-teal-600 border border-teal-200"
+                    : o.status === "Onderweg" ? "bg-blue-100 text-blue-600 border border-blue-200"
+                    : o.status === "Geannuleerd" ? "bg-rose-100 text-rose-600 border border-rose-200"
+                    : "bg-slate-100 text-slate-500 border border-slate-200"
+                  }`}>
+                    {t(o.status, o.status, o.status)}
+                  </span>
+                </div>
+                <div className="text-xs font-semibold text-slate-700">{o.machineName}</div>
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-slate-500">{o.startDate} · {o.rentalDays}d</span>
+                  <span className="font-mono font-bold text-teal-600">€ {o.totalAmount.toFixed(2)}</span>
+                </div>
+                <div className="flex gap-2 pt-2 border-t border-slate-100">
+                  <button
+                    onClick={() => { setSelectedDetailOrder(o); setIsProposingDate(false); }}
+                    className="flex-1 text-[11px] font-bold py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors border border-slate-200 cursor-pointer"
+                  >
+                    {t("Bekijken", "View", "Detaylar")}
+                  </button>
+                  <button onClick={() => printInvoice(o)} className="text-[11px] font-bold px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors border border-slate-200 cursor-pointer flex items-center justify-center">
+                    <Printer className="h-3.5 w-3.5 text-indigo-600" />
+                  </button>
+                  {o.status === "In behandeling" && (
+                    <button onClick={() => handleUpdateStatus(o.id, "Goedgekeurd", `Bestelling goedgekeurd: ${o.id} voor ${o.customerName}.`)}
+                      className="flex-1 text-[11px] font-black py-2 rounded-xl bg-teal-500 hover:bg-teal-600 text-slate-950 transition-colors cursor-pointer border-none">
+                      {t("Accorderen", "Approve", "Onayla")}
+                    </button>
+                  )}
+                  {o.status === "Goedgekeurd" && (
+                    <button onClick={() => handleUpdateStatus(o.id, "Onderweg", `Machine onderweg: ${o.id}.`)}
+                      className="flex-1 text-[11px] font-black py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white transition-colors cursor-pointer border-none">
+                      {t("Versturen", "Dispatch", "Yola Çıkar")}
+                    </button>
+                  )}
+                  {o.status === "Onderweg" && (
+                    <button onClick={() => handleUpdateStatus(o.id, "Voltooid", `Contract afgerond: ${o.id}.`)}
+                      className="flex-1 text-[11px] font-black py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white transition-colors cursor-pointer border-none">
+                      {t("Voltooien", "Complete", "Tamamla")}
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Desktop table */}
+        <div className="hidden md:block overflow-x-auto scrollbar-thin">
           <table className="w-full text-left text-xs border-collapse whitespace-nowrap">
             <thead>
               <tr className="border-b border-slate-200 text-slate-500">

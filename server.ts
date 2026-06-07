@@ -23,9 +23,20 @@ const app = express();
 app.set("trust proxy", 1);
 const PORT = Number(process.env.PORT || 3000);
 
-// Helmet with relaxed CSP to ensure local Vite development works
+const isProd = process.env.NODE_ENV === "production";
 app.use(helmet({
-  contentSecurityPolicy: false,
+  contentSecurityPolicy: isProd ? {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      imgSrc: ["'self'", "data:", "https:", "blob:"],
+      connectSrc: ["'self'", "https:"],
+      frameSrc: ["'none'"],
+      objectSrc: ["'none'"],
+    }
+  } : false,
   crossOriginEmbedderPolicy: false,
 }));
 // Environment-aware CORS: restrict origins in production

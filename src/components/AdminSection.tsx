@@ -24,6 +24,8 @@ import { useAuthStore } from "../store/authStore";
 import { useAppStore } from "../store/appStore";
 import { useLanguageStore } from "../store/languageStore";
 
+import AdminAvailabilityWidget from "./admin/AdminAvailabilityWidget";
+
 // Lazy load modular sub-components for code splitting and better initial bundle load performance
 const AdminDashboard = React.lazy(() => import("./admin/AdminDashboard"));
 const AdminOrders = React.lazy(() => import("./admin/AdminOrders"));
@@ -470,6 +472,9 @@ export default function AdminSection({
                 </div>
               </div>
             </div>
+
+            {/* Availability Checker Widget */}
+            <AdminAvailabilityWidget />
           </div>
 
           {/* MAIN CONFIG VIEWPORT */}

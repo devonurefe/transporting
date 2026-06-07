@@ -36,13 +36,13 @@ export function HuurGoLogo({ className = "h-8" }: { className?: string }) {
       fill="none" 
       xmlns="http://www.w3.org/2000/svg"
     >
-      <text 
-        x="10" 
-        y="42" 
-        fontFamily="Outfit, sans-serif" 
-        fontWeight="800" 
-        fontSize="34" 
-        fill="#0f2d59"
+      <text
+        x="10"
+        y="42"
+        fontFamily="Outfit, sans-serif"
+        fontWeight="800"
+        fontSize="34"
+        fill="#16a34a"
       >
         Huur
       </text>
@@ -58,19 +58,19 @@ export function HuurGoLogo({ className = "h-8" }: { className?: string }) {
       </text>
       
       <g transform="translate(138, 17)">
-        <line x1="0" y1="12" x2="22" y2="12" stroke="#0f2d59" strokeWidth="3.5" strokeLinecap="round" />
-        <line x1="0" y1="20" x2="22" y2="20" stroke="#0f2d59" strokeWidth="3.5" strokeLinecap="round" />
-        <line x1="0" y1="28" x2="22" y2="28" stroke="#0f2d59" strokeWidth="3.5" strokeLinecap="round" />
+        <line x1="0" y1="12" x2="22" y2="12" stroke="#16a34a" strokeWidth="3.5" strokeLinecap="round" />
+        <line x1="0" y1="20" x2="22" y2="20" stroke="#16a34a" strokeWidth="3.5" strokeLinecap="round" />
+        <line x1="0" y1="28" x2="22" y2="28" stroke="#16a34a" strokeWidth="3.5" strokeLinecap="round" />
         <path d="M22 6 L36 20 L22 34 Z" fill="#FF7A20" />
       </g>
 
-      <text 
-        x="12" 
-        y="68" 
-        fontFamily="Outfit, sans-serif" 
-        fontWeight="500" 
-        fontSize="15" 
-        fill="#0f2d59"
+      <text
+        x="12"
+        y="68"
+        fontFamily="Outfit, sans-serif"
+        fontWeight="500"
+        fontSize="15"
+        fill="#16a34a"
       >
         Snel en simpel
       </text>

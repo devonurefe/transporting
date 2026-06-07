@@ -177,11 +177,14 @@ export default function BookingSection({
     }
   }, [selectedMachine, machines]);
 
+  // Strip " (Unit N)" suffix — same logic as CatalogSection grouping
+  const getBaseName = (name: string) => name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "").trim();
+
   // Real-time capacity and collision checking logic
   const checkRealtimeAvailability = (machineId: string, start: string, end: string) => {
     if (!start || !end) return;
     setValidationError(null);
-    
+
     const requestedStart = new Date(start).getTime();
     const requestedEnd = new Date(end).getTime();
     const todayStr = new Date().toISOString().split('T')[0];
@@ -201,7 +204,7 @@ export default function BookingSection({
 
     const overlaps = allOrders.filter(o => {
       if (o.machineId !== machineId) return false;
-      
+
       const orderStart = new Date(o.startDate).getTime();
       const orderEnd = new Date(o.endDate).getTime();
 
@@ -214,7 +217,7 @@ export default function BookingSection({
     const sDate = new Date(start);
     const eDate = new Date(end);
     let curr = new Date(sDate);
-    
+
     // Limit safety block check to 1000 days
     let safetyCounter = 0;
     while (curr <= eDate && safetyCounter < 1000) {
@@ -233,6 +236,25 @@ export default function BookingSection({
     setBlockingReason(reasonTxt);
 
     if (overlaps.length > 0) {
+      // Auto-assign: try a sibling unit (same base model, different ID) for this period
+      if (selectedMachine) {
+        const base = getBaseName(selectedMachine.name);
+        const sibling = machines.find(m => {
+          if (m.id === machineId) return false;
+          if (getBaseName(m.name) !== base) return false;
+          const siblingOverlaps = allOrders.filter(o => {
+            if (o.machineId !== m.id) return false;
+            const os = new Date(o.startDate).getTime();
+            const oe = new Date(o.endDate).getTime();
+            return requestedStart <= oe && requestedEnd >= os;
+          });
+          return siblingOverlaps.length === 0;
+        });
+        if (sibling) {
+          onSelectMachine(sibling);
+          return;
+        }
+      }
       setIsAvailable(false);
       setOverlappingOrders(overlaps);
     } else if (dateIsBlocked) {

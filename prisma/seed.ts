@@ -8,7 +8,9 @@ const defaultCategories = [
   { id: "spin", label: "Rupshoogwerker", listLabel: "Rupshoogwerkers", desc: "Ideaal voor kwetsbare ondergronden, smalle tuintoegangen en hoge gevelwerkzaamheden.", heights: "15m - 17m", price: "v.a. €160/dag" },
   { id: "schaarlift", label: "Schaarlift (8m)", listLabel: "Schaarliften (8m)", desc: "Ideaal voor binnen- en buitengebruik op vlakke ondergronden. Past door deuren.", heights: "8m", price: "v.a. €80/dag" },
   { id: "schaarlift-smal", label: "Smal Model Schaarlift (10m)", listLabel: "Schaarliften (10m smal)", desc: "Compacte en smalle schaarlift voor nauwe gangpaden en binnenruimtes tot 10 meter werkhoogte.", heights: "10m", price: "v.a. €95/dag" },
+  { id: "schaarlift-6m", label: "Kompakte Schaarlift (6m)", listLabel: "Schaarliften (6m)", desc: "Kompakte elektrische schaarlift voor snel en veilig werken op 6 meter. Past door standaard binnendeuren.", heights: "6m", price: "v.a. €65/dag" },
   { id: "mastlift", label: "Mastlift", listLabel: "Mastliften", desc: "Verticale mastliften voor snel, efficiënt en compact werk in magazijnen of kantoren.", heights: "5m - 10m", price: "v.a. €75/dag" },
+  { id: "kamersteiger", label: "Kamersteiger", listLabel: "Kamersteigers", desc: "Stabiele en lichtgewicht kamersteigers voor veilig binnenwerk tot 4 meter. Snel op- en afgebouwd.", heights: "4m", price: "v.a. €35/dag" },
   { id: "ladderlift", label: "Ladderlift", listLabel: "Ladderliften / Verhuisliften", desc: "Verhuis- en ladderliften voor veilig transport van zware meubels of bouwmaterialen direct via het raam.", heights: "18m - 21m", price: "v.a. €90/dag" },
   { id: "ecolift", label: "Ecolift", listLabel: "Ecolift", desc: "Milieuvriendelijk en veilig alternatief voor ladders. Geen batterijen of hydrauliek nodig.", heights: "4.2m", price: "v.a. €45/dag" },
   { id: "klussensets", label: "Kluspakket", listLabel: "Kluspakketten", desc: "Complete kluspakketten speciaal samengesteld voor specifieke ZZP- en particuliere klussen.", heights: "4m - 21m", price: "v.a. €80/dag" }
@@ -225,6 +227,44 @@ const defaultMachines = [
     suitableFor: ["Installateur", "Schilder", "Magazijn"],
     weeklyDiscountPercent: 12,
     monthlyDiscountPercent: 28
+  },
+
+  // KATEGORİ 4b: Kompakte Schaarliften (6m) — Dingli JCPT 0607 DC
+  {
+    id: "dingli-6m",
+    name: "Dingli JCPT 0607 DC Compact Schaarlift",
+    category: "schaarlift-6m",
+    categoryLabel: "Kompakte Schaarlift (6m)",
+    height: 6.0,
+    reach: 0,
+    weight: 695,
+    pricePerDay: 65,
+    powerType: "Elektrisch",
+    imageUrl: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=600&auto=format&fit=crop",
+    imageAlt: "Dingli JCPT 0607 DC compact elektrische schaarlift 6 meter",
+    description: "Lichtgewicht elektrische schaarlift met 6 meter werkhoogte. Uiterst compact en geschikt voor smalle gangpaden en lage doorgangshoogtes. Ideaal voor onderhoudsklussen in winkels, scholen en kantoren.",
+    suitableFor: ["Installateur", "Schilder", "Particulier"],
+    weeklyDiscountPercent: 10,
+    monthlyDiscountPercent: 20
+  },
+
+  // KATEGORİ 4c: Kamersteigers — Altrex RS-44 Power
+  {
+    id: "altrex-rs44",
+    name: "Altrex RS-44 Power Kamersteiger",
+    category: "kamersteiger",
+    categoryLabel: "Kamersteiger",
+    height: 4.0,
+    reach: 0,
+    weight: 105,
+    pricePerDay: 35,
+    powerType: "Handmatig",
+    imageUrl: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?q=80&w=600&auto=format&fit=crop",
+    imageAlt: "Altrex RS-44 Power kamersteiger binnenwerk",
+    description: "Professionele aluminium kamersteiger met geveerde wielen en veiligheidsborging. In minuten opgebouwd en verplaatst. Ideaal voor schilder- en stucwerkzaamheden in woon- en kantoorruimtes.",
+    suitableFor: ["Schilder", "Stukadoor", "Particulier"],
+    weeklyDiscountPercent: 5,
+    monthlyDiscountPercent: 15
   },
 
   // KATEGORİ 5: Dikey Mastlı Personel Yükselticiler (Mastliften)

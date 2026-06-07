@@ -524,9 +524,9 @@ const defaultBlockedDates = [
 const defaultSiteConfig = {
   id: "default",
   siteName: "HuurGo",
-  heroTagline: "Snel & Makkelijk Hoogwerkers Huren",
-  heroTitle: "Huur uw hoogwerker in een handomdraai.",
-  heroSubtitle: "HuurGo is er voor ZZP'ers en particulieren. Geen gedoe, direct online geregeld. Vind binnen 1 minuut de perfecte machine voor uw schilderklus, tuinonderhoud of gevelwerk met onze slimme AI-assistent.",
+  heroTagline: "Professionele Hoogwerker Verhuur",
+  heroTitle: "De juiste machine, snel en veilig geregeld.",
+  heroSubtitle: "MB Hoogwerkers B.V. verhuurt gecertificeerde hoogwerkers, schaarliften, mastliften en ladderliften aan ZZP'ers, aannemers en particulieren door heel Nederland. Meer dan 50 BMWT-gecertificeerde machines, direct beschikbaar.",
   menuHomeLabel: "Home",
   menuCatalogLabel: "Catalogus",
   menuAdvisorLabel: "Snel Advies",

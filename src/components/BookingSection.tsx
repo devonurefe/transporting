@@ -6,6 +6,7 @@
 import React, { useState, useEffect } from "react";
 import {
   Building2,
+  RefreshCw,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Machine, Order, DeliveryType, UserProfile, CartItem, CampaignRule } from "../types";
@@ -781,9 +782,10 @@ export default function BookingSection({
                   </div>
                   <button
                     onClick={() => setActiveTab("catalog")}
-                    className="text-[11px] text-indigo-750 hover:text-white transition-all bg-indigo-50 hover:bg-indigo-600 border border-indigo-200 px-2.5 py-1.5 rounded-lg cursor-pointer border-none"
+                    className="text-[11px] text-indigo-600 hover:text-white transition-all bg-indigo-50 hover:bg-indigo-600 border border-indigo-100 hover:border-indigo-600 px-3 py-1.5 rounded-lg cursor-pointer flex items-center gap-1.5 font-semibold"
                   >
-                    Wissel Model
+                    <RefreshCw className="h-3 w-3 shrink-0" />
+                    Ander model
                   </button>
                 </div>
 
@@ -800,10 +802,10 @@ export default function BookingSection({
                     setSelectedAddons={setSelectedAddons}
                     validationError={validationError}
                     setValidationError={setValidationError}
-                    isAvailable={isAvailable && cartItems.every(item => {
+                    isAvailable={cartItems.length > 0 && cartItems.every(item => {
                       const av = getItemAvailability(
-                        item.machine.id, 
-                        item.startDate || new Date().toISOString().split("T")[0], 
+                        item.machine.id,
+                        item.startDate || new Date().toISOString().split("T")[0],
                         item.endDate || new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]
                       );
                       return av.available;

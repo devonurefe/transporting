@@ -417,7 +417,7 @@ export default function CatalogSection({
             initial={{ y: 80, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 80, opacity: 0 }}
-            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 w-[90%] max-w-2xl bg-white border border-slate-200 shadow-xl rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4"
+            className="fixed bottom-24 sm:bottom-6 left-1/2 -translate-x-1/2 z-40 w-[92%] max-w-2xl bg-white border border-slate-200 shadow-xl rounded-2xl p-3 sm:p-4 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4"
           >
             <div className="flex items-center space-x-3 w-full sm:w-auto overflow-x-auto py-1 scrollbar-none">
               <div className="bg-indigo-50 p-2 rounded-xl shrink-0 animate-pulse">

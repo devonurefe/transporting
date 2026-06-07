@@ -241,21 +241,24 @@ export default function MyOrdersSection({
       const user = useAuthStore.getState().user;
       if (user) {
         setResendEmailAddress(null);
-        setCurrentUser({
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          phone: user.phone || "",
-          profileType: user.profile || "Particulier",
-          companyName: loginCompany.trim() || undefined,
-          pastRentalsCount: 0
-        });
-        onAddSystemLog?.("login", user.name, "Klant is succesvol ingelogd met beveiligd account.");
-        onTriggerNotification(
-          "Klant Ingelogd",
-          `Welkom terug ${user.name}! Uw lopende huren zijn ingeladen.`,
-          "success"
-        );
+        // Admin users are handled by App.tsx — don't set customer context
+        if (user.role !== "admin") {
+          setCurrentUser({
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            phone: user.phone || "",
+            profileType: user.profile || "Particulier",
+            companyName: loginCompany.trim() || undefined,
+            pastRentalsCount: 0
+          });
+          onAddSystemLog?.("login", user.name, "Klant is succesvol ingelogd met beveiligd account.");
+          onTriggerNotification(
+            "Klant Ingelogd",
+            `Welkom terug ${user.name}! Uw lopende huren zijn ingeladen.`,
+            "success"
+          );
+        }
       }
     } else {
       const isUnverified = useAuthStore.getState().isUnverified;
@@ -285,18 +288,21 @@ export default function MyOrdersSection({
     });
 
     if (success) {
-      onAddSystemLog?.("signup", regName.trim(), `Nieuw account geregistreerd, wacht op e-mailverificatie.`);
+      onAddSystemLog?.("signup", regName.trim(), `Nieuw klantaccount aangemaakt.`);
       onTriggerNotification(
         "Registratie Voltooid",
-        `Registratie succesvol! Controleer uw e-mail (${regEmail}) om uw account te activeren.`,
+        `Account aangemaakt! U kunt nu direct inloggen met uw e-mailadres.`,
         "success"
       );
+      const justRegisteredEmail = regEmail.trim();
       setRegName("");
       setRegEmail("");
       setRegPassword("");
       setRegPhone("");
       setRegCompany("");
       setIsRegistering(false);
+      // Pre-fill login email for convenience
+      setLoginEmail(justRegisteredEmail);
     } else {
       const errorMsg = useAuthStore.getState().error || "Registratie mislukt.";
       onTriggerNotification("Registratie Mislukt", errorMsg, "warning");

@@ -146,25 +146,25 @@ export default function AdminCalendar({ onAddSystemLog, adminLanguage }: AdminCa
               </select>
             </div>
 
-            <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-1">
-                <label className="text-xs text-slate-700 block font-bold">{t("Begindatum *", "Start Date *", "Başlangıç Tarihi *")}</label>
+            <div className="grid grid-cols-1 xs:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <label className="text-[11px] text-slate-600 block font-semibold uppercase tracking-wide">{t("Begindatum *", "Start Date *", "Başlangıç Tarihi *")}</label>
                 <input
                   type="date"
                   required
                   value={blockDate}
                   onChange={(e) => { setBlockDate(e.target.value); if (blockEndDate && blockEndDate < e.target.value) setBlockEndDate(""); }}
-                  className="bg-white border border-slate-200 text-slate-800 w-full rounded-xl px-3 py-2 text-xs outline-none focus:border-amber-500 cursor-pointer"
+                  className="bg-white border border-slate-200 text-slate-800 w-full rounded-xl px-3 py-2.5 text-xs outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 cursor-pointer transition-colors"
                 />
               </div>
-              <div className="space-y-1">
-                <label className="text-xs text-slate-700 block font-bold">{t("Einddatum", "End Date", "Bitiş Tarihi")}</label>
+              <div className="space-y-1.5">
+                <label className="text-[11px] text-slate-600 block font-semibold uppercase tracking-wide">{t("Einddatum", "End Date", "Bitiş Tarihi")}</label>
                 <input
                   type="date"
                   value={blockEndDate}
                   min={blockDate}
                   onChange={(e) => setBlockEndDate(e.target.value)}
-                  className="bg-white border border-slate-200 text-slate-800 w-full rounded-xl px-3 py-2 text-xs outline-none focus:border-amber-500 cursor-pointer"
+                  className="bg-white border border-slate-200 text-slate-800 w-full rounded-xl px-3 py-2.5 text-xs outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 cursor-pointer transition-colors"
                 />
               </div>
             </div>

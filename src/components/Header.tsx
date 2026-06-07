@@ -30,51 +30,37 @@ import { AppNotification, UserProfile, CartItem } from "../types";
 
 export function HuurGoLogo({ className = "h-8" }: { className?: string }) {
   return (
-    <svg 
-      viewBox="0 0 250 80" 
-      className={className} 
-      fill="none" 
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <text
-        x="10"
-        y="42"
-        fontFamily="Outfit, sans-serif"
-        fontWeight="800"
-        fontSize="34"
-        fill="#16a34a"
-      >
-        Huur
-      </text>
-      <text 
-        x="90" 
-        y="42" 
-        fontFamily="Outfit, sans-serif" 
-        fontWeight="850" 
-        fontSize="34" 
-        fill="#FF7A20"
-      >
-        Go
-      </text>
-      
-      <g transform="translate(138, 17)">
-        <line x1="0" y1="12" x2="22" y2="12" stroke="#16a34a" strokeWidth="3.5" strokeLinecap="round" />
-        <line x1="0" y1="20" x2="22" y2="20" stroke="#16a34a" strokeWidth="3.5" strokeLinecap="round" />
-        <line x1="0" y1="28" x2="22" y2="28" stroke="#16a34a" strokeWidth="3.5" strokeLinecap="round" />
-        <path d="M22 6 L36 20 L22 34 Z" fill="#FF7A20" />
-      </g>
+    <div className={`flex items-center gap-2 ${className}`}>
+      {/* Geometric aerial-lift icon — pure shapes, no text */}
+      <svg viewBox="0 0 28 36" className="h-full w-auto shrink-0" fill="none" xmlns="http://www.w3.org/2000/svg">
+        {/* Mast */}
+        <rect x="11" y="9" width="3.5" height="20" rx="1.75" fill="#16a34a" />
+        {/* Horizontal boom */}
+        <rect x="5" y="9" width="18" height="3" rx="1.5" fill="#16a34a" />
+        {/* Work basket */}
+        <rect x="3" y="2" width="11" height="9" rx="2" fill="#FF7A20" />
+        {/* Basket guard rails */}
+        <line x1="6" y1="4" x2="6" y2="9" stroke="white" strokeWidth="1.2" strokeLinecap="round" />
+        <line x1="9" y1="4" x2="9" y2="9" stroke="white" strokeWidth="1.2" strokeLinecap="round" />
+        <line x1="12" y1="4" x2="12" y2="9" stroke="white" strokeWidth="1.2" strokeLinecap="round" />
+        {/* Base platform */}
+        <rect x="7" y="29" width="11" height="3.5" rx="1.75" fill="#16a34a" />
+        {/* Wheels */}
+        <circle cx="10" cy="33" r="2.5" fill="#16a34a" />
+        <circle cx="18" cy="33" r="2.5" fill="#16a34a" />
+        <circle cx="10" cy="33" r="1" fill="white" />
+        <circle cx="18" cy="33" r="1" fill="white" />
+      </svg>
 
-      <text
-        x="12"
-        y="68"
-        fontFamily="Outfit, sans-serif"
-        fontWeight="500"
-        fontSize="15"
-        fill="#16a34a"
-      >
-        Snel en simpel
-      </text>
-    </svg>
+      {/* Wordmark */}
+      <div className="flex flex-col leading-none select-none">
+        <div className="flex items-baseline gap-0">
+          <span className="font-display font-extrabold tracking-tight text-emerald-600 text-lg sm:text-xl">Huur</span>
+          <span className="font-display font-extrabold tracking-tight text-orange-500 text-lg sm:text-xl">Go</span>
+        </div>
+        <span className="text-[9px] text-slate-400 font-medium tracking-wide hidden sm:block">Snel &amp; professioneel</span>
+      </div>
+    </div>
   );
 }
 

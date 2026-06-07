@@ -4,7 +4,7 @@
  */
 
 import React from "react";
-import { TrendingDown } from "lucide-react";
+import { ShieldCheck, TrendingDown, Package } from "lucide-react";
 import { Machine } from "../../types";
 
 interface BookingPriceSummaryProps {
@@ -28,130 +28,127 @@ interface BookingPriceSummaryProps {
 export default function BookingPriceSummary({ selectedMachine, sums }: BookingPriceSummaryProps) {
   if (!selectedMachine) {
     return (
-      <div className="glass-panel p-6 rounded-3xl text-center space-y-3 bg-white border border-slate-200 shadow-md">
-        <div className="mx-auto h-10 w-10 bg-slate-50 text-slate-400 flex items-center justify-center rounded-full border border-slate-100 shadow-inner">
-          <TrendingDown className="h-5 w-5 animate-pulse" />
+      <div className="bg-white border border-slate-200 shadow-sm p-6 rounded-3xl text-center space-y-3">
+        <div className="mx-auto h-10 w-10 bg-slate-50 text-slate-400 flex items-center justify-center rounded-full border border-slate-100">
+          <Package className="h-5 w-5" />
         </div>
         <div>
-          <h4 className="text-xs font-bold text-slate-700">Specificatie leeg</h4>
+          <h4 className="text-xs font-bold text-slate-700">Kies een machine</h4>
           <p className="text-[10px] text-slate-500 mt-1 max-w-[200px] mx-auto leading-normal">
-            Kies een hoogwerker of kluspakket uit de catalogus om uw realtime prijsberekening te starten.
+            Selecteer een hoogwerker uit de catalogus om uw prijs te zien.
           </p>
         </div>
       </div>
     );
   }
 
-  return (
-    <div className="glass-panel p-5 rounded-3xl space-y-4 shadow-xl bg-white border border-slate-200">
-      <div className="border-b border-slate-200 pb-2.5">
-        <h4 className="font-display font-bold text-xs uppercase tracking-wider text-slate-500">
-          Huur Specificatie
-        </h4>
-      </div>
+  const priceExVat = sums.subtotal + sums.transport + sums.driver + sums.addonCost;
 
-      {/* Product Card */}
-      <div className="flex items-center space-x-3 bg-slate-50 p-2.5 rounded-xl border border-slate-100 shadow-sm">
-        <div className="h-12 w-16 rounded-lg overflow-hidden bg-slate-200 shrink-0">
-          <img 
-            src={selectedMachine.imageUrl} 
-            alt="" 
-            className="h-full w-full object-cover" 
-            referrerPolicy="no-referrer" 
-            onError={(e) => {
-              e.currentTarget.src = "/placeholder-machine.webp";
-            }}
+  return (
+    <div className="bg-white border border-slate-200 shadow-sm rounded-3xl overflow-hidden">
+
+      {/* Machine preview */}
+      <div className="flex items-center gap-3 p-4 bg-slate-50 border-b border-slate-100">
+        <div className="h-14 w-20 rounded-xl overflow-hidden bg-slate-200 shrink-0">
+          <img
+            src={selectedMachine.imageUrl}
+            alt=""
+            className="h-full w-full object-cover"
+            referrerPolicy="no-referrer"
+            onError={(e) => { e.currentTarget.src = "/placeholder-machine.webp"; }}
           />
         </div>
-        <div className="min-w-0">
-          <h4 className="text-xs font-bold text-slate-800 truncate leading-none">{selectedMachine.name}</h4>
-          <span className="text-[9.5px] text-teal-700 block font-bold font-mono mt-1.5 leading-none">€ {selectedMachine.pricePerDay} / dag</span>
+        <div className="min-w-0 flex-1">
+          <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wide leading-none mb-1">Jouw reservering</p>
+          <h4 className="text-sm font-extrabold text-slate-900 leading-tight truncate">{selectedMachine.name}</h4>
+          <span className="text-[11px] text-indigo-600 font-bold font-mono">€ {selectedMachine.pricePerDay}/dag</span>
         </div>
       </div>
 
-      {/* Sum details */}
-      <div className="space-y-2 pt-2 text-xs">
-        
-        <div className="flex justify-between items-center text-slate-500">
-          <span>Aantal dagen gevraagd:</span>
-          <span className="font-bold text-slate-800 font-mono">{sums.days} {sums.days === 1 ? 'dag' : 'dagen'}</span>
+      {/* Price breakdown */}
+      <div className="p-4 space-y-3">
+
+        {/* Days × rate */}
+        <div className="flex justify-between items-center">
+          <span className="text-xs text-slate-600">
+            {sums.days} {sums.days === 1 ? 'dag' : 'dagen'} × €{selectedMachine.pricePerDay}
+          </span>
+          <span className="text-xs font-bold text-slate-800 font-mono">€ {sums.rawSubtotal.toFixed(0)}</span>
         </div>
 
-        <div className="flex justify-between items-center text-slate-500">
-          <span>Bruto lokatieduur tarief:</span>
-          <span className="font-bold text-slate-800 font-mono">€ {sums.rawSubtotal}</span>
-        </div>
-
+        {/* Discount */}
         {sums.discountAmount > 0 && (
-          <div className="flex justify-between items-center text-emerald-700 font-bold">
-            <span className="flex items-center space-x-1">
-              <TrendingDown className="h-3 w-3 shrink-0" />
-              <span>{sums.discountLabel}:</span>
+          <div className="flex justify-between items-center bg-emerald-50 -mx-4 px-4 py-2 rounded-lg">
+            <span className="text-xs text-emerald-700 font-semibold flex items-center gap-1">
+              <TrendingDown className="h-3.5 w-3.5" />
+              {sums.discountLabel}
             </span>
-            <span className="font-mono font-bold">- € {sums.discountAmount.toFixed(0)}</span>
+            <span className="text-xs font-bold text-emerald-700 font-mono">− €{sums.discountAmount.toFixed(0)}</span>
           </div>
         )}
 
-        <div className="flex justify-between items-center text-slate-500 border-b border-slate-100 pb-2">
-          <span>Netto lokatieduur tarief:</span>
-          <span className="font-bold text-slate-800 font-mono">€ {sums.subtotal.toFixed(0)}</span>
+        {/* Delivery */}
+        {(sums.transport > 0 || sums.driver > 0) && (
+          <div className="flex justify-between items-center">
+            <span className="text-xs text-slate-600">Bezorging & chauffeur</span>
+            <span className="text-xs font-bold text-slate-800 font-mono">€ {(sums.transport + sums.driver).toFixed(0)}</span>
+          </div>
+        )}
+
+        {/* Self-pickup confirmation */}
+        {sums.transport === 0 && sums.driver === 0 && (
+          <div className="flex justify-between items-center">
+            <span className="text-xs text-slate-600">Bezorging</span>
+            <span className="text-xs font-semibold text-slate-500">Zelf ophalen</span>
+          </div>
+        )}
+
+        {/* Add-ons */}
+        {sums.addonCost > 0 && sums.addonDetails.map(addon => (
+          <div key={addon.id} className="flex justify-between items-center">
+            <span className="text-xs text-slate-600 truncate max-w-[160px]">{addon.name}</span>
+            <span className="text-xs font-bold text-slate-800 font-mono">€ {addon.price}</span>
+          </div>
+        ))}
+
+        {/* BTW */}
+        <div className="flex justify-between items-center text-slate-400 border-t border-slate-100 pt-3">
+          <span className="text-[11px]">BTW 21%</span>
+          <span className="text-[11px] font-mono">€ {sums.vat.toFixed(2)}</span>
         </div>
 
-        <div className="flex justify-between items-center text-slate-500">
-          <span>Transportkosten (Heen/Weer):</span>
-          <span className="font-bold text-slate-800 font-mono">
-            {sums.transport > 0 ? `€ ${sums.transport}` : "Zelf ophalen"}
-          </span>
-        </div>
-
-        <div className="flex justify-between items-center text-slate-500 border-b border-slate-100 pb-2">
-          <span>Chauffeur & Demonstratie:</span>
-          <span className="font-bold text-slate-800 font-mono">
-            {sums.driver > 0 ? `€ ${sums.driver}` : "Enkel Afhalen"}
-          </span>
-        </div>
-
-        {sums.addonCost > 0 && (
-          <div className="border-b border-slate-100 pb-2">
-            <span className="text-[10px] text-indigo-700 font-mono font-bold uppercase tracking-wider block mb-1">Toegevoegde Extra's (Sepet):</span>
-            <div className="space-y-1">
-              {sums.addonDetails.map(addon => (
-                <div key={addon.id} className="flex justify-between items-center text-slate-500 text-[11px]">
-                  <span>• {addon.name}:</span>
-                  <span className="font-bold text-teal-700 font-mono">€ {addon.price}</span>
-                </div>
-              ))}
+        {/* Total */}
+        <div className="bg-indigo-600 -mx-4 px-4 py-4 rounded-b-none">
+          <div className="flex justify-between items-center">
+            <div>
+              <p className="text-[10px] text-indigo-200 font-semibold uppercase tracking-wide">Totaal te betalen</p>
+              <p className="text-[10px] text-indigo-300 mt-0.5">incl. BTW</p>
             </div>
+            <span className="text-2xl font-black text-white font-mono">€ {sums.total.toFixed(0)}</span>
           </div>
-        )}
-
-        <div className="flex justify-between items-center text-slate-500">
-          <span>Omzetbelasting BTW (21%):</span>
-          <span className="font-bold text-slate-800 font-mono">€ {sums.vat.toFixed(2)}</span>
         </div>
 
-        <div className="flex justify-between items-end pt-3 border-t border-slate-100">
-          <div>
-            <span className="text-[9px] uppercase font-bold text-slate-500 font-mono tracking-wider block leading-none">Totaal Huur (incl. BTW)</span>
-            <span className="text-[8px] text-slate-400">Inclusief BTW & Training</span>
-          </div>
-          <span className="text-xl font-mono font-black text-indigo-600 leading-none">
-            € {sums.total.toFixed(2)}
-          </span>
-        </div>
-
+        {/* Borgsom */}
         {sums.borgsom > 0 && (
-          <div className="border-t border-dashed border-amber-200 pt-3 mt-1 space-y-1 bg-amber-50 -mx-5 px-5 pb-3 rounded-b-2xl">
-            <div className="flex justify-between items-center text-amber-800">
-              <span className="text-xs font-bold">Borgsom (eenmalig):</span>
-              <span className="font-bold font-mono text-sm">€ {sums.borgsom.toFixed(2)}</span>
+          <div className="bg-amber-50 border border-amber-100 -mx-4 px-4 py-3 space-y-1">
+            <div className="flex justify-between items-center">
+              <span className="text-xs font-bold text-amber-800">Waarborgsom</span>
+              <span className="text-xs font-bold font-mono text-amber-800">€ {sums.borgsom.toFixed(0)}</span>
             </div>
-            <p className="text-[10px] text-amber-600 leading-snug">
-              Wordt teruggestort na onbeschadigde retour van de machine.
-            </p>
+            <p className="text-[10px] text-amber-600 leading-snug">Volledig teruggestort na onbeschadigde retour.</p>
           </div>
         )}
+
       </div>
+
+      {/* Trust footer */}
+      <div className="px-4 pb-4">
+        <div className="flex items-center justify-center gap-1.5 text-[10px] text-slate-400 pt-2 border-t border-slate-100">
+          <ShieldCheck className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+          <span>Geen verborgen kosten · Veilige betaling</span>
+        </div>
+      </div>
+
     </div>
   );
 }

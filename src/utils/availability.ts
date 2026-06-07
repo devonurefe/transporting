@@ -53,7 +53,7 @@ export function checkAvailability(
   });
 
   if (overlaps.length > 0) {
-    return { available: false, blocked: false, overlap: true, reason: `Bezet (overlapping met boekingsnummer: ${overlaps[0].id})` };
+    return { available: false, blocked: false, overlap: true, reason: "Niet beschikbaar — al geboekt voor (een deel van) deze periode. Kies andere datums." };
   }
 
   // Check manual blocked dates

@@ -11,10 +11,32 @@ import {
   Info,
   X,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Paintbrush,
+  Home,
+  Wrench,
+  Leaf,
+  HardHat,
+  Droplets,
+  Layers,
+  Package,
+  Building2,
+  type LucideIcon,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Machine } from "../types";
+
+const professionIconMap: Record<string, LucideIcon> = {
+  Schilder: Paintbrush,
+  Particulier: Home,
+  Installateur: Wrench,
+  Hovenier: Leaf,
+  Aannemer: HardHat,
+  Glazenwasser: Droplets,
+  Stukadoor: Layers,
+  Magazijn: Package,
+  Gevelreiniger: Building2,
+};
 
 interface CatalogSectionProps {
   machines: Machine[];
@@ -230,164 +252,154 @@ export default function CatalogSection({
                   return (
                     <motion.div
                       layout
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.9 }}
-                      transition={{ duration: 0.3 }}
+                      initial={{ opacity: 0, y: 12, scale: 0.97 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      transition={{ duration: 0.22, ease: "easeOut" }}
                       key={machine.id}
-                      className={`machine-card group relative overflow-hidden rounded-2xl border ${
-                        isRecommended 
-                          ? "border-indigo-500 bg-white shadow-lg animate-pulse-intensity" 
-                          : "border-slate-200 bg-white shadow-sm hover:shadow-md transition-shadow"
-                      } flex flex-col justify-between min-h-[460px]`}
+                      className={`group relative overflow-hidden rounded-2xl border bg-white flex flex-col ${
+                        isRecommended
+                          ? "border-indigo-400 shadow-lg ring-1 ring-indigo-400/20"
+                          : "border-slate-200 shadow-sm hover:shadow-md hover:-translate-y-px"
+                      } transition-all duration-200`}
                     >
-                      {/* AI Spark indicator badge */}
+                      {/* Top-left badge: AI or Stock */}
                       {isRecommended && (
-                        <div className="absolute top-3.5 left-3.5 z-20 flex items-center space-x-1.5 bg-indigo-600 py-1 px-3 rounded-full text-[9px] font-extrabold uppercase tracking-widest text-white shadow-md">
-                          <Sparkles className="h-3 w-3 text-emerald-300" />
-                          <span>AI Geadviseerd</span>
+                        <div className="absolute top-3 left-3 z-20 flex items-center gap-1 bg-indigo-600 py-0.5 px-2.5 rounded-full text-[9px] font-extrabold uppercase tracking-widest text-white shadow">
+                          <Sparkles className="h-2.5 w-2.5 text-emerald-300" />
+                          AI Geadviseerd
                         </div>
                       )}
-
-                      {/* Stock count badge — shown only when multiple units available */}
                       {!isRecommended && (stockCountByBase[getBaseName(machine.name)] ?? 1) > 1 && (
-                        <div className="absolute top-3.5 left-3.5 z-20 flex items-center space-x-1 bg-emerald-600 py-1 px-2.5 rounded-full text-[9px] font-extrabold uppercase tracking-widest text-white shadow-md">
-                          <span>{stockCountByBase[getBaseName(machine.name)]}× beschikbaar</span>
+                        <div className="absolute top-3 left-3 z-20 bg-emerald-600 py-0.5 px-2.5 rounded-full text-[9px] font-extrabold uppercase tracking-widest text-white shadow">
+                          {stockCountByBase[getBaseName(machine.name)]}× voorraad
                         </div>
                       )}
 
-                      {/* Header Category and Power indicator & Compare checkbox */}
-                      <div 
-                        onClick={(e) => e.stopPropagation()} 
-                        onMouseDown={(e) => e.stopPropagation()} 
-                        className="absolute top-3.5 right-3.5 z-20 flex items-center space-x-1.5"
+                      {/* Top-right: compare checkbox */}
+                      <div
+                        onClick={(e) => e.stopPropagation()}
+                        onMouseDown={(e) => e.stopPropagation()}
+                        className="absolute top-3 right-3 z-20"
                       >
-                        <span className="bg-slate-900/95 backdrop-blur text-white px-2 py-0.5 rounded-md text-[9px] font-mono tracking-wider font-bold">
-                          {machine.powerType}
-                        </span>
-
-                        <div className="bg-white/95 backdrop-blur border border-slate-200 px-2.5 py-1 rounded-lg flex items-center space-x-1.5 hover:border-indigo-400 transition-colors shadow-sm">
+                        <label className="flex items-center gap-1 bg-white/90 backdrop-blur border border-slate-200 px-2 py-1 rounded-lg cursor-pointer hover:border-indigo-400 transition-colors duration-200 shadow-sm">
                           <input
                             id={`compare-${machine.id}`}
                             type="checkbox"
                             checked={compareIds.includes(machine.id)}
                             onChange={(e) => {
-                              const checked = e.target.checked;
-                              if (checked) {
-                                if (compareIds.length >= 4) {
-                                  return;
-                                }
+                              if (e.target.checked && compareIds.length < 4) {
                                 setCompareIds(prev => [...prev, machine.id]);
                               } else {
                                 setCompareIds(prev => prev.filter(id => id !== machine.id));
                               }
                             }}
-                            className="h-3.5 w-3.5 accent-indigo-600 bg-white border-slate-300 rounded cursor-pointer"
+                            className="h-3 w-3 accent-indigo-600 cursor-pointer"
                           />
-                          <label htmlFor={`compare-${machine.id}`} className="text-[10px] text-slate-850 font-bold tracking-wide font-sans cursor-pointer select-none">
-                            Vergelijk
-                          </label>
-                        </div>
+                          <span className="text-[9px] font-bold text-slate-700 select-none">Vergelijk</span>
+                        </label>
                       </div>
 
-                      {/* MACHINE IMAGE: Category label overlaid at top, smooth scale on hover */}
-                      <div className="relative aspect-video w-full overflow-hidden bg-slate-50 border-b border-slate-100">
+                      {/* IMAGE with category + powerType overlay */}
+                      <div className="relative aspect-video w-full overflow-hidden bg-slate-100">
                         <img
                           src={machine.imageUrl}
                           alt={machine.imageAlt}
-                          className="h-full w-full object-cover group-hover:scale-106 transition-transform duration-500"
+                          className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                           referrerPolicy="no-referrer"
-                          onError={(e) => {
-                            e.currentTarget.src = "/placeholder-machine.webp";
-                          }}
+                          onError={(e) => { e.currentTarget.src = "/placeholder-machine.webp"; }}
                         />
-                        {/* Category label — top-left overlay */}
-                        <div className="absolute bottom-0 left-0 right-0 px-3 py-1.5 bg-gradient-to-t from-slate-900/70 to-transparent">
-                          <span className="text-[10px] font-bold text-white/90 uppercase tracking-wider">
+                        <div className="absolute inset-x-0 bottom-0 px-3 py-2 bg-gradient-to-t from-black/65 to-transparent flex items-end justify-between">
+                          <span className="text-[10px] font-bold text-white/95 uppercase tracking-wider leading-none">
                             {machine.categoryLabel}
+                          </span>
+                          <span className="text-[8px] font-mono font-bold text-white/80 bg-black/30 backdrop-blur-sm px-1.5 py-0.5 rounded-md">
+                            {machine.powerType}
                           </span>
                         </div>
                       </div>
 
-                      {/* DATA CONTAINER */}
-                      <div className="p-5 flex-1 flex flex-col justify-between">
-                        
-                        <div className="space-y-2">
-                          <h3 className="font-display font-extrabold text-base text-slate-900 group-hover:text-indigo-700 transition-colors line-clamp-1">
+                      {/* CARD CONTENT */}
+                      <div className="p-4 flex flex-col gap-3 flex-1">
+
+                        {/* Name + Price — price is the hero */}
+                        <div className="flex items-start justify-between gap-3">
+                          <h3 className="font-display font-bold text-sm text-slate-900 leading-snug flex-1 line-clamp-2 group-hover:text-indigo-700 transition-colors duration-200">
                             {getBaseName(machine.name)}
                           </h3>
-                          <p className="text-[11px] text-slate-600 leading-relaxed line-clamp-3">
-                            {machine.description}
-                          </p>
-                        </div>
-
-                        {/* SPEC BADGES - Premium mini icons */}
-                        <div className="grid grid-cols-3 gap-2 py-3.5 border-t border-b border-slate-200 my-3.5 bg-slate-50 rounded-xl px-2">
-                          
-                          <div className="text-center">
-                            <ArrowUpToLine className="h-4 w-4 mx-auto text-indigo-600" />
-                            <span className="text-[10px] font-mono font-extrabold text-slate-800 block mt-1">
-                              {machine.height} m
-                            </span>
-                            <span className="text-[9px] text-slate-500 block">Werkhoogte</span>
-                          </div>
-
-                          <div className="text-center">
-                            <ArrowRightLeft className="h-4 w-4 mx-auto text-teal-650" />
-                            <span className="text-[10px] font-mono font-extrabold text-slate-800 block mt-1">
-                              {machine.reach} m
-                            </span>
-                            <span className="text-[9px] text-slate-500 block">Bereik</span>
-                          </div>
-
-                          <div className="text-center">
-                            <Weight className="h-4 w-4 mx-auto text-amber-600" />
-                            <span className="text-[10px] font-mono font-extrabold text-slate-800 block mt-1">
-                              {machine.weight} kg
-                            </span>
-                            <span className="text-[9px] text-slate-500 block">Gewicht</span>
-                          </div>
-
-                        </div>
-
-                        {/* PRICE & HUUR NU BUTTON - Responsive layout */}
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 pt-2 border-t border-slate-100 mt-2">
-                          <div className="flex sm:flex-col items-baseline justify-between sm:justify-start w-full sm:w-auto">
-                            <span className="text-[9px] text-slate-500 uppercase font-bold font-mono">Dagtotaal</span>
-                            <div className="flex items-baseline space-x-0.5">
-                              <span className="text-lg font-bold text-teal-700 font-mono">€{machine.pricePerDay}</span>
-                              <span className="text-[10px] text-slate-500 font-medium">/dag</span>
+                          <div className="text-right shrink-0">
+                            <div className="text-xl font-mono font-extrabold text-slate-900 leading-none">
+                              €{machine.pricePerDay}
                             </div>
+                            <div className="text-[9px] text-slate-400 font-mono mt-0.5">v.a. /dag</div>
                           </div>
+                        </div>
 
-                          <div className="flex items-center space-x-1.5 w-full sm:w-auto">
-                            <button
-                              onClick={() => {
-                                setSelectedDetailMachine(machine);
-                                onAddSystemLog?.(
-                                  "system",
-                                  currentUser ? currentUser.name : "Gast",
-                                  `Bekijkt technische specificaties van: "${machine.name}"`
-                                );
-                              }}
-                              className="flex-1 sm:flex-none text-center px-2.5 py-2 rounded-xl border border-slate-200 hover:border-slate-300 bg-slate-50 hover:bg-slate-100 text-slate-700 hover:text-slate-900 text-[11px] font-bold transition-all active:scale-97 cursor-pointer"
-                              title="Bekijk alle details & specificaties"
-                            >
-                              Details
-                            </button>
+                        {/* Spec row — clean horizontal */}
+                        <div className="flex items-center gap-4 text-[10px] font-mono text-slate-500 border-t border-slate-100 pt-2.5">
+                          <span className="flex items-center gap-1">
+                            <ArrowUpToLine className="h-3.5 w-3.5 text-indigo-500 shrink-0" />
+                            {machine.height}m
+                          </span>
+                          {machine.reach > 0 && (
+                            <span className="flex items-center gap-1">
+                              <ArrowRightLeft className="h-3.5 w-3.5 text-indigo-500 shrink-0" />
+                              {machine.reach}m
+                            </span>
+                          )}
+                          <span className="flex items-center gap-1 ml-auto">
+                            <Weight className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                            {machine.weight}kg
+                          </span>
+                        </div>
 
-                            <button
-                              onClick={() => onSelectMachineForBooking(machine)}
-                              className="flex-[2] sm:flex-none relative overflow-hidden flex items-center justify-center space-x-1.5 px-3.5 py-2 rounded-xl border border-indigo-500/20 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white text-xs font-bold transition-all hover:scale-[1.03] active:scale-97 hover:border-indigo-500/60 shadow-[0_2px_10px_rgba(79,70,229,0.15)] cursor-pointer whitespace-nowrap"
-                            >
-                              <ShoppingBag className="h-3.5 w-3.5 text-teal-350 text-teal-300" />
-                              <span>Huur Nu</span>
-                            </button>
+                        {/* SuitableFor — profession icon chips */}
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {machine.suitableFor.map((prof) => {
+                            const ProfIcon = professionIconMap[prof];
+                            return (
+                              <span
+                                key={prof}
+                                title={prof}
+                                className="flex items-center gap-1 text-[9px] font-semibold text-slate-600 bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 px-2 py-1 rounded-full transition-colors duration-150 cursor-default select-none"
+                              >
+                                {ProfIcon && <ProfIcon className="h-3 w-3 shrink-0" />}
+                                {prof}
+                              </span>
+                            );
+                          })}
+                        </div>
+
+                        {/* Campaign badge */}
+                        {machine.campaignText && (
+                          <div className="flex items-center gap-1.5 text-[9px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-lg w-fit">
+                            <Zap className="h-3 w-3 text-amber-500" />
+                            {machine.campaignText}
+                            {machine.campaignDiscountPercent && ` −${machine.campaignDiscountPercent}%`}
                           </div>
+                        )}
+
+                        {/* Action buttons */}
+                        <div className="flex gap-2 mt-auto pt-1">
+                          <button
+                            onClick={() => {
+                              setSelectedDetailMachine(machine);
+                              onAddSystemLog?.("system", currentUser?.name ?? "Gast", `Bekijkt specificaties: "${machine.name}"`);
+                            }}
+                            className="flex-1 py-2 rounded-xl border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 text-[11px] font-bold transition-all duration-200 active:scale-[0.97] cursor-pointer"
+                          >
+                            Details
+                          </button>
+                          <button
+                            onClick={() => onSelectMachineForBooking(machine)}
+                            className="flex-[2] py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-[11px] font-bold transition-all duration-200 active:scale-[0.97] cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
+                          >
+                            <ShoppingBag className="h-3.5 w-3.5" />
+                            Huur Nu
+                          </button>
                         </div>
 
                       </div>
-
                     </motion.div>
                   );
                 })}
@@ -636,11 +648,15 @@ export default function CatalogSection({
                       const m = machines.find(item => item.id === id);
                       return (
                         <div key={id} className="col-span-1 flex flex-wrap gap-1">
-                          {m ? m.suitableFor.map((app, idx2) => (
-                            <span key={idx2} className="inline-block bg-white/5 border border-white/5 px-2 py-0.5 rounded text-[10px] text-indigo-300">
-                              {app}
-                            </span>
-                          )) : "—"}
+                          {m ? m.suitableFor.map((app, idx2) => {
+                            const AppIcon = professionIconMap[app];
+                            return (
+                              <span key={idx2} className="inline-flex items-center gap-1 bg-white/5 border border-white/10 px-2 py-0.5 rounded-full text-[10px] text-indigo-200">
+                                {AppIcon && <AppIcon className="h-3 w-3 shrink-0" />}
+                                {app}
+                              </span>
+                            );
+                          }) : "—"}
                         </div>
                       );
                     })}
@@ -877,14 +893,18 @@ export default function CatalogSection({
                     <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200">
                       <h4 className="text-[10px] font-mono text-slate-500 uppercase tracking-wider mb-2 font-bold">Perfect Geschikt Voor:</h4>
                       <div className="flex flex-wrap gap-1.5">
-                        {selectedDetailMachine.suitableFor.map((tag, idx) => (
-                          <span 
-                            key={idx} 
-                            className="bg-indigo-50 border border-indigo-100 text-indigo-700 px-2.5 py-1 rounded-md text-[10px] font-semibold"
-                          >
-                            {tag}
-                          </span>
-                        ))}
+                        {selectedDetailMachine.suitableFor.map((tag, idx) => {
+                          const TagIcon = professionIconMap[tag];
+                          return (
+                            <span
+                              key={idx}
+                              className="flex items-center gap-1.5 bg-indigo-50 border border-indigo-100 text-indigo-700 px-2.5 py-1 rounded-full text-[10px] font-semibold"
+                            >
+                              {TagIcon && <TagIcon className="h-3 w-3 shrink-0" />}
+                              {tag}
+                            </span>
+                          );
+                        })}
                       </div>
                     </div>
 

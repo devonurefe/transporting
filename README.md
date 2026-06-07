@@ -1,91 +1,113 @@
-# HuurGo — Hoogwerker Verhuur Platform
+# HuurGo — Aerial Lift & Platform Rental Platform
 
-HuurGo is een modern en snel verhuurplatform voor compacte hoogwerkers, speciaal ontworpen voor ZZP'ers en particulieren in Nederland.
+HuurGo is a premium, high-performance web application designed for ZZP contractors and private individuals in the Netherlands to rent compact aerial lifts, scissor lifts, and spider platforms. The application is built using a modern full-stack architecture, featuring a hybrid AI Advisor, real-time availability checks, and a direct checkout pipeline.
 
 ---
 
-## 🚀 Snel Aan de Slag
+## 🛠️ Technology Stack
 
-### Vereisten
-* **Node.js** (versie 18+)
+* **Frontend:** React 19, Vite, TailwindCSS, Lucide React, Framer Motion
+* **Backend:** Node.js, Express, TypeScript, tsx, Esbuild
+* **Database & ORM:** Prisma ORM with SQLite (for local development) and PostgreSQL compatibility (for production)
+* **Security & Performance:** Express Rate Limit, Helmet CSP, Cors configuration, and lazy-loaded code-splitting chunks
+
+---
+
+## 🚀 Local Development Setup
+
+Follow these steps to set up and run the project on your local machine:
+
+### Prerequisites
+* **Node.js** (v18.0.0 or higher recommended)
 * **npm**
 
-### 1. Afhankelijkheden Installeren
+### 1. Clone the Repository & Install Dependencies
 ```bash
+git clone https://github.com/devonurefe/transporting.git
+cd transporting
 npm install
 ```
 
-### 2. Omgevingsvariabelen Instellen
-Kopieer het voorbeeldbestand `.env.example` naar `.env` en configureer de variabelen:
+### 2. Configure Environment Variables
+Copy the provided environment example file to `.env`:
 ```bash
 cp .env.example .env
 ```
-De belangrijkste variabelen in `.env` zijn:
-* `DATABASE_URL`: Verwijst lokaal naar de SQLite database (`file:./dev.db`) of in productie naar een PostgreSQL database (bijv. Supabase of Neon).
-* `JWT_SECRET`: Een sterke willekeurige sleutel voor beheerderstokens.
-* `GEMINI_API_KEY`: Optioneel, voor de AI Adviseur functionaliteit.
-* `VITE_WHATSAPP_NUMBER`: Het telefoonnummer waarnaar boekingsaanvragen worden doorgestuurd (zonder `+` of landcode voorvoegsels, bijv. `31612345678`).
+Open the `.env` file and configure the values:
+* `DATABASE_URL`: Set to `file:./dev.db` for local SQLite development (do not wrap in double quotes in environments where quotes are parsed literally).
+* `JWT_SECRET`: Secret key used for signing administrator session tokens.
+* `GEMINI_API_KEY`: Optional Google Gemini AI API key.
+* `VITE_WHATSAPP_NUMBER`: The planner's telephone number where bookings are directed (format without `+` or country prefix, e.g., `31612345678`).
 
-### 3. Database Initialiseren
-Voer de database-migratie uit en laad de initiële vloot/gebruikersgegevens via het seed-script:
+### 3. Initialize the Database
+Execute migrations to create the local SQLite schema and seed the database with initial fleets, categories, and administrator credentials:
 ```bash
 npx prisma db push
 npx prisma db seed
 ```
 
-### 4. Applicatie Starten
-Start de lokale ontwikkelserver (Vite + TSX Node server):
+### 4. Start the Application
+Run the local hybrid development server (Node + Vite SPA pipeline):
 ```bash
 npm run dev
 ```
-De website is nu lokaal beschikbaar op [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:3000](http://localhost:3000) in your web browser.
 
 ---
 
-## 🏗️ Productie & Scalability Hardening
+## 🏗️ Production Deployment & Scalability Hardening
 
-Bij het uitrollen van **HuurGo** naar platforms zoals AWS, GCP, Render of Heroku, zijn de volgende stappen essentieel voor stabiliteit en data-behoud:
+When deploying HuurGo to serverless or containerized cloud platforms (such as Render, Railway, AWS, or GCP), implement these changes to ensure persistent data storage:
 
-### 1. SQLite Persistentie op Render (Kritiek)
-Omdat container-omgevingen (zoals Render) standaard een tijdelijk (ephemeral) bestandssysteem hebben, zal de SQLite database (`dev.db`) bij elke nieuwe release of herstart worden gereset. 
-* **Oplossing A: Persistent Disk (Aanbevolen voor SQLite)**
-  Voeg in het Render Dashboard onder uw service een **Persistent Disk** toe (bijv. `/var/data` met een grootte van 1GB). Pas daarna uw `DATABASE_URL` in de Render Environment Variables aan naar:
-  `file:/var/data/dev.db`
-* **Oplossing B: Overstappen naar PostgreSQL**
-  Maak een gratis PostgreSQL instantie aan op Render, Supabase of Neon en verander de provider in [schema.prisma](file:///c:/Users/Lenovo/Documents/transporting/prisma/schema.prisma):
-  ```prisma
-  datasource db {
-    provider = "postgresql"
-    url      = env("DATABASE_URL")
-  }
-  ```
+### 1. SQLite Data Persistence on Render
+Render uses ephemeral storage by default. Any local files, including the SQLite database file (`dev.db`), are deleted every time the service restarts or redeploys.
 
-### 2. Automatische Database Bootstrap
-Zorg ervoor dat database updates automatisch worden toegepast bij het starten van de container. Pas de start-opdracht in het start-script aan naar:
+* **Option A: Add a Persistent Disk (Recommended for SQLite)**
+  1. Open your service settings in the **Render Dashboard**.
+  2. Scroll to **Disks** and click **Add Disk** (e.g., Mount Path: `/var/data`, Size: 1GB).
+  3. Update your `DATABASE_URL` in the Render Environment Variables to point to the mounted disk path:
+     `file:/var/data/dev.db`
+
+* **Option B: Migrate to PostgreSQL (Recommended for Scaling)**
+  1. Spin up a PostgreSQL database instance on Render, Supabase, or Neon.
+  2. Open [schema.prisma](file:///c:/Users/Lenovo/Documents/transporting/prisma/schema.prisma) and change the database provider to `postgresql`:
+     ```prisma
+     datasource db {
+       provider = "postgresql"
+       url      = env("DATABASE_URL")
+     }
+     ```
+  3. Commit the schema changes and push to GitHub. Configure the `DATABASE_URL` environment variable on Render to point to your PostgreSQL database URI.
+
+### 2. File Storage Decoupling (User Uploads)
+Since container file systems are stateless, uploaded images inside `./uploads` will be lost on container restarts. In production, refactor [api.ts](file:///c:/Users/Lenovo/Documents/transporting/server/routes/api.ts) (`POST /api/upload`) to upload files directly to an S3-compatible cloud bucket (e.g., AWS S3 or Cloudflare R2) using the `@aws-sdk/client-s3` library.
+
+### 3. Production Start Script
+To ensure schema migrations are applied on start-up in production, adjust the Start Command in your hosting dashboard:
 ```bash
 npx prisma db push && npm run start
 ```
 
 ---
 
-## 🩺 Audit & Kwaliteitsgarantie Checklists
+## 🩺 Audit Improvements & Quality Assurance Log
 
-Hier is de status van de verbeteringen die zijn doorgevoerd op basis van de auditrapporten (`huurgo-acimasz-rapor.html` en `huurgo-iyilestirme-rehberi.pdf`):
+A comprehensive refactoring audit was executed based on technical and visual feedback reports (`huurgo-acimasz-rapor.html` and `huurgo-iyilestirme-rehberi.pdf`). Below is the completion log:
 
-| Categorie | Probleem (Audit) | Oplossing (Doorgevoerd) | Status |
+| Category | Audit Issue | Refactoring Action | Status |
 | :--- | :--- | :--- | :---: |
-| **Ödeme / Betaling** | Stripe/Mollie nep-betalingen claimden succes | Formulering op de succes-pagina verzacht naar "aanvraag geregistreerd". Stripe/Mollie geconfigureerd als gesimuleerde test-gateways. | ✅ Voldaan |
-| **Ödeme / Betaling** | Chauffeurskosten verkeerd verdeeld | Chauffeurskosten worden nu als eenmalig vast tarief berekend op het eerste item bij meervoudige boekingen. | ✅ Voldaan |
-| **Ödeme / Betaling** | Enkele download bij meervoudige huur | Faturatie/Invoice generator geüpdatet om meerdere machines op één PDF-document te vermelden. | ✅ Voldaan |
-| **Müsaitlik / Availability** | Double-fetch netwerkverzoeken | Müsaitlik controleert nu uitsluitend lokale store state (`allOrders` & `blockedDaysList`), waardoor dubbele requests zijn geëlimineerd. | ✅ Voldaan |
-| **Müsaitlik / Availability** | 100 dagen limiet op blocked dates | Veiligheidsteller in de datum-loops verhoogd naar **1000 dagen** voor langere boekingsperiodes. | ✅ Voldaan |
-| **UI / UX** | Adres lookup met 400 regels hardcoded data | Hardcoded postcode tabel verwijderd. Systeem vertrouwt nu op de PDOK API en toont een handmatige invoer-instructie bij falen. | ✅ Voldaan |
-| **UI / UX** | Te kleine lettertypes | Letters en labels in de checkout stappen geoptimaliseerd voor betere leesbaarheid op mobiele schermen. | ✅ Voldaan |
-| **UI / UX** | Inloggen reset de boeking | Inloggen tijdens stap 2 gebeurt nu via een **inline inlogkaart** waardoor de voortgang van de boeking behouden blijft. | ✅ Voldaan |
-| **UI / UX** | AI Advisor in de header zonder API-sleutel | AI Advisor verwijderd uit de header navigatie. Nu geïntegreerd als een zwevende (floating) actieknop die automatisch terugvalt op WhatsApp als er geen Gemini API-sleutel is ingesteld. | ✅ Voldaan |
-| **Güvenlik / Security** | Geen rate limiting op inlogpogingen | `express-rate-limit` middleware geïnstalleerd en geactiveerd op `/api/auth` (max 10 pogingen per 15 minuten). | ✅ Voldaan |
-| **Güvenlik / Security** | E-mailadres admin vooraf ingevuld | E-mailadres invoerveld op het admin inlogscherm wordt niet langer vooraf ingevuld. | ✅ Voldaan |
-| **Güvenlik / Security** | Openbare test-profielen endpoint | Test-profielen route (`/api/auth/mock-profiles`) uitgeschakeld in productie. | ✅ Voldaan |
-| **Aesthetics / Perf** | Grote admin subcomponenten laden traag | Code-splitting toegepast: alle 9 admin subsecties worden nu dynamisch via `React.lazy()` en `<Suspense>` geladen. | ✅ Voldaan |
-| **Aesthetics / Perf** | Externe Unsplash afbeeldingen | Alle ontbrekende of foutieve productafbeeldingen vallen nu lokaal terug op `/placeholder-machine.webp`. | ✅ Voldaan |
-| **Compliance** | Ongeldig KvK/BTW nummer in footer | Footer tekst geüpdatet met de officiële bedrijfsgegevens: `KvK 72839102 \| BTW NL82039401B01`. | ✅ Voldaan |
+| **Payment Flow** | Stripe & Mollie checkouts claimed fake payments | Updated the success page copywriting for simulated gateways to clearly state that the order has been registered rather than claiming a payment transaction has been processed. | Resolved ✅ |
+| **Payment Flow** | Single invoice printout for multi-machine checkout | Refactored the `printInvoice` engine in [invoice.ts](file:///c:/Users/Lenovo/Documents/transporting/src/utils/invoice.ts) to accept `Order \| Order[]`. It now consolidates multiple rented machines, including addons, taxes, and transport fees, onto a single printable layout. | Resolved ✅ |
+| **Payment Flow** | Chauffeur/Driver cost incorrectly split | Driver cost is calculated as a flat, single support fee on the first item of a multi-product checkout instead of dividing it incorrectly. | Resolved ✅ |
+| **Calendar & Availability** | Double-fetch queries on date changes | Refactored `checkRealtimeAvailability` to execute purely against local state arrays (`allOrders` and `blockedDaysList`), eliminating duplicate network requests. | Resolved ✅ |
+| **Calendar & Availability** | 100 days safety limit in availability loops | Increased loop iteration limits in `checkAvailability` in [availability.ts](file:///c:/Users/Lenovo/Documents/transporting/src/utils/availability.ts) to **1000 days** to support long-term rentals. | Resolved ✅ |
+| **UX / UI** | 400 lines of hardcoded postcode lists | Deleted the local postcode lookup array. The address search now queries the PDOK API, with a fallback prompting manual address entry on network failure. | Resolved ✅ |
+| **UX / UI** | Small font sizes below accessibility standards | Adjusted typography values in checkout forms and steps to improve readability on mobile viewports. | Resolved ✅ |
+| **UX / UI** | "Inloggen" on step 2 resets checkout | Replaced the page redirect with a clean, **inline login card** within Step 2 so checkout progress is preserved. | Resolved ✅ |
+| **UX / UI** | AI Advisor in header was unfunctional without Gemini API Key | Removed the AI Advisor from the header. Implemented a floating help button on the bottom-right that launches the Advisor if `GEMINI_API_KEY` is present, or falls back to a WhatsApp planner redirection otherwise. | Resolved ✅ |
+| **Security** | Brute force risk on authentication | Mounted `express-rate-limit` on the `/api/auth` endpoint, restricting users to 10 inlog attempts per 15 minutes. | Resolved ✅ |
+| **Security** | Pre-filled admin email on login form | Cleared the initial state of `adminEmail` inside the login card to prevent credential leak risks. | Resolved ✅ |
+| **Security** | Public test-profiles endpoint active in production | Secured `/api/auth/mock-profiles` to only evaluate outside production environments. | Resolved ✅ |
+| **Aesthetics / Perf** | Statically imported admin subcomponents | Implemented dynamic imports using `React.lazy()` for all nine admin workspace panels. Wrapped components under a `<Suspense>` wrapper with an animated loading spinner. | Resolved ✅ |
+| **Aesthetics / Perf** | Broken external Unsplash URLs for image fallbacks | Configured fallback error handlers across all lists to fall back to the local `/placeholder-machine.webp` asset. | Resolved ✅ |
+| **Compliance** | Dummy KvK business numbers | Updated copyright sections in [Footer.tsx](file:///c:/Users/Lenovo/Documents/transporting/src/components/Footer.tsx) to official company numbers: `KvK 72839102 \| BTW NL82039401B01`. | Resolved ✅ |

@@ -191,10 +191,10 @@ export default function CatalogSection({
                       `Filtert catalogus op categorie: "${tab.label}"`
                     );
                   }}
-                  className={`px-3 py-1.5 text-xs font-bold rounded-lg whitespace-nowrap transition-all border cursor-pointer ${
+                  className={`px-3.5 py-1.5 text-xs font-bold rounded-lg whitespace-nowrap transition-all border cursor-pointer flex items-center gap-1.5 ${
                     isActive
-                      ? "bg-indigo-600 text-white border-indigo-700 shadow-sm"
-                      : "bg-slate-50 text-slate-600 border-slate-200 hover:text-slate-800 hover:bg-slate-100"
+                      ? "bg-indigo-600 text-white border-indigo-700 shadow-sm ring-2 ring-indigo-600/20"
+                      : "bg-white text-slate-600 border-slate-200 hover:text-slate-900 hover:border-slate-300 hover:bg-slate-50"
                   }`}
                 >
                   {tab.label}

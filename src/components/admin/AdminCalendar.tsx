@@ -30,8 +30,10 @@ export default function AdminCalendar({ onAddSystemLog, adminLanguage }: AdminCa
 
   const [selectedBlockMachineId, setSelectedBlockMachineId] = useState<string>("");
   const [blockDate, setBlockDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [blockEndDate, setBlockEndDate] = useState<string>("");
   const [blockReason, setBlockReason] = useState<string>("Planmatig Onderhoud / Keuring");
   const [isSubmittingBlock, setIsSubmittingBlock] = useState<boolean>(false);
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [isGoogleCalendarConnected, setIsGoogleCalendarConnected] = useState<boolean>(
     () => localStorage.getItem("gcal_linked") === "true"
   );
@@ -55,11 +57,29 @@ export default function AdminCalendar({ onAddSystemLog, adminLanguage }: AdminCa
     e.preventDefault();
     if (!selectedBlockMachineId || !blockDate) return;
     setIsSubmittingBlock(true);
-    const success = await blockDateAction(selectedBlockMachineId, blockDate, blockReason);
+
+    // Build list of dates to block (single date or range)
+    const datesToBlock: string[] = [];
+    const end = blockEndDate && blockEndDate >= blockDate ? blockEndDate : blockDate;
+    const cur = new Date(blockDate);
+    const endD = new Date(end);
+    while (cur <= endD) {
+      datesToBlock.push(cur.toISOString().split("T")[0]);
+      cur.setDate(cur.getDate() + 1);
+    }
+
+    let allOk = true;
+    for (const d of datesToBlock) {
+      const ok = await blockDateAction(selectedBlockMachineId, d, blockReason);
+      if (!ok) { allOk = false; break; }
+    }
+
     setIsSubmittingBlock(false);
-    if (success) {
+    if (allOk) {
       setBlockReason("Planmatig Onderhoud / Keuring");
-      onAddSystemLog("system", "Onur (Eigenaar)", t(`Datum ${blockDate} handmatig geblokkeerd of gesloten voor machine/pakket ID: ${selectedBlockMachineId}`, `Date ${blockDate} manually blocked or closed for machine/package ID: ${selectedBlockMachineId}`, `Tarih ${blockDate} makine/paket ID'si ${selectedBlockMachineId} için manuel olarak engellendi veya kapatıldı`));
+      setBlockEndDate("");
+      const rangeLabel = datesToBlock.length > 1 ? `${blockDate} t/m ${end}` : blockDate;
+      onAddSystemLog("system", "Onur (Eigenaar)", t(`Periode ${rangeLabel} geblokkeerd voor machine ID: ${selectedBlockMachineId}`, `Period ${rangeLabel} blocked for machine ID: ${selectedBlockMachineId}`, `${rangeLabel} tarihleri makine ID'si ${selectedBlockMachineId} için engellendi`));
     } else {
       alert(t("Fout bij het blokkeren van datum.", "Error blocking date.", "Tarih engellenirken hata oluştu."));
     }
@@ -96,11 +116,12 @@ export default function AdminCalendar({ onAddSystemLog, adminLanguage }: AdminCa
           </div>
           <button
             type="button"
-            onClick={fetchBlockedDates}
-            className="text-[11px] font-mono text-slate-700 hover:text-slate-900 flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 cursor-pointer shrink-0 self-start sm:self-auto"
+            disabled={isRefreshing}
+            onClick={async () => { setIsRefreshing(true); await fetchBlockedDates(); setIsRefreshing(false); }}
+            className="text-[11px] font-mono text-slate-700 hover:text-slate-900 flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 cursor-pointer shrink-0 self-start sm:self-auto disabled:opacity-60"
           >
-            <RefreshCw className="h-3 w-3 shrink-0" />
-            <span>{t("Ververs kalender", "Refresh calendar", "Takvimi yenile")}</span>
+            <RefreshCw className={`h-3 w-3 shrink-0 ${isRefreshing ? "animate-spin" : ""}`} />
+            <span>{isRefreshing ? t("Verversen...", "Refreshing...", "Yenileniyor...") : t("Ververs kalender", "Refresh calendar", "Takvimi yenile")}</span>
           </button>
         </div>
 
@@ -125,15 +146,27 @@ export default function AdminCalendar({ onAddSystemLog, adminLanguage }: AdminCa
               </select>
             </div>
 
-            <div className="space-y-1">
-              <label className="text-xs text-slate-700 block font-bold">{t("Geplande Sluitingsdatum *", "Scheduled Closure Date *", "Planlanan Kapatma Tarihi *")}</label>
-              <input
-                type="date"
-                required
-                value={blockDate}
-                onChange={(e) => setBlockDate(e.target.value)}
-                className="bg-white border border-slate-200 text-slate-800 w-full rounded-xl px-3 py-2 text-xs outline-none focus:border-amber-500 cursor-pointer"
-              />
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <label className="text-xs text-slate-700 block font-bold">{t("Begindatum *", "Start Date *", "Başlangıç Tarihi *")}</label>
+                <input
+                  type="date"
+                  required
+                  value={blockDate}
+                  onChange={(e) => { setBlockDate(e.target.value); if (blockEndDate && blockEndDate < e.target.value) setBlockEndDate(""); }}
+                  className="bg-white border border-slate-200 text-slate-800 w-full rounded-xl px-3 py-2 text-xs outline-none focus:border-amber-500 cursor-pointer"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs text-slate-700 block font-bold">{t("Einddatum", "End Date", "Bitiş Tarihi")}</label>
+                <input
+                  type="date"
+                  value={blockEndDate}
+                  min={blockDate}
+                  onChange={(e) => setBlockEndDate(e.target.value)}
+                  className="bg-white border border-slate-200 text-slate-800 w-full rounded-xl px-3 py-2 text-xs outline-none focus:border-amber-500 cursor-pointer"
+                />
+              </div>
             </div>
 
             <div className="space-y-1">
@@ -154,7 +187,7 @@ export default function AdminCalendar({ onAddSystemLog, adminLanguage }: AdminCa
               className="w-full py-2.5 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white font-extrabold text-xs rounded-xl transition-all border-none cursor-pointer flex items-center justify-center space-x-1.5"
             >
               <Plus className="h-4 w-4 shrink-0" />
-              <span>{isSubmittingBlock ? t("Sluiten...", "Closing...", "Kapatılıyor...") : t("Sluit deze datum", "Close this date", "Bu tarihi kapat")}</span>
+              <span>{isSubmittingBlock ? t("Bezig...", "Processing...", "İşleniyor...") : (blockEndDate && blockEndDate > blockDate ? t("Blokkeer periode", "Block period", "Periyodu Engelle") : t("Blokkeer datum", "Block date", "Tarihi Engelle"))}</span>
             </button>
           </form>
 
@@ -211,8 +244,9 @@ export default function AdminCalendar({ onAddSystemLog, adminLanguage }: AdminCa
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
             <div className="space-y-0.5">
               <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center space-x-2">
-                <span className={`inline-block h-2 w-2 rounded-full ${isGoogleCalendarConnected ? 'bg-emerald-500 shadow-[0_0_8px_#10b981]' : 'bg-rose-500 animate-pulse'} shrink-0`} />
-                <span>{t("Google Calendar Realtime Synchronisatie (API)", "Google Calendar Real-time Synchronization (API)", "Google Takvim Gerçek Zamanlı Senkronizasyon (API)")}</span>
+                <span className="inline-block h-2 w-2 rounded-full bg-slate-300 shrink-0" />
+                <span>{t("Google Calendar Synchronisatie", "Google Calendar Sync", "Google Takvim Senkronizasyonu")}</span>
+                <span className="text-[9px] font-bold bg-amber-100 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-full uppercase tracking-wider">Binnenkort</span>
               </h4>
               <p className="text-[11px] text-slate-500">
                 {t("Integreer uw vlootagenda met Google Agenda voor automatische updates op mobiel en tablet.", "Integrate your fleet calendar with Google Calendar for automatic updates on mobile and tablet.", "Mobil ve tablet cihazlarda otomatik güncellemeler için filo takviminizi Google Takvim ile entegre edin.")}

@@ -570,11 +570,10 @@ export function printInvoice(orderOrOrders: Order | Order[], clientCompanyName?:
       
       <!-- Auto print script -->
       <script>
-        window.addEventListener('DOMContentLoaded', () => {
-          // Add a minor delay to ensure assets/fonts compile beautifully
-          setTimeout(() => {
+        window.addEventListener('load', function() {
+          setTimeout(function() {
             window.print();
-          }, 350);
+          }, 600);
         });
       </script>
     </body>

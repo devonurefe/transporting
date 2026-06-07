@@ -192,9 +192,9 @@ export default function BookingStep2({
             </button>
           </div>
 
-          {/* Login Card */}
-          <div 
-            onClick={() => setShowLogin(true)}
+          {/* Login Card — redirects to customer portal */}
+          <div
+            onClick={() => setActiveTab && setActiveTab("orders")}
             className="p-5 rounded-2xl border border-slate-200 hover:border-indigo-500 bg-slate-50/50 hover:bg-indigo-50/10 cursor-pointer transition-all flex flex-col items-center text-center space-y-3 group"
           >
             <div className="h-12 w-12 rounded-xl bg-slate-100 group-hover:bg-indigo-50 flex items-center justify-center text-slate-500 group-hover:text-indigo-600 transition-colors">
@@ -203,11 +203,11 @@ export default function BookingStep2({
             <div>
               <h4 className="font-bold text-sm text-slate-900">Inloggen</h4>
               <p className="text-[11px] text-slate-500 mt-1 leading-normal">
-                Automatisch uw gegevens invullen en uw huurhistorie bewaren.
+                Log in via het klantportaal — uw gegevens worden automatisch ingevuld.
               </p>
             </div>
             <button className="text-xs font-bold text-indigo-600 group-hover:text-indigo-700 mt-2 bg-transparent border-none cursor-pointer">
-              Log in &rarr;
+              Naar klantportaal &rarr;
             </button>
           </div>
         </div>

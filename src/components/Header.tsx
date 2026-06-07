@@ -157,7 +157,7 @@ export default function Header({
               </div>
             </div>
           ) : (
-            <HuurGoLogo className="h-8 sm:h-12 w-auto" />
+            <HuurGoLogo className="h-7 sm:h-10 w-auto" />
           )}
         </div>        {/* Dynamic Desktop Navigation */}
         <nav className="hidden md:flex items-center space-x-1 lg:space-x-2 shrink">
@@ -377,12 +377,12 @@ export default function Header({
       {/* Dynamic Mobile Bottom Bar switcher */}
       {!isAdminMode && (
         <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex h-14 border-t border-slate-200/80 bg-white/95 backdrop-blur-lg justify-around items-center px-1 pb-safe shadow-[0_-4px_12px_rgba(0,0,0,0.06)]">
-          {[
+          {([
             { id: "home", label: (language === "nl" && siteConfig.menuHomeLabel) ? siteConfig.menuHomeLabel : t("menuHome"), icon: Home },
             { id: "catalog", label: (language === "nl" && siteConfig.menuCatalogLabel) ? siteConfig.menuCatalogLabel : t("menuCatalog"), icon: Layers },
             { id: "booking", label: t("menuBooking"), icon: ClipboardList },
-            { id: "orders", label: currentUser ? ((language === "nl" && siteConfig.menuOrdersLabel) ? siteConfig.menuOrdersLabel : t("menuMyArea")) : t("menuLogin"), icon: User },
-          ].map((tab) => {
+            ...(currentUser ? [{ id: "orders", label: (language === "nl" && siteConfig.menuOrdersLabel) ? siteConfig.menuOrdersLabel : t("menuMyArea"), icon: User }] : []),
+          ] as { id: string; label: string; icon: any }[]).map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
             return (

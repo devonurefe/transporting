@@ -46,6 +46,10 @@ authRouter.post("/register", async (req: AuthenticatedRequest, res: Response) =>
     const passwordHash = await hashPassword(validated.password);
     const verificationToken = crypto.randomBytes(32).toString("hex");
 
+    // Auto-verify when no real email provider is configured (dev / Render free tier)
+    const hasEmailProvider = process.env.RESEND_API_KEY && process.env.RESEND_API_KEY !== "MY_RESEND_API_KEY";
+    const autoVerify = !hasEmailProvider;
+
     const customer = await prisma.customer.create({
       data: {
         email: validated.email,
@@ -56,25 +60,34 @@ authRouter.post("/register", async (req: AuthenticatedRequest, res: Response) =>
         companyName: validated.companyName || null,
         address: validated.address || null,
         avatarUrl: validated.avatarUrl || null,
-        isEmailVerified: false,
-        verificationToken
+        isEmailVerified: autoVerify,
+        verificationToken: autoVerify ? null : verificationToken
       }
     });
 
-    const protocol = req.secure || req.headers["x-forwarded-proto"] === "https" ? "https" : "http";
-    const host = req.get("host") || "localhost:3000";
-    const origin = `${protocol}://${host}`;
+    if (!autoVerify) {
+      const protocol = req.secure || req.headers["x-forwarded-proto"] === "https" ? "https" : "http";
+      const host = req.get("host") || "localhost:3000";
+      const origin = `${protocol}://${host}`;
 
-    await emailService.sendVerificationEmail(
-      { name: customer.name, email: customer.email },
-      verificationToken,
-      origin
-    );
+      try {
+        await emailService.sendVerificationEmail(
+          { name: customer.name, email: customer.email },
+          verificationToken,
+          origin
+        );
+      } catch (emailErr) {
+        console.error("Verification email failed (non-critical):", emailErr);
+      }
+    }
 
     res.status(201).json({
       success: true,
-      message: "Registratie succesvol! Controleer uw e-mail om uw account te verifiëren.",
-      email: customer.email
+      message: autoVerify
+        ? "Registratie succesvol! U kunt nu direct inloggen."
+        : "Registratie succesvol! Controleer uw e-mail om uw account te verifiëren.",
+      email: customer.email,
+      autoVerified: autoVerify
     });
   } catch (error) {
     if (error instanceof z.ZodError) {

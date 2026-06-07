@@ -800,10 +800,10 @@ export default function BookingSection({
                     setSelectedAddons={setSelectedAddons}
                     validationError={validationError}
                     setValidationError={setValidationError}
-                    isAvailable={isAvailable && cartItems.every(item => {
+                    isAvailable={cartItems.length > 0 && cartItems.every(item => {
                       const av = getItemAvailability(
-                        item.machine.id, 
-                        item.startDate || new Date().toISOString().split("T")[0], 
+                        item.machine.id,
+                        item.startDate || new Date().toISOString().split("T")[0],
                         item.endDate || new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]
                       );
                       return av.available;

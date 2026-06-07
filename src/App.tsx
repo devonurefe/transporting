@@ -193,16 +193,7 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
 
-  const [notifications, setNotifications] = useState<AppNotification[]>([
-    {
-      id: "notif-1",
-      title: "Welkom bij HuurGo!",
-      message: "Ontdek premium gekeurde en direct leverbare hoogwerkers voor heel Nederland.",
-      type: "success",
-      read: false,
-      timestamp: new Date().toISOString()
-    }
-  ]);
+  const [notifications, setNotifications] = useState<AppNotification[]>([]);
 
   // Toast State for on-screen popup alerts
   const [activeToast, setActiveToast] = useState<{
@@ -258,14 +249,14 @@ export default function App() {
 
   useEffect(() => {
     if (appError) {
-      triggerNotification("Fout", appError, "warning");
+      triggerNotification("Fout", appError, "warning", false);
       clearAppError();
     }
   }, [appError, triggerNotification, clearAppError]);
 
   useEffect(() => {
     if (authError) {
-      triggerNotification("Fout", authError, "warning");
+      triggerNotification("Fout", authError, "warning", false);
       clearAuthError();
     }
   }, [authError, triggerNotification, clearAuthError]);

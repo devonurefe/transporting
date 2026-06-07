@@ -29,12 +29,12 @@ const dictionary: TranslationDictionary = {
   menuMyArea: { nl: "Mijn Area", en: "My Account", tr: "Hesabım" },
 
   // Landing page / Hero
-  heroTagline: { nl: "Smart Verhuur van Hoogwerkers in Nederland", en: "Smart High-Lift Rentals in the Netherlands", tr: "Hollanda'da Akıllı Sepetli Platform Kiralama" },
-  heroTitle: { nl: "Uitzonderlijk bereik. Volledig ontzorgd.", en: "Exceptional Reach. Completely Hassle-Free.", tr: "Olağanüstü Erişim. Tamamen Zahmetsiz." },
-  heroSubtitle: { 
-    nl: "Van schilderwerk binnen tot zware industriebouw buiten; HuurGo levert direct de juiste machines op locatie. Met of zonder vakbekwame chauffeur, gecontroleerd door onze slimme AI-assistent.",
-    en: "From indoor painting to heavy outdoor industrial construction; HuurGo delivers the right machinery directly to your location. With or without a skilled driver, monitored by our smart AI assistant.",
-    tr: "İç mekan boya işlerinden ağır dış sanayi inşaatlarına kadar; HuurGo doğru makineleri doğrudan adresinize teslim eder. Uzman operatörlü veya operatörsüz kiralama seçenekleriyle, yapay zeka asistanımız kontrolünde."
+  heroTagline: { nl: "Professionele Hoogwerker Verhuur", en: "Professional Aerial Work Platform Rental", tr: "Profesyonel Yüksek Erişim Platformu Kiralama" },
+  heroTitle: { nl: "De juiste machine, snel en veilig geregeld.", en: "The right machine, arranged quickly and safely.", tr: "Doğru makine, hızlı ve güvenli şekilde ayarlandı." },
+  heroSubtitle: {
+    nl: "MB Hoogwerkers B.V. verhuurt gecertificeerde hoogwerkers, schaarliften, mastliften en ladderliften aan ZZP'ers, aannemers en particulieren door heel Nederland. Meer dan 50 BMWT-gecertificeerde machines, direct beschikbaar.",
+    en: "MB Hoogwerkers B.V. rents certified aerial work platforms, scissor lifts, mast lifts, and ladder lifts to freelancers, contractors, and private individuals across the Netherlands. Over 50 BMWT-certified machines, immediately available.",
+    tr: "MB Hoogwerkers B.V., Hollanda genelinde serbest çalışanlara, müteahhitlere ve bireylere sertifikalı yüksek erişim platformları, makas platformları, direk asansörler ve merdiven asansörleri kiralamaktadır. 50'den fazla BMWT sertifikalı makine, hemen kullanıma hazır."
   },
   searchPlaceholder: { nl: "Waar gaat u werken? (bijv. 15 meter, schilder)", en: "Where will you work? (e.g. 15 meters, painting)", tr: "Nerede çalışacaksınız? (örn. 15 metre, boyacı)" },
   searchButton: { nl: "Zoeken", en: "Search Fleet", tr: "Filoda Ara" },

@@ -4,10 +4,9 @@
  */
 
 import React from "react";
-import { User, Mail, Phone, MapPin, Search, Check, ShieldAlert, ArrowLeft, ArrowRight, X, LogIn, Lock } from "lucide-react";
+import { User, Mail, Phone, MapPin, Search, Check, ShieldAlert, ArrowLeft, ArrowRight, X, LogIn } from "lucide-react";
 import { motion } from "motion/react";
 import { UserProfile } from "../../types";
-import { useAuthStore } from "../../store/authStore";
 
 interface BookingStep2Props {
   currentUser: UserProfile | null;
@@ -63,103 +62,6 @@ export default function BookingStep2({
   setActiveTab
 }: BookingStep2Props) {
   const [isGuestConfirmed, setIsGuestConfirmed] = React.useState<boolean>(false);
-  const [showLogin, setShowLogin] = React.useState<boolean>(false);
-  const [email, setEmail] = React.useState<string>("");
-  const [password, setPassword] = React.useState<string>("");
-  const [loginError, setLoginError] = React.useState<string>("");
-  const [isSubmittingLogin, setIsSubmittingLogin] = React.useState<boolean>(false);
-
-  if (!currentUser && showLogin) {
-    const handleLoginSubmit = async (e: React.FormEvent) => {
-      e.preventDefault();
-      setLoginError("");
-      setIsSubmittingLogin(true);
-      try {
-        const success = await useAuthStore.getState().login(email, password);
-        if (success) {
-          // Logged in successfully
-        } else {
-          setLoginError(useAuthStore.getState().error || "Verkeerd e-mailadres of wachtwoord.");
-        }
-      } catch (err) {
-        setLoginError("Verbindingsfout bij het inloggen.");
-      } finally {
-        setIsSubmittingLogin(false);
-      }
-    };
-
-    return (
-      <div className="bg-white border border-slate-200 shadow-sm p-6 rounded-3xl space-y-6 animate-fade-in max-w-md mx-auto text-slate-800">
-        <div className="flex items-center space-x-2 pb-3 border-b border-slate-100">
-          <LogIn className="h-5 w-5 text-indigo-650 text-indigo-600" />
-          <h3 className="font-display font-black text-base text-slate-900">Inloggen op uw account</h3>
-        </div>
-
-        {loginError && (
-          <div className="p-3.5 bg-rose-50 border border-rose-200 text-rose-800 text-xs rounded-xl font-semibold leading-relaxed">
-            {loginError}
-          </div>
-        )}
-
-        <form onSubmit={handleLoginSubmit} className="space-y-4">
-          <div className="space-y-1.5">
-            <label className="text-xs text-slate-700 block font-bold">E-mailadres</label>
-            <div className="flex items-center bg-white rounded-xl px-3 py-2.5 border border-slate-200 focus-within:border-indigo-500 transition-colors shadow-inner">
-              <Mail className="h-4 w-4 text-slate-400 mr-2" />
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="jan@voorbeeld.nl"
-                className="bg-transparent border-none text-xs text-slate-850 font-semibold outline-none w-full focus:ring-0 placeholder:text-slate-400"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-xs text-slate-700 block font-bold">Wachtwoord</label>
-            <div className="flex items-center bg-white rounded-xl px-3 py-2.5 border border-slate-200 focus-within:border-indigo-500 transition-colors shadow-inner">
-              <Lock className="h-4 w-4 text-slate-400 mr-2" />
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="bg-transparent border-none text-xs text-slate-855 font-semibold outline-none w-full focus:ring-0 placeholder:text-slate-400"
-              />
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            disabled={isSubmittingLogin}
-            className="w-full bg-indigo-650 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs py-3 rounded-xl transition-all cursor-pointer flex items-center justify-center space-x-1.5 shadow-sm active:scale-95 disabled:opacity-50 border-none"
-          >
-            {isSubmittingLogin ? (
-              <span className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
-            ) : (
-              <span>Inloggen & Doorgaan</span>
-            )}
-          </button>
-        </form>
-
-        <div className="flex justify-between items-center border-t border-slate-100 pt-4 mt-2">
-          <button
-            onClick={() => {
-              setLoginError("");
-              setShowLogin(false);
-            }}
-            className="flex items-center space-x-1.5 text-xs text-slate-500 hover:text-slate-800 font-bold bg-transparent border-none cursor-pointer"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            <span>Terug</span>
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   if (!currentUser && !isGuestConfirmed) {
     return (

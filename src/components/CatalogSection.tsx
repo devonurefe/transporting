@@ -98,17 +98,41 @@ export default function CatalogSection({
     }))
   ], [customCategories]);
 
-  // Filtered & Sorted Machines
+  // Strip " (Unit N)" suffix to get base model name for grouping
+  const getBaseName = (name: string) => name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "").trim();
+
+  // Count total physical units per base model name (from ALL machines, not filtered)
+  const stockCountByBase = useMemo(() => {
+    const counts: Record<string, number> = {};
+    machines.forEach(m => {
+      const base = getBaseName(m.name);
+      counts[base] = (counts[base] || 0) + 1;
+    });
+    return counts;
+  }, [machines]);
+
+  // Map base name → all unit IDs (used by BookingSection for auto-assignment)
+  const unitIdsByBase = useMemo(() => {
+    const map: Record<string, string[]> = {};
+    machines.forEach(m => {
+      const base = getBaseName(m.name);
+      if (!map[base]) map[base] = [];
+      map[base].push(m.id);
+    });
+    return map;
+  }, [machines]);
+
+  // Filtered & Sorted Machines — deduplicated to show ONE card per model
   const filteredMachines = useMemo(() => {
     const filtered = machines.filter((machine) => {
       // Category Match
-      const matchesCategory = selectedCategory === "all" 
-        ? machine.category !== "klussensets" 
+      const matchesCategory = selectedCategory === "all"
+        ? machine.category !== "klussensets"
         : machine.category === selectedCategory;
-      
+
       // Search Match
-      const matchesSearch = 
-        searchQuery.trim() === "" || 
+      const matchesSearch =
+        searchQuery.trim() === "" ||
         machine.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
         machine.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
         machine.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -128,17 +152,27 @@ export default function CatalogSection({
     });
 
     // Apply Sorting logic
+    let sorted = filtered;
     if (sortBy === "price_asc") {
-      return [...filtered].sort((a, b) => a.pricePerDay - b.pricePerDay);
+      sorted = [...filtered].sort((a, b) => a.pricePerDay - b.pricePerDay);
     } else if (sortBy === "price_desc") {
-      return [...filtered].sort((a, b) => b.pricePerDay - a.pricePerDay);
+      sorted = [...filtered].sort((a, b) => b.pricePerDay - a.pricePerDay);
     } else if (sortBy === "height_asc") {
-      return [...filtered].sort((a, b) => a.height - b.height);
+      sorted = [...filtered].sort((a, b) => a.height - b.height);
     } else if (sortBy === "height_desc") {
-      return [...filtered].sort((a, b) => b.height - a.height);
+      sorted = [...filtered].sort((a, b) => b.height - a.height);
+    } else {
+      sorted = filtered;
     }
 
-    return filtered;
+    // Deduplicate: show only the first unit (representative) per model
+    const seen = new Set<string>();
+    return sorted.filter(machine => {
+      const base = getBaseName(machine.name);
+      if (seen.has(base)) return false;
+      seen.add(base);
+      return true;
+    });
   }, [machines, selectedCategory, searchQuery, maxHeight, maxPrice, selectedPowerTypes, sortBy]);
 
   return (
@@ -210,7 +244,7 @@ export default function CatalogSection({
               <Filter className="h-3.5 w-3.5 text-indigo-600" />
               <span>{showFiltersMobile ? "Verberg" : "Filters"}</span>
               <span className="font-mono text-[9px] bg-indigo-50 text-indigo-700 font-extrabold px-1.5 py-0.2 rounded-full">
-                {filteredMachines.length}
+                {filteredMachines.length} modellen
               </span>
             </button>
 
@@ -260,7 +294,7 @@ export default function CatalogSection({
                   <span className="text-xs font-bold uppercase tracking-wider text-slate-800">Filters</span>
                 </div>
                 <span className="font-mono text-[10px] text-slate-500 font-bold bg-slate-50 px-2 py-0.5 rounded-full">
-                  {filteredMachines.length} vloot
+                  {filteredMachines.length} modellen
                 </span>
               </div>
 
@@ -428,6 +462,13 @@ export default function CatalogSection({
                         </div>
                       )}
 
+                      {/* Stock count badge — shown only when multiple units available */}
+                      {!isRecommended && (stockCountByBase[getBaseName(machine.name)] ?? 1) > 1 && (
+                        <div className="absolute top-3.5 left-3.5 z-20 flex items-center space-x-1 bg-emerald-600 py-1 px-2.5 rounded-full text-[9px] font-extrabold uppercase tracking-widest text-white shadow-md">
+                          <span>{stockCountByBase[getBaseName(machine.name)]}× beschikbaar</span>
+                        </div>
+                      )}
+
                       {/* Header Category and Power indicator & Compare checkbox */}
                       <div 
                         onClick={(e) => e.stopPropagation()} 
@@ -482,7 +523,7 @@ export default function CatalogSection({
                         
                         <div className="space-y-2">
                           <h3 className="font-display font-extrabold text-base text-slate-900 group-hover:text-indigo-700 transition-colors line-clamp-1">
-                            {machine.name}
+                            {getBaseName(machine.name)}
                           </h3>
                           <p className="text-[11px] text-slate-600 leading-relaxed line-clamp-3">
                             {machine.description}

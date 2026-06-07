@@ -11,8 +11,8 @@ interface EnvCheck {
 }
 
 const ENV_CHECKS: EnvCheck[] = [
-  { key: "DATABASE_URL", required: true, defaultValue: "file:./dev.db", description: "Prisma database connection string" },
-  { key: "JWT_SECRET", required: false, defaultValue: "dev-only-huurgo-jwt-secret", description: "JWT signing secret (required in production)" },
+  { key: "DATABASE_URL", required: true, description: "Prisma database connection string (postgresql://...)" },
+  { key: "JWT_SECRET", required: false, description: "JWT signing secret (required in production)" },
   { key: "GEMINI_API_KEY", required: false, description: "Google Gemini AI API key" },
   { key: "RESEND_API_KEY", required: false, description: "Resend email API key" },
   { key: "EMAIL_FROM", required: false, defaultValue: "onboarding@resend.dev", description: "Sender email address" },
@@ -49,6 +49,9 @@ export function validateEnvironment(): void {
   }
 
   if (hasErrors) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("[ENV] Critical environment variables are missing. Cannot start in production.");
+    }
     console.error("\n❌ [ENV] Critical environment variables are missing. Server may not function correctly.\n");
   } else {
     console.log("✅ [ENV] Environment validation passed.\n");

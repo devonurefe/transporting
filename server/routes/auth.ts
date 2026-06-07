@@ -334,34 +334,3 @@ authRouter.post("/resend-verification", async (req: Request, res: Response) => {
   }
 });
 
-// GET /api/auth/mock-profiles
-authRouter.get("/mock-profiles", async (req: Request, res: Response) => {
-  if (process.env.NODE_ENV === "production") {
-    return res.status(403).json({ error: "Access denied in production" });
-  }
-  try {
-    const customers = await prisma.customer.findMany({
-      include: {
-        _count: {
-          select: { orders: true }
-        }
-      }
-    });
-
-    const formatted = customers.map(c => ({
-      id: c.id,
-      name: c.name,
-      email: c.email,
-      phone: c.phone || "",
-      companyName: c.companyName || undefined,
-      profileType: c.profile || "Particulier",
-      pastRentalsCount: c._count.orders,
-      avatarUrl: c.avatarUrl || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=150&auto=format&fit=crop"
-    }));
-
-    res.json(formatted);
-  } catch (error) {
-    console.error("Error fetching mock profiles:", error);
-    res.status(500).json({ error: "Kon testprofielen niet ophalen" });
-  }
-});

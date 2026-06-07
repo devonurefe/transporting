@@ -1,9 +1,18 @@
 import { Router, Response } from "express";
+import rateLimit from "express-rate-limit";
 import { prisma } from "../../prisma/client.js";
 import { AuthenticatedRequest, requireAdmin, requireAuth } from "../middleware/auth.js";
 import { emailService } from "../services/emailService.js";
 
 export const ordersRouter = Router();
+
+const orderCreationLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 6,
+  message: { error: "Te veel boekingspogingen van dit IP. Probeer het over een uur opnieuw." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 // Public availability feed used by the booking calendar. It intentionally exposes
 // only the minimum data needed to detect date collisions.
@@ -89,7 +98,7 @@ ordersRouter.get("/", requireAuth as any, async (req: AuthenticatedRequest, res:
 });
 
 // POST orders — with input validation and date collision detection
-ordersRouter.post("/", async (req: AuthenticatedRequest, res: Response) => {
+ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, res: Response) => {
   const orderData = req.body;
 
   // Basic input validation

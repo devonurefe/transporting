@@ -105,7 +105,7 @@ export const emailService = {
             </div>
 
             <p style="font-size: 13px; line-height: 1.6; color: #475569;">
-              Wij nemen zo snel mogelijk contact met u op zodra de definitieve logistieke accordering door Onur (Eigenaar) is bevestigd. Meestal gebeurt dit binnen 1 uur.
+              Wij nemen zo snel mogelijk contact met u op zodra de definitieve logistieke accordering is bevestigd. Meestal gebeurt dit binnen 1 uur.
             </p>
 
             <div style="text-align: center;">
@@ -179,8 +179,8 @@ export const emailService = {
             <p>Admin alert voor HuurGo.nl</p>
           </div>
           <div class="content">
-            <h3 style="margin-top: 0; font-size: 16px; font-weight: 800; color: #0f172a;">Beste Onur (Eigenaar),</h3>
-            <p>Er is zojuist een nieuwe online reservering binnengekomen via het storefront portaal. Deze vereist directe accordering in uw HubAdmin dashboard:</p>
+            <h3 style="margin-top: 0; font-size: 16px; font-weight: 800; color: #0f172a;">Beste Admin,</h3>
+            <p>Er is zojuist een nieuwe online reservering binnengekomen via het storefront portaal. Deze vereist directe accordering in het HubAdmin dashboard:</p>
             
             <div class="details-grid">
               <div class="details-item">
@@ -451,6 +451,138 @@ export const emailService = {
       return true;
     } catch (e) {
       console.error("[EmailService] Failed to send verification email:", e);
+      return false;
+    }
+  },
+
+  /**
+   * Send a reminder email to the customer one day before the rental starts
+   */
+  sendRentalReminder: async (order: EmailOrderData) => {
+    const isPickup = order.deliveryType === "self_pickup";
+    const deliveryText = isPickup ? "Zelf afhalen bij HuurGo, Distributieweg 12, Amsterdam" : `Bezorging op adres: ${order.deliveryAddress || ""}`;
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Herinnering: Uw huur begint morgen</title>
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f8fafc; color: #1e293b; margin: 0; padding: 20px; }
+          .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 24px; border: 1px solid #e2e8f0; overflow: hidden; }
+          .header { background: linear-gradient(135deg, #0d9488, #0891b2); padding: 40px 30px; text-align: center; color: #ffffff; }
+          .header h1 { margin: 0; font-size: 22px; font-weight: 800; }
+          .content { padding: 40px 30px; }
+          .details-grid { display: grid; gap: 14px; margin: 24px 0; background: #f8fafc; padding: 20px; border-radius: 16px; }
+          .details-item { border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; }
+          .details-item:last-child { border-bottom: none; padding-bottom: 0; }
+          .label { font-size: 10px; text-transform: uppercase; color: #64748b; font-weight: bold; }
+          .value { font-size: 13px; font-weight: 600; color: #0f172a; margin-top: 2px; }
+          .footer { background: #f1f5f9; padding: 20px 30px; text-align: center; font-size: 11px; color: #64748b; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>⏰ Uw huur begint morgen!</h1>
+          </div>
+          <div class="content">
+            <p>Beste <strong>${order.customerName}</strong>,</p>
+            <p>Dit is een vriendelijke herinnering dat uw gereserveerde machine <strong>morgen</strong> klaar staat.</p>
+            <div class="details-grid">
+              <div class="details-item"><div class="label">Reservering</div><div class="value">${order.id}</div></div>
+              <div class="details-item"><div class="label">Machine</div><div class="value">${order.machineName}</div></div>
+              <div class="details-item"><div class="label">Startdatum</div><div class="value">${order.startDate}</div></div>
+              <div class="details-item"><div class="label">Ophalen / Levering</div><div class="value">${deliveryText}</div></div>
+            </div>
+            <p style="font-size: 13px; color: #475569;">Zorg dat de opstelplaats toegankelijk is. Bij vragen kunt u contact opnemen via WhatsApp.</p>
+          </div>
+          <div class="footer">© ${new Date().getFullYear()} HuurGo B.V. • BMWT-gecertificeerd verhuurnetwerk</div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    console.log(`[EmailService] Sending rental reminder for ${order.id} to ${order.customerEmail}`);
+
+    if (!resend) {
+      console.log(`[EmailService] [MOCK] Rental reminder simulated.`);
+      return true;
+    }
+
+    try {
+      const { data, error } = await resend.emails.send({
+        from: SENDER_EMAIL,
+        to: order.customerEmail,
+        subject: `Herinnering: Uw hoogwerker ${order.machineName} is morgen klaar — ${order.id}`,
+        html: htmlContent
+      });
+      if (error) { console.error("[EmailService] Reminder email error:", error); return false; }
+      console.log("[EmailService] Rental reminder sent:", data?.id);
+      return true;
+    } catch (e) {
+      console.error("[EmailService] Failed to send rental reminder:", e);
+      return false;
+    }
+  },
+
+  /**
+   * Send borgsom refund confirmation to customer
+   */
+  sendBorgsomRefundEmail: async (order: EmailOrderData & { borgsom?: number }) => {
+    const borgsom = (order as any).borgsom || 0;
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Borgsom Teruggestort - HuurGo</title>
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f8fafc; color: #1e293b; margin: 0; padding: 20px; }
+          .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 24px; border: 1px solid #e2e8f0; overflow: hidden; }
+          .header { background: linear-gradient(135deg, #10b981, #059669); padding: 40px 30px; text-align: center; color: #ffffff; }
+          .header h1 { margin: 0; font-size: 22px; font-weight: 800; }
+          .content { padding: 40px 30px; }
+          .amount { font-size: 32px; font-weight: 800; color: #10b981; text-align: center; margin: 20px 0; }
+          .footer { background: #f1f5f9; padding: 20px 30px; text-align: center; font-size: 11px; color: #64748b; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header"><h1>✅ Borgsom Teruggestort!</h1></div>
+          <div class="content">
+            <p>Beste <strong>${order.customerName}</strong>,</p>
+            <p>De borgsom voor uw reservering <strong>${order.id}</strong> (${order.machineName}) is succesvol verwerkt voor terugstorting.</p>
+            <div class="amount">€ ${borgsom.toFixed(2)}</div>
+            <p style="text-align: center; color: #475569; font-size: 13px;">Dit bedrag wordt binnen 3-5 werkdagen bijgeschreven op uw rekening. Bedankt voor uw huurperiode bij HuurGo!</p>
+          </div>
+          <div class="footer">© ${new Date().getFullYear()} HuurGo B.V. • BMWT-gecertificeerd verhuurnetwerk</div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    console.log(`[EmailService] Sending borgsom refund email for ${order.id} to ${order.customerEmail}`);
+
+    if (!resend) {
+      console.log(`[EmailService] [MOCK] Borgsom refund email simulated.`);
+      return true;
+    }
+
+    try {
+      const { data, error } = await resend.emails.send({
+        from: SENDER_EMAIL,
+        to: order.customerEmail,
+        subject: `Borgsom € ${borgsom.toFixed(2)} teruggestort — Reservering ${order.id}`,
+        html: htmlContent
+      });
+      if (error) { console.error("[EmailService] Borgsom email error:", error); return false; }
+      console.log("[EmailService] Borgsom refund email sent:", data?.id);
+      return true;
+    } catch (e) {
+      console.error("[EmailService] Failed to send borgsom email:", e);
       return false;
     }
   }

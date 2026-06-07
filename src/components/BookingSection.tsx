@@ -4,12 +4,8 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { 
-  Building2, 
-  Calendar, 
-  User, 
-  CheckCircle2,
-  CreditCard,
+import {
+  Building2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Machine, Order, DeliveryType, UserProfile, CartItem, CampaignRule } from "../types";
@@ -150,13 +146,7 @@ export default function BookingSection({
   // Addon / Shopping Cart Options state
   const [selectedAddons, setSelectedAddons] = useState<string[]>([]);
 
-  // Payment channel and inputs
-  const [paymentGateway, setPaymentGateway] = useState<"stripe" | "mollie" | "whatsapp">("whatsapp");
-  const [idealBank, setIdealBank] = useState<string>("rabobank");
-  const [cardNumber, setCardNumber] = useState<string>("");
-  const [cardName, setCardName] = useState<string>("");
-  const [cardExpiry, setCardExpiry] = useState<string>("");
-  const [cardCVC, setCardCVC] = useState<string>("");
+  const paymentGateway = "whatsapp";
 
   // Populate data when current user swaps
   useEffect(() => {
@@ -832,18 +822,6 @@ export default function BookingSection({
 
                 {step === 3 && (
                   <BookingStep3
-                    paymentGateway={paymentGateway}
-                    setPaymentGateway={setPaymentGateway}
-                    idealBank={idealBank}
-                    setIdealBank={setIdealBank}
-                    cardNumber={cardNumber}
-                    setCardNumber={setCardNumber}
-                    cardName={cardName}
-                    setCardName={setCardName}
-                    cardExpiry={cardExpiry}
-                    setCardExpiry={setCardExpiry}
-                    cardCVC={cardCVC}
-                    setCardCVC={setCardCVC}
                     isSubmitting={isSubmitting}
                     setStep={setStep}
                     handleCreateBooking={handleCreateBooking}

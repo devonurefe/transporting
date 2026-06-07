@@ -65,9 +65,9 @@ export default function MyOrdersSection({
     window.scrollTo(0, 0);
   }, []);
 
-  // Star rating memory map
   const [ratings, setRatings] = useState<Record<string, number>>({});
   const [activeFilter, setActiveFilter] = useState<string>("all");
+  const [cancellingOrderId, setCancellingOrderId] = useState<string | null>(null);
   
   // Custom login forms state
   const [loginEmail, setLoginEmail] = useState("");
@@ -151,17 +151,53 @@ export default function MyOrdersSection({
     }
   };
 
-  const handleRateOrder = (orderId: string, stars: number) => {
-    setRatings(prev => ({
-      ...prev,
-      [orderId]: stars
-    }));
+  const handleRateOrder = async (orderId: string, stars: number) => {
+    setRatings(prev => ({ ...prev, [orderId]: stars }));
+    const token = localStorage.getItem("hwh_token");
+    try {
+      await fetch(`/api/orders/${orderId}/rating`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { "Authorization": `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({ rating: stars })
+      });
+    } catch (e) {
+      console.error("Failed to save rating:", e);
+    }
     onTriggerNotification(
       "Waardering Opgeslagen",
-      `Bedankt! Uw waardering van ${stars} sterren is gekoppeld aan de order en doorgegeven aan onze logistieke afdeling.`,
+      `Bedankt! Uw waardering van ${stars} sterren is opgeslagen.`,
       "success",
       false
     );
+  };
+
+  const handleCancelOrder = async (orderId: string) => {
+    if (!confirm("Weet u zeker dat u deze bestelling wilt annuleren? Dit kan niet ongedaan worden gemaakt.")) return;
+    setCancellingOrderId(orderId);
+    const token = localStorage.getItem("hwh_token");
+    try {
+      const res = await fetch(`/api/orders/${orderId}/cancel`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { "Authorization": `Bearer ${token}` } : {})
+        }
+      });
+      if (res.ok) {
+        onUpdateOrderStatus(orderId, "Geannuleerd");
+        onAddSystemLog?.("status", currentUser?.name || "Klant", `Bestelling ${orderId} geannuleerd door klant.`);
+        onTriggerNotification("Bestelling Geannuleerd", "Uw bestelling is geannuleerd. U ontvangt een bevestiging per e-mail.", "info");
+      } else {
+        const data = await res.json().catch(() => ({}));
+        onTriggerNotification("Annulering Mislukt", data.error || "Annulering mislukt. Neem contact op via WhatsApp.", "warning");
+      }
+    } catch (e) {
+      onTriggerNotification("Annulering Mislukt", "Netwerkfout. Probeer het opnieuw.", "warning");
+    }
+    setCancellingOrderId(null);
   };
 
   const handleDownloadInvoice = (order: Order) => {
@@ -684,11 +720,24 @@ export default function MyOrdersSection({
                         </div>
 
                         <div className="space-y-1 sm:text-right">
-                          <span className="text-[9.5px] text-slate-450 text-slate-505 text-slate-500 font-mono font-bold block uppercase tracking-wider">Kostenoverzicht</span>
+                          <span className="text-[9.5px] text-slate-500 font-mono font-bold block uppercase tracking-wider">Kostenoverzicht</span>
                           <div className="text-sm font-mono font-black text-teal-700">
                             € {o.totalAmount.toFixed(2)}
                           </div>
                           <span className="text-[9px] text-slate-400 font-semibold block">Inclusief 21% BTW & logistiek</span>
+                          {o.borgsom && o.borgsom > 0 && (
+                            <div className="mt-1.5 text-right">
+                              <span className={`text-[9px] font-mono px-2 py-0.5 rounded-full font-bold inline-block ${
+                                o.borgsomStatus === "returned" ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                                : o.borgsomStatus === "withheld" ? "bg-rose-50 text-rose-700 border border-rose-200"
+                                : "bg-amber-50 text-amber-700 border border-amber-200"
+                              }`}>
+                                {o.borgsomStatus === "returned" ? "✅ Borg teruggestort"
+                                : o.borgsomStatus === "withheld" ? "🔴 Borg ingehouden"
+                                : `🟡 Borg € ${o.borgsom.toFixed(2)} in behandeling`}
+                              </span>
+                            </div>
+                          )}
                         </div>
                       </div>
 
@@ -722,14 +771,28 @@ export default function MyOrdersSection({
                           })}
                         </div>
 
-                        <div className="flex gap-2 shrink-0">
+                        <div className="flex gap-2 shrink-0 flex-wrap">
                           <button
                             onClick={() => handleDownloadInvoice(o)}
-                            className="flex items-center space-x-1 font-black text-[10px] bg-white hover:bg-slate-50 transition-colors text-slate-705 text-slate-700 px-3 py-1.5 rounded-lg border border-slate-205 border-slate-250 border-slate-200 shadow-sm cursor-pointer"
+                            className="flex items-center space-x-1 font-black text-[10px] bg-white hover:bg-slate-50 transition-colors text-slate-700 px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm cursor-pointer"
                           >
                             <Download className="h-3 w-3 text-indigo-600" />
-                            <span>Factuur / Teklif PDF</span>
+                            <span>Factuur PDF</span>
                           </button>
+
+                          {o.status === "In behandeling" && (
+                            <button
+                              disabled={cancellingOrderId === o.id}
+                              onClick={() => handleCancelOrder(o.id)}
+                              className="flex items-center space-x-1 font-black text-[10px] bg-white hover:bg-rose-50 transition-colors text-rose-600 hover:text-rose-700 px-3 py-1.5 rounded-lg border border-rose-200 shadow-sm cursor-pointer disabled:opacity-50"
+                            >
+                              {cancellingOrderId === o.id ? (
+                                <div className="h-3 w-3 border border-current border-t-transparent rounded-full animate-spin" />
+                              ) : (
+                                <span>Annuleren</span>
+                              )}
+                            </button>
+                          )}
 
                           {o.status === "Voltooid" && (
                             <div className="flex items-center space-x-1 bg-white p-0.5 rounded-lg border border-slate-200 shadow-sm">
@@ -740,7 +803,7 @@ export default function MyOrdersSection({
                                   className="p-1 hover:scale-110 active:scale-90 transition-transform text-slate-300"
                                 >
                                   <Star className={`h-3 w-3 ${
-                                    star <= stars ? "text-amber-500 fill-amber-500" : "text-slate-305 text-slate-300"
+                                    star <= stars ? "text-amber-500 fill-amber-500" : "text-slate-300"
                                   }`} />
                                 </button>
                               ))}

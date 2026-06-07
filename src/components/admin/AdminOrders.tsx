@@ -47,6 +47,8 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage }: AdminOrde
   const [newStartDate, setNewStartDate] = useState<string>("");
   const [newEndDate, setNewEndDate] = useState<string>("");
   const [isUpdatingStatus, setIsUpdatingStatus] = useState<boolean>(false);
+  const [isUpdatingPayment, setIsUpdatingPayment] = useState<boolean>(false);
+  const [isUpdatingBorgsom, setIsUpdatingBorgsom] = useState<boolean>(false);
 
   const handleUpdateStatus = async (orderId: string, nextStatus: string, logMsg: string) => {
     setIsUpdatingStatus(true);
@@ -59,6 +61,53 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage }: AdminOrde
         setSelectedDetailOrder((prev: any) => ({ ...prev, status: nextStatus }));
       }
     }
+  };
+
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem("hwh_admin_token");
+    return token ? { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" } : { "Content-Type": "application/json" };
+  };
+
+  const handleUpdatePaymentStatus = async (orderId: string, paymentStatus: string) => {
+    setIsUpdatingPayment(true);
+    try {
+      const res = await fetch(`/api/orders/${orderId}/payment`, {
+        method: "PUT",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ paymentStatus })
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        onAddSystemLog("status", adminUser?.name ?? "Admin", `Betaling ${paymentStatus === "paid" ? "ontvangen" : "bijgewerkt"} voor order ${orderId}.`);
+        if (selectedDetailOrder?.id === orderId) {
+          setSelectedDetailOrder((prev: any) => ({ ...prev, paymentStatus: updated.paymentStatus }));
+        }
+      }
+    } catch (e) {
+      console.error("Payment status update error:", e);
+    }
+    setIsUpdatingPayment(false);
+  };
+
+  const handleUpdateBorgsomStatus = async (orderId: string, borgsomStatus: string) => {
+    setIsUpdatingBorgsom(true);
+    try {
+      const res = await fetch(`/api/orders/${orderId}/borgsom`, {
+        method: "PUT",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ borgsomStatus })
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        onAddSystemLog("status", adminUser?.name ?? "Admin", `Borgsom ${borgsomStatus === "returned" ? "teruggestort" : "ingehouden"} voor order ${orderId}.`);
+        if (selectedDetailOrder?.id === orderId) {
+          setSelectedDetailOrder((prev: any) => ({ ...prev, borgsomStatus: updated.borgsomStatus }));
+        }
+      }
+    } catch (e) {
+      console.error("Borgsom status update error:", e);
+    }
+    setIsUpdatingBorgsom(false);
   };
 
   const handleSendDateProposal = (e: React.FormEvent) => {
@@ -463,6 +512,37 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage }: AdminOrde
                           <strong className="text-slate-800 font-extrabold">Eindtotaal:</strong>
                           <span className="font-mono text-teal-600 font-black text-base">€ {selectedDetailOrder.totalAmount.toFixed(2)}</span>
                         </div>
+
+                        {selectedDetailOrder.borgsom > 0 && (
+                          <div className="border-t border-dashed border-amber-200 pt-2 mt-1 space-y-1.5">
+                            <div className="flex justify-between items-center text-[11px]">
+                              <span className="text-amber-700 font-bold">Borgsom:</span>
+                              <span className="font-mono text-amber-700 font-bold">€ {selectedDetailOrder.borgsom.toFixed(2)}</span>
+                            </div>
+                            <div className="flex items-center space-x-1.5">
+                              <span className={`text-[9px] font-mono px-2 py-0.5 rounded-full font-bold uppercase ${
+                                selectedDetailOrder.borgsomStatus === "returned" ? "bg-emerald-100 text-emerald-700"
+                                : selectedDetailOrder.borgsomStatus === "withheld" ? "bg-rose-100 text-rose-700"
+                                : "bg-amber-100 text-amber-700"
+                              }`}>
+                                Borg: {selectedDetailOrder.borgsomStatus === "returned" ? "Teruggestort" : selectedDetailOrder.borgsomStatus === "withheld" ? "Ingehouden" : "In behandeling"}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="border-t border-slate-200 pt-2 mt-1">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[11px] text-slate-600">Betaalstatus:</span>
+                            <span className={`text-[9px] font-mono px-2 py-0.5 rounded-full font-bold uppercase ${
+                              selectedDetailOrder.paymentStatus === "paid" ? "bg-emerald-100 text-emerald-700"
+                              : selectedDetailOrder.paymentStatus === "refunded" ? "bg-slate-100 text-slate-500"
+                              : "bg-amber-100 text-amber-700"
+                            }`}>
+                              {selectedDetailOrder.paymentStatus === "paid" ? "Betaald" : selectedDetailOrder.paymentStatus === "refunded" ? "Teruggestort" : "In Afwachting"}
+                            </span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -537,9 +617,52 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage }: AdminOrde
               </div>
 
               {/* Action Buttons Footer */}
-              <div className="flex justify-between items-center pt-4 border-t border-slate-100 shrink-0 mt-5">
-                <div>
-                  <span className="text-[10px] text-slate-500 block font-mono">Status: {selectedDetailOrder.status}</span>
+              <div className="flex flex-wrap justify-between items-center pt-4 border-t border-slate-100 shrink-0 mt-5 gap-3">
+                <div className="flex flex-wrap gap-2">
+                  <span className="text-[10px] text-slate-500 font-mono">Status: {selectedDetailOrder.status}</span>
+
+                  {/* Mark payment received */}
+                  {selectedDetailOrder.paymentStatus !== "paid" && (
+                    <button
+                      type="button"
+                      disabled={isUpdatingPayment}
+                      onClick={() => handleUpdatePaymentStatus(selectedDetailOrder.id, "paid")}
+                      className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center space-x-1 disabled:opacity-50"
+                    >
+                      <DollarSign className="h-3 w-3 shrink-0" />
+                      <span>Betaling Ontvangen ✓</span>
+                    </button>
+                  )}
+
+                  {/* Borgsom actions — only when order is Voltooid */}
+                  {selectedDetailOrder.status === "Voltooid" && selectedDetailOrder.borgsom > 0 && selectedDetailOrder.borgsomStatus === "pending" && (
+                    <>
+                      <button
+                        type="button"
+                        disabled={isUpdatingBorgsom}
+                        onClick={() => {
+                          if (confirm("Borgsom terugstorten naar de klant?")) {
+                            handleUpdateBorgsomStatus(selectedDetailOrder.id, "returned");
+                          }
+                        }}
+                        className="px-3 py-1.5 bg-teal-50 hover:bg-teal-100 text-teal-700 border border-teal-200 rounded-lg text-[10px] font-bold transition-all cursor-pointer disabled:opacity-50"
+                      >
+                        Borg Terugstorten
+                      </button>
+                      <button
+                        type="button"
+                        disabled={isUpdatingBorgsom}
+                        onClick={() => {
+                          if (confirm("Borgsom inhouden wegens schade of overtreding?")) {
+                            handleUpdateBorgsomStatus(selectedDetailOrder.id, "withheld");
+                          }
+                        }}
+                        className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-[10px] font-bold transition-all cursor-pointer disabled:opacity-50"
+                      >
+                        Borg Inhouden
+                      </button>
+                    </>
+                  )}
                 </div>
 
                 <div className="flex items-center space-x-2">

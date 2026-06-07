@@ -24,9 +24,9 @@ export function printInvoice(orderOrOrders: Order | Order[], clientCompanyName?:
   if (orders.length === 0) return;
 
   const primaryOrder = orders[0];
-  const invoiceNumber = orders.length === 1 
-    ? `INV-${primaryOrder.id.toUpperCase()}`
-    : `INV-${primaryOrder.id.toUpperCase()}-GRP`;
+  const invoiceNumber = primaryOrder.invoiceNumber
+    ? (orders.length === 1 ? primaryOrder.invoiceNumber : `${primaryOrder.invoiceNumber}-GRP`)
+    : (orders.length === 1 ? `INV-${primaryOrder.id.toUpperCase()}` : `INV-${primaryOrder.id.toUpperCase()}-GRP`);
     
   const todayDate = new Date().toLocaleDateString("nl-NL");
   const dueDateStr = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toLocaleDateString("nl-NL");
@@ -37,6 +37,7 @@ export function printInvoice(orderOrOrders: Order | Order[], clientCompanyName?:
   let totalAddonCost = 0;
   let totalVat = 0;
   let totalAmount = 0;
+  let totalBorgsom = 0;
   let maxRentalDays = 0;
 
   orders.forEach(o => {
@@ -45,6 +46,7 @@ export function printInvoice(orderOrOrders: Order | Order[], clientCompanyName?:
     totalDriver += o.driverCost;
     totalVat += o.vatAmount;
     totalAmount += o.totalAmount;
+    totalBorgsom += o.borgsom || 0;
     if (o.rentalDays > maxRentalDays) {
       maxRentalDays = o.rentalDays;
     }
@@ -539,6 +541,13 @@ export function printInvoice(orderOrOrders: Order | Order[], clientCompanyName?:
               <span>Eindtotaal (Incl. BTW)</span>
               <span class="total-amount">€ ${totalAmount.toFixed(2)}</span>
             </div>
+            ${totalBorgsom > 0 ? `
+            <div class="totals-row" style="color: #b45309; border-top: 1px dashed #fcd34d; padding-top: 10px; margin-top: 5px;">
+              <span style="font-weight: 600;">Borgsom (terugbetaalbaar)</span>
+              <span style="font-family: monospace; font-weight: 700;">€ ${totalBorgsom.toFixed(2)}</span>
+            </div>
+            <div style="font-size: 10px; color: #92400e; margin-top: 4px; text-align: right;">Wordt teruggestort na onbeschadigde retour van de machine.</div>
+            ` : ''}
           </div>
         </div>
         

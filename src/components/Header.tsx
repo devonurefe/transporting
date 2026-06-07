@@ -30,35 +30,40 @@ import { AppNotification, UserProfile, CartItem } from "../types";
 
 export function HuurGoLogo({ className = "h-8" }: { className?: string }) {
   return (
-    <div className={`flex items-center gap-2 ${className}`}>
-      {/* Geometric aerial-lift icon — pure shapes, no text */}
-      <svg viewBox="0 0 28 36" className="h-full w-auto shrink-0" fill="none" xmlns="http://www.w3.org/2000/svg">
-        {/* Mast */}
-        <rect x="11" y="9" width="3.5" height="20" rx="1.75" fill="#16a34a" />
-        {/* Horizontal boom */}
-        <rect x="5" y="9" width="18" height="3" rx="1.5" fill="#16a34a" />
-        {/* Work basket */}
-        <rect x="3" y="2" width="11" height="9" rx="2" fill="#FF7A20" />
-        {/* Basket guard rails */}
-        <line x1="6" y1="4" x2="6" y2="9" stroke="white" strokeWidth="1.2" strokeLinecap="round" />
-        <line x1="9" y1="4" x2="9" y2="9" stroke="white" strokeWidth="1.2" strokeLinecap="round" />
-        <line x1="12" y1="4" x2="12" y2="9" stroke="white" strokeWidth="1.2" strokeLinecap="round" />
-        {/* Base platform */}
-        <rect x="7" y="29" width="11" height="3.5" rx="1.75" fill="#16a34a" />
-        {/* Wheels */}
-        <circle cx="10" cy="33" r="2.5" fill="#16a34a" />
-        <circle cx="18" cy="33" r="2.5" fill="#16a34a" />
-        <circle cx="10" cy="33" r="1" fill="white" />
-        <circle cx="18" cy="33" r="1" fill="white" />
+    <div className={`flex items-center gap-2.5 ${className}`}>
+      {/* Badge icon — 3 shapes, readable at any size */}
+      <svg viewBox="0 0 38 38" className="h-full w-auto shrink-0" fill="none" xmlns="http://www.w3.org/2000/svg">
+        {/* Green badge */}
+        <rect width="38" height="38" rx="10" fill="#16a34a"/>
+        {/* Shadow layer for depth */}
+        <rect width="38" height="38" rx="10" fill="url(#badgeShadow)"/>
+        {/* Platform base — wide white bar */}
+        <rect x="6" y="27.5" width="26" height="4.5" rx="2.25" fill="white"/>
+        {/* Lift shaft — centered vertical bar */}
+        <rect x="16" y="14" width="6" height="14" rx="2" fill="white"/>
+        {/* Work basket — orange, sits on shaft top */}
+        <rect x="8.5" y="6" width="21" height="10" rx="3.5" fill="#f97316"/>
+        {/* Basket top highlight */}
+        <rect x="8.5" y="6" width="21" height="3.5" rx="3.5" fill="rgba(255,255,255,0.18)"/>
+        {/* Basket railing dots */}
+        <circle cx="13" cy="11" r="1.2" fill="rgba(255,255,255,0.5)"/>
+        <circle cx="19" cy="11" r="1.2" fill="rgba(255,255,255,0.5)"/>
+        <circle cx="25" cy="11" r="1.2" fill="rgba(255,255,255,0.5)"/>
+        <defs>
+          <linearGradient id="badgeShadow" x1="0" y1="0" x2="0" y2="38">
+            <stop offset="0%" stopColor="white" stopOpacity="0.08"/>
+            <stop offset="100%" stopColor="black" stopOpacity="0.12"/>
+          </linearGradient>
+        </defs>
       </svg>
 
       {/* Wordmark */}
       <div className="flex flex-col leading-none select-none">
         <div className="flex items-baseline gap-0">
-          <span className="font-display font-extrabold tracking-tight text-emerald-600 text-lg sm:text-xl">Huur</span>
-          <span className="font-display font-extrabold tracking-tight text-orange-500 text-lg sm:text-xl">Go</span>
+          <span className="font-display font-black tracking-tight text-slate-800 text-lg sm:text-xl">Huur</span>
+          <span className="font-display font-black tracking-tight text-orange-500 text-lg sm:text-xl">Go</span>
         </div>
-        <span className="text-[9px] text-slate-400 font-medium tracking-wide hidden sm:block">Snel &amp; professioneel</span>
+        <span className="text-[9px] text-slate-400 font-medium tracking-widest uppercase hidden sm:block" style={{ letterSpacing: '0.12em' }}>Hoogwerkers</span>
       </div>
     </div>
   );

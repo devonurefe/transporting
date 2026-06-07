@@ -50,6 +50,8 @@ export interface Order {
   status: "In behandeling" | "Goedgekeurd" | "Onderweg" | "Voltooid" | "Geannuleerd";
   createdAt: string;
   addons?: { id: string; name: string; price: number; billing: "daily" | "flat" }[];
+  borgsom?: number;
+  borgsomStatus?: "pending" | "returned" | "withheld";
 }
 
 export interface ChatMessage {

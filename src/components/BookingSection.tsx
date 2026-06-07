@@ -293,7 +293,8 @@ export default function BookingSection({
           addonCost: 0,
           addonDetails: [],
           vat: 0,
-          total: 0
+          total: 0,
+          borgsom: 0
         };
       }
       let totalDays = 0;
@@ -344,6 +345,8 @@ export default function BookingSection({
         addonDetails.push({ id: "insurance", name: "Extra All-Risk Schadeverzekering", price: 25 * totalDays });
       }
 
+      const borgsom = parseFloat((cartItems.reduce((sum, item) => sum + item.machine.pricePerDay * 0.20, 0)).toFixed(2));
+
       const totalExcl = subtotal + transport + driver + addonCost;
       const vat = totalExcl * 0.21;
       const total = totalExcl + vat;
@@ -381,13 +384,14 @@ export default function BookingSection({
         addonCost,
         addonDetails,
         vat,
-        total
+        total,
+        borgsom
       };
     }
 
     // Legacy fallback
     if (!selectedMachine) {
-      return { days: 0, rawSubtotal: 0, discountAmount: 0, discountLabel: "", subtotal: 0, transport: 0, driver: 0, addonCost: 0, addonDetails: [], vat: 0, total: 0 };
+      return { days: 0, rawSubtotal: 0, discountAmount: 0, discountLabel: "", subtotal: 0, transport: 0, driver: 0, addonCost: 0, addonDetails: [], vat: 0, total: 0, borgsom: 0 };
     }
 
     const start = new Date(startDate);
@@ -445,6 +449,8 @@ export default function BookingSection({
       addonDetails.push({ id: "insurance", name: "Extra All-Risk Schadeverzekering", price: 25 * days });
     }
 
+    const borgsom = parseFloat((selectedMachine.pricePerDay * 0.20).toFixed(2));
+
     const totalExcl = subtotal + transport + driver + addonCost;
     const vat = totalExcl * 0.21;
     const total = totalExcl + vat;
@@ -460,7 +466,8 @@ export default function BookingSection({
       addonCost,
       addonDetails,
       vat,
-      total
+      total,
+      borgsom
     };
   };
 
@@ -555,12 +562,9 @@ export default function BookingSection({
 
   const handleCreateBooking = async () => {
     setIsSubmitting(true);
-    
-    // Simulate real security gateway delays
-    setTimeout(async () => {
-      try {
-        let firstSuccessfulOrder: Order | null = null;
-        const placedOrders: Order[] = [];
+    try {
+      let firstSuccessfulOrder: Order | null = null;
+      const placedOrders: Order[] = [];
         
         if (cartItems && cartItems.length > 0) {
           for (let i = 0; i < cartItems.length; i++) {
@@ -626,7 +630,8 @@ export default function BookingSection({
               driverCost: parseFloat(driver.toFixed(2)),
               vatAmount: parseFloat(itemVat.toFixed(2)),
               totalAmount: parseFloat(itemTotal.toFixed(2)),
-              addons: addonsList
+              addons: addonsList,
+              borgsom: parseFloat((item.machine.pricePerDay * 0.20).toFixed(2))
             };
 
             const result = await onCreateReservation(orderObj);
@@ -657,13 +662,12 @@ export default function BookingSection({
             onClearCart();
             setStep(4);
           } else {
-            alert("Er is een fout opgetreden bij de gateway-synchronisatie. Probeer het over een paar momenten opnieuw.");
+            alert("Er is een fout opgetreden. Probeer het over een paar momenten opnieuw.");
           }
         }
       } catch (err) {
         setIsSubmitting(false);
       }
-    }, 1500);
   };
 
   const sums = calculationSummary();

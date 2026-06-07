@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from "react";
-import { CheckCircle2, Check, Download, Lock, UserPlus } from "lucide-react";
+import { CheckCircle2, Download, MessageCircle, ClipboardList, ArrowLeft } from "lucide-react";
 import { motion } from "motion/react";
 import { Order, UserProfile } from "../../types";
 import { printInvoice } from "../../utils/invoice";
@@ -49,187 +49,146 @@ export default function BookingSuccess({
     try {
       const success = await useAuthStore.getState().register({
         email: successOrder.customerEmail,
-        password: password,
+        password,
         name: successOrder.customerName,
         phone: successOrder.customerPhone || undefined,
-        profile: successOrder.customerProfile || undefined
+        profile: successOrder.customerProfile || undefined,
       });
       if (success) {
         setRegisterSuccess(true);
       } else {
-        const storeError = useAuthStore.getState().error;
-        setRegisterError(storeError || "Registratie mislukt. Mogelijk bestaat er al een account met dit e-mailadres.");
+        setRegisterError(useAuthStore.getState().error || "Registratie mislukt.");
       }
-    } catch (err) {
+    } catch {
       setRegisterError("Er is een netwerkfout opgetreden. Probeer het opnieuw.");
     } finally {
       setIsRegistering(false);
     }
   };
 
+  const specs = [
+    { label: "Huurder", value: successOrder.customerName },
+    { label: "Hoogwerker", value: successOrder.machineName, highlight: true },
+    {
+      label: "Periode",
+      value: `${successOrder.startDate} t/m ${successOrder.endDate} (${successOrder.rentalDays} ${successOrder.rentalDays === 1 ? "dag" : "dagen"})`,
+    },
+    {
+      label: "Afhaling",
+      value: successOrder.deliveryType === "self_pickup" ? "Zelf ophalen" : "Bezorging door chauffeur",
+    },
+    ...(successOrder.deliveryAddress ? [{ label: "Adres", value: successOrder.deliveryAddress }] : []),
+    { label: "Totaal incl. BTW", value: `€ ${successOrder.totalAmount.toFixed(2)}`, price: true },
+    ...(successOrder.borgsom && successOrder.borgsom > 0
+      ? [{ label: "Borgsom (terugbetaalbaar)", value: `€ ${successOrder.borgsom.toFixed(2)}`, borgsom: true }]
+      : []),
+  ];
+
   return (
     <motion.div
       key="success-card"
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      className="bg-white border border-slate-200 shadow-xl max-w-2xl mx-auto p-6 sm:p-8 rounded-3xl space-y-6 text-center relative overflow-hidden"
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.28, ease: "easeOut" }}
+      className="bg-white border border-slate-200 shadow-lg max-w-xl mx-auto rounded-2xl overflow-hidden"
     >
-      {/* Green/teal glow radiant */}
-      <div className="absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-emerald-50 to-transparent -z-10" />
-
-      <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-600 shadow-sm animate-bounce mb-2">
-        <CheckCircle2 className="h-9 w-9" />
-      </div>
-
-      <div>
-        <span className="text-xs font-mono uppercase bg-amber-50 border border-amber-200 text-amber-700 px-3.5 py-1.5 rounded-full font-extrabold tracking-wider">
-          Aanvraag Ontvangen — Nog niet bevestigd
-        </span>
-        <h1 className="font-display text-2xl font-black text-slate-900 mt-4">
-          Reservering Aangevraagd!
-        </h1>
-        <p className="text-xs text-slate-600 font-medium mt-2 max-w-md mx-auto">
-          Uw hoogwerker is officieel geregistreerd onder referentienummer{" "}
-          <strong className="text-indigo-600 font-mono">{successOrder?.id}</strong>.{" "}
-          {paymentGateway === "whatsapp" ? (
-            <span>Bevestig uw boeking via WhatsApp om uw iDEAL-betaallink te ontvangen.</span>
-          ) : (
-            <span>Uw aanvraag is succesvol geregistreerd. U ontvangt binnenkort een betalingsbevestiging.</span>
-          )}
+      {/* Header */}
+      <div className="bg-gradient-to-b from-emerald-50 to-white px-6 pt-8 pb-6 text-center border-b border-slate-100">
+        <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100 border border-emerald-200 text-emerald-600 mb-4">
+          <CheckCircle2 className="h-8 w-8" />
+        </div>
+        <h1 className="font-display text-xl font-black text-slate-900">Reservering Aangevraagd</h1>
+        <p className="text-xs text-slate-500 mt-1.5 max-w-sm mx-auto leading-relaxed">
+          Referentie:{" "}
+          <span className="font-mono font-bold text-indigo-600">{successOrder.id}</span>
+          {" — "}
+          Bevestig via WhatsApp om uw betaallink te ontvangen.
         </p>
+        <span className="inline-block mt-3 text-[10px] font-mono uppercase bg-amber-50 border border-amber-200 text-amber-700 px-3 py-1 rounded-full font-bold tracking-wider">
+          Nog niet bevestigd
+        </span>
       </div>
 
-      {/* Booking specifications board */}
-      <div className="bg-slate-50 p-6 rounded-3xl border border-slate-200 space-y-4 max-w-lg mx-auto text-xs font-semibold shadow-sm text-center">
-        
-        <div className="pb-2.5 border-b border-slate-200/60 space-y-0.5">
-          <span className="text-slate-400 font-medium block text-[10px] uppercase tracking-wider">Huurder</span>
-          <span className="text-slate-800 font-bold text-sm block">{successOrder.customerName}</span>
-        </div>
-
-        <div className="pb-2.5 border-b border-slate-200/60 space-y-0.5">
-          <span className="text-slate-400 font-medium block text-[10px] uppercase tracking-wider">Hoogwerker Model</span>
-          <span className="text-indigo-700 font-bold text-sm block">{successOrder.machineName}</span>
-        </div>
-
-        <div className="pb-2.5 border-b border-slate-200/60 space-y-0.5">
-          <span className="text-slate-400 font-medium block text-[10px] uppercase tracking-wider">Gereserveerde Periode</span>
-          <span className="text-slate-800 font-bold text-sm block">
-            {successOrder.startDate} t/m {successOrder.endDate} ({successOrder.rentalDays} {successOrder.rentalDays === 1 ? 'dag' : 'dagen'})
-          </span>
-        </div>
-
-        <div className="pb-2.5 border-b border-slate-200/60 space-y-0.5">
-          <span className="text-slate-400 font-medium block text-[10px] uppercase tracking-wider">Logistieke Omgang</span>
-          <span className="text-teal-700 font-bold text-sm block">
-            {successOrder.deliveryType === "self_pickup" ? "Zelf ophalen bij de Hub" : "Transport door Hub Chauffeur"}
-          </span>
-        </div>
-
-        {successOrder.deliveryAddress && (
-          <div className="pb-2.5 border-b border-slate-200/60 space-y-0.5">
-            <span className="text-slate-400 font-medium block text-[10px] uppercase tracking-wider">Afleveradres</span>
-            <span className="text-slate-800 font-bold block leading-relaxed">{successOrder.deliveryAddress}</span>
+      {/* Specs */}
+      <div className="px-6 py-4 space-y-0 divide-y divide-slate-100">
+        {specs.map((s, i) => (
+          <div key={i} className="flex items-baseline justify-between py-2.5 gap-4">
+            <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider shrink-0">{s.label}</span>
+            <span
+              className={`text-xs font-bold text-right leading-snug ${
+                (s as any).price
+                  ? "text-lg font-mono text-slate-900"
+                  : (s as any).borgsom
+                  ? "text-amber-700 font-mono"
+                  : (s as any).highlight
+                  ? "text-indigo-700"
+                  : "text-slate-800"
+              }`}
+            >
+              {s.value}
+            </span>
           </div>
-        )}
-
-        <div className="pt-2.5 space-y-1">
-          <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 font-bold block">Huurbedrag (incl. BTW)</span>
-          <span className="text-xl font-mono font-bold text-teal-700 block">€ {successOrder.totalAmount.toFixed(2)}</span>
-        </div>
-
-        {successOrder.borgsom && successOrder.borgsom > 0 && (
-          <div className="pt-2.5 border-t border-dashed border-amber-200 space-y-0.5">
-            <span className="text-[10px] font-mono uppercase tracking-wider text-amber-600 font-bold block">Borgsom (eenmalig)</span>
-            <span className="text-base font-mono font-bold text-amber-700 block">€ {successOrder.borgsom.toFixed(2)}</span>
-            <span className="text-[10px] text-amber-500 block">Wordt teruggestort na onbeschadigde retour.</span>
-          </div>
-        )}
-
+        ))}
       </div>
 
+      {/* WhatsApp CTA */}
       {whatsappUrl && (
-        <div className="p-6 bg-gradient-to-br from-emerald-50 via-white to-emerald-50/30 border border-emerald-200 shadow-md rounded-3xl max-w-lg mx-auto text-center space-y-4 relative overflow-hidden">
-          {/* Subtle green glow ornament */}
-          <div className="absolute -top-10 -right-10 w-24 h-24 bg-emerald-400/10 rounded-full blur-xl pointer-events-none" />
-
-          <div className="text-left space-y-1.5 p-3 bg-white/60 rounded-xl border border-emerald-100">
-            <p className="text-[10px] font-mono font-bold text-emerald-700 uppercase tracking-wider mb-2">Volgende stappen:</p>
+        <div className="px-6 py-5 border-t border-slate-100 space-y-4">
+          {/* Steps */}
+          <ol className="space-y-2">
             {[
               "Klik hieronder om uw aanvraag te bevestigen via WhatsApp.",
-              "U ontvangt binnen 2 uur een beveiligde iDEAL-betaallink van onze planner.",
-              "Na betaling is uw boeking definitief bevestigd."
+              "U ontvangt binnen 2 uur een beveiligde iDEAL-betaallink.",
+              "Na betaling is uw boeking definitief bevestigd.",
             ].map((step, i) => (
-              <div key={i} className="flex items-start space-x-2 text-xs text-emerald-800">
-                <span className="font-bold font-mono shrink-0 text-emerald-600">{i + 1}.</span>
+              <li key={i} className="flex items-start gap-2.5 text-xs text-slate-700">
+                <span className="shrink-0 h-5 w-5 rounded-full bg-emerald-100 text-emerald-700 font-bold font-mono text-[10px] flex items-center justify-center mt-0.5">
+                  {i + 1}
+                </span>
                 <span>{step}</span>
-              </div>
+              </li>
             ))}
-          </div>
+          </ol>
 
-          <p className="text-xs text-emerald-800 font-extrabold leading-normal">
-            Klik op de onderstaande knop om uw aanvraag te bevestigen:
-          </p>
+          {/* WhatsApp button */}
           <motion.a
             href={whatsappUrl}
             target="_blank"
             rel="noopener noreferrer"
-            animate={{ 
-              scale: [1, 1.02, 1],
-              boxShadow: [
-                "0 10px 25px -5px rgba(16, 185, 129, 0.4)",
-                "0 20px 35px 5px rgba(16, 185, 129, 0.6)",
-                "0 10px 25px -5px rgba(16, 185, 129, 0.4)"
-              ]
-            }}
-            transition={{
-              duration: 1.8,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-            whileHover={{ scale: 1.05 }}
+            whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            className="inline-flex items-center justify-center space-x-3 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white font-black text-base px-8 py-4.5 rounded-2xl cursor-pointer border-none no-underline w-full max-w-md mx-auto shadow-xl"
+            className="flex items-center justify-center gap-3 w-full py-3.5 rounded-xl bg-[#25D366] hover:bg-[#1da851] text-white font-bold text-sm transition-colors duration-200 cursor-pointer no-underline shadow-sm"
           >
-            <span className="relative flex h-3 w-3 mr-1">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-85"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
-            </span>
-            <span className="tracking-wide">💬 Open WhatsApp & Bevestig Boeking</span>
+            <MessageCircle className="h-5 w-5 shrink-0" />
+            Bevestig via WhatsApp
           </motion.a>
         </div>
       )}
 
-      {/* Action routes */}
-      <div className="flex flex-col sm:flex-row justify-center items-center gap-3 pt-6 border-t border-slate-200 w-full">
+      {/* Bottom actions */}
+      <div className="px-6 py-4 border-t border-slate-100 flex flex-col sm:flex-row gap-2">
         <button
           onClick={() => printInvoice(successOrders.length > 0 ? successOrders : successOrder)}
-          className="w-full sm:w-auto bg-teal-600 hover:bg-teal-700 text-white font-extrabold text-xs px-5 py-3 rounded-xl transition-all flex items-center justify-center space-x-1.5 cursor-pointer shadow-md shadow-teal-100 border-none"
+          className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-bold transition-all duration-200 cursor-pointer"
         >
-          <Download className="h-4 w-4" />
-          <span>Factuur Downloaden (PDF)</span>
+          <Download className="h-4 w-4 shrink-0" />
+          Factuur PDF
         </button>
 
         <button
-          onClick={() => {
-            setStep(1);
-            setSuccessOrder(null);
-            setActiveTab("home");
-          }}
-          className="w-full sm:w-auto bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold text-xs px-5 py-3 rounded-xl transition-all border border-slate-200 cursor-pointer shadow-sm border-none"
+          onClick={() => { setStep(1); setSuccessOrder(null); setActiveTab("orders"); }}
+          className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-all duration-200 cursor-pointer shadow-sm"
         >
-          Terug naar Home
-        </button>
-
-        <button
-          onClick={() => {
-            setStep(1);
-            setSuccessOrder(null);
-            setActiveTab("orders");
-          }}
-          className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-6 py-3 rounded-xl transition-all shadow-md shadow-indigo-100 cursor-pointer border-none"
-        >
+          <ClipboardList className="h-4 w-4 shrink-0" />
           Mijn Bestellingen
+        </button>
+
+        <button
+          onClick={() => { setStep(1); setSuccessOrder(null); setActiveTab("home"); }}
+          className="sm:hidden flex items-center justify-center gap-2 py-2.5 rounded-xl border border-slate-200 text-slate-500 hover:text-slate-700 text-xs font-medium transition-all duration-200 cursor-pointer"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" />
+          Terug
         </button>
       </div>
     </motion.div>

@@ -26,7 +26,7 @@ export interface Machine {
   additionalImages?: string[];
 }
 
-export type DeliveryType = "self_pickup" | "delivery_with_driver";
+export type DeliveryType = "self_pickup" | "delivery_by_us" | "trailer_rental";
 
 export interface Order {
   id: string;

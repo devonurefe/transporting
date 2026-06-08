@@ -19,7 +19,7 @@ interface BookingStep2Props {
   setCustomerPhone: (phone: string) => void;
   customerProfile: string;
   setCustomerProfile: (profile: string) => void;
-  deliveryType: "self_pickup" | "delivery_with_driver";
+  deliveryType: "self_pickup" | "delivery_by_us" | "trailer_rental";
   postcode: string;
   setPostcode: (pc: string) => void;
   houseNumber: string;
@@ -225,7 +225,7 @@ export default function BookingStep2({
       </div>
 
       {/* Address entry with interactive Postcode Lookup */}
-      {deliveryType === "delivery_with_driver" && (
+      {deliveryType === "delivery_by_us" && (
         <div className="pt-4 border-t border-slate-200 space-y-4">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
             <label className="text-xs text-slate-600 block font-black uppercase tracking-wider flex items-center space-x-1.5">
@@ -294,7 +294,7 @@ export default function BookingStep2({
               <label className="text-[10px] text-slate-500 block font-bold uppercase tracking-wider mb-1">Geselecteerd Afleveradres (of handmatig aanpassen)</label>
               <input
                 type="text"
-                required={deliveryType === "delivery_with_driver"}
+                required={deliveryType === "delivery_by_us"}
                 value={deliveryAddress}
                 onChange={(e) => setDeliveryAddress(e.target.value)}
                 placeholder="Kortingstraat 5, 2404 CB Alphen aan den Rijn"

@@ -101,7 +101,7 @@ export default function BookingSection({
   // Form Fields State
   const [startDate, setStartDate] = useState<string>(() => new Date().toISOString().split("T")[0]);
   const [endDate, setEndDate] = useState<string>(() => new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]);
-  const [deliveryType, setDeliveryType] = useState<DeliveryType>("delivery_with_driver");
+  const [deliveryType, setDeliveryType] = useState<DeliveryType>("delivery_by_us");
   const [deliveryAddress, setDeliveryAddress] = useState<string>("");
   const [customerName, setCustomerName] = useState<string>(currentUser ? currentUser.name : "");
   const [customerEmail, setCustomerEmail] = useState<string>(currentUser ? currentUser.email : "");
@@ -132,7 +132,7 @@ export default function BookingSection({
       if (leadMachine.category === "aanhanger" || leadMachine.category === "ecolift") {
         setDeliveryType("self_pickup");
       } else {
-        setDeliveryType("delivery_with_driver");
+        setDeliveryType("delivery_by_us");
       }
       // Fetch availability scoped to this machine only
       fetch(`/api/orders/availability?machineId=${encodeURIComponent(leadMachine.id)}`)
@@ -337,8 +337,9 @@ export default function BookingSection({
         subtotal += itemSub;
       }
 
-      const transport = deliveryType === "delivery_with_driver" ? 120 : 0;
-      const driver = deliveryType === "delivery_with_driver" ? 150 : 0; // Flat chauffeur support
+      const transport = deliveryType === "delivery_by_us" ? 150 : 0;
+      const trailerCost = deliveryType === "trailer_rental" ? 25 * totalDays : 0;
+      const driver = 0;
 
       // Addon calculation
       let addonCost = 0;
@@ -351,7 +352,7 @@ export default function BookingSection({
 
       const borgsom = parseFloat((cartItems.reduce((sum, item) => sum + item.machine.pricePerDay * 0.20, 0)).toFixed(2));
 
-      const totalExcl = subtotal + transport + driver + addonCost;
+      const totalExcl = subtotal + transport + trailerCost + driver + addonCost;
       const vat = totalExcl * 0.21;
       const total = totalExcl + vat;
 
@@ -383,7 +384,7 @@ export default function BookingSection({
         discountAmount,
         discountLabel,
         subtotal,
-        transport,
+        transport: transport + trailerCost,
         driver,
         addonCost,
         addonDetails,
@@ -434,8 +435,9 @@ export default function BookingSection({
     }
 
     const subtotal = Math.max(0, rawSubtotal - discountAmount);
-    const transport = deliveryType === "delivery_with_driver" ? 120 : 0;
-    const driver = deliveryType === "delivery_with_driver" ? 150 : 0;
+    const transport = deliveryType === "delivery_by_us" ? 150 : 0;
+    const trailerCost = deliveryType === "trailer_rental" ? 25 * days : 0;
+    const driver = 0;
 
     let addonCost = 0;
     const addonDetails: { id: string; name: string; price: number }[] = [];
@@ -447,7 +449,7 @@ export default function BookingSection({
 
     const borgsom = parseFloat((selectedMachine.pricePerDay * 0.20).toFixed(2));
 
-    const totalExcl = subtotal + transport + driver + addonCost;
+    const totalExcl = subtotal + transport + trailerCost + driver + addonCost;
     const vat = totalExcl * 0.21;
     const total = totalExcl + vat;
 
@@ -457,7 +459,7 @@ export default function BookingSection({
       discountAmount,
       discountLabel,
       subtotal,
-      transport,
+      transport: transport + trailerCost,
       driver,
       addonCost,
       addonDetails,
@@ -553,8 +555,8 @@ export default function BookingSection({
         setValidationError("U dient alle contactgegevens (Naam, E-mail en Telefoonnummer) in te vullen.");
         return;
       }
-      if (deliveryType === "delivery_with_driver" && !deliveryAddress.trim()) {
-        setValidationError("Een afleveradres is verplicht bij bezorging door onze chauffeur.");
+      if (deliveryType === "delivery_by_us" && !deliveryAddress.trim()) {
+        setValidationError("Een afleveradres is verplicht bij bezorging door ons.");
         return;
       }
       setStep(3);
@@ -593,8 +595,9 @@ export default function BookingSection({
             }
 
             const itemSubtotal = Math.max(0, rawPrice - disc);
-            const transport = (deliveryType === "delivery_with_driver" && i === 0) ? 120 : 0;
-            const driver = (deliveryType === "delivery_with_driver" && i === 0) ? 150 : 0;
+            const transport = (deliveryType === "delivery_by_us" && i === 0) ? 150 : 0;
+            const trailerCost = (deliveryType === "trailer_rental" && i === 0) ? 25 * days : 0;
+            const driver = 0;
 
             let addonCost = 0;
             const addonsList: { id: string; name: string; price: number; billing: "daily" | "flat" }[] = [];
@@ -603,8 +606,8 @@ export default function BookingSection({
               addonsList.push({ id: "safety", name: "Gecertificeerd Harnas & Veiligheidskit", price: 15 * days, billing: "daily" });
             }
 
-            const itemVat = (itemSubtotal + transport + driver + addonCost) * 0.21;
-            const itemTotal = itemSubtotal + transport + driver + addonCost + itemVat;
+            const itemVat = (itemSubtotal + transport + trailerCost + driver + addonCost) * 0.21;
+            const itemTotal = itemSubtotal + transport + trailerCost + driver + addonCost + itemVat;
 
             const orderObj: Partial<Order> = {
               machineId: item.machine.id,
@@ -620,7 +623,7 @@ export default function BookingSection({
               customerPhone,
               customerProfile,
               subtotal: itemSubtotal,
-              transportCost: transport,
+              transportCost: transport + trailerCost,
               driverCost: parseFloat(driver.toFixed(2)),
               vatAmount: parseFloat(itemVat.toFixed(2)),
               totalAmount: parseFloat(itemTotal.toFixed(2)),

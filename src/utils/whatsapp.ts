@@ -37,7 +37,9 @@ export function buildWhatsAppUrl(
   if (deliveryType) {
     const label = deliveryType === "self_pickup"
       ? "Zelf ophalen bij de Hub (Gratis)"
-      : "Bezorging met chauffeur (+ Transport & Demo)";
+      : deliveryType === "trailer_rental"
+      ? "Aanhanger huren (€25/dag)"
+      : "Bezorging door ons (€75/rit, heen + terug)";
     lines.push(`Logistiek: ${label}`);
   }
 

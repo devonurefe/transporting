@@ -186,54 +186,83 @@ export default function BookingStep1({
       <div className="space-y-3.5 pt-4 border-t border-slate-200">
         <span className="text-xs text-slate-605 text-slate-600 font-bold uppercase tracking-wider font-mono">Selecteer Logistieke Methode</span>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Opt 1 — Wij bezorgen */}
+          <div
+            onClick={() => setDeliveryType("delivery_by_us")}
+            className={`p-4 rounded-2xl border transition-all cursor-pointer ${
+              deliveryType === "delivery_by_us"
+                ? "bg-indigo-50 border-indigo-400 shadow-sm"
+                : "bg-white border-slate-200 hover:border-indigo-300 shadow-sm"
+            }`}
+          >
+            <div className="flex items-center space-x-2.5 mb-2">
+              <span className="h-7 w-7 rounded-lg bg-indigo-50 flex items-center justify-center">
+                <Truck className="h-4 w-4 text-indigo-600" />
+              </span>
+              <div>
+                <h4 className="text-xs font-bold text-slate-900">Wij bezorgen</h4>
+                <span className="text-[9.5px] text-slate-400 block font-mono">Binnen 20 km straal</span>
+              </div>
+            </div>
+            <p className="text-[10.5px] text-slate-600 leading-normal">
+              Wij leveren de machine af en halen hem terug op. Geef uw afleveradres op in de volgende stap.
+            </p>
+            <span className="text-xs font-mono font-bold text-indigo-600 mt-2 block">€75,- / rit (heen + terug = €150,-)</span>
+          </div>
+
+          {/* Opt 2 — Aanhanger huren */}
+          <div
+            onClick={() => {
+              setDeliveryType("trailer_rental");
+              setDeliveryAddress("");
+            }}
+            className={`p-4 rounded-2xl border transition-all cursor-pointer ${
+              deliveryType === "trailer_rental"
+                ? "bg-indigo-50 border-indigo-400 shadow-sm"
+                : "bg-white border-slate-200 hover:border-indigo-300 shadow-sm"
+            }`}
+          >
+            <div className="flex items-center space-x-2.5 mb-2">
+              <span className="h-7 w-7 rounded-lg bg-amber-50 flex items-center justify-center">
+                <Truck className="h-4 w-4 text-amber-600" />
+              </span>
+              <div>
+                <h4 className="text-xs font-bold text-slate-900">Onze aanhanger huren</h4>
+                <span className="text-[9.5px] text-slate-400 block font-mono">Eigen auto, onze aanhanger</span>
+              </div>
+            </div>
+            <p className="text-[10.5px] text-slate-600 leading-normal">
+              U rijdt zelf met uw eigen voertuig en gebruikt onze aanhanger om de machine te vervoeren.
+            </p>
+            <span className="text-xs font-mono font-bold text-amber-700 mt-2 block">€25,- / dag (aanhanger)</span>
+          </div>
+
+          {/* Opt 3 — Zelf ophalen */}
           <div
             onClick={() => {
               setDeliveryType("self_pickup");
               setDeliveryAddress("");
             }}
             className={`p-4 rounded-2xl border transition-all cursor-pointer ${
-              deliveryType === "self_pickup" 
-                ? "bg-indigo-50 border-indigo-400 shadow-sm" 
+              deliveryType === "self_pickup"
+                ? "bg-indigo-50 border-indigo-400 shadow-sm"
                 : "bg-white border-slate-200 hover:border-indigo-300 shadow-sm"
             }`}
           >
             <div className="flex items-center space-x-2.5 mb-2">
-              <span className="h-7 w-7 rounded-lg bg-teal-50 text-teal-700 flex items-center justify-center">
+              <span className="h-7 w-7 rounded-lg bg-teal-50 flex items-center justify-center">
                 <Building2 className="h-4 w-4 text-teal-600" />
               </span>
               <div>
-                <h4 className="text-xs font-bold text-slate-900">Zelf ophalen bij de Hub</h4>
-                <span className="text-[9.5px] text-slate-400 block font-mono">Geen additioneel transport-tarief</span>
+                <h4 className="text-xs font-bold text-slate-900">Zelf ophalen</h4>
+                <span className="text-[9.5px] text-slate-400 block font-mono">Nifty 120 / Nifty 170</span>
               </div>
             </div>
             <p className="text-[10.5px] text-slate-600 leading-normal">
-              U haalt het materieel kosteloos af bij onze hoofdhub in Alphen a/d Rijn. Ervaren aanhangwagen (min. klasse BE) of dieplader is vereist.
+              U haalt de machine kosteloos op bij onze hub. Geschikt voor Nifty 120 en Nifty 170 met eigen auto.
             </p>
             <span className="text-xs font-mono font-bold text-teal-600 mt-2 block">Kosteloos / € 0,-</span>
-          </div>
-
-          <div
-            onClick={() => setDeliveryType("delivery_with_driver")}
-            className={`p-4 rounded-2xl border transition-all cursor-pointer ${
-              deliveryType === "delivery_with_driver" 
-                ? "bg-indigo-50 border-indigo-400 shadow-sm" 
-                : "bg-white border-slate-200 hover:border-indigo-305 hover:border-indigo-300 shadow-sm"
-            }`}
-          >
-            <div className="flex items-center space-x-2.5 mb-2">
-              <span className="h-7 w-7 rounded-lg bg-indigo-50 text-indigo-700 flex items-center justify-center">
-                <Truck className="h-4 w-4 text-indigo-600" />
-              </span>
-              <div>
-                <h4 className="text-xs font-bold text-slate-900">Transporteren & Chauffeur</h4>
-                <span className="text-[9.5px] text-slate-405 text-slate-400 block font-mono">Met demonstratie en instructie</span>
-              </div>
-            </div>
-            <p className="text-[10.5px] text-slate-600 leading-normal">
-              Wij leveren de hoogwerker af. Gecertificeerde demonstratie (10 min) en TÜV veiligheidsinstructie zijn contractueel co-verzekerd.
-            </p>
-            <span className="text-xs font-mono font-bold text-indigo-600 mt-2 block">€120,- transport + €150,- chauffeur</span>
           </div>
         </div>
       </div>

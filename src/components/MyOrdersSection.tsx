@@ -230,7 +230,7 @@ export default function MyOrdersSection({
       "success",
       false
     );
-    printInvoice(order, currentUser?.companyName);
+    printInvoice(order, currentUser?.companyName, true);
   };
 
   const handleResendVerification = async () => {

@@ -390,13 +390,14 @@ export default function BookingSection({
         addonDetails,
         vat,
         total,
-        borgsom
+        borgsom,
+        deliveryType
       };
     }
 
     // Legacy fallback
     if (!selectedMachine) {
-      return { days: 0, rawSubtotal: 0, discountAmount: 0, discountLabel: "", subtotal: 0, transport: 0, driver: 0, addonCost: 0, addonDetails: [], vat: 0, total: 0, borgsom: 0 };
+      return { days: 0, rawSubtotal: 0, discountAmount: 0, discountLabel: "", subtotal: 0, transport: 0, driver: 0, addonCost: 0, addonDetails: [], vat: 0, total: 0, borgsom: 0, deliveryType };
     }
 
     const start = new Date(startDate);
@@ -465,7 +466,8 @@ export default function BookingSection({
       addonDetails,
       vat,
       total,
-      borgsom
+      borgsom,
+      deliveryType
     };
   };
 

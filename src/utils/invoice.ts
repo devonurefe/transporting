@@ -9,7 +9,7 @@ import { Order } from "../types";
  * Utility to generate and print a professional Dutch rental invoice/agreement
  * for a HuurGo order using native browser print capability.
  */
-export function printInvoice(orderOrOrders: Order | Order[], clientCompanyName?: string) {
+export function printInvoice(orderOrOrders: Order | Order[], clientCompanyName?: string, isProforma?: boolean) {
   const escapeHtml = (str: string): string => {
     if (!str) return "";
     return str
@@ -59,20 +59,30 @@ export function printInvoice(orderOrOrders: Order | Order[], clientCompanyName?:
 
   const subtotalExclVat = totalSubtotal + totalTransport + totalDriver + totalAddonCost;
   
-  // Custom document title based on booking status
-  let documentTitle = "FACTUREUREN";
-  if (primaryOrder.status === "In behandeling") {
-    documentTitle = "PRO-FORMA FACTUUR / HUURRAMING";
+  // Custom document title based on context and booking status
+  let documentTitle: string;
+  let paymentStatusLabel: string;
+  let paymentStatusColor: string;
+  if (isProforma) {
+    documentTitle = "PRO-FORMA FACTUUR / OFFERTE";
+    paymentStatusLabel = "AANGEVRAAGD";
+    paymentStatusColor = "#b45309"; // amber
   } else if (primaryOrder.status === "Geannuleerd") {
     documentTitle = "GEANNULEERDE HUUROVEREENKOMST";
+    paymentStatusLabel = "GEANNULEERD";
+    paymentStatusColor = "#dc2626";
   } else {
     documentTitle = "OFFICIËLE HUUROVEREENKOMST & FACTUUR";
+    paymentStatusLabel = "BETAALD";
+    paymentStatusColor = "#059669";
   }
 
   // Delivery details display
   const logisticsText = primaryOrder.deliveryType === "self_pickup"
-    ? "Zelf afhalen bij vestiging HuurGo"
-    : "Bezorging door HuurGo logistieke dienst";
+    ? "Zelf afhalen bij vestiging MB Hoogwerkers (gratis)"
+    : primaryOrder.deliveryType === "trailer_rental"
+    ? "Aanhanger meegenomen — zelf heen en terug"
+    : "Bezorging door MB Hoogwerkers (heen + terug €150)";
 
   const customerCompany = clientCompanyName || "Particulier";
 
@@ -502,7 +512,7 @@ export function printInvoice(orderOrOrders: Order | Order[], clientCompanyName?:
           </div>
           <div>
             <div class="meta-item-label">Betalingsstatus</div>
-            <div class="meta-item-value" style="color: #059669;">BETAALD</div>
+            <div class="meta-item-value" style="color: ${paymentStatusColor};">${paymentStatusLabel}</div>
           </div>
           <div>
             <div class="meta-item-label">Vervaldatum</div>
@@ -558,11 +568,22 @@ export function printInvoice(orderOrOrders: Order | Order[], clientCompanyName?:
           </div>
         </div>
         
+        ${isProforma ? `
+        <!-- Proforma notice -->
+        <div style="background: #fffbeb; border: 1px dashed #fbbf24; border-radius: 12px; padding: 16px 20px; margin-bottom: 35px; font-size: 11px; color: #92400e; line-height: 1.6;">
+          <strong style="display: block; margin-bottom: 4px; font-size: 12px;">⚠️ Dit is een pro-forma offerte — geen officiële factuur</strong>
+          Betaling vindt plaats na ontvangst van een iDEAL-betaallink via WhatsApp. Zodra de betaling is ontvangen, maakt MB Hoogwerkers een officiële factuur op en stuurt deze per e-mail toe.
+        </div>
+        ` : ''}
+
         <!-- Footer Terms -->
         <footer class="footer-terms">
           <p>Op alle huurovereenkomsten zijn de algemene <span class="footer-highlight">BMWT-verhuurvoorwaarden 2026</span> van toepassing.</p>
-          <p>Betalingswijze: Online voldaan via iDEAL / Stripe Secure Gateway. Transactiereferentie: mollie_secure_${Math.random().toString(36).substring(2, 8).toUpperCase()}</p>
-          <p style="margin-top: 8px;">Dank u voor uw vertrouwen in de hoogste en veiligste kwaliteit van <strong>HuurGo Nederland</strong>.</p>
+          ${isProforma
+            ? `<p>Betaling via WhatsApp — u ontvangt een Tikkie of Mollie iDEAL-betaallink. Na betaling is uw boeking definitief bevestigd.</p>`
+            : `<p>Betalingswijze: Voldaan via iDEAL / Tikkie betaallink. Factuurkenmerk: ${primaryOrder.invoiceNumber || primaryOrder.id}</p>`
+          }
+          <p style="margin-top: 8px;">Dank u voor uw vertrouwen in de hoogste en veiligste kwaliteit van <strong>MB Hoogwerkers</strong>.</p>
         </footer>
         
       </div>

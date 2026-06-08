@@ -22,6 +22,7 @@ interface BookingPriceSummaryProps {
     vat: number;
     total: number;
     borgsom: number;
+    deliveryType?: string;
   };
 }
 
@@ -90,7 +91,9 @@ export default function BookingPriceSummary({ selectedMachine, sums }: BookingPr
         {/* Delivery */}
         {(sums.transport > 0 || sums.driver > 0) && (
           <div className="flex justify-between items-center">
-            <span className="text-xs text-slate-600">Bezorging & chauffeur</span>
+            <span className="text-xs text-slate-600">
+              {sums.deliveryType === "trailer_rental" ? "Aanhangerverhuur" : "Bezorging door ons"}
+            </span>
             <span className="text-xs font-bold text-slate-800 font-mono">€ {(sums.transport + sums.driver).toFixed(0)}</span>
           </div>
         )}
@@ -99,7 +102,7 @@ export default function BookingPriceSummary({ selectedMachine, sums }: BookingPr
         {sums.transport === 0 && sums.driver === 0 && (
           <div className="flex justify-between items-center">
             <span className="text-xs text-slate-600">Bezorging</span>
-            <span className="text-xs font-semibold text-slate-500">Zelf ophalen</span>
+            <span className="text-xs font-semibold text-emerald-600">Zelf ophalen (gratis)</span>
           </div>
         )}
 

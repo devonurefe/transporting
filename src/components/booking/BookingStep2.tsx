@@ -4,7 +4,7 @@
  */
 
 import React from "react";
-import { User, Mail, Phone, MapPin, Search, Check, ShieldAlert, ArrowLeft, ArrowRight, X, LogIn } from "lucide-react";
+import { User, Mail, Phone, MapPin, Search, Check, ShieldAlert, ArrowLeft, ArrowRight, X, LogIn, Paintbrush, Leaf, Droplets, HardHat, Zap, Hammer, Settings, Home, HelpCircle, ChevronDown } from "lucide-react";
 import { motion } from "motion/react";
 import { UserProfile, Machine } from "../../types";
 import BookingPriceSummary from "./BookingPriceSummary";
@@ -37,10 +37,22 @@ interface BookingStep2Props {
   sums?: {
     days: number; rawSubtotal: number; subtotal: number; discountAmount: number; discountLabel: string;
     transport: number; driver: number; addonCost: number; addonDetails: { id: string; name: string; price: number }[];
-    vat: number; total: number; borgsom: number;
+    vat: number; total: number; borgsom: number; deliveryType?: string;
   };
   selectedMachine?: Machine | null;
 }
+
+const PROFESSIONS = [
+  { value: "Schilder",                       label: "Schilder",                      Icon: Paintbrush },
+  { value: "Hovenier / Groenverzorging",     label: "Hovenier / Groenverzorging",    Icon: Leaf },
+  { value: "Glazenwasser / Gevelreiniger",   label: "Glazenwasser & Gevelreiniging", Icon: Droplets },
+  { value: "Aannemer",                       label: "Aannemer",                      Icon: HardHat },
+  { value: "Installateur / Elektricien",     label: "Installateur / Elektricien",    Icon: Zap },
+  { value: "Dakdekker / Gevelwerker",        label: "Dakdekker & Gevelwerker",       Icon: Hammer },
+  { value: "Industrieel Onderhoud",          label: "Industrieel Onderhoud",         Icon: Settings },
+  { value: "Particulier",                    label: "Particulier",                   Icon: Home },
+  { value: "Overig / Anders",                label: "Overig / Anders",               Icon: HelpCircle },
+];
 
 export default function BookingStep2({
   currentUser,
@@ -71,6 +83,8 @@ export default function BookingStep2({
   selectedMachine
 }: BookingStep2Props) {
   const [isGuestConfirmed, setIsGuestConfirmed] = React.useState<boolean>(false);
+  const [sectorOpen, setSectorOpen] = React.useState(false);
+  const selectedProfession = PROFESSIONS.find(p => p.value === customerProfile) ?? PROFESSIONS[0];
 
   if (!currentUser && !isGuestConfirmed) {
     return (
@@ -204,23 +218,34 @@ export default function BookingStep2({
           </div>
         </div>
 
-        <div className="space-y-1.5">
+        <div className="space-y-1.5 relative">
           <label className="text-xs text-slate-700 block font-bold">Sector / Groep</label>
-          <select
-            value={customerProfile}
-            onChange={(e) => setCustomerProfile(e.target.value)}
-            className="bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-800 font-bold outline-none focus:border-indigo-500 w-full cursor-pointer h-10.5 shadow-sm"
+          <button
+            type="button"
+            onClick={() => setSectorOpen(o => !o)}
+            className="flex items-center justify-between w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-800 font-bold outline-none focus:border-indigo-500 cursor-pointer shadow-sm hover:border-slate-300 transition-colors"
           >
-            <option value="Schilder">🎨 Schilder</option>
-            <option value="Hovenier / Groenverzorging">🌳 Hovenier / Groenverzorging</option>
-            <option value="Glazenwasser / Gevelreiniger">🧼 Glazenwasser & Gevelreiniging</option>
-            <option value="Aannemer">🧱 Aannemer</option>
-            <option value="Installateur / Elektricien">⚡ Installateur / Elektricien</option>
-            <option value="Dakdekker / Gevelwerker">🏠 Dakdekker & Gevelwerker</option>
-            <option value="Industrieel Onderhoud">⚙️ Industrieel Onderhoud</option>
-            <option value="Particulier">🏡 Particulier</option>
-            <option value="Overig / Anders">❓ Overig / Anders</option>
-          </select>
+            <span className="flex items-center gap-2">
+              <selectedProfession.Icon className="h-4 w-4 text-indigo-500 shrink-0" />
+              {selectedProfession.label}
+            </span>
+            <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform shrink-0 ${sectorOpen ? "rotate-180" : ""}`} />
+          </button>
+          {sectorOpen && (
+            <div className="absolute z-30 top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden">
+              {PROFESSIONS.map(p => (
+                <button
+                  key={p.value}
+                  type="button"
+                  onClick={() => { setCustomerProfile(p.value); setSectorOpen(false); }}
+                  className={`flex items-center gap-2.5 w-full px-3 py-2.5 text-xs font-semibold text-left transition-colors cursor-pointer border-none ${customerProfile === p.value ? "bg-indigo-50 text-indigo-700" : "bg-white text-slate-700 hover:bg-slate-50"}`}
+                >
+                  <p.Icon className={`h-4 w-4 shrink-0 ${customerProfile === p.value ? "text-indigo-600" : "text-slate-400"}`} />
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -329,13 +354,13 @@ export default function BookingStep2({
         </div>
       )}
 
-      <div className="flex justify-between pt-4 border-t border-slate-200">
+      <div className="flex flex-col-reverse sm:flex-row sm:justify-between gap-3 pt-4 border-t border-slate-200">
         <button
           onClick={() => {
             setValidationError(null);
             setStep(1);
           }}
-          className="bg-slate-50 hover:bg-slate-100 text-slate-705 text-slate-700 font-bold text-xs px-5 py-2.5 rounded-xl transition-all flex items-center space-x-1.5 border border-slate-200 cursor-pointer text-left shadow-sm"
+          className="bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold text-xs px-5 py-3 rounded-xl transition-all flex items-center justify-center space-x-1.5 border border-slate-200 cursor-pointer shadow-sm w-full sm:w-auto"
         >
           <ArrowLeft className="h-4 w-4" />
           <span>Terug</span>
@@ -343,7 +368,7 @@ export default function BookingStep2({
 
         <button
           onClick={handleNextStep}
-          className="bg-indigo-650 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-6 py-2.5 rounded-xl transition-all flex items-center space-x-1.5 border-none cursor-pointer shadow-indigo-100"
+          className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-6 py-3 rounded-xl transition-all flex items-center justify-center space-x-1.5 border-none cursor-pointer w-full sm:w-auto"
         >
           <span>Doorgaan naar betaling</span>
           <ArrowRight className="h-4 w-4" />

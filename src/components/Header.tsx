@@ -73,7 +73,6 @@ interface HeaderProps {
     heroSubtitle: string;
     menuHomeLabel: string;
     menuCatalogLabel: string;
-    menuAdvisorLabel: string;
     menuOrdersLabel: string;
   };
 }

@@ -111,7 +111,6 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
   const [subtitle, setSubtitle] = useState(siteConfig.heroSubtitle || "");
   const [menuHome, setMenuHome] = useState(siteConfig.menuHomeLabel || "");
   const [menuCatalog, setMenuCatalog] = useState(siteConfig.menuCatalogLabel || "");
-  const [menuAdvisor, setMenuAdvisor] = useState(siteConfig.menuAdvisorLabel || "");
   const [menuOrders, setMenuOrders] = useState(siteConfig.menuOrdersLabel || "");
 
   // Sync state if backend updates siteConfig
@@ -123,7 +122,6 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
       setSubtitle(siteConfig.heroSubtitle || "");
       setMenuHome(siteConfig.menuHomeLabel || "");
       setMenuCatalog(siteConfig.menuCatalogLabel || "");
-      setMenuAdvisor(siteConfig.menuAdvisorLabel || "");
       setMenuOrders(siteConfig.menuOrdersLabel || "");
     }
   }, [siteConfig]);
@@ -137,7 +135,6 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
       heroSubtitle: subtitle,
       menuHomeLabel: menuHome,
       menuCatalogLabel: menuCatalog,
-      menuAdvisorLabel: menuAdvisor,
       menuOrdersLabel: menuOrders,
       menuAdminLabel: siteConfig.menuAdminLabel || "Portaal"
     });
@@ -245,16 +242,6 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
                 type="text"
                 value={menuCatalog}
                 onChange={(e) => setMenuCatalog(e.target.value)}
-                className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-xs text-slate-700 block font-bold">{t("Labels - AI Vloot Adviseur", "Labels - AI Fleet Advisor", "Etiketler - Yapay Zeka Filo Danışmanı")}</label>
-              <input
-                type="text"
-                value={menuAdvisor}
-                onChange={(e) => setMenuAdvisor(e.target.value)}
                 className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
               />
             </div>

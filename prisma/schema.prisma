@@ -47,6 +47,8 @@ model BlockedDate {
   date      DateTime
   reason    String
   machine   Machine @relation(fields: [machineId], references: [id], onDelete: Cascade)
+
+  @@index([machineId, date])
 }
 
 model Customer {
@@ -107,6 +109,12 @@ model Order {
   invoiceNumber   String?
   paymentStatus   String    @default("awaiting")
   customer        Customer? @relation(fields: [customerId], references: [id])
+
+  @@index([machineId])
+  @@index([customerId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([machineId, startDate, endDate, status])
 }
 
 model OrderRating {
@@ -125,7 +133,6 @@ model SiteConfig {
   heroSubtitle     String
   menuHomeLabel    String
   menuCatalogLabel String
-  menuAdvisorLabel String
   menuOrdersLabel  String
   menuAdminLabel   String
 }

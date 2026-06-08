@@ -117,10 +117,6 @@ export default function BookingSection({
   const [blockingReason, setBlockingReason] = useState<string>("");
 
   useEffect(() => {
-    fetch("/api/orders/availability")
-      .then((res) => (res.ok ? res.json() : []))
-      .then((data) => setAllOrders(data))
-      .catch(() => {});
     fetch("/api/blocked-dates")
       .then((res) => (res.ok ? res.json() : []))
       .then((data) => setBlockedDaysList(data))
@@ -138,6 +134,11 @@ export default function BookingSection({
       } else {
         setDeliveryType("delivery_with_driver");
       }
+      // Fetch availability scoped to this machine only
+      fetch(`/api/orders/availability?machineId=${encodeURIComponent(leadMachine.id)}`)
+        .then((res) => (res.ok ? res.json() : []))
+        .then((data) => setAllOrders(data))
+        .catch(() => {});
     }
   }, [selectedMachine, cartItems]);
 

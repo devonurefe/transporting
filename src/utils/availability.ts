@@ -56,20 +56,24 @@ export function checkAvailability(
     return { available: false, blocked: false, overlap: true, reason: "Niet beschikbaar — al geboekt voor (een deel van) deze periode. Kies andere datums." };
   }
 
-  // Check manual blocked dates
+  // Build a Set for O(1) blocked-date lookups (avoids O(n²) find() inside loop)
+  const machineBlockedDates = blockedDates.filter(b => b.machineId === machineId);
+  const blockedDateReasonMap = new Map<string, string>();
+  for (const b of machineBlockedDates) {
+    const key = typeof b.date === "string" ? b.date.split("T")[0] : b.date.toISOString().split("T")[0];
+    blockedDateReasonMap.set(key, b.reason || "Planning gesloten door beheerder");
+  }
+
   const sDate = new Date(start);
   const eDate = new Date(end);
   let curr = new Date(sDate);
   let safetyCounter = 0;
   while (curr <= eDate && safetyCounter < 1000) {
     safetyCounter++;
-    const currStr = curr.toISOString().split('T')[0];
-    const blockedMatch = blockedDates.find(b => {
-      const bDateStr = typeof b.date === 'string' ? b.date : b.date.toISOString().split('T')[0];
-      return b.machineId === machineId && bDateStr === currStr;
-    });
-    if (blockedMatch) {
-      return { available: false, blocked: true, overlap: false, reason: blockedMatch.reason || "Planning gesloten door beheerder" };
+    const currStr = curr.toISOString().split("T")[0];
+    const reason = blockedDateReasonMap.get(currStr);
+    if (reason !== undefined) {
+      return { available: false, blocked: true, overlap: false, reason };
     }
     curr.setDate(curr.getDate() + 1);
   }

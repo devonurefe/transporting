@@ -27,12 +27,16 @@ const availabilityLimiter = rateLimit({
 // Public availability feed used by the booking calendar. It intentionally exposes
 // only the minimum data needed to detect date collisions.
 ordersRouter.get("/availability", availabilityLimiter, async (req: AuthenticatedRequest, res: Response) => {
+  const { machineId } = req.query;
+  if (!machineId || typeof machineId !== "string") {
+    return res.status(400).json({ error: "machineId parameter is verplicht" });
+  }
+
   try {
     const dbOrders = await prisma.order.findMany({
       where: {
-        status: {
-          not: "Geannuleerd"
-        }
+        machineId,
+        status: { not: "Geannuleerd" }
       },
       select: {
         id: true,

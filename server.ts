@@ -40,6 +40,10 @@ app.use(helmet({
     }
   } : false,
   crossOriginEmbedderPolicy: false,
+  hsts: isProd ? { maxAge: 31536000, includeSubDomains: true } : false,
+  frameguard: { action: "deny" },
+  noSniff: true,
+  referrerPolicy: { policy: "strict-origin-when-cross-origin" },
 }));
 // Environment-aware CORS: restrict origins in production
 const corsOptions = process.env.NODE_ENV === "production"

@@ -3,16 +3,45 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from "react";
+import React from "react";
 import { useLanguageStore } from "../store/languageStore";
 import { useAppStore } from "../store/appStore";
 import {
-  Search,
-  ArrowRight,
   MessageCircle,
+  Truck,
+  Tractor,
+  Scissors,
+  MoveVertical,
+  ArrowUpFromLine,
+  Leaf,
+  Columns2,
+  type LucideProps
 } from "lucide-react";
 import { motion } from "motion/react";
 import { buildWhatsAppGeneralUrl } from "../utils/whatsapp";
+
+type IconComponent = React.FC<LucideProps>;
+
+const CATEGORY_ICONS: Record<string, IconComponent> = {
+  aanhanger:    Truck,
+  spin:         Tractor,
+  schaarlift:   Scissors,
+  mastlift:     MoveVertical,
+  ladderlift:   ArrowUpFromLine,
+  ecolift:      Leaf,
+  kamersteiger: Columns2,
+};
+
+const bgClasses = [
+  "from-blue-50 to-indigo-100 border-blue-100",
+  "from-amber-50 to-orange-100 border-amber-100",
+  "from-rose-50 to-pink-100 border-rose-100",
+  "from-teal-50 to-emerald-100 border-teal-100",
+  "from-cyan-50 to-blue-100 border-cyan-100",
+  "from-violet-50 to-purple-100 border-violet-100",
+  "from-emerald-50 to-green-100 border-emerald-100",
+  "from-orange-50 to-amber-100 border-orange-100",
+];
 
 interface HomeSectionProps {
   onSearch: (query: string, category: string) => void;
@@ -36,21 +65,20 @@ interface HomeSectionProps {
   }[];
 }
 
-export default function HomeSection({ 
-  onSearch, 
-  setActiveTab,
+const SKIP_IDS = new Set(["klussensets", "schaarlift-smal", "schaarlift-6m"]);
+
+export default function HomeSection({
+  onSearch,
   customCategories = [
-    { id: "aanhanger", label: "\"Toe & Go\" Aanhangerhoogwerker", listLabel: "\"Toe & Go\" Aanhangerhoogwerkers", desc: "De meest flexibele oplossing die transportkosten elimineert, ideaal voor elke ZZP'er met een trekhaak.", heights: "12m - 17m", price: "v.a. €80/dag" },
-    { id: "spin", label: "Rupshoogwerker", listLabel: "Rupshoogwerkers", desc: "Ideaal voor kwetsbare ondergronden, smalle tuintoegangen en hoge gevelwerkzaamheden.", heights: "15m - 17m", price: "v.a. €160/dag" },
-    { id: "schaarlift", label: "Schaarlift", listLabel: "Schaarliften", desc: "Ideaal voor binnen- en buitengebruik op vlakke ondergronden. Verkrijgbaar in 6m, 8m en 10m werkhoogte. Past door standaard deuren.", heights: "6m - 10m", price: "v.a. €80/dag" },
-    { id: "mastlift", label: "Mastlift", listLabel: "Mastliften", desc: "Verticale mastliften voor snel, efficiënt en compact werk in magazijnen of kantoren.", heights: "5m - 10m", price: "v.a. €75/dag" },
-    { id: "ladderlift", label: "Ladderlift", listLabel: "Ladderliften / Verhuisliften", desc: "Verhuis- en ladderliften voor veilig transport van zware meubels of bouwmaterialen direct via het raam.", heights: "18m - 21m", price: "v.a. €90/dag" },
-    { id: "ecolift", label: "Ecolift", listLabel: "Ecolift", desc: "Milieuvriendelijk en veilig alternatief voor ladders. Geen batterijen of hydrauliek nodig.", heights: "4.2m", price: "v.a. €45/dag" },
-    { id: "klussensets", label: "Kluspakket", listLabel: "Kluspakketten", desc: "Complete kluspakketten speciaal samengesteld voor specifieke ZZP- en particuliere klussen.", heights: "4m - 21m", price: "v.a. €80/dag" }
+    { id: "aanhanger", label: "\"Toe & Go\" Aanhangerhoogwerker", listLabel: "\"Toe & Go\" Aanhangerhoogwerkers", desc: "", heights: "12m - 17m", price: "v.a. €80/dag" },
+    { id: "spin", label: "Rupshoogwerker", listLabel: "Rupshoogwerkers", desc: "", heights: "15m - 17m", price: "v.a. €160/dag" },
+    { id: "schaarlift", label: "Schaarlift", listLabel: "Schaarliften", desc: "", heights: "6m - 10m", price: "v.a. €65/dag" },
+    { id: "mastlift", label: "Mastlift", listLabel: "Mastliften", desc: "", heights: "5m - 10m", price: "v.a. €75/dag" },
+    { id: "kamersteiger", label: "Kamersteiger", listLabel: "Kamersteigers", desc: "", heights: "4m", price: "v.a. €35/dag" },
+    { id: "ladderlift", label: "Ladderlift", listLabel: "Ladderliften / Verhuisliften", desc: "", heights: "18m - 21m", price: "v.a. €90/dag" },
+    { id: "ecolift", label: "Ecolift", listLabel: "Ecolift", desc: "", heights: "4.2m", price: "v.a. €45/dag" },
   ]
 }: HomeSectionProps) {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCat, setSelectedCat] = useState("all");
   const siteConfig = useAppStore((state) => state.siteConfig);
   const language = useLanguageStore((state) => state.language);
   const t = useLanguageStore((state) => state.t);
@@ -59,30 +87,30 @@ export default function HomeSection({
     window.scrollTo(0, 0);
   }, []);
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSearch(searchQuery, selectedCat === "all" ? "" : selectedCat);
-  };
+  const displayCategories = customCategories
+    .filter(c => !SKIP_IDS.has(c.id))
+    .map(c => c.id === "schaarlift"
+      ? { ...c, label: "Schaarliften", listLabel: "Schaarliften", heights: "6m - 10m", price: "v.a. €65/dag" }
+      : c
+    );
 
   return (
     <div>
 
-      {/* ── HERO SECTION — photo background only here ── */}
+      {/* ── HERO SECTION ── */}
       <div
-        className="relative bg-slate-900 bg-cover bg-center bg-no-repeat overflow-hidden px-5 sm:px-6 lg:px-8 pt-12 sm:pt-16 pb-16 sm:pb-20"
+        className="relative bg-slate-900 bg-cover bg-center bg-no-repeat overflow-hidden px-5 sm:px-6 lg:px-8 pt-12 sm:pt-16 pb-14 sm:pb-18"
         style={{ backgroundImage: "url('/hero-bg.jpg')" }}
       >
-        {/* Gradient overlay — only dark enough to read text */}
         <div className="absolute inset-0 bg-gradient-to-b from-slate-900/65 via-slate-800/50 to-slate-900/60 pointer-events-none" />
 
-        <div className="relative z-10 mx-auto max-w-5xl">
+        <div className="relative z-10 mx-auto max-w-2xl text-center">
 
-          {/* Tagline + Title + Subtitle */}
           <motion.div
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="text-center mb-6 sm:mb-8 space-y-3 sm:space-y-4"
+            className="space-y-3 sm:space-y-4"
           >
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-400">
               {t("heroTagline")}
@@ -95,67 +123,69 @@ export default function HomeSection({
             </p>
           </motion.div>
 
-          {/* Search bar */}
-          <motion.form
-            onSubmit={handleSearchSubmit}
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="flex flex-col sm:flex-row items-stretch gap-2 p-1.5 sm:p-2 rounded-2xl border border-white/20 bg-white/10 backdrop-blur-sm shadow-sm max-w-2xl mx-auto"
-          >
-            <div className="flex-1 flex items-center px-3 space-x-2 bg-white/90 rounded-xl">
-              <Search className="h-4.5 w-4.5 text-slate-400 shrink-0" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={language === "nl" && siteConfig.heroTagline ? siteConfig.heroTagline : t("searchPlaceholder")}
-                className="w-full py-3 text-sm bg-transparent outline-none focus:ring-0 text-slate-800 placeholder-slate-400"
-              />
-            </div>
-            <select
-              value={selectedCat}
-              onChange={(e) => setSelectedCat(e.target.value)}
-              className="px-4 py-3 text-xs text-slate-700 font-semibold bg-white rounded-xl border border-white/20 outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer min-w-[140px]"
-            >
-              <option value="all">{t("filterAll")}</option>
-              {customCategories.filter(c => c.id !== "klussensets" && !["schaarlift-smal", "schaarlift-6m"].includes(c.id)).map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.id === "schaarlift" ? "Schaarliften" : (c.listLabel || c.label)}
-                </option>
-              ))}
-            </select>
-            <button
-              type="submit"
-              className="flex items-center justify-center space-x-1.5 font-bold hover:opacity-90 active:scale-97 bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-5 py-3 rounded-xl transition-all font-display border-none cursor-pointer"
-            >
-              <span>{t("searchButton")}</span>
-              <ArrowRight className="h-4 w-4" />
-            </button>
-          </motion.form>
-
           {/* WhatsApp CTA */}
           <motion.div
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="max-w-2xl mx-auto w-full mt-4"
+            transition={{ duration: 0.5, delay: 0.15 }}
+            className="mt-6"
           >
             <a
               href={buildWhatsAppGeneralUrl()}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center space-x-3 w-full py-3.5 px-6 rounded-2xl bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-sm transition-all shadow-md hover:shadow-lg active:scale-[0.98] no-underline"
+              className="inline-flex items-center justify-center space-x-3 w-full max-w-sm mx-auto py-3.5 px-6 rounded-2xl bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-sm transition-all shadow-md hover:shadow-lg active:scale-[0.98] no-underline"
             >
-              <MessageCircle className="h-5 w-5" />
+              <MessageCircle className="h-5 w-5 shrink-0" />
               <span>Direct advies nodig? WhatsApp ons!</span>
             </a>
           </motion.div>
 
-          <p className="text-center text-[10px] text-white/40 font-mono mt-3">
+          <p className="text-center text-[10px] text-white/40 font-mono mt-4">
             Zoeterwoude • TÜV / BMWT Gecertificeerd • Zelf ophalen of bezorgen
           </p>
 
+        </div>
+      </div>
+
+      {/* ── CATEGORY CARDS ── */}
+      <div className="bg-white px-4 sm:px-6 pt-6 pb-10">
+        <div className="max-w-2xl mx-auto grid grid-cols-2 gap-3">
+          {displayCategories.map((cat, i) => {
+            const Icon = CATEGORY_ICONS[cat.id] ?? Truck;
+            const bg = bgClasses[i % bgClasses.length];
+            const isLast = displayCategories.length % 2 !== 0 && i === displayCategories.length - 1;
+
+            return (
+              <motion.button
+                key={cat.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: i * 0.05 }}
+                onClick={() => onSearch("", cat.id)}
+                className={`bg-gradient-to-br ${bg} border rounded-2xl p-4 text-left cursor-pointer hover:shadow-md active:scale-[0.98] transition-all${isLast ? " col-span-2" : ""}`}
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <div className="p-2 bg-white/70 rounded-xl">
+                    <Icon className="h-5 w-5 text-slate-600" />
+                  </div>
+                </div>
+                <p className="font-bold text-sm text-slate-800 leading-snug mb-3">
+                  {cat.listLabel || cat.label}
+                </p>
+                <div className="flex justify-between items-end">
+                  <div>
+                    <p className="text-[9px] font-black uppercase tracking-wider text-slate-400 mb-0.5">Hoogte</p>
+                    <p className="text-xs font-bold text-slate-700">{cat.heights}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[9px] font-black uppercase tracking-wider text-slate-400 mb-0.5">All-in</p>
+                    <p className="text-xs font-bold text-emerald-600">{cat.price}</p>
+                  </div>
+                </div>
+              </motion.button>
+            );
+          })}
         </div>
       </div>
 

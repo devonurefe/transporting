@@ -6,7 +6,8 @@
 import React from "react";
 import { User, Mail, Phone, MapPin, Search, Check, ShieldAlert, ArrowLeft, ArrowRight, X, LogIn } from "lucide-react";
 import { motion } from "motion/react";
-import { UserProfile } from "../../types";
+import { UserProfile, Machine } from "../../types";
+import BookingPriceSummary from "./BookingPriceSummary";
 
 interface BookingStep2Props {
   currentUser: UserProfile | null;
@@ -33,6 +34,12 @@ interface BookingStep2Props {
   setStep: (step: number) => void;
   handleNextStep: () => void;
   setActiveTab?: (tab: string) => void;
+  sums?: {
+    days: number; rawSubtotal: number; subtotal: number; discountAmount: number; discountLabel: string;
+    transport: number; driver: number; addonCost: number; addonDetails: { id: string; name: string; price: number }[];
+    vat: number; total: number; borgsom: number;
+  };
+  selectedMachine?: Machine | null;
 }
 
 export default function BookingStep2({
@@ -59,7 +66,9 @@ export default function BookingStep2({
   setValidationError,
   setStep,
   handleNextStep,
-  setActiveTab
+  setActiveTab,
+  sums,
+  selectedMachine
 }: BookingStep2Props) {
   const [isGuestConfirmed, setIsGuestConfirmed] = React.useState<boolean>(false);
 
@@ -113,6 +122,12 @@ export default function BookingStep2({
             </button>
           </div>
         </div>
+
+        {sums && (
+          <div className="lg:hidden">
+            <BookingPriceSummary selectedMachine={selectedMachine ?? null} sums={sums} />
+          </div>
+        )}
 
         <div className="flex justify-start border-t border-slate-100 pt-4 mt-6">
           <button
@@ -308,6 +323,12 @@ export default function BookingStep2({
         </motion.div>
       )}
 
+      {sums && (
+        <div className="lg:hidden">
+          <BookingPriceSummary selectedMachine={selectedMachine ?? null} sums={sums} />
+        </div>
+      )}
+
       <div className="flex justify-between pt-4 border-t border-slate-200">
         <button
           onClick={() => {
@@ -324,7 +345,7 @@ export default function BookingStep2({
           onClick={handleNextStep}
           className="bg-indigo-650 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-6 py-2.5 rounded-xl transition-all flex items-center space-x-1.5 border-none cursor-pointer shadow-indigo-100"
         >
-          <span>Doorgaan</span>
+          <span>Doorgaan naar betaling</span>
           <ArrowRight className="h-4 w-4" />
         </button>
       </div>

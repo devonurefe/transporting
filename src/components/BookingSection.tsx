@@ -760,12 +760,7 @@ export default function BookingSection({
               className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start"
             >
 
-              {/* Price summary — desktop only sticky right column */}
-              <div className="hidden lg:block lg:col-span-4 lg:sticky lg:top-24 space-y-4">
-                <BookingPriceSummary selectedMachine={cartItems && cartItems.length > 0 ? cartItems[0].machine : null} sums={sums} />
-              </div>
-
-              {/* Form column */}
+              {/* Form column — left on desktop, full-width on mobile */}
               <div className="lg:col-span-8 space-y-6">
 
                 {step === 1 && (
@@ -822,6 +817,8 @@ export default function BookingSection({
                     setStep={setStep}
                     handleNextStep={handleNextStep}
                     setActiveTab={setActiveTab}
+                    sums={sums}
+                    selectedMachine={cartItems.length > 0 ? cartItems[0].machine : null}
                   />
                 )}
 
@@ -834,6 +831,11 @@ export default function BookingSection({
                   />
                 )}
 
+              </div>
+
+              {/* Price summary — desktop only, sticky right column */}
+              <div className="hidden lg:block lg:col-span-4 lg:sticky lg:top-24 space-y-4">
+                <BookingPriceSummary selectedMachine={cartItems && cartItems.length > 0 ? cartItems[0].machine : null} sums={sums} />
               </div>
 
             </motion.div>

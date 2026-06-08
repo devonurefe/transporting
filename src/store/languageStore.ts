@@ -31,9 +31,9 @@ const dictionary: TranslationDictionary = {
   heroTagline: { nl: "Professionele Hoogwerker Verhuur", en: "Professional Aerial Work Platform Rental", tr: "Profesyonel Yüksek Erişim Platformu Kiralama" },
   heroTitle: { nl: "De juiste machine, snel en veilig geregeld.", en: "The right machine, arranged quickly and safely.", tr: "Doğru makine, hızlı ve güvenli şekilde ayarlandı." },
   heroSubtitle: {
-    nl: "HuurGo is er voor ZZP'ers en particulieren. Geen gedoe, direct online geregeld. Vind binnen 1 minuut de perfecte machine voor uw schilderklus, tuinonderhoud of gevelwerk met onze slimme AI-assistent.",
-    en: "HuurGo is for freelancers and individuals. No hassle, arranged directly online. Find the perfect machine for your painting, garden, or facade job within 1 minute with our smart AI assistant.",
-    tr: "HuurGo, serbest çalışanlar ve bireyler içindir. Zahmetsiz, doğrudan çevrimiçi. Akıllı yapay zeka asistanımızla boya, bahçe veya cephe işiniz için 1 dakikada mükemmel makineyi bulun."
+    nl: "MB Hoogwerkers verhuurt hoogwerkers, schaarliften en ladderliften aan ZZP'ers en particulieren. Geen gedoe, direct online geregeld. Kies uw machine en boek eenvoudig via WhatsApp.",
+    en: "MB Hoogwerkers rents aerial work platforms, scissor lifts and ladder lifts to freelancers and individuals. No hassle, arranged directly online. Choose your machine and book easily via WhatsApp.",
+    tr: "MB Hoogwerkers, ZZP'ciler ve bireyler için sepetli platform, makaslı lift ve merdiven asansörü kiralar. Zahmetsiz, doğrudan çevrimiçi. Makinenizi seçin ve WhatsApp üzerinden kolayca rezervasyon yapın."
   },
   searchPlaceholder: { nl: "Waar gaat u werken? (bijv. 15 meter, schilder)", en: "Where will you work? (e.g. 15 meters, painting)", tr: "Nerede çalışacaksınız? (örn. 15 metre, boyacı)" },
   searchButton: { nl: "Zoeken", en: "Search Fleet", tr: "Filoda Ara" },

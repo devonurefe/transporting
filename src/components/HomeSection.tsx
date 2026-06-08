@@ -82,25 +82,33 @@ export default function HomeSection({
   };
 
   return (
-    <div className="relative min-h-[calc(100vh-3.5rem)] py-6 sm:py-8 px-5 sm:px-6 lg:px-8 overflow-hidden">
-      
-      {/* Subtle ambient background */}
-      <div className="absolute top-1/4 left-1/4 h-80 w-80 rounded-full bg-indigo-500/5 blur-[120px] -z-10" />
-      <div className="absolute bottom-1/4 right-1/4 h-80 w-80 rounded-full bg-blue-500/5 blur-[120px] -z-10" />
+    <div className="relative min-h-[calc(100vh-3.5rem)] overflow-hidden">
 
+      {/* Hero background photo */}
+      <div
+        className="absolute inset-0 -z-10 bg-cover bg-center"
+        style={{ backgroundImage: "url('/hero-bg.jpg')" }}
+      />
+      {/* Dark overlay so text stays readable */}
+      <div className="absolute inset-0 -z-10 bg-gradient-to-b from-slate-900/70 via-slate-900/50 to-white/95" />
+
+      <div className="relative px-5 sm:px-6 lg:px-8 py-16 sm:py-20">
       <div className="mx-auto max-w-5xl">
-        
-        {/* COMPACT HERO — Single Focus */}
-        <motion.div 
+
+        {/* HERO — photo background version */}
+        <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="text-center mb-6 sm:mb-8 space-y-2 sm:space-y-3"
+          className="text-center mb-6 sm:mb-8 space-y-3 sm:space-y-4"
         >
-          <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-slate-900">
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-400">
+            {t("heroTagline")}
+          </p>
+          <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-white drop-shadow-md">
             {language === "nl" && siteConfig.heroTitle ? siteConfig.heroTitle : t("heroTitle")}
           </h1>
-          <p className="text-sm sm:text-base text-slate-500 max-w-lg mx-auto">
+          <p className="text-sm sm:text-base text-slate-200 max-w-lg mx-auto leading-relaxed">
             {language === "nl" && siteConfig.heroSubtitle ? siteConfig.heroSubtitle : t("heroSubtitle")}
           </p>
         </motion.div>
@@ -222,6 +230,7 @@ export default function HomeSection({
           </p>
         </div>
 
+      </div>
       </div>
     </div>
   );

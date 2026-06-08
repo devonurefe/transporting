@@ -93,7 +93,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     siteName: "HuurGo",
     heroTagline: "Snel & Makkelijk Hoogwerkers Huren",
     heroTitle: "Wat heeft u nodig?",
-    heroSubtitle: "Kies uw categorie en huur direct. Simpel, snel, all-in.",
+    heroSubtitle: "MB Hoogwerkers verhuurt hoogwerkers, schaarliften en ladderliften aan ZZP'ers en particulieren. Geen gedoe, direct online geregeld.",
     menuHomeLabel: "Home",
     menuCatalogLabel: "Catalogus",
     menuOrdersLabel: "Mijn Account",

@@ -1,5 +1,7 @@
 import { Router, Response } from "express";
 import rateLimit from "express-rate-limit";
+import crypto from "crypto";
+import { Prisma } from "@prisma/client";
 import { prisma } from "../../prisma/client.js";
 import { AuthenticatedRequest, requireAdmin, requireAuth } from "../middleware/auth.js";
 import { emailService } from "../services/emailService.js";
@@ -14,15 +16,27 @@ const orderCreationLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+const availabilityLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 20,
+  message: { error: "Te veel beschikbaarheidsverzoeken. Probeer het over een minuut opnieuw." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 // Public availability feed used by the booking calendar. It intentionally exposes
 // only the minimum data needed to detect date collisions.
-ordersRouter.get("/availability", async (req: AuthenticatedRequest, res: Response) => {
+ordersRouter.get("/availability", availabilityLimiter, async (req: AuthenticatedRequest, res: Response) => {
+  const { machineId } = req.query;
+  if (!machineId || typeof machineId !== "string") {
+    return res.status(400).json({ error: "machineId parameter is verplicht" });
+  }
+
   try {
     const dbOrders = await prisma.order.findMany({
       where: {
-        status: {
-          not: "Geannuleerd"
-        }
+        machineId,
+        status: { not: "Geannuleerd" }
       },
       select: {
         id: true,
@@ -131,95 +145,97 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
   }
 
   try {
-    // Check for date collisions with existing active orders for the same machine
-    const conflictingOrders = await prisma.order.findMany({
-      where: {
-        machineId: orderData.machineId,
-        status: { not: "Geannuleerd" },
-        AND: [
-          { startDate: { lte: endDate } },
-          { endDate: { gte: startDate } }
-        ]
-      }
-    });
-
-    if (conflictingOrders.length > 0) {
-      return res.status(409).json({
-        error: "Deze machine is al gereserveerd in de opgegeven periode",
-        conflictingDates: conflictingOrders.map(o => ({
-          start: o.startDate.toISOString().split("T")[0],
-          end: o.endDate.toISOString().split("T")[0]
-        }))
-      });
+    // Server-side price validation — reject if client price deviates from DB
+    const machine = await prisma.machine.findUnique({ where: { id: orderData.machineId } });
+    if (!machine) {
+      return res.status(404).json({ error: "Machine niet gevonden" });
+    }
+    if (Math.abs(machine.pricePerDay - Number(orderData.machinePrice)) > 0.01) {
+      return res.status(400).json({ error: "Prijs niet actueel. Ververs de pagina en probeer opnieuw." });
     }
 
-    // Check for blocked dates in the requested range
-    const blockedDates = await prisma.blockedDate.findMany({
-      where: {
-        machineId: orderData.machineId,
-        date: { gte: startDate, lte: endDate }
-      }
-    });
-
-    if (blockedDates.length > 0) {
-      return res.status(409).json({
-        error: "De machine is niet beschikbaar op bepaalde datums in de opgegeven periode",
-        blockedDates: blockedDates.map(bd => ({
-          date: bd.date.toISOString().split("T")[0],
-          reason: bd.reason
-        }))
-      });
-    }
-
-    // Resolve customer ID from auth token if present
+    // Resolve customer ID from auth token if present (outside transaction — read-only)
     let resolvedCustomerId: string | null = null;
     if (req.user && req.user.role !== "admin") {
-      const customer = await prisma.customer.findUnique({
-        where: { id: req.user.id }
-      });
-      if (customer) {
-        resolvedCustomerId = req.user.id;
-      }
+      const customer = await prisma.customer.findUnique({ where: { id: req.user.id } });
+      if (customer) resolvedCustomerId = req.user.id;
     }
 
-    // Atomic sequential invoice number (Dutch BTW wetgeving)
-    const counter = await prisma.invoiceCounter.upsert({
-      where: { id: "default" },
-      create: { id: "default", lastNumber: 1 },
-      update: { lastNumber: { increment: 1 } }
-    });
-    const invoiceYear = new Date().getFullYear();
-    const invoiceNumber = `INV-${invoiceYear}-${String(counter.lastNumber).padStart(4, "0")}`;
+    // Serializable transaction: availability check + blocked-date check + create are atomic
+    const newOrder = await prisma.$transaction(async (tx) => {
+      const conflictingOrders = await tx.order.findMany({
+        where: {
+          machineId: orderData.machineId,
+          status: { not: "Geannuleerd" },
+          AND: [
+            { startDate: { lte: endDate } },
+            { endDate: { gte: startDate } }
+          ]
+        }
+      });
 
-    const newOrder = await prisma.order.create({
-      data: {
-        id: `HWH-${Math.floor(1000 + Math.random() * 9000)}`,
-        machineId: orderData.machineId,
-        machineName: orderData.machineName,
-        machinePrice: Number(orderData.machinePrice),
-        startDate: startDate,
-        endDate: endDate,
-        rentalDays: Number(orderData.rentalDays),
-        deliveryType: orderData.deliveryType,
-        deliveryAddress: orderData.deliveryAddress || "",
-        customerName: orderData.customerName,
-        customerEmail: orderData.customerEmail,
-        customerPhone: orderData.customerPhone,
-        customerProfile: orderData.customerProfile || "Particulier",
-        subtotal: Number(orderData.subtotal),
-        transportCost: Number(orderData.transportCost || 0),
-        driverCost: Number(orderData.driverCost || 0),
-        vatAmount: Number(orderData.vatAmount),
-        totalAmount: Number(orderData.totalAmount),
-        status: "In behandeling",
-        customerId: resolvedCustomerId,
-        addons: JSON.stringify(orderData.addons || []),
-        borgsom: Number(orderData.borgsom || 0),
-        borgsomStatus: "pending",
-        invoiceNumber,
-        paymentStatus: "awaiting"
+      if (conflictingOrders.length > 0) {
+        throw Object.assign(new Error("CONFLICT_ORDER"), {
+          conflictingDates: conflictingOrders.map(o => ({
+            start: o.startDate.toISOString().split("T")[0],
+            end: o.endDate.toISOString().split("T")[0]
+          }))
+        });
       }
-    });
+
+      const blocked = await tx.blockedDate.findFirst({
+        where: {
+          machineId: orderData.machineId,
+          date: { gte: startDate, lte: endDate }
+        }
+      });
+
+      if (blocked) {
+        throw Object.assign(new Error("BLOCKED_DATE"), {
+          date: blocked.date.toISOString().split("T")[0],
+          reason: blocked.reason
+        });
+      }
+
+      // Atomic sequential invoice number (Dutch BTW wetgeving)
+      const counter = await tx.invoiceCounter.upsert({
+        where: { id: "default" },
+        create: { id: "default", lastNumber: 1 },
+        update: { lastNumber: { increment: 1 } }
+      });
+      const invoiceYear = new Date().getFullYear();
+      const invoiceNumber = `INV-${invoiceYear}-${String(counter.lastNumber).padStart(4, "0")}`;
+
+      return tx.order.create({
+        data: {
+          id: `HWH-${crypto.randomBytes(4).toString("hex").toUpperCase()}`,
+          machineId: orderData.machineId,
+          machineName: orderData.machineName,
+          machinePrice: machine.pricePerDay,
+          startDate,
+          endDate,
+          rentalDays: Number(orderData.rentalDays),
+          deliveryType: orderData.deliveryType,
+          deliveryAddress: orderData.deliveryAddress || "",
+          customerName: orderData.customerName,
+          customerEmail: orderData.customerEmail,
+          customerPhone: orderData.customerPhone,
+          customerProfile: orderData.customerProfile || "Particulier",
+          subtotal: Number(orderData.subtotal),
+          transportCost: Number(orderData.transportCost || 0),
+          driverCost: Number(orderData.driverCost || 0),
+          vatAmount: Number(orderData.vatAmount),
+          totalAmount: Number(orderData.totalAmount),
+          status: "In behandeling",
+          customerId: resolvedCustomerId,
+          addons: JSON.stringify(orderData.addons || []),
+          borgsom: Number(orderData.borgsom || 0),
+          borgsomStatus: "pending",
+          invoiceNumber,
+          paymentStatus: "awaiting"
+        }
+      });
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
 
     // Trigger transactional emails asynchronously
     const emailData = {
@@ -237,7 +253,19 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
       endDate: newOrder.endDate.toISOString().split("T")[0],
       addons: JSON.parse(newOrder.addons)
     });
-  } catch (error) {
+  } catch (error: any) {
+    if (error?.message === "CONFLICT_ORDER") {
+      return res.status(409).json({
+        error: "Deze machine is al gereserveerd in de opgegeven periode",
+        conflictingDates: error.conflictingDates
+      });
+    }
+    if (error?.message === "BLOCKED_DATE") {
+      return res.status(409).json({
+        error: "De machine is niet beschikbaar op bepaalde datums in de opgegeven periode",
+        blockedDates: [{ date: error.date, reason: error.reason }]
+      });
+    }
     console.error("Error creating order:", error);
     res.status(500).json({ error: "Failed to create order" });
   }

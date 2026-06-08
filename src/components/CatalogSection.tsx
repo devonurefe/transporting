@@ -6,7 +6,6 @@ import {
   Zap,
   Check,
   Search,
-  Sparkles,
   ShoppingBag,
   Info,
   X,
@@ -54,7 +53,6 @@ interface CatalogSectionProps {
   selectedCategory: string;
   setSelectedCategory: (category: string) => void;
   onSelectMachineForBooking: (machine: Machine) => void;
-  aiRecommendedMachineIds: string[]; // Machine IDs suggested by the advisor
   onAddSystemLog?: (type: "login" | "logout" | "signup" | "booking" | "fleet" | "status" | "system", user: string, description: string) => void;
   currentUser?: { name: string } | null;
 }
@@ -67,7 +65,6 @@ export default function CatalogSection({
   selectedCategory,
   setSelectedCategory,
   onSelectMachineForBooking,
-  aiRecommendedMachineIds,
   onAddSystemLog,
   currentUser,
 }: CatalogSectionProps) {
@@ -163,12 +160,6 @@ export default function CatalogSection({
         <div className="mb-6">
           <h1 className="font-display text-xl sm:text-3xl font-extrabold tracking-tight text-slate-900 flex items-center space-x-2">
             <span>Ons Machinepark</span>
-            {aiRecommendedMachineIds.length > 0 && (
-              <span className="flex items-center space-x-1 text-[11px] font-mono uppercase bg-indigo-50 border border-indigo-200 text-indigo-700 px-2.5 py-1 rounded-full animate-pulse ml-2.5">
-                <Sparkles className="h-3 w-3 text-indigo-600" />
-                <span>AI Match Beschikbaar</span>
-              </span>
-            )}
           </h1>
           <p className="text-xs text-slate-500 mt-1 leading-relaxed">
             Professioneel gekeurde en direct leverbare hoogwerkers voor elk type werkzaamheid in heel Nederland.
@@ -253,7 +244,6 @@ export default function CatalogSection({
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <AnimatePresence mode="popLayout">
                 {filteredMachines.map((machine) => {
-                  const isRecommended = aiRecommendedMachineIds.includes(machine.id);
                   return (
                     <motion.div
                       layout
@@ -262,20 +252,10 @@ export default function CatalogSection({
                       exit={{ opacity: 0, scale: 0.95 }}
                       transition={{ duration: 0.22, ease: "easeOut" }}
                       key={machine.id}
-                      className={`group relative overflow-hidden rounded-2xl border bg-white flex flex-col ${
-                        isRecommended
-                          ? "border-indigo-400 shadow-lg ring-1 ring-indigo-400/20"
-                          : "border-slate-200 shadow-sm hover:shadow-md hover:-translate-y-px"
-                      } transition-all duration-200`}
+                      className="group relative overflow-hidden rounded-2xl border bg-white flex flex-col border-slate-200 shadow-sm hover:shadow-md hover:-translate-y-px transition-all duration-200"
                     >
-                      {/* Top-left badge: AI or Stock */}
-                      {isRecommended && (
-                        <div className="absolute top-3 left-3 z-20 flex items-center gap-1 bg-indigo-600 py-0.5 px-2.5 rounded-full text-[9px] font-extrabold uppercase tracking-widest text-white shadow">
-                          <Sparkles className="h-2.5 w-2.5 text-emerald-300" />
-                          AI Geadviseerd
-                        </div>
-                      )}
-                      {!isRecommended && (stockCountByBase[getBaseName(machine.name)] ?? 1) > 1 && (
+                      {/* Top-left badge: Stock */}
+                      {(stockCountByBase[getBaseName(machine.name)] ?? 1) > 1 && (
                         <div className="absolute top-3 left-3 z-20 bg-emerald-600 py-0.5 px-2.5 rounded-full text-[9px] font-extrabold uppercase tracking-widest text-white shadow">
                           {stockCountByBase[getBaseName(machine.name)]}× voorraad
                         </div>

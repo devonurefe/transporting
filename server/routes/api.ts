@@ -3,7 +3,6 @@ import { machinesRouter } from "./machines.js";
 import { ordersRouter } from "./orders.js";
 import { blockedDatesRouter } from "./blockedDates.js";
 import { siteConfigRouter } from "./siteConfig.js";
-import { geminiRouter } from "./gemini.js";
 import { prisma } from "../../prisma/client.js";
 import { requireAdmin } from "../middleware/auth.js";
 
@@ -19,7 +18,6 @@ apiRouter.get("/health", async (req, res) => {
       timestamp: new Date().toISOString(),
       services: {
         database: "connected",
-        gemini: (process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== "MY_GEMINI_API_KEY") ? "configured" : "unconfigured"
       }
     });
   } catch (error) {
@@ -36,7 +34,6 @@ apiRouter.use("/machines", machinesRouter);
 apiRouter.use("/orders", ordersRouter);
 apiRouter.use("/blocked-dates", blockedDatesRouter);
 apiRouter.use("/", siteConfigRouter);
-apiRouter.use("/gemini", geminiRouter);
 
 import fs from "fs";
 import path from "path";

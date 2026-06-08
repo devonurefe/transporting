@@ -86,6 +86,29 @@ export default function MyOrdersSection({
   const [resendEmailAddress, setResendEmailAddress] = useState<string | null>(null);
   const [isResending, setIsResending] = useState(false);
 
+  // Forgot password state
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotSent, setForgotSent] = useState(false);
+  const [isSendingReset, setIsSendingReset] = useState(false);
+  const [forgotError, setForgotError] = useState<string | null>(null);
+
+  // Check URL for password reset token
+  const [resetToken, setResetToken] = useState<string | null>(null);
+  const [newPassword, setNewPassword] = useState("");
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
+  const [resetSuccess, setResetSuccess] = useState(false);
+  const [resetError, setResetError] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("reset_token");
+    if (token) {
+      setResetToken(token);
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
+
   const { login, register, updateProfile, resendVerification, logout } = useAuthStore();
 
 
@@ -272,6 +295,55 @@ export default function MyOrdersSection({
     }
   };
 
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!forgotEmail.trim()) return;
+    setIsSendingReset(true);
+    setForgotError(null);
+    try {
+      const res = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: forgotEmail.trim() })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setForgotSent(true);
+      } else {
+        setForgotError(data.error || "Er is een fout opgetreden.");
+      }
+    } catch {
+      setForgotError("Netwerkfout. Probeer opnieuw.");
+    } finally {
+      setIsSendingReset(false);
+    }
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newPassword.trim() || !resetToken) return;
+    setIsResettingPassword(true);
+    setResetError(null);
+    try {
+      const res = await fetch("/api/auth/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: resetToken, newPassword: newPassword.trim() })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setResetSuccess(true);
+        setResetToken(null);
+      } else {
+        setResetError(data.error || "Er is een fout opgetreden.");
+      }
+    } catch {
+      setResetError("Netwerkfout. Probeer opnieuw.");
+    } finally {
+      setIsResettingPassword(false);
+    }
+  };
+
   const handleManualRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!regName.trim() || !regEmail.trim() || !regPassword.trim()) {
@@ -331,8 +403,52 @@ export default function MyOrdersSection({
           </div>
 
           <div className="flex justify-center items-start">
-            
+
+            {/* Password reset form (when reset_token is in URL) */}
+            {resetToken && !resetSuccess && (
+              <div className="w-full max-w-lg bg-white border border-slate-200 shadow-sm p-6 sm:p-8 rounded-3xl space-y-5">
+                <h2 className="text-base font-extrabold text-slate-900">Nieuw Wachtwoord Instellen</h2>
+                <form onSubmit={handleResetPassword} className="space-y-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-slate-600 block font-semibold">Nieuw Wachtwoord</label>
+                    <div className="relative flex items-center bg-white rounded-xl border border-slate-200 px-3 py-2.5 focus-within:border-indigo-500 shadow-sm">
+                      <Lock className="h-4 w-4 text-slate-400 shrink-0 mr-2.5" />
+                      <input
+                        type="password"
+                        required
+                        minLength={6}
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="Minimaal 6 tekens"
+                        className="w-full text-xs bg-transparent border-none outline-none text-slate-800 placeholder-slate-400 font-medium"
+                      />
+                    </div>
+                  </div>
+                  {resetError && <p className="text-xs text-rose-600 font-semibold">{resetError}</p>}
+                  <button
+                    type="submit"
+                    disabled={isResettingPassword}
+                    className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-bold text-xs rounded-xl transition-all cursor-pointer border-none"
+                  >
+                    {isResettingPassword ? "Opslaan..." : "Wachtwoord Opslaan"}
+                  </button>
+                </form>
+              </div>
+            )}
+
+            {resetSuccess && (
+              <div className="w-full max-w-lg bg-white border border-slate-200 shadow-sm p-8 rounded-3xl text-center space-y-4">
+                <CheckCircle className="h-10 w-10 text-emerald-500 mx-auto" />
+                <h2 className="text-base font-extrabold text-slate-900">Wachtwoord Gewijzigd!</h2>
+                <p className="text-xs text-slate-500">U kunt nu inloggen met uw nieuwe wachtwoord.</p>
+                <button onClick={() => setResetSuccess(false)} className="text-xs text-indigo-600 underline underline-offset-2 bg-transparent border-none cursor-pointer">
+                  Naar inloggen
+                </button>
+              </div>
+            )}
+
             {/* Login form */}
+            {!resetToken && !resetSuccess && (
             <div className="w-full max-w-lg bg-white border border-slate-200 shadow-sm p-6 sm:p-8 rounded-3xl space-y-6">
               <div className="flex border-b border-slate-200 pb-1">
                 <button
@@ -407,6 +523,71 @@ export default function MyOrdersSection({
                     <CheckCircle className="h-4 w-4 text-emerald-450" />
                     <span>Beveiligd Inloggen</span>
                   </button>
+
+                  <div className="text-center">
+                    <button
+                      type="button"
+                      onClick={() => { setIsForgotPassword(true); setForgotSent(false); setForgotError(null); setForgotEmail(loginEmail); }}
+                      className="text-[11px] text-slate-500 hover:text-indigo-600 underline underline-offset-2 transition-colors bg-transparent border-none cursor-pointer"
+                    >
+                      Wachtwoord vergeten?
+                    </button>
+                  </div>
+
+                  {isForgotPassword && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="bg-indigo-50 border border-indigo-100 rounded-2xl p-4 space-y-3"
+                    >
+                      {!forgotSent ? (
+                        <>
+                          <p className="text-[11px] text-indigo-800 font-semibold">Voer uw e-mailadres in om een resetlink te ontvangen.</p>
+                          <div className="relative flex items-center bg-white rounded-xl border border-slate-200 px-3 py-2.5 focus-within:border-indigo-500 shadow-sm">
+                            <Mail className="h-4 w-4 text-slate-400 shrink-0 mr-2.5" />
+                            <input
+                              type="email"
+                              value={forgotEmail}
+                              onChange={(e) => setForgotEmail(e.target.value)}
+                              placeholder="uw@emailadres.nl"
+                              className="w-full text-xs bg-transparent border-none outline-none text-slate-800 placeholder-slate-400 font-medium"
+                            />
+                          </div>
+                          {forgotError && <p className="text-[11px] text-rose-600 font-semibold">{forgotError}</p>}
+                          <div className="flex space-x-2">
+                            <button
+                              type="button"
+                              onClick={handleForgotPassword}
+                              disabled={isSendingReset || !forgotEmail.trim()}
+                              className="flex-1 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold text-xs rounded-xl transition-all cursor-pointer border-none"
+                            >
+                              {isSendingReset ? "Verzenden..." : "Resetlink Sturen"}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setIsForgotPassword(false)}
+                              className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs rounded-xl transition-all cursor-pointer border-none"
+                            >
+                              Annuleren
+                            </button>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="text-center space-y-2">
+                          <CheckCircle className="h-8 w-8 text-emerald-500 mx-auto" />
+                          <p className="text-xs text-slate-700 font-semibold">Controleer uw inbox!</p>
+                          <p className="text-[11px] text-slate-500">Als het e-mailadres bekend is, ontvangt u een resetlink.</p>
+                          <button
+                            type="button"
+                            onClick={() => { setIsForgotPassword(false); setForgotSent(false); }}
+                            className="text-[11px] text-indigo-600 underline underline-offset-2 bg-transparent border-none cursor-pointer"
+                          >
+                            Terug naar inloggen
+                          </button>
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
 
                   {resendEmailAddress && (
                     <motion.div 
@@ -528,6 +709,7 @@ export default function MyOrdersSection({
                 </form>
               )}
             </div>
+            )}
 
           </div>
 

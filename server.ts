@@ -40,6 +40,10 @@ app.use(helmet({
     }
   } : false,
   crossOriginEmbedderPolicy: false,
+  hsts: isProd ? { maxAge: 31536000, includeSubDomains: true } : false,
+  frameguard: { action: "deny" },
+  noSniff: true,
+  referrerPolicy: { policy: "strict-origin-when-cross-origin" },
 }));
 // Environment-aware CORS: restrict origins in production
 const corsOptions = process.env.NODE_ENV === "production"
@@ -57,14 +61,6 @@ const limiter = rateLimit({
   message: { error: "Te veel verzoeken van dit IP. Probeer het later opnieuw." }
 });
 app.use("/api/", limiter);
-
-// Stricter rate limit for AI endpoints (10 requests per minute to control cost)
-const geminiLimiter = rateLimit({
-  windowMs: 60 * 1000,
-  max: 10,
-  message: { error: "Te veel AI-verzoeken. Probeer het over een minuut opnieuw." }
-});
-app.use("/api/gemini/", geminiLimiter);
 
 // Stricter rate limit for Auth endpoints (10 requests per 15 minutes to protect against brute-force)
 const authLimiter = rateLimit({
@@ -106,7 +102,7 @@ async function startServer() {
   app.listen(PORT, "0.0.0.0", () => {
     console.log(`\n======================================================`);
     console.log(`🚀 HuurGo Server Running on http://localhost:${PORT}`);
-    console.log(`🤖 Serving full-stack React SPA with Dutch AI Advisor`);
+    console.log(`📦 Serving full-stack React SPA`);
     console.log(`======================================================`);
 
     // Diagnostics checks
@@ -118,14 +114,6 @@ async function startServer() {
       console.log(`⚠️  [JWT_SECRET]: USING DEVELOPMENT DEFAULT KEY. Please set a secure key in production.`);
     } else {
       console.log(`✅ [JWT_SECRET]: Configured securely.`);
-    }
-
-    // Gemini API Key Check
-    const geminiKey = process.env.GEMINI_API_KEY;
-    if (!geminiKey || geminiKey === "MY_GEMINI_API_KEY" || geminiKey === "") {
-      console.log(`⚠️  [GEMINI_API_KEY]: UNCONFIGURED. AI Advisor will operate in mock fallback mode.`);
-    } else {
-      console.log(`✅ [GEMINI_API_KEY]: Configured successfully.`);
     }
 
     // Resend API Key Check

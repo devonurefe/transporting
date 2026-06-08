@@ -30,6 +30,22 @@ interface EmailOrderData {
   status: string;
 }
 
+type EmailPayload = Parameters<NonNullable<typeof resend>["emails"]["send"]>[0];
+
+async function sendWithRetry(payload: EmailPayload, retries = 3): Promise<boolean> {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const { error } = await resend!.emails.send(payload);
+      if (error) throw error;
+      return true;
+    } catch (err) {
+      if (attempt < retries) await new Promise(r => setTimeout(r, attempt * 2000));
+    }
+  }
+  console.error("[EmailService] Permanently failed after", retries, "attempts:", payload.to);
+  return false;
+}
+
 export const emailService = {
   /**
    * Send Order Confirmation Email to the Customer
@@ -127,25 +143,12 @@ export const emailService = {
       return true;
     }
 
-    try {
-      const { data, error } = await resend.emails.send({
-        from: SENDER_EMAIL,
-        to: order.customerEmail,
-        subject: `Bevestiging van uw reservering ${order.id} - HuurGo`,
-        html: htmlContent,
-      });
-
-      if (error) {
-        console.error("[EmailService] Resend API error:", error);
-        return false;
-      }
-
-      console.log("[EmailService] Email sent successfully via Resend:", data?.id);
-      return true;
-    } catch (e) {
-      console.error("[EmailService] Failed to send email via Resend:", e);
-      return false;
-    }
+    return sendWithRetry({
+      from: SENDER_EMAIL,
+      to: order.customerEmail,
+      subject: `Bevestiging van uw reservering ${order.id} - HuurGo`,
+      html: htmlContent,
+    });
   },
 
   /**
@@ -221,25 +224,12 @@ export const emailService = {
       return true;
     }
 
-    try {
-      const { data, error } = await resend.emails.send({
-        from: SENDER_EMAIL,
-        to: ADMIN_ALERT_EMAIL,
-        subject: `🚨 Nieuwe Reservering ${order.id} - €${order.totalAmount.toFixed(2)} - ${order.customerName}`,
-        html: htmlContent,
-      });
-
-      if (error) {
-        console.error("[EmailService] Resend Admin alert error:", error);
-        return false;
-      }
-
-      console.log("[EmailService] Admin alert sent successfully:", data?.id);
-      return true;
-    } catch (e) {
-      console.error("[EmailService] Failed to send admin alert email:", e);
-      return false;
-    }
+    return sendWithRetry({
+      from: SENDER_EMAIL,
+      to: ADMIN_ALERT_EMAIL,
+      subject: `🚨 Nieuwe Reservering ${order.id} - €${order.totalAmount.toFixed(2)} - ${order.customerName}`,
+      html: htmlContent,
+    });
   },
 
   /**
@@ -344,25 +334,12 @@ export const emailService = {
       return true;
     }
 
-    try {
-      const { data, error } = await resend.emails.send({
-        from: SENDER_EMAIL,
-        to: order.customerEmail,
-        subject: `Update van uw reservering ${order.id}: ${order.status} - HuurGo`,
-        html: htmlContent,
-      });
-
-      if (error) {
-        console.error("[EmailService] Resend status update error:", error);
-        return false;
-      }
-
-      console.log("[EmailService] Status update email sent successfully:", data?.id);
-      return true;
-    } catch (e) {
-      console.error("[EmailService] Failed to send status update email:", e);
-      return false;
-    }
+    return sendWithRetry({
+      from: SENDER_EMAIL,
+      to: order.customerEmail,
+      subject: `Update van uw reservering ${order.id}: ${order.status} - HuurGo`,
+      html: htmlContent,
+    });
   },
 
   /**
@@ -434,25 +411,12 @@ export const emailService = {
       return true;
     }
 
-    try {
-      const { data, error } = await resend.emails.send({
-        from: SENDER_EMAIL,
-        to: customer.email,
-        subject: "Activeer uw HuurGo account",
-        html: htmlContent,
-      });
-
-      if (error) {
-        console.error("[EmailService] Resend Verification API error:", error);
-        return false;
-      }
-
-      console.log("[EmailService] Verification email sent successfully:", data?.id);
-      return true;
-    } catch (e) {
-      console.error("[EmailService] Failed to send verification email:", e);
-      return false;
-    }
+    return sendWithRetry({
+      from: SENDER_EMAIL,
+      to: customer.email,
+      subject: "Activeer uw HuurGo account",
+      html: htmlContent,
+    });
   },
 
   /**
@@ -511,20 +475,12 @@ export const emailService = {
       return true;
     }
 
-    try {
-      const { data, error } = await resend.emails.send({
-        from: SENDER_EMAIL,
-        to: order.customerEmail,
-        subject: `Herinnering: Uw hoogwerker ${order.machineName} is morgen klaar — ${order.id}`,
-        html: htmlContent
-      });
-      if (error) { console.error("[EmailService] Reminder email error:", error); return false; }
-      console.log("[EmailService] Rental reminder sent:", data?.id);
-      return true;
-    } catch (e) {
-      console.error("[EmailService] Failed to send rental reminder:", e);
-      return false;
-    }
+    return sendWithRetry({
+      from: SENDER_EMAIL,
+      to: order.customerEmail,
+      subject: `Herinnering: Uw hoogwerker ${order.machineName} is morgen klaar — ${order.id}`,
+      html: htmlContent
+    });
   },
 
   /**
@@ -571,19 +527,69 @@ export const emailService = {
       return true;
     }
 
-    try {
-      const { data, error } = await resend.emails.send({
-        from: SENDER_EMAIL,
-        to: order.customerEmail,
-        subject: `Borgsom € ${borgsom.toFixed(2)} teruggestort — Reservering ${order.id}`,
-        html: htmlContent
-      });
-      if (error) { console.error("[EmailService] Borgsom email error:", error); return false; }
-      console.log("[EmailService] Borgsom refund email sent:", data?.id);
+    return sendWithRetry({
+      from: SENDER_EMAIL,
+      to: order.customerEmail,
+      subject: `Borgsom € ${borgsom.toFixed(2)} teruggestort — Reservering ${order.id}`,
+      html: htmlContent
+    });
+  },
+
+  /**
+   * Send password reset link to customer
+   */
+  sendPasswordResetEmail: async (email: string, name: string, token: string, appUrl: string) => {
+    const resetUrl = `${appUrl}/orders?reset_token=${token}`;
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Wachtwoord Resetten - HuurGo</title>
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f8fafc; color: #1e293b; margin: 0; padding: 20px; }
+          .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 24px; border: 1px solid #e2e8f0; overflow: hidden; }
+          .header { background: linear-gradient(135deg, #4f46e5, #3b82f6); padding: 40px 30px; text-align: center; color: #ffffff; }
+          .header h1 { margin: 0; font-size: 24px; font-weight: 800; }
+          .content { padding: 40px 30px; text-align: center; }
+          .btn { display: inline-block; background: #4f46e5; color: #ffffff !important; text-decoration: none; padding: 14px 35px; border-radius: 12px; font-weight: bold; font-size: 14px; margin: 24px 0; }
+          .link-fallback { font-size: 11px; color: #64748b; word-break: break-all; margin-top: 20px; padding: 12px; background: #f8fafc; border-radius: 8px; border: 1px solid #edf2f7; text-align: left; }
+          .footer { background: #f1f5f9; padding: 20px 30px; text-align: center; font-size: 11px; color: #64748b; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header"><h1>HuurGo</h1><p>Wachtwoord resetten</p></div>
+          <div class="content">
+            <p style="text-align:left;">Beste <strong>${name}</strong>,</p>
+            <p style="text-align:left; font-size:13px; color:#475569; line-height:1.6;">
+              U heeft een aanvraag ingediend om uw wachtwoord te resetten. Klik op de knop hieronder om een nieuw wachtwoord in te stellen. De link is 1 uur geldig.
+            </p>
+            <a href="${resetUrl}" class="btn">Nieuw Wachtwoord Instellen</a>
+            <p style="font-size:12px; color:#94a3b8;">Heeft u dit niet aangevraagd? Dan kunt u deze e-mail negeren.</p>
+            <div class="link-fallback">
+              <strong>Werkt de knop niet?</strong><br/>
+              <a href="${resetUrl}" style="color:#4f46e5;">${resetUrl}</a>
+            </div>
+          </div>
+          <div class="footer">© ${new Date().getFullYear()} HuurGo B.V. • BMWT-gecertificeerd verhuurnetwerk</div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    console.log(`[EmailService] Sending password reset email to ${email}`);
+
+    if (!resend) {
+      console.log(`[EmailService] [MOCK] Password reset email simulated. Reset URL: ${resetUrl}`);
       return true;
-    } catch (e) {
-      console.error("[EmailService] Failed to send borgsom email:", e);
-      return false;
     }
+
+    return sendWithRetry({
+      from: SENDER_EMAIL,
+      to: email,
+      subject: "Wachtwoord resetten - HuurGo",
+      html: htmlContent
+    });
   }
 };

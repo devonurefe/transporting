@@ -46,7 +46,6 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
   const [isUploading, setIsUploading] = useState(false);
   const [additionalImages, setAdditionalImages] = useState<string[]>([]);
   const [isUploadingAdditional, setIsUploadingAdditional] = useState(false);
-  const [isAutofilling, setIsAutofilling] = useState(false);
   const [packageContents, setPackageContents] = useState("");
 
   const handleAdditionalImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -118,65 +117,6 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
       alert(t("Fout bij uploaden afbeelding.", "Error uploading image.", "Resim yükleme hatası."));
     } finally {
       setIsUploading(false);
-    }
-  };
-
-  const handleAIAutofill = async () => {
-    if (!newName.trim()) return;
-
-    setIsAutofilling(true);
-    try {
-      const token = localStorage.getItem("hwh_admin_token") || localStorage.getItem("hwh_token");
-      const res = await fetch("/api/gemini/autofill", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {})
-        },
-        body: JSON.stringify({ machineName: newName })
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        if (data.category) setNewCategory(data.category);
-        if (data.height !== undefined) setNewHeight(String(data.height));
-        if (data.reach !== undefined) setNewReach(String(data.reach));
-        if (data.weight !== undefined) setNewWeight(String(data.weight));
-        if (data.pricePerDay !== undefined) setNewPrice(String(data.pricePerDay));
-        if (data.powerType) setNewPower(data.powerType);
-        if (data.description) setNewDescription(data.description);
-        if (data.packageContents) setPackageContents(data.packageContents);
-        if (data.suitableFor && Array.isArray(data.suitableFor)) {
-          setSuitableInput(data.suitableFor.join(", "));
-        }
-        if (data.imageUrl) setImageUrl(data.imageUrl);
-
-        onAddSystemLog(
-          "fleet",
-          "Onur (Bedrijfseigenaar)",
-          t(
-            `AI Autofill succesvol toegepast voor model: "${newName}".`,
-            `AI Autofill successfully applied for model: "${newName}".`,
-            `AI Otomatik Doldurma şu model için başarıyla uygulandı: "${newName}".`
-          )
-        );
-      } else {
-        const errData = await res.json().catch(() => ({}));
-        alert(t(
-          "AI Autofill mislukt: " + (errData.error || "Onbekende fout"),
-          "AI Autofill failed: " + (errData.error || "Unknown error"),
-          "AI Otomatik Doldurma başarısız: " + (errData.error || "Bilinmeyen hata")
-        ));
-      }
-    } catch (err: any) {
-      console.error(err);
-      alert(t(
-        "Fout tijdens verbinding met Gemini AI.",
-        "Error connecting to Gemini AI.",
-        "Gemini AI ile bağlantı hatası."
-      ));
-    } finally {
-      setIsAutofilling(false);
     }
   };
 
@@ -309,26 +249,6 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
           <div className="space-y-1">
             <div className="flex justify-between items-center h-5">
               <label className="text-xs text-slate-700 block font-bold">{t("Titel / Modelnaam", "Title / Model name", "Başlık / Model Adı")}</label>
-              {newName.trim() && (
-                <button
-                  type="button"
-                  onClick={handleAIAutofill}
-                  disabled={isAutofilling}
-                  className="text-[10px] text-amber-800 bg-amber-100 hover:bg-amber-200 active:scale-95 disabled:opacity-50 px-2 py-0.5 rounded-lg font-bold flex items-center space-x-1 transition-all cursor-pointer border border-amber-300 shadow-xs"
-                >
-                  {isAutofilling ? (
-                    <>
-                      <div className="h-3 w-3 border-2 border-amber-800 border-t-transparent rounded-full animate-spin mr-1" />
-                      <span>{t("AI Laden...", "AI Loading...", "AI Yükleniyor...")}</span>
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="h-3 w-3 mr-0.5 text-amber-700 animate-pulse" />
-                      <span>{t("Gemini AI ile Doldur", "Fill with Gemini AI", "Gemini AI ile Doldur")}</span>
-                    </>
-                  )}
-                </button>
-              )}
             </div>
             <input
               type="text"

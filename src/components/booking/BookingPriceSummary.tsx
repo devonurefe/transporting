@@ -21,7 +21,6 @@ interface BookingPriceSummaryProps {
     addonDetails: { id: string; name: string; price: number }[];
     vat: number;
     total: number;
-    borgsom: number;
     deliveryType?: string;
   };
 }
@@ -131,16 +130,6 @@ export default function BookingPriceSummary({ selectedMachine, sums }: BookingPr
           </div>
         </div>
 
-        {/* Borgsom */}
-        {sums.borgsom > 0 && (
-          <div className="bg-amber-50 border border-amber-100 -mx-4 px-4 py-3 space-y-1">
-            <div className="flex justify-between items-center">
-              <span className="text-xs font-bold text-amber-800">Waarborgsom</span>
-              <span className="text-xs font-bold font-mono text-amber-800">€ {sums.borgsom.toFixed(0)}</span>
-            </div>
-            <p className="text-[10px] text-amber-600 leading-snug">Volledig teruggestort na onbeschadigde retour.</p>
-          </div>
-        )}
 
       </div>
 

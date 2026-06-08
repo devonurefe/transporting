@@ -42,7 +42,16 @@ export default function App() {
   const location = useLocation();
 
   const activeTab = location.pathname === "/" ? "home" : location.pathname.substring(1);
+
+  // Search parameters pre-filled from landing page search submit
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+
   const setActiveTab = (tab: string) => {
+    if (tab === "catalog") {
+      setSelectedCategory("all");
+      setSearchQuery("");
+    }
     navigate(tab === "home" ? "/" : `/${tab}`);
   };
 
@@ -173,10 +182,6 @@ export default function App() {
   };
   
   const [showContactModal, setShowContactModal] = useState<boolean>(false);
-
-  // Search parameters pre-filled from landing page search submit
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("all");
 
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
 
@@ -317,6 +322,7 @@ export default function App() {
   const handleLandingPageSearch = (query: string, category: string) => {
     setSearchQuery(query);
     setSelectedCategory(category || "all");
+    navigate("/catalog");
   };
 
   // Action: Select machine for booking & support cart

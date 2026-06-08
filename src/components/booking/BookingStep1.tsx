@@ -28,7 +28,7 @@ interface BookingStep1Props {
   sums?: {
     days: number; rawSubtotal: number; subtotal: number; discountAmount: number; discountLabel: string;
     transport: number; driver: number; addonCost: number; addonDetails: { id: string; name: string; price: number }[];
-    vat: number; total: number; borgsom: number; deliveryType?: string;
+    vat: number; total: number; deliveryType?: string;
   };
   selectedMachine?: Machine | null;
 }
@@ -184,7 +184,7 @@ export default function BookingStep1({
 
       {/* Logistical preference setup */}
       <div className="space-y-3.5 pt-4 border-t border-slate-200">
-        <span className="text-xs text-slate-605 text-slate-600 font-bold uppercase tracking-wider font-mono">Selecteer Logistieke Methode</span>
+        <span className="text-xs text-slate-600 font-bold uppercase tracking-wider font-mono">Transport Opties</span>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Opt 1 — Wij bezorgen */}
@@ -201,7 +201,7 @@ export default function BookingStep1({
                 <Truck className="h-4 w-4 text-indigo-600" />
               </span>
               <div>
-                <h4 className="text-xs font-bold text-slate-900">Wij bezorgen</h4>
+                <h4 className="text-xs font-bold text-slate-900"><span className="text-indigo-500 font-mono">Optie 1 · </span>Wij bezorgen</h4>
                 <span className="text-[9.5px] text-slate-400 block font-mono">Binnen 20 km straal</span>
               </div>
             </div>
@@ -228,7 +228,7 @@ export default function BookingStep1({
                 <Truck className="h-4 w-4 text-amber-600" />
               </span>
               <div>
-                <h4 className="text-xs font-bold text-slate-900">Onze aanhanger huren</h4>
+                <h4 className="text-xs font-bold text-slate-900"><span className="text-amber-500 font-mono">Optie 2 · </span>Onze aanhanger huren</h4>
                 <span className="text-[9.5px] text-slate-400 block font-mono">Eigen auto, onze aanhanger</span>
               </div>
             </div>
@@ -255,7 +255,7 @@ export default function BookingStep1({
                 <Building2 className="h-4 w-4 text-teal-600" />
               </span>
               <div>
-                <h4 className="text-xs font-bold text-slate-900">Zelf ophalen</h4>
+                <h4 className="text-xs font-bold text-slate-900"><span className="text-teal-500 font-mono">Optie 3 · </span>Zelf ophalen</h4>
                 <span className="text-[9.5px] text-slate-400 block font-mono">Nifty 120 / Nifty 170</span>
               </div>
             </div>

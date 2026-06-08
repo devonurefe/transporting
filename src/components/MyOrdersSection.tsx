@@ -913,19 +913,6 @@ export default function MyOrdersSection({
                             € {o.totalAmount.toFixed(2)}
                           </div>
                           <span className="text-[9px] text-slate-400 font-semibold block">Inclusief 21% BTW & logistiek</span>
-                          {o.borgsom && o.borgsom > 0 && (
-                            <div className="mt-1.5 text-right">
-                              <span className={`text-[9px] font-mono px-2 py-0.5 rounded-full font-bold inline-block ${
-                                o.borgsomStatus === "returned" ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                                : o.borgsomStatus === "withheld" ? "bg-rose-50 text-rose-700 border border-rose-200"
-                                : "bg-amber-50 text-amber-700 border border-amber-200"
-                              }`}>
-                                {o.borgsomStatus === "returned" ? "✅ Borg teruggestort"
-                                : o.borgsomStatus === "withheld" ? "🔴 Borg ingehouden"
-                                : `🟡 Borg € ${o.borgsom.toFixed(2)} in behandeling`}
-                              </span>
-                            </div>
-                          )}
                         </div>
                       </div>
 

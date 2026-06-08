@@ -37,7 +37,7 @@ interface BookingStep2Props {
   sums?: {
     days: number; rawSubtotal: number; subtotal: number; discountAmount: number; discountLabel: string;
     transport: number; driver: number; addonCost: number; addonDetails: { id: string; name: string; price: number }[];
-    vat: number; total: number; borgsom: number; deliveryType?: string;
+    vat: number; total: number; deliveryType?: string;
   };
   selectedMachine?: Machine | null;
 }

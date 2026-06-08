@@ -106,8 +106,6 @@ model Order {
   createdAt       DateTime  @default(now())
   customerId      String?
   addons          String
-  borgsom         Float     @default(0)
-  borgsomStatus   String    @default("pending")
   invoiceNumber   String?
   paymentStatus   String    @default("awaiting")
   customer        Customer? @relation(fields: [customerId], references: [id])

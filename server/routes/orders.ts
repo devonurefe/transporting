@@ -16,9 +16,17 @@ const orderCreationLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+const availabilityLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 20,
+  message: { error: "Te veel beschikbaarheidsverzoeken. Probeer het over een minuut opnieuw." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 // Public availability feed used by the booking calendar. It intentionally exposes
 // only the minimum data needed to detect date collisions.
-ordersRouter.get("/availability", async (req: AuthenticatedRequest, res: Response) => {
+ordersRouter.get("/availability", availabilityLimiter, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const dbOrders = await prisma.order.findMany({
       where: {

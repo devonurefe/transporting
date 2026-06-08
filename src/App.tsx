@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect, useCallback, lazy, Suspense } from "react";
-import { Loader2, ArrowUp, Sparkles, MessageCircle } from "lucide-react";
+import { Loader2, ArrowUp, MessageCircle } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import Header from "./components/Header";
@@ -12,7 +12,7 @@ import Footer from "./components/Footer";
 import ContactModal from "./components/ContactModal";
 import PWAInstallBanner from "./components/PWAInstallBanner";
 import ToastNotification from "./components/ToastNotification";
-import { Machine, Order, AppNotification, ChatMessage, UserProfile, CartItem } from "./types";
+import { Machine, Order, AppNotification, UserProfile, CartItem } from "./types";
 import { useAuthStore } from "./store/authStore";
 import { useAppStore } from "./store/appStore";
 import { buildWhatsAppGeneralUrl } from "./utils/whatsapp";
@@ -21,7 +21,6 @@ import { buildWhatsAppGeneralUrl } from "./utils/whatsapp";
 // Dynamic Code Splitting (React.lazy)
 const HomeSection = lazy(() => import("./components/HomeSection"));
 const CatalogSection = lazy(() => import("./components/CatalogSection"));
-const AdvisorSection = lazy(() => import("./components/AdvisorSection"));
 const BookingSection = lazy(() => import("./components/BookingSection"));
 const AdminSection = lazy(() => import("./components/AdminSection"));
 const MyOrdersSection = lazy(() => import("./components/MyOrdersSection"));
@@ -72,18 +71,6 @@ export default function App() {
   const [isAdminMode, setIsAdminModeState] = useState<boolean>(() => {
     return localStorage.getItem("hwh_admin_mode") === "true";
   });
-
-  const [isGeminiEnabled, setIsGeminiEnabled] = useState<boolean>(false);
-  useEffect(() => {
-    fetch("/api/health")
-      .then((res) => (res.ok ? res.json() : {}))
-      .then((data: any) => {
-        if (data?.services?.gemini === "configured") {
-          setIsGeminiEnabled(true);
-        }
-      })
-      .catch(() => {});
-  }, []);
 
   const setIsAdminMode = useCallback((val: boolean) => {
     localStorage.setItem("hwh_admin_mode", String(val));
@@ -185,8 +172,6 @@ export default function App() {
     useAppStore.getState().updateCategories(next);
   };
   
-  // Highlighting state: keeps track of machine IDs suggested by the AI advisor
-  const [aiRecommendedMachineIds, setAiRecommendedMachineIds] = useState<string[]>([]);
   const [showContactModal, setShowContactModal] = useState<boolean>(false);
 
   // Search parameters pre-filled from landing page search submit
@@ -277,16 +262,6 @@ export default function App() {
     setCurrentUser(null);
     triggerNotification("Afgemeld", "U bent nu veilig afgemeld uit uw account.", "info", false);
   }, [currentUser, handleAddSystemLog, triggerNotification]);
-
-  // AI Advisor persistent chat messages list
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
-    {
-      id: "welcome-advisor",
-      sender: "advisor",
-      text: "Hallo! Geef me gerust uw werkprofiel (bijv. schilder, glazenwasser, hovenier) of de benodigde werkhoogte door, dan stel ik direct de ideale configuratie voor u samen.",
-      timestamp: new Date().toISOString()
-    }
-  ]);
 
   const fetchAllData = useAppStore((state) => state.fetchAllData);
   const machines = useAppStore((state) => state.machines);
@@ -445,11 +420,6 @@ export default function App() {
     }
   };
 
-  // AI Advisor recommendations callback: Highlights items in Catalog
-  const handleRecommendMachinesFromAdvisor = (suggestedIds: string[]) => {
-    setAiRecommendedMachineIds(suggestedIds);
-  };
-
   return (
     <div className="relative min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans antialiased text-sm pb-14 md:pb-0">
       
@@ -485,12 +455,11 @@ export default function App() {
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <HomeSection 
-                    onSearch={handleLandingPageSearch} 
-                    setActiveTab={setActiveTab} 
+                  <HomeSection
+                    onSearch={handleLandingPageSearch}
+                    setActiveTab={setActiveTab}
                     siteConfig={siteConfig}
                     customCategories={customCategories}
-                    isGeminiEnabled={isGeminiEnabled}
                   />
                 </motion.div>
               } />
@@ -510,28 +479,8 @@ export default function App() {
                     selectedCategory={selectedCategory}
                     setSelectedCategory={setSelectedCategory}
                     onSelectMachineForBooking={handleSelectMachineForBooking}
-                    aiRecommendedMachineIds={aiRecommendedMachineIds}
                     onAddSystemLog={handleAddSystemLog}
                     currentUser={currentUser}
-                  />
-                </motion.div>
-              } />
-
-              <Route path="/advisor" element={
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <AdvisorSection 
-                    machines={machines}
-                    messages={chatMessages}
-                    setMessages={setChatMessages}
-                    onRecommendMachines={handleRecommendMachinesFromAdvisor}
-                    onSelectMachineForBooking={handleSelectMachineForBooking}
-                    currentUser={currentUser}
-                    onAddSystemLog={handleAddSystemLog}
                   />
                 </motion.div>
               } />
@@ -618,31 +567,17 @@ export default function App() {
         onClose={() => setActiveToast(null)} 
       />
 
-      {/* FLOATING HELP / ADVISOR BUTTON */}
+      {/* FLOATING WHATSAPP BUTTON */}
       {!isAdminMode && (
         <div className="fixed bottom-16 sm:bottom-6 right-4 sm:right-6 z-45 flex items-center">
           <motion.button
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
-            onClick={() => {
-              if (isGeminiEnabled) {
-                setActiveTab("advisor");
-              } else {
-                window.open(buildWhatsAppGeneralUrl(), "_blank");
-              }
-            }}
-            className={`flex items-center justify-center h-11 w-11 rounded-full text-white shadow-lg hover:scale-110 active:scale-95 transition-all cursor-pointer border-none ${
-              isGeminiEnabled
-                ? "bg-indigo-600 hover:bg-indigo-700 shadow-indigo-500/25"
-                : "bg-[#25D366] hover:bg-[#1da851] shadow-emerald-500/25"
-            }`}
-            title={isGeminiEnabled ? "AI Snel Advies" : "Hulp nodig? Chat via WhatsApp"}
+            onClick={() => window.open(buildWhatsAppGeneralUrl(), "_blank")}
+            className="flex items-center justify-center h-11 w-11 rounded-full text-white shadow-lg hover:scale-110 active:scale-95 transition-all cursor-pointer border-none bg-[#25D366] hover:bg-[#1da851] shadow-emerald-500/25"
+            title="Hulp nodig? Chat via WhatsApp"
           >
-            {isGeminiEnabled ? (
-              <Sparkles className="h-5 w-5" />
-            ) : (
-              <MessageCircle className="h-5 w-5" />
-            )}
+            <MessageCircle className="h-5 w-5" />
           </motion.button>
         </div>
       )}

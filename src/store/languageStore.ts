@@ -21,7 +21,6 @@ const dictionary: TranslationDictionary = {
   // Menu navigation
   menuHome: { nl: "Home", en: "Home", tr: "Ana Sayfa" },
   menuCatalog: { nl: "Catalogus", en: "Catalog", tr: "Katalog" },
-  menuAdvisor: { nl: "Snel Advies", en: "Fast Advice", tr: "Hızlı Tavsiye" },
   menuOrders: { nl: "Contact", en: "Contact", tr: "İletişim" },
   menuAdmin: { nl: "Portaal", en: "Portal", tr: "Yönetim" },
   menuBooking: { nl: "Boeken", en: "Book Now", tr: "Rezervasyon" },

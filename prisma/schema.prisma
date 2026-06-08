@@ -134,8 +134,9 @@ model SiteConfig {
   heroTitle        String
   heroSubtitle     String
   menuHomeLabel    String
-  menuCatalogLabel String
-  menuOrdersLabel  String
+  menuCatalogLabel  String
+  menuAdvisorLabel  String?
+  menuOrdersLabel   String
   menuAdminLabel   String
 }
 

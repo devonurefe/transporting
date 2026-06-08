@@ -10,10 +10,32 @@ import {
   Search,
   ArrowRight,
   Layers,
-  MessageCircle
+  MessageCircle,
+  Truck,
+  Tractor,
+  Scissors,
+  MoveVertical,
+  ArrowUpFromLine,
+  Leaf,
+  HardHat,
+  Construction,
+  type LucideProps
 } from "lucide-react";
 import { motion } from "motion/react";
 import { buildWhatsAppGeneralUrl } from "../utils/whatsapp";
+
+type IconComponent = React.FC<LucideProps>;
+
+const CATEGORY_ICONS: Record<string, IconComponent> = {
+  aanhanger:   Truck,
+  spin:        Tractor,
+  schaarlift:  Scissors,
+  mastlift:    MoveVertical,
+  ladderlift:  ArrowUpFromLine,
+  ecolift:     Leaf,
+  klussensets: HardHat,
+};
+const FALLBACK_ICONS: IconComponent[] = [Construction, HardHat, Truck, Tractor];
 
 interface HomeSectionProps {
   onSearch: (query: string, category: string) => void;
@@ -59,10 +81,6 @@ export default function HomeSection({
   React.useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
-
-  const categoryIcons = [
-    "🚛", "🕷️", "✂️", "📐", "🏗️", "🪜", "🌿", "📦"
-  ];
 
   const bgClasses = [
     "from-blue-600/10 to-indigo-600/10 hover:border-blue-400/50",
@@ -173,7 +191,9 @@ export default function HomeSection({
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-4">
-              {customCategories.filter(cat => cat.id !== "klussensets").map((cat, idx) => (
+              {customCategories.filter(cat => cat.id !== "klussensets").map((cat, idx) => {
+                const Icon: IconComponent = CATEGORY_ICONS[cat.id] ?? FALLBACK_ICONS[idx % FALLBACK_ICONS.length];
+                return (
                 <div
                   key={cat.id}
                   onClick={() => {
@@ -183,7 +203,9 @@ export default function HomeSection({
                   className={`group relative overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br bg-white/95 hover:bg-white shadow-sm hover:shadow-md p-3 sm:p-5 text-left cursor-pointer transition-all duration-300 hover:-translate-y-1 ${bgClasses[idx % bgClasses.length]} flex flex-col justify-between min-h-[150px] sm:min-h-[200px]`}
                 >
                   <div className="space-y-2 z-10">
-                    <span className="text-2xl select-none">{categoryIcons[idx % categoryIcons.length]}</span>
+                    <div className="h-9 w-9 rounded-xl bg-white/80 flex items-center justify-center shadow-sm border border-slate-100 group-hover:bg-indigo-50 group-hover:border-indigo-100 transition-colors">
+                      <Icon className="h-5 w-5 text-slate-500 group-hover:text-indigo-600 transition-colors" />
+                    </div>
                     <h3 className="font-display font-bold text-sm text-slate-900 group-hover:text-indigo-700 transition-colors leading-snug">
                       {cat.listLabel || cat.label}
                     </h3>
@@ -202,7 +224,7 @@ export default function HomeSection({
                     </div>
                   </div>
                 </div>
-              ))}
+              );})}
             </div>
           </motion.div>
 

@@ -12,20 +12,19 @@ interface FooterProps {
   setShowContactModal: (show: boolean) => void;
 }
 
-export default function Footer({ siteName, setActiveTab, setShowContactModal }: FooterProps) {
+export default function Footer({ siteName, setActiveTab: _setActiveTab, setShowContactModal }: FooterProps) {
   return (
     <footer className="bg-slate-950 border-t border-slate-800 pb-20 md:pb-0">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
 
         {/* Top row */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 pb-10 border-b border-slate-800">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-10 pb-10 border-b border-slate-800">
 
           {/* Brand */}
           <div className="space-y-4">
-            {/* Text logo — avoids SVG font rendering issues on dark bg */}
             <div className="flex items-baseline gap-0.5">
-              <span className="font-display text-xl font-extrabold text-emerald-400">Huur</span>
-              <span className="font-display text-xl font-extrabold text-orange-400">Go</span>
+              <span className="font-display text-xl font-extrabold text-emerald-400">MB</span>
+              <span className="font-display text-xl font-extrabold text-orange-400"> Hoogwerkers</span>
             </div>
             <p className="text-xs text-slate-400 leading-relaxed max-w-xs">
               Professionele verhuur van gecertificeerde hoogwerkers, schaarliften en mastliften voor zzp'ers, aannemers en particulieren door heel Nederland.
@@ -34,27 +33,6 @@ export default function Footer({ siteName, setActiveTab, setShowContactModal }: 
               <span className="text-[10px] font-bold text-amber-400 bg-amber-400/10 border border-amber-400/20 px-2 py-0.5 rounded-md uppercase tracking-wide">BMWT-Lid</span>
               <span className="text-[10px] font-bold text-emerald-400 bg-emerald-400/10 border border-emerald-400/20 px-2 py-0.5 rounded-md uppercase tracking-wide">Co-Verzekerd</span>
             </div>
-          </div>
-
-          {/* Links */}
-          <div className="space-y-3">
-            <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-500">Navigatie</h4>
-            <nav className="flex flex-col space-y-2">
-              {[
-                { label: "Home", action: () => { setActiveTab("home"); window.scrollTo({ top: 0, behavior: "smooth" }); } },
-                { label: "Catalogus", action: () => { setActiveTab("catalog"); window.scrollTo({ top: 0, behavior: "smooth" }); } },
-                { label: "Direct Huren", action: () => { setActiveTab("booking"); window.scrollTo({ top: 0, behavior: "smooth" }); } },
-                { label: "Contact", action: () => setShowContactModal(true) },
-              ].map((link, i) => (
-                <button
-                  key={i}
-                  onClick={link.action}
-                  className="text-xs text-slate-400 hover:text-white transition-colors text-left cursor-pointer bg-transparent border-none p-0 font-medium"
-                >
-                  {link.label}
-                </button>
-              ))}
-            </nav>
           </div>
 
           {/* Contact */}

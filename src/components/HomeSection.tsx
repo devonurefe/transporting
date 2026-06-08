@@ -82,153 +82,157 @@ export default function HomeSection({
   };
 
   return (
-    <div
-      className="relative min-h-[calc(100vh-3.5rem)] overflow-hidden bg-slate-900 bg-cover bg-center bg-no-repeat"
-      style={{ backgroundImage: "url('/hero-bg.jpg')" }}
-    >
-      {/* Gradient overlay — dark at top for hero text, transparent at bottom */}
-      <div className="absolute inset-0 bg-gradient-to-b from-slate-900/70 via-slate-900/40 to-transparent pointer-events-none" />
+    <div>
 
-      <div className="relative z-10 px-5 sm:px-6 lg:px-8 py-16 sm:py-20">
-      <div className="mx-auto max-w-5xl">
+      {/* ── HERO SECTION — photo background only here ── */}
+      <div
+        className="relative bg-slate-900 bg-cover bg-center bg-no-repeat overflow-hidden px-5 sm:px-6 lg:px-8 pt-12 sm:pt-16 pb-16 sm:pb-20"
+        style={{ backgroundImage: "url('/hero-bg.jpg')" }}
+      >
+        {/* Gradient overlay — only dark enough to read text */}
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-900/65 via-slate-800/50 to-slate-900/60 pointer-events-none" />
 
-        {/* HERO — photo background version */}
-        <motion.div
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="text-center mb-6 sm:mb-8 space-y-3 sm:space-y-4"
-        >
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-400">
-            {t("heroTagline")}
-          </p>
-          <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-white drop-shadow-md">
-            {language === "nl" && siteConfig.heroTitle ? siteConfig.heroTitle : t("heroTitle")}
-          </h1>
-          <p className="text-sm sm:text-base text-slate-200 max-w-lg mx-auto leading-relaxed">
-            {language === "nl" && siteConfig.heroSubtitle ? siteConfig.heroSubtitle : t("heroSubtitle")}
-          </p>
-        </motion.div>
+        <div className="relative z-10 mx-auto max-w-5xl">
 
-        {/* SEARCH BAR — Clean & Simple */}
-        <motion.form 
-          onSubmit={handleSearchSubmit}
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          className="flex flex-col sm:flex-row items-stretch gap-2 p-1.5 sm:p-2 rounded-2xl border border-slate-200 bg-white shadow-sm max-w-2xl mx-auto mb-8 sm:mb-10"
-        >
-          <div className="flex-1 flex items-center px-3 space-x-2 bg-slate-50 rounded-xl border border-slate-100/80">
-            <Search className="h-4.5 w-4.5 text-slate-400 shrink-0" />
-            <input 
-              type="text" 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={language === "nl" && siteConfig.heroTagline ? siteConfig.heroTagline : t("searchPlaceholder")} 
-              className="w-full py-3 text-sm bg-transparent outline-none focus:ring-0 text-slate-800 placeholder-slate-400"
-            />
-          </div>
-
-          <select 
-            value={selectedCat}
-            onChange={(e) => setSelectedCat(e.target.value)}
-            className="px-4 py-3 text-xs text-slate-700 font-semibold bg-white rounded-xl border border-slate-200 outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer min-w-[140px]"
+          {/* Tagline + Title + Subtitle */}
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="text-center mb-6 sm:mb-8 space-y-3 sm:space-y-4"
           >
-            <option value="all">{t("filterAll")}</option>
-            {customCategories.filter(c => c.id !== "klussensets").map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.listLabel || c.label}
-              </option>
-            ))}
-          </select>
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-400">
+              {t("heroTagline")}
+            </p>
+            <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-white drop-shadow-md">
+              {language === "nl" && siteConfig.heroTitle ? siteConfig.heroTitle : t("heroTitle")}
+            </h1>
+            <p className="text-sm sm:text-base text-slate-200 max-w-lg mx-auto leading-relaxed">
+              {language === "nl" && siteConfig.heroSubtitle ? siteConfig.heroSubtitle : t("heroSubtitle")}
+            </p>
+          </motion.div>
 
-          <button 
-            type="submit"
-            className="flex items-center justify-center space-x-1.5 font-bold hover:opacity-90 active:scale-97 bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-5 py-3 rounded-xl transition-all font-display border-none cursor-pointer"
+          {/* Search bar */}
+          <motion.form
+            onSubmit={handleSearchSubmit}
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="flex flex-col sm:flex-row items-stretch gap-2 p-1.5 sm:p-2 rounded-2xl border border-white/20 bg-white/10 backdrop-blur-sm shadow-sm max-w-2xl mx-auto"
           >
-            <span>{t("searchButton")}</span>
-            <ArrowRight className="h-4 w-4" />
-          </button>
-        </motion.form>
+            <div className="flex-1 flex items-center px-3 space-x-2 bg-white/90 rounded-xl">
+              <Search className="h-4.5 w-4.5 text-slate-400 shrink-0" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={language === "nl" && siteConfig.heroTagline ? siteConfig.heroTagline : t("searchPlaceholder")}
+                className="w-full py-3 text-sm bg-transparent outline-none focus:ring-0 text-slate-800 placeholder-slate-400"
+              />
+            </div>
+            <select
+              value={selectedCat}
+              onChange={(e) => setSelectedCat(e.target.value)}
+              className="px-4 py-3 text-xs text-slate-700 font-semibold bg-white rounded-xl border border-white/20 outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer min-w-[140px]"
+            >
+              <option value="all">{t("filterAll")}</option>
+              {customCategories.filter(c => c.id !== "klussensets").map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.listLabel || c.label}
+                </option>
+              ))}
+            </select>
+            <button
+              type="submit"
+              className="flex items-center justify-center space-x-1.5 font-bold hover:opacity-90 active:scale-97 bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-5 py-3 rounded-xl transition-all font-display border-none cursor-pointer"
+            >
+              <span>{t("searchButton")}</span>
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          </motion.form>
 
-        {/* 7 CATEGORY CARDS — The Main Focus */}
-        <motion.div 
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.15 }}
-          className="space-y-5"
-        >
-          <div className="flex justify-between items-end">
+        </div>
+      </div>
+
+      {/* ── CATEGORIES SECTION — clean white background ── */}
+      <div className="bg-white px-5 sm:px-6 lg:px-8 py-8 sm:py-10">
+        <div className="mx-auto max-w-5xl space-y-6">
+
+          {/* Category grid */}
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.15 }}
+            className="space-y-5"
+          >
             <div className="flex items-center space-x-2">
               <Layers className="h-5 w-5 text-indigo-600" />
               <h2 className="font-display text-lg sm:text-xl font-bold tracking-tight text-slate-900">
                 Kies uw categorie
               </h2>
             </div>
-          </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-4">
-            {customCategories.filter(cat => cat.id !== "klussensets").map((cat, idx) => (
-              <div
-                key={cat.id}
-                onClick={() => {
-                  onSearch("", cat.id);
-                  setActiveTab("catalog");
-                }}
-                className={`group relative overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br bg-white/95 hover:bg-white shadow-sm hover:shadow-md p-3 sm:p-5 text-left cursor-pointer transition-all duration-300 hover:-translate-y-1 ${bgClasses[idx % bgClasses.length]} flex flex-col justify-between min-h-[150px] sm:min-h-[200px]`}
-              >
-                <div className="space-y-2 z-10">
-                  <span className="text-2xl select-none">{categoryIcons[idx % categoryIcons.length]}</span>
-                  <h3 className="font-display font-bold text-sm text-slate-900 group-hover:text-indigo-700 transition-colors leading-snug">
-                    {cat.listLabel || cat.label}
-                  </h3>
-                  <p className="text-[10.5px] text-slate-500 leading-snug line-clamp-2 hidden sm:block">
-                    {cat.desc}
-                  </p>
-                </div>
-
-                <div className="flex items-end justify-between pt-3 border-t border-slate-100/80 z-10 mt-auto">
-                  <div>
-                    <span className="text-[9px] font-mono text-slate-400 block leading-none uppercase">Hoogte</span>
-                    <span className="text-xs font-bold text-slate-800 block mt-0.5">{cat.heights}</span>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-4">
+              {customCategories.filter(cat => cat.id !== "klussensets").map((cat, idx) => (
+                <div
+                  key={cat.id}
+                  onClick={() => {
+                    onSearch("", cat.id);
+                    setActiveTab("catalog");
+                  }}
+                  className={`group relative overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br bg-white/95 hover:bg-white shadow-sm hover:shadow-md p-3 sm:p-5 text-left cursor-pointer transition-all duration-300 hover:-translate-y-1 ${bgClasses[idx % bgClasses.length]} flex flex-col justify-between min-h-[150px] sm:min-h-[200px]`}
+                >
+                  <div className="space-y-2 z-10">
+                    <span className="text-2xl select-none">{categoryIcons[idx % categoryIcons.length]}</span>
+                    <h3 className="font-display font-bold text-sm text-slate-900 group-hover:text-indigo-700 transition-colors leading-snug">
+                      {cat.listLabel || cat.label}
+                    </h3>
+                    <p className="text-[10.5px] text-slate-500 leading-snug line-clamp-2 hidden sm:block">
+                      {cat.desc}
+                    </p>
                   </div>
-                  <div className="text-right">
-                    <span className="text-[9px] font-mono text-slate-400 block leading-none uppercase">All-in</span>
-                    <span className="text-xs font-bold text-emerald-700 block mt-0.5 font-mono">{cat.price}</span>
+                  <div className="flex items-end justify-between pt-3 border-t border-slate-100/80 z-10 mt-auto">
+                    <div>
+                      <span className="text-[9px] font-mono text-slate-400 block leading-none uppercase">Hoogte</span>
+                      <span className="text-xs font-bold text-slate-800 block mt-0.5">{cat.heights}</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-[9px] font-mono text-slate-400 block leading-none uppercase">All-in</span>
+                      <span className="text-xs font-bold text-emerald-700 block mt-0.5 font-mono">{cat.price}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        </motion.div>
+              ))}
+            </div>
+          </motion.div>
 
-        {/* WHATSAPP CTA STRIP */}
-        <motion.div 
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.25 }}
-          className="mt-10 mb-6"
-        >
-          <a
-            href={buildWhatsAppGeneralUrl()}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-center space-x-3 w-full py-4 px-6 rounded-2xl bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-sm transition-all shadow-md hover:shadow-lg active:scale-[0.98] no-underline"
+          {/* WhatsApp CTA */}
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.25 }}
           >
-            <MessageCircle className="h-5 w-5" />
-            <span>Direct advies nodig? WhatsApp ons!</span>
-          </a>
-        </motion.div>
+            <a
+              href={buildWhatsAppGeneralUrl()}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center space-x-3 w-full py-4 px-6 rounded-2xl bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-sm transition-all shadow-md hover:shadow-lg active:scale-[0.98] no-underline"
+            >
+              <MessageCircle className="h-5 w-5" />
+              <span>Direct advies nodig? WhatsApp ons!</span>
+            </a>
+          </motion.div>
 
-        {/* Minimal footer info */}
-        <div className="text-center pt-4 pb-2">
-          <p className="text-[10px] text-slate-400 font-mono">
-            Zoeterwoude • TÜV / BMWT Gecertificeerd • Zelf ophalen of bezorgen
-          </p>
+          {/* Footer badge */}
+          <div className="text-center pb-2">
+            <p className="text-[10px] text-slate-400 font-mono">
+              Zoeterwoude • TÜV / BMWT Gecertificeerd • Zelf ophalen of bezorgen
+            </p>
+          </div>
+
         </div>
+      </div>
 
-      </div>
-      </div>
     </div>
   );
 }

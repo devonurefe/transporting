@@ -229,8 +229,6 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
           status: "In behandeling",
           customerId: resolvedCustomerId,
           addons: JSON.stringify(orderData.addons || []),
-          borgsom: Number(orderData.borgsom || 0),
-          borgsomStatus: "pending",
           invoiceNumber,
           paymentStatus: "awaiting"
         }
@@ -295,44 +293,6 @@ ordersRouter.put("/:id/payment", requireAdmin as any, async (req: AuthenticatedR
   } catch (error) {
     console.error("Error updating payment status:", error);
     res.status(500).json({ error: "Failed to update payment status" });
-  }
-});
-
-// PUT /api/orders/:id/borgsom — admin updates borgsom status
-ordersRouter.put("/:id/borgsom", requireAdmin as any, async (req: AuthenticatedRequest, res: Response) => {
-  const { id } = req.params;
-  const { borgsomStatus } = req.body;
-
-  const validStatuses = ["pending", "returned", "withheld"];
-  if (!borgsomStatus || !validStatuses.includes(borgsomStatus)) {
-    return res.status(400).json({ error: "Ongeldige borgsom status" });
-  }
-
-  try {
-    const updatedOrder = await prisma.order.update({
-      where: { id },
-      data: { borgsomStatus }
-    });
-
-    if (borgsomStatus === "returned") {
-      const emailData = {
-        ...updatedOrder,
-        startDate: updatedOrder.startDate.toISOString().split("T")[0],
-        endDate: updatedOrder.endDate.toISOString().split("T")[0],
-        customerPhone: updatedOrder.customerPhone || ""
-      };
-      emailService.sendBorgsomRefundEmail(emailData).catch(err => console.error("Borgsom refund email error:", err));
-    }
-
-    res.json({
-      ...updatedOrder,
-      startDate: updatedOrder.startDate.toISOString().split("T")[0],
-      endDate: updatedOrder.endDate.toISOString().split("T")[0],
-      addons: JSON.parse(updatedOrder.addons || "[]")
-    });
-  } catch (error) {
-    console.error("Error updating borgsom status:", error);
-    res.status(500).json({ error: "Failed to update borgsom status" });
   }
 });
 

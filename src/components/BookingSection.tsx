@@ -306,7 +306,7 @@ export default function BookingSection({
           addonDetails: [],
           vat: 0,
           total: 0,
-          borgsom: 0
+          deliveryType
         };
       }
       let totalDays = 0;
@@ -350,8 +350,6 @@ export default function BookingSection({
         addonDetails.push({ id: "safety", name: "Gecertificeerd Harnas & Veiligheidskit", price: 15 * totalDays });
       }
 
-      const borgsom = parseFloat((cartItems.reduce((sum, item) => sum + item.machine.pricePerDay * 0.20, 0)).toFixed(2));
-
       const totalExcl = subtotal + transport + trailerCost + driver + addonCost;
       const vat = totalExcl * 0.21;
       const total = totalExcl + vat;
@@ -390,14 +388,13 @@ export default function BookingSection({
         addonDetails,
         vat,
         total,
-        borgsom,
         deliveryType
       };
     }
 
     // Legacy fallback
     if (!selectedMachine) {
-      return { days: 0, rawSubtotal: 0, discountAmount: 0, discountLabel: "", subtotal: 0, transport: 0, driver: 0, addonCost: 0, addonDetails: [], vat: 0, total: 0, borgsom: 0, deliveryType };
+      return { days: 0, rawSubtotal: 0, discountAmount: 0, discountLabel: "", subtotal: 0, transport: 0, driver: 0, addonCost: 0, addonDetails: [], vat: 0, total: 0, deliveryType };
     }
 
     const start = new Date(startDate);
@@ -448,8 +445,6 @@ export default function BookingSection({
       addonDetails.push({ id: "safety", name: "Gecertificeerd Harnas & Veiligheidskit", price: 15 * days });
     }
 
-    const borgsom = parseFloat((selectedMachine.pricePerDay * 0.20).toFixed(2));
-
     const totalExcl = subtotal + transport + trailerCost + driver + addonCost;
     const vat = totalExcl * 0.21;
     const total = totalExcl + vat;
@@ -466,7 +461,6 @@ export default function BookingSection({
       addonDetails,
       vat,
       total,
-      borgsom,
       deliveryType
     };
   };
@@ -629,8 +623,7 @@ export default function BookingSection({
               driverCost: parseFloat(driver.toFixed(2)),
               vatAmount: parseFloat(itemVat.toFixed(2)),
               totalAmount: parseFloat(itemTotal.toFixed(2)),
-              addons: addonsList,
-              borgsom: parseFloat((item.machine.pricePerDay * 0.20).toFixed(2))
+              addons: addonsList
             };
 
             const result = await onCreateReservation(orderObj);
@@ -652,7 +645,14 @@ export default function BookingSection({
                 startDate: startDate,
                 endDate: endDate
               }] : []);
-              const waUrl = buildWhatsAppUrl(checkoutItems, deliveryType, customerName, customerEmail, customerPhone || undefined);
+              const orderTotals = {
+                days: placedOrders.reduce((s, o) => s + o.rentalDays, 0),
+                subtotal: placedOrders.reduce((s, o) => s + o.subtotal, 0),
+                transport: placedOrders.reduce((s, o) => s + o.transportCost, 0),
+                vat: placedOrders.reduce((s, o) => s + o.vatAmount, 0),
+                total: placedOrders.reduce((s, o) => s + o.totalAmount, 0)
+              };
+              const waUrl = buildWhatsAppUrl(checkoutItems, deliveryType, customerName, customerEmail, customerPhone || undefined, orderTotals);
               setWhatsappUrl(waUrl);
             } else {
               setWhatsappUrl("");

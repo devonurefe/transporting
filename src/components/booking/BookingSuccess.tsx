@@ -79,9 +79,6 @@ export default function BookingSuccess({
     },
     ...(successOrder.deliveryAddress ? [{ label: "Adres", value: successOrder.deliveryAddress }] : []),
     { label: "Totaal incl. BTW", value: `€ ${successOrder.totalAmount.toFixed(2)}`, price: true },
-    ...(successOrder.borgsom && successOrder.borgsom > 0
-      ? [{ label: "Borgsom (terugbetaalbaar)", value: `€ ${successOrder.borgsom.toFixed(2)}`, borgsom: true }]
-      : []),
   ];
 
   return (
@@ -118,8 +115,6 @@ export default function BookingSuccess({
               className={`text-xs font-bold text-right leading-snug ${
                 (s as any).price
                   ? "text-lg font-mono text-slate-900"
-                  : (s as any).borgsom
-                  ? "text-amber-700 font-mono"
                   : (s as any).highlight
                   ? "text-indigo-700"
                   : "text-slate-800"

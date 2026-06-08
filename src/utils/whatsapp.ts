@@ -8,6 +8,14 @@ import { CartItem } from "../types";
 // HuurGo WhatsApp business number
 const WHATSAPP_NUMBER = (import.meta as any).env?.VITE_WHATSAPP_NUMBER ?? "31611848899";
 
+interface OrderTotals {
+  days: number;
+  subtotal: number;
+  transport: number;
+  vat: number;
+  total: number;
+}
+
 /**
  * Builds a WhatsApp click-to-chat URL with a pre-filled rental inquiry message requesting an iDeal payment link.
  */
@@ -16,7 +24,8 @@ export function buildWhatsAppUrl(
   deliveryType?: string,
   customerName?: string,
   customerEmail?: string,
-  customerPhone?: string
+  customerPhone?: string,
+  totals?: OrderTotals
 ): string {
   const lines: string[] = [];
 
@@ -28,9 +37,14 @@ export function buildWhatsAppUrl(
   for (const item of cartItems) {
     const start = item.startDate || "–";
     const end = item.endDate || "–";
+    const itemDays = totals && cartItems.length === 1 ? totals.days : null;
     lines.push(`• ${item.machine.name}`);
     lines.push(`  Periode: ${start} t/m ${end}`);
-    lines.push(`  Tarief: €${item.machine.pricePerDay}/dag`);
+    if (itemDays) {
+      lines.push(`  ${itemDays} ${itemDays === 1 ? "dag" : "dagen"} × €${item.machine.pricePerDay},-/dag = €${(item.machine.pricePerDay * itemDays).toFixed(0)},-`);
+    } else {
+      lines.push(`  Tarief: €${item.machine.pricePerDay}/dag`);
+    }
     lines.push("");
   }
 
@@ -38,12 +52,20 @@ export function buildWhatsAppUrl(
     const label = deliveryType === "self_pickup"
       ? "Zelf ophalen bij de Hub (Gratis)"
       : deliveryType === "trailer_rental"
-      ? "Aanhanger huren (€25/dag)"
-      : "Bezorging door ons (€75/rit, heen + terug)";
+      ? `Aanhanger huren (€25/dag${totals ? ` × ${totals.days} d = €${totals.transport.toFixed(0)},-` : ""})`
+      : `Bezorging door ons (€75/rit, heen + terug = €150,-)`;
     lines.push(`Logistiek: ${label}`);
   }
 
-  // Only append contact info if filled in by the user
+  if (totals && totals.total > 0) {
+    lines.push("");
+    lines.push("─────────────────────");
+    lines.push(`Subtotaal (excl. BTW): €${totals.subtotal.toFixed(2)}`);
+    lines.push(`BTW (21%): €${totals.vat.toFixed(2)}`);
+    lines.push(`✅ Totaal incl. BTW: €${totals.total.toFixed(2)}`);
+    lines.push("─────────────────────");
+  }
+
   if (customerName && customerName.trim().length > 0) {
     lines.push("");
     lines.push("Mijn contactgegevens:");

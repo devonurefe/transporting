@@ -12,8 +12,7 @@ const defaultCategories = [
   { id: "mastlift", label: "Mastlift", listLabel: "Mastliften", desc: "Verticale mastliften voor snel, efficiënt en compact werk in magazijnen of kantoren.", heights: "5m - 10m", price: "v.a. €75/dag" },
   { id: "kamersteiger", label: "Kamersteiger", listLabel: "Kamersteigers", desc: "Stabiele en lichtgewicht kamersteigers voor veilig binnenwerk tot 4 meter. Snel op- en afgebouwd.", heights: "4m", price: "v.a. €35/dag" },
   { id: "ladderlift", label: "Ladderlift", listLabel: "Ladderliften / Verhuisliften", desc: "Verhuis- en ladderliften voor veilig transport van zware meubels of bouwmaterialen direct via het raam.", heights: "18m - 21m", price: "v.a. €90/dag" },
-  { id: "ecolift", label: "Ecolift", listLabel: "Ecolift", desc: "Milieuvriendelijk en veilig alternatief voor ladders. Geen batterijen of hydrauliek nodig.", heights: "4.2m", price: "v.a. €45/dag" },
-  { id: "klussensets", label: "Kluspakket", listLabel: "Kluspakketten", desc: "Complete kluspakketten speciaal samengesteld voor specifieke ZZP- en particuliere klussen.", heights: "4m - 21m", price: "v.a. €80/dag" }
+  { id: "ecolift", label: "Ecolift", listLabel: "Ecolift", desc: "Milieuvriendelijk en veilig alternatief voor ladders. Geen batterijen of hydrauliek nodig.", heights: "4.2m", price: "v.a. €45/dag" }
 ];
 
 const defaultMachines = [
@@ -409,116 +408,12 @@ const defaultMachines = [
     monthlyDiscountPercent: 15
   },
 
-  // KATEGORİ 8: Kluspakketten (klussensets)
-  {
-    id: "set-paint-comfort",
-    name: "ZZP Schilder Comfort Set (8m)",
-    category: "klussensets",
-    categoryLabel: "Kluspakket",
-    height: 8.0,
-    reach: 0,
-    weight: 1520,
-    pricePerDay: 90,
-    powerType: "Elektrisch",
-    imageUrl: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=600&auto=format&fit=crop",
-    imageAlt: "Schilderspakket",
-    description: "Speciaal schilderspakket inclusief Haulotte Optimum 8 scissor lift, speciale vloerbeschermingsmatten og 2x 20m IP44 verlengkabels.",
-    suitableFor: ["Schilder", "Particulier"],
-    weeklyDiscountPercent: 10,
-    campaignText: "SchilderKorting",
-    campaignDiscountPercent: 5
-  },
-  {
-    id: "set-solar-pro",
-    name: "ZZP Zonnepaneel Installatie Set (12m)",
-    category: "klussensets",
-    categoryLabel: "Kluspakket",
-    height: 12.2,
-    reach: 6.1,
-    weight: 1400,
-    pricePerDay: 135,
-    powerType: "Elektrisch",
-    imageUrl: "https://images.unsplash.com/photo-1508514177221-188b1cf16e9d?q=80&w=600&auto=format&fit=crop",
-    imageAlt: "Solar Montage set",
-    description: "Ideaal voor installateurs van zonnepanelen. Inclusief Nifty 120 'Toe & Go' aanhangerlift met trekhaak, handige materiaalhaken en een veiligheidsharnas.",
-    suitableFor: ["Installateur", "Aannemer"],
-    weeklyDiscountPercent: 15,
-    campaignText: "EcoHuur",
-    campaignDiscountAmount: 20
-  },
-  {
-    id: "set-prune-compact",
-    name: "Groen & Snoei Rups Set (15m)",
-    category: "klussensets",
-    categoryLabel: "Kluspakket",
-    height: 15.4,
-    reach: 6.6,
-    weight: 1400,
-    pricePerDay: 185,
-    powerType: "Hybride",
-    imageUrl: "https://images.unsplash.com/photo-rgFjTRuKCFs?q=80&w=600&auto=format&fit=crop",
-    imageAlt: "Tuin Snoei compact set",
-    description: "Uitstekende set voor boom- en tuinonderhoud. Inclusief Hinowa 15.70 spinhoogwerker op rupsbanden, 4x plastic rijplaten en zaag-veiligheidsset.",
-    suitableFor: ["Hovenier", "Particulier"],
-    weeklyDiscountPercent: 12
-  },
-  {
-    id: "set-gutter-fast",
-    name: "Dakgoot & Reiniging Snelstart (12m)",
-    category: "klussensets",
-    categoryLabel: "Kluspakket",
-    height: 12.2,
-    reach: 6.1,
-    weight: 1400,
-    pricePerDay: 115,
-    powerType: "Elektrisch",
-    imageUrl: "https://images.unsplash.com/photo-1542385151-efd9000785a0?q=80&w=600&auto=format&fit=crop",
-    imageAlt: "Dakgoot kit",
-    description: "Bespaar op logistiek met de Nifty 120 'Toe & Go' trailerhoogwerker. Inclusief speciale dakgootschepset en veiligheidslijn.",
-    suitableFor: ["Particulier", "Glazenwasser"],
-    weeklyDiscountPercent: 10,
-    campaignText: "DakGootActie",
-    campaignDiscountPercent: 8
-  },
-  {
-    id: "set-facade-heavy",
-    name: "ZZP Gevel & Metselwerk Set (17m)",
-    category: "klussensets",
-    categoryLabel: "Kluspakket",
-    height: 17.06,
-    reach: 7.5,
-    weight: 2200,
-    pricePerDay: 210,
-    powerType: "Hybride",
-    imageUrl: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?q=80&w=600&auto=format&fit=crop",
-    imageAlt: "Gevel kit",
-    description: "Professionele set voor zwaar buitenonderhoud en voegwerk. Inclusief Hinowa 17.75 spinhoogwerker op rupsbanden en hogedrukslangophanging.",
-    suitableFor: ["Gevelreiniger", "Aannemer"],
-    weeklyDiscountPercent: 15
-  },
-  {
-    id: "set-window-premium",
-    name: "Verhuizing & Ladderlift Set (21m)",
-    category: "klussensets",
-    categoryLabel: "Kluspakket",
-    height: 21.0,
-    reach: 0,
-    weight: 1350,
-    pricePerDay: 130,
-    powerType: "Elektrisch",
-    imageUrl: "https://images.unsplash.com/photo-1608220179550-e128cc63979e?q=80&w=600&auto=format&fit=crop",
-    imageAlt: "Glasbewassing",
-    description: "Compleet pakket voor verhuizingen of meebeltransport. Inclusief 21m ladderlift, 4x meubel-verhuisdekens en stevige spanbanden.",
-    suitableFor: ["Particulier", "Aannemer"],
-    weeklyDiscountPercent: 12
-  }
 ];
 
 const defaultBlockedDates = [
   { id: "b1", machineId: "optimum-8-1", date: new Date("2026-06-15"), reason: "Onderhoud BMWT" },
   { id: "b2", machineId: "optimum-8-1", date: new Date("2026-06-16"), reason: "Onderhoud BMWT" },
-  { id: "b3", machineId: "nifty-120-1", date: new Date("2026-06-20"), reason: "Calibratie keuring" },
-  { id: "b4", machineId: "set-paint-comfort", date: new Date("2026-06-10"), reason: "Gereserveerd voor demo" }
+  { id: "b3", machineId: "nifty-120-1", date: new Date("2026-06-20"), reason: "Calibratie keuring" }
 ];
 
 const defaultSiteConfig = {
@@ -578,6 +473,10 @@ const mockCustomers = [
 ];
 
 async function main() {
+  console.log("Removing klussensets machines and category...");
+  await prisma.machine.deleteMany({ where: { category: "klussensets" } });
+  await prisma.category.deleteMany({ where: { id: "klussensets" } });
+
   console.log("Seeding categories (upsert)...");
   for (const cat of defaultCategories) {
     await prisma.category.upsert({

@@ -9,33 +9,10 @@ import { useAppStore } from "../store/appStore";
 import {
   Search,
   ArrowRight,
-  Layers,
   MessageCircle,
-  Truck,
-  Tractor,
-  Scissors,
-  MoveVertical,
-  ArrowUpFromLine,
-  Leaf,
-  HardHat,
-  Construction,
-  type LucideProps
 } from "lucide-react";
 import { motion } from "motion/react";
 import { buildWhatsAppGeneralUrl } from "../utils/whatsapp";
-
-type IconComponent = React.FC<LucideProps>;
-
-const CATEGORY_ICONS: Record<string, IconComponent> = {
-  aanhanger:   Truck,
-  spin:        Tractor,
-  schaarlift:  Scissors,
-  mastlift:    MoveVertical,
-  ladderlift:  ArrowUpFromLine,
-  ecolift:     Leaf,
-  klussensets: HardHat,
-};
-const FALLBACK_ICONS: IconComponent[] = [Construction, HardHat, Truck, Tractor];
 
 interface HomeSectionProps {
   onSearch: (query: string, category: string) => void;
@@ -82,21 +59,9 @@ export default function HomeSection({
     window.scrollTo(0, 0);
   }, []);
 
-  const bgClasses = [
-    "from-blue-600/10 to-indigo-600/10 hover:border-blue-400/50",
-    "from-indigo-600/10 to-purple-600/10 hover:border-indigo-400/50",
-    "from-amber-500/10 to-orange-500/10 hover:border-amber-400/50",
-    "from-rose-500/10 to-pink-500/10 hover:border-rose-400/50",
-    "from-teal-500/10 to-emerald-500/10 hover:border-teal-400/50",
-    "from-cyan-500/10 to-blue-500/10 hover:border-cyan-400/50",
-    "from-emerald-500/10 to-green-500/10 hover:border-emerald-400/50",
-    "from-violet-500/10 to-purple-500/10 hover:border-violet-400/50"
-  ];
-
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSearch(searchQuery, selectedCat === "all" ? "" : selectedCat);
-    setActiveTab("catalog");
   };
 
   return (
@@ -154,9 +119,9 @@ export default function HomeSection({
               className="px-4 py-3 text-xs text-slate-700 font-semibold bg-white rounded-xl border border-white/20 outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer min-w-[140px]"
             >
               <option value="all">{t("filterAll")}</option>
-              {customCategories.filter(c => c.id !== "klussensets").map((c) => (
+              {customCategories.filter(c => c.id !== "klussensets" && !["schaarlift-smal", "schaarlift-6m"].includes(c.id)).map((c) => (
                 <option key={c.id} value={c.id}>
-                  {c.listLabel || c.label}
+                  {c.id === "schaarlift" ? "Schaarliften" : (c.listLabel || c.label)}
                 </option>
               ))}
             </select>
@@ -169,88 +134,27 @@ export default function HomeSection({
             </button>
           </motion.form>
 
-        </div>
-      </div>
-
-      {/* ── CATEGORIES SECTION — clean white background ── */}
-      <div className="bg-white px-5 sm:px-6 lg:px-8 py-8 sm:py-10">
-        <div className="mx-auto max-w-5xl space-y-6">
-
-          {/* Category grid */}
-          <motion.div
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.15 }}
-            className="space-y-5"
-          >
-            <div className="flex items-center space-x-2">
-              <Layers className="h-5 w-5 text-indigo-600" />
-              <h2 className="font-display text-lg sm:text-xl font-bold tracking-tight text-slate-900">
-                Kies uw categorie
-              </h2>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-4">
-              {customCategories.filter(cat => cat.id !== "klussensets").map((cat, idx) => {
-                const Icon: IconComponent = CATEGORY_ICONS[cat.id] ?? FALLBACK_ICONS[idx % FALLBACK_ICONS.length];
-                return (
-                <div
-                  key={cat.id}
-                  onClick={() => {
-                    onSearch("", cat.id);
-                    setActiveTab("catalog");
-                  }}
-                  className={`group relative overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br bg-white/95 hover:bg-white shadow-sm hover:shadow-md p-3 sm:p-5 text-left cursor-pointer transition-all duration-300 hover:-translate-y-1 ${bgClasses[idx % bgClasses.length]} flex flex-col justify-between min-h-[150px] sm:min-h-[200px]`}
-                >
-                  <div className="space-y-2 z-10">
-                    <div className="h-9 w-9 rounded-xl bg-white/80 flex items-center justify-center shadow-sm border border-slate-100 group-hover:bg-indigo-50 group-hover:border-indigo-100 transition-colors">
-                      <Icon className="h-5 w-5 text-slate-500 group-hover:text-indigo-600 transition-colors" />
-                    </div>
-                    <h3 className="font-display font-bold text-sm text-slate-900 group-hover:text-indigo-700 transition-colors leading-snug">
-                      {cat.listLabel || cat.label}
-                    </h3>
-                    <p className="text-[10.5px] text-slate-500 leading-snug line-clamp-2 hidden sm:block">
-                      {cat.desc}
-                    </p>
-                  </div>
-                  <div className="flex items-end justify-between pt-3 border-t border-slate-100/80 z-10 mt-auto">
-                    <div>
-                      <span className="text-[9px] font-mono text-slate-400 block leading-none uppercase">Hoogte</span>
-                      <span className="text-xs font-bold text-slate-800 block mt-0.5">{cat.heights}</span>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-[9px] font-mono text-slate-400 block leading-none uppercase">All-in</span>
-                      <span className="text-xs font-bold text-emerald-700 block mt-0.5 font-mono">{cat.price}</span>
-                    </div>
-                  </div>
-                </div>
-              );})}
-            </div>
-          </motion.div>
-
           {/* WhatsApp CTA */}
           <motion.div
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.25 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="max-w-2xl mx-auto w-full mt-4"
           >
             <a
               href={buildWhatsAppGeneralUrl()}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center space-x-3 w-full py-4 px-6 rounded-2xl bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-sm transition-all shadow-md hover:shadow-lg active:scale-[0.98] no-underline"
+              className="flex items-center justify-center space-x-3 w-full py-3.5 px-6 rounded-2xl bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-sm transition-all shadow-md hover:shadow-lg active:scale-[0.98] no-underline"
             >
               <MessageCircle className="h-5 w-5" />
               <span>Direct advies nodig? WhatsApp ons!</span>
             </a>
           </motion.div>
 
-          {/* Footer badge */}
-          <div className="text-center pb-2">
-            <p className="text-[10px] text-slate-400 font-mono">
-              Zoeterwoude • TÜV / BMWT Gecertificeerd • Zelf ophalen of bezorgen
-            </p>
-          </div>
+          <p className="text-center text-[10px] text-white/40 font-mono mt-3">
+            Zoeterwoude • TÜV / BMWT Gecertificeerd • Zelf ophalen of bezorgen
+          </p>
 
         </div>
       </div>

@@ -88,13 +88,24 @@ export default function CatalogSection({
     setSelectedCategory("all");
   };
 
-  const categoryTabs = useMemo(() => [
-    { id: "all", label: "Alle Types" },
-    ...customCategories.map((category) => ({
-      id: category.id,
-      label: category.listLabel || category.label
-    }))
-  ], [customCategories]);
+  const SCHAARLIFT_IDS = new Set(["schaarlift", "schaarlift-smal", "schaarlift-6m"]);
+
+  const categoryTabs = useMemo(() => {
+    const tabs: { id: string; label: string }[] = [{ id: "all", label: "Alle Types" }];
+    let schaarAdded = false;
+    for (const cat of customCategories) {
+      if (cat.id === "klussensets") continue;
+      if (SCHAARLIFT_IDS.has(cat.id)) {
+        if (!schaarAdded) {
+          tabs.push({ id: "schaarlift-group", label: "Schaarliften" });
+          schaarAdded = true;
+        }
+      } else {
+        tabs.push({ id: cat.id, label: cat.listLabel || cat.label });
+      }
+    }
+    return tabs;
+  }, [customCategories]);
 
   // Strip " (Unit N)" suffix to get base model name for grouping
   const getBaseName = (name: string) => name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "").trim();
@@ -125,6 +136,8 @@ export default function CatalogSection({
     const filtered = machines.filter((machine) => {
       const matchesCategory = selectedCategory === "all"
         ? machine.category !== "klussensets"
+        : selectedCategory === "schaarlift-group"
+        ? SCHAARLIFT_IDS.has(machine.category)
         : machine.category === selectedCategory;
 
       const q = searchQuery.trim().toLowerCase();
@@ -373,7 +386,7 @@ export default function CatalogSection({
                             }}
                             className="flex-1 py-2 rounded-xl border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 text-[11px] font-bold transition-all duration-200 active:scale-[0.97] cursor-pointer"
                           >
-                            Details
+                            Specificaties
                           </button>
                           <button
                             onClick={() => onSelectMachineForBooking(machine)}

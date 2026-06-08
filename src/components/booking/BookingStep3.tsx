@@ -5,19 +5,29 @@
 
 import React from "react";
 import { ShieldCheck, ArrowLeft } from "lucide-react";
+import { Machine } from "../../types";
+import BookingPriceSummary from "./BookingPriceSummary";
 
 interface BookingStep3Props {
   isSubmitting: boolean;
   setStep: (step: number) => void;
   handleCreateBooking: () => void;
   bookingError?: string | null;
+  sums?: {
+    days: number; rawSubtotal: number; subtotal: number; discountAmount: number; discountLabel: string;
+    transport: number; driver: number; addonCost: number; addonDetails: { id: string; name: string; price: number }[];
+    vat: number; total: number; borgsom: number;
+  };
+  selectedMachine?: Machine | null;
 }
 
 export default function BookingStep3({
   isSubmitting,
   setStep,
   handleCreateBooking,
-  bookingError
+  bookingError,
+  sums,
+  selectedMachine
 }: BookingStep3Props) {
   return (
     <div className="bg-white border border-slate-200 shadow-sm p-6 rounded-3xl space-y-6 animate-fade-in">
@@ -64,6 +74,12 @@ export default function BookingStep3({
       {bookingError && (
         <div className="bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold px-4 py-3 rounded-xl leading-relaxed">
           {bookingError}
+        </div>
+      )}
+
+      {sums && (
+        <div className="lg:hidden">
+          <BookingPriceSummary selectedMachine={selectedMachine ?? null} sums={sums} />
         </div>
       )}
 

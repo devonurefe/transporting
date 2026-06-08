@@ -87,13 +87,13 @@ export default function ContactModal({ isOpen, onClose, onShowToast, onAddSystem
                     </div>
                     <div className="flex-1 min-w-0">
                       <span className="text-[8.5px] text-slate-400 block font-bold leading-none mb-0.5 uppercase tracking-wide">Bellen Regionaal</span>
-                      <span className="font-sans font-semibold text-slate-800 text-[11.5px]">+31 (0)172 456 789</span>
+                      <span className="font-sans font-semibold text-slate-800 text-[11.5px]">+31 (0)6 11 84 88 99</span>
                     </div>
                   </a>
 
                   {/* Email Link */}
                   <a
-                    href="mailto:support@huurgo.nl"
+                    href="mailto:mustafa@mbhoogwerkers.com"
                     className="w-full flex items-center p-3 rounded-xl bg-white hover:bg-slate-100/50 border border-slate-200 transition-all text-xs cursor-pointer gap-3 text-slate-700 group shadow-sm text-decoration-none"
                   >
                     <div className="h-7 w-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
@@ -101,7 +101,7 @@ export default function ContactModal({ isOpen, onClose, onShowToast, onAddSystem
                     </div>
                     <div className="flex-1 min-w-0">
                       <span className="text-[8.5px] text-slate-400 block font-bold leading-none mb-0.5 uppercase tracking-wide">E-mail Servicedesk</span>
-                      <span className="text-slate-800 text-[11px] block break-all font-semibold truncate">support@huurgo.nl</span>
+                      <span className="text-slate-800 text-[11px] block break-all font-semibold truncate">mustafa@mbhoogwerkers.com</span>
                     </div>
                   </a>
                 </div>

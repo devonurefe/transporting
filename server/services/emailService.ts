@@ -12,6 +12,7 @@ const resend = resendApiKey && resendApiKey !== "MY_RESEND_API_KEY" ? new Resend
 
 // Standard sender email (if domain is verified, use verified domain. Otherwise Resend sandbox uses onboarding@resend.dev)
 const SENDER_EMAIL = process.env.EMAIL_FROM || "onboarding@resend.dev";
+const APP_URL = process.env.APP_URL || "https://mbhoogwerkers.com";
 const ADMIN_ALERT_EMAIL = process.env.ADMIN_EMAIL || "mustafa@mbhoogwerkers.com";
 
 interface EmailOrderData {
@@ -125,7 +126,7 @@ export const emailService = {
             </p>
 
             <div style="text-align: center;">
-              <a href="https://huurgo.nl/account" class="btn" style="color: #ffffff;">Mijn Reserveringen Bekijken</a>
+              <a href="${APP_URL}/orders" class="btn" style="color: #ffffff;">Mijn Reserveringen Bekijken</a>
             </div>
           </div>
           <div class="footer">
@@ -209,7 +210,7 @@ export const emailService = {
             </div>
 
             <div style="text-align: center;">
-              <a href="https://huurgo.nl/admin" class="btn">Naar HubAdmin Dashboard</a>
+              <a href="${APP_URL}/admin" class="btn">Naar HubAdmin Dashboard</a>
             </div>
           </div>
         </div>
@@ -316,7 +317,7 @@ export const emailService = {
             </p>
 
             <div style="text-align: center;">
-              <a href="https://huurgo.nl/account" class="btn" style="color: #ffffff;">Mijn Account Openen</a>
+              <a href="${APP_URL}/orders" class="btn" style="color: #ffffff;">Mijn Account Openen</a>
             </div>
           </div>
           <div class="footer">

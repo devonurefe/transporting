@@ -828,6 +828,8 @@ export default function BookingSection({
                     setStep={setStep}
                     handleCreateBooking={handleCreateBooking}
                     bookingError={bookingError}
+                    sums={sums}
+                    selectedMachine={cartItems.length > 0 ? cartItems[0].machine : null}
                   />
                 )}
 

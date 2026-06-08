@@ -61,7 +61,7 @@ export default function BookingPriceSummary({ selectedMachine, sums }: BookingPr
         </div>
         <div className="min-w-0 flex-1">
           <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wide leading-none mb-1">Jouw reservering</p>
-          <h4 className="text-sm font-extrabold text-slate-900 leading-tight truncate">{selectedMachine.name}</h4>
+          <h4 className="text-sm font-extrabold text-slate-900 leading-snug">{selectedMachine.name}</h4>
           <span className="text-[11px] text-indigo-600 font-bold font-mono">€ {selectedMachine.pricePerDay}/dag</span>
         </div>
       </div>

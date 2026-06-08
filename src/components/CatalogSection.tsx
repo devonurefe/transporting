@@ -936,8 +936,7 @@ export default function CatalogSection({
                                     "2x Heavy-duty materiaalgordels met verstelbare karbijnhaakjes",
                                     "1x Speciaal ontworpen zonnepaneel-draagbeugel aan de korf",
                                     "1x Alleenstaand EN-361 Premium valbeveiligingsset Pro met schokdemper",
-                                    "1x Geïntegreerde 230V stroomaansluiting rechtstreeks in de werkbak",
-                                    "All-Risk Casco schadeverzekering (geen eigen risico op dakschade)"
+                                    "1x Geïntegreerde 230V stroomaansluiting rechtstreeks in de werkbak"
                                   ];
                                 case "set-prune-compact":
                                   return [
@@ -962,7 +961,6 @@ export default function CatalogSection({
                                     "1x Telescoophoogwerker Diesel (26m werkhoogte) - 4x4 aangedreven",
                                     "2x Slanghaspel mastklemmen voor hogedrukslangen tot korf",
                                     "1x Geïntegreerde generator unit (stroom & hogedrukwatertoevoer)",
-                                    "1x Volledige All-Risk Casco dekking zonder eigen risico",
                                     "2x Waterdichte mouwbeschermers & vizierbrillen voor gevelspuiten",
                                     "1x RVS werkbakorganizer voor spuitlansen"
                                   ];

@@ -12,7 +12,7 @@ const resend = resendApiKey && resendApiKey !== "MY_RESEND_API_KEY" ? new Resend
 
 // Standard sender email (if domain is verified, use verified domain. Otherwise Resend sandbox uses onboarding@resend.dev)
 const SENDER_EMAIL = process.env.EMAIL_FROM || "onboarding@resend.dev";
-const ADMIN_ALERT_EMAIL = process.env.ADMIN_EMAIL || "info@huurgo.nl";
+const ADMIN_ALERT_EMAIL = process.env.ADMIN_EMAIL || "mustafa@mbhoogwerkers.com";
 
 interface EmailOrderData {
   id: string;

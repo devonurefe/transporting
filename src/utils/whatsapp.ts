@@ -6,7 +6,7 @@
 import { CartItem } from "../types";
 
 // HuurGo WhatsApp business number
-const WHATSAPP_NUMBER = (import.meta as any).env?.VITE_WHATSAPP_NUMBER ?? "31612345678";
+const WHATSAPP_NUMBER = (import.meta as any).env?.VITE_WHATSAPP_NUMBER ?? "31611848899";
 
 /**
  * Builds a WhatsApp click-to-chat URL with a pre-filled rental inquiry message requesting an iDeal payment link.

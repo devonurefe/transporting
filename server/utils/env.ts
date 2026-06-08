@@ -16,7 +16,7 @@ const ENV_CHECKS: EnvCheck[] = [
   { key: "GEMINI_API_KEY", required: false, description: "Google Gemini AI API key" },
   { key: "RESEND_API_KEY", required: false, description: "Resend email API key" },
   { key: "EMAIL_FROM", required: false, defaultValue: "onboarding@resend.dev", description: "Sender email address" },
-  { key: "ADMIN_EMAIL", required: false, defaultValue: "info@huurgo.nl", description: "Admin notification email" },
+  { key: "ADMIN_EMAIL", required: false, defaultValue: "mustafa@mbhoogwerkers.com", description: "Admin notification email" },
   { key: "PORT", required: false, defaultValue: "3000", description: "Server listening port" }
 ];
 

@@ -344,17 +344,9 @@ export default function BookingSection({
       let addonCost = 0;
       const addonDetails: { id: string; name: string; price: number }[] = [];
 
-      if (selectedAddons.includes("clean")) {
-        addonCost += 45 * cartItems.length;
-        addonDetails.push({ id: "clean", name: `Reiniging & Schoonmaak Service (${cartItems.length}x)`, price: 45 * cartItems.length });
-      }
       if (selectedAddons.includes("safety")) {
         addonCost += 15 * totalDays;
         addonDetails.push({ id: "safety", name: "Gecertificeerd Harnas & Veiligheidskit", price: 15 * totalDays });
-      }
-      if (selectedAddons.includes("insurance")) {
-        addonCost += 25 * totalDays;
-        addonDetails.push({ id: "insurance", name: "Extra All-Risk Schadeverzekering", price: 25 * totalDays });
       }
 
       const borgsom = parseFloat((cartItems.reduce((sum, item) => sum + item.machine.pricePerDay * 0.20, 0)).toFixed(2));
@@ -448,17 +440,9 @@ export default function BookingSection({
     let addonCost = 0;
     const addonDetails: { id: string; name: string; price: number }[] = [];
 
-    if (selectedAddons.includes("clean")) {
-      addonCost += 45;
-      addonDetails.push({ id: "clean", name: "Reiniging & Schoonmaak Service", price: 45 });
-    }
     if (selectedAddons.includes("safety")) {
       addonCost += 15 * days;
       addonDetails.push({ id: "safety", name: "Gecertificeerd Harnas & Veiligheidskit", price: 15 * days });
-    }
-    if (selectedAddons.includes("insurance")) {
-      addonCost += 25 * days;
-      addonDetails.push({ id: "insurance", name: "Extra All-Risk Schadeverzekering", price: 25 * days });
     }
 
     const borgsom = parseFloat((selectedMachine.pricePerDay * 0.20).toFixed(2));
@@ -614,17 +598,9 @@ export default function BookingSection({
 
             let addonCost = 0;
             const addonsList: { id: string; name: string; price: number; billing: "daily" | "flat" }[] = [];
-            if (selectedAddons.includes("clean")) {
-              addonCost += 45;
-              addonsList.push({ id: "clean", name: "Reiniging & Schoonmaak Service", price: 45, billing: "flat" });
-            }
             if (selectedAddons.includes("safety")) {
               addonCost += 15 * days;
               addonsList.push({ id: "safety", name: "Gecertificeerd Harnas & Veiligheidskit", price: 15 * days, billing: "daily" });
-            }
-            if (selectedAddons.includes("insurance")) {
-              addonCost += 25 * days;
-              addonsList.push({ id: "insurance", name: "Extra All-Risk Schadeverzekering", price: 25 * days, billing: "daily" });
             }
 
             const itemVat = (itemSubtotal + transport + driver + addonCost) * 0.21;

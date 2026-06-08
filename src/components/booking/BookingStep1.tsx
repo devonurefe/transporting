@@ -251,37 +251,6 @@ export default function BookingStep1({
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div
             onClick={() => {
-              if (selectedAddons.includes("clean")) {
-                setSelectedAddons(selectedAddons.filter(x => x !== "clean"));
-              } else {
-                setSelectedAddons([...selectedAddons, "clean"]);
-              }
-            }}
-            className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between ${
-              selectedAddons.includes("clean") 
-                ? "bg-indigo-50 border-indigo-400 shadow-sm" 
-                : "bg-white border-slate-200 hover:border-indigo-300 shadow-sm"
-            }`}
-          >
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="text-xs font-bold text-slate-900">Schoonmaak service</h4>
-                <input 
-                  type="checkbox"
-                  checked={selectedAddons.includes("clean")}
-                  onChange={()=>{}}
-                  className="h-4 w-4 accent-indigo-600 rounded cursor-pointer"
-                />
-              </div>
-              <p className="text-[10.5px] text-slate-600 leading-normal">
-                Geen zorgen over verfresten, modder of zaagsel. Wij verzorgen de complete eindreiniging na inlevering.
-              </p>
-            </div>
-            <span className="text-xs font-mono font-bold text-teal-700 mt-3 block">€45,- (Eénmalig)</span>
-          </div>
-
-          <div
-            onClick={() => {
               if (selectedAddons.includes("safety")) {
                 setSelectedAddons(selectedAddons.filter(x => x !== "safety"));
               } else {
@@ -311,36 +280,6 @@ export default function BookingStep1({
             <span className="text-xs font-mono font-bold text-indigo-700 mt-3 block">€15,- / per dag</span>
           </div>
 
-          <div
-            onClick={() => {
-              if (selectedAddons.includes("insurance")) {
-                setSelectedAddons(selectedAddons.filter(x => x !== "insurance"));
-              } else {
-                setSelectedAddons([...selectedAddons, "insurance"]);
-              }
-            }}
-            className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between ${
-              selectedAddons.includes("insurance") 
-                ? "bg-indigo-50 border-indigo-400 shadow-sm" 
-                : "bg-white border-slate-200 hover:border-indigo-300 shadow-sm"
-            }`}
-          >
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="text-xs font-bold text-slate-900">All-Risk Kasko</h4>
-                <input 
-                  type="checkbox"
-                  checked={selectedAddons.includes("insurance")}
-                  onChange={()=>{}}
-                  className="h-4 w-4 accent-indigo-605 rounded cursor-pointer animate-fade-in"
-                />
-              </div>
-              <p className="text-[10.5px] text-slate-600 leading-normal">
-                Volledige kaskodekking tegen diefstal, stormschade of breuk met een gereduceerd eigen risico van €250.
-              </p>
-            </div>
-            <span className="text-xs font-mono font-bold text-indigo-700 mt-3 block">€25,- / per dag</span>
-          </div>
         </div>
       </div>
 

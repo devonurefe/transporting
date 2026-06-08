@@ -48,4 +48,4 @@ COPY --from=builder /app/prisma /app/prisma
 EXPOSE 3000
 
 # Script to push Prisma schema, seed the database, and start the server
-CMD ["sh", "-c", "npx prisma db push && npx prisma db seed && npm run start"]
+CMD ["sh", "-c", "npx prisma db push --accept-data-loss && npx prisma db seed && npm run start"]

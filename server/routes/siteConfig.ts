@@ -5,12 +5,14 @@ import { AuthenticatedRequest } from "../middleware/auth.js";
 
 export const siteConfigRouter = Router();
 
+const CORRECT_SUBTITLE = "MB Hoogwerkers verhuurt hoogwerkers, schaarliften en ladderliften aan ZZP'ers en particulieren. Geen gedoe, direct online geregeld. Kies uw machine en boek eenvoudig via WhatsApp.";
+
 const defaultSiteConfig = {
   id: "default",
   siteName: "HuurGo",
-  heroTagline: "Snel & Makkelijk Hoogwerkers Huren",
-  heroTitle: "Wat heeft u nodig?",
-  heroSubtitle: "Kies uw categorie en huur direct. Simpel, snel, all-in.",
+  heroTagline: "Professionele Hoogwerker Verhuur",
+  heroTitle: "De juiste machine, snel en veilig geregeld.",
+  heroSubtitle: CORRECT_SUBTITLE,
   menuHomeLabel: "Home",
   menuCatalogLabel: "Catalogus",
   menuOrdersLabel: "Mijn Account",
@@ -20,9 +22,14 @@ const defaultSiteConfig = {
 // GET site config
 siteConfigRouter.get("/site-config", async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const config = await prisma.siteConfig.findUnique({
-      where: { id: "default" }
-    });
+    let config = await prisma.siteConfig.findUnique({ where: { id: "default" } });
+    // Auto-fix stale AI-assistent text that may be stored in DB
+    if (config?.heroSubtitle?.includes("AI-assistent") || config?.heroSubtitle?.includes("AI assistant")) {
+      config = await prisma.siteConfig.update({
+        where: { id: "default" },
+        data: { heroSubtitle: CORRECT_SUBTITLE }
+      });
+    }
     res.json(config || defaultSiteConfig);
   } catch (error) {
     console.error("Error fetching site config:", error);

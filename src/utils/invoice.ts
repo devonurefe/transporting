@@ -452,11 +452,10 @@ export function printInvoice(orderOrOrders: Order | Order[], clientCompanyName?:
           </div>
           
           <div class="issuer-info">
-            <div class="issuer-name">HuurGo Nederland B.V.</div>
-            <div>Distributieweg 12, 1047 JC Amsterdam</div>
-            <div>E: mustafa@mbhoogwerkers.com | T: +31 (0)6 11 84 88 99</div>
-            <div>KvK-nummer: 72839102 | BTW-nummer: NL82039401B01</div>
-            <div>Bank: NL91 ABNA 0412 8391 02 (BIC: ABNANL2A)</div>
+            <div class="issuer-name">HuurGo B.V.</div>
+            <div>Produktieweg 20, 2382 PB Zoeterwoude</div>
+            <div>E: mustafa@mbhoogwerkers.com | T: 071 542 8114</div>
+            <div>KvK-nummer: 67438237 | BTW-nummer: NL856990656B01</div>
           </div>
         </header>
         

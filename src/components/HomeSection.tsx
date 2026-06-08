@@ -82,17 +82,14 @@ export default function HomeSection({
   };
 
   return (
-    <div className="relative min-h-[calc(100vh-3.5rem)] overflow-hidden">
+    <div
+      className="relative min-h-[calc(100vh-3.5rem)] overflow-hidden bg-slate-900 bg-cover bg-center bg-no-repeat"
+      style={{ backgroundImage: "url('/hero-bg.jpg')" }}
+    >
+      {/* Gradient overlay — dark at top for hero text, transparent at bottom */}
+      <div className="absolute inset-0 bg-gradient-to-b from-slate-900/70 via-slate-900/40 to-transparent pointer-events-none" />
 
-      {/* Hero background photo */}
-      <div
-        className="absolute inset-0 -z-10 bg-cover bg-center"
-        style={{ backgroundImage: "url('/hero-bg.jpg')" }}
-      />
-      {/* Dark overlay so text stays readable */}
-      <div className="absolute inset-0 -z-10 bg-gradient-to-b from-slate-900/70 via-slate-900/50 to-white/95" />
-
-      <div className="relative px-5 sm:px-6 lg:px-8 py-16 sm:py-20">
+      <div className="relative z-10 px-5 sm:px-6 lg:px-8 py-16 sm:py-20">
       <div className="mx-auto max-w-5xl">
 
         {/* HERO — photo background version */}
@@ -226,7 +223,7 @@ export default function HomeSection({
         {/* Minimal footer info */}
         <div className="text-center pt-4 pb-2">
           <p className="text-[10px] text-slate-400 font-mono">
-            Alphen a/d Rijn • TÜV / BMWT Gecertificeerd • Zelf ophalen of bezorgen
+            Zoeterwoude • TÜV / BMWT Gecertificeerd • Zelf ophalen of bezorgen
           </p>
         </div>
 

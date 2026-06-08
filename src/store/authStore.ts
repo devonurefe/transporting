@@ -152,16 +152,35 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
     set({ isLoading: true, token });
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 12000);
+
       const res = await fetch("/api/auth/me", {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
+        signal: controller.signal
       });
+      clearTimeout(timeoutId);
+
+      if (res.status === 401 || res.status === 403) {
+        // Token is genuinely invalid/expired — clear it
+        if (isAdminMode) {
+          localStorage.removeItem("hwh_admin_token");
+          localStorage.removeItem("hwh_admin_mode");
+        } else {
+          localStorage.removeItem("hwh_token");
+        }
+        set({ token: null, user: null, isAuthenticated: false, isAdmin: false, isLoading: false });
+        return;
+      }
 
       if (!res.ok) {
-        throw new Error("Sessie verlopen");
+        // Server error (5xx) — keep token, just don't authenticate yet
+        set({ isLoading: false });
+        return;
       }
 
       const data = await res.json();
-      
+
       if (data.user.role === "admin") {
         localStorage.setItem("hwh_admin_token", token);
         localStorage.setItem("hwh_admin_mode", "true");
@@ -177,13 +196,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         isAdmin: data.user.role === "admin",
         isLoading: false
       });
-    } catch (err) {
-      if (isAdminMode) {
-        localStorage.removeItem("hwh_admin_token");
-      } else {
-        localStorage.removeItem("hwh_token");
-      }
-      set({ token: null, user: null, isAuthenticated: false, isAdmin: false, isLoading: false });
+    } catch {
+      // Network error / timeout / Render cold-start — keep token in localStorage!
+      // The token may still be valid; the server was temporarily unreachable.
+      set({ isLoading: false });
     }
   },
 

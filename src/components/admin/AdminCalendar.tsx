@@ -128,16 +128,16 @@ export default function AdminCalendar({ onAddSystemLog, adminLanguage }: AdminCa
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           
           {/* Left: block a date form */}
-          <form onSubmit={handleBlockDateSubmit} className="lg:col-span-5 p-5 rounded-2xl bg-slate-50 border border-slate-200 shadow-sm space-y-4">
-            <h4 className="text-xs font-bold text-amber-600 uppercase tracking-wider">{t("Selecteer om te Blokkeren", "Select to Block", "Engellemek için Seçin")}</h4>
-            
-            <div className="space-y-1">
+          <form onSubmit={handleBlockDateSubmit} className="lg:col-span-5 p-6 rounded-2xl bg-slate-50 border border-slate-200 shadow-sm space-y-5">
+            <h4 className="text-sm font-bold text-amber-600">{t("Selecteer om te Blokkeren", "Select to Block", "Engellemek İçin Seçin")}</h4>
+
+            <div className="space-y-2">
               <label className="text-xs text-slate-700 block font-bold">{t("Kies Machine of Set/Pakket *", "Choose Machine or Set/Package *", "Makine veya Set/Paket Seçin *")}</label>
               <select
                 required
                 value={selectedBlockMachineId}
                 onChange={(e) => setSelectedBlockMachineId(e.target.value)}
-                className="bg-white border border-slate-200 text-slate-800 w-full rounded-xl px-3 py-2 text-xs outline-none focus:border-amber-500 cursor-pointer"
+                className="bg-white border border-slate-200 text-slate-800 w-full rounded-xl px-3 py-3 text-sm outline-none focus:border-amber-500 cursor-pointer"
               >
                 <option value="">{t("-- Maak uw vlootkeuze --", "-- Choose from fleet --", "-- Filonuzdan seçim yapın --")}</option>
                 {machines.map(m => (
@@ -146,30 +146,30 @@ export default function AdminCalendar({ onAddSystemLog, adminLanguage }: AdminCa
               </select>
             </div>
 
-            <div className="grid grid-cols-1 xs:grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <label className="text-[11px] text-slate-600 block font-semibold uppercase tracking-wide">{t("Begindatum *", "Start Date *", "Başlangıç Tarihi *")}</label>
+            <div className="grid grid-cols-1 xs:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-xs text-slate-600 block font-semibold">{t("Begindatum *", "Start Date *", "Başlangıç Tarihi *")}</label>
                 <input
                   type="date"
                   required
                   value={blockDate}
                   onChange={(e) => { setBlockDate(e.target.value); if (blockEndDate && blockEndDate < e.target.value) setBlockEndDate(""); }}
-                  className="bg-white border border-slate-200 text-slate-800 w-full rounded-xl px-3 py-2.5 text-xs outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 cursor-pointer transition-colors"
+                  className="bg-white border border-slate-200 text-slate-800 w-full rounded-xl px-3 py-3 text-sm outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 cursor-pointer transition-colors"
                 />
               </div>
-              <div className="space-y-1.5">
-                <label className="text-[11px] text-slate-600 block font-semibold uppercase tracking-wide">{t("Einddatum", "End Date", "Bitiş Tarihi")}</label>
+              <div className="space-y-2">
+                <label className="text-xs text-slate-600 block font-semibold">{t("Einddatum", "End Date", "Bitiş Tarihi")}</label>
                 <input
                   type="date"
                   value={blockEndDate}
                   min={blockDate}
                   onChange={(e) => setBlockEndDate(e.target.value)}
-                  className="bg-white border border-slate-200 text-slate-800 w-full rounded-xl px-3 py-2.5 text-xs outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 cursor-pointer transition-colors"
+                  className="bg-white border border-slate-200 text-slate-800 w-full rounded-xl px-3 py-3 text-sm outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 cursor-pointer transition-colors"
                 />
               </div>
             </div>
 
-            <div className="space-y-1">
+            <div className="space-y-2">
               <label className="text-xs text-slate-700 block font-bold">{t("Reden voor de Blokkade *", "Reason for Block *", "Engelleme Nedeni *")}</label>
               <input
                 type="text"
@@ -177,14 +177,14 @@ export default function AdminCalendar({ onAddSystemLog, adminLanguage }: AdminCa
                 value={blockReason}
                 onChange={(e) => setBlockReason(e.target.value)}
                 placeholder={t("bijv: TÜV Keuring / Periodiek onderhoud / Demo", "e.g., TÜV Inspection / Periodic maintenance / Demo", "örn: TÜV Denetimi / Periyodik bakım / Demo")}
-                className="bg-white border border-slate-200 text-slate-800 w-full rounded-xl px-3 py-2 text-xs outline-none focus:border-amber-500"
+                className="bg-white border border-slate-200 text-slate-800 w-full rounded-xl px-3 py-3 text-sm outline-none focus:border-amber-500"
               />
             </div>
 
             <button
               type="submit"
               disabled={isSubmittingBlock || !selectedBlockMachineId}
-              className="w-full py-2.5 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white font-extrabold text-xs rounded-xl transition-all border-none cursor-pointer flex items-center justify-center space-x-1.5"
+              className="w-full py-3.5 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white font-extrabold text-sm rounded-xl transition-all border-none cursor-pointer flex items-center justify-center space-x-2"
             >
               <Plus className="h-4 w-4 shrink-0" />
               <span>{isSubmittingBlock ? t("Bezig...", "Processing...", "İşleniyor...") : (blockEndDate && blockEndDate > blockDate ? t("Blokkeer periode", "Block period", "Periyodu Engelle") : t("Blokkeer datum", "Block date", "Tarihi Engelle"))}</span>
@@ -193,40 +193,40 @@ export default function AdminCalendar({ onAddSystemLog, adminLanguage }: AdminCa
 
           {/* Right: show active blocked list */}
           <div className="lg:col-span-7 space-y-4">
-            <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center justify-between">
+            <h4 className="text-sm font-bold text-slate-700 flex items-center justify-between">
               <span>{t("Actieve Systeemsluitingen", "Active System Closures", "Aktif Sistem Kapatmaları")} ({blockedDates.length})</span>
-              <span className="text-[10px] lowercase font-normal font-mono text-slate-500">{t("gebaseerd op realtime database", "based on real-time database", "gerçek zamanlı veri tabanına göre")}</span>
+              <span className="text-xs font-normal text-slate-400">{t("realtime", "real-time", "gerçek zamanlı veri tabanına göre")}</span>
             </h4>
 
-            <div className="space-y-3 max-h-[400px] overflow-y-auto pr-1">
+            <div className="space-y-3 max-h-[450px] overflow-y-auto pr-1">
               {blockedDates.length === 0 ? (
-                <div className="p-8 rounded-2xl bg-slate-50 border border-slate-200 text-center text-slate-500 space-y-2">
+                <div className="p-10 rounded-2xl bg-slate-50 border border-slate-200 text-center text-slate-500 space-y-2">
                   <Calendar className="h-8 w-8 text-slate-400 mx-auto" />
-                  <p className="text-xs font-medium">{t("Alle datums zijn momenteel open voor boekingen.", "All dates are currently open for bookings.", "Şu anda tüm tarihler rezervasyona açıktır.")}</p>
+                  <p className="text-sm font-medium">{t("Alle datums zijn momenteel open voor boekingen.", "All dates are currently open for bookings.", "Şu anda tüm tarihler rezervasyona açıktır.")}</p>
                 </div>
               ) : (
                 blockedDates.map((block) => {
                   const relatedMachine = machines.find(m => m.id === block.machineId);
                   return (
-                    <div key={block.id} className="p-3.5 rounded-xl bg-amber-500/5 hover:bg-amber-500/8 border border-amber-200/80 transition-all flex justify-between items-start gap-3">
-                      <div className="space-y-1 min-w-0 flex-1">
-                        <div className="flex items-center space-x-1.5">
-                          <span className="h-1.5 w-1.5 rounded-full bg-amber-500 shrink-0" />
-                          <h4 className="text-xs font-extrabold text-slate-800 truncate leading-none">
+                    <div key={block.id} className="p-4 rounded-xl bg-amber-500/5 hover:bg-amber-50 border border-amber-200/80 transition-all flex justify-between items-start gap-3">
+                      <div className="space-y-1.5 min-w-0 flex-1">
+                        <div className="flex items-center space-x-2">
+                          <span className="h-2 w-2 rounded-full bg-amber-500 shrink-0" />
+                          <h4 className="text-sm font-extrabold text-slate-800 leading-tight">
                             {relatedMachine ? relatedMachine.name : block.machineId}
                           </h4>
                         </div>
-                        <p className="text-[10px] font-mono text-amber-700 leading-none">
+                        <p className="text-xs font-mono text-amber-700">
                           {t("Datum: ", "Date: ", "Tarih: ")}{block.date}
                         </p>
-                        <p className="text-[10.5px] text-slate-600 leading-normal">
-                          {t("Reden: ", "Reason: ", "Neden: ")}<span className="text-slate-800 font-bold">{block.reason || t("Geen opgegeven reden", "No reason provided", "Neden belirtilmedi")}</span>
+                        <p className="text-xs text-slate-600">
+                          {t("Reden: ", "Reason: ", "Neden: ")}<span className="text-slate-800 font-semibold">{block.reason || t("Geen opgegeven reden", "No reason provided", "Neden belirtilmedi")}</span>
                         </p>
                       </div>
                       <button
                         type="button"
                         onClick={() => handleUnblockDate(block.machineId, block.date)}
-                        className="text-[10px] font-bold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 px-2.5 py-1 rounded-lg border border-rose-200 cursor-pointer transition-colors border-none shrink-0"
+                        className="text-xs font-bold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 px-3 py-1.5 rounded-lg border border-rose-200 cursor-pointer transition-colors shrink-0"
                       >
                         {t("Vrijgeven", "Release", "Kullanıma Aç")}
                       </button>

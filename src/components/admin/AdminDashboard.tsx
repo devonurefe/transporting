@@ -452,58 +452,57 @@ export default function AdminDashboard({ setSubTab, adminLanguage }: AdminDashbo
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs border-collapse whitespace-nowrap">
+          <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="border-b border-slate-200 text-slate-500">
-                <th className="pb-2.5 font-bold">Ref No.</th>
-                <th className="pb-2.5 font-bold">{t("Klant", "Customer", "Müşteri")}</th>
-                <th className="pb-2.5 font-bold">{t("Machine", "Machine", "Makine")}</th>
-                <th className="pb-2.5 font-bold">{t("Dagen", "Days", "Gün")}</th>
-                <th className="pb-2.5 font-bold">{t("Bedrag (incl BTW)", "Amount (incl VAT)", "Tutar (KDV Dahil)")}</th>
-                <th className="pb-2.5 font-bold text-center">{t("Status", "Status", "Durum")}</th>
+                <th className="pb-3 font-bold pr-4">Ref No.</th>
+                <th className="pb-3 font-bold pr-4">{t("Klant", "Customer", "Müşteri")}</th>
+                <th className="pb-3 font-bold pr-4 hidden sm:table-cell">{t("Machine", "Machine", "Makine")}</th>
+                <th className="pb-3 font-bold pr-4 hidden sm:table-cell">{t("Bedrag (incl BTW)", "Amount (incl VAT)", "Tutar")}</th>
+                <th className="pb-3 font-bold text-center">{t("Status", "Status", "Durum")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {orders.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-6 text-center text-slate-500">
+                  <td colSpan={5} className="py-8 text-center text-slate-500">
                     {t("Er zijn momenteel geen boekingen in de database.", "There are currently no bookings in the database.", "Veri tabanında şu anda rezervasyon bulunmamaktadır.")}
                   </td>
                 </tr>
               ) : (
-                orders.slice(0, 4).map((o) => {
-                  return (
-                    <tr key={o.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="py-3 font-mono font-bold text-indigo-600">{o.id}</td>
-                      <td className="py-3 font-medium text-slate-800">
-                        {o.customerName}
-                        <span className="block text-[10px] text-slate-500 font-normal">{o.customerProfile}</span>
-                      </td>
-                      <td className="py-3 text-slate-600">{o.machineName}</td>
-                      <td className="py-3 font-mono text-slate-600">{o.rentalDays}d</td>
-                      <td className="py-3 font-mono text-teal-600 font-bold">€ {o.totalAmount.toFixed(2)}</td>
-                      <td className="py-3 text-center">
-                        <span className={`inline-block text-[9px] font-mono px-2 py-0.5 rounded-full font-extrabold uppercase ${
-                          o.status === "In behandeling" 
-                            ? "bg-amber-400/20 text-amber-400" 
-                            : o.status === "Goedgekeurd"
-                              ? "bg-teal-500/20 text-teal-400"
-                              : o.status === "Onderweg"
-                                ? "bg-blue-500/20 text-blue-400"
-                                : "bg-slate-700/30 text-slate-400"
-                        }`}>
-                          {o.status === "In behandeling" 
-                            ? t("In behandeling", "Pending", "Beklemede") 
-                            : o.status === "Goedgekeurd"
-                              ? t("Goedgekeurd", "Approved", "Onaylandı")
-                              : o.status === "Onderweg"
-                                ? t("Onderweg", "Dispatched", "Yolda")
-                                : t("Voltooid", "Completed", "Tamamlandı")}
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })
+                orders.slice(0, 5).map((o) => (
+                  <tr key={o.id} className="hover:bg-slate-50 transition-colors">
+                    <td className="py-4 pr-4 font-mono font-bold text-indigo-600 text-[11px]">{o.id}</td>
+                    <td className="py-4 pr-4">
+                      <span className="font-semibold text-slate-800 block">{o.customerName}</span>
+                      <span className="text-[11px] text-slate-400 font-normal">{o.customerProfile}</span>
+                    </td>
+                    <td className="py-4 pr-4 text-slate-600 max-w-[160px] hidden sm:table-cell">
+                      <span className="block leading-snug">{o.machineName}</span>
+                      <span className="text-[11px] text-slate-400 font-mono">{o.rentalDays}d</span>
+                    </td>
+                    <td className="py-4 pr-4 font-mono text-teal-600 font-bold hidden sm:table-cell">€ {o.totalAmount.toFixed(2)}</td>
+                    <td className="py-4 text-center">
+                      <span className={`inline-block text-[10px] font-bold px-2.5 py-1 rounded-full ${
+                        o.status === "In behandeling"
+                          ? "bg-amber-100 text-amber-700"
+                          : o.status === "Goedgekeurd"
+                            ? "bg-teal-100 text-teal-700"
+                            : o.status === "Onderweg"
+                              ? "bg-blue-100 text-blue-700"
+                              : "bg-slate-100 text-slate-600"
+                      }`}>
+                        {o.status === "In behandeling"
+                          ? t("Wacht", "Pending", "Bekliyor")
+                          : o.status === "Goedgekeurd"
+                            ? t("OK", "OK", "Onaylandı")
+                            : o.status === "Onderweg"
+                              ? t("Weg", "Dispatched", "Yolda")
+                              : t("Klaar", "Done", "Tamam")}
+                      </span>
+                    </td>
+                  </tr>
+                ))
               )}
             </tbody>
           </table>

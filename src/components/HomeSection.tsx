@@ -99,10 +99,10 @@ export default function HomeSection({
 
       {/* ── HERO SECTION ── */}
       <div
-        className="relative bg-slate-900 bg-cover bg-center bg-no-repeat overflow-hidden px-5 sm:px-6 lg:px-8 pt-12 sm:pt-16 pb-14 sm:pb-18"
+        className="relative bg-slate-900 bg-cover bg-center bg-no-repeat overflow-hidden px-5 sm:px-6 lg:px-8 pt-16 sm:pt-20 pb-20 sm:pb-24"
         style={{ backgroundImage: "url('/hero-bg.jpg')" }}
       >
-        <div className="absolute inset-0 bg-gradient-to-b from-slate-900/65 via-slate-800/50 to-slate-900/60 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-900/60 via-slate-800/50 to-slate-900/70 pointer-events-none" />
 
         <div className="relative z-10 mx-auto max-w-2xl text-center">
 
@@ -128,7 +128,7 @@ export default function HomeSection({
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.15 }}
-            className="mt-6"
+            className="mt-8"
           >
             <a
               href={buildWhatsAppGeneralUrl()}
@@ -141,7 +141,7 @@ export default function HomeSection({
             </a>
           </motion.div>
 
-          <p className="text-center text-[10px] text-white/40 font-mono mt-4">
+          <p className="text-center text-[10px] text-white/40 font-mono mt-5">
             Zoeterwoude • TÜV / BMWT Gecertificeerd • Zelf ophalen of bezorgen
           </p>
 
@@ -170,7 +170,7 @@ export default function HomeSection({
                     <Icon className="h-5 w-5 text-slate-600" />
                   </div>
                 </div>
-                <p className="font-bold text-sm text-slate-800 leading-snug mb-3">
+                <p className="font-bold text-[12px] text-slate-800 leading-snug mb-3 line-clamp-2">
                   {cat.listLabel || cat.label}
                 </p>
                 <div className="flex justify-between items-end">

@@ -180,14 +180,14 @@ export default function HomeSection({
                 <p className="font-bold text-[12px] text-slate-800 leading-snug mb-3 line-clamp-2">
                   {cat.listLabel || cat.label}
                 </p>
-                <div className="flex justify-between items-end">
-                  <div>
-                    <p className="text-[9px] font-black uppercase tracking-wider text-slate-400 mb-0.5">Hoogte</p>
-                    <p className="text-xs font-bold text-slate-700">{cat.heights}</p>
+                <div className="space-y-1.5 mt-auto">
+                  <div className="flex items-baseline gap-1.5">
+                    <p className="text-[9px] font-black uppercase tracking-wider text-slate-400 w-10 shrink-0">Hoogte</p>
+                    <p className="text-sm font-bold text-slate-700">{cat.heights}</p>
                   </div>
-                  <div className="text-right">
-                    <p className="text-[9px] font-black uppercase tracking-wider text-slate-400 mb-0.5">All-in</p>
-                    <p className="text-xs font-bold text-emerald-600">{cat.price}</p>
+                  <div className="flex items-baseline gap-1.5">
+                    <p className="text-[9px] font-black uppercase tracking-wider text-slate-400 w-10 shrink-0">All-in</p>
+                    <p className="text-sm font-extrabold text-emerald-600">{cat.price}</p>
                   </div>
                 </div>
               </motion.button>

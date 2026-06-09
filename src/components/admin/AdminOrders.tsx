@@ -28,12 +28,18 @@ interface AdminOrdersProps {
   key?: string;
   onAddSystemLog: (type: "login" | "logout" | "signup" | "booking" | "fleet" | "status" | "system", user: string, description: string) => void;
   adminLanguage?: string;
+  statusFilter?: string[];
+  onClearStatusFilter?: () => void;
 }
 
-export default function AdminOrders({ onAddSystemLog, adminLanguage }: AdminOrdersProps) {
+export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilter, onClearStatusFilter }: AdminOrdersProps) {
   const orders = useAppStore((state) => state.orders);
   const updateOrderStatus = useAppStore((state) => state.updateOrderStatus);
   const adminUser = useAuthStore((state) => state.user);
+
+  const displayOrders = statusFilter && statusFilter.length > 0
+    ? orders.filter(o => statusFilter.includes(o.status))
+    : orders;
 
   const t = (nl: string, en: string, tr: string) => {
     if (adminLanguage === "tr") return tr;
@@ -169,8 +175,21 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage }: AdminOrde
     >
       <div className="glass-panel p-6 rounded-3xl space-y-4">
         <div className="border-b border-slate-200 pb-3">
-          <h3 className="font-display font-bold text-sm text-slate-900">{t("Alle Actieve & Historische Contracten", "All Active & Historical Contracts", "Tüm Aktif ve Geçmiş Sözleşmeler")}</h3>
-          <p className="text-[11px] text-slate-500 mt-0.5">{t("Hier accordeert u inkomende reserveringen en past u de logistieke status aan van klanten.", "Here you approve incoming reservations and adjust the logistics status.", "Buradan gelen rezervasyonları onaylar ve müşterilerin lojistik durumlarını düzenlersiniz.")}</p>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h3 className="font-display font-bold text-sm text-slate-900">{t("Alle Actieve & Historische Contracten", "All Active & Historical Contracts", "Tüm Aktif ve Geçmiş Sözleşmeler")}</h3>
+              <p className="text-[11px] text-slate-500 mt-0.5">{t("Hier accordeert u inkomende reserveringen en past u de logistieke status aan van klanten.", "Here you approve incoming reservations and adjust the logistics status.", "Buradan gelen rezervasyonları onaylar ve müşterilerin lojistik durumlarını düzenlersiniz.")}</p>
+            </div>
+            {statusFilter && statusFilter.length > 0 && (
+              <button
+                onClick={onClearStatusFilter}
+                className="flex items-center gap-1.5 flex-shrink-0 text-[10px] font-bold px-3 py-1.5 rounded-full bg-indigo-100 text-indigo-700 border border-indigo-200 hover:bg-indigo-200 transition-colors"
+              >
+                <span>{statusFilter.join(" / ")}</span>
+                <X className="h-3 w-3" />
+              </button>
+            )}
+          </div>
         </div>
 
         {statusError && (
@@ -182,12 +201,12 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage }: AdminOrde
 
         {/* Mobile card layout */}
         <div className="md:hidden space-y-3">
-          {orders.length === 0 ? (
+          {displayOrders.length === 0 ? (
             <div className="py-8 text-center text-slate-500 text-xs">
               {t("Geen contracten beschikbaar.", "No contracts available.", "Kullanılabilir sözleşme yok.")}
             </div>
           ) : (
-            orders.map((o) => (
+            displayOrders.map((o) => (
               <div key={o.id} className="bg-white rounded-2xl border border-slate-200 p-4 space-y-3 shadow-sm">
                 <div className="flex justify-between items-start gap-2">
                   <div className="min-w-0">
@@ -258,14 +277,14 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage }: AdminOrde
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {orders.length === 0 ? (
+              {displayOrders.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="py-8 text-center text-slate-500">
                     {t("Geen contracten beschikbaar in het beheerder log.", "No contracts available in the admin log.", "Yönetici kaydında kullanılabilir sözleşme bulunmamaktadır.")}
                   </td>
                 </tr>
               ) : (
-                orders.map((o) => {
+                displayOrders.map((o) => {
                   return (
                     <tr key={o.id} className="hover:bg-slate-50 transition-colors group">
                       <td 

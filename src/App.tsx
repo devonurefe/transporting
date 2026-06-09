@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect, useCallback, lazy, Suspense } from "react";
-import { Loader2, ArrowUp, MessageCircle } from "lucide-react";
+import { Loader2, MessageCircle } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import Header from "./components/Header";
@@ -60,21 +60,7 @@ export default function App() {
     window.scrollTo(0, 0);
   }, [location.pathname]);
 
-  // Back to Top button show/hide tracking
-  const [showScrollTop, setShowScrollTop] = useState(false);
   const [fabOpen, setFabOpen] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 400);
-    };
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
 
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [selectedMachine, setSelectedMachine] = useState<Machine | null>(null);
@@ -89,6 +75,7 @@ export default function App() {
 
   const checkAuth = useAuthStore((state) => state.checkAuth);
   const storeUser = useAuthStore((state) => state.user);
+  const authChecked = useAuthStore((state) => state.authChecked);
 
   useEffect(() => {
     checkAuth();
@@ -117,11 +104,14 @@ export default function App() {
         });
         setIsAdminMode(false);
       }
-    } else {
+    } else if (authChecked) {
+      // Auth check is complete and confirmed no user — safe to clear admin mode
       setCurrentUser(null);
       setIsAdminMode(false);
     }
-  }, [storeUser, setIsAdminMode, navigate, location.pathname]);
+    // When authChecked=false (still loading), don't touch isAdminMode
+    // so the admin panel stays visible while the token is being verified
+  }, [storeUser, authChecked, setIsAdminMode, navigate, location.pathname]);
 
   // System and Activity Logs
   const [systemLogs, setSystemLogs] = useState<any[]>([
@@ -632,15 +622,23 @@ export default function App() {
             )}
           </AnimatePresence>
 
-          <motion.button
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            onClick={() => setFabOpen(v => !v)}
-            className={`flex items-center justify-center h-11 w-11 rounded-full text-white shadow-lg hover:scale-110 active:scale-95 transition-all cursor-pointer border-none shadow-emerald-500/25 ${fabOpen ? "bg-slate-700 hover:bg-slate-800" : "bg-[#25D366] hover:bg-[#1da851]"}`}
-            title="Hulp nodig? Chat via WhatsApp"
-          >
-            <MessageCircle className="h-5 w-5" />
-          </motion.button>
+          <div className="relative">
+            {!fabOpen && (
+              <>
+                <span className="absolute inset-0 rounded-full bg-[#25D366] animate-ping opacity-50 pointer-events-none" />
+                <span className="absolute inset-0 rounded-full bg-[#25D366] animate-ping opacity-30 pointer-events-none" style={{ animationDelay: "0.4s" }} />
+              </>
+            )}
+            <motion.button
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              onClick={() => setFabOpen(v => !v)}
+              className={`relative flex items-center justify-center h-11 w-11 rounded-full text-white shadow-lg hover:scale-110 active:scale-95 transition-all cursor-pointer border-none shadow-emerald-500/25 ${fabOpen ? "bg-slate-700 hover:bg-slate-800" : "bg-[#25D366] hover:bg-[#1da851]"}`}
+              title="Hulp nodig? Chat via WhatsApp"
+            >
+              <MessageCircle className="h-5 w-5" />
+            </motion.button>
+          </div>
 
           {fabOpen && (
             <div className="fixed inset-0 -z-10" onClick={() => setFabOpen(false)} />
@@ -648,21 +646,6 @@ export default function App() {
         </div>
       )}
 
-      {/* FLOATING ACTION BACK-TO-TOP BUTTON */}
-      <AnimatePresence>
-        {showScrollTop && (
-          <motion.button
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            onClick={scrollToTop}
-            className="fixed bottom-32 sm:bottom-22 right-4 sm:right-6 z-40 p-3.5 rounded-full bg-slate-900/90 text-white shadow-xl backdrop-blur-md border border-white/10 hover:bg-slate-800 hover:scale-105 active:scale-95 transition-all cursor-pointer flex items-center justify-center border-none"
-            title="Omhoog scrollen"
-          >
-            <ArrowUp className="h-5 w-5" />
-          </motion.button>
-        )}
-      </AnimatePresence>
 
     </div>
   );

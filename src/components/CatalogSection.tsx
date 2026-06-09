@@ -435,9 +435,12 @@ export default function CatalogSection({
                             <div className="border-t border-slate-100 pt-1">
                               <button
                                 onClick={() => setExpandedInfoId(isOpen ? null : machine.id)}
-                                className="w-full flex items-center justify-between text-xs font-bold text-indigo-600 hover:text-indigo-800 py-1.5 cursor-pointer transition-colors"
+                                className={`w-full flex items-center justify-between text-[11px] font-extrabold py-2 px-2.5 rounded-lg cursor-pointer transition-all ${isOpen ? "text-indigo-700 bg-indigo-50" : "text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50/60"}`}
                               >
-                                <span>{t("btnMoreInfo")}</span>
+                                <span className="flex items-center gap-1.5">
+                                  <span className="text-[13px]">🔍</span>
+                                  {t("btnMoreInfo")}
+                                </span>
                                 <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
                               </button>
                               <AnimatePresence>

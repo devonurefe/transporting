@@ -29,54 +29,65 @@ export function buildWhatsAppUrl(
 ): string {
   const lines: string[] = [];
 
-  lines.push("Hallo HuurGo! 👋");
+  lines.push("🏗️ *Verhuurverzoek via HuurGo*");
   lines.push("");
-  lines.push("Ik wil graag de volgende machine(s) boeken en betalen via een iDEAL betaallink:");
-  lines.push("");
+  lines.push("─────────────────────────────");
+  lines.push("📦 *BESTELDE MACHINE(S)*");
+  lines.push("─────────────────────────────");
 
   for (const item of cartItems) {
     const start = item.startDate || "–";
     const end = item.endDate || "–";
     const itemDays = totals && cartItems.length === 1 ? totals.days : null;
-    lines.push(`• ${item.machine.name}`);
-    lines.push(`  Periode: ${start} t/m ${end}`);
+    lines.push(`▸ *${item.machine.name}*`);
+    lines.push(`   📅 Periode:  ${start}  →  ${end}`);
     if (itemDays) {
-      lines.push(`  ${itemDays} ${itemDays === 1 ? "dag" : "dagen"} × €${item.machine.pricePerDay},-/dag = €${(item.machine.pricePerDay * itemDays).toFixed(0)},-`);
+      lines.push(`   💶 ${itemDays} ${itemDays === 1 ? "dag" : "dagen"} × €${item.machine.pricePerDay},- = *€${(item.machine.pricePerDay * itemDays).toFixed(0)},-*`);
     } else {
-      lines.push(`  Tarief: €${item.machine.pricePerDay}/dag`);
+      lines.push(`   💶 Tarief: €${item.machine.pricePerDay},-/dag`);
     }
     lines.push("");
   }
 
   if (deliveryType) {
+    lines.push("─────────────────────────────");
+    lines.push("🚛 *TRANSPORT*");
+    lines.push("─────────────────────────────");
     const label = deliveryType === "self_pickup"
-      ? "Zelf ophalen bij de Hub (Gratis)"
+      ? "✅  Zelf ophalen bij de Hub  (Gratis)"
       : deliveryType === "trailer_rental"
-      ? `Aanhanger huren (€25/dag${totals ? ` × ${totals.days} d = €${totals.transport.toFixed(0)},-` : ""})`
-      : `Bezorging door ons (€75/rit, heen + terug = €150,-)`;
-    lines.push(`Logistiek: ${label}`);
+      ? `🔗  Aanhanger huren  (€25/dag${totals ? `  ×  ${totals.days} d  =  €${totals.transport.toFixed(0)},-` : ""})`
+      : `🚐  Bezorging door ons  (heen + terug = €150,-)`;
+    lines.push(label);
+    lines.push("");
   }
 
   if (totals && totals.total > 0) {
+    lines.push("─────────────────────────────");
+    lines.push("💰 *PRIJSOVERZICHT*");
+    lines.push("─────────────────────────────");
+    lines.push(`   Subtotaal (excl. BTW) :  €${totals.subtotal.toFixed(2)}`);
+    lines.push(`   BTW 21%               :  €${totals.vat.toFixed(2)}`);
+    lines.push("─────────────────────────────");
+    lines.push(`✅ *Totaal incl. BTW :  €${totals.total.toFixed(2)}*`);
+    lines.push("─────────────────────────────");
     lines.push("");
-    lines.push("─────────────────────");
-    lines.push(`Subtotaal (excl. BTW): €${totals.subtotal.toFixed(2)}`);
-    lines.push(`BTW (21%): €${totals.vat.toFixed(2)}`);
-    lines.push(`✅ Totaal incl. BTW: €${totals.total.toFixed(2)}`);
-    lines.push("─────────────────────");
   }
 
   if (customerName && customerName.trim().length > 0) {
+    lines.push("👤 *CONTACTGEGEVENS*");
+    lines.push("─────────────────────────────");
+    lines.push(`   Naam     :  ${customerName}`);
+    if (customerPhone) lines.push(`   📞 Tel  :  ${customerPhone}`);
+    if (customerEmail) lines.push(`   📧 Mail :  ${customerEmail}`);
     lines.push("");
-    lines.push("Mijn contactgegevens:");
-    lines.push(`Naam: ${customerName}`);
-    if (customerPhone) lines.push(`Telefoon: ${customerPhone}`);
-    if (customerEmail) lines.push(`E-mail: ${customerEmail}`);
   }
 
+  lines.push("💳 *Verzoek:*");
+  lines.push("Stuur mij een iDEAL betaallink zodat ik");
+  lines.push("de betaling direct kan afronden.");
   lines.push("");
-  lines.push("Stuur mij alstublieft een iDEAL betaallink (bijv. Tikkie of Mollie link) zodat ik de betaling direct kan afronden.");
-  lines.push("Bedankt!");
+  lines.push("Alvast bedankt! 🙏");
 
   const encodedText = encodeURIComponent(lines.join("\n"));
   return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodedText}`;

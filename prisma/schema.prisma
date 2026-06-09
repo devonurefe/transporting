@@ -137,6 +137,7 @@ model SiteConfig {
   menuAdvisorLabel  String?
   menuOrdersLabel   String
   menuAdminLabel   String
+  campaignRules    Json?
 }
 
 model Notification {

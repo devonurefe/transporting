@@ -79,6 +79,13 @@ export default function AdminSection({
   const machines = useAppStore((state) => state.machines);
   const orders = useAppStore((state) => state.orders);
   const blockedDates = useAppStore((state) => state.blockedDates);
+
+  // Always refresh data when admin panel mounts (catches stale state after login)
+  React.useEffect(() => {
+    if (isAdminMode) {
+      useAppStore.getState().fetchAllData();
+    }
+  }, [isAdminMode]);
   
   const adminLanguage = useLanguageStore((state) => state.adminLanguage);
   const setAdminLanguage = useLanguageStore((state) => state.setAdminLanguage);

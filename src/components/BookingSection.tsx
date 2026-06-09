@@ -14,7 +14,6 @@ import { checkAvailability } from "../utils/availability";
 import { buildWhatsAppUrl } from "../utils/whatsapp";
 import BookingStep1 from "./booking/BookingStep1";
 import BookingStep2 from "./booking/BookingStep2";
-import BookingStep3 from "./booking/BookingStep3";
 import BookingSuccess from "./booking/BookingSuccess";
 import BookingPriceSummary from "./booking/BookingPriceSummary";
 

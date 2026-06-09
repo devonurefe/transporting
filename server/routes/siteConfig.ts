@@ -63,6 +63,48 @@ siteConfigRouter.get("/categories", async (req: AuthenticatedRequest, res: Respo
   }
 });
 
+// GET campaign rules
+siteConfigRouter.get("/campaign-rules", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const config = await prisma.siteConfig.findUnique({ where: { id: "default" } });
+    const rules = (config as any)?.campaignRules;
+    res.json(Array.isArray(rules) ? rules : []);
+  } catch (error) {
+    console.error("Error fetching campaign rules:", error);
+    res.status(500).json({ error: "Failed to fetch campaign rules" });
+  }
+});
+
+// POST campaign rules (admin only)
+siteConfigRouter.post("/campaign-rules", requireAdmin as any, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const rules = req.body;
+    if (!Array.isArray(rules)) {
+      return res.status(400).json({ error: "Expected an array of campaign rules" });
+    }
+    await prisma.siteConfig.upsert({
+      where: { id: "default" },
+      update: { campaignRules: rules },
+      create: {
+        id: "default",
+        siteName: "HuurGo",
+        heroTagline: "Professionele Hoogwerker Verhuur",
+        heroTitle: "De juiste machine, snel en veilig geregeld.",
+        heroSubtitle: "MB Hoogwerkers verhuurt hoogwerkers, schaarliften en ladderliften aan ZZP'ers en particulieren.",
+        menuHomeLabel: "Home",
+        menuCatalogLabel: "Catalogus",
+        menuOrdersLabel: "Mijn Account",
+        menuAdminLabel: "Portaal",
+        campaignRules: rules
+      }
+    });
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Error saving campaign rules:", error);
+    res.status(500).json({ error: "Failed to save campaign rules" });
+  }
+});
+
 // POST categories
 siteConfigRouter.post("/categories", requireAdmin as any, async (req: AuthenticatedRequest, res: Response) => {
   try {

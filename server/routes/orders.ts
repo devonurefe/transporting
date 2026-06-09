@@ -474,7 +474,11 @@ ordersRouter.post("/send-reminders", async (req: AuthenticatedRequest, res: Resp
   const secret = process.env.REMINDER_SECRET;
   const providedKey = req.headers["x-reminder-key"] || req.body?.key;
 
-  if (secret && providedKey !== secret) {
+  // Always require a secret — if not configured, endpoint is disabled
+  if (!secret) {
+    return res.status(503).json({ error: "Reminder endpoint niet geconfigureerd (stel REMINDER_SECRET in)" });
+  }
+  if (providedKey !== secret) {
     return res.status(401).json({ error: "Ongeldige sleutel" });
   }
 

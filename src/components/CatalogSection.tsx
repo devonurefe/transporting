@@ -27,6 +27,8 @@ import { motion, AnimatePresence } from "motion/react";
 import { Machine } from "../types";
 import { categoryIconMap } from "./icons/CategoryIcons";
 import { useLanguageStore } from "../store/languageStore";
+import { useAppStore } from "../store/appStore";
+import { checkAvailability } from "../utils/availability";
 
 const professionIconMap: Record<string, LucideIcon> = {
   Schilder: Paintbrush,
@@ -76,6 +78,16 @@ export default function CatalogSection({
   currentUser,
 }: CatalogSectionProps) {
   const t = useLanguageStore((state) => state.t);
+  const orders = useAppStore((state) => state.orders);
+  const blockedDates = useAppStore((state) => state.blockedDates);
+
+  const today = new Date().toISOString().split("T")[0];
+  const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+
+  const isMachineAvailableThisWeek = (machineId: string): boolean => {
+    const result = checkAvailability(machineId, today, nextWeek, orders, blockedDates);
+    return result.available;
+  };
 
   const [compareIds, setCompareIds] = useState<string[]>([]);
   const [showCompareModal, setShowCompareModal] = useState<boolean>(false);
@@ -275,10 +287,19 @@ export default function CatalogSection({
                       key={machine.id}
                       className="group relative overflow-hidden rounded-2xl border bg-white flex flex-col border-slate-200 shadow-sm hover:shadow-md hover:-translate-y-px transition-all duration-200"
                     >
-                      {/* Top-left badge: Stock */}
-                      {(stockCountByBase[getBaseName(machine.name)] ?? 1) > 1 && (
+                      {/* Top-left badge: Stock or Availability */}
+                      {(stockCountByBase[getBaseName(machine.name)] ?? 1) > 1 ? (
                         <div className="absolute top-3 left-3 z-20 bg-emerald-600 py-0.5 px-2.5 rounded-full text-[9px] font-extrabold uppercase tracking-widest text-white shadow">
                           {stockCountByBase[getBaseName(machine.name)]}× voorraad
+                        </div>
+                      ) : (
+                        <div className={`absolute top-3 left-3 z-20 flex items-center gap-1 py-0.5 px-2 rounded-full text-[9px] font-bold shadow ${
+                          isMachineAvailableThisWeek(machine.id)
+                            ? "bg-emerald-50 border border-emerald-200 text-emerald-700"
+                            : "bg-amber-50 border border-amber-200 text-amber-700"
+                        }`}>
+                          <span className={`h-1.5 w-1.5 rounded-full ${isMachineAvailableThisWeek(machine.id) ? "bg-emerald-500" : "bg-amber-400"}`} />
+                          {isMachineAvailableThisWeek(machine.id) ? "Beschikbaar" : "Binnenkort bezet"}
                         </div>
                       )}
 

@@ -39,6 +39,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { Order, UserProfile } from "../types";
 import { useAuthStore } from "../store/authStore";
 import { printInvoice } from "../utils/invoice";
+import { buildWhatsAppOrderStatusUrl, buildWhatsAppPaymentLinkUrl } from "../utils/whatsapp";
 
 interface MyOrdersSectionProps {
   orders: Order[];
@@ -954,6 +955,32 @@ export default function MyOrdersSection({
                             <Download className="h-3 w-3 text-indigo-600" />
                             <span>Factuur PDF</span>
                           </button>
+
+                          {/* WhatsApp quick action — context-aware per status */}
+                          {o.status === "In behandeling" && (
+                            <a
+                              href={buildWhatsAppPaymentLinkUrl(o.id)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center space-x-1 font-black text-[10px] bg-[#25D366]/10 hover:bg-[#25D366]/20 text-[#1a9b4b] px-3 py-1.5 rounded-lg border border-[#25D366]/30 shadow-sm no-underline transition-colors"
+                              title="Vraag uw betaallink op via WhatsApp"
+                            >
+                              <MessageSquare className="h-3 w-3" />
+                              <span>Betaallink</span>
+                            </a>
+                          )}
+                          {(o.status === "Goedgekeurd" || o.status === "Onderweg") && (
+                            <a
+                              href={buildWhatsAppOrderStatusUrl(o.id, o.machineName)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center space-x-1 font-black text-[10px] bg-[#25D366]/10 hover:bg-[#25D366]/20 text-[#1a9b4b] px-3 py-1.5 rounded-lg border border-[#25D366]/30 shadow-sm no-underline transition-colors"
+                              title="Vraag de status op via WhatsApp"
+                            >
+                              <MessageSquare className="h-3 w-3" />
+                              <span>Status</span>
+                            </a>
+                          )}
 
                           {o.status === "In behandeling" && (
                             <button

@@ -34,6 +34,8 @@ interface BookingStep2Props {
   setStep: (step: number) => void;
   handleNextStep: () => void;
   setActiveTab?: (tab: string) => void;
+  isSubmitting?: boolean;
+  bookingError?: string | null;
   sums?: {
     days: number; rawSubtotal: number; subtotal: number; discountAmount: number; discountLabel: string;
     transport: number; driver: number; addonCost: number; addonDetails: { id: string; name: string; price: number }[];
@@ -80,7 +82,9 @@ export default function BookingStep2({
   handleNextStep,
   setActiveTab,
   sums,
-  selectedMachine
+  selectedMachine,
+  isSubmitting,
+  bookingError
 }: BookingStep2Props) {
   const [isGuestConfirmed, setIsGuestConfirmed] = React.useState<boolean>(false);
   const [sectorOpen, setSectorOpen] = React.useState(false);
@@ -354,6 +358,12 @@ export default function BookingStep2({
         </div>
       )}
 
+      {bookingError && (
+        <div className="bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold px-4 py-3 rounded-xl leading-relaxed">
+          {bookingError}
+        </div>
+      )}
+
       <div className="flex flex-col-reverse sm:flex-row sm:justify-between gap-3 pt-4 border-t border-slate-200">
         <button
           onClick={() => {
@@ -368,10 +378,17 @@ export default function BookingStep2({
 
         <button
           onClick={handleNextStep}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-6 py-3 rounded-xl transition-all flex items-center justify-center space-x-1.5 border-none cursor-pointer w-full sm:w-auto"
+          disabled={isSubmitting}
+          className="font-extrabold text-xs px-7 py-3.5 rounded-xl transition-all flex items-center justify-center space-x-2 disabled:opacity-50 cursor-pointer border-none shadow-md w-full sm:w-auto bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-emerald-100/50"
         >
-          <span>Doorgaan naar betaling</span>
-          <ArrowRight className="h-4 w-4" />
+          {isSubmitting ? (
+            <>
+              <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+              <span>Verwerken...</span>
+            </>
+          ) : (
+            <span>Boeking Afronden via WhatsApp 💬</span>
+          )}
         </button>
       </div>
 

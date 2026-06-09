@@ -87,12 +87,19 @@ export default function HomeSection({
     window.scrollTo(0, 0);
   }, []);
 
+  const HOME_ORDER = ["schaarlift", "spin", "mastlift", "kamersteiger", "ladderlift", "ecolift", "aanhanger"];
+
   const displayCategories = customCategories
     .filter(c => !SKIP_IDS.has(c.id))
     .map(c => c.id === "schaarlift"
       ? { ...c, label: "Schaarliften", listLabel: "Schaarliften", heights: "6m - 10m", price: "v.a. €65/dag" }
       : c
-    );
+    )
+    .sort((a, b) => {
+      const ai = HOME_ORDER.indexOf(a.id);
+      const bi = HOME_ORDER.indexOf(b.id);
+      return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+    });
 
   return (
     <div>

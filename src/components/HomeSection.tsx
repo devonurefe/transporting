@@ -99,10 +99,10 @@ export default function HomeSection({
 
       {/* ── HERO SECTION ── */}
       <div
-        className="relative bg-slate-900 bg-cover bg-center bg-no-repeat overflow-hidden px-5 sm:px-6 lg:px-8 pt-16 sm:pt-20 pb-20 sm:pb-24"
+        className="relative bg-slate-900 bg-cover bg-center bg-no-repeat overflow-hidden flex flex-col justify-end px-5 sm:px-6 lg:px-8 pb-10 sm:pb-14 min-h-[460px] sm:min-h-[520px]"
         style={{ backgroundImage: "url('/hero-bg.jpg')" }}
       >
-        <div className="absolute inset-0 bg-gradient-to-b from-slate-900/60 via-slate-800/50 to-slate-900/70 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-900/40 via-slate-800/30 to-slate-900/75 pointer-events-none" />
 
         <div className="relative z-10 mx-auto max-w-2xl text-center">
 

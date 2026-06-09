@@ -485,58 +485,6 @@ export const emailService = {
   },
 
   /**
-   * Send borgsom refund confirmation to customer
-   */
-  sendBorgsomRefundEmail: async (order: EmailOrderData & { borgsom?: number }) => {
-    const borgsom = (order as any).borgsom || 0;
-
-    const htmlContent = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="utf-8">
-        <title>Borgsom Teruggestort - HuurGo</title>
-        <style>
-          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f8fafc; color: #1e293b; margin: 0; padding: 20px; }
-          .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 24px; border: 1px solid #e2e8f0; overflow: hidden; }
-          .header { background: linear-gradient(135deg, #10b981, #059669); padding: 40px 30px; text-align: center; color: #ffffff; }
-          .header h1 { margin: 0; font-size: 22px; font-weight: 800; }
-          .content { padding: 40px 30px; }
-          .amount { font-size: 32px; font-weight: 800; color: #10b981; text-align: center; margin: 20px 0; }
-          .footer { background: #f1f5f9; padding: 20px 30px; text-align: center; font-size: 11px; color: #64748b; }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="header"><h1>✅ Borgsom Teruggestort!</h1></div>
-          <div class="content">
-            <p>Beste <strong>${order.customerName}</strong>,</p>
-            <p>De borgsom voor uw reservering <strong>${order.id}</strong> (${order.machineName}) is succesvol verwerkt voor terugstorting.</p>
-            <div class="amount">€ ${borgsom.toFixed(2)}</div>
-            <p style="text-align: center; color: #475569; font-size: 13px;">Dit bedrag wordt binnen 3-5 werkdagen bijgeschreven op uw rekening. Bedankt voor uw huurperiode bij HuurGo!</p>
-          </div>
-          <div class="footer">© ${new Date().getFullYear()} HuurGo B.V. • BMWT-gecertificeerd verhuurnetwerk</div>
-        </div>
-      </body>
-      </html>
-    `;
-
-    console.log(`[EmailService] Sending borgsom refund email for ${order.id} to ${order.customerEmail}`);
-
-    if (!resend) {
-      console.log(`[EmailService] [MOCK] Borgsom refund email simulated.`);
-      return true;
-    }
-
-    return sendWithRetry({
-      from: SENDER_EMAIL,
-      to: order.customerEmail,
-      subject: `Borgsom € ${borgsom.toFixed(2)} teruggestort — Reservering ${order.id}`,
-      html: htmlContent
-    });
-  },
-
-  /**
    * Send password reset link to customer
    */
   sendPasswordResetEmail: async (email: string, name: string, token: string, appUrl: string) => {

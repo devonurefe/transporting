@@ -163,7 +163,8 @@ export function printInvoice(orderOrOrders: Order | Order[], clientCompanyName?:
       <link rel="preconnect" href="https://fonts.googleapis.com">
       <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
       <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800;900&display=swap" rel="stylesheet">
-      
+      <script>document.documentElement.style.opacity='0';document.fonts.ready.then(()=>{document.documentElement.style.opacity='1';});</script>
+
       <style>
         /* Modern styling optimized for both screen preview and high-contrast A4 print */
         * {

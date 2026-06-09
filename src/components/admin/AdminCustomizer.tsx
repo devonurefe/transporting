@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from "react";
-import { Settings, Check, Trash2, Tag, Plus } from "lucide-react";
+import { Settings, Check, Trash2, Tag, Plus, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useAppStore } from "../../store/appStore";
 import { CampaignRule } from "../../types";
@@ -144,6 +144,38 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
       alert(t("Instellingen succesvol permanent opgeslagen!", "Settings successfully permanently saved!", "Ayarlar kalıcı olarak başarıyla kaydedildi!"));
     } else {
       alert(t("Fout bij opslaan van instellingen.", "Error saving settings.", "Ayarlar kaydedilirken hata oluştu."));
+    }
+  };
+
+  const [editingInfoCatId, setEditingInfoCatId] = useState<string | null>(null);
+  const [infoUseCases, setInfoUseCases] = useState("");
+  const [infoAdvantages, setInfoAdvantages] = useState("");
+  const [infoNotFor, setInfoNotFor] = useState("");
+
+  const handleOpenInfoEditor = (cat: typeof customCategories[0]) => {
+    if (editingInfoCatId === cat.id) { setEditingInfoCatId(null); return; }
+    const info = (cat as any).infoContent;
+    setInfoUseCases(info?.useCases?.join("\n") || "");
+    setInfoAdvantages(info?.advantages?.join("\n") || "");
+    setInfoNotFor(info?.notFor?.join("\n") || "");
+    setEditingInfoCatId(cat.id);
+  };
+
+  const handleSaveInfoContent = async (catId: string) => {
+    const updated = customCategories.map(c =>
+      c.id === catId ? {
+        ...c,
+        infoContent: {
+          useCases: infoUseCases.split("\n").map(s => s.trim()).filter(Boolean),
+          advantages: infoAdvantages.split("\n").map(s => s.trim()).filter(Boolean),
+          notFor: infoNotFor.split("\n").map(s => s.trim()).filter(Boolean)
+        }
+      } : c
+    );
+    const success = await updateCategories(updated);
+    if (success) {
+      setEditingInfoCatId(null);
+      onAddSystemLog("system", "Onur (Eigenaar)", t(`Info-inhoud opgeslagen voor categorie: ${catId}`, `Info content saved for category: ${catId}`, `Kategori bilgi içeriği kaydedildi: ${catId}`));
     }
   };
 
@@ -288,26 +320,87 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {customCategories.map((cat) => (
-              <div key={cat.id} className="p-3.5 bg-white border border-slate-200 shadow-sm rounded-2xl text-xs space-y-1">
-                <div className="flex justify-between items-center">
-                  <span className="font-bold text-slate-800">{cat.label}</span>
-                  <div className="flex items-center space-x-1">
-                    <span className="text-[9px] font-mono text-amber-700 uppercase bg-amber-500/10 px-1.5 py-0.5 rounded font-extrabold">{cat.id}</span>
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteCategory(cat.id, cat.label)}
-                      className="text-rose-600 hover:text-rose-700 font-extrabold px-1 cursor-pointer transition-colors border-none bg-transparent"
-                      title={t("Verwijder Categorie", "Delete Category", "Kategoriyi Sil")}
-                    >
-                      ×
-                    </button>
+              <div key={cat.id} className="bg-white border border-slate-200 shadow-sm rounded-2xl text-xs overflow-hidden">
+                <div className="p-3.5 space-y-1">
+                  <div className="flex justify-between items-center">
+                    <span className="font-bold text-slate-800">{cat.label}</span>
+                    <div className="flex items-center space-x-1">
+                      <span className="text-[9px] font-mono text-amber-700 uppercase bg-amber-500/10 px-1.5 py-0.5 rounded font-extrabold">{cat.id}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteCategory(cat.id, cat.label)}
+                        className="text-rose-600 hover:text-rose-700 font-extrabold px-1 cursor-pointer transition-colors border-none bg-transparent"
+                        title={t("Verwijder Categorie", "Delete Category", "Kategoriyi Sil")}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  </div>
+                  <p className="text-[10.5px] text-slate-600 line-clamp-2 leading-relaxed">{cat.desc}</p>
+                  <div className="flex justify-between text-[10px] text-slate-500 pt-1 font-mono">
+                    <span>{t("Hoogten: ", "Heights: ", "Yükseklikler: ")}{cat.heights}</span>
+                    <span>{t("Prijzen: ", "Prices: ", "Ücretler: ")}{cat.price}</span>
                   </div>
                 </div>
-                <p className="text-[10.5px] text-slate-600 line-clamp-2 leading-relaxed">{cat.desc}</p>
-                <div className="flex justify-between text-[10px] text-slate-500 pt-1 font-mono">
-                  <span>{t("Hoogten: ", "Heights: ", "Yükseklikler: ")}{cat.heights}</span>
-                  <span>{t("Prijzen: ", "Prices: ", "Ücretler: ")}{cat.price}</span>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => handleOpenInfoEditor(cat)}
+                  className="w-full flex items-center justify-between px-3.5 py-2 border-t border-slate-100 text-[10px] font-bold text-indigo-600 hover:bg-indigo-50 transition-colors cursor-pointer bg-transparent"
+                >
+                  <span>{t("Info bewerken", "Edit info", "Bilgileri düzenle")}</span>
+                  <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${editingInfoCatId === cat.id ? "rotate-180" : ""}`} />
+                </button>
+                {editingInfoCatId === cat.id && (
+                  <div className="p-3.5 border-t border-indigo-100 bg-indigo-50/40 space-y-2.5">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-700 block">{t("Waarvoor (één per regel)", "Use cases (one per line)", "Kullanım alanları (satır satır)")}</label>
+                      <textarea
+                        rows={3}
+                        value={infoUseCases}
+                        onChange={(e) => setInfoUseCases(e.target.value)}
+                        className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-2 text-[10px] text-slate-800 outline-none focus:border-indigo-400 resize-none font-sans"
+                        placeholder="Schilderwerk aan gevels&#10;Dakgootreiniging&#10;..."
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-700 block">{t("Voordelen (één per regel)", "Advantages (one per line)", "Avantajlar (satır satır)")}</label>
+                      <textarea
+                        rows={3}
+                        value={infoAdvantages}
+                        onChange={(e) => setInfoAdvantages(e.target.value)}
+                        className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-2 text-[10px] text-slate-800 outline-none focus:border-indigo-400 resize-none font-sans"
+                        placeholder="Geen transportkosten&#10;In 5 minuten opgesteld&#10;..."
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-700 block">{t("Niet geschikt voor (één per regel)", "Not suitable for (one per line)", "Uygun olmayan durumlar (satır satır)")}</label>
+                      <textarea
+                        rows={3}
+                        value={infoNotFor}
+                        onChange={(e) => setInfoNotFor(e.target.value)}
+                        className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-2 text-[10px] text-slate-800 outline-none focus:border-indigo-400 resize-none font-sans"
+                        placeholder="Zachte bodem&#10;Binnenwerk&#10;..."
+                      />
+                    </div>
+                    <div className="flex justify-end gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => setEditingInfoCatId(null)}
+                        className="px-3 py-1.5 text-[10px] font-bold text-slate-600 bg-white border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors"
+                      >
+                        {t("Annuleren", "Cancel", "Vazgeç")}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleSaveInfoContent(cat.id)}
+                        className="px-3 py-1.5 text-[10px] font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg cursor-pointer transition-colors flex items-center gap-1"
+                      >
+                        <Check className="h-3 w-3" />
+                        {t("Opslaan", "Save", "Kaydet")}
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>

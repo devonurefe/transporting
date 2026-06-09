@@ -8,6 +8,11 @@ interface Category {
   desc: string;
   heights: string;
   price: string;
+  infoContent?: {
+    useCases?: string[];
+    advantages?: string[];
+    notFor?: string[];
+  };
 }
 
 interface SiteConfig {

@@ -8,6 +8,7 @@ export interface SimpleOrder {
   machineId: string;
   startDate: string | Date;
   endDate: string | Date;
+  status?: string;
 }
 
 export interface SimpleBlockedDate {
@@ -44,9 +45,10 @@ export function checkAvailability(
     return { available: false, blocked: false, overlap: false, reason: "De begindatum kan niet in het verleden liggen." };
   }
 
-  // Check overlaps with orders
+  // Check overlaps with active orders (skip cancelled)
   const overlaps = orders.filter(o => {
     if (o.machineId !== machineId) return false;
+    if (o.status === "Geannuleerd") return false;
     const orderStart = new Date(o.startDate).getTime();
     const orderEnd = new Date(o.endDate).getTime();
     return (requestedStart <= orderEnd && requestedEnd >= orderStart);

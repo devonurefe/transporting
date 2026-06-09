@@ -67,7 +67,14 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage }: AdminOrde
       return;
     }
     const phone = formatPhoneForWA(order.customerPhone);
-    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(lines.join("\n"))}`, "_blank", "noopener,noreferrer");
+    const url = `https://wa.me/${phone}?text=${encodeURIComponent(lines.join("\n"))}`;
+    // Use <a> click trick so it works even after an async await
+    const a = document.createElement("a");
+    a.href = url; a.target = "_blank"; a.rel = "noopener noreferrer";
+    a.style.display = "none";
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => document.body.removeChild(a), 200);
   };
 
   // Modal and custom date proposal state
@@ -77,17 +84,33 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage }: AdminOrde
   const [newEndDate, setNewEndDate] = useState<string>("");
   const [isUpdatingStatus, setIsUpdatingStatus] = useState<boolean>(false);
   const [isUpdatingPayment, setIsUpdatingPayment] = useState<boolean>(false);
+  const [statusError, setStatusError] = useState<string | null>(null);
+
   const handleUpdateStatus = async (orderId: string, nextStatus: string, logMsg: string, order?: any) => {
-    // Open WA synchronously (in click handler) to avoid popup blocker
-    if (order) openWhatsAppToCustomer(order, nextStatus);
+    // Pre-validate: "Accorderen" requires payment marked first
+    if (nextStatus === "Goedgekeurd" && order?.paymentStatus !== "paid") {
+      setStatusError("Markeer eerst de betaling als ontvangen (knop 'Betaling Ontvangen ✓') voordat u kunt accorderen.");
+      setTimeout(() => setStatusError(null), 6000);
+      return;
+    }
+
     setIsUpdatingStatus(true);
-    const success = await updateOrderStatus(orderId, nextStatus);
+    const result = await updateOrderStatus(orderId, nextStatus);
     setIsUpdatingStatus(false);
-    if (success) {
+
+    if (result === true) {
       onAddSystemLog("status", adminUser?.name ?? "Admin", logMsg);
       if (selectedDetailOrder && selectedDetailOrder.id === orderId) {
         setSelectedDetailOrder((prev: any) => ({ ...prev, status: nextStatus }));
       }
+      // Open WA AFTER successful update (use <a> trick to minimize popup blocker)
+      if (order?.customerPhone) {
+        openWhatsAppToCustomer(order, nextStatus);
+      }
+    } else if (result) {
+      // result is an error string
+      setStatusError(result as string);
+      setTimeout(() => setStatusError(null), 7000);
     }
   };
 
@@ -149,6 +172,13 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage }: AdminOrde
           <h3 className="font-display font-bold text-sm text-slate-900">{t("Alle Actieve & Historische Contracten", "All Active & Historical Contracts", "Tüm Aktif ve Geçmiş Sözleşmeler")}</h3>
           <p className="text-[11px] text-slate-500 mt-0.5">{t("Hier accordeert u inkomende reserveringen en past u de logistieke status aan van klanten.", "Here you approve incoming reservations and adjust the logistics status.", "Buradan gelen rezervasyonları onaylar ve müşterilerin lojistik durumlarını düzenlersiniz.")}</p>
         </div>
+
+        {statusError && (
+          <div className="flex items-start gap-2 bg-rose-50 border border-rose-200 rounded-xl px-3.5 py-3 text-xs text-rose-700 font-medium animate-fade-in">
+            <ShieldAlert className="h-4 w-4 shrink-0 mt-0.5 text-rose-500" />
+            <span>{statusError}</span>
+          </div>
+        )}
 
         {/* Mobile card layout */}
         <div className="md:hidden space-y-3">
@@ -610,6 +640,12 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage }: AdminOrde
 
               {/* Action Buttons Footer */}
               <div className="pt-4 border-t border-slate-100 shrink-0 mt-5 space-y-3">
+                {statusError && (
+                  <div className="flex items-start gap-2 bg-rose-50 border border-rose-200 rounded-xl px-3 py-2.5 text-[11px] text-rose-700 font-medium">
+                    <ShieldAlert className="h-3.5 w-3.5 shrink-0 mt-0.5 text-rose-500" />
+                    <span>{statusError}</span>
+                  </div>
+                )}
 
                 {/* Row 1: Utility actions */}
                 <div className="flex items-center justify-between gap-2 flex-wrap">

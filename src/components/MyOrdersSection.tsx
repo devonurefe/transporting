@@ -351,6 +351,10 @@ export default function MyOrdersSection({
       onTriggerNotification("Registratie Mislukt", "Naam, e-mail en wachtwoord zijn verplicht.", "warning");
       return;
     }
+    if (regPassword.trim().length < 6) {
+      onTriggerNotification("Registratie Mislukt", "Wachtwoord moet minimaal 6 tekens bevatten.", "warning");
+      return;
+    }
 
     const success = await register({
       email: regEmail.trim(),

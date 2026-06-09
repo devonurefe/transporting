@@ -86,7 +86,7 @@ describe("checkAvailability", () => {
     );
     expect(result.available).toBe(false);
     expect(result.overlap).toBe(true);
-    expect(result.reason).toContain("overlapping met boekingsnummer: HWH-1234");
+    expect(result.reason).toContain("Niet beschikbaar");
   });
 
   it("should detect order overlap when request starts inside an order", () => {

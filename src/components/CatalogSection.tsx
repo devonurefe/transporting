@@ -413,13 +413,13 @@ export default function CatalogSection({
                               setSelectedDetailMachine(machine);
                               onAddSystemLog?.("system", currentUser?.name ?? "Gast", `Bekijkt specificaties: "${machine.name}"`);
                             }}
-                            className="flex-1 py-2 rounded-xl border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 text-[11px] font-bold transition-all duration-200 active:scale-[0.97] cursor-pointer"
+                            className="flex-1 py-2.5 rounded-xl border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 text-[11px] font-bold transition-all duration-200 active:scale-[0.97] cursor-pointer"
                           >
                             {t("btnSpecifications")}
                           </button>
                           <button
                             onClick={() => onSelectMachineForBooking(machine)}
-                            className="flex-[2] py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-[11px] font-bold transition-all duration-200 active:scale-[0.97] cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
+                            className="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-[11px] font-bold transition-all duration-200 active:scale-[0.97] cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
                           >
                             <ShoppingBag className="h-3.5 w-3.5" />
                             {t("btnRentNow")}

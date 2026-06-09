@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from "react";
-import { ArrowUpRight, Sparkles } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { motion } from "motion/react";
 import { useAppStore } from "../../store/appStore";
 

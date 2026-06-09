@@ -4,34 +4,22 @@
  */
 
 import React, { useState } from "react";
-import { 
-  ClipboardCheck, 
-  MapPin, 
-  Calendar, 
-  FileText, 
-  Star, 
-  Bell, 
-  CreditCard, 
-  Sliders, 
-  PlusCircle, 
+import {
+  Calendar,
+  Star,
+  Bell,
   CheckCircle,
   Truck,
-  Sparkles,
-  RefreshCw,
   Clock,
   User,
   Mail,
   Building2,
-  SlidersHorizontal,
   BellRing,
   Download,
   Check,
-  Smartphone,
-  Eye,
   Info,
   UserPlus,
   LogOut,
-  ShieldCheck,
   Lock,
   MessageSquare
 } from "lucide-react";

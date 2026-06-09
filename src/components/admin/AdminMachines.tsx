@@ -7,6 +7,7 @@ import React, { useState } from "react";
 import { Plus, Trash2, Wrench, X, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useAppStore } from "../../store/appStore";
+import { useAuthStore } from "../../store/authStore";
 import { Machine } from "../../types";
 
 interface AdminMachinesProps {
@@ -21,6 +22,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
   const customCategories = useAppStore((state) => state.customCategories);
   const deleteMachine = useAppStore((state) => state.deleteMachine);
   const updateMachine = useAppStore((state) => state.updateMachine);
+  const adminUser = useAuthStore((state) => state.user);
 
   const t = (nl: string, en: string, tr: string) => {
     if (adminLanguage === "tr") return tr;
@@ -331,7 +333,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                             if (confirm(t("Weet u zeker dat u permanent wilt verwijderen?", "Are you sure you want to permanently delete this?", "Bunu kalıcı olarak silmek istediğinizden emin misiniz?"))) {
                               const success = await deleteMachine(m.id);
                               if (success) {
-                                onAddSystemLog("fleet", "Onur (Eigenaar)", `Hoogwerker permanent verwijderd: ${m.name}`);
+                                onAddSystemLog("fleet", adminUser?.name ?? "Admin", `Hoogwerker permanent verwijderd: ${m.name}`);
                                 alert(t("Machine succesvol verwijderd!", "Machine successfully deleted!", "Makine başarıyla silindi!"));
                               } else {
                                 alert(t("Fout bij het verwijderen.", "Error deleting machine.", "Silme sırasında bir hata oluştu."));

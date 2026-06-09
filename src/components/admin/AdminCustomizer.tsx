@@ -7,6 +7,7 @@ import React, { useState } from "react";
 import { Settings, Check, Trash2, Tag, Plus, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useAppStore } from "../../store/appStore";
+import { useAuthStore } from "../../store/authStore";
 import { CampaignRule } from "../../types";
 
 interface AdminCustomizerProps {
@@ -23,6 +24,7 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
   const machines = useAppStore((state) => state.machines);
   const campaignRules = useAppStore((state) => state.campaignRules);
   const updateCampaignRules = useAppStore((state) => state.updateCampaignRules);
+  const adminUser = useAuthStore((state) => state.user);
 
   const t = (nl: string, en: string, tr: string) => {
     if (adminLanguage === "tr") return tr;
@@ -39,14 +41,14 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
   const handleToggleRule = (id: string) => {
     const updated = campaignRules.map(r => r.id === id ? { ...r, isActive: !r.isActive } : r);
     updateCampaignRules(updated);
-    onAddSystemLog("system", "Onur (Eigenaar)", t("Campagneregel status bijgewerkt.", "Campaign rule status updated.", "Kampanya kuralı durumu güncellendi."));
+    onAddSystemLog("system", adminUser?.name ?? "Admin", t("Campagneregel status bijgewerkt.", "Campaign rule status updated.", "Kampanya kuralı durumu güncellendi."));
   };
 
   const handleDeleteRule = (id: string, name: string) => {
     if (confirm(t(`Weet u zeker dat u de campagneregel "${name}" wilt verwijderen?`, `Are you sure you want to delete the campaign rule "${name}"?`, `Kampanya kuralını "${name}" silmek istediğinizden emin misiniz?`))) {
       const updated = campaignRules.filter(r => r.id !== id);
       updateCampaignRules(updated);
-      onAddSystemLog("system", "Onur (Eigenaar)", t("Campagneregel verwijderd: ", "Campaign rule deleted: ", "Kampanya kuralı silindi: ") + name);
+      onAddSystemLog("system", adminUser?.name ?? "Admin", t("Campagneregel verwijderd: ", "Campaign rule deleted: ", "Kampanya kuralı silindi: ") + name);
     }
   };
 
@@ -64,7 +66,7 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
     };
 
     updateCampaignRules([...campaignRules, newRule]);
-    onAddSystemLog("system", "Onur (Eigenaar)", t("Nieuwe campagneregel toegevoegd: ", "New campaign rule added: ", "Yeni kampanya kuralı eklendi: ") + newRule.name);
+    onAddSystemLog("system", adminUser?.name ?? "Admin", t("Nieuwe campagneregel toegevoegd: ", "New campaign rule added: ", "Yeni kampanya kuralı eklendi: ") + newRule.name);
     
     // reset form
     setRuleName("");
@@ -98,7 +100,7 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
     );
 
     updateCampaignRules(updated);
-    onAddSystemLog("system", "Onur (Eigenaar)", t("Campagneregel gewijzigd: ", "Campaign rule edited: ", "Kampanya kuralı düzenlendi: ") + editName.trim());
+    onAddSystemLog("system", adminUser?.name ?? "Admin", t("Campagneregel gewijzigd: ", "Campaign rule edited: ", "Kampanya kuralı düzenlendi: ") + editName.trim());
     setEditingRule(null);
   };
 
@@ -140,7 +142,7 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
     });
     setIsSavingConfig(false);
     if (success) {
-      onAddSystemLog("system", "Onur (Eigenaar)", t("Storefront algemene en navigatie instellingen opgeslagen.", "Storefront general and navigation settings saved.", "Mağaza genel ve gezinme ayarları kaydedildi."));
+      onAddSystemLog("system", adminUser?.name ?? "Admin", t("Storefront algemene en navigatie instellingen opgeslagen.", "Storefront general and navigation settings saved.", "Mağaza genel ve gezinme ayarları kaydedildi."));
       alert(t("Instellingen succesvol permanent opgeslagen!", "Settings successfully permanently saved!", "Ayarlar kalıcı olarak başarıyla kaydedildi!"));
     } else {
       alert(t("Fout bij opslaan van instellingen.", "Error saving settings.", "Ayarlar kaydedilirken hata oluştu."));
@@ -175,7 +177,7 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
     const success = await updateCategories(updated);
     if (success) {
       setEditingInfoCatId(null);
-      onAddSystemLog("system", "Onur (Eigenaar)", t(`Info-inhoud opgeslagen voor categorie: ${catId}`, `Info content saved for category: ${catId}`, `Kategori bilgi içeriği kaydedildi: ${catId}`));
+      onAddSystemLog("system", adminUser?.name ?? "Admin", t(`Info-inhoud opgeslagen voor categorie: ${catId}`, `Info content saved for category: ${catId}`, `Kategori bilgi içeriği kaydedildi: ${catId}`));
     }
   };
 
@@ -184,7 +186,7 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
       const updated = customCategories.filter((c) => c.id !== id);
       const success = await updateCategories(updated);
       if (success) {
-        onAddSystemLog("system", "Onur (Eigenaar)", t("Categorie verwijderd: ", "Category deleted: ", "Kategori silindi: ") + `${label} (${id}).`);
+        onAddSystemLog("system", adminUser?.name ?? "Admin", t("Categorie verwijderd: ", "Category deleted: ", "Kategori silindi: ") + `${label} (${id}).`);
       }
     }
   };
@@ -779,6 +781,7 @@ interface AddCategoryFormProps {
 function AddCategoryForm({ onAddSystemLog, adminLanguage }: AddCategoryFormProps) {
   const customCategories = useAppStore((state) => state.customCategories);
   const updateCategories = useAppStore((state) => state.updateCategories);
+  const adminUser = useAuthStore((state) => state.user);
 
   const t = (nl: string, en: string, tr: string) => {
     if (adminLanguage === "tr") return tr;
@@ -819,7 +822,7 @@ function AddCategoryForm({ onAddSystemLog, adminLanguage }: AddCategoryFormProps
     const updated = [...customCategories, newCat];
     const success = await updateCategories(updated);
     if (success) {
-      onAddSystemLog("system", "Onur (Eigenaar)", t("Nieuwe categorie permanent opgeslagen: ", "New category permanently saved: ", "Yeni kategori kalıcı olarak kaydedildi: ") + `${label} (${cleanId}).`);
+      onAddSystemLog("system", adminUser?.name ?? "Admin", t("Nieuwe categorie permanent opgeslagen: ", "New category permanently saved: ", "Yeni kategori kalıcı olarak kaydedildi: ") + `${label} (${cleanId}).`);
       // Reset inputs
       setId("");
       setLabel("");

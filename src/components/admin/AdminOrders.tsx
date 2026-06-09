@@ -142,6 +142,8 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
       }
     } catch (e) {
       console.error("Payment status update error:", e);
+      setStatusError("Betaling bijwerken mislukt. Controleer de verbinding en probeer opnieuw.");
+      setTimeout(() => setStatusError(null), 6000);
     }
     setIsUpdatingPayment(false);
   };
@@ -152,15 +154,34 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
       alert("Voer zowel de startdatum als de einddatum in.");
       return;
     }
-    
-    // Log proposal activity
+    const machine = getBaseName(selectedDetailOrder.machineName);
+    const lines = [
+      "Goed nieuws! Wij kunnen uw reservering herplannen. 📅",
+      "",
+      `Bestelling: *${selectedDetailOrder.id}*`,
+      `Machine: *${machine}*`,
+      `Nieuwe voorsteldata: *${newStartDate} t/m ${newEndDate}*`,
+      "",
+      "Kunt u dit bevestigen of heeft u een andere voorkeur?",
+      "",
+      "Met vriendelijke groet,",
+      "*HuurGo*"
+    ];
+    if (selectedDetailOrder.customerPhone) {
+      const phone = formatPhoneForWA(selectedDetailOrder.customerPhone);
+      const url = `https://wa.me/${phone}?text=${encodeURIComponent(lines.join("\n"))}`;
+      const a = document.createElement("a");
+      a.href = url; a.target = "_blank"; a.rel = "noopener noreferrer";
+      a.style.display = "none";
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => document.body.removeChild(a), 200);
+    }
     onAddSystemLog(
       "system",
       adminUser?.name ?? "Admin",
-      `Nieuw datumvoorstel verzonden voor contract ${selectedDetailOrder.id} (${selectedDetailOrder.customerName}). Nieuwe data: ${newStartDate} t/m ${newEndDate}.`
+      `Datumvoorstel via WhatsApp gestuurd voor contract ${selectedDetailOrder.id} (${selectedDetailOrder.customerName}). Voorstel: ${newStartDate} t/m ${newEndDate}.`
     );
-
-    alert(`Datumvoorstel (${newStartDate} t/m ${newEndDate}) is succesvol verzonden naar ${selectedDetailOrder.customerName}!`);
     setIsProposingDate(false);
     setSelectedDetailOrder(null);
   };
@@ -725,7 +746,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                           );
                         }
                       }}
-                      className="px-3 py-1.5 bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white border border-rose-200 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1 disabled:opacity-50"
+                      className="px-3 py-1.5 bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white border border-rose-200 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1 disabled:opacity-50 disabled:hover:bg-rose-50 disabled:hover:text-rose-700 disabled:cursor-not-allowed"
                     >
                       <X className="h-3.5 w-3.5 shrink-0" />
                       <span>Annuleren</span>

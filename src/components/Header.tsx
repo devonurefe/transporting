@@ -216,12 +216,12 @@ export default function Header({
             <>
               {/* Phone link (desktop) */}
               <a
-                href="tel:+31711848899"
+                href="tel:+31715428114"
                 className="hidden md:flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-bold text-slate-700 transition-all shrink-0 shadow-xs"
                 aria-label="Bel ons"
               >
                 <Phone className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                <span className="hidden lg:inline">071 184 8899</span>
+                <span className="hidden lg:inline">071 542 8114</span>
               </a>
 
               {/* Language Switcher */}

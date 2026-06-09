@@ -4,7 +4,7 @@
  */
 
 import React from "react";
-import { Mail, MapPin, Clock, MessageCircle } from "lucide-react";
+import { Mail, MapPin, Clock, MessageCircle, Phone } from "lucide-react";
 import { useLanguageStore } from "../store/languageStore";
 
 interface FooterProps {
@@ -46,6 +46,12 @@ export default function Footer({ siteName, setActiveTab: _setActiveTab, setShowC
                   <Mail className="h-3.5 w-3.5 text-slate-400" />
                 </span>
                 info@mbhoogwerkers.com
+              </a>
+              <a href="tel:+31715428114" className="flex items-center gap-3 text-xs text-slate-400 hover:text-white transition-colors no-underline group">
+                <span className="h-8 w-8 rounded-xl bg-slate-800 flex items-center justify-center shrink-0 group-hover:bg-slate-700 transition-colors">
+                  <Phone className="h-3.5 w-3.5 text-slate-400" />
+                </span>
+                071 542 8114
               </a>
               <a href="https://wa.me/31715428114" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-xs text-[#25D366] hover:text-[#1da851] transition-colors no-underline font-semibold group">
                 <span className="h-8 w-8 rounded-xl bg-[#25D366]/10 flex items-center justify-center shrink-0 group-hover:bg-[#25D366]/20 transition-colors">

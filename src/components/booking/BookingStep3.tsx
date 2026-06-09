@@ -36,31 +36,12 @@ export default function BookingStep3({
         <span>Reservering Bevestigen via WhatsApp</span>
       </h3>
 
-      {/* WhatsApp flow explanation */}
-      <div className="bg-emerald-50 p-5 rounded-2xl border border-emerald-100 space-y-4 shadow-inner">
-        <div className="flex items-center space-x-2 pb-1.5 border-b border-emerald-200">
-          <div className="h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
-          <span className="text-xs font-black text-slate-800">Reserveren via WhatsApp & iDEAL Betaallink</span>
-        </div>
-
-        <p className="text-xs leading-relaxed text-slate-600 font-medium">
-          Uw aanvraag wordt geregistreerd en u wordt doorgestuurd naar WhatsApp met een kant-en-klaar bericht. Ons vlootbeheer controleert de bestelling en stuurt u direct een <strong>beveiligde iDEAL-betaallink</strong> via WhatsApp.
+      {/* WhatsApp flow explanation — compact */}
+      <div className="bg-emerald-50 px-4 py-3.5 rounded-2xl border border-emerald-100 flex items-start gap-3">
+        <div className="h-2 w-2 rounded-full bg-emerald-500 animate-ping shrink-0 mt-1" />
+        <p className="text-xs leading-relaxed text-slate-700">
+          Uw aanvraag wordt geregistreerd en u ontvangt een <strong>kant-en-klaar WhatsApp-bericht</strong>. Verstuur dit naar onze planner — u ontvangt dan een beveiligde iDEAL-betaallink.
         </p>
-
-        <div className="p-3.5 bg-white/70 border border-emerald-100 rounded-xl space-y-2">
-          <div className="flex items-start space-x-2 text-xs text-emerald-800">
-            <span className="font-bold font-mono shrink-0">1.</span>
-            <span>Klik op "Boeking Afronden" om uw aanvraag te registreren.</span>
-          </div>
-          <div className="flex items-start space-x-2 text-xs text-emerald-800">
-            <span className="font-bold font-mono shrink-0">2.</span>
-            <span>Verzend het vooraf samengestelde bericht via WhatsApp naar onze planner.</span>
-          </div>
-          <div className="flex items-start space-x-2 text-xs text-emerald-800">
-            <span className="font-bold font-mono shrink-0">3.</span>
-            <span>Ontvang een Tikkie of Mollie iDEAL-betaallink. Na betaling is uw boeking definitief.</span>
-          </div>
-        </div>
       </div>
 
       {/* CE Certified Assurance Info */}

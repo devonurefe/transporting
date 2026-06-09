@@ -317,13 +317,13 @@ export default function BookingStep2({
 
             <div className="pt-2">
               <label className="text-[10px] text-slate-500 block font-bold uppercase tracking-wider mb-1">Geselecteerd Afleveradres (of handmatig aanpassen)</label>
-              <input
-                type="text"
+              <textarea
+                rows={2}
                 required={deliveryType === "delivery_by_us"}
                 value={deliveryAddress}
                 onChange={(e) => setDeliveryAddress(e.target.value)}
                 placeholder="Kortingstraat 5, 2404 CB Alphen aan den Rijn"
-                className="w-full bg-white border border-slate-200 focus:border-indigo-500 rounded-xl px-4 py-2.5 text-xs text-slate-800 font-semibold outline-none transition-colors focus:ring-0 placeholder:text-slate-400 shadow-sm"
+                className="w-full bg-white border border-slate-200 focus:border-indigo-500 rounded-xl px-4 py-2.5 text-xs text-slate-800 font-semibold outline-none transition-colors focus:ring-0 placeholder:text-slate-400 shadow-sm resize-none leading-relaxed"
               />
             </div>
           </div>

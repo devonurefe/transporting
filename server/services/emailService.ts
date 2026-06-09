@@ -40,7 +40,7 @@ async function sendWithRetry(payload: EmailPayload, retries = 3): Promise<boolea
       if (error) throw error;
       return true;
     } catch (err) {
-      if (attempt < retries) await new Promise(r => setTimeout(r, attempt * 2000));
+      if (attempt < retries) await new Promise(r => setTimeout(r, 2 ** attempt * 1000));
     }
   }
   console.error("[EmailService] Permanently failed after", retries, "attempts:", payload.to);

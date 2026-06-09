@@ -33,12 +33,13 @@ model Machine {
 }
 
 model Category {
-  id        String @id
-  label     String
-  listLabel String
-  desc      String
-  heights   String
-  price     String
+  id          String @id
+  label       String
+  listLabel   String
+  desc        String
+  heights     String
+  price       String
+  infoContent Json?
 }
 
 model BlockedDate {

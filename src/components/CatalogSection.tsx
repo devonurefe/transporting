@@ -11,6 +11,7 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   Paintbrush,
   Home,
   Wrench,
@@ -47,6 +48,11 @@ interface CatalogSectionProps {
     desc: string;
     heights: string;
     price: string;
+    infoContent?: {
+      useCases?: string[];
+      advantages?: string[];
+      notFor?: string[];
+    };
   }[];
   searchQuery: string;
   setSearchQuery: (query: string) => void;
@@ -68,12 +74,11 @@ export default function CatalogSection({
   onAddSystemLog,
   currentUser,
 }: CatalogSectionProps) {
-  // Filters state
-  // Compare state
   const [compareIds, setCompareIds] = useState<string[]>([]);
   const [showCompareModal, setShowCompareModal] = useState<boolean>(false);
   const [selectedDetailMachine, setSelectedDetailMachine] = useState<Machine | null>(null);
   const [activeDetailImageIndex, setActiveDetailImageIndex] = useState<number>(0);
+  const [expandedInfoId, setExpandedInfoId] = useState<string | null>(null);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -396,6 +401,77 @@ export default function CatalogSection({
                             Huur Nu
                           </button>
                         </div>
+
+                        {/* Meer info accordion */}
+                        {(() => {
+                          const catInfo = customCategories.find(c => c.id === machine.category)?.infoContent;
+                          if (!catInfo || (!catInfo.useCases?.length && !catInfo.advantages?.length && !catInfo.notFor?.length)) return null;
+                          const isOpen = expandedInfoId === machine.id;
+                          return (
+                            <div className="border-t border-slate-100 pt-1">
+                              <button
+                                onClick={() => setExpandedInfoId(isOpen ? null : machine.id)}
+                                className="w-full flex items-center justify-between text-[10px] font-bold text-indigo-600 hover:text-indigo-800 py-1.5 cursor-pointer transition-colors"
+                              >
+                                <span>Meer info</span>
+                                <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
+                              </button>
+                              <AnimatePresence>
+                                {isOpen && (
+                                  <motion.div
+                                    initial={{ height: 0, opacity: 0 }}
+                                    animate={{ height: "auto", opacity: 1 }}
+                                    exit={{ height: 0, opacity: 0 }}
+                                    transition={{ duration: 0.2 }}
+                                    className="overflow-hidden"
+                                  >
+                                    <div className="pb-2 space-y-2.5 text-[10px]">
+                                      {catInfo.useCases && catInfo.useCases.length > 0 && (
+                                        <div>
+                                          <p className="font-bold text-slate-700 uppercase tracking-wide mb-1">Waarvoor</p>
+                                          <ul className="space-y-0.5">
+                                            {catInfo.useCases.map((item, i) => (
+                                              <li key={i} className="flex items-start gap-1.5 text-slate-600">
+                                                <span className="text-emerald-500 font-bold shrink-0 mt-0.5">✓</span>
+                                                {item}
+                                              </li>
+                                            ))}
+                                          </ul>
+                                        </div>
+                                      )}
+                                      {catInfo.advantages && catInfo.advantages.length > 0 && (
+                                        <div>
+                                          <p className="font-bold text-slate-700 uppercase tracking-wide mb-1">Voordelen</p>
+                                          <ul className="space-y-0.5">
+                                            {catInfo.advantages.map((item, i) => (
+                                              <li key={i} className="flex items-start gap-1.5 text-slate-600">
+                                                <span className="text-indigo-500 font-bold shrink-0 mt-0.5">+</span>
+                                                {item}
+                                              </li>
+                                            ))}
+                                          </ul>
+                                        </div>
+                                      )}
+                                      {catInfo.notFor && catInfo.notFor.length > 0 && (
+                                        <div>
+                                          <p className="font-bold text-slate-700 uppercase tracking-wide mb-1">Niet geschikt voor</p>
+                                          <ul className="space-y-0.5">
+                                            {catInfo.notFor.map((item, i) => (
+                                              <li key={i} className="flex items-start gap-1.5 text-slate-600">
+                                                <span className="text-rose-400 font-bold shrink-0 mt-0.5">✕</span>
+                                                {item}
+                                              </li>
+                                            ))}
+                                          </ul>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
+                            </div>
+                          );
+                        })()}
 
                       </div>
                     </motion.div>

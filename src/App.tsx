@@ -15,7 +15,7 @@ import ToastNotification from "./components/ToastNotification";
 import { Machine, Order, AppNotification, UserProfile, CartItem } from "./types";
 import { useAuthStore } from "./store/authStore";
 import { useAppStore } from "./store/appStore";
-import { buildWhatsAppGeneralUrl } from "./utils/whatsapp";
+import { buildWhatsAppGeneralUrl, buildWhatsAppOrderStatusUrl, buildWhatsAppPaymentLinkUrl, buildWhatsAppAdviceUrl } from "./utils/whatsapp";
 
 
 // Dynamic Code Splitting (React.lazy)
@@ -62,6 +62,7 @@ export default function App() {
 
   // Back to Top button show/hide tracking
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [fabOpen, setFabOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -573,18 +574,77 @@ export default function App() {
         onClose={() => setActiveToast(null)} 
       />
 
-      {/* FLOATING WHATSAPP BUTTON */}
+      {/* FLOATING WHATSAPP BUTTON + QUICK TEMPLATES */}
       {!isAdminMode && (
-        <div className="fixed bottom-16 sm:bottom-6 right-4 sm:right-6 z-45 flex items-center">
+        <div className="fixed bottom-16 sm:bottom-6 right-4 sm:right-6 z-45 flex flex-col items-end gap-2">
+          <AnimatePresence>
+            {fabOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                transition={{ duration: 0.18 }}
+                className="bg-white border border-slate-200 rounded-2xl shadow-xl p-3 w-64 space-y-1.5"
+              >
+                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 px-1 pb-1">Stuur ons een bericht</p>
+                {[
+                  {
+                    icon: "📅",
+                    label: "Machine huren",
+                    sub: "Ik wil een machine boeken",
+                    url: buildWhatsAppGeneralUrl(),
+                  },
+                  {
+                    icon: "📋",
+                    label: "Status van mijn boeking",
+                    sub: "Waar staat mijn aanvraag?",
+                    url: buildWhatsAppOrderStatusUrl(),
+                  },
+                  {
+                    icon: "💳",
+                    label: "Betaallink ontvangen",
+                    sub: "Ik wacht op mijn iDEAL link",
+                    url: buildWhatsAppPaymentLinkUrl(),
+                  },
+                  {
+                    icon: "🔧",
+                    label: "Advies over machine",
+                    sub: "Welke machine past bij mijn klus?",
+                    url: buildWhatsAppAdviceUrl(),
+                  },
+                ].map((item) => (
+                  <a
+                    key={item.label}
+                    href={item.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setFabOpen(false)}
+                    className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl hover:bg-emerald-50 transition-colors no-underline group"
+                  >
+                    <span className="text-base shrink-0">{item.icon}</span>
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold text-slate-800 group-hover:text-emerald-700 leading-tight">{item.label}</p>
+                      <p className="text-[10px] text-slate-400 leading-tight truncate">{item.sub}</p>
+                    </div>
+                  </a>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           <motion.button
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
-            onClick={() => window.open(buildWhatsAppGeneralUrl(), "_blank")}
-            className="flex items-center justify-center h-11 w-11 rounded-full text-white shadow-lg hover:scale-110 active:scale-95 transition-all cursor-pointer border-none bg-[#25D366] hover:bg-[#1da851] shadow-emerald-500/25"
+            onClick={() => setFabOpen(v => !v)}
+            className={`flex items-center justify-center h-11 w-11 rounded-full text-white shadow-lg hover:scale-110 active:scale-95 transition-all cursor-pointer border-none shadow-emerald-500/25 ${fabOpen ? "bg-slate-700 hover:bg-slate-800" : "bg-[#25D366] hover:bg-[#1da851]"}`}
             title="Hulp nodig? Chat via WhatsApp"
           >
             <MessageCircle className="h-5 w-5" />
           </motion.button>
+
+          {fabOpen && (
+            <div className="fixed inset-0 -z-10" onClick={() => setFabOpen(false)} />
+          )}
         </div>
       )}
 

@@ -95,3 +95,52 @@ export function buildWhatsAppGeneralUrl(categoryLabel?: string): string {
   const encodedText = encodeURIComponent(message);
   return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodedText}`;
 }
+
+/**
+ * Customer asking for status of their existing booking.
+ */
+export function buildWhatsAppOrderStatusUrl(orderId?: string, machineName?: string): string {
+  const lines = [
+    "Hallo HuurGo! 👋",
+    "",
+    "Ik wil graag de status opvragen van mijn boeking.",
+    orderId ? `📋 Referentienummer: ${orderId}` : "",
+    machineName ? `🏗️ Machine: ${machineName}` : "",
+    "",
+    "Kunt u mij informeren over de huidige status en wanneer ik de bevestiging kan verwachten?",
+    "Alvast bedankt!",
+  ].filter(Boolean);
+  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(lines.join("\n"))}`;
+}
+
+/**
+ * Customer waiting for their iDEAL payment link after booking.
+ */
+export function buildWhatsAppPaymentLinkUrl(orderId?: string): string {
+  const lines = [
+    "Hallo HuurGo! 👋",
+    "",
+    "Ik heb zojuist een boeking geplaatst en wacht op mijn iDEAL betaallink.",
+    orderId ? `📋 Referentienummer: ${orderId}` : "",
+    "",
+    "Kunt u mij de betaallink sturen zodat ik direct kan afrekenen?",
+    "Bedankt! 🙏",
+  ].filter(Boolean);
+  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(lines.join("\n"))}`;
+}
+
+/**
+ * Customer requesting advice on which machine suits their job.
+ */
+export function buildWhatsAppAdviceUrl(jobDescription?: string): string {
+  const lines = [
+    "Hallo HuurGo! 👋",
+    "",
+    "Ik ben op zoek naar een geschikte hoogwerker voor mijn klus maar weet niet goed welke machine het beste past.",
+    jobDescription ? `Klus: ${jobDescription}` : "",
+    "",
+    "Kunt u mij adviseren welke machine het meest geschikt is?",
+    "Alvast bedankt!",
+  ].filter(Boolean);
+  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(lines.join("\n"))}`;
+}

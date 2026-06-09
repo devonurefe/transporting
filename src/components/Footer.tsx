@@ -17,57 +17,65 @@ export default function Footer({ siteName, setActiveTab: _setActiveTab, setShowC
   const t = useLanguageStore((state) => state.t);
   return (
     <footer className="bg-slate-950 border-t border-slate-800 pb-20 md:pb-0">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
+      <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-10 py-14 sm:py-16">
 
         {/* Top row */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-10 pb-10 border-b border-slate-800 text-center sm:text-left">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-10 sm:gap-14 pb-12 border-b border-slate-800 text-center sm:text-left">
 
           {/* Brand */}
-          <div className="space-y-4 flex flex-col items-center sm:items-start">
+          <div className="space-y-5 flex flex-col items-center sm:items-start">
             <div className="flex items-baseline gap-0.5">
-              <span className="font-display text-xl font-extrabold text-emerald-400">huur</span>
-              <span className="font-display text-xl font-extrabold text-orange-400">go.</span>
+              <span className="font-display text-2xl font-extrabold text-emerald-400">huur</span>
+              <span className="font-display text-2xl font-extrabold text-orange-400">go.</span>
             </div>
-            <p className="text-xs text-slate-400 leading-relaxed max-w-xs">
+            <p className="text-xs text-slate-400 leading-loose max-w-xs">
               Professionele verhuur van gecertificeerde hoogwerkers, schaarliften en mastliften voor zzp'ers, aannemers en particulieren door heel Nederland.
             </p>
             <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
-              <span className="text-[10px] font-bold text-amber-400 bg-amber-400/10 border border-amber-400/20 px-2 py-0.5 rounded-md uppercase tracking-wide">BMWT-Lid</span>
-              <span className="text-[10px] font-bold text-emerald-400 bg-emerald-400/10 border border-emerald-400/20 px-2 py-0.5 rounded-md uppercase tracking-wide">Co-Verzekerd</span>
+              <span className="text-[10px] font-bold text-amber-400 bg-amber-400/10 border border-amber-400/20 px-2.5 py-1 rounded-md uppercase tracking-wide">BMWT-Lid</span>
+              <span className="text-[10px] font-bold text-emerald-400 bg-emerald-400/10 border border-emerald-400/20 px-2.5 py-1 rounded-md uppercase tracking-wide">Co-Verzekerd</span>
             </div>
           </div>
 
           {/* Contact */}
-          <div className="space-y-3 flex flex-col items-center sm:items-start">
-            <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-500">Contact</h4>
-            <div className="flex flex-col space-y-2.5 items-center sm:items-start">
-              <a href="mailto:info@mbhoogwerkers.com" className="flex items-center gap-2 text-xs text-slate-400 hover:text-white transition-colors no-underline">
-                <Mail className="h-3.5 w-3.5 text-slate-600 shrink-0" />
+          <div className="space-y-5 flex flex-col items-center sm:items-start">
+            <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500 border-b border-slate-800 pb-2 w-full text-center sm:text-left">Contact</h4>
+            <div className="flex flex-col gap-4 items-center sm:items-start">
+              <a href="mailto:info@mbhoogwerkers.com" className="flex items-center gap-3 text-xs text-slate-400 hover:text-white transition-colors no-underline group">
+                <span className="h-8 w-8 rounded-xl bg-slate-800 flex items-center justify-center shrink-0 group-hover:bg-slate-700 transition-colors">
+                  <Mail className="h-3.5 w-3.5 text-slate-400" />
+                </span>
                 info@mbhoogwerkers.com
               </a>
-              <a href="https://wa.me/31715428114" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-xs text-[#25D366] hover:text-[#1da851] transition-colors no-underline font-semibold">
-                <MessageCircle className="h-3.5 w-3.5 shrink-0" />
+              <a href="https://wa.me/31715428114" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-xs text-[#25D366] hover:text-[#1da851] transition-colors no-underline font-semibold group">
+                <span className="h-8 w-8 rounded-xl bg-[#25D366]/10 flex items-center justify-center shrink-0 group-hover:bg-[#25D366]/20 transition-colors">
+                  <MessageCircle className="h-3.5 w-3.5 text-[#25D366]" />
+                </span>
                 WhatsApp Support
               </a>
             </div>
           </div>
 
-          {/* Hours */}
-          <div className="space-y-3 flex flex-col items-center sm:items-start">
-            <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-500">{t("footerHours")}</h4>
-            <div className="flex flex-col space-y-2.5 text-xs text-slate-400 items-center sm:items-start">
-              <div className="flex items-start gap-2">
-                <Clock className="h-3.5 w-3.5 text-slate-600 shrink-0 mt-0.5" />
-                <div>
+          {/* Hours & Location */}
+          <div className="space-y-5 flex flex-col items-center sm:items-start">
+            <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500 border-b border-slate-800 pb-2 w-full text-center sm:text-left">{t("footerHours")}</h4>
+            <div className="flex flex-col gap-4 text-xs text-slate-400 items-center sm:items-start">
+              <div className="flex items-start gap-3">
+                <span className="h-8 w-8 rounded-xl bg-slate-800 flex items-center justify-center shrink-0">
+                  <Clock className="h-3.5 w-3.5 text-slate-400" />
+                </span>
+                <div className="leading-relaxed">
                   <span className="font-semibold text-slate-200 block">{t("footerHoursLine")}</span>
-                  <span className="text-slate-500">{t("footerClosed")}</span>
+                  <span className="text-slate-500 text-[11px]">{t("footerClosed")}</span>
                 </div>
               </div>
-              <div className="flex items-start gap-2">
-                <MapPin className="h-3.5 w-3.5 text-slate-600 shrink-0 mt-0.5" />
-                <div>
+              <div className="flex items-start gap-3">
+                <span className="h-8 w-8 rounded-xl bg-slate-800 flex items-center justify-center shrink-0">
+                  <MapPin className="h-3.5 w-3.5 text-slate-400" />
+                </span>
+                <div className="leading-relaxed">
                   <span className="font-semibold text-slate-200 block">Zoeterwoude (HQ)</span>
-                  <span className="text-slate-500">Produktieweg 20, 2382 PB</span>
+                  <span className="text-slate-500 text-[11px]">Produktieweg 20, 2382 PB</span>
                 </div>
               </div>
             </div>
@@ -76,11 +84,11 @@ export default function Footer({ siteName, setActiveTab: _setActiveTab, setShowC
         </div>
 
         {/* Bottom row */}
-        <div className="pt-6 flex flex-col sm:flex-row justify-between items-center gap-2 text-[10.5px] text-slate-600">
+        <div className="pt-8 flex flex-col sm:flex-row justify-between items-center gap-3 text-[10.5px] text-slate-600">
           <span>© 2026 HuurGo / MB Hoogwerkers B.V. · KvK 67438237 · BTW NL856990656B01</span>
           <div className="flex gap-3">
-            <span className="text-[10px] font-bold bg-slate-800/60 border border-slate-700 text-slate-500 px-2 py-0.5 rounded-md">TÜV Gecertificeerd</span>
-            <span className="text-[10px] font-bold bg-slate-800/60 border border-slate-700 text-slate-500 px-2 py-0.5 rounded-md">Cat. 1-3B</span>
+            <span className="text-[10px] font-bold bg-slate-800/60 border border-slate-700 text-slate-500 px-2.5 py-1 rounded-md">TÜV Gecertificeerd</span>
+            <span className="text-[10px] font-bold bg-slate-800/60 border border-slate-700 text-slate-500 px-2.5 py-1 rounded-md">Cat. 1-3B</span>
           </div>
         </div>
 

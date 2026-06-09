@@ -432,10 +432,10 @@ export default function CatalogSection({
                           if (!catInfo || (!catInfo.useCases?.length && !catInfo.advantages?.length && !catInfo.notFor?.length)) return null;
                           const isOpen = expandedInfoId === machine.id;
                           return (
-                            <div className="border-t border-slate-100 pt-1">
+                            <div className="border-t border-slate-100 pt-2">
                               <button
                                 onClick={() => setExpandedInfoId(isOpen ? null : machine.id)}
-                                className={`w-full flex items-center justify-between text-[11px] font-extrabold py-2 px-2.5 rounded-lg cursor-pointer transition-all ${isOpen ? "text-indigo-700 bg-indigo-50" : "text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50/60"}`}
+                                className={`w-full flex items-center justify-between text-[11px] font-extrabold py-2.5 px-3 rounded-xl cursor-pointer transition-all ${isOpen ? "text-indigo-700 bg-indigo-50 border border-indigo-100" : "text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50/70 border border-transparent"}`}
                               >
                                 <span className="flex items-center gap-1.5">
                                   <span className="text-[13px]">🔍</span>
@@ -452,14 +452,14 @@ export default function CatalogSection({
                                     transition={{ duration: 0.2 }}
                                     className="overflow-hidden"
                                   >
-                                    <div className="pb-2 space-y-2.5 text-xs">
+                                    <div className="mt-2 mb-1 px-3 pt-4 pb-4 space-y-4 text-xs bg-indigo-50/40 rounded-2xl border border-indigo-100/60">
                                       {catInfo.useCases && catInfo.useCases.length > 0 && (
                                         <div>
-                                          <p className="font-bold text-slate-700 uppercase tracking-wide mb-1">{t("infoUseCases")}</p>
-                                          <ul className="space-y-0.5">
+                                          <p className="font-extrabold text-slate-700 uppercase tracking-wider text-[10px] mb-2">{t("infoUseCases")}</p>
+                                          <ul className="space-y-1.5">
                                             {catInfo.useCases.map((item, i) => (
-                                              <li key={i} className="flex items-start gap-1.5 text-slate-600">
-                                                <span className="text-emerald-500 font-bold shrink-0 mt-0.5">✓</span>
+                                              <li key={i} className="flex items-start gap-2 text-slate-600 leading-snug">
+                                                <span className="text-emerald-500 font-black shrink-0 mt-0.5">✓</span>
                                                 {item}
                                               </li>
                                             ))}
@@ -468,11 +468,11 @@ export default function CatalogSection({
                                       )}
                                       {catInfo.advantages && catInfo.advantages.length > 0 && (
                                         <div>
-                                          <p className="font-bold text-slate-700 uppercase tracking-wide mb-1">{t("infoAdvantages")}</p>
-                                          <ul className="space-y-0.5">
+                                          <p className="font-extrabold text-slate-700 uppercase tracking-wider text-[10px] mb-2">{t("infoAdvantages")}</p>
+                                          <ul className="space-y-1.5">
                                             {catInfo.advantages.map((item, i) => (
-                                              <li key={i} className="flex items-start gap-1.5 text-slate-600">
-                                                <span className="text-indigo-500 font-bold shrink-0 mt-0.5">+</span>
+                                              <li key={i} className="flex items-start gap-2 text-slate-600 leading-snug">
+                                                <span className="text-indigo-500 font-black shrink-0 mt-0.5">+</span>
                                                 {item}
                                               </li>
                                             ))}
@@ -481,11 +481,11 @@ export default function CatalogSection({
                                       )}
                                       {catInfo.notFor && catInfo.notFor.length > 0 && (
                                         <div>
-                                          <p className="font-bold text-slate-700 uppercase tracking-wide mb-1">{t("infoNotFor")}</p>
-                                          <ul className="space-y-0.5">
+                                          <p className="font-extrabold text-slate-700 uppercase tracking-wider text-[10px] mb-2">{t("infoNotFor")}</p>
+                                          <ul className="space-y-1.5">
                                             {catInfo.notFor.map((item, i) => (
-                                              <li key={i} className="flex items-start gap-1.5 text-slate-600">
-                                                <span className="text-rose-400 font-bold shrink-0 mt-0.5">✕</span>
+                                              <li key={i} className="flex items-start gap-2 text-slate-600 leading-snug">
+                                                <span className="text-rose-400 font-black shrink-0 mt-0.5">✕</span>
                                                 {item}
                                               </li>
                                             ))}

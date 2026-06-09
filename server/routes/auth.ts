@@ -94,7 +94,7 @@ authRouter.post("/register", async (req: AuthenticatedRequest, res: Response) =>
       return res.status(400).json({ error: error.issues[0].message });
     }
     console.error("Registration error:", error);
-    res.status(500).json({ error: "Registratie mislukt" });
+    res.status(500).json({ error: "Registratie tijdelijk niet mogelijk. Wacht even en probeer het opnieuw." });
   }
 });
 

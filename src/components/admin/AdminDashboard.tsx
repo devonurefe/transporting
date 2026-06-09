@@ -41,6 +41,7 @@ export default function AdminDashboard({ setSubTab, setOrdersFilter, adminLangua
 
   const monthlyRevenue = last6Months.map((m) => {
     const amount = orders.reduce((sum, order) => {
+      if (order.status === "Geannuleerd") return sum;
       const orderDate = new Date(order.createdAt);
       if (orderDate.getMonth() === m.monthIndex && orderDate.getFullYear() === m.year) {
         return sum + order.totalAmount;
@@ -64,11 +65,13 @@ export default function AdminDashboard({ setSubTab, setOrdersFilter, adminLangua
   const pendingRegistrations = orders.filter(o => o.status === "In behandeling").length;
   
   const totalEarnings = orders.reduce((acc, current) => {
+    if (current.status === "Geannuleerd") return acc;
     return acc + current.totalAmount;
   }, 0);
 
   // Dynamic statistics calculated from active orders
   const profileEarnings = orders.reduce((acc, order) => {
+    if (order.status === "Geannuleerd") return acc;
     const prof = order.customerProfile || "Particulier";
     let key = "Particulier";
     if (prof.toLowerCase().includes("schilder")) key = "Schilder";
@@ -182,10 +185,10 @@ export default function AdminDashboard({ setSubTab, setOrdersFilter, adminLangua
                   >
                     {/* Tooltip wrapper */}
                     <div className={`absolute -top-4 transition-all duration-250 ease-out flex flex-col items-center pointer-events-none ${isHovered ? "opacity-100 scale-100" : "opacity-0 scale-90 translate-y-1"}`}>
-                      <span className="bg-slate-900 border border-slate-205 px-2 py-1 rounded-lg text-[10px] text-white font-black font-mono shadow-xl">
+                      <span className="bg-slate-900 border border-slate-200 px-2 py-1 rounded-lg text-[10px] text-white font-black font-mono shadow-xl">
                         € {val.toFixed(2)}
                       </span>
-                      <div className="w-1.5 h-1.5 bg-slate-900 border-r border-b border-slate-205 rotate-45 -mt-1" />
+                      <div className="w-1.5 h-1.5 bg-slate-900 border-r border-b border-slate-200 rotate-45 -mt-1" />
                     </div>
 
                     {/* Rounded Bar with custom height */}

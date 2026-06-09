@@ -52,6 +52,8 @@ export interface Order {
   addons?: { id: string; name: string; price: number; billing: "daily" | "flat" }[];
   invoiceNumber?: string;
   paymentStatus?: string;
+  borgsom?: number;
+  borgsomStatus?: string;
 }
 
 export interface ChatMessage {

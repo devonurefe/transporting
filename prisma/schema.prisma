@@ -109,6 +109,8 @@ model Order {
   addons          String
   invoiceNumber   String?
   paymentStatus   String    @default("awaiting")
+  borgsom         Float?
+  borgsomStatus   String?   @default("pending")
   customer        Customer? @relation(fields: [customerId], references: [id])
 
   @@index([machineId])

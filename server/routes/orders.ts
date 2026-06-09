@@ -154,6 +154,23 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
       return res.status(400).json({ error: "Prijs niet actueel. Ververs de pagina en probeer opnieuw." });
     }
 
+    // Server-side financial recalculation — prevent subtotal/VAT/total manipulation
+    const rentalDays = Number(orderData.rentalDays);
+    const transportCostClient = Number(orderData.transportCost || 0);
+    const driverCostClient = Number(orderData.driverCost || 0);
+    const addonsTotal = (Array.isArray(orderData.addons) ? orderData.addons : []).reduce((sum: number, a: any) => {
+      const addon = typeof a === "object" && a !== null ? a : {};
+      const price = Number(addon.price || 0);
+      const billing = addon.billing ?? "flat";
+      return sum + (billing === "daily" ? price * rentalDays : price);
+    }, 0);
+    const serverSubtotal = Math.round(machine.pricePerDay * rentalDays * 100) / 100;
+    const serverVat = Math.round((serverSubtotal + transportCostClient + driverCostClient + addonsTotal) * 21) / 100;
+    const serverTotal = Math.round((serverSubtotal + transportCostClient + driverCostClient + addonsTotal + serverVat) * 100) / 100;
+    if (Math.abs(serverTotal - Number(orderData.totalAmount)) > 0.10) {
+      return res.status(400).json({ error: "Totaalbedrag klopt niet. Ververs de pagina en probeer opnieuw." });
+    }
+
     // Resolve customer ID from auth token if present (outside transaction — read-only)
     let resolvedCustomerId: string | null = null;
     if (req.user && req.user.role !== "admin") {

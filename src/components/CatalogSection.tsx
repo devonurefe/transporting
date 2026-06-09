@@ -350,6 +350,7 @@ export default function CatalogSection({
                         <img
                           src={machine.imageUrl}
                           alt={machine.imageAlt}
+                          loading="lazy"
                           className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                           referrerPolicy="no-referrer"
                           onError={(e) => { e.currentTarget.src = "/placeholder-machine.webp"; }}

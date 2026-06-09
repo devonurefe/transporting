@@ -420,7 +420,56 @@ export default function App() {
 
   return (
     <div className="relative min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans antialiased text-sm pb-14 md:pb-0">
-      
+
+      {/* JSON-LD Structured Data for Google */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": ["LocalBusiness", "RentalService"],
+            "name": "HuurGo — Hoogwerkers Verhuur",
+            "description": "Snel en eenvoudig hoogwerkers huren bij HuurGo. Schaarlift, spinhoogwerker en aanhangerhoogwerker voor ZZP'ers en particulieren.",
+            "url": "https://huurgo.nl",
+            "telephone": "+31711848899",
+            "email": "info@mbhoogwerkers.com",
+            "address": {
+              "@type": "PostalAddress",
+              "addressLocality": "Alphen aan den Rijn",
+              "addressCountry": "NL"
+            },
+            "geo": {
+              "@type": "GeoCoordinates",
+              "latitude": 52.1298,
+              "longitude": 4.6562
+            },
+            "openingHoursSpecification": [{
+              "@type": "OpeningHoursSpecification",
+              "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday"],
+              "opens": "08:00",
+              "closes": "17:00"
+            }],
+            "priceRange": "€€",
+            "currenciesAccepted": "EUR",
+            "paymentAccepted": "iDEAL, Bank Transfer",
+            "areaServed": {
+              "@type": "State",
+              "name": "Zuid-Holland"
+            },
+            "hasOfferCatalog": {
+              "@type": "OfferCatalog",
+              "name": "Hoogwerker Verhuur",
+              "itemListElement": [
+                { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Schaarlift huren" } },
+                { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Spinhoogwerker huren" } },
+                { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Aanhangerhoogwerker huren" } }
+              ]
+            },
+            "sameAs": ["https://www.mbhoogwerkers.com"]
+          })
+        }}
+      />
+
       {/* Background ambient lighting */}
       <div className="absolute top-0 inset-x-0 h-150 bg-gradient-to-b from-indigo-500/5 to-transparent pointer-events-none -z-10" />
 

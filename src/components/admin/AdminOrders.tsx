@@ -43,6 +43,33 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage }: AdminOrde
 
   const getBaseName = (name: string) => name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "").trim();
 
+  const formatPhoneForWA = (phone: string): string => {
+    const digits = phone.replace(/\D/g, "");
+    if (digits.startsWith("00")) return digits.slice(2);
+    if (digits.startsWith("0")) return "31" + digits.slice(1);
+    if (!digits.startsWith("31")) return "31" + digits;
+    return digits;
+  };
+
+  const openWhatsAppToCustomer = (order: any, nextStatus: string) => {
+    if (!order?.customerPhone) return;
+    const machine = getBaseName(order.machineName);
+    const lines: string[] = [];
+    if (nextStatus === "Goedgekeurd") {
+      lines.push("Goed nieuws! ✅", "", `Uw boeking *${order.id}* voor de *${machine}* is goedgekeurd.`, "", "U ontvangt binnenkort de iDEAL betaallink om de huur te bevestigen.", "", "Met vriendelijke groet,", "*HuurGo*");
+    } else if (nextStatus === "Onderweg") {
+      lines.push("Uw machine is onderweg! 🚐", "", `De *${machine}* (ref: *${order.id}*) wordt vandaag bezorgd.`, "", "De chauffeur neemt contact op bij aankomst.", "", "Met vriendelijke groet,", "*HuurGo*");
+    } else if (nextStatus === "Voltooid") {
+      lines.push("Bedankt voor uw huur! 🙏", "", `Uw huurperiode voor de *${machine}* (ref: *${order.id}*) is afgerond.`, "", "We hopen u snel weer van dienst te zijn!", "", "*HuurGo*");
+    } else if (nextStatus === "Geannuleerd") {
+      lines.push("Annulering bevestigd ❌", "", `Uw boeking *${order.id}* is helaas geannuleerd.`, "", "Heeft u vragen? Neem gerust contact op.", "", "*HuurGo*");
+    } else {
+      return;
+    }
+    const phone = formatPhoneForWA(order.customerPhone);
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(lines.join("\n"))}`, "_blank", "noopener,noreferrer");
+  };
+
   // Modal and custom date proposal state
   const [selectedDetailOrder, setSelectedDetailOrder] = useState<any | null>(null);
   const [isProposingDate, setIsProposingDate] = useState<boolean>(false);
@@ -50,13 +77,14 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage }: AdminOrde
   const [newEndDate, setNewEndDate] = useState<string>("");
   const [isUpdatingStatus, setIsUpdatingStatus] = useState<boolean>(false);
   const [isUpdatingPayment, setIsUpdatingPayment] = useState<boolean>(false);
-  const handleUpdateStatus = async (orderId: string, nextStatus: string, logMsg: string) => {
+  const handleUpdateStatus = async (orderId: string, nextStatus: string, logMsg: string, order?: any) => {
+    // Open WA synchronously (in click handler) to avoid popup blocker
+    if (order) openWhatsAppToCustomer(order, nextStatus);
     setIsUpdatingStatus(true);
     const success = await updateOrderStatus(orderId, nextStatus);
     setIsUpdatingStatus(false);
     if (success) {
       onAddSystemLog("status", adminUser?.name ?? "Admin", logMsg);
-      // Update local state if modal is open
       if (selectedDetailOrder && selectedDetailOrder.id === orderId) {
         setSelectedDetailOrder((prev: any) => ({ ...prev, status: nextStatus }));
       }
@@ -162,19 +190,19 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage }: AdminOrde
                     <Printer className="h-3.5 w-3.5 text-indigo-600" />
                   </button>
                   {o.status === "In behandeling" && (
-                    <button onClick={() => handleUpdateStatus(o.id, "Goedgekeurd", `Bestelling goedgekeurd: ${o.id} voor ${o.customerName}.`)}
+                    <button onClick={() => handleUpdateStatus(o.id, "Goedgekeurd", `Bestelling goedgekeurd: ${o.id} voor ${o.customerName}.`, o)}
                       className="flex-1 text-[11px] font-black py-2 rounded-xl bg-teal-500 hover:bg-teal-600 text-slate-950 transition-colors cursor-pointer border-none">
                       {t("Accorderen", "Approve", "Onayla")}
                     </button>
                   )}
                   {o.status === "Goedgekeurd" && (
-                    <button onClick={() => handleUpdateStatus(o.id, "Onderweg", `Machine onderweg: ${o.id}.`)}
+                    <button onClick={() => handleUpdateStatus(o.id, "Onderweg", `Machine onderweg: ${o.id}.`, o)}
                       className="flex-1 text-[11px] font-black py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white transition-colors cursor-pointer border-none">
                       {t("Versturen", "Dispatch", "Yola Çıkar")}
                     </button>
                   )}
                   {o.status === "Onderweg" && (
-                    <button onClick={() => handleUpdateStatus(o.id, "Voltooid", `Contract afgerond: ${o.id}.`)}
+                    <button onClick={() => handleUpdateStatus(o.id, "Voltooid", `Contract afgerond: ${o.id}.`, o)}
                       className="flex-1 text-[11px] font-black py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white transition-colors cursor-pointer border-none">
                       {t("Voltooien", "Complete", "Tamamla")}
                     </button>
@@ -291,9 +319,10 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage }: AdminOrde
                             {o.status === "In behandeling" && (
                               <button
                                 onClick={() => handleUpdateStatus(
-                                  o.id, 
-                                  "Goedgekeurd", 
-                                  `Bestelling goedgekeurd: ${o.id} voor ${o.customerName}.`
+                                  o.id,
+                                  "Goedgekeurd",
+                                  `Bestelling goedgekeurd: ${o.id} voor ${o.customerName}.`,
+                                  o
                                 )}
                                 className="bg-teal-500 hover:bg-teal-600 text-slate-950 text-[10px] font-black px-3.5 py-1.5 rounded-xl cursor-pointer leading-none transition-all hover:scale-[1.02] active:scale-95 border-none shadow-md"
                               >
@@ -303,9 +332,10 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage }: AdminOrde
                             {o.status === "Goedgekeurd" && (
                               <button
                                 onClick={() => handleUpdateStatus(
-                                  o.id, 
-                                  "Onderweg", 
-                                  `Chauffeur ingepland & machine onderweg: ${o.id}.`
+                                  o.id,
+                                  "Onderweg",
+                                  `Chauffeur ingepland & machine onderweg: ${o.id}.`,
+                                  o
                                 )}
                                 className="bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-black px-3.5 py-1.5 rounded-xl cursor-pointer leading-none transition-all hover:scale-[1.02] active:scale-95 border-none shadow-md"
                               >
@@ -315,9 +345,10 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage }: AdminOrde
                             {o.status === "Onderweg" && (
                               <button
                                 onClick={() => handleUpdateStatus(
-                                  o.id, 
-                                  "Voltooid", 
-                                  `Verhuurcontract succesvol afgerond: ${o.id}.`
+                                  o.id,
+                                  "Voltooid",
+                                  `Verhuurcontract succesvol afgerond: ${o.id}.`,
+                                  o
                                 )}
                                 className="bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-black px-3.5 py-1.5 rounded-xl cursor-pointer leading-none transition-all hover:scale-[1.02] active:scale-95 border-none shadow-md"
                               >
@@ -578,45 +609,54 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage }: AdminOrde
               </div>
 
               {/* Action Buttons Footer */}
-              <div className="flex flex-wrap justify-between items-center pt-4 border-t border-slate-100 shrink-0 mt-5 gap-3">
-                <div className="flex flex-wrap gap-2">
-                  <span className="text-[10px] text-slate-500 font-mono">Status: {selectedDetailOrder.status}</span>
+              <div className="pt-4 border-t border-slate-100 shrink-0 mt-5 space-y-3">
 
-                  {/* Mark payment received */}
-                  {selectedDetailOrder.paymentStatus !== "paid" && (
+                {/* Row 1: Utility actions */}
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className={`text-[9px] font-mono px-2.5 py-1 rounded-full font-extrabold uppercase ${
+                      selectedDetailOrder.status === "In behandeling" ? "bg-amber-100 text-amber-700"
+                      : selectedDetailOrder.status === "Goedgekeurd" ? "bg-teal-100 text-teal-700"
+                      : selectedDetailOrder.status === "Onderweg" ? "bg-blue-100 text-blue-700"
+                      : selectedDetailOrder.status === "Geannuleerd" ? "bg-rose-100 text-rose-700"
+                      : "bg-slate-100 text-slate-500"
+                    }`}>
+                      {selectedDetailOrder.status}
+                    </span>
+                    {selectedDetailOrder.paymentStatus !== "paid" && (
+                      <button
+                        type="button"
+                        disabled={isUpdatingPayment}
+                        onClick={() => handleUpdatePaymentStatus(selectedDetailOrder.id, "paid")}
+                        className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1 disabled:opacity-50"
+                      >
+                        <DollarSign className="h-3 w-3 shrink-0" />
+                        <span>Betaling Ontvangen ✓</span>
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
                     <button
                       type="button"
-                      disabled={isUpdatingPayment}
-                      onClick={() => handleUpdatePaymentStatus(selectedDetailOrder.id, "paid")}
-                      className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center space-x-1 disabled:opacity-50"
+                      onClick={() => printInvoice(selectedDetailOrder)}
+                      className="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1.5"
                     >
-                      <DollarSign className="h-3 w-3 shrink-0" />
-                      <span>Betaling Ontvangen ✓</span>
+                      <Printer className="h-3.5 w-3.5 shrink-0 text-indigo-600" />
+                      <span>{t("Afdrukken / PDF", "Print / PDF", "Yazdır / PDF")}</span>
                     </button>
-                  )}
-
+                    <button
+                      type="button"
+                      onClick={() => setSelectedDetailOrder(null)}
+                      className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-[10px] font-bold transition-all cursor-pointer border-none"
+                    >
+                      Sluiten
+                    </button>
+                  </div>
                 </div>
 
-                <div className="flex items-center space-x-2">
-                  <button
-                    type="button"
-                    onClick={() => printInvoice(selectedDetailOrder)}
-                    className="px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center space-x-1.5"
-                  >
-                    <Printer className="h-3.5 w-3.5 shrink-0 text-indigo-600" />
-                    <span>{t("Afdrukken / PDF", "Print / PDF", "Yazdır / PDF")}</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setSelectedDetailOrder(null)}
-                    className="px-4 py-2 hover:bg-slate-100 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold transition-all cursor-pointer border-none"
-                  >
-                    Sluiten
-                  </button>
-
-                  {/* Cancel Button */}
-                  {selectedDetailOrder.status !== "Geannuleerd" && selectedDetailOrder.status !== "Voltooid" && (
+                {/* Row 2: Status actions */}
+                {selectedDetailOrder.status !== "Geannuleerd" && selectedDetailOrder.status !== "Voltooid" && (
+                  <div className="flex items-center justify-between gap-2 pt-3 border-t border-slate-100">
                     <button
                       type="button"
                       disabled={isUpdatingStatus}
@@ -625,62 +665,66 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage }: AdminOrde
                           handleUpdateStatus(
                             selectedDetailOrder.id,
                             "Geannuleerd",
-                            `Huurcontract permanent geannuleerd door verhuurder: ${selectedDetailOrder.id}.`
+                            `Huurcontract permanent geannuleerd door verhuurder: ${selectedDetailOrder.id}.`,
+                            selectedDetailOrder
                           );
                         }
                       }}
-                      className="px-4 py-2 bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white border border-rose-200 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center space-x-1"
+                      className="px-3 py-1.5 bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white border border-rose-200 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1 disabled:opacity-50"
                     >
                       <X className="h-3.5 w-3.5 shrink-0" />
                       <span>Annuleren</span>
                     </button>
-                  )}
-
-                  {/* Core State actions */}
-                  {selectedDetailOrder.status === "In behandeling" && (
-                    <button
-                      type="button"
-                      disabled={isUpdatingStatus}
-                      onClick={() => handleUpdateStatus(
-                        selectedDetailOrder.id,
-                        "Goedgekeurd",
-                        `Bestelling goedgekeurd: ${selectedDetailOrder.id} voor ${selectedDetailOrder.customerName}.`
+                    <div className="flex items-center gap-2">
+                      {selectedDetailOrder.status === "In behandeling" && (
+                        <button
+                          type="button"
+                          disabled={isUpdatingStatus}
+                          onClick={() => handleUpdateStatus(
+                            selectedDetailOrder.id,
+                            "Goedgekeurd",
+                            `Bestelling goedgekeurd: ${selectedDetailOrder.id} voor ${selectedDetailOrder.customerName}.`,
+                            selectedDetailOrder
+                          )}
+                          className="bg-teal-500 hover:bg-teal-600 text-slate-950 text-xs font-black px-4 py-2 rounded-lg cursor-pointer transition-transform active:scale-95 border-none flex items-center gap-1.5 disabled:opacity-60"
+                        >
+                          <Check className="h-4 w-4 shrink-0" />
+                          <span>Accorderen</span>
+                        </button>
                       )}
-                      className="bg-teal-500 hover:bg-teal-600 text-slate-950 text-xs font-black px-4.5 py-2 rounded-lg cursor-pointer transition-transform active:scale-95 border-none flex items-center space-x-1"
-                    >
-                      <Check className="h-4 w-4 shrink-0 text-slate-950" />
-                      <span>Accorderen</span>
-                    </button>
-                  )}
-                  {selectedDetailOrder.status === "Goedgekeurd" && (
-                    <button
-                      type="button"
-                      disabled={isUpdatingStatus}
-                      onClick={() => handleUpdateStatus(
-                        selectedDetailOrder.id,
-                        "Onderweg",
-                        `Chauffeur ingepland & machine onderweg: ${selectedDetailOrder.id}.`
+                      {selectedDetailOrder.status === "Goedgekeurd" && (
+                        <button
+                          type="button"
+                          disabled={isUpdatingStatus}
+                          onClick={() => handleUpdateStatus(
+                            selectedDetailOrder.id,
+                            "Onderweg",
+                            `Chauffeur ingepland & machine onderweg: ${selectedDetailOrder.id}.`,
+                            selectedDetailOrder
+                          )}
+                          className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-4 py-2 rounded-lg cursor-pointer transition-transform active:scale-95 border-none disabled:opacity-60"
+                        >
+                          Versturen
+                        </button>
                       )}
-                      className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-4.5 py-2 rounded-lg cursor-pointer transition-transform active:scale-95 border-none"
-                    >
-                      Versturen
-                    </button>
-                  )}
-                  {selectedDetailOrder.status === "Onderweg" && (
-                    <button
-                      type="button"
-                      disabled={isUpdatingStatus}
-                      onClick={() => handleUpdateStatus(
-                        selectedDetailOrder.id,
-                        "Voltooid",
-                        `Verhuurcontract succesvol afgerond: ${selectedDetailOrder.id}.`
+                      {selectedDetailOrder.status === "Onderweg" && (
+                        <button
+                          type="button"
+                          disabled={isUpdatingStatus}
+                          onClick={() => handleUpdateStatus(
+                            selectedDetailOrder.id,
+                            "Voltooid",
+                            `Verhuurcontract succesvol afgerond: ${selectedDetailOrder.id}.`,
+                            selectedDetailOrder
+                          )}
+                          className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-4 py-2 rounded-lg cursor-pointer transition-transform active:scale-95 border-none disabled:opacity-60"
+                        >
+                          Voltooien
+                        </button>
                       )}
-                      className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-4.5 py-2 rounded-lg cursor-pointer transition-transform active:scale-95 border-none"
-                    >
-                      Voltooien
-                    </button>
-                  )}
-                </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
             </motion.div>

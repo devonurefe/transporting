@@ -50,6 +50,54 @@ const dictionary: TranslationDictionary = {
   infoAdvantages: { nl: "Voordelen", en: "Advantages", tr: "Avantajlar" },
   infoNotFor: { nl: "Niet geschikt voor", en: "Not suitable for", tr: "Uygun Değil" },
 
+  // Price Summary
+  priceSummaryReservation: { nl: "Jouw reservering", en: "Your reservation", tr: "Rezervasyonunuz" },
+  priceSummaryTrailer: { nl: "Aanhangerverhuur", en: "Trailer rental", tr: "Römork kiralama" },
+  priceSummaryDelivery: { nl: "Bezorging door ons", en: "Delivery by us", tr: "Bizim teslimatımız" },
+  priceSummaryPickup: { nl: "Bezorging", en: "Delivery", tr: "Teslimat" },
+  priceSummaryPickupFree: { nl: "Zelf ophalen (gratis)", en: "Self-pickup (free)", tr: "Kendi alım (ücretsiz)" },
+  priceSummaryTotal: { nl: "Totaal te betalen", en: "Total to pay", tr: "Ödenecek Toplam" },
+  priceSummaryInclVAT: { nl: "incl. BTW", en: "incl. VAT", tr: "KDV dahil" },
+  priceSummaryChooseMachine: { nl: "Kies een machine", en: "Choose a machine", tr: "Makine seçin" },
+  priceSummaryNoHidden: { nl: "Geen verborgen kosten · Veilige betaling", en: "No hidden costs · Secure payment", tr: "Gizli maliyet yok · Güvenli ödeme" },
+
+  // Booking Step 1
+  step1Title: { nl: "Huurperiode & Bezorging", en: "Rental Period & Delivery", tr: "Kiralama Dönemi & Teslimat" },
+  step1Subtitle: { nl: "Kies uw datums en hoe u de machine wilt ontvangen.", en: "Choose your dates and how you'd like to receive the machine.", tr: "Tarihlerinizi ve makineyi nasıl almak istediğinizi seçin." },
+  step1EmptyCart: { nl: "Uw winkelwagen is leeg", en: "Your cart is empty", tr: "Sepetiniz boş" },
+  step1EmptyCartSub: { nl: "Selecteer een of meer machines uit onze catalogus om uw boeking te starten.", en: "Select one or more machines from our catalog to start your booking.", tr: "Rezervasyonunuzu başlatmak için katalogumuzdan bir veya daha fazla makine seçin." },
+  step1BrowseCatalog: { nl: "Catalogus Bekijken", en: "Browse Catalog", tr: "Kataloğa Göz At" },
+  step1StartDate: { nl: "Begindatum", en: "Start Date", tr: "Başlangıç Tarihi" },
+  step1EndDate: { nl: "Einddatum (Retour)", en: "End Date (Return)", tr: "Bitiş Tarihi (İade)" },
+  step1Available: { nl: "Beschikbaar op uw geselecteerde datums!", en: "Available for your selected dates!", tr: "Seçilen tarihler için müsait!" },
+  step1TransportOpts: { nl: "Transport Opties", en: "Transport Options", tr: "Nakliye Seçenekleri" },
+  step1Opt1Title: { nl: "Wij bezorgen", en: "We deliver", tr: "Biz teslim ederiz" },
+  step1Opt2Title: { nl: "Onze aanhanger huren", en: "Rent our trailer", tr: "Römorkumuzu kiralayın" },
+  step1Opt3Title: { nl: "Zelf ophalen", en: "Self pickup", tr: "Kendi alımı" },
+  step1AddonsTitle: { nl: "Kies Extra Opties & Services", en: "Choose Extra Options & Services", tr: "Ekstra Seçenekler & Hizmetler" },
+
+  // Booking Success
+  successTitle: { nl: "Reservering Aangevraagd", en: "Reservation Requested", tr: "Rezervasyon Talep Edildi" },
+  successPending: { nl: "Nog niet bevestigd", en: "Not yet confirmed", tr: "Henüz onaylanmadı" },
+  successConfirmWA: { nl: "Bevestig via WhatsApp", en: "Confirm via WhatsApp", tr: "WhatsApp ile Onayla" },
+  successPdfBtn: { nl: "Pro-forma PDF", en: "Pro-forma PDF", tr: "Pro-forma PDF" },
+  successOrdersBtn: { nl: "Mijn Bestellingen", en: "My Orders", tr: "Siparişlerim" },
+  successWAStep1: { nl: "Klik hieronder om uw aanvraag te bevestigen via WhatsApp.", en: "Click below to confirm your request via WhatsApp.", tr: "WhatsApp üzerinden talebinizi onaylamak için aşağıya tıklayın." },
+  successWAStep2: { nl: "U ontvangt binnen 2 uur een beveiligde iDEAL-betaallink.", en: "You will receive a secure iDEAL payment link within 2 hours.", tr: "2 saat içinde güvenli bir iDEAL ödeme bağlantısı alacaksınız." },
+  successWAStep3: { nl: "Na betaling is uw boeking definitief bevestigd.", en: "After payment your booking is definitively confirmed.", tr: "Ödeme sonrasında rezervasyonunuz kesin olarak onaylanır." },
+  specRenter: { nl: "Huurder", en: "Renter", tr: "Kiracı" },
+  specMachine: { nl: "Hoogwerker", en: "Machine", tr: "Makine" },
+  specPeriod: { nl: "Periode", en: "Period", tr: "Dönem" },
+  specCollection: { nl: "Afhaling", en: "Collection", tr: "Teslim alma" },
+  specAddress: { nl: "Adres", en: "Address", tr: "Adres" },
+  specTotal: { nl: "Totaal incl. BTW", en: "Total incl. VAT", tr: "Toplam KDV dahil" },
+  successConfirmRef: { nl: "Bevestig via WhatsApp om uw betaallink te ontvangen.", en: "Confirm via WhatsApp to receive your payment link.", tr: "Ödeme bağlantınızı almak için WhatsApp üzerinden onaylayın." },
+
+  // Footer
+  footerHours: { nl: "Openingstijden", en: "Opening Hours", tr: "Çalışma Saatleri" },
+  footerHoursLine: { nl: "Ma – Za: 07:00–19:00", en: "Mon – Sat: 07:00–19:00", tr: "Pzt – Cmt: 07:00–19:00" },
+  footerClosed: { nl: "Zondag gesloten", en: "Closed on Sundays", tr: "Pazar günleri kapalı" },
+
   // Advisor Section
   advisorTitle: { nl: "AI Smart Adviseur", en: "AI Smart Advisor", tr: "Yapay Zeka Danışmanı" },
   advisorSubtitle: { 

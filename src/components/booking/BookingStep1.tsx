@@ -9,6 +9,7 @@ import { motion } from "motion/react";
 import { CartItem, DeliveryType, Machine } from "../../types";
 import { buildWhatsAppUrl } from "../../utils/whatsapp";
 import BookingPriceSummary from "./BookingPriceSummary";
+import { useLanguageStore } from "../../store/languageStore";
 
 interface BookingStep1Props {
   cartItems: CartItem[];
@@ -51,6 +52,7 @@ export default function BookingStep1({
   sums,
   selectedMachine
 }: BookingStep1Props) {
+  const t = useLanguageStore((state) => state.t);
   const todayStr = new Date().toISOString().split('T')[0];
 
   return (
@@ -58,9 +60,9 @@ export default function BookingStep1({
       <div className="border-b border-slate-100 pb-4">
         <h3 className="font-display font-black text-base text-slate-900 flex items-center space-x-2">
           <Calendar className="h-5 w-5 text-indigo-600" />
-          <span>Huurperiode &amp; Bezorging</span>
+          <span>{t("step1Title")}</span>
         </h3>
-        <p className="text-[11px] text-slate-400 mt-1">Kies uw datums en hoe u de machine wilt ontvangen.</p>
+        <p className="text-[11px] text-slate-400 mt-1">{t("step1Subtitle")}</p>
       </div>
 
       {cartItems.length === 0 ? (
@@ -69,16 +71,16 @@ export default function BookingStep1({
             <Building2 className="h-6 w-6" />
           </div>
           <div>
-            <p className="text-slate-900 font-bold text-sm">Uw winkelwagen is leeg</p>
+            <p className="text-slate-900 font-bold text-sm">{t("step1EmptyCart")}</p>
             <p className="text-xs text-slate-500 max-w-sm mx-auto mt-1">
-              Selecteer een of meer machines uit onze catalogus om uw boeking te starten.
+              {t("step1EmptyCartSub")}
             </p>
           </div>
           <button
             onClick={() => setActiveTab("catalog")}
             className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-xl text-xs font-bold text-white transition-all border-none cursor-pointer"
           >
-            Catalogus Bekijken
+            {t("step1BrowseCatalog")}
           </button>
         </div>
       ) : (
@@ -130,7 +132,7 @@ export default function BookingStep1({
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-2 border-t border-slate-200">
                   <div className="space-y-1.5">
-                    <label className="text-[10.5px] text-slate-500 block font-bold">Begindatum</label>
+                    <label className="text-[10.5px] text-slate-500 block font-bold">{t("step1StartDate")}</label>
                     <div className="flex items-center bg-white rounded-xl px-2.5 py-2 border border-slate-200 focus-within:border-indigo-500 transition-colors shadow-sm">
                       <Calendar className="h-4 w-4 text-slate-400 mr-2 shrink-0" />
                       <input
@@ -144,7 +146,7 @@ export default function BookingStep1({
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-[10.5px] text-slate-500 block font-bold">Einddatum (Retour)</label>
+                    <label className="text-[10.5px] text-slate-500 block font-bold">{t("step1EndDate")}</label>
                     <div className="flex items-center bg-white rounded-xl px-2.5 py-2 border border-slate-200 focus-within:border-indigo-500 transition-colors shadow-sm">
                       <Calendar className="h-4 w-4 text-slate-400 mr-2 shrink-0" />
                       <input
@@ -167,7 +169,7 @@ export default function BookingStep1({
                   {availability.available ? (
                     <>
                       <CheckCircle2Icon className="h-4 w-4 text-teal-600 shrink-0" />
-                      <span>Beschikbaar op uw geselecteerde datums!</span>
+                      <span>{t("step1Available")}</span>
                     </>
                   ) : (
                     <>
@@ -184,7 +186,7 @@ export default function BookingStep1({
 
       {/* Logistical preference setup */}
       <div className="space-y-3.5 pt-4 border-t border-slate-200">
-        <span className="text-xs text-slate-600 font-bold uppercase tracking-wider font-mono">Transport Opties</span>
+        <span className="text-xs text-slate-600 font-bold uppercase tracking-wider font-mono">{t("step1TransportOpts")}</span>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Opt 1 — Wij bezorgen */}
@@ -272,7 +274,7 @@ export default function BookingStep1({
         <div className="flex justify-between items-center">
           <span className="text-xs text-indigo-705 text-indigo-700 font-bold uppercase tracking-wider font-mono flex items-center space-x-1.5">
             <Sparkles className="h-4 w-4 text-indigo-650 text-indigo-600" />
-            <span>Winkelwagen: Kies Extra Opties & Services</span>
+            <span>{t("step1AddonsTitle")}</span>
           </span>
           <span className="text-[10px] text-slate-500 font-mono">Combineer naar wens</span>
         </div>

@@ -49,6 +49,7 @@ interface AppState {
   fetchCategories: () => Promise<void>;
   fetchSiteConfig: () => Promise<void>;
   fetchBlockedDates: () => Promise<void>;
+  fetchCampaignRules: () => Promise<void>;
   fetchAllData: () => Promise<void>;
 
   // Catalog / Admin actions
@@ -214,6 +215,22 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
   },
 
+  fetchCampaignRules: async () => {
+    try {
+      const res = await fetch("/api/campaign-rules");
+      if (res.ok) {
+        const rules = await res.json();
+        if (Array.isArray(rules) && rules.length > 0) {
+          set({ campaignRules: rules });
+          try { localStorage.setItem("hwh_campaign_rules", JSON.stringify(rules)); } catch { /* ignore */ }
+        }
+        // If API returns empty, keep the localStorage/default value already loaded
+      }
+    } catch (e) {
+      console.warn("Failed to fetch campaign rules from API, using local fallback.");
+    }
+  },
+
   fetchAllData: async () => {
     set({ isLoading: true, error: null });
     await Promise.all([
@@ -221,7 +238,8 @@ export const useAppStore = create<AppState>((set, get) => ({
       get().fetchOrders(),
       get().fetchCategories(),
       get().fetchSiteConfig(),
-      get().fetchBlockedDates()
+      get().fetchBlockedDates(),
+      get().fetchCampaignRules()
     ]);
     set({ isLoading: false });
   },
@@ -444,12 +462,15 @@ export const useAppStore = create<AppState>((set, get) => ({
   clearError: () => set({ error: null }),
 
   updateCampaignRules: (rules) => {
-    try {
-      localStorage.setItem("hwh_campaign_rules", JSON.stringify(rules));
-    } catch (e) {
-      console.warn("Failed to save campaign rules to localStorage");
-    }
+    // Optimistic update
     set({ campaignRules: rules });
+    try { localStorage.setItem("hwh_campaign_rules", JSON.stringify(rules)); } catch { /* ignore */ }
+    // Persist to DB
+    fetch("/api/campaign-rules", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+      body: JSON.stringify(rules)
+    }).catch(() => console.warn("Failed to save campaign rules to DB, localStorage fallback active."));
   }
 }));
 

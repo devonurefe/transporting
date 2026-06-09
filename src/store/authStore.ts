@@ -20,6 +20,7 @@ interface AuthState {
   isLoading: boolean;
   error: string | null;
   isUnverified: boolean;
+  authChecked: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   register: (data: { email: string; password?: string; name: string; phone?: string; profile?: string }) => Promise<boolean>;
   resendVerification: (email: string) => Promise<boolean>;
@@ -39,6 +40,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isLoading: false,
   error: null,
   isUnverified: false,
+  authChecked: false,
 
   clearError: () => set({ error: null, isUnverified: false }),
 
@@ -146,7 +148,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       : localStorage.getItem("hwh_token");
 
     if (!token) {
-      set({ token: null, isAuthenticated: false, user: null, isAdmin: false });
+      set({ token: null, isAuthenticated: false, user: null, isAdmin: false, authChecked: true });
       return;
     }
 
@@ -169,13 +171,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         } else {
           localStorage.removeItem("hwh_token");
         }
-        set({ token: null, user: null, isAuthenticated: false, isAdmin: false, isLoading: false });
+        set({ token: null, user: null, isAuthenticated: false, isAdmin: false, isLoading: false, authChecked: true });
         return;
       }
 
       if (!res.ok) {
         // Server error (5xx) — keep token, just don't authenticate yet
-        set({ isLoading: false });
+        set({ isLoading: false, authChecked: true });
         return;
       }
 
@@ -194,12 +196,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         user: data.user,
         isAuthenticated: true,
         isAdmin: data.user.role === "admin",
-        isLoading: false
+        isLoading: false,
+        authChecked: true
       });
     } catch {
       // Network error / timeout / Render cold-start — keep token in localStorage!
       // The token may still be valid; the server was temporarily unreachable.
-      set({ isLoading: false });
+      set({ isLoading: false, authChecked: true });
     }
   },
 

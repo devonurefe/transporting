@@ -75,6 +75,7 @@ export default function App() {
 
   const checkAuth = useAuthStore((state) => state.checkAuth);
   const storeUser = useAuthStore((state) => state.user);
+  const authChecked = useAuthStore((state) => state.authChecked);
 
   useEffect(() => {
     checkAuth();
@@ -103,11 +104,14 @@ export default function App() {
         });
         setIsAdminMode(false);
       }
-    } else {
+    } else if (authChecked) {
+      // Auth check is complete and confirmed no user — safe to clear admin mode
       setCurrentUser(null);
       setIsAdminMode(false);
     }
-  }, [storeUser, setIsAdminMode, navigate, location.pathname]);
+    // When authChecked=false (still loading), don't touch isAdminMode
+    // so the admin panel stays visible while the token is being verified
+  }, [storeUser, authChecked, setIsAdminMode, navigate, location.pathname]);
 
   // System and Activity Logs
   const [systemLogs, setSystemLogs] = useState<any[]>([

@@ -6,6 +6,7 @@
 import React from "react";
 import { ShieldCheck, TrendingDown, Package } from "lucide-react";
 import { Machine } from "../../types";
+import { useLanguageStore } from "../../store/languageStore";
 
 interface BookingPriceSummaryProps {
   selectedMachine: Machine | null;
@@ -26,6 +27,8 @@ interface BookingPriceSummaryProps {
 }
 
 export default function BookingPriceSummary({ selectedMachine, sums }: BookingPriceSummaryProps) {
+  const t = useLanguageStore((state) => state.t);
+
   if (!selectedMachine) {
     return (
       <div className="bg-white border border-slate-200 shadow-sm p-6 rounded-3xl text-center space-y-3">
@@ -33,7 +36,7 @@ export default function BookingPriceSummary({ selectedMachine, sums }: BookingPr
           <Package className="h-5 w-5" />
         </div>
         <div>
-          <h4 className="text-xs font-bold text-slate-700">Kies een machine</h4>
+          <h4 className="text-xs font-bold text-slate-700">{t("priceSummaryChooseMachine")}</h4>
           <p className="text-[10px] text-slate-500 mt-1 max-w-[200px] mx-auto leading-normal">
             Selecteer een hoogwerker uit de catalogus om uw prijs te zien.
           </p>
@@ -59,7 +62,7 @@ export default function BookingPriceSummary({ selectedMachine, sums }: BookingPr
           />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wide leading-none mb-1">Jouw reservering</p>
+          <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wide leading-none mb-1">{t("priceSummaryReservation")}</p>
           <h4 className="text-sm font-extrabold text-slate-900 leading-snug">{selectedMachine.name}</h4>
           <span className="text-[11px] text-indigo-600 font-bold font-mono">€ {selectedMachine.pricePerDay}/dag</span>
         </div>
@@ -91,7 +94,7 @@ export default function BookingPriceSummary({ selectedMachine, sums }: BookingPr
         {(sums.transport > 0 || sums.driver > 0) && (
           <div className="flex justify-between items-center">
             <span className="text-xs text-slate-600">
-              {sums.deliveryType === "trailer_rental" ? "Aanhangerverhuur" : "Bezorging door ons"}
+              {sums.deliveryType === "trailer_rental" ? t("priceSummaryTrailer") : t("priceSummaryDelivery")}
             </span>
             <span className="text-xs font-bold text-slate-800 font-mono">€ {(sums.transport + sums.driver).toFixed(0)}</span>
           </div>
@@ -100,8 +103,8 @@ export default function BookingPriceSummary({ selectedMachine, sums }: BookingPr
         {/* Self-pickup confirmation */}
         {sums.transport === 0 && sums.driver === 0 && (
           <div className="flex justify-between items-center">
-            <span className="text-xs text-slate-600">Bezorging</span>
-            <span className="text-xs font-semibold text-emerald-600">Zelf ophalen (gratis)</span>
+            <span className="text-xs text-slate-600">{t("priceSummaryPickup")}</span>
+            <span className="text-xs font-semibold text-emerald-600">{t("priceSummaryPickupFree")}</span>
           </div>
         )}
 
@@ -123,8 +126,8 @@ export default function BookingPriceSummary({ selectedMachine, sums }: BookingPr
         <div className="bg-indigo-600 -mx-4 px-4 py-4 rounded-b-none">
           <div className="flex justify-between items-center">
             <div>
-              <p className="text-[10px] text-indigo-200 font-semibold uppercase tracking-wide">Totaal te betalen</p>
-              <p className="text-[10px] text-indigo-300 mt-0.5">incl. BTW</p>
+              <p className="text-[10px] text-indigo-200 font-semibold uppercase tracking-wide">{t("priceSummaryTotal")}</p>
+              <p className="text-[10px] text-indigo-300 mt-0.5">{t("priceSummaryInclVAT")}</p>
             </div>
             <span className="text-2xl font-black text-white font-mono">€ {sums.total.toFixed(0)}</span>
           </div>
@@ -137,7 +140,7 @@ export default function BookingPriceSummary({ selectedMachine, sums }: BookingPr
       <div className="px-4 pb-4">
         <div className="flex items-center justify-center gap-1.5 text-[10px] text-slate-400 pt-2 border-t border-slate-100">
           <ShieldCheck className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
-          <span>Geen verborgen kosten · Veilige betaling</span>
+          <span>{t("priceSummaryNoHidden")}</span>
         </div>
       </div>
 

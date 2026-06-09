@@ -5,6 +5,7 @@
 
 import React from "react";
 import { Mail, MapPin, Clock, MessageCircle } from "lucide-react";
+import { useLanguageStore } from "../store/languageStore";
 
 interface FooterProps {
   siteName: string;
@@ -13,6 +14,7 @@ interface FooterProps {
 }
 
 export default function Footer({ siteName, setActiveTab: _setActiveTab, setShowContactModal }: FooterProps) {
+  const t = useLanguageStore((state) => state.t);
   return (
     <footer className="bg-slate-950 border-t border-slate-800 pb-20 md:pb-0">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
@@ -52,13 +54,13 @@ export default function Footer({ siteName, setActiveTab: _setActiveTab, setShowC
 
           {/* Hours */}
           <div className="space-y-3 flex flex-col items-center sm:items-start">
-            <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-500">Openingstijden</h4>
+            <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-500">{t("footerHours")}</h4>
             <div className="flex flex-col space-y-2.5 text-xs text-slate-400 items-center sm:items-start">
               <div className="flex items-start gap-2">
                 <Clock className="h-3.5 w-3.5 text-slate-600 shrink-0 mt-0.5" />
                 <div>
-                  <span className="font-semibold text-slate-200 block">Ma – Za: 07:00–19:00</span>
-                  <span className="text-slate-500">Zondag gesloten</span>
+                  <span className="font-semibold text-slate-200 block">{t("footerHoursLine")}</span>
+                  <span className="text-slate-500">{t("footerClosed")}</span>
                 </div>
               </div>
               <div className="flex items-start gap-2">

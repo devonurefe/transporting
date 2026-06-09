@@ -555,7 +555,7 @@ export default function BookingSection({
         setValidationError("Een afleveradres is verplicht bij bezorging door ons.");
         return;
       }
-      setStep(3);
+      handleCreateBooking();
     }
   };
 
@@ -693,8 +693,7 @@ export default function BookingSection({
             <div className="flex items-center justify-center max-w-md mx-auto relative px-6">
               {[
                 { number: 1, label: "Logistiek" },
-                { number: 2, label: "Gegevens" },
-                { number: 3, label: "Betaling" }
+                { number: 2, label: "Gegevens" }
               ].map((s, idx) => {
                 const isActive = step >= s.number;
                 const isCurrent = step === s.number;
@@ -774,7 +773,7 @@ export default function BookingSection({
                 )}
 
                 {step === 2 && (
-                  <BookingStep2 
+                  <BookingStep2
                     currentUser={currentUser}
                     customerName={customerName}
                     setCustomerName={setCustomerName}
@@ -801,17 +800,8 @@ export default function BookingSection({
                     setActiveTab={setActiveTab}
                     sums={sums}
                     selectedMachine={cartItems.length > 0 ? cartItems[0].machine : null}
-                  />
-                )}
-
-                {step === 3 && (
-                  <BookingStep3
                     isSubmitting={isSubmitting}
-                    setStep={setStep}
-                    handleCreateBooking={handleCreateBooking}
                     bookingError={bookingError}
-                    sums={sums}
-                    selectedMachine={cartItems.length > 0 ? cartItems[0].machine : null}
                   />
                 )}
 

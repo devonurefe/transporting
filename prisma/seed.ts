@@ -491,11 +491,7 @@ const defaultMachines = [
 
 ];
 
-const defaultBlockedDates = [
-  { id: "b1", machineId: "optimum-8-1", date: new Date("2026-06-15"), reason: "Onderhoud BMWT" },
-  { id: "b2", machineId: "optimum-8-1", date: new Date("2026-06-16"), reason: "Onderhoud BMWT" },
-  { id: "b3", machineId: "nifty-120-1", date: new Date("2026-06-20"), reason: "Calibratie keuring" }
-];
+const defaultBlockedDates: { id: string; machineId: string; date: Date; reason: string }[] = [];
 
 const defaultSiteConfig = {
   id: "default",

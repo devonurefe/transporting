@@ -26,6 +26,7 @@ import {
 import { motion, AnimatePresence } from "motion/react";
 import { Machine } from "../types";
 import { categoryIconMap } from "./icons/CategoryIcons";
+import { useLanguageStore } from "../store/languageStore";
 
 const professionIconMap: Record<string, LucideIcon> = {
   Schilder: Paintbrush,
@@ -74,6 +75,8 @@ export default function CatalogSection({
   onAddSystemLog,
   currentUser,
 }: CatalogSectionProps) {
+  const t = useLanguageStore((state) => state.t);
+
   const [compareIds, setCompareIds] = useState<string[]>([]);
   const [showCompareModal, setShowCompareModal] = useState<boolean>(false);
   const [selectedDetailMachine, setSelectedDetailMachine] = useState<Machine | null>(null);
@@ -177,10 +180,10 @@ export default function CatalogSection({
         {/* Title Deck */}
         <div className="mb-6">
           <h1 className="font-display text-xl sm:text-3xl font-extrabold tracking-tight text-slate-900 flex items-center space-x-2">
-            <span>Ons Machinepark</span>
+            <span>{t("catalogTitle")}</span>
           </h1>
           <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-            Professioneel gekeurde en direct leverbare hoogwerkers voor elk type werkzaamheid in heel Nederland.
+            {t("catalogSubtitle")}
           </p>
         </div>
 
@@ -391,14 +394,14 @@ export default function CatalogSection({
                             }}
                             className="flex-1 py-2 rounded-xl border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 text-[11px] font-bold transition-all duration-200 active:scale-[0.97] cursor-pointer"
                           >
-                            Specificaties
+                            {t("btnSpecifications")}
                           </button>
                           <button
                             onClick={() => onSelectMachineForBooking(machine)}
                             className="flex-[2] py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-[11px] font-bold transition-all duration-200 active:scale-[0.97] cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
                           >
                             <ShoppingBag className="h-3.5 w-3.5" />
-                            Huur Nu
+                            {t("btnRentNow")}
                           </button>
                         </div>
 
@@ -411,9 +414,9 @@ export default function CatalogSection({
                             <div className="border-t border-slate-100 pt-1">
                               <button
                                 onClick={() => setExpandedInfoId(isOpen ? null : machine.id)}
-                                className="w-full flex items-center justify-between text-[10px] font-bold text-indigo-600 hover:text-indigo-800 py-1.5 cursor-pointer transition-colors"
+                                className="w-full flex items-center justify-between text-xs font-bold text-indigo-600 hover:text-indigo-800 py-1.5 cursor-pointer transition-colors"
                               >
-                                <span>Meer info</span>
+                                <span>{t("btnMoreInfo")}</span>
                                 <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
                               </button>
                               <AnimatePresence>
@@ -425,10 +428,10 @@ export default function CatalogSection({
                                     transition={{ duration: 0.2 }}
                                     className="overflow-hidden"
                                   >
-                                    <div className="pb-2 space-y-2.5 text-[10px]">
+                                    <div className="pb-2 space-y-2.5 text-xs">
                                       {catInfo.useCases && catInfo.useCases.length > 0 && (
                                         <div>
-                                          <p className="font-bold text-slate-700 uppercase tracking-wide mb-1">Waarvoor</p>
+                                          <p className="font-bold text-slate-700 uppercase tracking-wide mb-1">{t("infoUseCases")}</p>
                                           <ul className="space-y-0.5">
                                             {catInfo.useCases.map((item, i) => (
                                               <li key={i} className="flex items-start gap-1.5 text-slate-600">
@@ -441,7 +444,7 @@ export default function CatalogSection({
                                       )}
                                       {catInfo.advantages && catInfo.advantages.length > 0 && (
                                         <div>
-                                          <p className="font-bold text-slate-700 uppercase tracking-wide mb-1">Voordelen</p>
+                                          <p className="font-bold text-slate-700 uppercase tracking-wide mb-1">{t("infoAdvantages")}</p>
                                           <ul className="space-y-0.5">
                                             {catInfo.advantages.map((item, i) => (
                                               <li key={i} className="flex items-start gap-1.5 text-slate-600">
@@ -454,7 +457,7 @@ export default function CatalogSection({
                                       )}
                                       {catInfo.notFor && catInfo.notFor.length > 0 && (
                                         <div>
-                                          <p className="font-bold text-slate-700 uppercase tracking-wide mb-1">Niet geschikt voor</p>
+                                          <p className="font-bold text-slate-700 uppercase tracking-wide mb-1">{t("infoNotFor")}</p>
                                           <ul className="space-y-0.5">
                                             {catInfo.notFor.map((item, i) => (
                                               <li key={i} className="flex items-start gap-1.5 text-slate-600">
@@ -959,7 +962,7 @@ export default function CatalogSection({
                         className="w-full relative overflow-hidden flex items-center justify-center space-x-2 px-4 py-3 rounded-xl border border-indigo-500/25 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-all shadow-md cursor-pointer"
                       >
                         <ShoppingBag className="h-4 w-4 text-white" />
-                        <span>Huur Nu Direct</span>
+                        <span>{t("btnRentNow")}</span>
                       </button>
                     </div>
 

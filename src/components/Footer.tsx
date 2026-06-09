@@ -4,7 +4,7 @@
  */
 
 import React from "react";
-import { Phone, Mail, MapPin, Clock, MessageCircle } from "lucide-react";
+import { Mail, MapPin, Clock, MessageCircle } from "lucide-react";
 
 interface FooterProps {
   siteName: string;
@@ -38,11 +38,7 @@ export default function Footer({ siteName, setActiveTab: _setActiveTab, setShowC
           {/* Contact */}
           <div className="space-y-3 flex flex-col items-center sm:items-start">
             <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-500">Contact</h4>
-            <div className="flex flex-col space-y-2.5 items-center sm:items-start">
-              <a href="tel:+31715428114" className="flex items-center gap-2 text-xs text-slate-400 hover:text-white transition-colors no-underline">
-                <Phone className="h-3.5 w-3.5 text-slate-600 shrink-0" />
-                071 542 8114
-              </a>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 items-start">
               <a href="mailto:info@mbhoogwerkers.com" className="flex items-center gap-2 text-xs text-slate-400 hover:text-white transition-colors no-underline">
                 <Mail className="h-3.5 w-3.5 text-slate-600 shrink-0" />
                 info@mbhoogwerkers.com
@@ -57,7 +53,7 @@ export default function Footer({ siteName, setActiveTab: _setActiveTab, setShowC
           {/* Hours */}
           <div className="space-y-3 flex flex-col items-center sm:items-start">
             <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-500">Openingstijden</h4>
-            <div className="flex flex-col space-y-2.5 text-xs text-slate-400 items-center sm:items-start">
+            <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs text-slate-400 items-start">
               <div className="flex items-start gap-2">
                 <Clock className="h-3.5 w-3.5 text-slate-600 shrink-0 mt-0.5" />
                 <div>

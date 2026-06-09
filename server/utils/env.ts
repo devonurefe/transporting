@@ -13,7 +13,6 @@ interface EnvCheck {
 const ENV_CHECKS: EnvCheck[] = [
   { key: "DATABASE_URL", required: true, description: "Prisma database connection string (postgresql://...)" },
   { key: "JWT_SECRET", required: false, description: "JWT signing secret (required in production)" },
-  { key: "GEMINI_API_KEY", required: false, description: "Google Gemini AI API key" },
   { key: "RESEND_API_KEY", required: false, description: "Resend email API key" },
   { key: "EMAIL_FROM", required: false, defaultValue: "onboarding@resend.dev", description: "Sender email address" },
   { key: "ADMIN_EMAIL", required: false, defaultValue: "mustafa@mbhoogwerkers.com", description: "Admin notification email" },

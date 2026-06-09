@@ -98,16 +98,6 @@ const dictionary: TranslationDictionary = {
   footerHoursLine: { nl: "Ma – Za: 07:00–19:00", en: "Mon – Sat: 07:00–19:00", tr: "Pzt – Cmt: 07:00–19:00" },
   footerClosed: { nl: "Zondag gesloten", en: "Closed on Sundays", tr: "Pazar günleri kapalı" },
 
-  // Advisor Section
-  advisorTitle: { nl: "AI Smart Adviseur", en: "AI Smart Advisor", tr: "Yapay Zeka Danışmanı" },
-  advisorSubtitle: { 
-    nl: "Beschrijf uw klus aan onze AI-assistent en ontvang direct de perfecte hoogwerker-aanbeveling met realtime capaciteitscheck.",
-    en: "Describe your job to our AI assistant and instantly receive the perfect high-lift recommendation with real-time capacity checks.",
-    tr: "Görevinizi yapay zeka asistanımıza tarif edin, anlık kapasite kontrolü ile en mükemmel sepetli platform önerisini hemen alın."
-  },
-  advisorPromptPlaceholder: { nl: "Typ uw bericht aan de adviseur...", en: "Type your message to the advisor...", tr: "Yapay zeka asistanına mesajınızı yazın..." },
-  advisorSend: { nl: "Versturen", en: "Send", tr: "Gönder" },
-
   // Booking Section
   bookingTitle: { nl: "Rond uw Reservatie Af", en: "Complete Your Reservation", tr: "Rezervasyonunuzu Tamamlayın" },
   bookingSubtitle: { nl: "Configureer uw huurperiode en bezorgwijze. Veilig, vakkundig en direct verbonden.", en: "Configure your rental period and delivery method. Safe, professional, and directly connected.", tr: "Kiralama periyodunuzu ve lojistik yönteminizi seçin. Güvenli, profesyonel ve anında bağlantılı." },

@@ -321,6 +321,7 @@ export default function App() {
     setSelectedMachine(machine);
     const todayStr = new Date().toISOString().split("T")[0];
     const endStr = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+    clearCart();
     addToCart(machine, todayStr, endStr);
     setActiveTab("booking");
     

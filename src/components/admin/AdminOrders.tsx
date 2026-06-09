@@ -28,12 +28,18 @@ interface AdminOrdersProps {
   key?: string;
   onAddSystemLog: (type: "login" | "logout" | "signup" | "booking" | "fleet" | "status" | "system", user: string, description: string) => void;
   adminLanguage?: string;
+  statusFilter?: string[];
+  onClearStatusFilter?: () => void;
 }
 
-export default function AdminOrders({ onAddSystemLog, adminLanguage }: AdminOrdersProps) {
+export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilter, onClearStatusFilter }: AdminOrdersProps) {
   const orders = useAppStore((state) => state.orders);
   const updateOrderStatus = useAppStore((state) => state.updateOrderStatus);
   const adminUser = useAuthStore((state) => state.user);
+
+  const displayOrders = statusFilter && statusFilter.length > 0
+    ? orders.filter(o => statusFilter.includes(o.status))
+    : orders;
 
   const t = (nl: string, en: string, tr: string) => {
     if (adminLanguage === "tr") return tr;
@@ -43,6 +49,40 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage }: AdminOrde
 
   const getBaseName = (name: string) => name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "").trim();
 
+  const formatPhoneForWA = (phone: string): string => {
+    const digits = phone.replace(/\D/g, "");
+    if (digits.startsWith("00")) return digits.slice(2);
+    if (digits.startsWith("0")) return "31" + digits.slice(1);
+    if (!digits.startsWith("31")) return "31" + digits;
+    return digits;
+  };
+
+  const openWhatsAppToCustomer = (order: any, nextStatus: string) => {
+    if (!order?.customerPhone) return;
+    const machine = getBaseName(order.machineName);
+    const lines: string[] = [];
+    if (nextStatus === "Goedgekeurd") {
+      lines.push("Goed nieuws! ✅", "", `Uw boeking *${order.id}* voor de *${machine}* is goedgekeurd.`, "", "U ontvangt binnenkort de iDEAL betaallink om de huur te bevestigen.", "", "Met vriendelijke groet,", "*HuurGo*");
+    } else if (nextStatus === "Onderweg") {
+      lines.push("Uw machine is onderweg! 🚐", "", `De *${machine}* (ref: *${order.id}*) wordt vandaag bezorgd.`, "", "De chauffeur neemt contact op bij aankomst.", "", "Met vriendelijke groet,", "*HuurGo*");
+    } else if (nextStatus === "Voltooid") {
+      lines.push("Bedankt voor uw huur! 🙏", "", `Uw huurperiode voor de *${machine}* (ref: *${order.id}*) is afgerond.`, "", "We hopen u snel weer van dienst te zijn!", "", "*HuurGo*");
+    } else if (nextStatus === "Geannuleerd") {
+      lines.push("Annulering bevestigd ❌", "", `Uw boeking *${order.id}* is helaas geannuleerd.`, "", "Heeft u vragen? Neem gerust contact op.", "", "*HuurGo*");
+    } else {
+      return;
+    }
+    const phone = formatPhoneForWA(order.customerPhone);
+    const url = `https://wa.me/${phone}?text=${encodeURIComponent(lines.join("\n"))}`;
+    // Use <a> click trick so it works even after an async await
+    const a = document.createElement("a");
+    a.href = url; a.target = "_blank"; a.rel = "noopener noreferrer";
+    a.style.display = "none";
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => document.body.removeChild(a), 200);
+  };
+
   // Modal and custom date proposal state
   const [selectedDetailOrder, setSelectedDetailOrder] = useState<any | null>(null);
   const [isProposingDate, setIsProposingDate] = useState<boolean>(false);
@@ -50,16 +90,33 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage }: AdminOrde
   const [newEndDate, setNewEndDate] = useState<string>("");
   const [isUpdatingStatus, setIsUpdatingStatus] = useState<boolean>(false);
   const [isUpdatingPayment, setIsUpdatingPayment] = useState<boolean>(false);
-  const handleUpdateStatus = async (orderId: string, nextStatus: string, logMsg: string) => {
+  const [statusError, setStatusError] = useState<string | null>(null);
+
+  const handleUpdateStatus = async (orderId: string, nextStatus: string, logMsg: string, order?: any) => {
+    // Pre-validate: "Accorderen" requires payment marked first
+    if (nextStatus === "Goedgekeurd" && order?.paymentStatus !== "paid") {
+      setStatusError("Markeer eerst de betaling als ontvangen (knop 'Betaling Ontvangen ✓') voordat u kunt accorderen.");
+      setTimeout(() => setStatusError(null), 6000);
+      return;
+    }
+
     setIsUpdatingStatus(true);
-    const success = await updateOrderStatus(orderId, nextStatus);
+    const result = await updateOrderStatus(orderId, nextStatus);
     setIsUpdatingStatus(false);
-    if (success) {
+
+    if (result === true) {
       onAddSystemLog("status", adminUser?.name ?? "Admin", logMsg);
-      // Update local state if modal is open
       if (selectedDetailOrder && selectedDetailOrder.id === orderId) {
         setSelectedDetailOrder((prev: any) => ({ ...prev, status: nextStatus }));
       }
+      // Open WA AFTER successful update (use <a> trick to minimize popup blocker)
+      if (order?.customerPhone) {
+        openWhatsAppToCustomer(order, nextStatus);
+      }
+    } else if (result) {
+      // result is an error string
+      setStatusError(result as string);
+      setTimeout(() => setStatusError(null), 7000);
     }
   };
 
@@ -85,6 +142,8 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage }: AdminOrde
       }
     } catch (e) {
       console.error("Payment status update error:", e);
+      setStatusError("Betaling bijwerken mislukt. Controleer de verbinding en probeer opnieuw.");
+      setTimeout(() => setStatusError(null), 6000);
     }
     setIsUpdatingPayment(false);
   };
@@ -95,15 +154,34 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage }: AdminOrde
       alert("Voer zowel de startdatum als de einddatum in.");
       return;
     }
-    
-    // Log proposal activity
+    const machine = getBaseName(selectedDetailOrder.machineName);
+    const lines = [
+      "Goed nieuws! Wij kunnen uw reservering herplannen. 📅",
+      "",
+      `Bestelling: *${selectedDetailOrder.id}*`,
+      `Machine: *${machine}*`,
+      `Nieuwe voorsteldata: *${newStartDate} t/m ${newEndDate}*`,
+      "",
+      "Kunt u dit bevestigen of heeft u een andere voorkeur?",
+      "",
+      "Met vriendelijke groet,",
+      "*HuurGo*"
+    ];
+    if (selectedDetailOrder.customerPhone) {
+      const phone = formatPhoneForWA(selectedDetailOrder.customerPhone);
+      const url = `https://wa.me/${phone}?text=${encodeURIComponent(lines.join("\n"))}`;
+      const a = document.createElement("a");
+      a.href = url; a.target = "_blank"; a.rel = "noopener noreferrer";
+      a.style.display = "none";
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => document.body.removeChild(a), 200);
+    }
     onAddSystemLog(
       "system",
       adminUser?.name ?? "Admin",
-      `Nieuw datumvoorstel verzonden voor contract ${selectedDetailOrder.id} (${selectedDetailOrder.customerName}). Nieuwe data: ${newStartDate} t/m ${newEndDate}.`
+      `Datumvoorstel via WhatsApp gestuurd voor contract ${selectedDetailOrder.id} (${selectedDetailOrder.customerName}). Voorstel: ${newStartDate} t/m ${newEndDate}.`
     );
-
-    alert(`Datumvoorstel (${newStartDate} t/m ${newEndDate}) is succesvol verzonden naar ${selectedDetailOrder.customerName}!`);
     setIsProposingDate(false);
     setSelectedDetailOrder(null);
   };
@@ -118,18 +196,38 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage }: AdminOrde
     >
       <div className="glass-panel p-6 rounded-3xl space-y-4">
         <div className="border-b border-slate-200 pb-3">
-          <h3 className="font-display font-bold text-sm text-slate-900">{t("Alle Actieve & Historische Contracten", "All Active & Historical Contracts", "Tüm Aktif ve Geçmiş Sözleşmeler")}</h3>
-          <p className="text-[11px] text-slate-500 mt-0.5">{t("Hier accordeert u inkomende reserveringen en past u de logistieke status aan van klanten.", "Here you approve incoming reservations and adjust the logistics status.", "Buradan gelen rezervasyonları onaylar ve müşterilerin lojistik durumlarını düzenlersiniz.")}</p>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h3 className="font-display font-bold text-sm text-slate-900">{t("Alle Actieve & Historische Contracten", "All Active & Historical Contracts", "Tüm Aktif ve Geçmiş Sözleşmeler")}</h3>
+              <p className="text-[11px] text-slate-500 mt-0.5">{t("Hier accordeert u inkomende reserveringen en past u de logistieke status aan van klanten.", "Here you approve incoming reservations and adjust the logistics status.", "Buradan gelen rezervasyonları onaylar ve müşterilerin lojistik durumlarını düzenlersiniz.")}</p>
+            </div>
+            {statusFilter && statusFilter.length > 0 && (
+              <button
+                onClick={onClearStatusFilter}
+                className="flex items-center gap-1.5 flex-shrink-0 text-[10px] font-bold px-3 py-1.5 rounded-full bg-indigo-100 text-indigo-700 border border-indigo-200 hover:bg-indigo-200 transition-colors"
+              >
+                <span>{statusFilter.join(" / ")}</span>
+                <X className="h-3 w-3" />
+              </button>
+            )}
+          </div>
         </div>
+
+        {statusError && (
+          <div className="flex items-start gap-2 bg-rose-50 border border-rose-200 rounded-xl px-3.5 py-3 text-xs text-rose-700 font-medium animate-fade-in">
+            <ShieldAlert className="h-4 w-4 shrink-0 mt-0.5 text-rose-500" />
+            <span>{statusError}</span>
+          </div>
+        )}
 
         {/* Mobile card layout */}
         <div className="md:hidden space-y-3">
-          {orders.length === 0 ? (
+          {displayOrders.length === 0 ? (
             <div className="py-8 text-center text-slate-500 text-xs">
               {t("Geen contracten beschikbaar.", "No contracts available.", "Kullanılabilir sözleşme yok.")}
             </div>
           ) : (
-            orders.map((o) => (
+            displayOrders.map((o) => (
               <div key={o.id} className="bg-white rounded-2xl border border-slate-200 p-4 space-y-3 shadow-sm">
                 <div className="flex justify-between items-start gap-2">
                   <div className="min-w-0">
@@ -162,19 +260,19 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage }: AdminOrde
                     <Printer className="h-3.5 w-3.5 text-indigo-600" />
                   </button>
                   {o.status === "In behandeling" && (
-                    <button onClick={() => handleUpdateStatus(o.id, "Goedgekeurd", `Bestelling goedgekeurd: ${o.id} voor ${o.customerName}.`)}
+                    <button onClick={() => handleUpdateStatus(o.id, "Goedgekeurd", `Bestelling goedgekeurd: ${o.id} voor ${o.customerName}.`, o)}
                       className="flex-1 text-[11px] font-black py-2 rounded-xl bg-teal-500 hover:bg-teal-600 text-slate-950 transition-colors cursor-pointer border-none">
                       {t("Accorderen", "Approve", "Onayla")}
                     </button>
                   )}
                   {o.status === "Goedgekeurd" && (
-                    <button onClick={() => handleUpdateStatus(o.id, "Onderweg", `Machine onderweg: ${o.id}.`)}
+                    <button onClick={() => handleUpdateStatus(o.id, "Onderweg", `Machine onderweg: ${o.id}.`, o)}
                       className="flex-1 text-[11px] font-black py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white transition-colors cursor-pointer border-none">
                       {t("Versturen", "Dispatch", "Yola Çıkar")}
                     </button>
                   )}
                   {o.status === "Onderweg" && (
-                    <button onClick={() => handleUpdateStatus(o.id, "Voltooid", `Contract afgerond: ${o.id}.`)}
+                    <button onClick={() => handleUpdateStatus(o.id, "Voltooid", `Contract afgerond: ${o.id}.`, o)}
                       className="flex-1 text-[11px] font-black py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white transition-colors cursor-pointer border-none">
                       {t("Voltooien", "Complete", "Tamamla")}
                     </button>
@@ -200,14 +298,14 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage }: AdminOrde
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {orders.length === 0 ? (
+              {displayOrders.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="py-8 text-center text-slate-500">
                     {t("Geen contracten beschikbaar in het beheerder log.", "No contracts available in the admin log.", "Yönetici kaydında kullanılabilir sözleşme bulunmamaktadır.")}
                   </td>
                 </tr>
               ) : (
-                orders.map((o) => {
+                displayOrders.map((o) => {
                   return (
                     <tr key={o.id} className="hover:bg-slate-50 transition-colors group">
                       <td 
@@ -291,9 +389,10 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage }: AdminOrde
                             {o.status === "In behandeling" && (
                               <button
                                 onClick={() => handleUpdateStatus(
-                                  o.id, 
-                                  "Goedgekeurd", 
-                                  `Bestelling goedgekeurd: ${o.id} voor ${o.customerName}.`
+                                  o.id,
+                                  "Goedgekeurd",
+                                  `Bestelling goedgekeurd: ${o.id} voor ${o.customerName}.`,
+                                  o
                                 )}
                                 className="bg-teal-500 hover:bg-teal-600 text-slate-950 text-[10px] font-black px-3.5 py-1.5 rounded-xl cursor-pointer leading-none transition-all hover:scale-[1.02] active:scale-95 border-none shadow-md"
                               >
@@ -303,9 +402,10 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage }: AdminOrde
                             {o.status === "Goedgekeurd" && (
                               <button
                                 onClick={() => handleUpdateStatus(
-                                  o.id, 
-                                  "Onderweg", 
-                                  `Chauffeur ingepland & machine onderweg: ${o.id}.`
+                                  o.id,
+                                  "Onderweg",
+                                  `Chauffeur ingepland & machine onderweg: ${o.id}.`,
+                                  o
                                 )}
                                 className="bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-black px-3.5 py-1.5 rounded-xl cursor-pointer leading-none transition-all hover:scale-[1.02] active:scale-95 border-none shadow-md"
                               >
@@ -315,9 +415,10 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage }: AdminOrde
                             {o.status === "Onderweg" && (
                               <button
                                 onClick={() => handleUpdateStatus(
-                                  o.id, 
-                                  "Voltooid", 
-                                  `Verhuurcontract succesvol afgerond: ${o.id}.`
+                                  o.id,
+                                  "Voltooid",
+                                  `Verhuurcontract succesvol afgerond: ${o.id}.`,
+                                  o
                                 )}
                                 className="bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-black px-3.5 py-1.5 rounded-xl cursor-pointer leading-none transition-all hover:scale-[1.02] active:scale-95 border-none shadow-md"
                               >
@@ -578,45 +679,60 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage }: AdminOrde
               </div>
 
               {/* Action Buttons Footer */}
-              <div className="flex flex-wrap justify-between items-center pt-4 border-t border-slate-100 shrink-0 mt-5 gap-3">
-                <div className="flex flex-wrap gap-2">
-                  <span className="text-[10px] text-slate-500 font-mono">Status: {selectedDetailOrder.status}</span>
+              <div className="pt-4 border-t border-slate-100 shrink-0 mt-5 space-y-3">
+                {statusError && (
+                  <div className="flex items-start gap-2 bg-rose-50 border border-rose-200 rounded-xl px-3 py-2.5 text-[11px] text-rose-700 font-medium">
+                    <ShieldAlert className="h-3.5 w-3.5 shrink-0 mt-0.5 text-rose-500" />
+                    <span>{statusError}</span>
+                  </div>
+                )}
 
-                  {/* Mark payment received */}
-                  {selectedDetailOrder.paymentStatus !== "paid" && (
+                {/* Row 1: Utility actions */}
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className={`text-[9px] font-mono px-2.5 py-1 rounded-full font-extrabold uppercase ${
+                      selectedDetailOrder.status === "In behandeling" ? "bg-amber-100 text-amber-700"
+                      : selectedDetailOrder.status === "Goedgekeurd" ? "bg-teal-100 text-teal-700"
+                      : selectedDetailOrder.status === "Onderweg" ? "bg-blue-100 text-blue-700"
+                      : selectedDetailOrder.status === "Geannuleerd" ? "bg-rose-100 text-rose-700"
+                      : "bg-slate-100 text-slate-500"
+                    }`}>
+                      {selectedDetailOrder.status}
+                    </span>
+                    {selectedDetailOrder.paymentStatus !== "paid" && (
+                      <button
+                        type="button"
+                        disabled={isUpdatingPayment}
+                        onClick={() => handleUpdatePaymentStatus(selectedDetailOrder.id, "paid")}
+                        className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1 disabled:opacity-50"
+                      >
+                        <DollarSign className="h-3 w-3 shrink-0" />
+                        <span>Betaling Ontvangen ✓</span>
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
                     <button
                       type="button"
-                      disabled={isUpdatingPayment}
-                      onClick={() => handleUpdatePaymentStatus(selectedDetailOrder.id, "paid")}
-                      className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center space-x-1 disabled:opacity-50"
+                      onClick={() => printInvoice(selectedDetailOrder)}
+                      className="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1.5"
                     >
-                      <DollarSign className="h-3 w-3 shrink-0" />
-                      <span>Betaling Ontvangen ✓</span>
+                      <Printer className="h-3.5 w-3.5 shrink-0 text-indigo-600" />
+                      <span>{t("Afdrukken / PDF", "Print / PDF", "Yazdır / PDF")}</span>
                     </button>
-                  )}
-
+                    <button
+                      type="button"
+                      onClick={() => setSelectedDetailOrder(null)}
+                      className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-[10px] font-bold transition-all cursor-pointer border-none"
+                    >
+                      Sluiten
+                    </button>
+                  </div>
                 </div>
 
-                <div className="flex items-center space-x-2">
-                  <button
-                    type="button"
-                    onClick={() => printInvoice(selectedDetailOrder)}
-                    className="px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center space-x-1.5"
-                  >
-                    <Printer className="h-3.5 w-3.5 shrink-0 text-indigo-600" />
-                    <span>{t("Afdrukken / PDF", "Print / PDF", "Yazdır / PDF")}</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setSelectedDetailOrder(null)}
-                    className="px-4 py-2 hover:bg-slate-100 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold transition-all cursor-pointer border-none"
-                  >
-                    Sluiten
-                  </button>
-
-                  {/* Cancel Button */}
-                  {selectedDetailOrder.status !== "Geannuleerd" && selectedDetailOrder.status !== "Voltooid" && (
+                {/* Row 2: Status actions */}
+                {selectedDetailOrder.status !== "Geannuleerd" && selectedDetailOrder.status !== "Voltooid" && (
+                  <div className="flex items-center justify-between gap-2 pt-3 border-t border-slate-100">
                     <button
                       type="button"
                       disabled={isUpdatingStatus}
@@ -625,62 +741,66 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage }: AdminOrde
                           handleUpdateStatus(
                             selectedDetailOrder.id,
                             "Geannuleerd",
-                            `Huurcontract permanent geannuleerd door verhuurder: ${selectedDetailOrder.id}.`
+                            `Huurcontract permanent geannuleerd door verhuurder: ${selectedDetailOrder.id}.`,
+                            selectedDetailOrder
                           );
                         }
                       }}
-                      className="px-4 py-2 bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white border border-rose-200 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center space-x-1"
+                      className="px-3 py-1.5 bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white border border-rose-200 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1 disabled:opacity-50 disabled:hover:bg-rose-50 disabled:hover:text-rose-700 disabled:cursor-not-allowed"
                     >
                       <X className="h-3.5 w-3.5 shrink-0" />
                       <span>Annuleren</span>
                     </button>
-                  )}
-
-                  {/* Core State actions */}
-                  {selectedDetailOrder.status === "In behandeling" && (
-                    <button
-                      type="button"
-                      disabled={isUpdatingStatus}
-                      onClick={() => handleUpdateStatus(
-                        selectedDetailOrder.id,
-                        "Goedgekeurd",
-                        `Bestelling goedgekeurd: ${selectedDetailOrder.id} voor ${selectedDetailOrder.customerName}.`
+                    <div className="flex items-center gap-2">
+                      {selectedDetailOrder.status === "In behandeling" && (
+                        <button
+                          type="button"
+                          disabled={isUpdatingStatus}
+                          onClick={() => handleUpdateStatus(
+                            selectedDetailOrder.id,
+                            "Goedgekeurd",
+                            `Bestelling goedgekeurd: ${selectedDetailOrder.id} voor ${selectedDetailOrder.customerName}.`,
+                            selectedDetailOrder
+                          )}
+                          className="bg-teal-500 hover:bg-teal-600 text-slate-950 text-xs font-black px-4 py-2 rounded-lg cursor-pointer transition-transform active:scale-95 border-none flex items-center gap-1.5 disabled:opacity-60"
+                        >
+                          <Check className="h-4 w-4 shrink-0" />
+                          <span>Accorderen</span>
+                        </button>
                       )}
-                      className="bg-teal-500 hover:bg-teal-600 text-slate-950 text-xs font-black px-4.5 py-2 rounded-lg cursor-pointer transition-transform active:scale-95 border-none flex items-center space-x-1"
-                    >
-                      <Check className="h-4 w-4 shrink-0 text-slate-950" />
-                      <span>Accorderen</span>
-                    </button>
-                  )}
-                  {selectedDetailOrder.status === "Goedgekeurd" && (
-                    <button
-                      type="button"
-                      disabled={isUpdatingStatus}
-                      onClick={() => handleUpdateStatus(
-                        selectedDetailOrder.id,
-                        "Onderweg",
-                        `Chauffeur ingepland & machine onderweg: ${selectedDetailOrder.id}.`
+                      {selectedDetailOrder.status === "Goedgekeurd" && (
+                        <button
+                          type="button"
+                          disabled={isUpdatingStatus}
+                          onClick={() => handleUpdateStatus(
+                            selectedDetailOrder.id,
+                            "Onderweg",
+                            `Chauffeur ingepland & machine onderweg: ${selectedDetailOrder.id}.`,
+                            selectedDetailOrder
+                          )}
+                          className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-4 py-2 rounded-lg cursor-pointer transition-transform active:scale-95 border-none disabled:opacity-60"
+                        >
+                          Versturen
+                        </button>
                       )}
-                      className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-4.5 py-2 rounded-lg cursor-pointer transition-transform active:scale-95 border-none"
-                    >
-                      Versturen
-                    </button>
-                  )}
-                  {selectedDetailOrder.status === "Onderweg" && (
-                    <button
-                      type="button"
-                      disabled={isUpdatingStatus}
-                      onClick={() => handleUpdateStatus(
-                        selectedDetailOrder.id,
-                        "Voltooid",
-                        `Verhuurcontract succesvol afgerond: ${selectedDetailOrder.id}.`
+                      {selectedDetailOrder.status === "Onderweg" && (
+                        <button
+                          type="button"
+                          disabled={isUpdatingStatus}
+                          onClick={() => handleUpdateStatus(
+                            selectedDetailOrder.id,
+                            "Voltooid",
+                            `Verhuurcontract succesvol afgerond: ${selectedDetailOrder.id}.`,
+                            selectedDetailOrder
+                          )}
+                          className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-4 py-2 rounded-lg cursor-pointer transition-transform active:scale-95 border-none disabled:opacity-60"
+                        >
+                          Voltooien
+                        </button>
                       )}
-                      className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-4.5 py-2 rounded-lg cursor-pointer transition-transform active:scale-95 border-none"
-                    >
-                      Voltooien
-                    </button>
-                  )}
-                </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
             </motion.div>

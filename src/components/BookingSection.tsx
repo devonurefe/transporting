@@ -4,7 +4,6 @@
  */
 
 import React, { useState, useEffect } from "react";
-import {} from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Machine, Order, DeliveryType, UserProfile, CartItem, CampaignRule } from "../types";
 import { useAppStore } from "../store/appStore";

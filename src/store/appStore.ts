@@ -56,7 +56,7 @@ interface AppState {
   addMachine: (machData: Partial<Machine>) => Promise<boolean>;
   updateMachine: (id: string, machData: Partial<Machine>) => Promise<boolean>;
   deleteMachine: (id: string) => Promise<boolean>;
-  updateOrderStatus: (orderId: string, status: string) => Promise<boolean>;
+  updateOrderStatus: (orderId: string, status: string) => Promise<true | false | string>;
   blockDate: (machineId: string, date: string, reason: string) => Promise<boolean>;
   unblockDate: (machineId: string, date: string) => Promise<boolean>;
   updateCategories: (categories: Category[]) => Promise<boolean>;
@@ -313,10 +313,21 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   updateOrderStatus: async (orderId, status) => {
+    // Remember original for rollback
+    const originalStatus = get().orders.find(o => o.id === orderId)?.status;
+
     // Optimistic frontend update
     set(state => ({
       orders: state.orders.map(o => o.id === orderId ? { ...o, status: status as any } : o)
     }));
+
+    const rollback = () => {
+      if (originalStatus) {
+        set(state => ({
+          orders: state.orders.map(o => o.id === orderId ? { ...o, status: originalStatus as any } : o)
+        }));
+      }
+    };
 
     try {
       const res = await fetch(`/api/orders/${orderId}/status`, {
@@ -331,8 +342,13 @@ export const useAppStore = create<AppState>((set, get) => ({
         await get().fetchOrders();
         return true;
       }
+      // API rejected — roll back optimistic update and surface the error
+      const data = await res.json().catch(() => ({}));
+      rollback();
+      return data?.error || "Status bijwerken mislukt.";
     } catch (e) {
       console.error("Failed to persist order status update:", e);
+      rollback();
     }
     return false;
   },

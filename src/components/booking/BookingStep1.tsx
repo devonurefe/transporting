@@ -154,7 +154,7 @@ export default function BookingStep1({
                         min={item.startDate || todayStr}
                         value={item.endDate}
                         onChange={(e) => onUpdateCartItemDates(item.id, item.startDate || "", e.target.value)}
-                        className="bg-transparent border-none text-xs text-slate-880 text-slate-800 outline-none w-full cursor-pointer font-bold focus:ring-0"
+                        className="bg-transparent border-none text-xs text-slate-800 outline-none w-full cursor-pointer font-bold focus:ring-0"
                       />
                     </div>
                   </div>

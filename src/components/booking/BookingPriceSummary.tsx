@@ -112,7 +112,7 @@ export default function BookingPriceSummary({ selectedMachine, sums }: BookingPr
         {sums.addonCost > 0 && sums.addonDetails.map(addon => (
           <div key={addon.id} className="flex justify-between items-center">
             <span className="text-xs text-slate-600 truncate max-w-[160px]">{addon.name}</span>
-            <span className="text-xs font-bold text-slate-800 font-mono">€ {addon.price}</span>
+            <span className="text-xs font-bold text-slate-800 font-mono">€ {Number(addon.price).toFixed(2)}</span>
           </div>
         ))}
 

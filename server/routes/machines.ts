@@ -228,6 +228,15 @@ machinesRouter.put("/:id", requireAdmin as any, async (req: AuthenticatedRequest
 machinesRouter.delete("/:id", requireAdmin as any, async (req: AuthenticatedRequest, res: Response) => {
   const { id } = req.params;
   try {
+    const activeOrder = await prisma.order.findFirst({
+      where: {
+        machineId: id,
+        status: { in: ["In behandeling", "Goedgekeurd", "Onderweg"] }
+      }
+    });
+    if (activeOrder) {
+      return res.status(409).json({ error: "Deze machine heeft actieve bestellingen en kan niet worden verwijderd. Annuleer eerst alle actieve bestellingen." });
+    }
     await prisma.blockedDate.deleteMany({
       where: { machineId: id }
     });

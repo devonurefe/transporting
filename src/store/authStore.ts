@@ -22,7 +22,7 @@ interface AuthState {
   isUnverified: boolean;
   authChecked: boolean;
   login: (email: string, password: string) => Promise<boolean>;
-  register: (data: { email: string; password?: string; name: string; phone?: string; profile?: string }) => Promise<boolean>;
+  register: (data: { email: string; password?: string; name: string; phone?: string; profile?: string; companyName?: string }) => Promise<boolean>;
   resendVerification: (email: string) => Promise<boolean>;
   updateProfile: (data: { name: string; phone?: string; profile?: string; companyName?: string; address?: string; avatarUrl?: string }) => Promise<boolean>;
   logout: () => void;

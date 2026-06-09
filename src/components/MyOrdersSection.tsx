@@ -4,34 +4,22 @@
  */
 
 import React, { useState } from "react";
-import { 
-  ClipboardCheck, 
-  MapPin, 
-  Calendar, 
-  FileText, 
-  Star, 
-  Bell, 
-  CreditCard, 
-  Sliders, 
-  PlusCircle, 
+import {
+  Calendar,
+  Star,
+  Bell,
   CheckCircle,
   Truck,
-  Sparkles,
-  RefreshCw,
   Clock,
   User,
   Mail,
   Building2,
-  SlidersHorizontal,
   BellRing,
   Download,
   Check,
-  Smartphone,
-  Eye,
   Info,
   UserPlus,
   LogOut,
-  ShieldCheck,
   Lock,
   MessageSquare
 } from "lucide-react";
@@ -179,7 +167,7 @@ export default function MyOrdersSection({
     setRatings(prev => ({ ...prev, [orderId]: stars }));
     const token = localStorage.getItem("hwh_token");
     try {
-      await fetch(`/api/orders/${orderId}/rating`, {
+      const res = await fetch(`/api/orders/${orderId}/rating`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -187,15 +175,18 @@ export default function MyOrdersSection({
         },
         body: JSON.stringify({ rating: stars })
       });
+      if (!res.ok) throw new Error("Rating save failed");
+      onTriggerNotification(
+        "Waardering Opgeslagen",
+        `Bedankt! Uw waardering van ${stars} sterren is opgeslagen.`,
+        "success",
+        false
+      );
     } catch (e) {
       console.error("Failed to save rating:", e);
+      setRatings(prev => { const next = { ...prev }; delete next[orderId]; return next; });
+      onTriggerNotification("Fout", "Waardering kon niet worden opgeslagen. Probeer het opnieuw.", "warning", false);
     }
-    onTriggerNotification(
-      "Waardering Opgeslagen",
-      `Bedankt! Uw waardering van ${stars} sterren is opgeslagen.`,
-      "success",
-      false
-    );
   };
 
   const handleCancelOrder = async (orderId: string) => {
@@ -351,13 +342,18 @@ export default function MyOrdersSection({
       onTriggerNotification("Registratie Mislukt", "Naam, e-mail en wachtwoord zijn verplicht.", "warning");
       return;
     }
+    if (regPassword.trim().length < 6) {
+      onTriggerNotification("Registratie Mislukt", "Wachtwoord moet minimaal 6 tekens bevatten.", "warning");
+      return;
+    }
 
     const success = await register({
       email: regEmail.trim(),
       password: regPassword.trim(),
       name: regName.trim(),
       phone: regPhone.trim() || undefined,
-      profile: regProfile
+      profile: regProfile,
+      companyName: regCompany.trim() || undefined
     });
 
     if (success) {

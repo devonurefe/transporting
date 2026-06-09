@@ -66,6 +66,7 @@ export default function AdminSection({
   onClearSystemLogs,
 }: AdminSectionProps) {
   const [subTab, setSubTab] = useState<"dashboard" | "orders" | "machines" | "calendar" | "add" | "logs" | "customizer" | "diagnostics" | "accounting">("dashboard");
+  const [ordersFilter, setOrdersFilter] = useState<string[]>([]);
   const [showAdvancedSubmenu, setShowAdvancedSubmenu] = useState<boolean>(false);
   const [showMobileMenu, setShowMobileMenu] = useState<boolean>(false);
 
@@ -489,10 +490,10 @@ export default function AdminSection({
             <React.Suspense fallback={<AdminLoadingSpinner />}>
               <AnimatePresence mode="wait">
                 {subTab === "dashboard" && (
-                  <AdminDashboard key="dashboard" setSubTab={setSubTab} adminLanguage={adminLanguage} />
+                  <AdminDashboard key="dashboard" setSubTab={setSubTab} setOrdersFilter={setOrdersFilter} adminLanguage={adminLanguage} />
                 )}
                 {subTab === "orders" && (
-                  <AdminOrders key="orders" onAddSystemLog={onAddSystemLog} adminLanguage={adminLanguage} />
+                  <AdminOrders key="orders" onAddSystemLog={onAddSystemLog} adminLanguage={adminLanguage} statusFilter={ordersFilter} onClearStatusFilter={() => setOrdersFilter([])} />
                 )}
                 {subTab === "machines" && (
                   <AdminMachines key="machines" setSubTab={setSubTab} onAddSystemLog={onAddSystemLog} adminLanguage={adminLanguage} />

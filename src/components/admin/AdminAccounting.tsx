@@ -259,7 +259,7 @@ export default function AdminAccounting({ adminLanguage }: AdminAccountingProps)
                       <span className="text-[11.5px] font-extrabold text-slate-800 font-mono">
                         {log.orderId} ({log.customer})
                       </span>
-                      <span className="text-[10px] text-slate-550 text-slate-500">
+                      <span className="text-[10px] text-slate-500">
                         {new Date(log.timestamp).toLocaleTimeString("nl-NL")}
                       </span>
                     </div>

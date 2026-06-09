@@ -4,17 +4,18 @@
  */
 
 import React, { useState } from "react";
-import { ArrowUpRight, Sparkles } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { motion } from "motion/react";
 import { useAppStore } from "../../store/appStore";
 
 interface AdminDashboardProps {
   key?: string;
   setSubTab: (tab: "dashboard" | "orders" | "machines" | "calendar" | "add" | "logs" | "customizer") => void;
+  setOrdersFilter?: (filter: string[]) => void;
   adminLanguage?: string;
 }
 
-export default function AdminDashboard({ setSubTab, adminLanguage }: AdminDashboardProps) {
+export default function AdminDashboard({ setSubTab, setOrdersFilter, adminLanguage }: AdminDashboardProps) {
   const machines = useAppStore((state) => state.machines);
   const orders = useAppStore((state) => state.orders);
   
@@ -40,6 +41,7 @@ export default function AdminDashboard({ setSubTab, adminLanguage }: AdminDashbo
 
   const monthlyRevenue = last6Months.map((m) => {
     const amount = orders.reduce((sum, order) => {
+      if (order.status === "Geannuleerd") return sum;
       const orderDate = new Date(order.createdAt);
       if (orderDate.getMonth() === m.monthIndex && orderDate.getFullYear() === m.year) {
         return sum + order.totalAmount;
@@ -63,11 +65,13 @@ export default function AdminDashboard({ setSubTab, adminLanguage }: AdminDashbo
   const pendingRegistrations = orders.filter(o => o.status === "In behandeling").length;
   
   const totalEarnings = orders.reduce((acc, current) => {
+    if (current.status === "Geannuleerd") return acc;
     return acc + current.totalAmount;
   }, 0);
 
   // Dynamic statistics calculated from active orders
   const profileEarnings = orders.reduce((acc, order) => {
+    if (order.status === "Geannuleerd") return acc;
     const prof = order.customerProfile || "Particulier";
     let key = "Particulier";
     if (prof.toLowerCase().includes("schilder")) key = "Schilder";
@@ -83,14 +87,26 @@ export default function AdminDashboard({ setSubTab, adminLanguage }: AdminDashbo
     const cat = machine.category;
     let label = "Algemeen";
     if (cat === "schaarlift") label = t("Schaarliften", "Scissor Lifts", "Makaslı Platformlar");
-    else if (cat === "knikarm") label = t("Knikarm", "Articulated", "Eklemli Platform");
+    else if (cat === "knikarm") label = t("Knikarmhoogv.", "Articulated", "Eklemli Platform");
     else if (cat === "telescoop") label = t("Telescoop", "Telescopic", "Teleskopik Platform");
     else if (cat === "auto") label = t("Autohoogv.", "Truck-mounted", "Araç Üstü");
-    else if (cat === "spin") label = t("Spinhoogv.", "Spider Lifts", "Örümcek Platform");
+    else if (cat === "spin") label = t("Rupshoogv.", "Spider Lifts", "Paletli Platform");
+    else if (cat === "aanhanger") label = t("Aanhanger", "Trailer Lift", "Römork Platformu");
+    else if (cat === "mastlift") label = t("Mastliften", "Mast Lifts", "Direk Platformu");
+    else if (cat === "ladderlift") label = t("Ladderliften", "Ladder Lifts", "Merdiven Platformu");
+    else if (cat === "ecolift") label = t("Ecoliften", "Eco Lifts", "Eco Platform");
+    else if (cat === "klussensets") label = t("Klussensets", "Tool Sets", "Takım Setleri");
 
     acc[label] = (acc[label] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
+
+  // Real month-over-month revenue trend
+  const currentMonthRevenue = monthlyRevenue.at(-1)?.revenue ?? 0;
+  const prevMonthRevenue = monthlyRevenue.at(-2)?.revenue ?? 0;
+  const revenueTrend = prevMonthRevenue > 0
+    ? `${currentMonthRevenue >= prevMonthRevenue ? "+" : ""}${((currentMonthRevenue - prevMonthRevenue) / prevMonthRevenue * 100).toFixed(1)}% t.o.v. vorige maand`
+    : (currentMonthRevenue > 0 ? t("Eerste omzet dit jaar", "First revenue this year", "İlk ciro") : t("Nog geen omzet", "No revenue yet", "Henüz ciro yok"));
 
   return (
     <motion.div
@@ -103,15 +119,16 @@ export default function AdminDashboard({ setSubTab, adminLanguage }: AdminDashbo
       {/* Glowing Premium KPI Card deck */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { title: t("Cumulatieve Omzet", "Cumulative Revenue", "Toplam Ciro"), value: `€ ${totalEarnings.toFixed(2)}`, trend: t("+14.2% deze maand", "+14.2% this month", "bu ay +14.2%"), color: "bg-amber-50 border border-amber-200 text-amber-900 shadow-sm" },
-          { title: t("Actieve Huren", "Active Rentals", "Aktif Kiralamalar"), value: `${activeRentals} ${t("machines", "machines", "makine")}`, trend: t("Planners onderweg", "Planners en route", "Sevkiyat planlanıyor"), color: "border border-slate-200 bg-slate-50 text-slate-800 shadow-sm" },
-          { title: t("Vloot Bezetting", "Fleet Occupancy", "Filo Doluluk Oranı"), value: `${machines.length > 0 ? Math.round((activeRentals / machines.length) * 100) : 0}% ${t("bezet", "occupied", "dolu")}`, trend: `${machines.length} ${t("units totaal", "total units", "toplam adet")}`, color: "border border-slate-200 bg-slate-50 text-slate-800 shadow-sm" },
-          { title: t("Ter Beoordeling", "To Review", "Onay Bekleyenler"), value: `${pendingRegistrations} ${t("aanvragen", "requests", "başvuru")}`, trend: t("Eigenaar goedkeuring", "Owner approval", "Yönetici onayı"), color: pendingRegistrations > 0 ? "border border-amber-200 bg-amber-50 text-amber-950 shadow-sm" : "border border-slate-200 bg-slate-50 text-slate-500 shadow-sm" }
+          { title: t("Cumulatieve Omzet", "Cumulative Revenue", "Toplam Ciro"), value: `€ ${totalEarnings.toFixed(2)}`, trend: revenueTrend, color: "bg-amber-50 border border-amber-200 text-amber-900 shadow-sm", tab: "orders" as const, filter: [] as string[] },
+          { title: t("Actieve Huren", "Active Rentals", "Aktif Kiralamalar"), value: `${activeRentals} ${t("machines", "machines", "makine")}`, trend: t("Klik voor details →", "Click for details →", "Detay için tıkla →"), color: "border border-slate-200 bg-slate-50 text-slate-800 shadow-sm", tab: "orders" as const, filter: ["Goedgekeurd", "Onderweg"] as string[] },
+          { title: t("Vloot Bezetting", "Fleet Occupancy", "Filo Doluluk Oranı"), value: `${machines.length > 0 ? Math.round((activeRentals / machines.length) * 100) : 0}% ${t("bezet", "occupied", "dolu")}`, trend: `${machines.length} ${t("units totaal", "total units", "toplam adet")}`, color: "border border-slate-200 bg-slate-50 text-slate-800 shadow-sm", tab: "machines" as const, filter: [] as string[] },
+          { title: t("Ter Beoordeling", "To Review", "Onay Bekleyenler"), value: `${pendingRegistrations} ${t("aanvragen", "requests", "başvuru")}`, trend: t("Klik voor details →", "Click for details →", "Detay için tıkla →"), color: pendingRegistrations > 0 ? "border border-amber-200 bg-amber-50 text-amber-950 shadow-sm" : "border border-slate-200 bg-slate-50 text-slate-500 shadow-sm", tab: "orders" as const, filter: ["In behandeling"] as string[] }
         ].map((card, idx) => {
           return (
-            <div 
-              key={idx} 
-              className={`p-5 rounded-2xl flex flex-col justify-between min-h-[140px] ${card.color}`}
+            <div
+              key={idx}
+              onClick={() => { setSubTab(card.tab); if (card.tab === "orders") setOrdersFilter?.(card.filter); }}
+              className={`p-5 rounded-2xl flex flex-col justify-between min-h-[140px] cursor-pointer hover:shadow-md hover:scale-[1.01] transition-all active:scale-[0.99] ${card.color}`}
             >
               <div>
                 <span className="text-[10px] uppercase font-bold text-slate-500 font-mono tracking-wider block leading-none">
@@ -168,10 +185,10 @@ export default function AdminDashboard({ setSubTab, adminLanguage }: AdminDashbo
                   >
                     {/* Tooltip wrapper */}
                     <div className={`absolute -top-4 transition-all duration-250 ease-out flex flex-col items-center pointer-events-none ${isHovered ? "opacity-100 scale-100" : "opacity-0 scale-90 translate-y-1"}`}>
-                      <span className="bg-slate-900 border border-slate-205 px-2 py-1 rounded-lg text-[10px] text-white font-black font-mono shadow-xl">
+                      <span className="bg-slate-900 border border-slate-200 px-2 py-1 rounded-lg text-[10px] text-white font-black font-mono shadow-xl">
                         € {val.toFixed(2)}
                       </span>
-                      <div className="w-1.5 h-1.5 bg-slate-900 border-r border-b border-slate-205 rotate-45 -mt-1" />
+                      <div className="w-1.5 h-1.5 bg-slate-900 border-r border-b border-slate-200 rotate-45 -mt-1" />
                     </div>
 
                     {/* Rounded Bar with custom height */}

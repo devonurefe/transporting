@@ -4,15 +4,96 @@ import bcrypt from "bcryptjs";
 const prisma = new PrismaClient();
 
 const defaultCategories = [
-  { id: "aanhanger", label: "\"Toe & Go\" Aanhangerhoogwerker", listLabel: "\"Toe & Go\" Aanhangerhoogwerkers", desc: "De meest flexibele oplossing die transportkosten elimineert, ideaal voor elke ZZP'er met een trekhaak.", heights: "12m - 17m", price: "v.a. €80/dag" },
-  { id: "spin", label: "Rupshoogwerker", listLabel: "Rupshoogwerkers", desc: "Ideaal voor kwetsbare ondergronden, smalle tuintoegangen en hoge gevelwerkzaamheden.", heights: "15m - 17m", price: "v.a. €160/dag" },
-  { id: "schaarlift", label: "Schaarlift (8m)", listLabel: "Schaarliften (8m)", desc: "Ideaal voor binnen- en buitengebruik op vlakke ondergronden. Past door deuren.", heights: "8m", price: "v.a. €80/dag" },
-  { id: "schaarlift-smal", label: "Smal Model Schaarlift (10m)", listLabel: "Schaarliften (10m smal)", desc: "Compacte en smalle schaarlift voor nauwe gangpaden en binnenruimtes tot 10 meter werkhoogte.", heights: "10m", price: "v.a. €95/dag" },
-  { id: "schaarlift-6m", label: "Kompakte Schaarlift (6m)", listLabel: "Schaarliften (6m)", desc: "Kompakte elektrische schaarlift voor snel en veilig werken op 6 meter. Past door standaard binnendeuren.", heights: "6m", price: "v.a. €65/dag" },
-  { id: "mastlift", label: "Mastlift", listLabel: "Mastliften", desc: "Verticale mastliften voor snel, efficiënt en compact werk in magazijnen of kantoren.", heights: "5m - 10m", price: "v.a. €75/dag" },
-  { id: "kamersteiger", label: "Kamersteiger", listLabel: "Kamersteigers", desc: "Stabiele en lichtgewicht kamersteigers voor veilig binnenwerk tot 4 meter. Snel op- en afgebouwd.", heights: "4m", price: "v.a. €35/dag" },
-  { id: "ladderlift", label: "Ladderlift", listLabel: "Ladderliften / Verhuisliften", desc: "Verhuis- en ladderliften voor veilig transport van zware meubels of bouwmaterialen direct via het raam.", heights: "18m - 21m", price: "v.a. €90/dag" },
-  { id: "ecolift", label: "Ecolift", listLabel: "Ecolift", desc: "Milieuvriendelijk en veilig alternatief voor ladders. Geen batterijen of hydrauliek nodig.", heights: "4.2m", price: "v.a. €45/dag" }
+  {
+    id: "aanhanger", label: "\"Toe & Go\" Aanhangerhoogwerker", listLabel: "\"Toe & Go\" Aanhangerhoogwerkers",
+    desc: "De meest flexibele oplossing die transportkosten elimineert, ideaal voor elke ZZP'er met een trekhaak.",
+    heights: "12m - 17m", price: "v.a. €80/dag",
+    infoContent: {
+      useCases: ["Schilderwerk en onderhoud aan gevels en hogere panden", "Dakgootreiniging en dakreparaties", "Montage van zonnepanelen", "Boomverzorging"],
+      advantages: ["Geen transportkosten: zelf rijden met rijbewijs B", "In 5 minuten opgesteld", "Geen kraanwagen nodig", "Flexibel: volgt u naar elke locatie"],
+      notFor: ["Smalle tuinpoorten smaller dan 2 meter", "Zachte bodem, gras", "Binnenwerk in gebouwen"]
+    }
+  },
+  {
+    id: "spin", label: "Rupshoogwerker", listLabel: "Rupshoogwerkers",
+    desc: "Ideaal voor kwetsbare ondergronden, smalle tuintoegangen en hoge gevelwerkzaamheden.",
+    heights: "15m - 17m", price: "v.a. €160/dag",
+    infoContent: {
+      useCases: ["Boomverzorging en snoeiwerk", "Gevelonderhoud op moeilijk bereikbare hoeken", "Werkzaamheden op kwetsbare gazons"],
+      advantages: ["Rupsbanden: geen schade aan gras of tegels", "Past door poortjes vanaf 80 cm", "Stabiel op hellingen"],
+      notFor: ["Binnenwerk in gebouwen", "Langdurig gebruik op openbare wegen", "Locaties alleen bereikbaar via trap"]
+    }
+  },
+  {
+    id: "schaarlift", label: "Schaarlift (8m)", listLabel: "Schaarliften (8m)",
+    desc: "Ideaal voor binnen- en buitengebruik op vlakke ondergronden. Past door deuren.",
+    heights: "8m", price: "v.a. €80/dag",
+    infoContent: {
+      useCases: ["Plafondreparaties en schilderwerk binnenshuis", "Montage van verlichting en HVAC", "Magazijn- en kantooronderhoud"],
+      advantages: ["Groot stabiel werkplatform", "Elektrisch en geruisloos", "Past door standaard deuropeningen (smal model)"],
+      notFor: ["Oneffen of zachte buitengrond", "Steile hellingen", "Werkzaamheden waarbij lateraal uitreiken vereist is"]
+    }
+  },
+  {
+    id: "schaarlift-smal", label: "Smal Model Schaarlift (10m)", listLabel: "Schaarliften (10m smal)",
+    desc: "Compacte en smalle schaarlift voor nauwe gangpaden en binnenruimtes tot 10 meter werkhoogte.",
+    heights: "10m", price: "v.a. €95/dag",
+    infoContent: {
+      useCases: ["Plafondreparaties en schilderwerk binnenshuis", "Montage van verlichting en HVAC", "Magazijn- en kantooronderhoud"],
+      advantages: ["Groot stabiel werkplatform", "Elektrisch en geruisloos", "Past door standaard deuropeningen (smal model)"],
+      notFor: ["Oneffen of zachte buitengrond", "Steile hellingen", "Werkzaamheden waarbij lateraal uitreiken vereist is"]
+    }
+  },
+  {
+    id: "schaarlift-6m", label: "Kompakte Schaarlift (6m)", listLabel: "Schaarliften (6m)",
+    desc: "Kompakte elektrische schaarlift voor snel en veilig werken op 6 meter. Past door standaard binnendeuren.",
+    heights: "6m", price: "v.a. €65/dag",
+    infoContent: {
+      useCases: ["Plafondreparaties en schilderwerk binnenshuis", "Montage van verlichting en HVAC", "Magazijn- en kantooronderhoud"],
+      advantages: ["Groot stabiel werkplatform", "Elektrisch en geruisloos", "Past door standaard deuropeningen (smal model)"],
+      notFor: ["Oneffen of zachte buitengrond", "Steile hellingen", "Werkzaamheden waarbij lateraal uitreiken vereist is"]
+    }
+  },
+  {
+    id: "mastlift", label: "Mastlift", listLabel: "Mastliften",
+    desc: "Verticale mastliften voor snel, efficiënt en compact werk in magazijnen of kantoren.",
+    heights: "5m - 10m", price: "v.a. €75/dag",
+    infoContent: {
+      useCases: ["Installatie in magazijnen en fabrieken", "Licht onderhoud in smalle gangen", "Schilderwerk op beperkte ruimte"],
+      advantages: ["Uiterst compact en licht", "Geschikt voor lifttransport", "Direct inzetbaar"],
+      notFor: ["Buitengebruik of ongelijke vloeren", "Zwaar constructiewerk", "Meer dan 1 persoon op hoogte"]
+    }
+  },
+  {
+    id: "kamersteiger", label: "Kamersteiger", listLabel: "Kamersteigers",
+    desc: "Stabiele en lichtgewicht kamersteigers voor veilig binnenwerk tot 4 meter. Snel op- en afgebouwd.",
+    heights: "4m", price: "v.a. €35/dag",
+    infoContent: {
+      useCases: ["Schilderwerk en stucwerk aan plafonds", "Binnenhuisrenovaties", "Plaatsing van plafondlampen"],
+      advantages: ["Licht aluminium: snel op- en afgebouwd", "Geen stroom of accu nodig", "Stabiel werkplatform"],
+      notFor: ["Buitengebruik of ongelijke vloeren", "Werkhoogtes boven 4 meter", "Zwaar materiaal hijsen"]
+    }
+  },
+  {
+    id: "ladderlift", label: "Ladderlift", listLabel: "Ladderliften / Verhuisliften",
+    desc: "Verhuis- en ladderliften voor veilig transport van zware meubels of bouwmaterialen direct via het raam.",
+    heights: "18m - 21m", price: "v.a. €90/dag",
+    infoContent: {
+      useCases: ["Verhuizingen via raam of balkon", "Dakdekkers: dakpannen transport", "Installatie van dakramen en zonnepanelen"],
+      advantages: ["Veilig tillen zonder traplopen", "Tot 21 meter bereik (7 woonlagen)", "Groot gewichtsvermogen"],
+      notFor: ["Personentransport", "Locaties zonder vrij pad langs gevel", "Binnenwerk"]
+    }
+  },
+  {
+    id: "ecolift", label: "Ecolift", listLabel: "Ecolift",
+    desc: "Milieuvriendelijk en veilig alternatief voor ladders. Geen batterijen of hydrauliek nodig.",
+    heights: "4.2m", price: "v.a. €45/dag",
+    infoContent: {
+      useCases: ["Schilderwerk, elektra, installatie binnenshuis", "Kantoren, winkels, scholen", "Licht onderhoud op vaste vloer"],
+      advantages: ["Direct klaar: geen montagetijd", "100% handmatig: geen accu of stroom", "Veilig 360° werken", "Beschadigt kwetsbare vloeren niet"],
+      notFor: ["Buitengebruik (alleen vlakke harde binnenvloeren)", "Zware bouwmaterialen (max. 150 kg incl. persoon)", "Lateraal uitreiken"]
+    }
+  }
 ];
 
 const defaultMachines = [
@@ -481,7 +562,7 @@ async function main() {
   for (const cat of defaultCategories) {
     await prisma.category.upsert({
       where: { id: cat.id },
-      update: { label: cat.label, listLabel: cat.listLabel, desc: cat.desc, heights: cat.heights, price: cat.price },
+      update: { label: cat.label, listLabel: cat.listLabel, desc: cat.desc, heights: cat.heights, price: cat.price, infoContent: (cat as any).infoContent ?? null },
       create: cat
     });
   }

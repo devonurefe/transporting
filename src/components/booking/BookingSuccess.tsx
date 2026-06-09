@@ -9,6 +9,7 @@ import { motion } from "motion/react";
 import { Order, UserProfile } from "../../types";
 import { printInvoice } from "../../utils/invoice";
 import { useAuthStore } from "../../store/authStore";
+import { useLanguageStore } from "../../store/languageStore";
 
 interface BookingSuccessProps {
   successOrder: Order | null;
@@ -31,6 +32,7 @@ export default function BookingSuccess({
   currentUser,
   whatsappUrl
 }: BookingSuccessProps) {
+  const t = useLanguageStore((state) => state.t);
   const [password, setPassword] = useState("");
   const [isRegistering, setIsRegistering] = useState(false);
   const [registerSuccess, setRegisterSuccess] = useState(false);
@@ -67,18 +69,18 @@ export default function BookingSuccess({
   };
 
   const specs = [
-    { label: "Huurder", value: successOrder.customerName },
-    { label: "Hoogwerker", value: successOrder.machineName, highlight: true },
+    { label: t("specRenter"), value: successOrder.customerName },
+    { label: t("specMachine"), value: successOrder.machineName, highlight: true },
     {
-      label: "Periode",
+      label: t("specPeriod"),
       value: `${successOrder.startDate} t/m ${successOrder.endDate} (${successOrder.rentalDays} ${successOrder.rentalDays === 1 ? "dag" : "dagen"})`,
     },
     {
-      label: "Afhaling",
+      label: t("specCollection"),
       value: successOrder.deliveryType === "self_pickup" ? "Zelf ophalen" : "Bezorging door chauffeur",
     },
-    ...(successOrder.deliveryAddress ? [{ label: "Adres", value: successOrder.deliveryAddress }] : []),
-    { label: "Totaal incl. BTW", value: `€ ${successOrder.totalAmount.toFixed(2)}`, price: true },
+    ...(successOrder.deliveryAddress ? [{ label: t("specAddress"), value: successOrder.deliveryAddress }] : []),
+    { label: t("specTotal"), value: `€ ${successOrder.totalAmount.toFixed(2)}`, price: true },
   ];
 
   return (
@@ -94,15 +96,15 @@ export default function BookingSuccess({
         <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100 border border-emerald-200 text-emerald-600 mb-4">
           <CheckCircle2 className="h-8 w-8" />
         </div>
-        <h1 className="font-display text-xl font-black text-slate-900">Reservering Aangevraagd</h1>
+        <h1 className="font-display text-xl font-black text-slate-900">{t("successTitle")}</h1>
         <p className="text-xs text-slate-500 mt-1.5 max-w-sm mx-auto leading-relaxed">
           Referentie:{" "}
           <span className="font-mono font-bold text-indigo-600">{successOrder.id}</span>
           {" — "}
-          Bevestig via WhatsApp om uw betaallink te ontvangen.
+          {t("successConfirmRef")}
         </p>
         <span className="inline-block mt-3 text-[10px] font-mono uppercase bg-amber-50 border border-amber-200 text-amber-700 px-3 py-1 rounded-full font-bold tracking-wider">
-          Nog niet bevestigd
+          {t("successPending")}
         </span>
       </div>
 
@@ -131,11 +133,7 @@ export default function BookingSuccess({
         <div className="px-6 py-5 border-t border-slate-100 space-y-4">
           {/* Steps */}
           <ol className="space-y-2">
-            {[
-              "Klik hieronder om uw aanvraag te bevestigen via WhatsApp.",
-              "U ontvangt binnen 2 uur een beveiligde iDEAL-betaallink.",
-              "Na betaling is uw boeking definitief bevestigd.",
-            ].map((step, i) => (
+            {[t("successWAStep1"), t("successWAStep2"), t("successWAStep3")].map((step, i) => (
               <li key={i} className="flex items-start gap-2.5 text-xs text-slate-700">
                 <span className="shrink-0 h-5 w-5 rounded-full bg-emerald-100 text-emerald-700 font-bold font-mono text-[10px] flex items-center justify-center mt-0.5">
                   {i + 1}
@@ -155,7 +153,7 @@ export default function BookingSuccess({
             className="flex items-center justify-center gap-3 w-full py-3.5 rounded-xl bg-[#25D366] hover:bg-[#1da851] text-white font-bold text-sm transition-colors duration-200 cursor-pointer no-underline shadow-sm"
           >
             <MessageCircle className="h-5 w-5 shrink-0" />
-            Bevestig via WhatsApp
+            {t("successConfirmWA")}
           </motion.a>
         </div>
       )}
@@ -167,7 +165,7 @@ export default function BookingSuccess({
           className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-bold transition-all duration-200 cursor-pointer"
         >
           <Download className="h-4 w-4 shrink-0" />
-          Pro-forma PDF
+          {t("successPdfBtn")}
         </button>
 
         <button
@@ -175,7 +173,7 @@ export default function BookingSuccess({
           className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-all duration-200 cursor-pointer shadow-sm"
         >
           <ClipboardList className="h-4 w-4 shrink-0" />
-          Mijn Bestellingen
+          {t("successOrdersBtn")}
         </button>
 
         <button

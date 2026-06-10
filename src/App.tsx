@@ -673,12 +673,6 @@ export default function App() {
           </AnimatePresence>
 
           <div className="relative">
-            {!fabOpen && (
-              <>
-                <span className="absolute inset-0 rounded-full bg-[#25D366] animate-ping opacity-50 pointer-events-none" />
-                <span className="absolute inset-0 rounded-full bg-[#25D366] animate-ping opacity-30 pointer-events-none" style={{ animationDelay: "0.4s" }} />
-              </>
-            )}
             <motion.button
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}

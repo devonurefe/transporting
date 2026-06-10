@@ -76,7 +76,7 @@ export default function HomeSection({
     { id: "mastlift", label: "Mastlift", listLabel: "Mastliften", desc: "", heights: "5m - 10m", price: "v.a. €75/dag" },
     { id: "kamersteiger", label: "Kamersteiger", listLabel: "Kamersteigers", desc: "", heights: "4m", price: "v.a. €35/dag" },
     { id: "ladderlift", label: "Ladderlift", listLabel: "Ladderliften / Verhuisliften", desc: "", heights: "18m - 21m", price: "v.a. €90/dag" },
-    { id: "ecolift", label: "Ecolift", listLabel: "Ecolift", desc: "", heights: "4.2m", price: "v.a. €45/dag" },
+    { id: "ecolift", label: "Pecolift", listLabel: "Pecolift", desc: "", heights: "4.2m", price: "v.a. €45/dag" },
   ]
 }: HomeSectionProps) {
   const siteConfig = useAppStore((state) => state.siteConfig);

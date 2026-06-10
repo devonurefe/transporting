@@ -85,7 +85,7 @@ const defaultCategories = [
     }
   },
   {
-    id: "ecolift", label: "Ecolift", listLabel: "Ecolift",
+    id: "ecolift", label: "Pecolift", listLabel: "Pecolift",
     desc: "Milieuvriendelijk en veilig alternatief voor ladders. Geen batterijen of hydrauliek nodig.",
     heights: "4.2m", price: "v.a. €45/dag",
     infoContent: {
@@ -470,19 +470,19 @@ const defaultMachines = [
     monthlyDiscountPercent: 28
   },
 
-  // KATEGORİ 7: İnsan Gücüyle Yürüyen Hafif Sınıf (Ecolift)
+  // Categorie 7: Handmatige Lichtgewicht Klasse (Pecolift)
   {
     id: "ecolift",
-    name: "JLG Ecolift Low-Level Access",
+    name: "Pecolift Low-Level Access",
     category: "ecolift",
-    categoryLabel: "Ecolift",
+    categoryLabel: "Pecolift",
     height: 4.2,
     reach: 0,
     weight: 305,
     pricePerDay: 45,
     powerType: "Handmatig",
-    imageUrl: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=600&auto=format&fit=crop",
-    imageAlt: "JLG Ecolift handmatige lift",
+    imageUrl: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?q=80&w=600&auto=format&fit=crop",
+    imageAlt: "Pecolift handmatig lage toegangsplatform",
     description: "Volledig milieuvriendelijke low-level access lift. Geen batterijen, olie of hydrauliek nodig. Draai simpelweg aan het wiel om uzelf tot 4.2 meter werkhoogte te liften. Geluidloos en veilig.",
     suitableFor: ["Schilder", "Installateur", "Particulier"],
     weeklyDiscountPercent: 5,

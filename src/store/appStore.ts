@@ -79,7 +79,7 @@ const defaultCategories: Category[] = [
   { id: "schaarlift", label: "Schaarlift", listLabel: "Schaarliften", desc: "Ideaal voor binnen- en buitengebruik op vlakke ondergronden. Verkrijgbaar in 6m, 8m en 10m werkhoogte. Past door standaard deuren.", heights: "6m - 10m", price: "v.a. €80/dag" },
   { id: "mastlift", label: "Mastlift", listLabel: "Mastliften", desc: "Verticale mastliften voor snel, efficiënt en compact werk in magazijnen of kantoren.", heights: "5m - 10m", price: "v.a. €75/dag" },
   { id: "ladderlift", label: "Ladderlift", listLabel: "Ladderliften / Verhuisliften", desc: "Verhuis- en ladderliften voor veilig transport van zware meubels of bouwmaterialen direct via het raam.", heights: "18m - 21m", price: "v.a. €90/dag" },
-  { id: "ecolift", label: "Ecolift", listLabel: "Ecolift", desc: "Milieuvriendelijk en veilig alternatief voor ladders. Geen batterijen of hydrauliek nodig.", heights: "4.2m", price: "v.a. €45/dag" },
+  { id: "ecolift", label: "Pecolift", listLabel: "Pecolift", desc: "Milieuvriendelijk en veilig alternatief voor ladders. Geen batterijen of hydrauliek nodig.", heights: "4.2m", price: "v.a. €45/dag" },
   { id: "klussensets", label: "Kluspakket", listLabel: "Kluspakketten", desc: "Complete kluspakketten speciaal samengesteld voor specifieke ZZP- en particuliere klussen.", heights: "4m - 21m", price: "v.a. €80/dag" }
 ];
 

@@ -104,38 +104,46 @@ export default function HomeSection({
   return (
     <div>
 
-      {/* ── HERO SECTION ── */}
+      {/* ── HERO IMAGE — sade, metin yok ── */}
       <div
-        className="relative bg-slate-900 bg-cover bg-center bg-no-repeat overflow-hidden flex flex-col justify-end px-5 sm:px-6 lg:px-8 pb-10 sm:pb-14 min-h-[460px] sm:min-h-[520px]"
+        className="relative bg-slate-900 bg-cover bg-center bg-no-repeat overflow-hidden min-h-[220px] sm:min-h-[280px]"
         style={{ backgroundImage: "url('/hero-bg.jpg')" }}
       >
-        <div className="absolute inset-0 bg-gradient-to-b from-slate-900/40 via-slate-800/30 to-slate-900/75 pointer-events-none" />
+        <div className="absolute inset-0 bg-black/15 pointer-events-none" />
+      </div>
 
-        <div className="relative z-10 mx-auto max-w-2xl text-center">
-
-          <motion.div
-            initial={{ opacity: 0, y: 15 }}
+      {/* ── HERO TEXT + CTA — resmin altında beyaz alanda ── */}
+      <div className="bg-white px-5 sm:px-6 pt-8 pb-6 text-center border-b border-slate-100">
+        <div className="mx-auto max-w-lg space-y-3">
+          <motion.p
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="space-y-3 sm:space-y-4"
+            transition={{ duration: 0.4 }}
+            className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-600"
           >
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-400">
-              {t("heroTagline")}
-            </p>
-            <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-white drop-shadow-md">
-              {language === "nl" && siteConfig.heroTitle ? siteConfig.heroTitle : t("heroTitle")}
-            </h1>
-            <p className="text-sm sm:text-base text-slate-200 max-w-lg mx-auto leading-relaxed">
-              {language === "nl" && siteConfig.heroSubtitle ? siteConfig.heroSubtitle : t("heroSubtitle")}
-            </p>
-          </motion.div>
-
-          {/* CTA + Trust — hero alt kısmı */}
-          <motion.div
-            initial={{ opacity: 0, y: 15 }}
+            {t("heroTagline")}
+          </motion.p>
+          <motion.h1
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.15 }}
-            className="mt-8 flex flex-col items-center gap-4"
+            transition={{ duration: 0.4, delay: 0.07 }}
+            className="font-display text-2xl sm:text-3xl font-black tracking-tight text-slate-900"
+          >
+            {language === "nl" && siteConfig.heroTitle ? siteConfig.heroTitle : t("heroTitle")}
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.12 }}
+            className="text-sm text-slate-500 leading-relaxed"
+          >
+            {language === "nl" && siteConfig.heroSubtitle ? siteConfig.heroSubtitle : t("heroSubtitle")}
+          </motion.p>
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.18 }}
+            className="pt-2"
           >
             <a
               href={buildWhatsAppGeneralUrl()}
@@ -146,26 +154,7 @@ export default function HomeSection({
               <MessageCircle className="h-5 w-5 shrink-0" />
               <span>Direct advies nodig? WhatsApp ons!</span>
             </a>
-
-            {/* Trust bar */}
-            <div className="flex items-center justify-center gap-4 flex-wrap">
-              <span className="flex items-center gap-1.5 text-[11px] font-semibold text-white/80">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shrink-0" />
-                BMWT Gecertificeerd
-              </span>
-              <span className="text-white/30">|</span>
-              <span className="flex items-center gap-1.5 text-[11px] font-semibold text-white/80">
-                <span className="h-1.5 w-1.5 rounded-full bg-amber-400 shrink-0" />
-                TÜV Klasse C
-              </span>
-              <span className="text-white/30">|</span>
-              <span className="flex items-center gap-1.5 text-[11px] font-semibold text-white/80">
-                <span className="h-1.5 w-1.5 rounded-full bg-sky-400 shrink-0" />
-                Zelf ophalen of bezorgen
-              </span>
-            </div>
           </motion.div>
-
         </div>
       </div>
 

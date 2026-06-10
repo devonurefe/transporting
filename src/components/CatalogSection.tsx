@@ -641,7 +641,7 @@ export default function CatalogSection({
               className="w-full max-w-5xl bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden z-50 flex flex-col max-h-[90vh] my-8"
             >
               {/* Top bar stripe */}
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-teal-500 via-indigo-505 via-indigo-500 to-amber-500" />
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-teal-500 via-indigo-500 to-amber-500" />
 
               <div className="flex justify-between items-start mb-6 shrink-0">
                 <div>
@@ -650,7 +650,7 @@ export default function CatalogSection({
                 </div>
                 <button
                   onClick={() => setShowCompareModal(false)}
-                  className="p-1.5 rounded-xl bg-slate-150 hover:bg-slate-200 text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
+                  className="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
                 >
                   <X className="h-5 w-5" />
                 </button>
@@ -842,7 +842,7 @@ export default function CatalogSection({
                               setShowCompareModal(false);
                               onSelectMachineForBooking(m);
                             }}
-                            className="w-full relative overflow-hidden flex items-center justify-center space-x-1.5 px-3.5 py-2.5 rounded-xl border border-indigo-500/20 bg-indigo-600 hover:bg-indigo-505 bg-indigo-500 text-white text-xs font-bold transition-all hover:scale-[1.03] active:scale-97 cursor-pointer text-center"
+                            className="w-full relative overflow-hidden flex items-center justify-center space-x-1.5 px-3.5 py-2.5 rounded-xl border border-indigo-500/20 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-all hover:scale-[1.03] active:scale-95 cursor-pointer text-center"
                           >
                             <ShoppingBag className="h-3.5 w-3.5 text-teal-300" />
                             <span>Direct Boeken</span>
@@ -897,7 +897,7 @@ export default function CatalogSection({
               {/* Close Button & Header */}
               <div className="flex justify-between items-start mb-6 shrink-0">
                 <div>
-                  <span className="text-[10px] text-teal-650 font-mono uppercase tracking-widest block font-bold">
+                  <span className="text-[10px] text-teal-600 font-mono uppercase tracking-widest block font-bold">
                     {selectedDetailMachine.categoryLabel || "Vloot Details"} • {selectedDetailMachine.powerType}
                   </span>
                   <h3 className="font-display text-2xl font-black text-slate-900 tracking-tight">
@@ -997,7 +997,7 @@ export default function CatalogSection({
                                   key={i}
                                   type="button"
                                   onClick={() => setActiveDetailImageIndex(i)}
-                                  className={`relative h-12 w-20 rounded-xl overflow-hidden border-2 shrink-0 transition-all cursor-pointer shadow-sm ${i === activeDetailImageIndex ? 'border-indigo-650 border-indigo-600 scale-95 ring-2 ring-indigo-500/10' : 'border-slate-200 hover:border-slate-400 hover:scale-102'}`}
+                                  className={`relative h-12 w-20 rounded-xl overflow-hidden border-2 shrink-0 transition-all cursor-pointer shadow-sm ${i === activeDetailImageIndex ? 'border-indigo-600 scale-95 ring-2 ring-indigo-500/10' : 'border-slate-200 hover:border-slate-400 hover:scale-[1.02]'}`}
                                 >
                                   <img src={url} alt={`Thumbnail ${i}`} className="w-full h-full object-cover" />
                                 </button>
@@ -1196,7 +1196,7 @@ export default function CatalogSection({
                     </div>
 
                     {/* Safety compliance guarantees */}
-                    <div className="flex flex-col sm:flex-row justify-between items-center bg-slate-50 border border-slate-200 p-4 rounded-xl text-[10.5px] text-slate-605 text-slate-600 gap-3">
+                    <div className="flex flex-col sm:flex-row justify-between items-center bg-slate-50 border border-slate-200 p-4 rounded-xl text-[10.5px] text-slate-600 gap-3">
                       <div className="flex items-center space-x-2">
                         <span className="bg-amber-100 border border-amber-200 text-amber-900 px-2 py-0.5 rounded text-[9px] uppercase tracking-wider font-extrabold font-mono">BMWT</span>
                         <span>Jaarlijks veilig geverifieerd</span>
@@ -1214,7 +1214,7 @@ export default function CatalogSection({
               <div className="pt-4 border-t border-slate-200 flex justify-end shrink-0 mt-3">
                 <button
                   onClick={() => setSelectedDetailMachine(null)}
-                  className="px-5 py-2 hover:bg-slate-150 bg-slate-55 bg-slate-100 border border-slate-200 text-slate-600 hover:text-slate-800 rounded-xl text-xs font-bold transition-all cursor-pointer"
+                  className="px-5 py-2 hover:bg-slate-100 bg-slate-100 border border-slate-200 text-slate-600 hover:text-slate-800 rounded-xl text-xs font-bold transition-all cursor-pointer"
                 >
                   Sluiten
                 </button>

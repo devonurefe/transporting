@@ -221,7 +221,7 @@ export default function AdminAccounting({ adminLanguage }: AdminAccountingProps)
             <button
               onClick={handleManualSync}
               disabled={isSyncing}
-              className="bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-slate-950 font-extrabold text-[10.5px] px-3.5 py-2 rounded-xl transition-all cursor-pointer flex items-center space-x-1.5 border-none h-8.5 shadow-sm active:scale-97"
+              className="bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-slate-950 font-extrabold text-[10.5px] px-3.5 py-2 rounded-xl transition-all cursor-pointer flex items-center space-x-1.5 border-none h-9 shadow-sm active:scale-95"
             >
               <RefreshCw className={`h-3.5 w-3.5 ${isSyncing ? "animate-spin" : ""}`} />
               <span>{t("Handmatig Syncken", "Sync Now", "Şimdi Eşitle")}</span>
@@ -231,8 +231,8 @@ export default function AdminAccounting({ adminLanguage }: AdminAccountingProps)
           {syncFeedback && (
             <div className={`p-3 rounded-xl border text-xs flex items-center space-x-2 animate-fade-in ${
               syncFeedback.includes("Fout") || syncFeedback.includes("Error") || syncFeedback.includes("Hata")
-                ? "bg-rose-50 border-rose-150 text-rose-800"
-                : "bg-emerald-50 border-emerald-150 text-emerald-800"
+                ? "bg-rose-50 border-rose-100 text-rose-800"
+                : "bg-emerald-50 border-emerald-100 text-emerald-800"
             }`}>
               {syncFeedback.includes("Fout") || syncFeedback.includes("Error") || syncFeedback.includes("Hata") ? (
                 <AlertCircle className="h-4.5 w-4.5 text-rose-600 shrink-0" />

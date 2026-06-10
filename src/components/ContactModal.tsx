@@ -52,9 +52,9 @@ export default function ContactModal({ isOpen, onClose, onShowToast, onAddSystem
 
             <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-stretch">
               {/* Left Pane: Direct WhatsApp & Call channels */}
-              <div className="md:col-span-5 flex flex-col justify-between space-y-5 bg-slate-50 p-4.5 rounded-2xl border border-slate-150">
+              <div className="md:col-span-5 flex flex-col justify-between space-y-5 bg-slate-50 p-4 rounded-2xl border border-slate-100">
                 <div className="space-y-3">
-                  <span className="text-[10px] font-display font-semibold text-indigo-650 uppercase tracking-wider block">Directe Communicatie</span>
+                  <span className="text-[10px] font-display font-semibold text-indigo-600 uppercase tracking-wider block">Directe Communicatie</span>
                   <p className="text-[11.5px] leading-relaxed text-slate-500 font-medium">
                     Heeft u direct antwoord of advies nodig over de inzetbaarheid van een hoogwerker? Start direct een gesprek of bel ons hoofdkantoor.
                   </p>

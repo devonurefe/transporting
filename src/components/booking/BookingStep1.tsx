@@ -173,7 +173,7 @@ export default function BookingStep1({
                     </>
                   ) : (
                     <>
-                      <ShieldAlert className="h-4 w-4 text-rose-605 text-rose-600 shrink-0" />
+                      <ShieldAlert className="h-4 w-4 text-rose-600 shrink-0" />
                       <span className="font-semibold">{availability.reason}</span>
                     </>
                   )}
@@ -272,8 +272,8 @@ export default function BookingStep1({
       {/* Shopping Basket & Add-ons Selection Row */}
       <div className="space-y-3.5 pt-5 border-t border-slate-200">
         <div className="flex justify-between items-center">
-          <span className="text-xs text-indigo-705 text-indigo-700 font-bold uppercase tracking-wider font-mono flex items-center space-x-1.5">
-            <Sparkles className="h-4 w-4 text-indigo-650 text-indigo-600" />
+          <span className="text-xs text-indigo-700 font-bold uppercase tracking-wider font-mono flex items-center space-x-1.5">
+            <Sparkles className="h-4 w-4 text-indigo-600" />
             <span>{t("step1AddonsTitle")}</span>
           </span>
           <span className="text-[10px] text-slate-500 font-mono">Combineer naar wens</span>
@@ -327,7 +327,7 @@ export default function BookingStep1({
             <span className="font-extrabold text-slate-900 block mb-0.5">Invoerfout gedetecteerd</span>
             {validationError}
           </div>
-          <button onClick={() => setValidationError(null)} className="p-0.5 hover:bg-slate-100 rounded text-rose-550 text-rose-650 hover:text-slate-800 transition-colors cursor-pointer shrink-0 border-none bg-transparent">
+          <button onClick={() => setValidationError(null)} className="p-0.5 hover:bg-slate-100 rounded text-rose-600 hover:text-slate-800 transition-colors cursor-pointer shrink-0 border-none bg-transparent">
             <X className="h-3.5 w-3.5" />
           </button>
         </motion.div>

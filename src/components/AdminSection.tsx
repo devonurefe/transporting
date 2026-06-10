@@ -267,7 +267,7 @@ export default function AdminSection({
                     );
                   })()}
                 </div>
-                <span className="text-[10px] text-slate-550">{showMobileMenu ? "▲" : "▼"}</span>
+                <span className="text-[10px] text-slate-500">{showMobileMenu ? "▲" : "▼"}</span>
               </button>
 
               <AnimatePresence>
@@ -307,7 +307,7 @@ export default function AdminSection({
                               <span>{sub.label}</span>
                             </div>
                             {sub.count !== undefined && (
-                              <span className={`font-mono text-[9px] px-2 py-0.5 rounded-full ${isSel ? "bg-slate-950 text-amber-450" : "bg-slate-100 text-slate-650"}`}>
+                              <span className={`font-mono text-[9px] px-2 py-0.5 rounded-full ${isSel ? "bg-slate-950 text-amber-400" : "bg-slate-100 text-slate-600"}`}>
                                 {sub.count}
                               </span>
                             )}
@@ -358,7 +358,7 @@ export default function AdminSection({
                                     <span>{sub.label}</span>
                                   </div>
                                   {sub.count !== undefined && (
-                                    <span className={`font-mono text-[9px] px-2 py-0.5 rounded-full ${isSel ? "bg-slate-950 text-amber-450" : "bg-slate-100 text-slate-550"}`}>
+                                    <span className={`font-mono text-[9px] px-2 py-0.5 rounded-full ${isSel ? "bg-slate-950 text-amber-400" : "bg-slate-100 text-slate-500"}`}>
                                       {sub.count}
                                     </span>
                                   )}
@@ -392,7 +392,7 @@ export default function AdminSection({
                     className={`flex items-center justify-between px-4 py-2.5 rounded-xl text-left text-xs font-bold transition-all cursor-pointer border-none ${
                       isSel 
                         ? "bg-amber-500 hover:bg-amber-600 text-slate-950 border border-amber-500/20 shadow-[0_4px_12px_rgba(245,158,11,0.25)]" 
-                        : "text-slate-650 hover:text-slate-900 hover:bg-slate-100 border border-transparent bg-transparent"
+                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent bg-transparent"
                     }`}
                   >
                     <div className="flex items-center space-x-2.5">
@@ -442,7 +442,7 @@ export default function AdminSection({
                     className={`flex items-center justify-between px-4 py-2.5 rounded-xl text-left text-xs font-bold transition-all cursor-pointer border-none pl-7 ${
                       isSel 
                         ? "bg-amber-500 hover:bg-amber-600 text-slate-950 border border-amber-500/20 shadow-[0_4px_12px_rgba(245,158,11,0.25)]" 
-                        : "text-slate-550 hover:text-slate-800 hover:bg-slate-50 border border-transparent bg-transparent"
+                        : "text-slate-500 hover:text-slate-800 hover:bg-slate-50 border border-transparent bg-transparent"
                     }`}
                   >
                     <div className="flex items-center space-x-2.5">
@@ -450,7 +450,7 @@ export default function AdminSection({
                       <span>{sub.label}</span>
                     </div>
                     {sub.count !== undefined && (
-                      <span className={`font-mono text-[9px] px-2 py-0.5 rounded-full ${isSel ? "bg-slate-950 text-amber-400" : "bg-slate-100 text-slate-550"}`}>
+                      <span className={`font-mono text-[9px] px-2 py-0.5 rounded-full ${isSel ? "bg-slate-950 text-amber-400" : "bg-slate-100 text-slate-500"}`}>
                         {sub.count}
                       </span>
                     )}
@@ -460,7 +460,7 @@ export default function AdminSection({
             </div>
 
             {/* Live website indicators */}
-            <div className="glass-panel p-4.5 rounded-2xl hidden lg:block space-y-3">
+            <div className="glass-panel p-4 rounded-2xl hidden lg:block space-y-3">
               <h4 className="font-display font-bold text-[10px] uppercase text-slate-500 tracking-wider">BMWT Status</h4>
               <div className="space-y-2 text-xs">
                 <div className="flex items-center justify-between text-slate-600">

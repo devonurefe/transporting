@@ -393,7 +393,7 @@ export default function MyOrdersSection({
             <h1 className="font-display text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900">
               Welkom op het <span className="text-indigo-600">Klant Portaal</span>
             </h1>
-            <p className="text-xs sm:text-sm text-slate-550 text-slate-600 max-w-xl mx-auto leading-relaxed">
+            <p className="text-xs sm:text-sm text-slate-500 text-slate-600 max-w-xl mx-auto leading-relaxed">
               Log in om uw actieve huurcontracten te beheren, transportstatussen te volgen, live BMWT-certificaten te downloaden en facturen in te zien.
             </p>
           </div>
@@ -450,7 +450,7 @@ export default function MyOrdersSection({
                 <button
                   onClick={() => setIsRegistering(false)}
                   className={`flex-1 pb-3 text-sm font-bold border-b-2 transition-all cursor-pointer ${
-                    !isRegistering ? "text-indigo-600 border-indigo-600" : "text-slate-400 hover:text-slate-605 border-transparent"
+                    !isRegistering ? "text-indigo-600 border-indigo-600" : "text-slate-400 hover:text-slate-600 border-transparent"
                   }`}
                 >
                   Regulier Inloggen
@@ -458,7 +458,7 @@ export default function MyOrdersSection({
                 <button
                   onClick={() => setIsRegistering(true)}
                   className={`flex-1 pb-3 text-sm font-bold border-b-2 transition-all cursor-pointer ${
-                    isRegistering ? "text-indigo-600 border-indigo-600" : "text-slate-400 hover:text-slate-605 border-transparent"
+                    isRegistering ? "text-indigo-600 border-indigo-600" : "text-slate-400 hover:text-slate-600 border-transparent"
                   }`}
                 >
                   Account Aanmaken
@@ -575,7 +575,7 @@ export default function MyOrdersSection({
                     <motion.div 
                       initial={{ opacity: 0, y: 5 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="bg-amber-50 border border-amber-200/85 rounded-2xl p-4.5 mt-3 space-y-2.5 text-left border-dashed"
+                      className="bg-amber-50 border border-amber-200/85 rounded-2xl p-4 mt-3 space-y-2.5 text-left border-dashed"
                     >
                       <p className="text-[11px] text-amber-900 leading-normal font-semibold">
                         Uw e-mailadres is nog niet geverifieerd. Heeft u geen e-mail ontvangen? Klik hieronder om de verificatielink opnieuw te verzenden naar <strong>{resendEmailAddress}</strong>.
@@ -734,7 +734,7 @@ export default function MyOrdersSection({
                   referrerPolicy="no-referrer"
                 />
               ) : (
-                <div className="h-16 w-16 rounded-2xl bg-gradient-to-tr from-indigo-500 to-indigo-650 text-white font-black text-xl flex items-center justify-center border-2 border-indigo-500/40 shadow-md uppercase select-none font-display">
+                <div className="h-16 w-16 rounded-2xl bg-gradient-to-tr from-indigo-500 to-indigo-600 text-white font-black text-xl flex items-center justify-center border-2 border-indigo-500/40 shadow-md uppercase select-none font-display">
                   {currentUser.name.charAt(0)}
                 </div>
               )}
@@ -747,7 +747,7 @@ export default function MyOrdersSection({
                   Actieve Klant (Sessie)
                 </span>
               </div>
-              <p className="text-xs text-slate-550 font-semibold mt-1 flex items-center space-x-1.5">
+              <p className="text-xs text-slate-500 font-semibold mt-1 flex items-center space-x-1.5">
                 <Building2 className="h-3.5 w-3.5 text-slate-500" />
                 <span>{currentUser.companyName || "Particulier"}</span>
                 <span className="text-slate-300">•</span>
@@ -787,7 +787,7 @@ export default function MyOrdersSection({
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-3 pb-2">
               <div>
                 <h3 className="font-display font-black text-base text-slate-800">Actieve Huurobjecten & Overeenkomsten</h3>
-                <p className="text-xs text-slate-550 text-slate-500 mt-0.5">Mijn huidige reserveringen gesorteerd op datum.</p>
+                <p className="text-xs text-slate-500 text-slate-500 mt-0.5">Mijn huidige reserveringen gesorteerd op datum.</p>
               </div>
 
               {/* Inline layout category switcher */}
@@ -834,7 +834,7 @@ export default function MyOrdersSection({
                       className="bg-white border border-slate-200 shadow-sm p-5 rounded-2xl space-y-4 transition-all duration-300 hover:border-indigo-300 hover:shadow-md relative overflow-hidden"
                     >
                       {o.status === "Onderweg" && (
-                        <div className="absolute top-0 right-0 h-1 border-b border-t-0 border-indigo-505 border-indigo-500 w-full animate-pulse bg-indigo-100" />
+                        <div className="absolute top-0 right-0 h-1 border-b border-t-0 border-indigo-500 w-full animate-pulse bg-indigo-100" />
                       )}
 
                       <div className="flex flex-col sm:flex-row justify-between gap-3.5 border-b border-slate-100 pb-3">
@@ -899,7 +899,7 @@ export default function MyOrdersSection({
                       </div>
 
                       {/* Stepper tracking */}
-                      <div className="bg-slate-50 p-3 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4.5 border border-slate-100">
+                      <div className="bg-slate-50 p-3 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border border-slate-100">
                         
                         <div className="flex items-center space-x-2 flex-grow max-w-md w-full">
                           {[
@@ -1010,7 +1010,7 @@ export default function MyOrdersSection({
             {/* Customer Profile Customizer Settings */}
             <div className="bg-white border border-slate-200 shadow-sm p-5 rounded-3xl space-y-4">
               <h4 className="font-display font-black text-xs text-slate-850 uppercase tracking-wider flex items-center space-x-2">
-                <User className="h-4 w-4 text-indigo-650 text-indigo-600" />
+                <User className="h-4 w-4 text-indigo-600" />
                 <span>Profiel & Standaardgegevens</span>
               </h4>
               <p className="text-[11px] text-slate-500 leading-relaxed font-semibold">
@@ -1108,7 +1108,7 @@ export default function MyOrdersSection({
                 <BellRing className="h-4 w-4 text-emerald-600" />
                 <span>Mijn Notificaties</span>
               </h4>
-              <p className="text-[11px] text-slate-650 font-semibold leading-relaxed">
+              <p className="text-[11px] text-slate-600 font-semibold leading-relaxed">
                 Kies uw voorkeurskanalen voor reserveringsbevestigingen, BMWT certificaten, en status updates van de chauffeur.
               </p>
               
@@ -1118,7 +1118,7 @@ export default function MyOrdersSection({
                 <label className="flex items-center justify-between cursor-pointer group">
                   <div>
                     <span className="text-xs font-black block text-slate-700 group-hover:text-indigo-600 transition-colors animate-fade-in">E-mail Notificaties</span>
-                    <span className="text-[9.5px] text-slate-505 text-slate-500">Live contracten, orders & facturen in inbox</span>
+                    <span className="text-[9.5px] text-slate-500">Live contracten, orders & facturen in inbox</span>
                   </div>
                   <input
                     type="checkbox"
@@ -1134,7 +1134,7 @@ export default function MyOrdersSection({
                 {/* SMS toggle */}
                 <label className="flex items-center justify-between cursor-pointer group pt-1">
                   <div>
-                    <span className="text-xs font-black block text-slate-705 text-slate-700 group-hover:text-indigo-600 transition-colors">SMS Bezorgupdates</span>
+                    <span className="text-xs font-black block text-slate-700 group-hover:text-indigo-600 transition-colors">SMS Bezorgupdates</span>
                     <span className="text-[9.5px] text-slate-500">Sms wanneer de chauffeur onze Hub verlaat</span>
                   </div>
                   <input
@@ -1158,7 +1158,7 @@ export default function MyOrdersSection({
 
 
         {/* WhatsApp Help Banner */}
-        <div className="mt-8 flex flex-col sm:flex-row justify-between items-center bg-emerald-500/5 hover:bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4.5 transition-all text-left gap-4 shadow-sm">
+        <div className="mt-8 flex flex-col sm:flex-row justify-between items-center bg-emerald-500/5 hover:bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4 transition-all text-left gap-4 shadow-sm">
           <div className="flex items-start space-x-3.5">
             <div className="h-9 w-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
               <MessageSquare className="h-5 w-5" />

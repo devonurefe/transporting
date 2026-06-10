@@ -29,7 +29,7 @@ const MyOrdersSection = lazy(() => import("./components/MyOrdersSection"));
 function LoadingSpinner() {
   return (
     <div className="min-h-[60vh] flex flex-col items-center justify-center space-y-4">
-      <Loader2 className="h-10 w-10 text-indigo-650 text-indigo-600 animate-spin" />
+      <Loader2 className="h-10 w-10 text-indigo-600 animate-spin" />
       <span className="text-xs text-slate-500 font-mono tracking-wider uppercase font-semibold">Laden van premium module...</span>
     </div>
   );
@@ -471,7 +471,7 @@ export default function App() {
       />
 
       {/* Background ambient lighting */}
-      <div className="absolute top-0 inset-x-0 h-150 bg-gradient-to-b from-indigo-500/5 to-transparent pointer-events-none -z-10" />
+      <div className="absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-indigo-500/5 to-transparent pointer-events-none -z-10" />
 
       {/* Main Navigation Header */}
       <Header 

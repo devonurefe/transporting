@@ -205,7 +205,7 @@ export default function Header({
                 onCustomerLogout();
                 setActiveTab("home");
               }}
-              className="inline-flex items-center space-x-1.5 bg-rose-600 hover:bg-rose-700 px-3 py-2 sm:px-4 rounded-xl text-xs font-bold text-white transition-all hover:scale-[1.03] active:scale-97 hover:shadow-md cursor-pointer shrink-0"
+              className="inline-flex items-center space-x-1.5 bg-rose-600 hover:bg-rose-700 px-3 py-2 sm:px-4 rounded-xl text-xs font-bold text-white transition-all hover:scale-[1.03] active:scale-95 hover:shadow-md cursor-pointer shrink-0"
             >
               <LogOut className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">Console Sluiten (Uitloggen)</span>
@@ -336,7 +336,7 @@ export default function Header({
                        referrerPolicy="no-referrer"
                     />
                   ) : (
-                    <div className="h-6 w-6 rounded-full bg-gradient-to-tr from-indigo-500 to-indigo-650 text-white font-extrabold text-[10px] flex items-center justify-center border border-indigo-200 uppercase font-display select-none shrink-0 shadow-inner">
+                    <div className="h-6 w-6 rounded-full bg-gradient-to-tr from-indigo-500 to-indigo-600 text-white font-extrabold text-[10px] flex items-center justify-center border border-indigo-200 uppercase font-display select-none shrink-0 shadow-inner">
                       {currentUser.name.charAt(0)}
                     </div>
                   )}
@@ -347,7 +347,7 @@ export default function Header({
               ) : (
                 <button
                   onClick={() => setActiveTab("orders")}
-                  className="inline-flex items-center justify-center border border-slate-200 hover:border-slate-300 bg-white p-2 sm:px-4 sm:py-2 rounded-xl text-xs font-bold text-slate-700 hover:text-slate-900 transition-all active:scale-97 shrink-0"
+                  className="inline-flex items-center justify-center border border-slate-200 hover:border-slate-300 bg-white p-2 sm:px-4 sm:py-2 rounded-xl text-xs font-bold text-slate-700 hover:text-slate-900 transition-all active:scale-95 shrink-0"
                   title="Klant Login"
                 >
                   <User className="h-4 w-4 text-slate-500" />

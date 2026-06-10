@@ -470,7 +470,7 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
                         }}
                         className={`px-2 py-1 rounded-md text-[10px] font-extrabold uppercase transition-all border-none bg-transparent cursor-pointer ${
                           rule.isActive 
-                            ? "text-emerald-700 bg-emerald-55 hover:bg-emerald-100" 
+                            ? "text-emerald-700 bg-emerald-50 hover:bg-emerald-100" 
                             : "text-slate-400 bg-slate-100 hover:bg-slate-200"
                         }`}
                         title={rule.isActive ? t("Deactiveren", "Deactivate", "Devre Dışı Bırak") : t("Activeren", "Activate", "Etkinleştir")}

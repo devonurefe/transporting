@@ -94,7 +94,7 @@ export default function BookingStep2({
     return (
       <div className="bg-white border border-slate-200 shadow-sm p-6 rounded-3xl space-y-6 animate-fade-in text-center py-10 text-slate-800">
         <h3 className="font-display font-black text-lg text-slate-900 flex items-center justify-center space-x-2">
-          <User className="h-5 w-5 text-indigo-650 text-indigo-600" />
+          <User className="h-5 w-5 text-indigo-600" />
           <span>Hoe wilt u doorgaan?</span>
         </h3>
         <p className="text-xs text-slate-500 max-w-md mx-auto">
@@ -163,7 +163,7 @@ export default function BookingStep2({
   return (
     <div className="bg-white border border-slate-200 shadow-sm p-6 rounded-3xl space-y-6 animate-fade-in">
       <h3 className="font-display font-black text-base text-slate-900 flex items-center space-x-2">
-        <User className="h-5 w-5 text-indigo-650 text-indigo-600" />
+        <User className="h-5 w-5 text-indigo-600" />
         <span>Contactgegevens & Bedrijfsprofiel</span>
       </h3>
 
@@ -258,7 +258,7 @@ export default function BookingStep2({
         <div className="pt-4 border-t border-slate-200 space-y-4">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
             <label className="text-xs text-slate-600 block font-black uppercase tracking-wider flex items-center space-x-1.5">
-              <MapPin className="h-4 w-4 text-indigo-650 text-indigo-600 shrink-0" />
+              <MapPin className="h-4 w-4 text-indigo-600 shrink-0" />
               <span className="text-indigo-750 text-indigo-700">Bezorgadres in Nederland</span>
             </label>
 
@@ -298,7 +298,7 @@ export default function BookingStep2({
                 <button
                   onClick={handleAddressLookup}
                   disabled={isSearchingAddress}
-                  className="w-full bg-indigo-650 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs py-3 rounded-xl transition-all cursor-pointer h-10 flex items-center justify-center space-x-1.5 shadow-sm active:scale-95 disabled:opacity-50 border-none"
+                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs py-3 rounded-xl transition-all cursor-pointer h-10 flex items-center justify-center space-x-1.5 shadow-sm active:scale-95 disabled:opacity-50 border-none"
                 >
                   {isSearchingAddress ? (
                     <span className="h-4.5 w-4.5 rounded-full border-2 border-white border-t-transparent animate-spin" />

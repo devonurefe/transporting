@@ -320,7 +320,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                         className="py-3 px-3 font-medium text-slate-800 cursor-pointer"
                         title={t("Klik om klantgegevens in te zien", "Click to view customer details", "Müşteri bilgilerini görmek için tıklayın")}
                       >
-                        <div className="font-bold text-slate-950 group-hover:text-indigo-650 group-hover:text-indigo-600 transition-colors mb-1 text-xs">{o.customerName}</div>
+                        <div className="font-bold text-slate-950 group-hover:text-indigo-600 transition-colors mb-1 text-xs">{o.customerName}</div>
                         <span className="block text-[10px] text-slate-450 text-slate-500 font-mono mt-0.5 leading-none">{o.customerPhone}</span>
                         <span className="block text-[10px] text-slate-400 font-sans mt-1.5 truncate max-w-[180px] leading-none" title={o.customerEmail}>{o.customerEmail}</span>
                       </td>
@@ -467,7 +467,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                   </span>
                   <h3 className="font-display text-sm font-black text-slate-900 tracking-tight flex items-center space-x-1.5">
                     <span>Dossier:</span> 
-                    <span className="font-mono text-indigo-650 text-indigo-600 font-bold">{selectedDetailOrder.id}</span>
+                    <span className="font-mono text-indigo-600 font-bold">{selectedDetailOrder.id}</span>
                   </h3>
                 </div>
                 <button
@@ -612,7 +612,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                 </div>
 
                 {/* Date Proposal Section */}
-                <div className="p-4.5 bg-amber-500/5 border border-amber-500/20 rounded-2xl space-y-3">
+                <div className="p-4 bg-amber-500/5 border border-amber-500/20 rounded-2xl space-y-3">
                   <div className="flex items-center justify-between">
                     <h5 className="text-xs font-bold text-amber-700 uppercase tracking-wider flex items-center space-x-1.5">
                       <AlertTriangle className="h-4 w-4" />
@@ -666,7 +666,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                         <div className="flex justify-end">
                           <button
                             type="submit"
-                            className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold text-[10px] px-4 py-2 rounded-lg shadow-sm hover:shadow active:scale-97 transition-all cursor-pointer border-none"
+                            className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold text-[10px] px-4 py-2 rounded-lg shadow-sm hover:shadow active:scale-95 transition-all cursor-pointer border-none"
                           >
                             Voorstel Verzenden
                           </button>

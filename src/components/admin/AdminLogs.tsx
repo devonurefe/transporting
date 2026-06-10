@@ -44,7 +44,7 @@ export default function AdminLogs({ systemLogs, onClearSystemLogs, userProfiles,
             {systemLogs.length > 0 && (
               <button
                 onClick={onClearSystemLogs}
-                className="text-[10px] font-extrabold text-slate-600 hover:text-rose-600 flex items-center space-x-1 border border-slate-200 bg-slate-50 hover:bg-rose-55 hover:bg-rose-50 py-1.5 px-2.5 rounded-lg transition-colors cursor-pointer"
+                className="text-[10px] font-extrabold text-slate-600 hover:text-rose-600 flex items-center space-x-1 border border-slate-200 bg-slate-50 hover:bg-rose-50 py-1.5 px-2.5 rounded-lg transition-colors cursor-pointer"
               >
                 <Trash2 className="h-3 w-3" />
                 <span>{t("Schoonmaken", "Clear Logs", "Günlükleri Temizle")}</span>

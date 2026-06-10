@@ -680,7 +680,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                   <button
                     type="button"
                     onClick={() => setEditingMachine(null)}
-                    className="px-4 py-2.5 hover:bg-slate-100 bg-slate-100 border border-slate-200 text-slate-650 rounded-xl text-xs font-bold transition-all cursor-pointer border-none"
+                    className="px-4 py-2.5 hover:bg-slate-100 bg-slate-100 border border-slate-200 text-slate-600 rounded-xl text-xs font-bold transition-all cursor-pointer border-none"
                   >
                     {t("Sluiten", "Close", "Kapat")}
                   </button>

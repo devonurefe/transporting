@@ -30,6 +30,9 @@ model Machine {
   additionalImages        Json?
   blockedDates            BlockedDate[]
   updatedAt               DateTime      @updatedAt @default(now())
+
+  @@index([category])
+  @@index([pricePerDay])
 }
 
 model Category {

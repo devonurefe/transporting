@@ -4,6 +4,7 @@
  */
 
 import { CartItem } from "../types";
+import { euro, euroCompact } from "./format";
 
 // HuurGo WhatsApp business number
 const WHATSAPP_NUMBER = (import.meta as any).env?.VITE_WHATSAPP_NUMBER ?? "31611848899";
@@ -42,9 +43,9 @@ export function buildWhatsAppUrl(
     lines.push(`▸ *${item.machine.name}*`);
     lines.push(`   📅 Periode:  ${start}  →  ${end}`);
     if (itemDays) {
-      lines.push(`   💶 ${itemDays} ${itemDays === 1 ? "dag" : "dagen"} × €${item.machine.pricePerDay},- = *€${(item.machine.pricePerDay * itemDays).toFixed(0)},-*`);
+      lines.push(`   💶 ${itemDays} ${itemDays === 1 ? "dag" : "dagen"} × ${euroCompact(item.machine.pricePerDay)} = *${euroCompact(item.machine.pricePerDay * itemDays)}*`);
     } else {
-      lines.push(`   💶 Tarief: €${item.machine.pricePerDay},-/dag`);
+      lines.push(`   💶 Tarief: ${euroCompact(item.machine.pricePerDay)}/dag`);
     }
     lines.push("");
   }
@@ -56,8 +57,8 @@ export function buildWhatsAppUrl(
     const label = deliveryType === "self_pickup"
       ? "✅  Zelf ophalen  –  Produktieweg 20, Zoeterwoude  (Gratis)\n   🕐 Openingstijden: ma–vr 08:00–17:00"
       : deliveryType === "trailer_rental"
-      ? `🔗  Aanhanger huren  (€25/dag${totals ? `  ×  ${totals.days} d  =  €${totals.transport.toFixed(0)},-` : ""})`
-      : `🚐  Bezorging door ons  (heen + terug = €150,-)`;
+      ? `🔗  Aanhanger huren  (€ 25,-/dag${totals ? `  ×  ${totals.days} d  =  ${euroCompact(totals.transport)}` : ""})`
+      : `🚐  Bezorging door ons  (heen + terug = € 150,-)`;
     lines.push(label);
     lines.push("");
   }
@@ -66,10 +67,10 @@ export function buildWhatsAppUrl(
     lines.push("─────────────────────────────");
     lines.push("💰 *PRIJSOVERZICHT*");
     lines.push("─────────────────────────────");
-    lines.push(`   Subtotaal (excl. BTW) :  €${totals.subtotal.toFixed(2)}`);
-    lines.push(`   BTW 21%               :  €${totals.vat.toFixed(2)}`);
+    lines.push(`   Subtotaal (excl. BTW) :  ${euro(totals.subtotal)}`);
+    lines.push(`   BTW 21%               :  ${euro(totals.vat)}`);
     lines.push("─────────────────────────────");
-    lines.push(`✅ *Totaal incl. BTW :  €${totals.total.toFixed(2)}*`);
+    lines.push(`✅ *Totaal incl. BTW :  ${euro(totals.total)}*`);
     lines.push("─────────────────────────────");
     lines.push("");
   }

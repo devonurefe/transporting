@@ -15,6 +15,15 @@ const SENDER_EMAIL = process.env.EMAIL_FROM || "onboarding@resend.dev";
 const APP_URL = process.env.APP_URL || "https://mbhoogwerkers.com";
 const ADMIN_ALERT_EMAIL = process.env.ADMIN_EMAIL || "mustafa@mbhoogwerkers.com";
 
+// Escape user-supplied values before interpolating into HTML email bodies
+const esc = (s: unknown): string =>
+  String(s ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+
 interface EmailOrderData {
   id: string;
   machineName: string;
@@ -88,13 +97,13 @@ export const emailService = {
           </div>
           <div class="content">
             <span class="order-id">Reservering ID: ${order.id}</span>
-            <p>Beste <strong>${order.customerName}</strong>,</p>
+            <p>Beste <strong>${esc(order.customerName)}</strong>,</p>
             <p>Hartelijk dank voor uw reservering bij HuurGo. Onze logistieke afdeling en AI-planner hebben uw reservering direct gereserveerd en in behandeling genomen. Hieronder vindt u de specificaties:</p>
             
             <div class="details-grid">
               <div class="details-item">
                 <div class="label">Gereserveerd Object</div>
-                <div class="value">${order.machineName}</div>
+                <div class="value">${esc(order.machineName)}</div>
               </div>
               <div class="details-item">
                 <div class="label">Huurperiode</div>
@@ -107,7 +116,7 @@ export const emailService = {
               ${!isPickup && order.deliveryAddress ? `
               <div class="details-item">
                 <div class="label">Bezorgadres</div>
-                <div class="value">${order.deliveryAddress}</div>
+                <div class="value">${esc(order.deliveryAddress)}</div>
               </div>
               ` : ''}
               <div class="details-item">
@@ -193,11 +202,11 @@ export const emailService = {
               </div>
               <div class="details-item">
                 <div class="label">Klant Details</div>
-                <div class="value">${order.customerName} (${order.customerProfile})<br><span style="font-weight: normal; font-size: 11px; font-family: monospace;">${order.customerEmail} | ${order.customerPhone || ''}</span></div>
+                <div class="value">${esc(order.customerName)} (${esc(order.customerProfile)})<br><span style="font-weight: normal; font-size: 11px; font-family: monospace;">${esc(order.customerEmail)} | ${esc(order.customerPhone || '')}</span></div>
               </div>
               <div class="details-item">
                 <div class="label">Gevraagd Materieel</div>
-                <div class="value">${order.machineName}</div>
+                <div class="value">${esc(order.machineName)}</div>
               </div>
               <div class="details-item">
                 <div class="label">Huurperiode</div>
@@ -287,14 +296,14 @@ export const emailService = {
             <div style="text-align: center;">
               <span class="status-badge" style="color: #4f46e5;">Status: ${order.status}</span>
             </div>
-            <p>Beste <strong>${order.customerName}</strong>,</p>
+            <p>Beste <strong>${esc(order.customerName)}</strong>,</p>
             <p>${statusDescription}</p>
             
             <h4 style="margin-top: 24px; font-size: 14px; border-bottom: 1px solid #edf2f7; padding-bottom: 8px;">Reservering details</h4>
             <div class="details-grid">
               <div class="details-item">
                 <div class="label">Machine</div>
-                <div class="value">${order.machineName}</div>
+                <div class="value">${esc(order.machineName)}</div>
               </div>
               <div class="details-item">
                 <div class="label">Huurperiode</div>
@@ -303,7 +312,7 @@ export const emailService = {
               ${order.deliveryAddress ? `
               <div class="details-item">
                 <div class="label">Bezorgadres</div>
-                <div class="value">${order.deliveryAddress}</div>
+                <div class="value">${esc(order.deliveryAddress)}</div>
               </div>
               ` : ''}
               <div class="details-item">
@@ -377,7 +386,7 @@ export const emailService = {
             <p>Bevestig uw e-mailadres om uw account te activeren</p>
           </div>
           <div class="content">
-            <p class="welcome-text">Beste <strong>${customer.name}</strong>,</p>
+            <p class="welcome-text">Beste <strong>${esc(customer.name)}</strong>,</p>
             <p class="info-text">
               Welkom bij HuurGo! U heeft succesvol een account aangemaakt. Om te kunnen inloggen op het Klant Portaal en uw reserveringen te beheren, dient u eerst uw e-mailadres te verifiëren door op de onderstaande knop te klikken:
             </p>
@@ -424,7 +433,7 @@ export const emailService = {
    */
   sendRentalReminder: async (order: EmailOrderData) => {
     const isPickup = order.deliveryType === "self_pickup";
-    const deliveryText = isPickup ? "Zelf afhalen bij HuurGo, Distributieweg 12, Amsterdam" : `Bezorging op adres: ${order.deliveryAddress || ""}`;
+    const deliveryText = isPickup ? "Zelf afhalen bij HuurGo, Distributieweg 12, Amsterdam" : `Bezorging op adres: ${esc(order.deliveryAddress || "")}`;
 
     const htmlContent = `
       <!DOCTYPE html>
@@ -452,11 +461,11 @@ export const emailService = {
             <h1>⏰ Uw huur begint morgen!</h1>
           </div>
           <div class="content">
-            <p>Beste <strong>${order.customerName}</strong>,</p>
+            <p>Beste <strong>${esc(order.customerName)}</strong>,</p>
             <p>Dit is een vriendelijke herinnering dat uw gereserveerde machine <strong>morgen</strong> klaar staat.</p>
             <div class="details-grid">
               <div class="details-item"><div class="label">Reservering</div><div class="value">${order.id}</div></div>
-              <div class="details-item"><div class="label">Machine</div><div class="value">${order.machineName}</div></div>
+              <div class="details-item"><div class="label">Machine</div><div class="value">${esc(order.machineName)}</div></div>
               <div class="details-item"><div class="label">Startdatum</div><div class="value">${order.startDate}</div></div>
               <div class="details-item"><div class="label">Ophalen / Levering</div><div class="value">${deliveryText}</div></div>
             </div>
@@ -509,7 +518,7 @@ export const emailService = {
         <div class="container">
           <div class="header"><h1>HuurGo</h1><p>Wachtwoord resetten</p></div>
           <div class="content">
-            <p style="text-align:left;">Beste <strong>${name}</strong>,</p>
+            <p style="text-align:left;">Beste <strong>${esc(name)}</strong>,</p>
             <p style="text-align:left; font-size:13px; color:#475569; line-height:1.6;">
               U heeft een aanvraag ingediend om uw wachtwoord te resetten. Klik op de knop hieronder om een nieuw wachtwoord in te stellen. De link is 1 uur geldig.
             </p>

@@ -60,6 +60,46 @@ export default function App() {
     window.scrollTo(0, 0);
   }, [location.pathname]);
 
+  // SEO: per-route title, meta description and canonical (SPA fallback)
+  useEffect(() => {
+    const seo: Record<string, { title: string; desc: string; noindex?: boolean }> = {
+      "/": {
+        title: "HuurGo — Hoogwerkers Huren | Alphen a/d Rijn",
+        desc: "Huur hoogwerkers, schaarliften en spinhoogwerkers bij HuurGo. Scherpe dagprijzen, gratis zelf ophalen of bezorging. BMWT-gecertificeerd.",
+      },
+      "/catalog": {
+        title: "Catalogus — Alle Hoogwerkers & Schaarliften | HuurGo",
+        desc: "Bekijk ons complete aanbod: schaarliften, aanhangerhoogwerkers, spinhoogwerkers en mastliften. Direct online reserveren met live beschikbaarheid.",
+      },
+      "/booking": {
+        title: "Online Reserveren — Snel & Eenvoudig | HuurGo",
+        desc: "Reserveer uw hoogwerker in 3 stappen. Kies uw data, ontvang direct de prijs en bevestig via WhatsApp met iDEAL betaallink.",
+      },
+      "/orders": {
+        title: "Mijn Reserveringen | HuurGo",
+        desc: "Beheer uw huurcontracten, volg de status en download facturen.",
+        noindex: true,
+      },
+      "/admin": { title: "Beheer | HuurGo", desc: "", noindex: true },
+    };
+    const entry = seo[location.pathname] ?? seo["/"];
+    document.title = entry.title;
+    document.querySelector('meta[name="description"]')?.setAttribute("content", entry.desc);
+    const canonical = document.querySelector('link[rel="canonical"]');
+    if (canonical) canonical.setAttribute("href", `https://huurgo.nl${location.pathname === "/" ? "/" : location.pathname}`);
+    let robotsMeta = document.querySelector('meta[name="robots"]');
+    if (entry.noindex) {
+      if (!robotsMeta) {
+        robotsMeta = document.createElement("meta");
+        robotsMeta.setAttribute("name", "robots");
+        document.head.appendChild(robotsMeta);
+      }
+      robotsMeta.setAttribute("content", "noindex, nofollow");
+    } else if (robotsMeta) {
+      robotsMeta.setAttribute("content", "index, follow");
+    }
+  }, [location.pathname]);
+
   const [fabOpen, setFabOpen] = useState(false);
 
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);

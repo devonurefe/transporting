@@ -94,7 +94,6 @@ app.get("/sitemap.xml", (_req, res) => {
     { loc: "https://huurgo.nl/", priority: "1.0", changefreq: "weekly" },
     { loc: "https://huurgo.nl/catalog", priority: "0.9", changefreq: "daily" },
     { loc: "https://huurgo.nl/booking", priority: "0.8", changefreq: "weekly" },
-    { loc: "https://huurgo.nl/orders", priority: "0.5", changefreq: "monthly" },
   ];
   const urlset = urls
     .map(

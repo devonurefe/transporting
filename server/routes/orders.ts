@@ -186,6 +186,9 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
     if (!rentalDays || rentalDays < 1 || !Number.isInteger(rentalDays)) {
       return res.status(400).json({ error: "Minimum huurperiode is 1 dag" });
     }
+    if (rentalDays > 365) {
+      return res.status(400).json({ error: "Maximale huurperiode is 365 dagen. Neem contact op voor langere periodes." });
+    }
     const transportCostClient = Number(orderData.transportCost || 0);
     const driverCostClient = Number(orderData.driverCost || 0);
     const addonsTotal = (Array.isArray(orderData.addons) ? orderData.addons : []).reduce((sum: number, a: any) => {

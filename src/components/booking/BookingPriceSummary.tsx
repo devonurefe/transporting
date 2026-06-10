@@ -7,6 +7,7 @@ import React from "react";
 import { ShieldCheck, TrendingDown, Package } from "lucide-react";
 import { Machine } from "../../types";
 import { useLanguageStore } from "../../store/languageStore";
+import { euro, euroCompact } from "../../utils/format";
 
 interface BookingPriceSummaryProps {
   selectedMachine: Machine | null;
@@ -64,7 +65,7 @@ export default function BookingPriceSummary({ selectedMachine, sums }: BookingPr
         <div className="min-w-0 flex-1">
           <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wide leading-none mb-1">{t("priceSummaryReservation")}</p>
           <h4 className="text-sm font-extrabold text-slate-900 leading-snug">{selectedMachine.name}</h4>
-          <span className="text-[11px] text-indigo-600 font-bold font-mono">€ {selectedMachine.pricePerDay}/dag</span>
+          <span className="text-[11px] text-indigo-600 font-bold font-mono">{euroCompact(selectedMachine.pricePerDay)}/dag</span>
         </div>
       </div>
 
@@ -74,9 +75,9 @@ export default function BookingPriceSummary({ selectedMachine, sums }: BookingPr
         {/* Days × rate */}
         <div className="flex justify-between items-center">
           <span className="text-xs text-slate-600">
-            {sums.days} {sums.days === 1 ? 'dag' : 'dagen'} × €{selectedMachine.pricePerDay}
+            {sums.days} {sums.days === 1 ? 'dag' : 'dagen'} × {euroCompact(selectedMachine.pricePerDay)}
           </span>
-          <span className="text-xs font-bold text-slate-800 font-mono">€ {sums.rawSubtotal.toFixed(0)}</span>
+          <span className="text-xs font-bold text-slate-800 font-mono">{euro(sums.rawSubtotal)}</span>
         </div>
 
         {/* Discount */}
@@ -86,7 +87,7 @@ export default function BookingPriceSummary({ selectedMachine, sums }: BookingPr
               <TrendingDown className="h-3.5 w-3.5" />
               {sums.discountLabel}
             </span>
-            <span className="text-xs font-bold text-emerald-700 font-mono">− €{sums.discountAmount.toFixed(0)}</span>
+            <span className="text-xs font-bold text-emerald-700 font-mono">− {euro(sums.discountAmount)}</span>
           </div>
         )}
 
@@ -96,7 +97,7 @@ export default function BookingPriceSummary({ selectedMachine, sums }: BookingPr
             <span className="text-xs text-slate-600">
               {sums.deliveryType === "trailer_rental" ? t("priceSummaryTrailer") : t("priceSummaryDelivery")}
             </span>
-            <span className="text-xs font-bold text-slate-800 font-mono">€ {(sums.transport + sums.driver).toFixed(0)}</span>
+            <span className="text-xs font-bold text-slate-800 font-mono">{euro(sums.transport + sums.driver)}</span>
           </div>
         )}
 
@@ -112,14 +113,14 @@ export default function BookingPriceSummary({ selectedMachine, sums }: BookingPr
         {sums.addonCost > 0 && sums.addonDetails.map(addon => (
           <div key={addon.id} className="flex justify-between items-center">
             <span className="text-xs text-slate-600 truncate max-w-[160px]">{addon.name}</span>
-            <span className="text-xs font-bold text-slate-800 font-mono">€ {Number(addon.price).toFixed(2)}</span>
+            <span className="text-xs font-bold text-slate-800 font-mono">{euro(Number(addon.price))}</span>
           </div>
         ))}
 
         {/* BTW */}
         <div className="flex justify-between items-center text-slate-400 border-t border-slate-100 pt-3">
           <span className="text-[11px]">BTW 21%</span>
-          <span className="text-[11px] font-mono">€ {sums.vat.toFixed(2)}</span>
+          <span className="text-[11px] font-mono">{euro(sums.vat)}</span>
         </div>
 
         {/* Total */}
@@ -129,7 +130,7 @@ export default function BookingPriceSummary({ selectedMachine, sums }: BookingPr
               <p className="text-[10px] text-indigo-200 font-semibold uppercase tracking-wide">{t("priceSummaryTotal")}</p>
               <p className="text-[10px] text-indigo-300 mt-0.5">{t("priceSummaryInclVAT")}</p>
             </div>
-            <span className="text-2xl font-black text-white font-mono">€ {sums.total.toFixed(0)}</span>
+            <span className="text-2xl font-black text-white font-mono">{euro(sums.total)}</span>
           </div>
         </div>
 

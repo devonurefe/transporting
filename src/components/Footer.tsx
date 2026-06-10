@@ -19,7 +19,7 @@ export default function Footer({ siteName, setActiveTab: _setActiveTab, setShowC
     <footer className="bg-slate-950 border-t border-slate-800 pb-20 md:pb-0">
       <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-10 py-14 sm:py-16">
 
-        {/* Top row — 2 sütun, sol hizalı */}
+        {/* Top row — 2 columns, left aligned */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-10 sm:gap-14 pb-12 border-b border-slate-800">
 
           {/* Brand + email */}

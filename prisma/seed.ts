@@ -97,7 +97,7 @@ const defaultCategories = [
 ];
 
 const defaultMachines = [
-  // KATEGORİ 1: "Toe & Go" Aanhangerhoogwerkers
+  // CATEGORIE 1: "Tow & Go" Aanhangerhoogwerkers
   {
     id: "nifty-120-1",
     name: "Nifty 120 \"Toe & Go\" Aanhangerhoogwerker",
@@ -167,7 +167,7 @@ const defaultMachines = [
     monthlyDiscountPercent: 28
   },
 
-  // KATEGORİ 2: Paletli Örümcek Platformlar (Rupshoogwerkers)
+  // CATEGORIE 2: Spinhoogwerkers (Rupshoogwerkers)
   {
     id: "hinowa-15-70",
     name: "Hinowa Goldlift 15.70 Rupshoogwerker",
@@ -203,7 +203,7 @@ const defaultMachines = [
     monthlyDiscountPercent: 30
   },
 
-  // KATEGORİ 3: Standart Akülü Makaslı Liftler (Schaarliften - 8 Metre)
+  // CATEGORIE 3: Elektrische Schaarliften (8 meter)
   {
     id: "optimum-8-1",
     name: "Haulotte Optimum 8 Schaarlift",
@@ -273,7 +273,7 @@ const defaultMachines = [
     monthlyDiscountPercent: 25
   },
 
-  // KATEGORİ 4: Dar Şasi Akülü Makaslı Liftler (Smal model - 10 Metre)
+  // CATEGORIE 4: Smalle Elektrische Schaarliften (10 meter)
   {
     id: "compact-10n-1",
     name: "Haulotte Compact 10N Schaarlift (Smal)",
@@ -303,13 +303,13 @@ const defaultMachines = [
     powerType: "Elektrisch",
     imageUrl: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=600&auto=format&fit=crop",
     imageAlt: "Haulotte Compact 10N smalle schaarlift",
-    description: "Smalle schaarlift (Unit 2) met non-marking banden voor compact og geruisloos binnenwerk.",
+    description: "Smalle schaarlift (Unit 2) met non-marking banden voor compact en geruisloos binnenwerk.",
     suitableFor: ["Installateur", "Schilder", "Magazijn"],
     weeklyDiscountPercent: 12,
     monthlyDiscountPercent: 28
   },
 
-  // KATEGORİ 4b: Kompakte Schaarliften (6m) — Dingli JCPT 0607 DC
+  // CATEGORIE 4b: Compacte Schaarliften (6m) — Dingli JCPT 0607 DC
   {
     id: "dingli-6m",
     name: "Dingli JCPT 0607 DC Compact Schaarlift",
@@ -328,7 +328,7 @@ const defaultMachines = [
     monthlyDiscountPercent: 20
   },
 
-  // KATEGORİ 4c: Kamersteigers — Altrex RS-44 Power
+  // CATEGORIE 4c: Kamersteigers — Altrex RS-44 Power
   {
     id: "altrex-rs44",
     name: "Altrex RS-44 Power Kamersteiger",
@@ -347,7 +347,7 @@ const defaultMachines = [
     monthlyDiscountPercent: 15
   },
 
-  // KATEGORİ 5: Dikey Mastlı Personel Yükselticiler (Mastliften)
+  // CATEGORIE 5: Verticale Mastliften
   {
     id: "star-10",
     name: "Haulotte Star 10 Mastlift",
@@ -417,7 +417,7 @@ const defaultMachines = [
     monthlyDiscountPercent: 25
   },
 
-  // KATEGORİ 6: Eşya ve Yük Asansörleri (Verhuisliften / Ladderliften)
+  // CATEGORIE 6: Verhuisliften / Ladderliften
   {
     id: "ladderlift-18",
     name: "Ladderlift / Verhuislift (18m)",
@@ -470,7 +470,7 @@ const defaultMachines = [
     monthlyDiscountPercent: 28
   },
 
-  // KATEGORİ 7: İnsan Gücüyle Yürüyen Hafif Sınıf (Ecolift)
+  // CATEGORIE 7: Handmatige Lichtgewicht Klasse (Ecolift)
   {
     id: "ecolift",
     name: "JLG Ecolift Low-Level Access",

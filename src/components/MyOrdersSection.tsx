@@ -858,7 +858,7 @@ export default function MyOrdersSection({
                             <span className="font-mono text-[10px] font-extrabold text-indigo-700 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded-md">
                               {o.id}
                             </span>
-                            <span className="text-[10px] text-slate-500 font-bold">Overeenkomst van {new Date(o.createdAt).toLocaleDateString("nl-NL")}</span>
+                            <span className="text-[10px] text-slate-500 font-bold">Besteld op {new Date(o.createdAt).toLocaleDateString("nl-NL")}</span>
                           </div>
                           <h4 className="font-display font-black text-sm sm:text-base text-slate-900 mt-1.5 text-sans">
                             {o.machineName}

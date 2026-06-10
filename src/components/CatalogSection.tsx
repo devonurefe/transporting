@@ -415,13 +415,13 @@ export default function CatalogSection({
                             {machine.weight}kg
                           </span>
                           <span className={`ml-auto text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${
-                            machine.powerType === "Elektrisch"
-                              ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
+                            machine.powerType === "Diesel"
+                              ? "bg-orange-50 text-orange-600 border border-orange-100"
                               : machine.powerType === "Hybride"
                               ? "bg-blue-50 text-blue-700 border border-blue-100"
-                              : "bg-orange-50 text-orange-600 border border-orange-100"
+                              : "bg-emerald-50 text-emerald-700 border border-emerald-100"
                           }`}>
-                            {machine.powerType === "Elektrisch" ? "Binnen & buiten" : machine.powerType === "Hybride" ? "Flexibel" : "Buiten"}
+                            {machine.powerType === "Diesel" ? "Buiten" : machine.powerType === "Hybride" ? "Flexibel" : "Binnen & buiten"}
                           </span>
                         </div>
 

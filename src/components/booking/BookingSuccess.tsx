@@ -10,6 +10,7 @@ import { Order, UserProfile } from "../../types";
 import { printInvoice } from "../../utils/invoice";
 import { useAuthStore } from "../../store/authStore";
 import { useLanguageStore } from "../../store/languageStore";
+import { euro } from "../../utils/format";
 
 interface BookingSuccessProps {
   successOrder: Order | null;
@@ -82,10 +83,14 @@ export default function BookingSuccess({
     },
     {
       label: t("specCollection"),
-      value: successOrder.deliveryType === "self_pickup" ? "Zelf ophalen" : "Bezorging door chauffeur",
+      value: successOrder.deliveryType === "self_pickup"
+        ? "Zelf ophalen (gratis)"
+        : successOrder.deliveryType === "trailer_rental"
+        ? "Aanhanger huren"
+        : "Bezorging door ons",
     },
     ...(successOrder.deliveryAddress ? [{ label: t("specAddress"), value: successOrder.deliveryAddress }] : []),
-    { label: t("specTotal"), value: `€ ${successOrder.totalAmount.toFixed(2)}`, price: true },
+    { label: t("specTotal"), value: euro(successOrder.totalAmount), price: true },
   ];
 
   return (

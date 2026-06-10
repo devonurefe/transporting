@@ -322,7 +322,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                       <div className="flex items-center justify-end space-x-1.5 ml-auto">
                         <button
                           onClick={() => handleStartEdit(m)}
-                          className="text-indigo-600 hover:text-indigo-850 hover:text-indigo-800 font-bold text-xs bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer border-none shadow-sm flex items-center justify-center space-x-1"
+                          className="text-indigo-600 hover:text-indigo-800 font-bold text-xs bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer border-none shadow-sm flex items-center justify-center space-x-1"
                         >
                           <Wrench className="h-3 w-3 shrink-0" />
                           <span>{t("Aanpassen", "Modify", "Düzenle")}</span>

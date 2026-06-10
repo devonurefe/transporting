@@ -92,6 +92,14 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
   const [isUpdatingPayment, setIsUpdatingPayment] = useState<boolean>(false);
   const [statusError, setStatusError] = useState<string | null>(null);
 
+  const closeModal = () => {
+    setSelectedDetailOrder(null);
+    setIsProposingDate(false);
+    setNewStartDate("");
+    setNewEndDate("");
+    setStatusError(null);
+  };
+
   const handleUpdateStatus = async (orderId: string, nextStatus: string, logMsg: string, order?: any) => {
     // Pre-validate: "Accorderen" requires payment marked first
     if (nextStatus === "Goedgekeurd" && order?.paymentStatus !== "paid") {
@@ -186,8 +194,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
       adminUser?.name ?? "Admin",
       `Datumvoorstel via WhatsApp gestuurd voor contract ${selectedDetailOrder.id} (${selectedDetailOrder.customerName}). Voorstel: ${newStartDate} t/m ${newEndDate}.`
     );
-    setIsProposingDate(false);
-    setSelectedDetailOrder(null);
+    closeModal();
   };
 
   return (
@@ -449,7 +456,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => setSelectedDetailOrder(null)}
+              onClick={() => closeModal()}
               className="absolute inset-0 bg-slate-900/40 backdrop-blur-md"
             />
 
@@ -475,7 +482,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                   </h3>
                 </div>
                 <button
-                  onClick={() => setSelectedDetailOrder(null)}
+                  onClick={() => closeModal()}
                   className="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 transition-colors cursor-pointer border-none"
                 >
                   <X className="h-4.5 w-4.5" />
@@ -625,7 +632,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                     
                     <button
                       onClick={() => setIsProposingDate(!isProposingDate)}
-                      className="text-[10px] font-bold text-amber-800 hover:text-amber-900 border border-amber-200 hover:bg-amber-100/50 bg-white py-1 px-2.5 rounded-lg transition-colors cursor-pointer border-none"
+                      className="text-[10px] font-bold text-amber-800 hover:text-amber-900 border border-amber-200 hover:bg-amber-100/50 bg-white py-1 px-2.5 rounded-lg transition-colors cursor-pointer"
                     >
                       {isProposingDate ? "Sluiten" : "Nieuwe datum voorstellen"}
                     </button>
@@ -726,7 +733,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                     </button>
                     <button
                       type="button"
-                      onClick={() => setSelectedDetailOrder(null)}
+                      onClick={() => closeModal()}
                       className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-[10px] font-bold transition-all cursor-pointer border-none"
                     >
                       Sluiten

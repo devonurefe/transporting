@@ -391,6 +391,11 @@ export default function CatalogSection({
                                 week −{machine.weeklyDiscountPercent}%
                               </div>
                             )}
+                            {machine.monthlyDiscountPercent > 0 && (
+                              <div className="text-[9px] text-teal-600 font-bold mt-0.5">
+                                maand −{machine.monthlyDiscountPercent}%
+                              </div>
+                            )}
                           </div>
                         </div>
 

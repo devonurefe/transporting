@@ -346,8 +346,14 @@ export default function CatalogSection({
                         </label>
                       </div>
 
-                      {/* IMAGE with category + powerType overlay */}
-                      <div className="relative aspect-video w-full overflow-hidden bg-slate-100">
+                      {/* IMAGE with category + powerType overlay — clickable to open detail modal */}
+                      <div
+                        className="relative aspect-video w-full overflow-hidden bg-slate-100 cursor-pointer"
+                        onClick={() => {
+                          setSelectedDetailMachine(machine);
+                          onAddSystemLog?.("system", currentUser?.name ?? "Gast", `Bekijkt specificaties: "${machine.name}"`);
+                        }}
+                      >
                         <img
                           src={machine.imageUrl}
                           alt={machine.imageAlt}
@@ -362,6 +368,12 @@ export default function CatalogSection({
                           </span>
                           <span className="text-[8px] font-mono font-bold text-white/80 bg-black/30 backdrop-blur-sm px-1.5 py-0.5 rounded-md">
                             {machine.powerType}
+                          </span>
+                        </div>
+                        {/* Hover hint */}
+                        <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors duration-200 flex items-center justify-center">
+                          <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-black/50 text-white text-[10px] font-bold px-2.5 py-1 rounded-full backdrop-blur-sm">
+                            Meer info
                           </span>
                         </div>
                       </div>

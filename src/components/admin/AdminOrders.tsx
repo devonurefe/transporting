@@ -154,6 +154,10 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
       alert("Voer zowel de startdatum als de einddatum in.");
       return;
     }
+    if (new Date(newEndDate) < new Date(newStartDate)) {
+      alert("Einddatum moet op of na de startdatum liggen.");
+      return;
+    }
     const machine = getBaseName(selectedDetailOrder.machineName);
     const lines = [
       "Goed nieuws! Wij kunnen uw reservering herplannen. 📅",

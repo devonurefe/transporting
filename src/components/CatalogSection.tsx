@@ -179,8 +179,8 @@ export default function CatalogSection({
         machine.id.toLowerCase().includes(q) ||
         machine.category.toLowerCase().includes(q) ||
         machine.name.toLowerCase().includes(q) ||
-        machine.description.toLowerCase().includes(q) ||
-        machine.suitableFor.some(p => p.toLowerCase().includes(q));
+        (machine.description?.toLowerCase() || "").includes(q) ||
+        (machine.suitableFor ?? []).some(p => p.toLowerCase().includes(q));
 
       return matchesCategory && matchesSearch;
     });
@@ -423,7 +423,10 @@ export default function CatalogSection({
 
                         {/* SuitableFor — capped at 3 chips + overflow count */}
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          {machine.suitableFor.slice(0, 3).map((prof) => {
+                          {(machine.suitableFor ?? []).length === 0 && (
+                            <span className="text-[9px] text-slate-400 italic">Algemeen gebruik</span>
+                          )}
+                          {(machine.suitableFor ?? []).slice(0, 3).map((prof) => {
                             const ProfIcon = professionIconMap[prof];
                             return (
                               <span
@@ -436,7 +439,7 @@ export default function CatalogSection({
                               </span>
                             );
                           })}
-                          {machine.suitableFor.length > 3 && (
+                          {(machine.suitableFor ?? []).length > 3 && (
                             <span className="text-[9px] text-slate-400 font-semibold px-1 select-none">+{machine.suitableFor.length - 3} meer</span>
                           )}
                         </div>

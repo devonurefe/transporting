@@ -370,9 +370,9 @@ export default function CatalogSection({
                       </div>
 
                       {/* CARD CONTENT */}
-                      <div className="p-4 flex flex-col gap-3 flex-1">
+                      <div className="p-4 flex flex-col gap-2.5 flex-1">
 
-                        {/* Name + Price — price is the hero */}
+                        {/* Name + Price */}
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex-1 min-w-0">
                             <h3 className="font-display font-bold text-sm text-slate-900 leading-snug line-clamp-2 group-hover:text-indigo-700 transition-colors duration-200">
@@ -388,46 +388,40 @@ export default function CatalogSection({
                             <div className="text-xl font-mono font-extrabold text-slate-900 leading-none">
                               €{formatPrice(machine.pricePerDay)}
                             </div>
-                            <div className="text-[9px] text-slate-400 font-mono mt-0.5">v.a. /dag</div>
-                            {machine.weeklyDiscountPercent > 0 && (
-                              <div className="text-[9px] text-emerald-600 font-bold mt-0.5">
-                                week −{machine.weeklyDiscountPercent}%
-                              </div>
+                            <div className="text-[9px] text-slate-400 font-mono mt-0.5">per dag</div>
+                            {(machine.weeklyDiscountPercent ?? 0) > 0 && (
+                              <div className="text-[9px] text-emerald-600 font-bold mt-0.5">week −{machine.weeklyDiscountPercent}%</div>
                             )}
-                            {machine.monthlyDiscountPercent > 0 && (
-                              <div className="text-[9px] text-teal-600 font-bold mt-0.5">
-                                maand −{machine.monthlyDiscountPercent}%
-                              </div>
+                            {(machine.monthlyDiscountPercent ?? 0) > 0 && (
+                              <div className="text-[9px] text-teal-600 font-bold mt-0.5">maand −{machine.monthlyDiscountPercent}%</div>
                             )}
                           </div>
                         </div>
 
-                        {/* Indoor/outdoor indicator */}
-                        <div className="flex items-center gap-1.5 -mt-1">
-                          {machine.powerType === "Elektrisch" ? (
-                            <span className="text-[9px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full">⚡ Binnen &amp; buiten</span>
-                          ) : machine.powerType === "Diesel" ? (
-                            <span className="text-[9px] font-semibold text-orange-700 bg-orange-50 border border-orange-100 px-2 py-0.5 rounded-full">⛽ Alleen buiten</span>
-                          ) : machine.powerType === "Hybride" ? (
-                            <span className="text-[9px] font-semibold text-blue-700 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-full">🔄 Flexibel</span>
-                          ) : null}
-                        </div>
-
-                        {/* Spec row — height / reach / weight */}
+                        {/* Spec row — height / reach / weight + indoor badge */}
                         <div className="flex items-center gap-3 text-[10px] font-mono text-slate-500 border-t border-slate-100 pt-2.5">
-                          <span className="flex items-center gap-1">
+                          <span className="flex items-center gap-1" title="Werkhoogte">
                             <ArrowUpToLine className="h-3.5 w-3.5 text-indigo-500 shrink-0" />
                             <span className="font-bold text-slate-700">{machine.height}m</span>
-                            <span className="text-slate-400">hgt</span>
                           </span>
-                          <span className="flex items-center gap-1">
-                            <ArrowRightLeft className="h-3.5 w-3.5 text-indigo-400 shrink-0" />
-                            <span>{machine.reach > 0 ? `${machine.reach}m` : "—"}</span>
-                            <span className="text-slate-400">ber</span>
-                          </span>
-                          <span className="flex items-center gap-1 ml-auto">
+                          {machine.reach > 0 && (
+                            <span className="flex items-center gap-1" title="Uitreik">
+                              <ArrowRightLeft className="h-3.5 w-3.5 text-indigo-400 shrink-0" />
+                              {machine.reach}m
+                            </span>
+                          )}
+                          <span className="flex items-center gap-1" title="Gewicht">
                             <Weight className="h-3.5 w-3.5 text-slate-400 shrink-0" />
                             {machine.weight}kg
+                          </span>
+                          <span className={`ml-auto text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${
+                            machine.powerType === "Elektrisch"
+                              ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
+                              : machine.powerType === "Hybride"
+                              ? "bg-blue-50 text-blue-700 border border-blue-100"
+                              : "bg-orange-50 text-orange-600 border border-orange-100"
+                          }`}>
+                            {machine.powerType === "Elektrisch" ? "Binnen & buiten" : machine.powerType === "Hybride" ? "Flexibel" : "Buiten"}
                           </span>
                         </div>
 

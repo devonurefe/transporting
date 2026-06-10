@@ -130,52 +130,40 @@ export default function HomeSection({
             </p>
           </motion.div>
 
-          {/* CTA row */}
+          {/* CTA + Trust — hero alt kısmı */}
           <motion.div
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.15 }}
-            className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3"
+            className="mt-8 flex flex-col items-center gap-4"
           >
-            <button
-              onClick={() => onSearch("", "all")}
-              className="inline-flex items-center justify-center space-x-2 w-full sm:w-auto py-3.5 px-7 rounded-2xl bg-white text-slate-900 font-extrabold text-sm transition-all shadow-md hover:shadow-lg hover:bg-slate-50 active:scale-[0.98] cursor-pointer"
-            >
-              <span>Bekijk aanbod</span>
-              <span className="text-indigo-600">→</span>
-            </button>
             <a
               href={buildWhatsAppGeneralUrl()}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-center space-x-2 w-full sm:w-auto py-3.5 px-6 rounded-2xl bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-sm transition-all shadow-md hover:shadow-lg active:scale-[0.98] no-underline"
+              className="inline-flex items-center justify-center space-x-3 w-full max-w-sm py-3.5 px-6 rounded-2xl bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-sm transition-all shadow-md hover:shadow-lg active:scale-[0.98] no-underline"
             >
               <MessageCircle className="h-5 w-5 shrink-0" />
-              <span>Snel advies via WhatsApp</span>
+              <span>Direct advies nodig? WhatsApp ons!</span>
             </a>
-          </motion.div>
 
-          {/* Trust bar */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-            className="mt-6 flex items-center justify-center gap-4 flex-wrap"
-          >
-            <span className="flex items-center gap-1.5 text-[11px] font-semibold text-white/80">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shrink-0" />
-              BMWT Gecertificeerd
-            </span>
-            <span className="text-white/30">|</span>
-            <span className="flex items-center gap-1.5 text-[11px] font-semibold text-white/80">
-              <span className="h-1.5 w-1.5 rounded-full bg-amber-400 shrink-0" />
-              TÜV Klasse C
-            </span>
-            <span className="text-white/30">|</span>
-            <span className="flex items-center gap-1.5 text-[11px] font-semibold text-white/80">
-              <span className="h-1.5 w-1.5 rounded-full bg-sky-400 shrink-0" />
-              Zelf ophalen of bezorgen
-            </span>
+            {/* Trust bar */}
+            <div className="flex items-center justify-center gap-4 flex-wrap">
+              <span className="flex items-center gap-1.5 text-[11px] font-semibold text-white/80">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shrink-0" />
+                BMWT Gecertificeerd
+              </span>
+              <span className="text-white/30">|</span>
+              <span className="flex items-center gap-1.5 text-[11px] font-semibold text-white/80">
+                <span className="h-1.5 w-1.5 rounded-full bg-amber-400 shrink-0" />
+                TÜV Klasse C
+              </span>
+              <span className="text-white/30">|</span>
+              <span className="flex items-center gap-1.5 text-[11px] font-semibold text-white/80">
+                <span className="h-1.5 w-1.5 rounded-full bg-sky-400 shrink-0" />
+                Zelf ophalen of bezorgen
+              </span>
+            </div>
           </motion.div>
 
         </div>

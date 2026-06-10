@@ -43,7 +43,7 @@ const dictionary: TranslationDictionary = {
   catalogSubtitle: { nl: "Direct beschikbaar voor zzp, bouw, groenvoorziening en industrie.", en: "Directly available for freelancers, construction, landscaping, and industry.", tr: "ZZP, inşaat, peyzaj ve sanayi için anında rezerve edilebilir." },
   filterAll: { nl: "Alle Machines", en: "All Machines", tr: "Tüm Platformlar" },
   btnSelect: { nl: "Dit Model Kiezen", en: "Choose This Model", tr: "Bu Modeli Seç" },
-  btnSpecifications: { nl: "Specificaties", en: "Specifications", tr: "Teknik Bilgi" },
+  btnSpecifications: { nl: "Geschikt voor mij?", en: "Is this right for me?", tr: "Bana uygun mu?" },
   btnRentNow: { nl: "Huur Nu", en: "Rent Now", tr: "Kirala" },
   btnMoreInfo: { nl: "Geschikt voor mijn klus?", en: "Is this right for my job?", tr: "İşime uygun mu?" },
   infoUseCases: { nl: "Waarvoor", en: "Use Cases", tr: "Kullanım Alanları" },

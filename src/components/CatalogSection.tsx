@@ -11,7 +11,6 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
-  ChevronDown,
   Paintbrush,
   Home,
   Wrench,
@@ -110,8 +109,6 @@ export default function CatalogSection({
   const [showCompareModal, setShowCompareModal] = useState<boolean>(false);
   const [selectedDetailMachine, setSelectedDetailMachine] = useState<Machine | null>(null);
   const [activeDetailImageIndex, setActiveDetailImageIndex] = useState<number>(0);
-  const [expandedInfoId, setExpandedInfoId] = useState<string | null>(null);
-
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
@@ -378,11 +375,6 @@ export default function CatalogSection({
                             <h3 className="font-display font-bold text-sm text-slate-900 leading-snug line-clamp-2 group-hover:text-indigo-700 transition-colors duration-200">
                               {getBaseName(machine.name)}
                             </h3>
-                            {machine.description && (
-                              <p className="text-[10px] text-slate-500 leading-snug mt-0.5 line-clamp-1">
-                                {(machine.description.split(/[.!?]/)[0].trim() || machine.description.substring(0, 60)).trim()}
-                              </p>
-                            )}
                           </div>
                           <div className="text-right shrink-0">
                             <div className="text-xl font-mono font-extrabold text-slate-900 leading-none">
@@ -398,11 +390,11 @@ export default function CatalogSection({
                           </div>
                         </div>
 
-                        {/* Spec row — height / reach / weight + indoor badge */}
-                        <div className="flex items-center gap-3 text-[10px] font-mono text-slate-500 border-t border-slate-100 pt-2.5">
+                        {/* Spec row — height / reach + usage badge */}
+                        <div className="flex items-center gap-3 text-[10px] font-mono text-slate-600 border-t border-slate-100 pt-2.5">
                           <span className="flex items-center gap-1" title="Werkhoogte">
                             <ArrowUpToLine className="h-3.5 w-3.5 text-indigo-500 shrink-0" />
-                            <span className="font-bold text-slate-700">{machine.height}m</span>
+                            <span className="font-bold text-slate-800">{machine.height}m</span>
                           </span>
                           {machine.reach > 0 && (
                             <span className="flex items-center gap-1" title="Uitreik">
@@ -410,10 +402,6 @@ export default function CatalogSection({
                               {machine.reach}m
                             </span>
                           )}
-                          <span className="flex items-center gap-1" title="Gewicht">
-                            <Weight className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-                            {machine.weight}kg
-                          </span>
                           <span className={`ml-auto text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${
                             machine.powerType === "Diesel"
                               ? "bg-orange-50 text-orange-600 border border-orange-100"
@@ -425,26 +413,21 @@ export default function CatalogSection({
                           </span>
                         </div>
 
-                        {/* SuitableFor — capped at 3 chips + overflow count */}
+                        {/* SuitableFor — max 2 plain text chips */}
                         <div className="flex items-center gap-1.5 flex-wrap">
                           {(machine.suitableFor ?? []).length === 0 && (
                             <span className="text-[9px] text-slate-400 italic">Algemeen gebruik</span>
                           )}
-                          {(machine.suitableFor ?? []).slice(0, 3).map((prof) => {
-                            const ProfIcon = professionIconMap[prof];
-                            return (
-                              <span
-                                key={prof}
-                                title={prof}
-                                className="flex items-center gap-1 text-[9px] font-semibold text-slate-600 bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 px-2 py-1 rounded-full transition-colors duration-150 cursor-default select-none"
-                              >
-                                {ProfIcon && <ProfIcon className="h-3 w-3 shrink-0" />}
-                                {prof}
-                              </span>
-                            );
-                          })}
-                          {(machine.suitableFor ?? []).length > 3 && (
-                            <span className="text-[9px] text-slate-400 font-semibold px-1 select-none">+{machine.suitableFor.length - 3} meer</span>
+                          {(machine.suitableFor ?? []).slice(0, 2).map((prof) => (
+                            <span
+                              key={prof}
+                              className="text-[9px] font-semibold text-slate-600 bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 px-2 py-0.5 rounded-full transition-colors duration-150 cursor-default select-none"
+                            >
+                              {prof}
+                            </span>
+                          ))}
+                          {(machine.suitableFor ?? []).length > 2 && (
+                            <span className="text-[9px] text-slate-400 font-semibold px-1 select-none">+{machine.suitableFor.length - 2} meer</span>
                           )}
                         </div>
 
@@ -476,80 +459,6 @@ export default function CatalogSection({
                             {t("btnRentNow")}
                           </button>
                         </div>
-
-                        {/* Meer info accordion */}
-                        {(() => {
-                          const catInfo = customCategories.find(c => c.id === machine.category)?.infoContent;
-                          if (!catInfo || (!catInfo.useCases?.length && !catInfo.advantages?.length && !catInfo.notFor?.length)) return null;
-                          const isOpen = expandedInfoId === machine.id;
-                          return (
-                            <div className="border-t border-slate-100 pt-2">
-                              <button
-                                onClick={() => setExpandedInfoId(isOpen ? null : machine.id)}
-                                className={`w-full flex items-center justify-between text-[11px] font-extrabold py-2.5 px-3 rounded-xl cursor-pointer transition-all ${isOpen ? "text-indigo-700 bg-indigo-50 border border-indigo-100" : "text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50/70 border border-transparent"}`}
-                              >
-                                <span className="flex items-center gap-1.5">
-                                  <span className="text-[13px]">🔍</span>
-                                  {t("btnMoreInfo")}
-                                </span>
-                                <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
-                              </button>
-                              <AnimatePresence>
-                                {isOpen && (
-                                  <motion.div
-                                    initial={{ height: 0, opacity: 0 }}
-                                    animate={{ height: "auto", opacity: 1 }}
-                                    exit={{ height: 0, opacity: 0 }}
-                                    transition={{ duration: 0.2 }}
-                                    className="overflow-hidden"
-                                  >
-                                    <div className="mt-2 mb-1 px-3 pt-4 pb-4 space-y-4 text-xs bg-indigo-50/40 rounded-2xl border border-indigo-100/60">
-                                      {catInfo.useCases && catInfo.useCases.length > 0 && (
-                                        <div>
-                                          <p className="font-extrabold text-slate-700 uppercase tracking-wider text-[10px] mb-2">{t("infoUseCases")}</p>
-                                          <ul className="space-y-1.5">
-                                            {catInfo.useCases.map((item, i) => (
-                                              <li key={i} className="flex items-start gap-2 text-slate-600 leading-snug">
-                                                <span className="text-emerald-500 font-black shrink-0 mt-0.5">✓</span>
-                                                {item}
-                                              </li>
-                                            ))}
-                                          </ul>
-                                        </div>
-                                      )}
-                                      {catInfo.advantages && catInfo.advantages.length > 0 && (
-                                        <div>
-                                          <p className="font-extrabold text-slate-700 uppercase tracking-wider text-[10px] mb-2">{t("infoAdvantages")}</p>
-                                          <ul className="space-y-1.5">
-                                            {catInfo.advantages.map((item, i) => (
-                                              <li key={i} className="flex items-start gap-2 text-slate-600 leading-snug">
-                                                <span className="text-indigo-500 font-black shrink-0 mt-0.5">+</span>
-                                                {item}
-                                              </li>
-                                            ))}
-                                          </ul>
-                                        </div>
-                                      )}
-                                      {catInfo.notFor && catInfo.notFor.length > 0 && (
-                                        <div>
-                                          <p className="font-extrabold text-slate-700 uppercase tracking-wider text-[10px] mb-2">{t("infoNotFor")}</p>
-                                          <ul className="space-y-1.5">
-                                            {catInfo.notFor.map((item, i) => (
-                                              <li key={i} className="flex items-start gap-2 text-slate-600 leading-snug">
-                                                <span className="text-rose-400 font-black shrink-0 mt-0.5">✕</span>
-                                                {item}
-                                              </li>
-                                            ))}
-                                          </ul>
-                                        </div>
-                                      )}
-                                    </div>
-                                  </motion.div>
-                                )}
-                              </AnimatePresence>
-                            </div>
-                          );
-                        })()}
 
                       </div>
                     </motion.div>
@@ -919,303 +828,311 @@ export default function CatalogSection({
                 </button>
               </div>
 
-              {/* Scrollable Layout Content */}
-              <div className="flex-1 overflow-y-auto pr-1 space-y-6 scrollbar-thin scrollbar-thumb-white/10">
-                
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
-                  
-                  {/* LEFT COLUMN: Image & Quick Details */}
-                  <div className="md:col-span-12 lg:col-span-5 space-y-4">
-                    {(() => {
-                      const allDetailImages = [
-                        selectedDetailMachine.imageUrl,
-                        ...(selectedDetailMachine.additionalImages || [])
-                      ].filter(Boolean);
+              {/* Scrollable Content — single column, mobile-first */}
+              {(() => {
+                const catInfo = customCategories.find(c => c.id === selectedDetailMachine.category)?.infoContent ?? null;
+                const allDetailImages = [
+                  selectedDetailMachine.imageUrl,
+                  ...(selectedDetailMachine.additionalImages ?? [])
+                ].filter((url): url is string => typeof url === "string" && url.trim().length > 0);
+                const packageItems = selectedDetailMachine.packageContents?.trim()
+                  ? selectedDetailMachine.packageContents.split(";").map(s => s.trim()).filter(Boolean)
+                  : null;
 
-                      return (
-                        <>
-                          {/* Main Image Slider */}
-                          <div className="aspect-video w-full rounded-2xl overflow-hidden bg-slate-950 border border-slate-200 shadow-sm relative group">
-                            <AnimatePresence mode="wait">
-                              <motion.img 
-                                key={activeDetailImageIndex}
-                                src={allDetailImages[activeDetailImageIndex] || "/placeholder-machine.webp"} 
-                                alt={`${selectedDetailMachine.name} - ${activeDetailImageIndex}`} 
-                                className="w-full h-full object-cover"
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                transition={{ duration: 0.2 }}
-                                referrerPolicy="no-referrer"
-                                onError={(e) => {
-                                  e.currentTarget.src = "/placeholder-machine.webp";
-                                }}
-                              />
-                            </AnimatePresence>
-                            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/45 via-transparent to-transparent pointer-events-none" />
+                const getDefaultPackageItems = (id: string): string[] => {
+                  switch (id) {
+                    case "set-paint-comfort": return [
+                      "1x Gecertificeerde Elektrische Schaarlift (12m werkhoogte)",
+                      "2x 20m zware rubberen verlengkabels (230V / IP44)",
+                      "1x Handige gereedschapsbak gemonteerd op het werkplatform",
+                      "1x Luxe comfort-veiligheidsharnas (EN-361 gekeurd)",
+                      "4x Non-marking witte banden (geen sporen op luxe vloeren)",
+                      "10m Vloerbeschermingsvlies (gratis meegeleverd)",
+                    ];
+                    case "set-solar-pro": return [
+                      "1x Knikarmhoogwerker (18m werkhoogte, 16m zijdelings bereik)",
+                      "2x Heavy-duty materiaalgordels met verstelbare karbijnhaakjes",
+                      "1x Speciaal ontworpen zonnepaneel-draagbeugel aan de korf",
+                      "1x Alleenstaand EN-361 Premium valbeveiligingsset Pro met schokdemper",
+                      "1x Geïntegreerde 230V stroomaansluiting rechtstreeks in de werkbak",
+                    ];
+                    case "set-prune-compact": return [
+                      "1x Spinhoogwerker Spider (15m werkhoogte) op smalle rupsbanden",
+                      "4x Heavy-duty kunststof rijplaten (voorkomt sporen in gazons)",
+                      "1x Gecertificeerde bosbouwer snoeihelm met vizier en oorkappen",
+                      "1x Magnetische relingtray voor snoeigereedschappen",
+                      "1x Biologische kettingzaag olie (1 Liter)",
+                      "1x Spanbandenset voor extra stempelfixatie op hellingen",
+                    ];
+                    case "set-gutter-fast": return [
+                      "1x Autohoogwerker (22m werkhoogte, B-Rijbewijs vereist)",
+                      "1x Telescopische dakgootschep & telescopische trekker/bezem set",
+                      "1x Geïntegreerde 230V stroomaansluiting in de korf",
+                      "1x Geperforeerde aluminium werkbak voor emmers en afval",
+                      "1x Set van 4 wegafzetting pionnen met reflecterende strips",
+                      "1x Veiligheidshesje en handschoenen (maat L)",
+                    ];
+                    case "set-facade-heavy": return [
+                      "1x Telescoophoogwerker Diesel (26m werkhoogte) - 4x4 aangedreven",
+                      "2x Slanghaspel mastklemmen voor hogedrukslangen tot korf",
+                      "1x Geïntegreerde generator unit (stroom & hogedrukwatertoevoer)",
+                      "2x Waterdichte mouwbeschermers & vizierbrillen voor gevelspuiten",
+                      "1x RVS werkbakorganizer voor spuitlansen",
+                    ];
+                    case "set-window-premium": return [
+                      "1x Autohoogwerker (22m werkhoogte, B-Rijbewijs vereist)",
+                      "1x Osmose watertank montagebeugels aan de werkbak",
+                      "1x Extra brede 2-persoons platformbak (gondel)",
+                      "4x Stempelschotels om wegzakken in zachte straatstenen te voorkomen",
+                      "1x Ruitenwisserset Pro (trekkers, inwasmoffen & telescoopsteel)",
+                      "1x Waterbestendige opbergtas aan de korf",
+                    ];
+                    case "set-diy-weekend": return [
+                      "1x Compacte Elektrische Schaarlift (12m werkhoogte)",
+                      "1x Comfort EN-361 gecertificeerd veiligheidsharnas",
+                      "1x Premium klushelm met kinband",
+                      "1x Stap-voor-stap gedrukte handleiding 'Veilig Werken op Hoogte'",
+                      "Voorrangstoegang tot onze 24/7 telefonische hulplijn (WhatsApp)",
+                    ];
+                    case "set-light-install": return [
+                      "1x Spinhoogwerker Hybrid (15m werkhoogte) op rupsen",
+                      "1x Automatische veertrommel haspelkit voor mastbekabeling",
+                      "1x Magnetische bak voor schroeven, klemmen en zekeringen",
+                      "2x Comfort harnassen met snelgespen",
+                      "1x Professionele laser nevelmeter (te leen)",
+                    ];
+                    default: return [
+                      "1x Professionele en gekeurde machine",
+                      "1x Volle tank brandstof of 100% opgeladen accupakket",
+                      "1x Hub service inspectie voorafgaand aan aflevering",
+                      "BMWT Veiligheidscertificaat handleiding in de werkbak",
+                      "24/7 Technische storingshulp & backup service",
+                    ];
+                  }
+                };
 
-                            {allDetailImages.length > 1 && (
-                              <>
-                                {/* Navigation Chevrons */}
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setActiveDetailImageIndex((prev) => (prev === 0 ? allDetailImages.length - 1 : prev - 1));
-                                  }}
-                                  className="absolute left-2.5 top-1/2 -translate-y-1/2 p-2 rounded-xl bg-slate-900/60 hover:bg-slate-900/80 text-white transition-all opacity-0 group-hover:opacity-100 cursor-pointer flex items-center justify-center shadow-lg"
-                                  title="Vorige"
-                                >
-                                  <ChevronLeft className="h-4.5 w-4.5" />
-                                </button>
-                                
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setActiveDetailImageIndex((prev) => (prev === allDetailImages.length - 1 ? 0 : prev + 1));
-                                  }}
-                                  className="absolute right-2.5 top-1/2 -translate-y-1/2 p-2 rounded-xl bg-slate-900/60 hover:bg-slate-900/80 text-white transition-all opacity-0 group-hover:opacity-100 cursor-pointer flex items-center justify-center shadow-lg"
-                                  title="Volgende"
-                                >
-                                  <ChevronRight className="h-4.5 w-4.5" />
-                                </button>
+                return (
+                  <div className="flex-1 overflow-y-auto space-y-5 pr-1 scrollbar-thin scrollbar-thumb-slate-200">
 
-                                {/* Dots overlay */}
-                                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex space-x-1.5 z-10 bg-slate-950/40 px-2.5 py-1 rounded-full backdrop-blur-sm">
-                                  {allDetailImages.map((_, i) => (
-                                    <button
-                                      key={i}
-                                      type="button"
-                                      onClick={() => setActiveDetailImageIndex(i)}
-                                      className={`h-1.5 rounded-full transition-all cursor-pointer ${i === activeDetailImageIndex ? 'bg-indigo-400 w-3.5' : 'bg-white/60 hover:bg-white'}`}
-                                    />
-                                  ))}
-                                </div>
-                              </>
-                            )}
-                          </div>
-
-                          {/* Thumbnails Row */}
-                          {allDetailImages.length > 1 && (
-                            <div className="flex gap-2 overflow-x-auto py-1 px-0.5 scrollbar-none animate-fade-in justify-center">
-                              {allDetailImages.map((url, i) => (
-                                <button
-                                  key={i}
-                                  type="button"
-                                  onClick={() => setActiveDetailImageIndex(i)}
-                                  className={`relative h-12 w-20 rounded-xl overflow-hidden border-2 shrink-0 transition-all cursor-pointer shadow-sm ${i === activeDetailImageIndex ? 'border-indigo-600 scale-95 ring-2 ring-indigo-500/10' : 'border-slate-200 hover:border-slate-400 hover:scale-[1.02]'}`}
-                                >
-                                  <img src={url} alt={`Thumbnail ${i}`} className="w-full h-full object-cover" />
-                                </button>
+                    {/* A — Afbeeldingen */}
+                    <div className="space-y-2">
+                      <div className="aspect-video w-full rounded-2xl overflow-hidden bg-slate-950 border border-slate-200 shadow-sm relative group">
+                        <AnimatePresence mode="wait">
+                          <motion.img
+                            key={activeDetailImageIndex}
+                            src={allDetailImages[activeDetailImageIndex] ?? "/placeholder-machine.webp"}
+                            alt={`${selectedDetailMachine.name} — foto ${activeDetailImageIndex + 1}`}
+                            className="w-full h-full object-cover"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            referrerPolicy="no-referrer"
+                            onError={(e) => { e.currentTarget.src = "/placeholder-machine.webp"; }}
+                          />
+                        </AnimatePresence>
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/30 via-transparent to-transparent pointer-events-none" />
+                        {allDetailImages.length > 1 && (
+                          <>
+                            <button type="button"
+                              onClick={(e) => { e.stopPropagation(); setActiveDetailImageIndex(p => p === 0 ? allDetailImages.length - 1 : p - 1); }}
+                              className="absolute left-2.5 top-1/2 -translate-y-1/2 p-2 rounded-xl bg-slate-900/60 hover:bg-slate-900/80 text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer shadow-lg"
+                            ><ChevronLeft className="h-4 w-4" /></button>
+                            <button type="button"
+                              onClick={(e) => { e.stopPropagation(); setActiveDetailImageIndex(p => p === allDetailImages.length - 1 ? 0 : p + 1); }}
+                              className="absolute right-2.5 top-1/2 -translate-y-1/2 p-2 rounded-xl bg-slate-900/60 hover:bg-slate-900/80 text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer shadow-lg"
+                            ><ChevronRight className="h-4 w-4" /></button>
+                            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 bg-slate-950/40 px-2.5 py-1 rounded-full backdrop-blur-sm">
+                              {allDetailImages.map((_, i) => (
+                                <button key={i} type="button" onClick={() => setActiveDetailImageIndex(i)}
+                                  className={`h-1.5 rounded-full transition-all cursor-pointer ${i === activeDetailImageIndex ? "bg-indigo-400 w-3.5" : "bg-white/60 hover:bg-white w-1.5"}`}
+                                />
                               ))}
                             </div>
-                          )}
-                        </>
-                      );
-                    })()}
-
-                    <div className="bg-slate-50 border border-slate-200 p-4 rounded-2xl space-y-3.5">
-                      <div className="flex justify-between items-center text-xs">
-                        <span className="text-slate-500 font-medium">Dagtarief:</span>
-                        <span className="font-mono font-bold text-teal-600 text-base">€{selectedDetailMachine.pricePerDay} / dag</span>
+                          </>
+                        )}
                       </div>
-                      
-                      {selectedDetailMachine.weeklyDiscountPercent && (
-                        <div className="flex justify-between items-center text-xs border-t border-slate-200 pt-2">
-                          <span className="text-slate-500 font-medium">Weekkorting (7+ dagen):</span>
-                          <span className="font-mono text-emerald-600 font-bold">-{selectedDetailMachine.weeklyDiscountPercent}%</span>
+                      {allDetailImages.length > 1 && (
+                        <div className="flex gap-2 overflow-x-auto py-0.5 scrollbar-none">
+                          {allDetailImages.map((url, i) => (
+                            <button key={i} type="button" onClick={() => setActiveDetailImageIndex(i)}
+                              className={`relative h-11 w-16 rounded-lg overflow-hidden border-2 shrink-0 transition-all cursor-pointer ${i === activeDetailImageIndex ? "border-indigo-600 ring-2 ring-indigo-500/20" : "border-slate-200 hover:border-slate-400"}`}
+                            >
+                              <img src={url} alt={`Foto ${i + 1}`} className="w-full h-full object-cover"
+                                referrerPolicy="no-referrer"
+                                onError={(e) => { e.currentTarget.src = "/placeholder-machine.webp"; }}
+                              />
+                            </button>
+                          ))}
                         </div>
                       )}
+                    </div>
 
-                      {/* Call to action button */}
+                    {/* B — Prijs & Boeken */}
+                    <div className="bg-gradient-to-br from-indigo-50 to-slate-50 border border-indigo-100 rounded-2xl p-4 space-y-3">
+                      <div className="flex items-end justify-between">
+                        <div>
+                          <p className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">Dagtarief</p>
+                          <p className="text-3xl font-mono font-extrabold text-slate-900 leading-none">
+                            €{formatPrice(selectedDetailMachine.pricePerDay)}
+                          </p>
+                          <p className="text-[10px] text-slate-400 font-mono mt-0.5">excl. BTW per dag</p>
+                        </div>
+                        <div className="space-y-1 text-right">
+                          {(selectedDetailMachine.weeklyDiscountPercent ?? 0) > 0 && (
+                            <div className="flex items-center gap-1.5 justify-end">
+                              <span className="text-[10px] font-mono text-slate-500">7+ dagen</span>
+                              <span className="text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 rounded-full">−{selectedDetailMachine.weeklyDiscountPercent}%</span>
+                            </div>
+                          )}
+                          {(selectedDetailMachine.monthlyDiscountPercent ?? 0) > 0 && (
+                            <div className="flex items-center gap-1.5 justify-end">
+                              <span className="text-[10px] font-mono text-slate-500">30+ dagen</span>
+                              <span className="text-xs font-bold text-teal-600 bg-teal-50 border border-teal-100 px-1.5 py-0.5 rounded-full">−{selectedDetailMachine.monthlyDiscountPercent}%</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      {selectedDetailMachine.campaignText && (
+                        <div className="flex items-center gap-1.5 text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-xl w-fit">
+                          <Zap className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+                          {selectedDetailMachine.campaignText}
+                          {selectedDetailMachine.campaignDiscountPercent ? ` −${selectedDetailMachine.campaignDiscountPercent}%` : ""}
+                        </div>
+                      )}
                       <button
-                        onClick={() => {
-                          setSelectedDetailMachine(null);
-                          onSelectMachineForBooking(selectedDetailMachine);
-                        }}
-                        className="w-full relative overflow-hidden flex items-center justify-center space-x-2 px-4 py-3 rounded-xl border border-indigo-500/25 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-all shadow-md cursor-pointer"
+                        onClick={() => { setSelectedDetailMachine(null); onSelectMachineForBooking(selectedDetailMachine); }}
+                        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold transition-all shadow-md cursor-pointer"
                       >
-                        <ShoppingBag className="h-4 w-4 text-white" />
-                        <span>{t("btnRentNow")}</span>
+                        <ShoppingBag className="h-4 w-4" />
+                        {t("btnRentNow")}
                       </button>
                     </div>
 
-                    {/* Suitability guidelines */}
-                    <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200">
-                      <h4 className="text-[10px] font-mono text-slate-500 uppercase tracking-wider mb-2 font-bold">Perfect Geschikt Voor:</h4>
-                      <div className="flex flex-wrap gap-1.5">
-                        {selectedDetailMachine.suitableFor.map((tag, idx) => {
-                          const TagIcon = professionIconMap[tag];
-                          return (
-                            <span
-                              key={idx}
-                              className="flex items-center gap-1.5 bg-indigo-50 border border-indigo-100 text-indigo-700 px-2.5 py-1 rounded-full text-[10px] font-semibold"
-                            >
-                              {TagIcon && <TagIcon className="h-3 w-3 shrink-0" />}
-                              {tag}
-                            </span>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                  </div>
-
-                  {/* RIGHT COLUMN: Specifications & Contents */}
-                  <div className="md:col-span-12 lg:col-span-7 space-y-5">
-                    
-                    {/* Rich description */}
+                    {/* C — Omschrijving */}
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-mono text-indigo-700 uppercase tracking-widest block font-bold">Omschrijving & Toepassing</label>
-                      <p className="text-slate-600 text-xs leading-relaxed font-sans">
+                      <p className="text-[10px] font-mono text-slate-400 uppercase tracking-wider font-bold">Omschrijving</p>
+                      <p className="text-slate-700 text-sm leading-relaxed">
                         {selectedDetailMachine.description}
                       </p>
                     </div>
 
-                    {/* Package Included Contents Section! (Extremely important for Sets) */}
-                    <div className="p-5 rounded-2xl bg-indigo-50/40 border border-indigo-100 space-y-3.5 relative overflow-hidden">
-                      <div className="absolute top-0 right-0 w-24 h-24 bg-teal-500/5 blur-xl rounded-full pointer-events-none" />
-                      <div className="flex items-center space-x-2">
-                        <ShoppingBag className="h-4 w-4 text-teal-600" />
-                        <h4 className="text-xs font-extrabold text-slate-900 uppercase tracking-wider">
-                          Inbegrepen Pakketinhoud ({selectedDetailMachine.id.startsWith("set-") ? "Klusgids Set" : "Standaard inspectie"})
-                        </h4>
+                    {/* D — Technische Specificaties */}
+                    <div className="space-y-2">
+                      <p className="text-[10px] font-mono text-slate-400 uppercase tracking-wider font-bold">Technische Specificaties</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 flex flex-col gap-0.5">
+                          <span className="text-[10px] text-slate-400 font-mono">Werkhoogte</span>
+                          <span className="font-mono font-bold text-slate-900 text-sm">{selectedDetailMachine.height} m</span>
+                        </div>
+                        <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 flex flex-col gap-0.5">
+                          <span className="text-[10px] text-slate-400 font-mono">Aandrijving</span>
+                          <span className={`font-bold text-sm ${selectedDetailMachine.powerType === "Diesel" ? "text-orange-600" : selectedDetailMachine.powerType === "Hybride" ? "text-blue-700" : "text-emerald-700"}`}>
+                            {selectedDetailMachine.powerType}
+                          </span>
+                        </div>
+                        {selectedDetailMachine.reach > 0 && (
+                          <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 flex flex-col gap-0.5">
+                            <span className="text-[10px] text-slate-400 font-mono">Uitreik</span>
+                            <span className="font-mono font-bold text-slate-900 text-sm">{selectedDetailMachine.reach} m</span>
+                          </div>
+                        )}
+                        <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 flex flex-col gap-0.5">
+                          <span className="text-[10px] text-slate-400 font-mono">Gewicht</span>
+                          <span className="font-mono font-bold text-slate-900 text-sm">{selectedDetailMachine.weight.toLocaleString("nl-NL")} kg</span>
+                        </div>
                       </div>
+                    </div>
 
-                      <div className="grid grid-cols-1 gap-2">
-                        {(selectedDetailMachine.packageContents && selectedDetailMachine.packageContents.trim()
-                          ? selectedDetailMachine.packageContents.split(";").map(s => s.trim()).filter(s => s.length > 0)
-                          : ((machineId: string) => {
-                              switch (machineId) {
-                                case "set-paint-comfort":
-                                  return [
-                                    "1x Gecertificeerde Elektrische Schaarlift (12m werkhoogte)",
-                                    "2x 20m zware rubberen verlengkabels (230V / IP44)",
-                                    "1x Handige gereedschapsbak gemonteerd op het werkplatform",
-                                    "1x Luxe comfort-veiligheidsharnas (EN-361 gekeurd)",
-                                    "4x Non-marking witte banden (geen sporen op luxe vloeren)",
-                                    "10m Vloerbeschermingsvlies (gratis meegeleverd)"
-                                  ];
-                                case "set-solar-pro":
-                                  return [
-                                    "1x Knikarmhoogwerker (18m werkhoogte, 16m zijdelings bereik)",
-                                    "2x Heavy-duty materiaalgordels met verstelbare karbijnhaakjes",
-                                    "1x Speciaal ontworpen zonnepaneel-draagbeugel aan de korf",
-                                    "1x Alleenstaand EN-361 Premium valbeveiligingsset Pro met schokdemper",
-                                    "1x Geïntegreerde 230V stroomaansluiting rechtstreeks in de werkbak"
-                                  ];
-                                case "set-prune-compact":
-                                  return [
-                                    "1x Spinhoogwerker Spider (15m werkhoogte) op smalle rupsbanden",
-                                    "4x Heavy-duty kunststof rijplaten (voorkomt sporen in gazons)",
-                                    "1x Gecertificeerde bosbouwer snoeihelm met vizier en oorkappen",
-                                    "1x Magnetische relingtray voor snoeigereedschappen",
-                                    "1x Biologische kettingzaag olie (1 Liter)",
-                                    "1x Spanbandenset voor extra stempelfixatie op hellingen"
-                                  ];
-                                case "set-gutter-fast":
-                                  return [
-                                    "1x Autohoogwerker (22m werkhoogte, B-Rijbewijs vereist)",
-                                    "1x Telescopische dakgootschep & telescopische trekker/bezem set",
-                                    "1x Geïntegreerde 230V stroomaansluiting in de korf",
-                                    "1x Geperforeerde aluminium werkbak voor emmers en afval",
-                                    "1x Set van 4 wegafzetting pionnen met reflecterende strips",
-                                    "1x Veiligheidshesje en handschoenen (maat L)"
-                                  ];
-                                case "set-facade-heavy":
-                                  return [
-                                    "1x Telescoophoogwerker Diesel (26m werkhoogte) - 4x4 aangedreven",
-                                    "2x Slanghaspel mastklemmen voor hogedrukslangen tot korf",
-                                    "1x Geïntegreerde generator unit (stroom & hogedrukwatertoevoer)",
-                                    "2x Waterdichte mouwbeschermers & vizierbrillen voor gevelspuiten",
-                                    "1x RVS werkbakorganizer voor spuitlansen"
-                                  ];
-                                case "set-window-premium":
-                                  return [
-                                    "1x Autohoogwerker (22m werkhoogte, B-Rijbewijs vereist)",
-                                    "1x Osmose watertank montagebeugels aan de werkbak",
-                                    "1x Extra brede 2-persoons platformbak (gondel)",
-                                    "4x Stempelschotels om wegzakken in zachte straatstenen te voorkomen",
-                                    "1x Ruitenwisserset Pro (trekkers, inwasmoffen & telescoopsteel)",
-                                    "1x Waterbestendige opbergtas aan de korf"
-                                  ];
-                                case "set-diy-weekend":
-                                  return [
-                                    "1x Compacte Elektrische Schaarlift (12m werkhoogte)",
-                                    "1x Comfort EN-361 gecertificeerd veiligheidsharnas",
-                                    "1x Premium klushelm met kinband",
-                                    "1x Stap-voor-stap gedrukte handleiding 'Veilig Werken op Hoogte'",
-                                    "Voorrangstoegang tot onze 24/7 telefonische hulplijn (WhatsApp)"
-                                  ];
-                                case "set-light-install":
-                                  return [
-                                    "1x Spinhoogwerker Hybrid (15m werkhoogte) op rupsen",
-                                    "1x Automatische veertrommel haspelkit voor mastbekabeling",
-                                    "1x Magnetische bak voor schroeven, klemmen en zekeringen",
-                                    "2x Comfort harnassen met snelgespen",
-                                    "1x Professionele laser nevelmeter (te leen)"
-                                  ];
-                                default:
-                                  return [
-                                    "1x Professionele en gekeurde machine",
-                                    "1x Volle tank brandstof of 100% opgeladen accupakket",
-                                    "1x Hub service inspectie voorafgaand aan aflevering",
-                                    "BMWT Veiligheidscertificaat handleiding in de werkbak",
-                                    "24/7 Technische storingshulp & backup service"
-                                  ];
-                              }
-                            })(selectedDetailMachine.id)
-                        ).map((item, idx) => (
-                          <div key={idx} className="flex items-start space-x-1.5 text-xs text-slate-700">
-                            <span className="text-teal-600 font-bold shrink-0 mt-0.5 font-mono">✓</span>
+                    {/* E — Geschikt voor */}
+                    {(selectedDetailMachine.suitableFor ?? []).length > 0 && (
+                      <div className="space-y-2">
+                        <p className="text-[10px] font-mono text-slate-400 uppercase tracking-wider font-bold">Geschikt Voor</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {selectedDetailMachine.suitableFor.map((tag) => {
+                            const TagIcon = professionIconMap[tag];
+                            return (
+                              <span key={tag} className="flex items-center gap-1.5 bg-indigo-50 border border-indigo-100 text-indigo-700 px-2.5 py-1 rounded-full text-[10px] font-semibold">
+                                {TagIcon && <TagIcon className="h-3 w-3 shrink-0" />}
+                                {tag}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* F — Toepassing (van kaartaccordeon naar modal) */}
+                    {catInfo && (catInfo.useCases?.length || catInfo.advantages?.length || catInfo.notFor?.length) ? (
+                      <div className="bg-indigo-50/40 border border-indigo-100 rounded-2xl p-4 space-y-4">
+                        <p className="text-[10px] font-mono text-indigo-700 uppercase tracking-wider font-bold">Toepassing & Geschiktheid</p>
+                        {catInfo.useCases && catInfo.useCases.length > 0 && (
+                          <div>
+                            <p className="text-[10px] font-extrabold text-slate-600 uppercase tracking-wider mb-2">{t("infoUseCases")}</p>
+                            <ul className="space-y-1.5">
+                              {catInfo.useCases.map((item, i) => (
+                                <li key={i} className="flex items-start gap-2 text-xs text-slate-600 leading-snug">
+                                  <span className="text-emerald-500 font-black shrink-0 mt-0.5 select-none">✓</span>{item}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        {catInfo.advantages && catInfo.advantages.length > 0 && (
+                          <div>
+                            <p className="text-[10px] font-extrabold text-slate-600 uppercase tracking-wider mb-2">{t("infoAdvantages")}</p>
+                            <ul className="space-y-1.5">
+                              {catInfo.advantages.map((item, i) => (
+                                <li key={i} className="flex items-start gap-2 text-xs text-slate-600 leading-snug">
+                                  <span className="text-indigo-500 font-black shrink-0 mt-0.5 select-none">+</span>{item}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        {catInfo.notFor && catInfo.notFor.length > 0 && (
+                          <div>
+                            <p className="text-[10px] font-extrabold text-slate-600 uppercase tracking-wider mb-2">{t("infoNotFor")}</p>
+                            <ul className="space-y-1.5">
+                              {catInfo.notFor.map((item, i) => (
+                                <li key={i} className="flex items-start gap-2 text-xs text-slate-600 leading-snug">
+                                  <span className="text-rose-400 font-black shrink-0 mt-0.5 select-none">✕</span>{item}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    ) : null}
+
+                    {/* G — Pakketinhoud */}
+                    <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Package className="h-4 w-4 text-teal-600 shrink-0" />
+                        <p className="text-[10px] font-mono text-slate-500 uppercase tracking-wider font-bold">Inbegrepen in de Huurprijs</p>
+                      </div>
+                      <div className="space-y-2">
+                        {(packageItems ?? getDefaultPackageItems(selectedDetailMachine.id)).map((item, idx) => (
+                          <div key={idx} className="flex items-start gap-2 text-xs text-slate-700">
+                            <span className="text-teal-600 font-bold shrink-0 mt-0.5 font-mono select-none">✓</span>
                             <span>{item}</span>
                           </div>
                         ))}
                       </div>
                     </div>
 
-                    {/* Detailed Specifications Listing */}
-                    <div className="space-y-3">
-                      <h4 className="text-[10px] font-mono text-slate-500 uppercase tracking-widest block font-bold">Technische Specificaties</h4>
-                      
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 font-sans">
-                        <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between">
-                          <span className="text-[11px] text-slate-500">Werkhoogte:</span>
-                          <span className="font-mono text-xs font-bold text-slate-900">{selectedDetailMachine.height} meter</span>
-                        </div>
-
-                        <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between">
-                          <span className="text-[11px] text-slate-500">Zijdelings bereik:</span>
-                          <span className="font-mono text-xs font-bold text-slate-900">{selectedDetailMachine.reach} meter</span>
-                        </div>
-
-                        <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between">
-                          <span className="text-[11px] text-slate-500">Totaal gewicht:</span>
-                          <span className="font-mono text-xs font-bold text-slate-900">{selectedDetailMachine.weight.toLocaleString('nl-NL')} kg</span>
-                        </div>
-
-                        <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between">
-                          <span className="text-[11px] text-slate-500">Aandrijving:</span>
-                          <span className="text-xs font-bold text-slate-800">{selectedDetailMachine.powerType}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Safety compliance guarantees */}
-                    <div className="flex flex-col sm:flex-row justify-between items-center bg-slate-50 border border-slate-200 p-4 rounded-xl text-[10.5px] text-slate-600 gap-3">
-                      <div className="flex items-center space-x-2">
+                    {/* H — Compliance footer */}
+                    <div className="flex flex-col sm:flex-row justify-between items-center bg-slate-50 border border-slate-200 p-3 rounded-xl text-[10px] text-slate-500 gap-2">
+                      <div className="flex items-center gap-2">
                         <span className="bg-amber-100 border border-amber-200 text-amber-900 px-2 py-0.5 rounded text-[9px] uppercase tracking-wider font-extrabold font-mono">BMWT</span>
-                        <span>Jaarlijks veilig geverifieerd</span>
+                        <span>Jaarlijks veilig gekeurd</span>
                       </div>
-                      <span className="text-indigo-600 font-mono">Art. ID: {selectedDetailMachine.id}</span>
+                      <span className="font-mono text-indigo-400">Art. {selectedDetailMachine.id}</span>
                     </div>
 
                   </div>
-
-                </div>
-
-              </div>
+                );
+              })()}
               
               {/* Footer */}
               <div className="pt-4 border-t border-slate-200 flex justify-end shrink-0 mt-3">

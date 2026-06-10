@@ -219,6 +219,34 @@ async function autoSeedIfEmpty() {
   }
 }
 
-autoSeedIfEmpty().then(() => startServer()).catch(err => {
+async function applyDataMigrations() {
+  try {
+    const ecoliftMachine = await prisma.machine.findUnique({ where: { id: "ecolift" } });
+    if (ecoliftMachine && ecoliftMachine.name === "JLG Ecolift Low-Level Access") {
+      await prisma.machine.update({
+        where: { id: "ecolift" },
+        data: {
+          name: "Pecolift Low-Level Access",
+          categoryLabel: "Pecolift",
+          imageUrl: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?q=80&w=600&auto=format&fit=crop",
+          imageAlt: "Pecolift handmatig lage toegangsplatform",
+        }
+      });
+      console.log("[Migration] Renamed Ecolift → Pecolift.");
+    }
+    const ecoliftCat = await prisma.category.findUnique({ where: { id: "ecolift" } });
+    if (ecoliftCat && ecoliftCat.label === "Ecolift") {
+      await prisma.category.update({
+        where: { id: "ecolift" },
+        data: { label: "Pecolift", listLabel: "Pecolift" }
+      });
+      console.log("[Migration] Updated ecolift category label → Pecolift.");
+    }
+  } catch (err) {
+    console.warn("[Migration] Could not apply data migrations:", err instanceof Error ? err.message : err);
+  }
+}
+
+autoSeedIfEmpty().then(() => applyDataMigrations()).then(() => startServer()).catch(err => {
   console.error("Failed to start server:", err);
 });

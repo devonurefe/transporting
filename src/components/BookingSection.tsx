@@ -167,12 +167,6 @@ export default function BookingSection({
     window.scrollTo(0, 0);
   }, [step]);
 
-  // If no machine selection exists, pre-load first available
-  useEffect(() => {
-    if (!selectedMachine && machines.length > 0) {
-      onSelectMachine(machines[0]);
-    }
-  }, [selectedMachine, machines]);
 
   // Strip " (Unit N)" suffix — same logic as CatalogSection grouping
   const getBaseName = (name: string) => name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "").trim();

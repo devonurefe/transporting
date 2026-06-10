@@ -505,7 +505,9 @@ ordersRouter.post("/send-reminders", async (req: AuthenticatedRequest, res: Resp
   if (!secret) {
     return res.status(503).json({ error: "Reminder endpoint niet geconfigureerd (stel REMINDER_SECRET in)" });
   }
-  if (providedKey !== secret) {
+  const keyBuf = Buffer.from(String(providedKey || ""));
+  const secretBuf = Buffer.from(secret);
+  if (keyBuf.length !== secretBuf.length || !crypto.timingSafeEqual(keyBuf, secretBuf)) {
     return res.status(401).json({ error: "Ongeldige sleutel" });
   }
 

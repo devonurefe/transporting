@@ -52,7 +52,7 @@ authRouter.post("/register", async (req: AuthenticatedRequest, res: Response) =>
 
     const customer = await prisma.customer.create({
       data: {
-        email: validated.email,
+        email: validated.email.toLowerCase(),
         passwordHash,
         name: validated.name,
         phone: validated.phone || null,
@@ -105,7 +105,7 @@ authRouter.post("/login", async (req: AuthenticatedRequest, res: Response) => {
 
     // Try finding admin first
     const admin = await prisma.admin.findUnique({
-      where: { email: validated.email }
+      where: { email: validated.email.toLowerCase() }
     });
 
     if (admin) {
@@ -133,7 +133,7 @@ authRouter.post("/login", async (req: AuthenticatedRequest, res: Response) => {
 
     // Try finding customer
     const customer = await prisma.customer.findUnique({
-      where: { email: validated.email }
+      where: { email: validated.email.toLowerCase() }
     });
 
     if (customer) {

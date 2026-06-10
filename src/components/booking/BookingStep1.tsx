@@ -258,11 +258,11 @@ export default function BookingStep1({
               </span>
               <div>
                 <h4 className="text-xs font-bold text-slate-900"><span className="text-teal-500 font-mono">Optie 3 · </span>Zelf ophalen</h4>
-                <span className="text-[9.5px] text-slate-400 block font-mono">Nifty 120 / Nifty 170</span>
+                <span className="text-[9.5px] text-slate-400 block font-mono">Zoeterwoude depot</span>
               </div>
             </div>
             <p className="text-[10.5px] text-slate-600 leading-normal">
-              U haalt de machine kosteloos op bij onze hub. Geschikt voor Nifty 120 en Nifty 170 met eigen auto.
+              U haalt de machine kosteloos op bij ons depot in Zoeterwoude. Controleer of de machine in uw auto of aanhanger past.
             </p>
             <span className="text-xs font-mono font-bold text-teal-600 mt-2 block">Kosteloos / € 0,-</span>
           </div>

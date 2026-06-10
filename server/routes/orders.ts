@@ -120,6 +120,14 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
     return res.status(400).json({ error: "Onvolledige bestelgegevens" });
   }
 
+  // Name and email length caps
+  if (String(orderData.customerName).length > 200) {
+    return res.status(400).json({ error: "Naam is te lang (max 200 tekens)" });
+  }
+  if (String(orderData.customerEmail).length > 254) {
+    return res.status(400).json({ error: "E-mailadres is te lang" });
+  }
+
   // Email format validation
   const emailRegex = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/;
   if (!emailRegex.test(orderData.customerEmail)) {

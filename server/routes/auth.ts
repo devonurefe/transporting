@@ -378,15 +378,15 @@ authRouter.post("/resend-verification", async (req: Request, res: Response) => {
 
   try {
     const customer = await prisma.customer.findUnique({
-      where: { email: email.trim() }
+      where: { email: email.trim().toLowerCase() }
     });
 
-    if (!customer) {
-      return res.status(404).json({ error: "Gebruiker niet gevonden met dit e-mailadres." });
-    }
-
-    if (customer.isEmailVerified) {
-      return res.status(400).json({ error: "E-mailadres is al geverifieerd." });
+    if (!customer || customer.isEmailVerified) {
+      // Return generic success to avoid leaking whether the address exists
+      return res.json({
+        success: true,
+        message: "Als dit e-mailadres bij ons bekend is en nog niet geverifieerd, ontvangt u een nieuwe verificatiemail."
+      });
     }
 
     const newToken = crypto.randomBytes(32).toString("hex");

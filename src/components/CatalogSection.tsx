@@ -405,19 +405,17 @@ export default function CatalogSection({
                           ) : null}
                         </div>
 
-                        {/* Spec row — clean horizontal */}
-                        <div className="flex items-center gap-4 text-[10px] font-mono text-slate-500 border-t border-slate-100 pt-2.5">
-                          <span className="flex items-center gap-1">
+                        {/* Spec row — height / reach / weight */}
+                        <div className="flex items-center gap-3 text-[10px] font-mono text-slate-500 border-t border-slate-100 pt-2.5">
+                          <span className="flex items-center gap-1" title="Werkhoogte">
                             <ArrowUpToLine className="h-3.5 w-3.5 text-indigo-500 shrink-0" />
-                            {machine.height}m
+                            <span className="font-bold text-slate-700">{machine.height}m</span>
                           </span>
-                          {machine.reach > 0 && (
-                            <span className="flex items-center gap-1">
-                              <ArrowRightLeft className="h-3.5 w-3.5 text-indigo-500 shrink-0" />
-                              {machine.reach}m
-                            </span>
-                          )}
-                          <span className="flex items-center gap-1 ml-auto">
+                          <span className="flex items-center gap-1" title="Zijdelings bereik">
+                            <ArrowRightLeft className="h-3.5 w-3.5 text-indigo-400 shrink-0" />
+                            <span>{machine.reach > 0 ? `${machine.reach}m` : "—"}</span>
+                          </span>
+                          <span className="flex items-center gap-1 ml-auto" title="Machinegewicht">
                             <Weight className="h-3.5 w-3.5 text-slate-400 shrink-0" />
                             {machine.weight}kg
                           </span>

@@ -559,6 +559,16 @@ export default function BookingSection({
         setValidationError("U dient alle contactgegevens (Naam, E-mail en Telefoonnummer) in te vullen.");
         return;
       }
+      const emailOk = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/.test(customerEmail);
+      if (!emailOk) {
+        setValidationError("Voer een geldig e-mailadres in (bijv. naam@voorbeeld.nl).");
+        return;
+      }
+      const phoneClean = customerPhone.replace(/[\s\-().+]/g, "");
+      if (!/^\d{7,15}$/.test(phoneClean)) {
+        setValidationError("Voer een geldig telefoonnummer in (bijv. 06 12345678 of +31 6 12345678).");
+        return;
+      }
       if (deliveryType === "delivery_by_us" && !deliveryAddress.trim()) {
         setValidationError("Een afleveradres is verplicht bij bezorging door ons.");
         return;

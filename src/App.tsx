@@ -435,13 +435,15 @@ export default function App() {
             "email": "info@mbhoogwerkers.com",
             "address": {
               "@type": "PostalAddress",
-              "addressLocality": "Alphen aan den Rijn",
+              "streetAddress": "Produktieweg 20",
+              "postalCode": "2382 PB",
+              "addressLocality": "Zoeterwoude",
               "addressCountry": "NL"
             },
             "geo": {
               "@type": "GeoCoordinates",
-              "latitude": 52.1298,
-              "longitude": 4.6562
+              "latitude": 52.0981,
+              "longitude": 4.5215
             },
             "openingHoursSpecification": [{
               "@type": "OpeningHoursSpecification",

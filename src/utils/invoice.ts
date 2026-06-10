@@ -24,9 +24,12 @@ export function printInvoice(orderOrOrders: Order | Order[], clientCompanyName?:
   if (orders.length === 0) return;
 
   const primaryOrder = orders[0];
+  if (!primaryOrder.invoiceNumber) {
+    console.warn(`[Invoice] Order ${primaryOrder.id} missing sequential invoiceNumber — invoice may not comply with Dutch BTW requirements`);
+  }
   const invoiceNumber = primaryOrder.invoiceNumber
     ? (orders.length === 1 ? primaryOrder.invoiceNumber : `${primaryOrder.invoiceNumber}-GRP`)
-    : (orders.length === 1 ? `INV-${primaryOrder.id.toUpperCase()}` : `INV-${primaryOrder.id.toUpperCase()}-GRP`);
+    : (orders.length === 1 ? primaryOrder.id : `${primaryOrder.id}-GRP`);
     
   const todayDate = new Date().toLocaleDateString("nl-NL");
   const dueDateStr = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toLocaleDateString("nl-NL");

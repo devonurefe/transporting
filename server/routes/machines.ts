@@ -58,7 +58,7 @@ machinesRouter.get("/", async (req: AuthenticatedRequest, res: Response) => {
 function validateMachineInput(body: any): { valid: boolean; error?: string } {
   const { name, category, height, pricePerDay, reach, weight, weeklyDiscountPercent, monthlyDiscountPercent, campaignDiscountPercent, campaignDiscountAmount } = body;
 
-  if (!name || !category || !height || !pricePerDay) {
+  if (!name?.trim() || !category?.trim() || !height || !pricePerDay) {
     return { valid: false, error: "Missing required machine fields" };
   }
 

@@ -405,7 +405,6 @@ export const emailService = {
     `;
 
     console.log(`[EmailService] Attempting to send verification email to ${customer.email}`);
-    console.log(`[EmailService] Verification Link: ${verificationUrl}`);
 
     if (!resend) {
       console.log(`[EmailService] [MOCK] Resend NOT configured. Simulated verification email sent.`);
@@ -530,7 +529,7 @@ export const emailService = {
     console.log(`[EmailService] Sending password reset email to ${email}`);
 
     if (!resend) {
-      console.log(`[EmailService] [MOCK] Password reset email simulated. Reset URL: ${resetUrl}`);
+      console.log(`[EmailService] [MOCK] Password reset email simulated.`);
       return true;
     }
 

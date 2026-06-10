@@ -183,6 +183,9 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
 
     // Server-side financial recalculation — prevent subtotal/VAT/total manipulation
     const rentalDays = Number(orderData.rentalDays);
+    if (!rentalDays || rentalDays < 1 || !Number.isInteger(rentalDays)) {
+      return res.status(400).json({ error: "Minimum huurperiode is 1 dag" });
+    }
     const transportCostClient = Number(orderData.transportCost || 0);
     const driverCostClient = Number(orderData.driverCost || 0);
     const addonsTotal = (Array.isArray(orderData.addons) ? orderData.addons : []).reduce((sum: number, a: any) => {

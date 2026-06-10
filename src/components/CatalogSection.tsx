@@ -377,7 +377,7 @@ export default function CatalogSection({
                             </h3>
                             {machine.description && (
                               <p className="text-[10px] text-slate-500 leading-snug mt-0.5 line-clamp-1">
-                                {machine.description.split(/[.!?]/)[0].trim()}
+                                {(machine.description.split(/[.!?]/)[0].trim() || machine.description.substring(0, 60)).trim()}
                               </p>
                             )}
                           </div>

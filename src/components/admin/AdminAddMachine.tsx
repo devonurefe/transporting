@@ -362,6 +362,7 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
             <label className="text-xs text-slate-700 block font-bold">{t("Omschrijving", "Description", "Açıklama")}</label>
             <textarea
               rows={4}
+              maxLength={2000}
               value={newDescription}
               onChange={(e) => setNewDescription(e.target.value)}
               placeholder={t("Professionele producttekst: toepassing, ondergrond, binnen/buiten, plus belangrijkste voordeel.", "Professional product text: application, surface, indoor/outdoor, plus main benefit.", "Profesyonel ürün metni: uygulama alanı, zemin, iç/dış mekan ve en önemli avantajı.")}
@@ -375,6 +376,7 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
             </label>
             <textarea
               rows={3}
+              maxLength={1500}
               value={packageContents}
               onChange={(e) => setPackageContents(e.target.value)}
               placeholder={t(

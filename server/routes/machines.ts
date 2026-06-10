@@ -220,7 +220,7 @@ machinesRouter.put("/:id", requireAdmin as any, async (req: AuthenticatedRequest
     });
   } catch (error: any) {
     console.error("Error updating machine:", error);
-    res.status(500).json({ error: "Failed to update machine: " + error.message });
+    res.status(500).json({ error: "Machine bijwerken mislukt" });
   }
 });
 

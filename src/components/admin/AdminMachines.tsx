@@ -408,6 +408,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                       <input
                         type="text"
                         required
+                        maxLength={200}
                         value={editName}
                         onChange={(e) => setEditName(e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
@@ -588,6 +589,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                       <label className="text-xs text-slate-700 block font-bold">{t("Omschrijving", "Description", "Açıklama")}</label>
                       <textarea
                         rows={4}
+                        maxLength={2000}
                         value={editDescription}
                         onChange={(e) => setEditDescription(e.target.value)}
                         placeholder={t("Professionele producttekst: toepassing, ondergrond, binnen/buiten, plus belangrijkste voordeel.", "Professional product text: application, surface, indoor/outdoor, plus main benefit.", "Profesyonel ürün metni: uygulama alanı, zemin, iç/dış mekan ve en önemli avantajı.")}
@@ -601,6 +603,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                       </label>
                       <textarea
                         rows={3}
+                        maxLength={1500}
                         value={editPackageContents}
                         onChange={(e) => setEditPackageContents(e.target.value)}
                         placeholder={t(

@@ -74,6 +74,10 @@ export default function MyOrdersSection({
   const [resendEmailAddress, setResendEmailAddress] = useState<string | null>(null);
   const [isResending, setIsResending] = useState(false);
 
+  // Inline form errors
+  const [loginError, setLoginError] = useState<string | null>(null);
+  const [regError, setRegError] = useState<string | null>(null);
+
   // Forgot password state
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
@@ -245,8 +249,9 @@ export default function MyOrdersSection({
 
   const handleManualLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoginError(null);
     if (!loginEmail.trim() || !loginPassword.trim()) {
-      onTriggerNotification("Inloggen Mislukt", "E-mail en wachtwoord zijn verplicht.", "warning");
+      setLoginError("E-mail en wachtwoord zijn verplicht.");
       return;
     }
 
@@ -282,7 +287,7 @@ export default function MyOrdersSection({
       } else {
         setResendEmailAddress(null);
       }
-      onTriggerNotification("Inloggen Mislukt", errorMsg, "warning");
+      setLoginError(errorMsg);
     }
   };
 
@@ -337,8 +342,9 @@ export default function MyOrdersSection({
 
   const handleManualRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    setRegError(null);
     if (!regName.trim() || !regEmail.trim() || !regPassword.trim()) {
-      onTriggerNotification("Registratie Mislukt", "Naam, e-mail en wachtwoord zijn verplicht.", "warning");
+      setRegError("Naam, e-mail en wachtwoord zijn verplicht.");
       return;
     }
     if (regPassword.trim().length < 6) {
@@ -372,8 +378,8 @@ export default function MyOrdersSection({
       // Pre-fill login email for convenience
       setLoginEmail(justRegisteredEmail);
     } else {
-      const errorMsg = useAuthStore.getState().error || "Registratie mislukt.";
-      onTriggerNotification("Registratie Mislukt", errorMsg, "warning");
+      const errorMsg = useAuthStore.getState().error || "Registratie mislukt. Probeer het opnieuw.";
+      setRegError(errorMsg);
     }
   };
 
@@ -448,7 +454,7 @@ export default function MyOrdersSection({
             <div className="w-full max-w-lg bg-white border border-slate-200 shadow-sm p-6 sm:p-8 rounded-3xl space-y-6">
               <div className="flex border-b border-slate-200 pb-1">
                 <button
-                  onClick={() => setIsRegistering(false)}
+                  onClick={() => { setIsRegistering(false); setLoginError(null); setRegError(null); }}
                   className={`flex-1 pb-3 text-sm font-bold border-b-2 transition-all cursor-pointer ${
                     !isRegistering ? "text-indigo-600 border-indigo-600" : "text-slate-400 hover:text-slate-600 border-transparent"
                   }`}
@@ -456,7 +462,7 @@ export default function MyOrdersSection({
                   Regulier Inloggen
                 </button>
                 <button
-                  onClick={() => setIsRegistering(true)}
+                  onClick={() => { setIsRegistering(true); setLoginError(null); setRegError(null); }}
                   className={`flex-1 pb-3 text-sm font-bold border-b-2 transition-all cursor-pointer ${
                     isRegistering ? "text-indigo-600 border-indigo-600" : "text-slate-400 hover:text-slate-600 border-transparent"
                   }`}
@@ -497,6 +503,11 @@ export default function MyOrdersSection({
                       />
                     </div>
                   </div>
+
+
+                  {loginError && (
+                    <p className="text-[11px] text-rose-600 font-semibold bg-rose-50 border border-rose-200 rounded-xl px-3 py-2">{loginError}</p>
+                  )}
 
                   <button
                     type="submit"
@@ -688,6 +699,10 @@ export default function MyOrdersSection({
                       </button>
                     </div>
                   </div>
+
+                  {regError && (
+                    <p className="text-[11px] text-rose-600 font-semibold bg-rose-50 border border-rose-200 rounded-xl px-3 py-2">{regError}</p>
+                  )}
                 </form>
               )}
             </div>

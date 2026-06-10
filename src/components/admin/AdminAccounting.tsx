@@ -15,8 +15,8 @@ interface AdminAccountingProps {
 
 export default function AdminAccounting({ adminLanguage }: AdminAccountingProps) {
   const [isConnected, setIsConnected] = useState(true);
-  const [clientId, setClientId] = useState("ex-online-client-id-88492");
-  const [clientSecret, setClientSecret] = useState("••••••••••••••••••••••••••••••••");
+  const [clientId, setClientId] = useState("");
+  const [clientSecret, setClientSecret] = useState("");
   const [division, setDivision] = useState("124092"); // Default division code for HuurGo Nederland
   const [autoSync, setAutoSync] = useState(true);
   const [autoEmail, setAutoEmail] = useState(false);
@@ -104,7 +104,7 @@ export default function AdminAccounting({ adminLanguage }: AdminAccountingProps)
               className={`text-[10px] font-extrabold px-3 py-1.5 rounded-xl border transition-all cursor-pointer flex items-center space-x-1 ${
                 isConnected 
                   ? "bg-emerald-50 hover:bg-emerald-100 border-emerald-200 text-emerald-700" 
-                  : "bg-slate-100 hover:bg-slate-200 border-slate-250 text-slate-700"
+                  : "bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-700"
               }`}
             >
               {isConnected ? (
@@ -130,9 +130,9 @@ export default function AdminAccounting({ adminLanguage }: AdminAccountingProps)
               )}
             </p>
             {isConnected && (
-              <div className="flex items-center space-x-1.5 p-2 bg-emerald-50 border border-emerald-100 rounded-xl text-emerald-850 text-emerald-800 text-[10.5px]">
+              <div className="flex items-center space-x-1.5 p-2 bg-emerald-50 border border-emerald-100 rounded-xl text-emerald-800 text-[10.5px]">
                 <ShieldCheck className="h-4 w-4 shrink-0 text-emerald-600" />
-                <span>OAuth 2.5 API Token is momenteel actief en stabiel.</span>
+                <span>OAuth 2.0 API Token is momenteel actief en stabiel.</span>
               </div>
             )}
           </div>

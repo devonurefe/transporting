@@ -61,7 +61,6 @@ export default function MyOrdersSection({
   // Custom login forms state
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
-  const [loginCompany, setLoginCompany] = useState("");
   const [isRegistering, setIsRegistering] = useState(false);
   
   // Registration state
@@ -264,7 +263,7 @@ export default function MyOrdersSection({
             email: user.email,
             phone: user.phone || "",
             profileType: user.profile || "Particulier",
-            companyName: loginCompany.trim() || undefined,
+            companyName: user.companyName || undefined,
             pastRentalsCount: 0
           });
           onAddSystemLog?.("login", user.name, "Klant is succesvol ingelogd met beveiligd account.");
@@ -495,20 +494,6 @@ export default function MyOrdersSection({
                         onChange={(e) => setLoginPassword(e.target.value)}
                         placeholder="••••••••"
                         className="w-full text-xs bg-transparent border-none outline-none text-slate-800 placeholder-slate-450 font-medium"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="text-xs text-slate-600 block font-semibold">Bedrijfsnaam <span className="text-slate-400 font-normal">(Optioneel)</span></label>
-                    <div className="relative flex items-center bg-white rounded-xl border border-slate-200 px-3 py-2.5 focus-within:border-indigo-500 transition-colors shadow-sm">
-                      <Building2 className="h-4 w-4 text-slate-450 shrink-0 mr-2.5" />
-                      <input
-                        type="text"
-                        value={loginCompany}
-                        onChange={(e) => setLoginCompany(e.target.value)}
-                        placeholder="De Vries Schilderwerken"
-                        className="w-full text-xs bg-transparent border-none outline-none text-slate-800 placeholder-slate-450"
                       />
                     </div>
                   </div>

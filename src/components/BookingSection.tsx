@@ -560,6 +560,7 @@ export default function BookingSection({
   const handleCreateBooking = async () => {
     setIsSubmitting(true);
     setBookingError(null);
+    window.scrollTo({ top: 0, behavior: "smooth" });
     try {
       let firstSuccessfulOrder: Order | null = null;
       const placedOrders: Order[] = [];

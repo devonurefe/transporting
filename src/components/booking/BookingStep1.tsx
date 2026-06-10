@@ -115,7 +115,7 @@ export default function BookingStep1({
                     <button
                       type="button"
                       onClick={() => setActiveTab("catalog")}
-                      className="text-[10px] text-slate-400 hover:text-indigo-600 transition-colors border-none bg-transparent cursor-pointer font-medium hidden sm:block"
+                      className="text-[10px] text-slate-400 hover:text-indigo-600 transition-colors border-none bg-transparent cursor-pointer font-medium"
                     >
                       Ander model
                     </button>

@@ -38,7 +38,12 @@ export default function BookingSuccess({
   const [registerSuccess, setRegisterSuccess] = useState(false);
   const [registerError, setRegisterError] = useState("");
 
-  if (!successOrder) return null;
+  if (!successOrder) return (
+    <div className="flex flex-col items-center justify-center py-24 gap-4 text-slate-500">
+      <div className="h-8 w-8 rounded-full border-2 border-indigo-400 border-t-transparent animate-spin" />
+      <p className="text-sm font-medium">Bestelling verwerken...</p>
+    </div>
+  );
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();

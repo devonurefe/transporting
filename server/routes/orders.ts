@@ -121,7 +121,7 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
   }
 
   // Email format validation
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/;
   if (!emailRegex.test(orderData.customerEmail)) {
     return res.status(400).json({ error: "Ongeldig e-mailadres" });
   }
@@ -341,6 +341,8 @@ ordersRouter.put("/:id/cancel", requireAuth as any, async (req: AuthenticatedReq
       customerPhone: updatedOrder.customerPhone || ""
     };
     emailService.sendStatusUpdate(emailData).catch(err => console.error("Cancel email error:", err));
+    emailService.sendAdminAlert({ ...emailData, customerPhone: updatedOrder.customerPhone || "" })
+      .catch(err => console.error("Admin cancel alert error:", err));
 
     res.json({
       ...updatedOrder,
@@ -472,7 +474,11 @@ ordersRouter.post("/send-reminders", async (req: AuthenticatedRequest, res: Resp
   const secret = process.env.REMINDER_SECRET;
   const providedKey = req.headers["x-reminder-key"] || req.body?.key;
 
-  if (secret && providedKey !== secret) {
+  // Always require a secret — if not configured, endpoint is disabled
+  if (!secret) {
+    return res.status(503).json({ error: "Reminder endpoint niet geconfigureerd (stel REMINDER_SECRET in)" });
+  }
+  if (providedKey !== secret) {
     return res.status(401).json({ error: "Ongeldige sleutel" });
   }
 

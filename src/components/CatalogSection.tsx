@@ -89,6 +89,21 @@ export default function CatalogSection({
     return result.available;
   };
 
+  const getNextAvailableDate = (machineId: string): string | null => {
+    for (let i = 1; i <= 90; i++) {
+      const d = new Date(Date.now() + i * 24 * 60 * 60 * 1000);
+      const ds = d.toISOString().split("T")[0];
+      if (checkAvailability(machineId, ds, ds, orders, blockedDates).available) return ds;
+    }
+    return null;
+  };
+
+  const formatShortDate = (iso: string): string => {
+    const d = new Date(iso);
+    const months = ["jan","feb","mrt","apr","mei","jun","jul","aug","sep","okt","nov","dec"];
+    return `${d.getDate()} ${months[d.getMonth()]}`;
+  };
+
   const [compareIds, setCompareIds] = useState<string[]>([]);
   const [showCompareModal, setShowCompareModal] = useState<boolean>(false);
   const [selectedDetailMachine, setSelectedDetailMachine] = useState<Machine | null>(null);
@@ -299,7 +314,10 @@ export default function CatalogSection({
                             : "bg-amber-50 border border-amber-200 text-amber-700"
                         }`}>
                           <span className={`h-1.5 w-1.5 rounded-full ${isMachineAvailableThisWeek(machine.id) ? "bg-emerald-500" : "bg-amber-400"}`} />
-                          {isMachineAvailableThisWeek(machine.id) ? "Beschikbaar" : "Binnenkort bezet"}
+                          {isMachineAvailableThisWeek(machine.id) ? "Beschikbaar" : (() => {
+                            const next = getNextAvailableDate(machine.id);
+                            return next ? `Vrij ${formatShortDate(next)}` : "Vol geboekt";
+                          })()}
                         </div>
                       )}
 
@@ -332,6 +350,7 @@ export default function CatalogSection({
                         <img
                           src={machine.imageUrl}
                           alt={machine.imageAlt}
+                          loading="lazy"
                           className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                           referrerPolicy="no-referrer"
                           onError={(e) => { e.currentTarget.src = "/placeholder-machine.webp"; }}
@@ -351,15 +370,38 @@ export default function CatalogSection({
 
                         {/* Name + Price — price is the hero */}
                         <div className="flex items-start justify-between gap-3">
-                          <h3 className="font-display font-bold text-sm text-slate-900 leading-snug flex-1 line-clamp-2 group-hover:text-indigo-700 transition-colors duration-200">
-                            {getBaseName(machine.name)}
-                          </h3>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-display font-bold text-sm text-slate-900 leading-snug line-clamp-2 group-hover:text-indigo-700 transition-colors duration-200">
+                              {getBaseName(machine.name)}
+                            </h3>
+                            {machine.description && (
+                              <p className="text-[10px] text-slate-500 leading-snug mt-0.5 line-clamp-1">
+                                {machine.description.split(/[.!?]/)[0].trim()}
+                              </p>
+                            )}
+                          </div>
                           <div className="text-right shrink-0">
                             <div className="text-xl font-mono font-extrabold text-slate-900 leading-none">
                               €{machine.pricePerDay}
                             </div>
                             <div className="text-[9px] text-slate-400 font-mono mt-0.5">v.a. /dag</div>
+                            {machine.weeklyDiscountPercent > 0 && (
+                              <div className="text-[9px] text-emerald-600 font-bold mt-0.5">
+                                week −{machine.weeklyDiscountPercent}%
+                              </div>
+                            )}
                           </div>
+                        </div>
+
+                        {/* Indoor/outdoor indicator */}
+                        <div className="flex items-center gap-1.5 -mt-1">
+                          {machine.powerType === "Elektrisch" ? (
+                            <span className="text-[9px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full">⚡ Binnen &amp; buiten</span>
+                          ) : machine.powerType === "Diesel" ? (
+                            <span className="text-[9px] font-semibold text-orange-700 bg-orange-50 border border-orange-100 px-2 py-0.5 rounded-full">⛽ Alleen buiten</span>
+                          ) : machine.powerType === "Hybride" ? (
+                            <span className="text-[9px] font-semibold text-blue-700 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-full">🔄 Flexibel</span>
+                          ) : null}
                         </div>
 
                         {/* Spec row — clean horizontal */}

@@ -144,6 +144,25 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
     return res.status(400).json({ error: "Ongeldig totaalbedrag" });
   }
 
+  // deliveryType enum validation
+  const VALID_DELIVERY_TYPES = ["self_pickup", "delivery_by_us", "trailer_rental"] as const;
+  if (!VALID_DELIVERY_TYPES.includes(orderData.deliveryType)) {
+    return res.status(400).json({ error: "Ongeldig bezorgtype" });
+  }
+
+  // deliveryAddress length limit
+  if (orderData.deliveryAddress && String(orderData.deliveryAddress).length > 500) {
+    return res.status(400).json({ error: "Bezorgadres is te lang (max 500 tekens)" });
+  }
+
+  // customerPhone format validation (optional field, but if provided must look like a phone number)
+  if (orderData.customerPhone) {
+    const phoneClean = String(orderData.customerPhone).replace(/[\s\-().+]/g, "");
+    if (!/^\d{7,15}$/.test(phoneClean)) {
+      return res.status(400).json({ error: "Ongeldig telefoonnummer" });
+    }
+  }
+
   try {
     // Server-side price validation — reject if client price deviates from DB
     const machine = await prisma.machine.findUnique({ where: { id: orderData.machineId } });

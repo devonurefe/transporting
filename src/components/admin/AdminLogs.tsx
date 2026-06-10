@@ -72,8 +72,8 @@ export default function AdminLogs({ systemLogs, onClearSystemLogs, userProfiles,
                       {log.type}
                     </span>
                     <div className="flex-1 space-y-1">
-                      <div className="text-slate-205 text-slate-200 font-medium leading-relaxed">
-                        <span className="text-indigo-305 text-indigo-300 font-bold mr-1">{log.user}:</span>
+                      <div className="text-slate-200 font-medium leading-relaxed">
+                        <span className="text-indigo-300 font-bold mr-1">{log.user}:</span>
                         {log.description}
                       </div>
                       <div className="text-[9.5px] text-slate-500 flex items-center justify-between font-mono pt-0.5">

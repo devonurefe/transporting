@@ -97,6 +97,9 @@ export default function CatalogSection({
     return null;
   };
 
+  const formatPrice = (p: number): string =>
+    p % 1 === 0 ? String(Math.round(p)) : p.toFixed(2).replace(".", ",");
+
   const formatShortDate = (iso: string): string => {
     const d = new Date(iso);
     const months = ["jan","feb","mrt","apr","mei","jun","jul","aug","sep","okt","nov","dec"];
@@ -383,7 +386,7 @@ export default function CatalogSection({
                           </div>
                           <div className="text-right shrink-0">
                             <div className="text-xl font-mono font-extrabold text-slate-900 leading-none">
-                              €{machine.pricePerDay}
+                              €{formatPrice(machine.pricePerDay)}
                             </div>
                             <div className="text-[9px] text-slate-400 font-mono mt-0.5">v.a. /dag</div>
                             {machine.weeklyDiscountPercent > 0 && (
@@ -412,15 +415,17 @@ export default function CatalogSection({
 
                         {/* Spec row — height / reach / weight */}
                         <div className="flex items-center gap-3 text-[10px] font-mono text-slate-500 border-t border-slate-100 pt-2.5">
-                          <span className="flex items-center gap-1" title="Werkhoogte">
+                          <span className="flex items-center gap-1">
                             <ArrowUpToLine className="h-3.5 w-3.5 text-indigo-500 shrink-0" />
                             <span className="font-bold text-slate-700">{machine.height}m</span>
+                            <span className="text-slate-400">hgt</span>
                           </span>
-                          <span className="flex items-center gap-1" title="Zijdelings bereik">
+                          <span className="flex items-center gap-1">
                             <ArrowRightLeft className="h-3.5 w-3.5 text-indigo-400 shrink-0" />
                             <span>{machine.reach > 0 ? `${machine.reach}m` : "—"}</span>
+                            <span className="text-slate-400">ber</span>
                           </span>
-                          <span className="flex items-center gap-1 ml-auto" title="Machinegewicht">
+                          <span className="flex items-center gap-1 ml-auto">
                             <Weight className="h-3.5 w-3.5 text-slate-400 shrink-0" />
                             {machine.weight}kg
                           </span>

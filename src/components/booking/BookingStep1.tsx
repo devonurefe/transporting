@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React from "react";
-import { Calendar, Building2, X, Truck, Sparkles, ShieldAlert, ArrowRight, MessageCircle } from "lucide-react";
-import { motion } from "motion/react";
+import React, { useState } from "react";
+import { Calendar, Building2, X, Truck, Sparkles, ShieldAlert, ArrowRight, MessageCircle, ArrowUpToLine, ArrowRightLeft } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
 import { CartItem, DeliveryType, Machine } from "../../types";
 import { buildWhatsAppUrl } from "../../utils/whatsapp";
 import BookingPriceSummary from "./BookingPriceSummary";
@@ -54,6 +54,7 @@ export default function BookingStep1({
 }: BookingStep1Props) {
   const t = useLanguageStore((state) => state.t);
   const todayStr = new Date().toISOString().split('T')[0];
+  const [previewMachine, setPreviewMachine] = useState<Machine | null>(null);
 
   return (
     <div className="bg-white border border-slate-200 shadow-sm p-6 rounded-3xl space-y-6">
@@ -95,16 +96,21 @@ export default function BookingStep1({
               <div key={item.id} className="p-4 rounded-2xl bg-slate-50/50 border border-slate-200 space-y-4 shadow-sm">
                 <div className="flex justify-between items-start gap-4">
                   <div className="flex items-center space-x-3">
-                    <div className="h-12 w-12 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center font-mono text-[10px] text-slate-400 overflow-hidden shadow-sm">
-                      <img 
-                        src={item.machine.imageUrl || `/api/placeholder/100/100`} 
-                        alt={item.machine.name} 
-                        className="object-cover h-full w-full"
+                    <div
+                      className="h-12 w-12 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center font-mono text-[10px] text-slate-400 overflow-hidden shadow-sm cursor-pointer hover:ring-2 hover:ring-indigo-400 transition-all relative group/thumb"
+                      onClick={() => setPreviewMachine(item.machine)}
+                      title="Bekijk details"
+                    >
+                      <img
+                        src={item.machine.imageUrl || `/api/placeholder/100/100`}
+                        alt={item.machine.name}
+                        className="object-cover h-full w-full group-hover/thumb:scale-110 transition-transform duration-300"
                         referrerPolicy="no-referrer"
                         onError={(e) => {
                           e.currentTarget.src = "/placeholder-machine.webp";
                         }}
                       />
+                      <div className="absolute inset-0 bg-black/0 group-hover/thumb:bg-black/20 transition-colors duration-200 rounded-xl" />
                     </div>
                     <div>
                       <h4 className="text-xs font-extrabold text-slate-900">{item.machine.name}</h4>
@@ -355,6 +361,85 @@ export default function BookingStep1({
           <ArrowRight className="h-4 w-4" />
         </button>
       </div>
+      {/* Machine detail preview popup */}
+      <AnimatePresence>
+        {previewMachine && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setPreviewMachine(null)}
+              className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 12 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 12 }}
+              transition={{ type: "spring", stiffness: 380, damping: 28 }}
+              className="relative z-50 w-full max-w-sm bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200"
+            >
+              {/* Top stripe */}
+              <div className="h-1 bg-gradient-to-r from-teal-400 via-indigo-500 to-amber-400" />
+
+              {/* Image */}
+              <div className="aspect-video w-full overflow-hidden bg-slate-100 relative">
+                <img
+                  src={previewMachine.imageUrl}
+                  alt={previewMachine.imageAlt}
+                  className="w-full h-full object-cover"
+                  referrerPolicy="no-referrer"
+                  onError={(e) => { e.currentTarget.src = "/placeholder-machine.webp"; }}
+                />
+                <div className="absolute inset-x-0 bottom-0 px-3 py-2 bg-gradient-to-t from-black/60 to-transparent flex items-end justify-between">
+                  <span className="text-[10px] font-bold text-white/90 uppercase tracking-wider">{previewMachine.categoryLabel}</span>
+                  <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md ${
+                    previewMachine.powerType === "Diesel" ? "bg-orange-500/80 text-white"
+                    : previewMachine.powerType === "Hybride" ? "bg-blue-500/80 text-white"
+                    : "bg-emerald-500/80 text-white"
+                  }`}>{previewMachine.powerType}</span>
+                </div>
+                <button
+                  onClick={() => setPreviewMachine(null)}
+                  className="absolute top-2 right-2 p-1.5 rounded-xl bg-black/40 hover:bg-black/60 text-white cursor-pointer transition-colors"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              {/* Content */}
+              <div className="p-4 space-y-3">
+                <div>
+                  <h3 className="font-display font-black text-base text-slate-900 leading-snug">{previewMachine.name}</h3>
+                  <p className="text-xs text-slate-500 leading-relaxed mt-1 line-clamp-3">{previewMachine.description}</p>
+                </div>
+
+                {/* Specs */}
+                <div className="flex items-center gap-3 text-xs font-mono text-slate-600 border-t border-slate-100 pt-3">
+                  <span className="flex items-center gap-1">
+                    <ArrowUpToLine className="h-3.5 w-3.5 text-indigo-500" />
+                    <span className="font-bold text-slate-800">{previewMachine.height}m</span>
+                  </span>
+                  {previewMachine.reach > 0 && (
+                    <span className="flex items-center gap-1">
+                      <ArrowRightLeft className="h-3.5 w-3.5 text-indigo-400" />
+                      {previewMachine.reach}m
+                    </span>
+                  )}
+                  <span className="ml-auto font-mono font-extrabold text-indigo-700 text-sm">€{previewMachine.pricePerDay},-<span className="text-[10px] font-normal text-slate-400">/dag</span></span>
+                </div>
+
+                <button
+                  onClick={() => setPreviewMachine(null)}
+                  className="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all cursor-pointer"
+                >
+                  Sluiten
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

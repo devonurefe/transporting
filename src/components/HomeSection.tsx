@@ -80,12 +80,25 @@ export default function HomeSection({
   ]
 }: HomeSectionProps) {
   const siteConfig = useAppStore((state) => state.siteConfig);
+  const machines = useAppStore((state) => state.machines);
   const language = useLanguageStore((state) => state.language);
   const t = useLanguageStore((state) => state.t);
 
   React.useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+
+  const SCHAARLIFT_VARIANTS = new Set(["schaarlift", "schaarlift-smal", "schaarlift-6m"]);
+
+  // Live minimum price per category from loaded machine data
+  const livePriceByCategory = React.useMemo(() => {
+    const map: Record<string, number> = {};
+    machines.forEach(m => {
+      const key = SCHAARLIFT_VARIANTS.has(m.category) ? "schaarlift" : m.category;
+      if (map[key] === undefined || m.pricePerDay < map[key]) map[key] = m.pricePerDay;
+    });
+    return map;
+  }, [machines]);
 
   const HOME_ORDER = ["schaarlift", "spin", "mastlift", "kamersteiger", "ladderlift", "ecolift", "aanhanger"];
 
@@ -190,7 +203,9 @@ export default function HomeSection({
                   </div>
                   <div className="flex items-baseline gap-1.5">
                     <p className="text-[9px] font-black uppercase tracking-wider text-slate-400 w-10 shrink-0">All-in</p>
-                    <p className="text-sm font-extrabold text-emerald-600">{cat.price}</p>
+                    <p className="text-sm font-extrabold text-emerald-600">
+                      {livePriceByCategory[cat.id] !== undefined ? `v.a. €${livePriceByCategory[cat.id]}/dag` : cat.price}
+                    </p>
                   </div>
                 </div>
               </motion.button>

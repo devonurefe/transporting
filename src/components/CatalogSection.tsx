@@ -91,9 +91,8 @@ export default function CatalogSection({
 
   const getNextAvailableDate = (machineId: string): string | null => {
     for (let i = 1; i <= 90; i++) {
-      const d = new Date(Date.now() + i * 24 * 60 * 60 * 1000);
-      const ds = d.toISOString().split("T")[0];
-      if (checkAvailability(machineId, ds, ds, orders, blockedDates).available) return ds;
+      const d = new Date(Date.now() + i * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+      if (checkAvailability(machineId, d, d, orders, blockedDates).available) return d;
     }
     return null;
   };
@@ -302,24 +301,26 @@ export default function CatalogSection({
                       key={machine.id}
                       className="group relative overflow-hidden rounded-2xl border bg-white flex flex-col border-slate-200 shadow-sm hover:shadow-md hover:-translate-y-px transition-all duration-200"
                     >
-                      {/* Top-left badge: Stock or Availability */}
-                      {(stockCountByBase[getBaseName(machine.name)] ?? 1) > 1 ? (
-                        <div className="absolute top-3 left-3 z-20 bg-emerald-600 py-0.5 px-2.5 rounded-full text-[9px] font-extrabold uppercase tracking-widest text-white shadow">
-                          {stockCountByBase[getBaseName(machine.name)]}× voorraad
-                        </div>
-                      ) : (
-                        <div className={`absolute top-3 left-3 z-20 flex items-center gap-1 py-0.5 px-2 rounded-full text-[9px] font-bold shadow ${
-                          isMachineAvailableThisWeek(machine.id)
-                            ? "bg-emerald-50 border border-emerald-200 text-emerald-700"
-                            : "bg-amber-50 border border-amber-200 text-amber-700"
-                        }`}>
-                          <span className={`h-1.5 w-1.5 rounded-full ${isMachineAvailableThisWeek(machine.id) ? "bg-emerald-500" : "bg-amber-400"}`} />
-                          {isMachineAvailableThisWeek(machine.id) ? "Beschikbaar" : (() => {
-                            const next = getNextAvailableDate(machine.id);
-                            return next ? `Vrij ${formatShortDate(next)}` : "Vol geboekt";
-                          })()}
-                        </div>
-                      )}
+                      {/* Top-left badge: Availability + optional stock count */}
+                      {(() => {
+                        const stock = stockCountByBase[getBaseName(machine.name)] ?? 1;
+                        const available = isMachineAvailableThisWeek(machine.id);
+                        const nextDate = !available ? getNextAvailableDate(machine.id) : null;
+                        const availText = available ? "Beschikbaar" : nextDate ? `Vrij ${formatShortDate(nextDate)}` : "Vol geboekt";
+                        return (
+                          <div className={`absolute top-3 left-3 z-20 flex items-center gap-1 py-0.5 px-2 rounded-full text-[9px] font-bold shadow ${
+                            available
+                              ? "bg-emerald-50 border border-emerald-200 text-emerald-700"
+                              : "bg-amber-50 border border-amber-200 text-amber-700"
+                          }`}>
+                            <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${available ? "bg-emerald-500" : "bg-amber-400"}`} />
+                            {availText}
+                            {stock > 1 && (
+                              <span className={`font-black pl-0.5 ${available ? "text-emerald-600" : "text-amber-600"}`}>· {stock}×</span>
+                            )}
+                          </div>
+                        );
+                      })()}
 
                       {/* Top-right: compare checkbox */}
                       <div
@@ -422,9 +423,9 @@ export default function CatalogSection({
                           </span>
                         </div>
 
-                        {/* SuitableFor — profession icon chips */}
+                        {/* SuitableFor — capped at 3 chips + overflow count */}
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          {machine.suitableFor.map((prof) => {
+                          {machine.suitableFor.slice(0, 3).map((prof) => {
                             const ProfIcon = professionIconMap[prof];
                             return (
                               <span
@@ -437,6 +438,9 @@ export default function CatalogSection({
                               </span>
                             );
                           })}
+                          {machine.suitableFor.length > 3 && (
+                            <span className="text-[9px] text-slate-400 font-semibold px-1 select-none">+{machine.suitableFor.length - 3} meer</span>
+                          )}
                         </div>
 
                         {/* Campaign badge */}

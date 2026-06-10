@@ -492,17 +492,22 @@ export default function BookingSection({
 
     setIsSearchingAddress(true);
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
+
     try {
       const response = await fetch(
-        `https://api.pdok.nl/bzk/locatieserver/search/v3_1/free?q=${cleanPostcode}+${encodeURIComponent(cleanHouse)}&fq=type:adres`
+        `https://api.pdok.nl/bzk/locatieserver/search/v3_1/free?q=${cleanPostcode}+${encodeURIComponent(cleanHouse)}&fq=type:adres`,
+        { signal: controller.signal }
       );
-      
+      clearTimeout(timeoutId);
+
       if (!response.ok) {
         throw new Error("Systeem kon locatieserver niet bereiken.");
       }
-      
+
       const data = await response.json();
-      
+
       if (data && data.response && data.response.docs && data.response.docs.length > 0) {
         const bestDoc = data.response.docs[0];
         // Build address using user's house number, not the API's nearest match
@@ -512,16 +517,21 @@ export default function BookingSection({
           ? `${street} ${cleanHouse}, ${cleanPostcode} ${city}`
           : bestDoc.weergavenaam;
         setDeliveryAddress(resolvedAddress);
-        setAddressSuccessMsg(`✓ Gevalideerd adres gevonden:\n${resolvedAddress}`);
+        setAddressSuccessMsg(`✓ Gevalideerd adres gevonden: ${resolvedAddress}`);
       } else {
         setDeliveryAddress("");
         setAddressSuccessMsg("");
         setValidationError("Adres kon niet automatisch worden gevonden. Vul alstublieft uw adres handmatig in.");
       }
-    } catch (err) {
+    } catch (err: any) {
+      clearTimeout(timeoutId);
       setDeliveryAddress("");
       setAddressSuccessMsg("");
-      setValidationError("Adres kon niet automatisch worden geverifieerd (netwerkfout). Vul alstublieft uw adres handmatig in.");
+      if (err?.name === "AbortError") {
+        setValidationError("Adres opzoeken mislukt (time-out). Vul alstublieft uw adres handmatig in.");
+      } else {
+        setValidationError("Adres kon niet automatisch worden geverifieerd (netwerkfout). Vul alstublieft uw adres handmatig in.");
+      }
     } finally {
       setIsSearchingAddress(false);
     }

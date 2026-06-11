@@ -677,11 +677,15 @@ export default function BookingSection({
             setBookingError("Er is een fout opgetreden bij het verwerken van uw boeking. Controleer uw gegevens en probeer het opnieuw.");
           }
         }
-      } catch (err: any) {
+        } catch (err: any) {
         setIsSubmitting(false);
-        const msg = err?.message || "";
-        if (msg.includes("409") || msg.toLowerCase().includes("conflict")) {
+        const msg: string = err?.message || "";
+        if (msg.includes("409") || msg.toLowerCase().includes("conflict") || msg.toLowerCase().includes("gereserveerd")) {
           setBookingError("Deze machine is helaas niet meer beschikbaar op de geselecteerde datums. Kies andere datums.");
+        } else if (msg.toLowerCase().includes("geblokkeerde") || msg.toLowerCase().includes("blokkeer")) {
+          setBookingError("De geselecteerde periode bevat een geblokkeerde datum. Kies andere datums.");
+        } else if (msg) {
+          setBookingError(msg);
         } else {
           setBookingError("Er is een technische fout opgetreden. Probeer het over een paar momenten opnieuw.");
         }

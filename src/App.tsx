@@ -402,34 +402,30 @@ export default function App() {
 
   // Action: Submit reservation checkout
   const handleCreateReservation = async (orderData: Partial<Order>): Promise<Order | null> => {
-    try {
-      const response = await fetch("/api/orders", {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          ...getAuthHeaders()
-        },
-        body: JSON.stringify(orderData)
-      });
+    const response = await fetch("/api/orders", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...getAuthHeaders()
+      },
+      body: JSON.stringify(orderData)
+    });
 
-      if (!response.ok) {
-        throw new Error("Checkout creation failed via API");
-      }
-
-      const freshOrder: Order = await response.json();
-      useAppStore.setState((state) => ({ orders: [freshOrder, ...state.orders] }));
-
-      triggerNotification(
-        "Betaling Geverifieerd",
-        `Uw reservation ${freshOrder.id} is veilig geaccordeerd in de Mollie gateway.`,
-        "success"
-      );
-
-      return freshOrder;
-    } catch (err) {
-      console.error(err);
-      return null;
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData.error || `Serverfout (${response.status})`);
     }
+
+    const freshOrder: Order = await response.json();
+    useAppStore.setState((state) => ({ orders: [freshOrder, ...state.orders] }));
+
+    triggerNotification(
+      "Reservering Ontvangen",
+      `Aanvraag ${freshOrder.id} is succesvol ingediend.`,
+      "success"
+    );
+
+    return freshOrder;
   };
 
   // Action: Add machinery from Admin portal

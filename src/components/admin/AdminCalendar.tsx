@@ -30,10 +30,21 @@ export default function AdminCalendar({ onAddSystemLog, adminLanguage }: AdminCa
     return nl;
   };
 
+  const BLOCK_REASON_OPTIONS = [
+    "Planmatig Onderhoud / Keuring",
+    "Noodonderhoud / Reparatie",
+    "Demo / Showroom gebruik",
+    "Interne reservering",
+    "Seizoensluiting",
+    "Anders...",
+  ];
+
   const [selectedBlockMachineId, setSelectedBlockMachineId] = useState<string>("");
   const [blockDate, setBlockDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [blockEndDate, setBlockEndDate] = useState<string>("");
-  const [blockReason, setBlockReason] = useState<string>("Planmatig Onderhoud / Keuring");
+  const [blockReasonPreset, setBlockReasonPreset] = useState<string>("Planmatig Onderhoud / Keuring");
+  const [blockReasonCustom, setBlockReasonCustom] = useState<string>("");
+  const blockReason = blockReasonPreset === "Anders..." ? blockReasonCustom : blockReasonPreset;
   const [isSubmittingBlock, setIsSubmittingBlock] = useState<boolean>(false);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const handleBlockDateSubmit = async (e: React.FormEvent) => {
@@ -59,7 +70,8 @@ export default function AdminCalendar({ onAddSystemLog, adminLanguage }: AdminCa
 
     setIsSubmittingBlock(false);
     if (allOk) {
-      setBlockReason("Planmatig Onderhoud / Keuring");
+      setBlockReasonPreset("Planmatig Onderhoud / Keuring");
+      setBlockReasonCustom("");
       setBlockEndDate("");
       const rangeLabel = datesToBlock.length > 1 ? `${blockDate} t/m ${end}` : blockDate;
       onAddSystemLog("system", adminUser?.name ?? "Admin", t(`Periode ${rangeLabel} geblokkeerd voor machine ID: ${selectedBlockMachineId}`, `Period ${rangeLabel} blocked for machine ID: ${selectedBlockMachineId}`, `${rangeLabel} tarihleri makine ID'si ${selectedBlockMachineId} için engellendi`));
@@ -129,39 +141,51 @@ export default function AdminCalendar({ onAddSystemLog, adminLanguage }: AdminCa
               </select>
             </div>
 
-            <div className="grid grid-cols-1 xs:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-xs text-slate-600 block font-semibold">{t("Begindatum *", "Start Date *", "Başlangıç Tarihi *")}</label>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2 min-w-0">
+                <label className="text-xs text-slate-600 block font-semibold truncate">{t("Begindatum *", "Start Date *", "Başlangıç Tarihi *")}</label>
                 <input
                   type="date"
                   required
                   value={blockDate}
                   onChange={(e) => { setBlockDate(e.target.value); if (blockEndDate && blockEndDate < e.target.value) setBlockEndDate(""); }}
-                  className="bg-white border border-slate-200 text-slate-800 w-full rounded-xl px-3 py-3 text-sm outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 cursor-pointer transition-colors"
+                  className="bg-white border border-slate-200 text-slate-800 w-full rounded-xl px-2 py-2.5 text-sm outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 cursor-pointer transition-colors min-w-0"
                 />
               </div>
-              <div className="space-y-2">
-                <label className="text-xs text-slate-600 block font-semibold">{t("Einddatum", "End Date", "Bitiş Tarihi")}</label>
+              <div className="space-y-2 min-w-0">
+                <label className="text-xs text-slate-600 block font-semibold truncate">{t("Einddatum", "End Date", "Bitiş Tarihi")}</label>
                 <input
                   type="date"
                   value={blockEndDate}
                   min={blockDate}
                   onChange={(e) => setBlockEndDate(e.target.value)}
-                  className="bg-white border border-slate-200 text-slate-800 w-full rounded-xl px-3 py-3 text-sm outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 cursor-pointer transition-colors"
+                  className="bg-white border border-slate-200 text-slate-800 w-full rounded-xl px-2 py-2.5 text-sm outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 cursor-pointer transition-colors min-w-0"
                 />
               </div>
             </div>
 
             <div className="space-y-2">
               <label className="text-xs text-slate-700 block font-bold">{t("Reden voor de Blokkade *", "Reason for Block *", "Engelleme Nedeni *")}</label>
-              <input
-                type="text"
+              <select
                 required
-                value={blockReason}
-                onChange={(e) => setBlockReason(e.target.value)}
-                placeholder={t("bijv: TÜV Keuring / Periodiek onderhoud / Demo", "e.g., TÜV Inspection / Periodic maintenance / Demo", "örn: TÜV Denetimi / Periyodik bakım / Demo")}
-                className="bg-white border border-slate-200 text-slate-800 w-full rounded-xl px-3 py-3 text-sm outline-none focus:border-amber-500"
-              />
+                value={blockReasonPreset}
+                onChange={(e) => setBlockReasonPreset(e.target.value)}
+                className="bg-white border border-slate-200 text-slate-800 w-full rounded-xl px-3 py-3 text-sm outline-none focus:border-amber-500 cursor-pointer"
+              >
+                {BLOCK_REASON_OPTIONS.map(opt => (
+                  <option key={opt} value={opt}>{opt}</option>
+                ))}
+              </select>
+              {blockReasonPreset === "Anders..." && (
+                <input
+                  type="text"
+                  required
+                  value={blockReasonCustom}
+                  onChange={(e) => setBlockReasonCustom(e.target.value)}
+                  placeholder={t("Omschrijf de reden...", "Describe the reason...", "Nedeni açıklayın...")}
+                  className="bg-white border border-slate-200 text-slate-800 w-full rounded-xl px-3 py-2.5 text-sm outline-none focus:border-amber-500 mt-2"
+                />
+              )}
             </div>
 
             <button

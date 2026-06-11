@@ -66,11 +66,13 @@ interface CatalogSectionProps {
 }
 
 function computeDiscounts(m: Machine) {
-  const weekly = m.weeklyPrice && m.pricePerDay > 0
-    ? Math.round((1 - m.weeklyPrice / (5 * m.pricePerDay)) * 100)
+  // Use twoDayPrice/2 as the effective day rate when available (more accurate for machines with actie 1-day pricing)
+  const effectiveDayRate = m.twoDayPrice ? m.twoDayPrice / 2 : m.pricePerDay;
+  const weekly = m.weeklyPrice && effectiveDayRate > 0
+    ? Math.round((1 - m.weeklyPrice / (5 * effectiveDayRate)) * 100)
     : (m.weeklyDiscountPercent ?? 0);
-  const monthly = m.monthlyPrice && m.pricePerDay > 0
-    ? Math.round((1 - m.monthlyPrice / (28 * m.pricePerDay)) * 100)
+  const monthly = m.monthlyPrice && effectiveDayRate > 0
+    ? Math.round((1 - m.monthlyPrice / (28 * effectiveDayRate)) * 100)
     : (m.monthlyDiscountPercent ?? 0);
   return { weekly: Math.max(0, weekly), monthly: Math.max(0, monthly) };
 }
@@ -365,14 +367,21 @@ export default function CatalogSection({
                         }}
                       >
                         <img
-                          src={machine.imageUrl}
+                          src={machine.imageUrl || (machine.additionalImages?.[0] ?? "/placeholder-machine.webp")}
                           alt={machine.imageAlt}
                           loading="lazy"
                           className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                           referrerPolicy="no-referrer"
-                          onError={(e) => { e.currentTarget.src = "/placeholder-machine.webp"; }}
+                          onError={(e) => {
+                            const fallback = machine.additionalImages?.[0];
+                            if (fallback && e.currentTarget.src !== fallback) {
+                              e.currentTarget.src = fallback;
+                            } else {
+                              e.currentTarget.src = "/placeholder-machine.webp";
+                            }
+                          }}
                         />
-                        <div className="absolute inset-x-0 bottom-0 px-3 py-2 bg-gradient-to-t from-black/65 to-transparent flex items-end justify-between">
+                        <div className="absolute inset-x-0 bottom-0 px-3 py-2 bg-gradient-to-t from-black/45 to-transparent flex items-end justify-between">
                           <span className="text-[10px] font-bold text-white/95 uppercase tracking-wider leading-none">
                             {machine.categoryLabel}
                           </span>

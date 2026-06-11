@@ -39,6 +39,7 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
   const [weeklyDiscountPercent, setWeeklyDiscountPercent] = useState("");
   const [monthlyDiscountPercent, setMonthlyDiscountPercent] = useState("");
   const [newWeekendPrice, setNewWeekendPrice] = useState("");
+  const [newTwoDayPrice, setNewTwoDayPrice] = useState("");
   const [newWeeklyPrice, setNewWeeklyPrice] = useState("");
   const [newMonthlyFlatPrice, setNewMonthlyFlatPrice] = useState("");
   const [campaignText, setCampaignText] = useState("");
@@ -199,6 +200,7 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
       weeklyDiscountPercent: weeklyDiscountPercent ? Number(weeklyDiscountPercent) : undefined,
       monthlyDiscountPercent: monthlyDiscountPercent ? Number(monthlyDiscountPercent) : undefined,
       weekendPrice: newWeekendPrice ? Number(newWeekendPrice) : undefined,
+      twoDayPrice: newTwoDayPrice ? Number(newTwoDayPrice) : undefined,
       weeklyPrice: newWeeklyPrice ? Number(newWeeklyPrice) : undefined,
       monthlyPrice: newMonthlyFlatPrice ? Number(newMonthlyFlatPrice) : undefined,
       campaignText: campaignText.trim() || undefined,
@@ -397,7 +399,19 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
             />
           </div>
 
-          <div className="col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-slate-100 pt-3">
+          <div className="col-span-2 grid grid-cols-1 md:grid-cols-4 gap-4 border-t border-slate-100 pt-3">
+            <div className="space-y-1">
+              <label className="text-xs text-slate-700 block font-bold">{t("2 Dagen (doordeweeks) €", "2 Days (weekdays) €", "2 Gün (hafta içi) €")}</label>
+              <input
+                type="number"
+                min="0"
+                step="any"
+                value={newTwoDayPrice}
+                onChange={(e) => setNewTwoDayPrice(e.target.value)}
+                placeholder="–"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
+              />
+            </div>
             <div className="space-y-1">
               <label className="text-xs text-slate-700 block font-bold">{t("Weekend (2-3 dgn) €", "Weekend (2-3 days) €", "Hafta Sonu (2-3 gün) €")}</label>
               <input

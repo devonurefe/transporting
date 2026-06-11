@@ -27,6 +27,7 @@ model Machine {
   campaignDiscountPercent Float?
   campaignDiscountAmount  Float?
   weekendPrice            Float?
+  twoDayPrice             Float?
   weeklyPrice             Float?
   monthlyPrice            Float?
   packageContents         String?

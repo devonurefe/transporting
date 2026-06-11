@@ -38,6 +38,9 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
   const [suitableInput, setSuitableInput] = useState("Schilder, Aannemer");
   const [weeklyDiscountPercent, setWeeklyDiscountPercent] = useState("");
   const [monthlyDiscountPercent, setMonthlyDiscountPercent] = useState("");
+  const [newWeekendPrice, setNewWeekendPrice] = useState("");
+  const [newWeeklyPrice, setNewWeeklyPrice] = useState("");
+  const [newMonthlyFlatPrice, setNewMonthlyFlatPrice] = useState("");
   const [campaignText, setCampaignText] = useState("");
   const [campaignDiscountPercent, setCampaignDiscountPercent] = useState("");
   const [campaignDiscountAmount, setCampaignDiscountAmount] = useState("");
@@ -195,6 +198,9 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
       suitableFor: parsedSuitable.length > 0 ? parsedSuitable : ["Algemeen"],
       weeklyDiscountPercent: weeklyDiscountPercent ? Number(weeklyDiscountPercent) : undefined,
       monthlyDiscountPercent: monthlyDiscountPercent ? Number(monthlyDiscountPercent) : undefined,
+      weekendPrice: newWeekendPrice ? Number(newWeekendPrice) : undefined,
+      weeklyPrice: newWeeklyPrice ? Number(newWeeklyPrice) : undefined,
+      monthlyPrice: newMonthlyFlatPrice ? Number(newMonthlyFlatPrice) : undefined,
       campaignText: campaignText.trim() || undefined,
       campaignDiscountPercent: campaignDiscountPercent ? Number(campaignDiscountPercent) : undefined,
       campaignDiscountAmount: campaignDiscountAmount ? Number(campaignDiscountAmount) : undefined,
@@ -216,6 +222,9 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
       setSuitableInput("Schilder, Aannemer");
       setWeeklyDiscountPercent("");
       setMonthlyDiscountPercent("");
+      setNewWeekendPrice("");
+      setNewWeeklyPrice("");
+      setNewMonthlyFlatPrice("");
       setCampaignText("");
       setCampaignDiscountPercent("");
       setCampaignDiscountAmount("");
@@ -386,6 +395,45 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
               )}
               className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white resize-none"
             />
+          </div>
+
+          <div className="col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-slate-100 pt-3">
+            <div className="space-y-1">
+              <label className="text-xs text-slate-700 block font-bold">{t("Weekend (2-3 dgn) €", "Weekend (2-3 days) €", "Hafta Sonu (2-3 gün) €")}</label>
+              <input
+                type="number"
+                min="0"
+                step="any"
+                value={newWeekendPrice}
+                onChange={(e) => setNewWeekendPrice(e.target.value)}
+                placeholder="–"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-slate-700 block font-bold">{t("Werkweek (5 dgn) €", "Work Week (5 days) €", "İş Haftası (5 gün) €")}</label>
+              <input
+                type="number"
+                min="0"
+                step="any"
+                value={newWeeklyPrice}
+                onChange={(e) => setNewWeeklyPrice(e.target.value)}
+                placeholder="–"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-slate-700 block font-bold">{t("4 Weken €", "4 Weeks €", "4 Hafta €")}</label>
+              <input
+                type="number"
+                min="0"
+                step="any"
+                value={newMonthlyFlatPrice}
+                onChange={(e) => setNewMonthlyFlatPrice(e.target.value)}
+                placeholder="–"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
+              />
+            </div>
           </div>
 
           <div className="col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-slate-100 pt-3">

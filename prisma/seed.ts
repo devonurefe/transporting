@@ -695,34 +695,23 @@ async function main() {
     });
   }
 
-  console.log("Seeding machines (upsert)...");
+  console.log("Seeding machines (create-only + flat-rate backfill)...");
   for (const mach of defaultMachines) {
+    // Never overwrite admin-customized data (prices, images, discounts) on existing machines.
+    // Only insert when the machine does not yet exist.
     await prisma.machine.upsert({
       where: { id: mach.id },
-      update: {
-        name: mach.name,
-        category: mach.category,
-        categoryLabel: mach.categoryLabel,
-        height: mach.height,
-        reach: mach.reach,
-        weight: mach.weight,
-        pricePerDay: mach.pricePerDay,
-        powerType: mach.powerType,
-        imageUrl: mach.imageUrl,
-        imageAlt: mach.imageAlt,
-        description: mach.description,
-        suitableFor: mach.suitableFor,
-        weeklyDiscountPercent: mach.weeklyDiscountPercent ?? null,
-        monthlyDiscountPercent: mach.monthlyDiscountPercent ?? null,
-        campaignText: (mach as any).campaignText ?? null,
-        campaignDiscountPercent: (mach as any).campaignDiscountPercent ?? null,
-        campaignDiscountAmount: (mach as any).campaignDiscountAmount ?? null,
-        weekendPrice: (mach as any).weekendPrice ?? null,
-        weeklyPrice: (mach as any).weeklyPrice ?? null,
-        monthlyPrice: (mach as any).monthlyPrice ?? null,
-      },
+      update: {}, // preserve all admin changes
       create: mach
     });
+    // Back-fill the three flat-rate price fields that were added 2026-06.
+    // Only write them when the column is still null (first run after db push).
+    const wp = (mach as any).weekendPrice ?? null;
+    const wkp = (mach as any).weeklyPrice ?? null;
+    const mp = (mach as any).monthlyPrice ?? null;
+    if (wp !== null) await prisma.machine.updateMany({ where: { id: mach.id, weekendPrice: null }, data: { weekendPrice: wp } });
+    if (wkp !== null) await prisma.machine.updateMany({ where: { id: mach.id, weeklyPrice: null }, data: { weeklyPrice: wkp } });
+    if (mp !== null) await prisma.machine.updateMany({ where: { id: mach.id, monthlyPrice: null }, data: { monthlyPrice: mp } });
   }
 
   console.log("Seeding blocked dates (upsert)...");

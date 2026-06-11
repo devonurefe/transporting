@@ -65,6 +65,16 @@ interface CatalogSectionProps {
   currentUser?: { name: string } | null;
 }
 
+function computeDiscounts(m: Machine) {
+  const weekly = m.weeklyPrice && m.pricePerDay > 0
+    ? Math.round((1 - m.weeklyPrice / (5 * m.pricePerDay)) * 100)
+    : (m.weeklyDiscountPercent ?? 0);
+  const monthly = m.monthlyPrice && m.pricePerDay > 0
+    ? Math.round((1 - m.monthlyPrice / (28 * m.pricePerDay)) * 100)
+    : (m.monthlyDiscountPercent ?? 0);
+  return { weekly: Math.max(0, weekly), monthly: Math.max(0, monthly) };
+}
+
 export default function CatalogSection({
   machines,
   customCategories = [],
@@ -393,12 +403,10 @@ export default function CatalogSection({
                               €{formatPrice(machine.pricePerDay)}
                             </div>
                             <div className="text-[9px] text-slate-400 font-mono mt-0.5">per dag</div>
-                            {(machine.weeklyDiscountPercent ?? 0) > 0 && (
-                              <div className="text-[9px] text-emerald-600 font-bold mt-0.5">week −{machine.weeklyDiscountPercent}%</div>
-                            )}
-                            {(machine.monthlyDiscountPercent ?? 0) > 0 && (
-                              <div className="text-[9px] text-teal-600 font-bold mt-0.5">maand −{machine.monthlyDiscountPercent}%</div>
-                            )}
+                            {(() => { const d = computeDiscounts(machine); return (<>
+                              {d.weekly > 0 && <div className="text-[9px] text-emerald-600 font-bold mt-0.5">week −{d.weekly}%</div>}
+                              {d.monthly > 0 && <div className="text-[9px] text-teal-600 font-bold mt-0.5">maand −{d.monthly}%</div>}
+                            </>); })()}
                           </div>
                         </div>
 
@@ -991,18 +999,20 @@ export default function CatalogSection({
                           <p className="text-[10px] text-slate-400 font-mono mt-0.5">excl. BTW per dag</p>
                         </div>
                         <div className="space-y-1 text-right">
-                          {(selectedDetailMachine.weeklyDiscountPercent ?? 0) > 0 && (
-                            <div className="flex items-center gap-1.5 justify-end">
-                              <span className="text-[10px] font-mono text-slate-500">7+ dagen</span>
-                              <span className="text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 rounded-full">−{selectedDetailMachine.weeklyDiscountPercent}%</span>
-                            </div>
-                          )}
-                          {(selectedDetailMachine.monthlyDiscountPercent ?? 0) > 0 && (
-                            <div className="flex items-center gap-1.5 justify-end">
-                              <span className="text-[10px] font-mono text-slate-500">30+ dagen</span>
-                              <span className="text-xs font-bold text-teal-600 bg-teal-50 border border-teal-100 px-1.5 py-0.5 rounded-full">−{selectedDetailMachine.monthlyDiscountPercent}%</span>
-                            </div>
-                          )}
+                          {(() => { const d = computeDiscounts(selectedDetailMachine); return (<>
+                            {d.weekly > 0 && (
+                              <div className="flex items-center gap-1.5 justify-end">
+                                <span className="text-[10px] font-mono text-slate-500">werkweek (5d)</span>
+                                <span className="text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 rounded-full">−{d.weekly}%</span>
+                              </div>
+                            )}
+                            {d.monthly > 0 && (
+                              <div className="flex items-center gap-1.5 justify-end">
+                                <span className="text-[10px] font-mono text-slate-500">4 weken (28d)</span>
+                                <span className="text-xs font-bold text-teal-600 bg-teal-50 border border-teal-100 px-1.5 py-0.5 rounded-full">−{d.monthly}%</span>
+                              </div>
+                            )}
+                          </>); })()}
                         </div>
                       </div>
                       {selectedDetailMachine.campaignText && (

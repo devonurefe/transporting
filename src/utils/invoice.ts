@@ -166,7 +166,7 @@ export function printInvoice(orderOrOrders: Order | Order[], clientCompanyName?:
       <link rel="preconnect" href="https://fonts.googleapis.com">
       <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
       <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800;900&display=swap" rel="stylesheet">
-      <script>document.documentElement.style.opacity='0';document.fonts.ready.then(()=>{document.documentElement.style.opacity='1';});</script>
+      <script>/* fonts load passively — print triggered from parent */</script>
 
       <style>
         /* Modern styling optimized for both screen preview and high-contrast A4 print */
@@ -583,24 +583,21 @@ export function printInvoice(orderOrOrders: Order | Order[], clientCompanyName?:
         
       </div>
       
-      <!-- Auto print script -->
-      <script>
-        window.addEventListener('load', function() {
-          setTimeout(function() {
-            window.print();
-          }, 600);
-        });
-      </script>
+      <!-- print triggered from opener -->
     </body>
     </html>
   `;
 
-  // Open off-screen printable window context
   const printWindow = window.open("", "_blank");
   if (printWindow) {
     printWindow.document.open();
     printWindow.document.write(htmlContent);
     printWindow.document.close();
+    printWindow.focus();
+    // Trigger print after fonts & layout settle; 900ms covers Google Fonts load
+    setTimeout(() => {
+      printWindow.print();
+    }, 900);
   } else {
     alert("Popup-blocker actief! Gelieve pop-ups toe te staan voor deze website om de PDF factuur te kunnen genereren.");
   }

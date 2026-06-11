@@ -184,6 +184,21 @@ export default function BookingStep1({
                     </>
                   )}
                 </div>
+
+                {!availability.available && (
+                  <a
+                    href={(() => {
+                      const msg = `Hallo HuurGo! 👋\n\nIk zie dat ${item.machine.name} niet beschikbaar is voor mijn periode (${item.startDate} t/m ${item.endDate}).\n\nKunt u mij helpen met alternatieve datums of een vergelijkbare machine?\n\nAlvast bedankt!`;
+                      return `https://wa.me/${(import.meta as any).env?.VITE_WHATSAPP_NUMBER ?? "31611848899"}?text=${encodeURIComponent(msg)}`;
+                    })()}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 p-2.5 rounded-xl border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-[11px] font-bold transition-all shadow-sm"
+                  >
+                    <MessageCircle className="h-4 w-4 text-emerald-600 shrink-0" />
+                    <span>Overleg datums via WhatsApp</span>
+                  </a>
+                )}
               </div>
             );
           })}

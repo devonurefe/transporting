@@ -197,7 +197,19 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
       const billing = addon.billing ?? "flat";
       return sum + (billing === "daily" ? price * rentalDays : price);
     }, 0);
-    const serverSubtotal = Math.round(machine.pricePerDay * rentalDays * 100) / 100;
+    const rawSubtotal = machine.pricePerDay * rentalDays;
+    let serverDiscountAmount = 0;
+    if (rentalDays >= 30 && machine.monthlyDiscountPercent) {
+      serverDiscountAmount = rawSubtotal * (machine.monthlyDiscountPercent / 100);
+    } else if (rentalDays >= 7 && machine.weeklyDiscountPercent) {
+      serverDiscountAmount = rawSubtotal * (machine.weeklyDiscountPercent / 100);
+    }
+    if (machine.campaignDiscountPercent) {
+      serverDiscountAmount += rawSubtotal * (machine.campaignDiscountPercent / 100);
+    } else if (machine.campaignDiscountAmount) {
+      serverDiscountAmount += machine.campaignDiscountAmount;
+    }
+    const serverSubtotal = Math.round(Math.max(0, rawSubtotal - serverDiscountAmount) * 100) / 100;
     const serverVat = Math.round((serverSubtotal + transportCostClient + driverCostClient + addonsTotal) * 21) / 100;
     const serverTotal = Math.round((serverSubtotal + transportCostClient + driverCostClient + addonsTotal + serverVat) * 100) / 100;
     if (Math.abs(serverTotal - Number(orderData.totalAmount)) > 0.10) {

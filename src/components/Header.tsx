@@ -12,9 +12,8 @@ import {
   Bell, 
   Layers, 
   Home, 
-  ShieldCheck, 
+  ShieldCheck,
   Sparkles,
-  Phone,
   CheckCircle2,
   Trash2,
   LogOut,
@@ -104,7 +103,7 @@ export default function Header({
           ? "border-amber-500/30 bg-amber-50/90 shadow-md shadow-amber-500/5 text-slate-800" 
           : "border-slate-200/80 bg-white/80 backdrop-blur-xl shadow-sm text-slate-800"
       }`}>
-        <div className="mx-auto flex max-w-7xl h-14 sm:h-20 items-center justify-between px-5 sm:px-6 lg:px-8">
+        <div className="mx-auto relative flex max-w-7xl h-14 sm:h-20 items-center justify-between px-5 sm:px-6 lg:px-8">
         
         {/* Brand Logo & State Indicator */}
         <div 
@@ -136,7 +135,7 @@ export default function Header({
             <HuurGoLogo className="h-7 sm:h-10 w-auto" />
           )}
         </div>        {/* Dynamic Desktop Navigation */}
-        <nav className="hidden md:flex items-center space-x-1 lg:space-x-2 shrink">
+        <nav className="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center space-x-1 lg:space-x-2">
           {isAdminMode ? (
             // Admin Mode Navigation Indicator (Simple, informative)
             <div className="flex items-center space-x-2 bg-amber-500/10 border border-amber-500/20 px-3.5 py-1.5 rounded-xl text-xs text-amber-900 font-semibold my-0.5">
@@ -214,16 +213,6 @@ export default function Header({
           ) : (
             // Public Visitors Utilities
             <>
-              {/* Phone link (desktop) */}
-              <a
-                href="tel:+31715428114"
-                className="hidden md:flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-bold text-slate-700 transition-all shrink-0 shadow-xs"
-                aria-label="Bel ons"
-              >
-                <Phone className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                <span className="hidden lg:inline">071 542 8114</span>
-              </a>
-
               {/* Language Switcher */}
               <button
                 onClick={toggleLanguage}
@@ -348,10 +337,10 @@ export default function Header({
                 <button
                   onClick={() => setActiveTab("orders")}
                   className="inline-flex items-center justify-center border border-slate-200 hover:border-slate-300 bg-white p-2 sm:px-4 sm:py-2 rounded-xl text-xs font-bold text-slate-700 hover:text-slate-900 transition-all active:scale-95 shrink-0"
-                  title="Klant Login"
+                  title="Login"
                 >
                   <User className="h-4 w-4 text-slate-500" />
-                  <span className="hidden sm:inline-block ml-1.5">Klant Login</span>
+                  <span className="hidden sm:inline-block ml-1.5">Login</span>
                 </button>
               )}
             </>

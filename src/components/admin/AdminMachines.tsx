@@ -523,13 +523,25 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                           />
                         </div>
                         <div className="space-y-2">
-                          <input
-                            type="text"
-                            value={editImageUrl}
-                            onChange={(e) => setEditImageUrl(e.target.value)}
-                            placeholder="https://images.unsplash.com/photo-..."
-                            className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 font-mono"
-                          />
+                          <div className="relative">
+                            <input
+                              type="text"
+                              value={editImageUrl}
+                              onChange={(e) => setEditImageUrl(e.target.value)}
+                              placeholder="/placeholder-machine.webp"
+                              className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 pr-8 text-xs text-slate-800 outline-none focus:border-amber-500 font-mono"
+                            />
+                            {editImageUrl && (
+                              <button
+                                type="button"
+                                onClick={() => setEditImageUrl("")}
+                                className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 text-slate-400 hover:text-red-500 cursor-pointer border-none bg-transparent"
+                                title="URL wissen"
+                              >
+                                <X className="h-3.5 w-3.5" />
+                              </button>
+                            )}
+                          </div>
                           <div className="relative">
                             <input
                               type="file"
@@ -547,9 +559,14 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
 
                       {/* Additional Images Section */}
                       <div className="border-t border-slate-200/80 pt-4 space-y-3 mt-3">
-                        <span className="text-xs text-slate-700 block font-bold">
-                          {t("Ek Resim Galerisi (Çoklu Slayt Gösterisi)", "Additional Image Gallery (Slideshow)", "Ek Resim Galerisi (Çoklu Slayt)")}
-                        </span>
+                        <div className="flex items-baseline justify-between">
+                          <span className="text-xs text-slate-700 block font-bold">
+                            {t("Ek Resim Galerisi (Çoklu Slayt Gösterisi)", "Additional Image Gallery (Slideshow)", "Ek Resim Galerisi (Çoklu Slayt)")}
+                          </span>
+                          <span className="text-[10px] text-slate-400 italic">
+                            {t("Zichtbaar in detailpopup (niet op kaart)", "Visible in detail popup (not on card)", "Detay popup'ta görünür (kartta değil)")}
+                          </span>
+                        </div>
                         
                         <div className="relative">
                           <input

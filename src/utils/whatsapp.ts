@@ -88,7 +88,7 @@ export function buildWhatsAppUrl(
   lines.push("Stuur mij een iDEAL betaallink zodat ik");
   lines.push("de betaling direct kan afronden.");
   lines.push("");
-  lines.push("Alvast bedankt! 🙏");
+  lines.push("Alvast bedankt! 🦾");
 
   const encodedText = encodeURIComponent(lines.join("\n"));
   return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodedText}`;
@@ -136,7 +136,7 @@ export function buildWhatsAppPaymentLinkUrl(orderId?: string): string {
     orderId ? `📋 Referentienummer: ${orderId}` : "",
     "",
     "Kunt u mij de betaallink sturen zodat ik direct kan afrekenen?",
-    "Bedankt! 🙏",
+    "Bedankt! 🦾",
   ].filter(Boolean);
   return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(lines.join("\n"))}`;
 }

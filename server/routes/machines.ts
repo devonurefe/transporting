@@ -132,7 +132,7 @@ machinesRouter.post("/", requireAdmin as any, async (req: AuthenticatedRequest, 
         weight: Number(weight || 1500),
         pricePerDay: Number(pricePerDay),
         powerType: powerType || "Elektrisch",
-        imageUrl: imageUrl || "https://images.unsplash.com/photo-1504307651254-35680f356dfd?q=80&w=600&auto=format&fit=crop",
+        imageUrl: imageUrl || "/placeholder-machine.webp",
         imageAlt: name,
         description: description || "Gebruiksvriendelijke hoogwerker geschikt voor lichte installatie of inspectie.",
         suitableFor: Array.isArray(suitableFor) ? suitableFor : ["Algemeen"],
@@ -151,9 +151,9 @@ machinesRouter.post("/", requireAdmin as any, async (req: AuthenticatedRequest, 
       suitableFor: Array.isArray(newMachine.suitableFor) ? newMachine.suitableFor : [],
       additionalImages: Array.isArray(newMachine.additionalImages) ? newMachine.additionalImages : []
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error creating machine:", error);
-    res.status(500).json({ error: "Failed to create machine" });
+    res.status(500).json({ error: "Machine aanmaken mislukt" });
   }
 });
 
@@ -199,7 +199,7 @@ machinesRouter.put("/:id", requireAdmin as any, async (req: AuthenticatedRequest
         weight: Number(weight || 1500),
         pricePerDay: Number(pricePerDay),
         powerType: powerType || "Elektrisch",
-        imageUrl: imageUrl || "https://images.unsplash.com/photo-1504307651254-35680f356dfd?q=80&w=600&auto=format&fit=crop",
+        imageUrl: imageUrl !== undefined && imageUrl !== null ? imageUrl : "",
         imageAlt: name,
         description: description || "Gebruiksvriendelijke hoogwerker geschikt voor lichte installatie of inspectie.",
         suitableFor: Array.isArray(suitableFor) ? suitableFor : suitableFor ? [suitableFor] : ["Algemeen"],

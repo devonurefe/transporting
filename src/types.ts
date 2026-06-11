@@ -22,6 +22,9 @@ export interface Machine {
   campaignText?: string; // campaign tag, e.g., "LenteKorting"
   campaignDiscountPercent?: number; // campaign discount %
   campaignDiscountAmount?: number; // campaign discount EUR amount
+  weekendPrice?: number; // flat rate for 2-3 day booking
+  weeklyPrice?: number; // flat rate for 5-day werkweek booking
+  monthlyPrice?: number; // flat rate for 28-day booking
   packageContents?: string; // Semicolon separated included items checklist
   additionalImages?: string[];
 }

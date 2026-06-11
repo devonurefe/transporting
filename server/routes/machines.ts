@@ -99,22 +99,25 @@ machinesRouter.post("/", requireAdmin as any, async (req: AuthenticatedRequest, 
     return res.status(400).json({ error: validation.error });
   }
 
-  const { 
-    name, 
-    category, 
-    height, 
-    reach, 
-    weight, 
-    pricePerDay, 
-    powerType, 
-    imageUrl, 
-    description, 
+  const {
+    name,
+    category,
+    height,
+    reach,
+    weight,
+    pricePerDay,
+    powerType,
+    imageUrl,
+    description,
     suitableFor,
     weeklyDiscountPercent,
     monthlyDiscountPercent,
     campaignText,
     campaignDiscountPercent,
     campaignDiscountAmount,
+    weekendPrice,
+    weeklyPrice,
+    monthlyPrice,
     packageContents,
     additionalImages
   } = req.body;
@@ -141,6 +144,9 @@ machinesRouter.post("/", requireAdmin as any, async (req: AuthenticatedRequest, 
         campaignText: campaignText || null,
         campaignDiscountPercent: campaignDiscountPercent ? Number(campaignDiscountPercent) : null,
         campaignDiscountAmount: campaignDiscountAmount ? Number(campaignDiscountAmount) : null,
+        weekendPrice: weekendPrice ? Number(weekendPrice) : null,
+        weeklyPrice: weeklyPrice ? Number(weeklyPrice) : null,
+        monthlyPrice: monthlyPrice ? Number(monthlyPrice) : null,
         packageContents: packageContents || null,
         additionalImages: Array.isArray(additionalImages) ? additionalImages : []
       }
@@ -166,22 +172,25 @@ machinesRouter.put("/:id", requireAdmin as any, async (req: AuthenticatedRequest
     return res.status(400).json({ error: validation.error });
   }
 
-  const { 
-    name, 
-    category, 
-    height, 
-    reach, 
-    weight, 
-    pricePerDay, 
-    powerType, 
-    imageUrl, 
-    description, 
+  const {
+    name,
+    category,
+    height,
+    reach,
+    weight,
+    pricePerDay,
+    powerType,
+    imageUrl,
+    description,
     suitableFor,
     weeklyDiscountPercent,
     monthlyDiscountPercent,
     campaignText,
     campaignDiscountPercent,
     campaignDiscountAmount,
+    weekendPrice,
+    weeklyPrice,
+    monthlyPrice,
     packageContents,
     additionalImages
   } = req.body;
@@ -208,6 +217,9 @@ machinesRouter.put("/:id", requireAdmin as any, async (req: AuthenticatedRequest
         campaignText: campaignText || null,
         campaignDiscountPercent: campaignDiscountPercent !== undefined && campaignDiscountPercent !== null ? Number(campaignDiscountPercent) : null,
         campaignDiscountAmount: campaignDiscountAmount !== undefined && campaignDiscountAmount !== null ? Number(campaignDiscountAmount) : null,
+        weekendPrice: weekendPrice !== undefined && weekendPrice !== null && weekendPrice !== "" ? Number(weekendPrice) : null,
+        weeklyPrice: weeklyPrice !== undefined && weeklyPrice !== null && weeklyPrice !== "" ? Number(weeklyPrice) : null,
+        monthlyPrice: monthlyPrice !== undefined && monthlyPrice !== null && monthlyPrice !== "" ? Number(monthlyPrice) : null,
         packageContents: packageContents !== undefined ? packageContents : null,
         additionalImages: Array.isArray(additionalImages) ? additionalImages : []
       }

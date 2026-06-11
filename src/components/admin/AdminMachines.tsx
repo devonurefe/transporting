@@ -47,6 +47,9 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
   const [editImageUrl, setEditImageUrl] = useState("");
   const [editWeeklyDiscountPercent, setEditWeeklyDiscountPercent] = useState("");
   const [editMonthlyDiscountPercent, setEditMonthlyDiscountPercent] = useState("");
+  const [editWeekendPrice, setEditWeekendPrice] = useState("");
+  const [editWeeklyPrice, setEditWeeklyPrice] = useState("");
+  const [editMonthlyFlatPrice, setEditMonthlyFlatPrice] = useState("");
   const [editCampaignText, setEditCampaignText] = useState("");
   const [editCampaignDiscountPercent, setEditCampaignDiscountPercent] = useState("");
   const [editCampaignDiscountAmount, setEditCampaignDiscountAmount] = useState("");
@@ -115,6 +118,9 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
     setEditImageUrl(m.imageUrl || "");
     setEditWeeklyDiscountPercent(m.weeklyDiscountPercent ? String(m.weeklyDiscountPercent) : "");
     setEditMonthlyDiscountPercent(m.monthlyDiscountPercent ? String(m.monthlyDiscountPercent) : "");
+    setEditWeekendPrice(m.weekendPrice ? String(m.weekendPrice) : "");
+    setEditWeeklyPrice(m.weeklyPrice ? String(m.weeklyPrice) : "");
+    setEditMonthlyFlatPrice(m.monthlyPrice ? String(m.monthlyPrice) : "");
     setEditCampaignText(m.campaignText || "");
     setEditCampaignDiscountPercent(m.campaignDiscountPercent ? String(m.campaignDiscountPercent) : "");
     setEditCampaignDiscountAmount(m.campaignDiscountAmount ? String(m.campaignDiscountAmount) : "");
@@ -236,6 +242,9 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
       suitableFor: parsedSuitable,
       weeklyDiscountPercent: editWeeklyDiscountPercent ? Number(editWeeklyDiscountPercent) : undefined,
       monthlyDiscountPercent: editMonthlyDiscountPercent ? Number(editMonthlyDiscountPercent) : undefined,
+      weekendPrice: editWeekendPrice ? Number(editWeekendPrice) : undefined,
+      weeklyPrice: editWeeklyPrice ? Number(editWeeklyPrice) : undefined,
+      monthlyPrice: editMonthlyFlatPrice ? Number(editMonthlyFlatPrice) : undefined,
       campaignText: editCampaignText.trim() || undefined,
       campaignDiscountPercent: editCampaignDiscountPercent ? Number(editCampaignDiscountPercent) : undefined,
       campaignDiscountAmount: editCampaignDiscountAmount ? Number(editCampaignDiscountAmount) : undefined,
@@ -633,6 +642,42 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                     </div>
 
                     <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-slate-100 pt-3">
+                      <div className="space-y-1">
+                        <label className="text-xs text-slate-700 block font-bold">{t("Weekend (2-3 dgn) €", "Weekend (2-3 days) €", "Hafta Sonu (2-3 gün) €")}</label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="any"
+                          value={editWeekendPrice}
+                          onChange={(e) => setEditWeekendPrice(e.target.value)}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-xs text-slate-700 block font-bold">{t("Werkweek (5 dgn) €", "Work Week (5 days) €", "İş Haftası (5 gün) €")}</label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="any"
+                          value={editWeeklyPrice}
+                          onChange={(e) => setEditWeeklyPrice(e.target.value)}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-xs text-slate-700 block font-bold">{t("4 Weken €", "4 Weeks €", "4 Hafta €")}</label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="any"
+                          value={editMonthlyFlatPrice}
+                          onChange={(e) => setEditMonthlyFlatPrice(e.target.value)}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
+                        />
+                      </div>
+
                       <div className="space-y-1">
                         <label className="text-xs text-slate-700 block font-bold">{t("Weekkorting (%)", "Weekly Discount (%)", "Haftalık İndirim (%)")}</label>
                         <input

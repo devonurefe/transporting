@@ -197,19 +197,41 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
       const billing = addon.billing ?? "flat";
       return sum + (billing === "daily" ? price * rentalDays : price);
     }, 0);
-    const rawSubtotal = machine.pricePerDay * rentalDays;
-    let serverDiscountAmount = 0;
-    if (rentalDays >= 30 && machine.monthlyDiscountPercent) {
-      serverDiscountAmount = rawSubtotal * (machine.monthlyDiscountPercent / 100);
-    } else if (rentalDays >= 7 && machine.weeklyDiscountPercent) {
-      serverDiscountAmount = rawSubtotal * (machine.weeklyDiscountPercent / 100);
+    // Flat-rate pricing mirrors BookingSection.tsx calculateItemSubtotal
+    let serverSubtotal: number;
+    const m = machine as any;
+    if ((rentalDays === 2 || rentalDays === 3) && m.weekendPrice) {
+      serverSubtotal = m.weekendPrice;
+    } else if (rentalDays >= 5 && rentalDays < 28 && m.weeklyPrice) {
+      const fullWeeks = Math.floor(rentalDays / 5);
+      const remainder = rentalDays % 5;
+      serverSubtotal = fullWeeks * m.weeklyPrice + remainder * machine.pricePerDay;
+    } else if (rentalDays >= 28 && m.monthlyPrice) {
+      const fullMonths = Math.floor(rentalDays / 28);
+      const remainder = rentalDays % 28;
+      let remainderCost: number;
+      if (remainder >= 5 && m.weeklyPrice) {
+        remainderCost = Math.floor(remainder / 5) * m.weeklyPrice + (remainder % 5) * machine.pricePerDay;
+      } else {
+        remainderCost = remainder * machine.pricePerDay;
+      }
+      serverSubtotal = fullMonths * m.monthlyPrice + remainderCost;
+    } else {
+      const rawSubtotal = machine.pricePerDay * rentalDays;
+      let serverDiscountAmount = 0;
+      if (rentalDays >= 30 && machine.monthlyDiscountPercent) {
+        serverDiscountAmount = rawSubtotal * (machine.monthlyDiscountPercent / 100);
+      } else if (rentalDays >= 7 && machine.weeklyDiscountPercent) {
+        serverDiscountAmount = rawSubtotal * (machine.weeklyDiscountPercent / 100);
+      }
+      if (machine.campaignDiscountPercent) {
+        serverDiscountAmount += rawSubtotal * (machine.campaignDiscountPercent / 100);
+      } else if (machine.campaignDiscountAmount) {
+        serverDiscountAmount += (machine.campaignDiscountAmount as number);
+      }
+      serverSubtotal = Math.max(0, rawSubtotal - serverDiscountAmount);
     }
-    if (machine.campaignDiscountPercent) {
-      serverDiscountAmount += rawSubtotal * (machine.campaignDiscountPercent / 100);
-    } else if (machine.campaignDiscountAmount) {
-      serverDiscountAmount += machine.campaignDiscountAmount;
-    }
-    const serverSubtotal = Math.round(Math.max(0, rawSubtotal - serverDiscountAmount) * 100) / 100;
+    serverSubtotal = Math.round(serverSubtotal * 100) / 100;
     const serverVat = Math.round((serverSubtotal + transportCostClient + driverCostClient + addonsTotal) * 21) / 100;
     const serverTotal = Math.round((serverSubtotal + transportCostClient + driverCostClient + addonsTotal + serverVat) * 100) / 100;
     if (Math.abs(serverTotal - Number(orderData.totalAmount)) > 0.10) {

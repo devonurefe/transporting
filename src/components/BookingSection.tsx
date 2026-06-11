@@ -51,7 +51,7 @@ export default function BookingSection({
 
   const evaluateDiscountPercent = (machine: Machine, days: number, profile: string, rules: CampaignRule[]) => {
     let highestDiscount = 0;
-    
+
     // 1. Weekly/Monthly volume discounts
     if (days >= 30 && machine.monthlyDiscountPercent) {
       highestDiscount = Math.max(highestDiscount, machine.monthlyDiscountPercent);
@@ -84,6 +84,44 @@ export default function BookingSection({
     }
 
     return highestDiscount;
+  };
+
+  // Calculate item subtotal using flat-rate prices when available,
+  // otherwise fall back to pricePerDay × days × (1 - discountPercent/100)
+  const calculateItemSubtotal = (machine: Machine, days: number, profile: string, rules: CampaignRule[]): number => {
+    // Weekend flat rate: 2–3 days
+    if ((days === 2 || days === 3) && machine.weekendPrice) {
+      return machine.weekendPrice;
+    }
+
+    // Weekly flat rate: 5–27 days
+    if (days >= 5 && days < 28 && machine.weeklyPrice) {
+      const fullWeeks = Math.floor(days / 5);
+      const remainder = days % 5;
+      return fullWeeks * machine.weeklyPrice + remainder * machine.pricePerDay;
+    }
+
+    // Monthly flat rate: 28+ days
+    if (days >= 28 && machine.monthlyPrice) {
+      const fullMonths = Math.floor(days / 28);
+      const remainder = days % 28;
+      let remainderCost: number;
+      if (remainder >= 5 && machine.weeklyPrice) {
+        remainderCost = Math.floor(remainder / 5) * machine.weeklyPrice + (remainder % 5) * machine.pricePerDay;
+      } else {
+        remainderCost = remainder * machine.pricePerDay;
+      }
+      return fullMonths * machine.monthlyPrice + remainderCost;
+    }
+
+    // Fallback: pricePerDay × days with percentage discount
+    const rawSubtotal = machine.pricePerDay * days;
+    const discountPercent = evaluateDiscountPercent(machine, days, profile, rules);
+    let discountAmount = rawSubtotal * (discountPercent / 100);
+    if (machine.campaignDiscountAmount) {
+      discountAmount += machine.campaignDiscountAmount;
+    }
+    return Math.max(0, rawSubtotal - discountAmount);
   };
   const [successOrder, setSuccessOrder] = useState<Order | null>(null);
   const [successOrders, setSuccessOrders] = useState<Order[]>([]);
@@ -316,14 +354,8 @@ export default function BookingSection({
         totalDays += days;
 
         const itemRaw = item.machine.pricePerDay * days;
-        const discountPercent = evaluateDiscountPercent(item.machine, days, customerProfile, campaignRules);
-        let itemDisc = itemRaw * (discountPercent / 100);
-
-        if (item.machine.campaignDiscountAmount) {
-          itemDisc += item.machine.campaignDiscountAmount;
-        }
-
-        const itemSub = Math.max(0, itemRaw - itemDisc);
+        const itemSub = calculateItemSubtotal(item.machine, days, customerProfile, campaignRules);
+        const itemDisc = Math.max(0, itemRaw - itemSub);
         rawSubtotal += itemRaw;
         discountAmount += itemDisc;
         subtotal += itemSub;
@@ -395,12 +427,8 @@ export default function BookingSection({
     const days = Math.max(1, Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1);
 
     const rawSubtotal = selectedMachine.pricePerDay * days;
-    const discountPercent = evaluateDiscountPercent(selectedMachine, days, customerProfile, campaignRules);
-    let discountAmount = rawSubtotal * (discountPercent / 100);
-
-    if (selectedMachine.campaignDiscountAmount) {
-      discountAmount += selectedMachine.campaignDiscountAmount;
-    }
+    const itemSub = calculateItemSubtotal(selectedMachine, days, customerProfile, campaignRules);
+    const discountAmount = Math.max(0, rawSubtotal - itemSub);
 
     let discountLabel = "Korting";
     if (days >= 30) {
@@ -424,7 +452,7 @@ export default function BookingSection({
       discountLabel = `${discountLabel} + ${selectedMachine.campaignText}`;
     }
 
-    const subtotal = Math.max(0, rawSubtotal - discountAmount);
+    const subtotal = itemSub;
     const transport = deliveryType === "delivery_by_us" ? 150 : 0;
     const trailerCost = deliveryType === "trailer_rental" ? 25 * days : 0;
     const driver = 0;
@@ -587,23 +615,7 @@ export default function BookingSection({
             const timeDiff = end.getTime() - start.getTime();
             const days = Math.max(1, Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1);
 
-            const rawPrice = item.machine.pricePerDay * days;
-            let disc = 0;
-            if (days >= 30 && item.machine.monthlyDiscountPercent) {
-              disc = rawPrice * (item.machine.monthlyDiscountPercent / 100);
-            } else if (days >= 7 && item.machine.weeklyDiscountPercent) {
-              disc = rawPrice * (item.machine.weeklyDiscountPercent / 100);
-            }
-
-            if (item.machine.campaignText) {
-              if (item.machine.campaignDiscountPercent) {
-                disc += rawPrice * (item.machine.campaignDiscountPercent / 100);
-              } else if (item.machine.campaignDiscountAmount) {
-                disc += item.machine.campaignDiscountAmount;
-              }
-            }
-
-            const itemSubtotal = Math.max(0, rawPrice - disc);
+            const itemSubtotal = calculateItemSubtotal(item.machine, days, customerProfile, campaignRules);
             const transport = (deliveryType === "delivery_by_us" && i === 0) ? 150 : 0;
             const trailerCost = (deliveryType === "trailer_rental" && i === 0) ? 25 * days : 0;
             const driver = 0;

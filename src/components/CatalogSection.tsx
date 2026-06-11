@@ -459,7 +459,7 @@ export default function CatalogSection({
                               setSelectedDetailMachine(machine);
                               onAddSystemLog?.("system", currentUser?.name ?? "Gast", `Bekijkt specificaties: "${machine.name}"`);
                             }}
-                            className="flex-1 py-2.5 rounded-xl border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 text-[11px] font-bold transition-all duration-200 active:scale-[0.97] cursor-pointer"
+                            className="flex-1 py-2.5 rounded-xl border border-indigo-200 hover:border-indigo-400 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 hover:text-indigo-900 text-[11px] font-bold transition-all duration-200 active:scale-[0.97] cursor-pointer"
                           >
                             {t("btnSpecifications")}
                           </button>

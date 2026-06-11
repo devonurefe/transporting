@@ -101,6 +101,20 @@ export default function App() {
   }, [location.pathname]);
 
   const [fabOpen, setFabOpen] = useState(false);
+  const [fabPulse, setFabPulse] = useState(false);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setFabPulse(prev => {
+        if (!prev) {
+          setTimeout(() => setFabPulse(false), 900);
+          return true;
+        }
+        return prev;
+      });
+    }, 15000);
+    return () => clearInterval(interval);
+  }, []);
 
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [selectedMachine, setSelectedMachine] = useState<Machine | null>(null);
@@ -711,10 +725,13 @@ export default function App() {
           </AnimatePresence>
 
           <div className="relative">
+            {fabPulse && !fabOpen && (
+              <span className="absolute inset-0 rounded-full bg-[#25D366] animate-ping opacity-40 pointer-events-none" />
+            )}
             <motion.button
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
-              onClick={() => setFabOpen(v => !v)}
+              onClick={() => { setFabOpen(v => !v); setFabPulse(false); }}
               className={`relative flex items-center justify-center h-11 w-11 rounded-full text-white shadow-lg hover:scale-110 active:scale-95 transition-all cursor-pointer border-none shadow-emerald-500/25 ${fabOpen ? "bg-slate-700 hover:bg-slate-800" : "bg-[#25D366] hover:bg-[#1da851]"}`}
               title="Hulp nodig? Chat via WhatsApp"
             >

@@ -48,6 +48,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
   const [editWeeklyDiscountPercent, setEditWeeklyDiscountPercent] = useState("");
   const [editMonthlyDiscountPercent, setEditMonthlyDiscountPercent] = useState("");
   const [editWeekendPrice, setEditWeekendPrice] = useState("");
+  const [editTwoDayPrice, setEditTwoDayPrice] = useState("");
   const [editWeeklyPrice, setEditWeeklyPrice] = useState("");
   const [editMonthlyFlatPrice, setEditMonthlyFlatPrice] = useState("");
   const [editCampaignText, setEditCampaignText] = useState("");
@@ -119,6 +120,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
     setEditWeeklyDiscountPercent(m.weeklyDiscountPercent ? String(m.weeklyDiscountPercent) : "");
     setEditMonthlyDiscountPercent(m.monthlyDiscountPercent ? String(m.monthlyDiscountPercent) : "");
     setEditWeekendPrice(m.weekendPrice ? String(m.weekendPrice) : "");
+    setEditTwoDayPrice(m.twoDayPrice ? String(m.twoDayPrice) : "");
     setEditWeeklyPrice(m.weeklyPrice ? String(m.weeklyPrice) : "");
     setEditMonthlyFlatPrice(m.monthlyPrice ? String(m.monthlyPrice) : "");
     setEditCampaignText(m.campaignText || "");
@@ -243,6 +245,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
       weeklyDiscountPercent: editWeeklyDiscountPercent ? Number(editWeeklyDiscountPercent) : undefined,
       monthlyDiscountPercent: editMonthlyDiscountPercent ? Number(editMonthlyDiscountPercent) : undefined,
       weekendPrice: editWeekendPrice ? Number(editWeekendPrice) : undefined,
+      twoDayPrice: editTwoDayPrice ? Number(editTwoDayPrice) : undefined,
       weeklyPrice: editWeeklyPrice ? Number(editWeeklyPrice) : undefined,
       monthlyPrice: editMonthlyFlatPrice ? Number(editMonthlyFlatPrice) : undefined,
       campaignText: editCampaignText.trim() || undefined,
@@ -308,14 +311,19 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                 return (
                    <tr key={m.id} className="hover:bg-slate-50 transition-colors">
                     <td className="py-3 font-bold text-slate-800 flex items-center space-x-2.5">
-                      <div className="h-8 w-11 rounded-lg overflow-hidden shrink-0 border border-slate-200 bg-slate-100">
-                        <img 
-                          src={m.imageUrl} 
-                          alt="" 
-                          className="h-full w-full object-cover" 
-                          referrerPolicy="no-referrer" 
+                      <div className="h-11 w-16 rounded-lg overflow-hidden shrink-0 border border-slate-200 bg-slate-100">
+                        <img
+                          src={m.imageUrl || (m.additionalImages as string[])?.[0] || "/placeholder-machine.webp"}
+                          alt=""
+                          className="h-full w-full object-cover"
+                          referrerPolicy="no-referrer"
                           onError={(e) => {
-                            e.currentTarget.src = "/placeholder-machine.webp";
+                            const fallback = (m.additionalImages as string[])?.[0];
+                            if (fallback && e.currentTarget.src !== fallback) {
+                              e.currentTarget.src = fallback;
+                            } else {
+                              e.currentTarget.src = "/placeholder-machine.webp";
+                            }
                           }}
                         />
                       </div>
@@ -641,7 +649,19 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                       />
                     </div>
 
-                    <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-slate-100 pt-3">
+                    <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-slate-100 pt-3">
+                      <div className="space-y-1">
+                        <label className="text-xs text-slate-700 block font-bold">{t("2 Dagen (doordeweeks) €", "2 Days (weekdays) €", "2 Gün (hafta içi) €")}</label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="any"
+                          value={editTwoDayPrice}
+                          onChange={(e) => setEditTwoDayPrice(e.target.value)}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
+                        />
+                      </div>
+
                       <div className="space-y-1">
                         <label className="text-xs text-slate-700 block font-bold">{t("Weekend (2-3 dgn) €", "Weekend (2-3 days) €", "Hafta Sonu (2-3 gün) €")}</label>
                         <input

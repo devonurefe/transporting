@@ -89,7 +89,11 @@ export default function BookingSection({
   // Calculate item subtotal using flat-rate prices when available,
   // otherwise fall back to pricePerDay × days × (1 - discountPercent/100)
   const calculateItemSubtotal = (machine: Machine, days: number, profile: string, rules: CampaignRule[]): number => {
-    // Weekend flat rate: 2–3 days
+    // 2-day weekday flat rate (takes priority over weekendPrice for exactly 2 days)
+    if (days === 2 && machine.twoDayPrice) {
+      return machine.twoDayPrice;
+    }
+    // Weekend flat rate: 2–3 days (if no twoDayPrice for 2 days, or always for 3 days)
     if ((days === 2 || days === 3) && machine.weekendPrice) {
       return machine.weekendPrice;
     }
@@ -381,8 +385,8 @@ export default function BookingSection({
       let discountLabel = "Korting";
       const leadItem = cartItems[0]?.machine;
       if (leadItem) {
-        if (totalDays >= 30) discountLabel = "Maandkorting";
-        else if (totalDays >= 7) discountLabel = "Weekkorting";
+        if (totalDays >= 28) discountLabel = "Maandkorting";
+        else if (totalDays >= 5) discountLabel = "Weekkorting";
 
         const activeRules = campaignRules.filter(r => r.isActive);
         const matchingRuleName = activeRules.find(rule => {
@@ -431,9 +435,9 @@ export default function BookingSection({
     const discountAmount = Math.max(0, rawSubtotal - itemSub);
 
     let discountLabel = "Korting";
-    if (days >= 30) {
+    if (days >= 28) {
       discountLabel = "Maandkorting";
-    } else if (days >= 7) {
+    } else if (days >= 5) {
       discountLabel = "Weekkorting";
     }
 

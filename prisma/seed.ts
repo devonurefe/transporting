@@ -118,6 +118,7 @@ const defaultMachines = [
     campaignDiscountPercent: null,
     campaignDiscountAmount: null,
     weekendPrice: 150,
+    twoDayPrice: 190,
     weeklyPrice: 335,
     monthlyPrice: 490
   },
@@ -141,6 +142,7 @@ const defaultMachines = [
     campaignDiscountPercent: null,
     campaignDiscountAmount: null,
     weekendPrice: 150,
+    twoDayPrice: 190,
     weeklyPrice: 335,
     monthlyPrice: 490
   },
@@ -164,6 +166,7 @@ const defaultMachines = [
     campaignDiscountPercent: null,
     campaignDiscountAmount: null,
     weekendPrice: 150,
+    twoDayPrice: 190,
     weeklyPrice: 335,
     monthlyPrice: 490
   },
@@ -187,6 +190,7 @@ const defaultMachines = [
     campaignDiscountPercent: null,
     campaignDiscountAmount: null,
     weekendPrice: 195,
+    twoDayPrice: 240,
     weeklyPrice: 430,
     monthlyPrice: 590
   },
@@ -212,6 +216,7 @@ const defaultMachines = [
     campaignDiscountPercent: null,
     campaignDiscountAmount: null,
     weekendPrice: 290,
+    twoDayPrice: 360,
     weeklyPrice: 750,
     monthlyPrice: 1100
   },
@@ -235,6 +240,7 @@ const defaultMachines = [
     campaignDiscountPercent: null,
     campaignDiscountAmount: null,
     weekendPrice: 360,
+    twoDayPrice: 450,
     weeklyPrice: 920,
     monthlyPrice: 1350
   },
@@ -546,6 +552,7 @@ const defaultMachines = [
     campaignDiscountPercent: null,
     campaignDiscountAmount: null,
     weekendPrice: 129,
+    twoDayPrice: 160,
     weeklyPrice: 290,
     monthlyPrice: null
   },
@@ -569,6 +576,7 @@ const defaultMachines = [
     campaignDiscountPercent: null,
     campaignDiscountAmount: null,
     weekendPrice: 159,
+    twoDayPrice: 199,
     weeklyPrice: 360,
     monthlyPrice: null
   },
@@ -592,6 +600,7 @@ const defaultMachines = [
     campaignDiscountPercent: null,
     campaignDiscountAmount: null,
     weekendPrice: 159,
+    twoDayPrice: 199,
     weeklyPrice: 360,
     monthlyPrice: null
   },
@@ -707,9 +716,11 @@ async function main() {
     // Back-fill the three flat-rate price fields that were added 2026-06.
     // Only write them when the column is still null (first run after db push).
     const wp = (mach as any).weekendPrice ?? null;
+    const tdp = (mach as any).twoDayPrice ?? null;
     const wkp = (mach as any).weeklyPrice ?? null;
     const mp = (mach as any).monthlyPrice ?? null;
     if (wp !== null) await prisma.machine.updateMany({ where: { id: mach.id, weekendPrice: null }, data: { weekendPrice: wp } });
+    if (tdp !== null) await prisma.machine.updateMany({ where: { id: mach.id, twoDayPrice: null }, data: { twoDayPrice: tdp } });
     if (wkp !== null) await prisma.machine.updateMany({ where: { id: mach.id, weeklyPrice: null }, data: { weeklyPrice: wkp } });
     if (mp !== null) await prisma.machine.updateMany({ where: { id: mach.id, monthlyPrice: null }, data: { monthlyPrice: mp } });
   }

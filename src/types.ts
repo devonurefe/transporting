@@ -22,7 +22,8 @@ export interface Machine {
   campaignText?: string; // campaign tag, e.g., "LenteKorting"
   campaignDiscountPercent?: number; // campaign discount %
   campaignDiscountAmount?: number; // campaign discount EUR amount
-  weekendPrice?: number; // flat rate for 2-3 day booking
+  weekendPrice?: number; // flat rate for 3-day (weekend) booking
+  twoDayPrice?: number; // flat rate for exactly 2 days (weekday rate, distinct from weekend)
   weeklyPrice?: number; // flat rate for 5-day werkweek booking
   monthlyPrice?: number; // flat rate for 28-day booking
   packageContents?: string; // Semicolon separated included items checklist

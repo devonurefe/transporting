@@ -668,7 +668,11 @@ export default function App() {
 
       {/* FLOATING WHATSAPP BUTTON + QUICK TEMPLATES */}
       {!isAdminMode && (
-        <div className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-[51] flex flex-col items-end gap-2">
+        <>
+          {fabOpen && (
+            <div className="fixed inset-0 z-[50]" onClick={() => setFabOpen(false)} />
+          )}
+          <div className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-[51] flex flex-col items-end gap-2">
           <AnimatePresence>
             {fabOpen && (
               <motion.div
@@ -738,11 +742,8 @@ export default function App() {
               <MessageCircle className="h-5 w-5" />
             </motion.button>
           </div>
-
-          {fabOpen && (
-            <div className="fixed inset-0 z-[49]" onClick={() => setFabOpen(false)} />
-          )}
         </div>
+        </>
       )}
 
 

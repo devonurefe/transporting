@@ -160,7 +160,14 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
   }
 
   // customerProfile whitelist (prevents XSS/injection via stored profile)
-  const VALID_PROFILES = ["Schilder", "Particulier", "Installateur", "Hovenier", "Aannemer", "Glazenwasser", "Stukadoor", "Magazijn", "Gevelreiniger"];
+  const VALID_PROFILES = [
+    // Current values (must match BookingStep2 + MyOrdersSection dropdowns exactly)
+    "Schilder", "Hovenier / Groenverzorging", "Glazenwasser / Gevelreiniger",
+    "Aannemer", "Installateur / Elektricien", "Dakdekker / Gevelwerker",
+    "Industrieel Onderhoud", "Particulier", "Overig / Anders",
+    // Legacy values kept for existing orders already stored in the database
+    "Installateur", "Hovenier", "Glazenwasser", "Stukadoor", "Magazijn", "Gevelreiniger",
+  ];
   if (orderData.customerProfile && !VALID_PROFILES.includes(String(orderData.customerProfile))) {
     return res.status(400).json({ error: "Profiel type niet ondersteund" });
   }

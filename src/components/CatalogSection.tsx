@@ -67,6 +67,168 @@ interface CatalogSectionProps {
   currentUser?: { name: string } | null;
 }
 
+// Per-model extra specs (platformhoogte, draagvermogen, afmeting, breedte etc.)
+// Unit variants (-1/-2/-3 suffix) fall back to the base key via getExtraSpecs().
+const MACHINE_SPECS: Record<string, Array<{ label: string; value: string }>> = {
+  "nifty-120": [
+    { label: "Platformhoogte",    value: "10,2 m" },
+    { label: "Platformafmeting",  value: "76 × 163 cm" },
+    { label: "Draagvermogen",     value: "200 kg (2 pers.)" },
+    { label: "Transportbreedte",  value: "159 cm" },
+    { label: "Transportlengte",   value: "468 cm" },
+    { label: "Transporthoogte",   value: "180 cm" },
+    { label: "Kogelgewicht",      value: "ca. 75 kg" },
+    { label: "Rijbewijs",         value: "Categorie B vereist" },
+    { label: "Opsteltijd",        value: "± 5 min" },
+    { label: "Stroomopname",      value: "230 V / accu" },
+  ],
+  "nifty-170": [
+    { label: "Platformhoogte",      value: "15,1 m" },
+    { label: "Platformafmeting",    value: "76 × 163 cm" },
+    { label: "Draagvermogen",       value: "200 kg (2 pers.)" },
+    { label: "Transportbreedte",    value: "179 cm" },
+    { label: "Transporthoogte",     value: "ca. 190 cm" },
+    { label: "Rijbewijs",           value: "Categorie B vereist" },
+    { label: "Opsteltijd",          value: "± 10 min" },
+    { label: "Aandrijving rijden",  value: "Diesel + elektrisch" },
+  ],
+  "hinowa-15-70": [
+    { label: "Platformhoogte",          value: "13,4 m" },
+    { label: "Platformafmeting",        value: "70 × 120 cm" },
+    { label: "Draagvermogen",           value: "200 kg (2 pers.)" },
+    { label: "Rupsbreedte",             value: "79 cm (59 cm ingetrokken)" },
+    { label: "Min. poortbreedte",       value: "60 cm" },
+    { label: "Max. helling (rijden)",   value: "25°" },
+    { label: "Stabilisatoren",          value: "4× automatisch" },
+    { label: "Rijden in geheven stand", value: "Niet toegestaan" },
+  ],
+  "hinowa-17-75": [
+    { label: "Platformhoogte",          value: "15,06 m" },
+    { label: "Platformafmeting",        value: "70 × 120 cm" },
+    { label: "Draagvermogen",           value: "200 kg (2 pers.)" },
+    { label: "Rupsbreedte",             value: "89 cm" },
+    { label: "Min. poortbreedte",       value: "90 cm" },
+    { label: "Max. helling (rijden)",   value: "20°" },
+    { label: "Stabilisatoren",          value: "4× automatisch" },
+    { label: "Rijden in geheven stand", value: "Niet toegestaan" },
+  ],
+  "optimum-8": [
+    { label: "Platformhoogte",     value: "5,76 m" },
+    { label: "Platformafmeting",   value: "136 × 69 cm (uitschuif: 256 × 69 cm)" },
+    { label: "Draagvermogen",      value: "230 kg (2 pers.)" },
+    { label: "Machinebreedte",     value: "76 cm" },
+    { label: "Accu",               value: "4 × 6 V / 24 V" },
+    { label: "Non-marking banden", value: "Ja" },
+    { label: "Max. helling",       value: "25 %" },
+  ],
+  "compact-8": [
+    { label: "Platformhoogte",     value: "6,17 m" },
+    { label: "Platformafmeting",   value: "165 × 76 cm (uitschuif: 265 × 76 cm)" },
+    { label: "Draagvermogen",      value: "230 kg (2 pers.)" },
+    { label: "Machinebreedte",     value: "82 cm" },
+    { label: "Accu",               value: "4 × 6 V / 24 V" },
+    { label: "Non-marking banden", value: "Ja" },
+    { label: "Max. helling",       value: "25 %" },
+  ],
+  "compact-10n": [
+    { label: "Platformhoogte",     value: "7,96 m" },
+    { label: "Platformafmeting",   value: "126 × 81 cm (uitschuif: 251 × 81 cm)" },
+    { label: "Draagvermogen",      value: "450 kg (2 pers.)" },
+    { label: "Machinebreedte",     value: "81 cm" },
+    { label: "Accu",               value: "4 × 6 V / 24 V" },
+    { label: "Non-marking banden", value: "Ja" },
+    { label: "Min. deuropening",   value: "81 cm breed" },
+  ],
+  "dingli-6m": [
+    { label: "Platformhoogte",     value: "4,0 m" },
+    { label: "Platformafmeting",   value: "74 × 60 cm" },
+    { label: "Draagvermogen",      value: "230 kg" },
+    { label: "Machinebreedte",     value: "74 cm" },
+    { label: "Accu",               value: "2 × 12 V / 24 V" },
+    { label: "Non-marking banden", value: "Ja" },
+    { label: "Min. deuropening",   value: "74 cm breed" },
+  ],
+  "altrex-rs44": [
+    { label: "Platformhoogte",   value: "2,0 m" },
+    { label: "Platformafmeting", value: "ca. 135 × 60 cm" },
+    { label: "Draagvermogen",    value: "200 kg" },
+    { label: "Machinebreedte",   value: "75 cm" },
+    { label: "Materiaal",        value: "Aluminium" },
+    { label: "Wielen",           value: "4× met vergrendeling" },
+    { label: "Montagetijd",      value: "± 5 min" },
+    { label: "Norm",             value: "NEN-EN 1004" },
+  ],
+  "star-10": [
+    { label: "Platformhoogte",     value: "8,0 m" },
+    { label: "Platformafmeting",   value: "80 × 120 cm" },
+    { label: "Draagvermogen",      value: "230 kg (1 pers.)" },
+    { label: "Machinebreedte",     value: "78 cm" },
+    { label: "Accu",               value: "24 V" },
+    { label: "Draairadius",        value: "0 cm (zero-radius)" },
+    { label: "Non-marking banden", value: "Ja" },
+  ],
+  "skyjack-sj16": [
+    { label: "Platformhoogte",     value: "4,6 m" },
+    { label: "Platformafmeting",   value: "74 × 76 cm" },
+    { label: "Draagvermogen",      value: "136 kg (1 pers.)" },
+    { label: "Machinebreedte",     value: "74 cm" },
+    { label: "Accu",               value: "24 V" },
+    { label: "Draairadius",        value: "0 cm (zero-radius)" },
+    { label: "Non-marking banden", value: "Ja" },
+  ],
+  "bravi-mini-hd": [
+    { label: "Platformhoogte",     value: "2,9 m" },
+    { label: "Platformafmeting",   value: "70 × 70 cm" },
+    { label: "Draagvermogen",      value: "200 kg" },
+    { label: "Machinebreedte",     value: "69 cm" },
+    { label: "Accu",               value: "24 V" },
+    { label: "Min. deuropening",   value: "69 cm breed" },
+    { label: "Liftvriendelijk",    value: "Ja (smal profiel)" },
+    { label: "Non-marking banden", value: "Ja" },
+  ],
+  "jlg-1230es": [
+    { label: "Platformhoogte",     value: "3,65 m (12 ft)" },
+    { label: "Platformafmeting",   value: "76 × 68 cm" },
+    { label: "Draagvermogen",      value: "227 kg" },
+    { label: "Machinebreedte",     value: "76 cm" },
+    { label: "Accu",               value: "24 V" },
+    { label: "Non-marking banden", value: "Ja" },
+    { label: "Rijden geheven",     value: "Niet toegestaan" },
+  ],
+  "ladderlift-18": [
+    { label: "Max. belasting",    value: "200 kg (goederen)" },
+    { label: "Bandenbreedte",     value: "ca. 40 cm" },
+    { label: "Transportsnelheid", value: "ca. 0,4 m/s" },
+    { label: "Stroomvereiste",    value: "230 V / 16 A" },
+    { label: "Personentransport", value: "Niet toegestaan" },
+    { label: "Opsteltijd",        value: "± 15 min" },
+    { label: "Bereik (etages)",   value: "t/m ca. 5e verdieping" },
+  ],
+  "ladderlift-21": [
+    { label: "Max. belasting",    value: "250 kg (goederen)" },
+    { label: "Bandenbreedte",     value: "ca. 40 cm" },
+    { label: "Transportsnelheid", value: "ca. 0,5 m/s" },
+    { label: "Stroomvereiste",    value: "230 V / 16 A" },
+    { label: "Personentransport", value: "Niet toegestaan" },
+    { label: "Opsteltijd",        value: "± 20 min" },
+    { label: "Bereik (etages)",   value: "t/m ca. 7e verdieping" },
+  ],
+  "ecolift": [
+    { label: "Platformhoogte",   value: "2,2 m" },
+    { label: "Platformafmeting", value: "65 × 65 cm" },
+    { label: "Draagvermogen",    value: "150 kg (incl. persoon)" },
+    { label: "Machinebreedte",   value: "69 cm" },
+    { label: "Bediening",        value: "Handmatig (zwengel)" },
+    { label: "Energiebron",      value: "Geen (geen accu / stroom)" },
+    { label: "Min. deuropening", value: "70 cm breed" },
+    { label: "Norm",             value: "CE gecertificeerd" },
+  ],
+};
+
+// Look up extra specs: exact ID first, then strip trailing unit suffix (-1/-2/-3).
+const getExtraSpecs = (id: string) =>
+  MACHINE_SPECS[id] ?? MACHINE_SPECS[id.replace(/-[123]$/, "")] ?? [];
+
 function computeDiscounts(m: Machine) {
   // Use pricePerDay as the regular day rate baseline for discount % calculation
   const weekly = m.weeklyPrice && m.pricePerDay > 0
@@ -114,7 +276,9 @@ export default function CatalogSection({
   };
 
   const formatPrice = (p: number): string =>
-    p % 1 === 0 ? String(Math.round(p)) : p.toFixed(2).replace(".", ",");
+    p % 1 === 0
+      ? Math.round(p).toLocaleString("nl-NL")
+      : p.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   const formatShortDate = (iso: string): string => {
     const d = new Date(iso);
@@ -307,8 +471,8 @@ export default function CatalogSection({
               </div>
             )}
 
-            {/* Grid layout */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Grid layout — wider cards: 2-col from sm, 3-col only at xl */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5 sm:gap-6">
               <AnimatePresence mode="popLayout">
                 {filteredMachines.map((machine) => {
                   return (
@@ -328,7 +492,7 @@ export default function CatalogSection({
                         const nextDate = !available ? getNextAvailableDate(machine.id) : null;
                         const availText = available ? "Beschikbaar" : nextDate ? `Vrij ${formatShortDate(nextDate)}` : "Vol geboekt";
                         return (
-                          <div className={`absolute top-3 left-3 z-20 flex items-center gap-1 py-0.5 px-2 rounded-full text-[9px] font-bold shadow ${
+                          <div className={`absolute top-3 left-3 z-20 flex items-center gap-1 py-1 px-2.5 rounded-full text-[10px] font-bold shadow-sm ${
                             available
                               ? "bg-emerald-50 border border-emerald-200 text-emerald-700"
                               : "bg-amber-50 border border-amber-200 text-amber-700"
@@ -362,13 +526,13 @@ export default function CatalogSection({
                             }}
                             className="h-3 w-3 accent-indigo-600 cursor-pointer"
                           />
-                          <span className="text-[9px] font-bold text-slate-700 select-none">Vergelijk</span>
+                          <span className="text-[10px] font-bold text-slate-700 select-none">Vergelijk</span>
                         </label>
                       </div>
 
                       {/* IMAGE with category + powerType overlay — clickable to open detail modal */}
                       <div
-                        className="relative aspect-[4/3] w-full overflow-hidden bg-white cursor-pointer"
+                        className="relative aspect-[3/2] w-full overflow-hidden bg-slate-50 cursor-pointer"
                         onClick={() => {
                           setSelectedDetailMachine(machine);
                           onAddSystemLog?.("system", currentUser?.name ?? "Gast", `Bekijkt specificaties: "${machine.name}"`);
@@ -393,7 +557,7 @@ export default function CatalogSection({
                           <span className="text-[10px] font-bold text-white/95 uppercase tracking-wider leading-none">
                             {machine.categoryLabel}
                           </span>
-                          <span className="text-[8px] font-mono font-bold text-white/80 bg-black/30 backdrop-blur-sm px-1.5 py-0.5 rounded-md">
+                          <span className="text-[10px] font-semibold text-white/90 bg-black/30 backdrop-blur-sm px-2 py-0.5 rounded-md">
                             {machine.powerType}
                           </span>
                         </div>
@@ -416,32 +580,32 @@ export default function CatalogSection({
                             </h3>
                           </div>
                           <div className="text-right shrink-0">
-                            <div className="text-xl font-mono font-extrabold text-slate-900 leading-none">
+                            <div className="text-xl font-display font-black leading-none bg-gradient-to-br from-indigo-600 to-violet-600 bg-clip-text text-transparent">
                               €{formatPrice(vp(machine.pricePerDay))}
                             </div>
-                            <div className="text-[9px] text-slate-400 font-mono mt-0.5">per dag {vatLabel}</div>
+                            <div className="text-[10px] text-slate-400 mt-0.5">per dag {vatLabel}</div>
                             {machine.oneDayPrice && machine.oneDayPrice < machine.pricePerDay && (
-                              <div className="text-[9px] text-amber-600 font-bold mt-0.5">1 dag actie €{formatPrice(vp(machine.oneDayPrice))}</div>
+                              <div className="text-[10px] text-amber-600 font-bold mt-0.5">1 dag actie €{formatPrice(vp(machine.oneDayPrice))}</div>
                             )}
                           </div>
                         </div>
 
-                        {/* Tarieven — clean uniform flat-rate strip */}
+                        {/* Tarieven — colorful rate pills */}
                         {(machine.weekendPrice || machine.weeklyPrice || machine.monthlyPrice) && (
                           <div className="flex flex-wrap items-center gap-1.5">
                             {machine.weekendPrice && (
-                              <span className="text-[9px] font-mono font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
-                                weekend <span className="font-bold text-slate-800">€{formatPrice(vp(machine.weekendPrice))}</span>
+                              <span className="text-[10px] font-semibold text-violet-700 bg-violet-50 border border-violet-100 px-2 py-0.5 rounded-md">
+                                wknd <span className="font-extrabold">€{formatPrice(vp(machine.weekendPrice))}</span>
                               </span>
                             )}
                             {machine.weeklyPrice && (
-                              <span className="text-[9px] font-mono font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
-                                week <span className="font-bold text-slate-800">€{formatPrice(vp(machine.weeklyPrice))}</span>
+                              <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-md">
+                                week <span className="font-extrabold">€{formatPrice(vp(machine.weeklyPrice))}</span>
                               </span>
                             )}
                             {machine.monthlyPrice && (
-                              <span className="text-[9px] font-mono font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
-                                maand <span className="font-bold text-slate-800">€{formatPrice(vp(machine.monthlyPrice))}</span>
+                              <span className="text-[10px] font-semibold text-teal-700 bg-teal-50 border border-teal-100 px-2 py-0.5 rounded-md">
+                                maand <span className="font-extrabold">€{formatPrice(vp(machine.monthlyPrice))}</span>
                               </span>
                             )}
                           </div>
@@ -464,44 +628,44 @@ export default function CatalogSection({
                         {/* SuitableFor — max 2 plain text chips */}
                         <div className="flex items-center gap-1.5 flex-wrap">
                           {(machine.suitableFor ?? []).length === 0 && (
-                            <span className="text-[9px] text-slate-400 italic">Algemeen gebruik</span>
+                            <span className="text-[10px] text-slate-400 italic">Algemeen gebruik</span>
                           )}
                           {(machine.suitableFor ?? []).slice(0, 2).map((prof) => (
                             <span
                               key={prof}
-                              className="text-[9px] font-semibold text-slate-600 bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 px-2 py-0.5 rounded-full transition-colors duration-150 cursor-default select-none"
+                              className="text-[10px] font-semibold text-slate-600 bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 px-2 py-0.5 rounded-full transition-colors duration-150 cursor-default select-none"
                             >
                               {prof}
                             </span>
                           ))}
                           {(machine.suitableFor ?? []).length > 2 && (
-                            <span className="text-[9px] text-slate-400 font-semibold px-1 select-none">+{machine.suitableFor.length - 2} meer</span>
+                            <span className="text-[10px] text-slate-400 font-semibold px-1 select-none">+{machine.suitableFor.length - 2} meer</span>
                           )}
                         </div>
 
                         {/* Campaign badge */}
                         {machine.campaignText && (
-                          <div className="flex items-center gap-1.5 text-[9px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-lg w-fit">
+                          <div className="flex items-center gap-1.5 text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-lg w-fit">
                             <Zap className="h-3 w-3 text-amber-500" />
                             {machine.campaignText}
                             {machine.campaignDiscountPercent && ` −${machine.campaignDiscountPercent}%`}
                           </div>
                         )}
 
-                        {/* Action buttons */}
-                        <div className="flex gap-2 mt-auto pt-1">
+                        {/* Action buttons — primary CTA is dominant */}
+                        <div className="flex gap-2 mt-auto pt-1.5">
                           <button
                             onClick={() => {
                               setSelectedDetailMachine(machine);
                               onAddSystemLog?.("system", currentUser?.name ?? "Gast", `Bekijkt specificaties: "${machine.name}"`);
                             }}
-                            className="flex-1 py-2.5 rounded-xl border border-indigo-200 hover:border-indigo-400 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 hover:text-indigo-900 text-[11px] font-bold transition-all duration-200 active:scale-[0.97] cursor-pointer"
+                            className="flex-none px-3 py-3 rounded-xl border border-slate-200 hover:border-slate-300 bg-transparent hover:bg-slate-50 text-slate-600 hover:text-slate-800 text-[11px] font-semibold transition-all duration-200 active:scale-[0.97] cursor-pointer"
                           >
                             {t("btnSpecifications")}
                           </button>
                           <button
                             onClick={() => onSelectMachineForBooking(machine)}
-                            className="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-[11px] font-bold transition-all duration-200 active:scale-[0.97] cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
+                            className="flex-1 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-xs font-bold transition-all duration-200 active:scale-[0.97] cursor-pointer flex items-center justify-center gap-1.5 shadow-sm hover:shadow-md"
                           >
                             <ShoppingBag className="h-3.5 w-3.5" />
                             {t("btnRentNow")}
@@ -1137,6 +1301,12 @@ export default function CatalogSection({
                             {selectedDetailMachine.powerType}
                           </span>
                         </div>
+                        {getExtraSpecs(selectedDetailMachine.id).map((spec) => (
+                          <div key={spec.label} className="flex items-center justify-between px-3 py-2 bg-white">
+                            <span className="text-[10px] font-mono text-slate-400">{spec.label}</span>
+                            <span className="text-sm font-bold text-slate-700 text-right max-w-[55%]">{spec.value}</span>
+                          </div>
+                        ))}
                       </div>
                       {selectedDetailMachine.packageContents && (() => {
                         const items = selectedDetailMachine.packageContents!.split(";").map(s => s.trim()).filter(Boolean);

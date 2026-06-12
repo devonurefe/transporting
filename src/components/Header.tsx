@@ -27,7 +27,7 @@ import { useLanguageStore } from "../store/languageStore";
 import { useAppStore } from "../store/appStore";
 import { AppNotification, UserProfile, CartItem } from "../types";
 
-export function HuurGoLogo({ className = "h-8" }: { className?: string }) {
+export function HuurGoLogo({ className = "h-8", dark = false }: { className?: string; dark?: boolean }) {
   return (
     <div className={`flex items-center gap-3 ${className}`}>
       {/* Green accent bar — scales with container height */}
@@ -44,11 +44,11 @@ export function HuurGoLogo({ className = "h-8" }: { className?: string }) {
       {/* Wordmark */}
       <div className="flex flex-col leading-none select-none">
         <div className="flex items-baseline gap-0">
-          <span className="font-display font-black tracking-tight text-slate-900" style={{ fontSize: '1.25em', letterSpacing: '-0.03em' }}>huur</span>
-          <span className="font-display font-black tracking-tight text-orange-500" style={{ fontSize: '1.25em', letterSpacing: '-0.03em' }}>go</span>
-          <span className="font-display font-black text-emerald-500" style={{ fontSize: '1.25em' }}>.</span>
+          <span className={`font-display font-black tracking-tight text-[1.25em]`} style={{ letterSpacing: '-0.03em', color: dark ? '#fff' : '#0f172a' }}>huur</span>
+          <span className="font-display font-black tracking-tight text-orange-500 text-[1.25em]" style={{ letterSpacing: '-0.03em' }}>go</span>
+          <span className="font-display font-black text-emerald-500 text-[1.25em]">.</span>
         </div>
-        <span className="text-slate-400 font-semibold hidden sm:block" style={{ fontSize: '0.48em', letterSpacing: '0.18em', textTransform: 'uppercase', marginTop: '2px' }}>Simpel en snel</span>
+        <span className={`font-semibold hidden sm:block text-[0.48em] uppercase tracking-[0.18em] mt-[2px] ${dark ? 'text-slate-500' : 'text-slate-400'}`}>Simpel en snel</span>
       </div>
     </div>
   );

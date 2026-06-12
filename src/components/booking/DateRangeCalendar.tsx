@@ -174,7 +174,7 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
 
   const validRange = !!draftStart && !!draftEnd && checkAvailability(machine.id, draftStart, draftEnd, orders, blockedDates, today).available;
   const days = validRange ? calculateRentalDays(draftStart, draftEnd) : 0;
-  const subtotal = validRange ? calculateItemSubtotal(machine, days, profile, campaignRules, draftStart) : 0;
+  const subtotal = validRange ? calculateItemSubtotal(machine, days, profile, campaignRules) : 0;
 
   const confirm = () => { if (!validRange) return; onConfirm(draftStart, draftEnd); close(); };
   const reset = () => { setDraftStart(""); setDraftEnd(""); };

@@ -174,7 +174,7 @@ export default function AdminSection({
               className="w-full py-3 mt-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-slate-950 font-black text-xs rounded-xl shadow-lg transition-transform hover:scale-[1.01] active:scale-99 cursor-pointer flex items-center justify-center space-x-1.5 border-none"
             >
               <LogIn className="h-4 w-4 shrink-0" />
-              <span>Verbinding Maken (Accederen)</span>
+              <span>Inloggen als Beheerder</span>
             </button>
           </form>
 

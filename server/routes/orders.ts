@@ -8,6 +8,31 @@ import { emailService } from "../services/emailService.js";
 
 export const ordersRouter = Router();
 
+// Addons are stored as a JSON string column — a corrupt row must not crash the request
+function safeParseAddons(raw: string | null): any[] {
+  try {
+    const parsed = JSON.parse(raw || "[]");
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    console.error("Corrupt addons JSON in order row:", raw?.slice(0, 100));
+    return [];
+  }
+}
+
+// Serializable transactions abort with P2034 when two bookings race on the same
+// machine — retry with backoff instead of surfacing a 500 to the customer
+async function withSerializableRetry<T>(fn: () => Promise<T>, retries = 3): Promise<T> {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await fn();
+    } catch (error: any) {
+      const isSerializationFailure = error?.code === "P2034" || error?.code === "40001";
+      if (!isSerializationFailure || attempt >= retries) throw error;
+      await new Promise(r => setTimeout(r, attempt * 100 + Math.random() * 100));
+    }
+  }
+}
+
 const orderCreationLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   max: 6,
@@ -89,7 +114,7 @@ ordersRouter.get("/", requireAuth as any, async (req: AuthenticatedRequest, res:
         ...o,
         startDate: o.startDate.toISOString().split("T")[0],
         endDate: o.endDate.toISOString().split("T")[0],
-        addons: JSON.parse(o.addons || "[]")
+        addons: safeParseAddons(o.addons)
       }));
       return res.json(formatted);
     } else {
@@ -101,7 +126,7 @@ ordersRouter.get("/", requireAuth as any, async (req: AuthenticatedRequest, res:
         ...o,
         startDate: o.startDate.toISOString().split("T")[0],
         endDate: o.endDate.toISOString().split("T")[0],
-        addons: JSON.parse(o.addons || "[]")
+        addons: safeParseAddons(o.addons)
       }));
       return res.json(formatted);
     }
@@ -187,10 +212,13 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
       return res.status(400).json({ error: "Prijs niet actueel. Ververs de pagina en probeer opnieuw." });
     }
 
-    // Server-side financial recalculation — prevent subtotal/VAT/total manipulation
-    const rentalDays = Number(orderData.rentalDays);
-    if (!rentalDays || rentalDays < 1 || !Number.isInteger(rentalDays)) {
-      return res.status(400).json({ error: "Minimum huurperiode is 1 dag" });
+    // Server-side financial recalculation — prevent subtotal/VAT/total manipulation.
+    // rentalDays is recomputed from the dates (inclusive, same formula as
+    // BookingSection.tsx) — never trusted from the client, otherwise a 30-day
+    // booking could be paid as a 1-day rental.
+    const rentalDays = Math.max(1, Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24)) + 1);
+    if (orderData.rentalDays !== undefined && Number(orderData.rentalDays) !== rentalDays) {
+      return res.status(400).json({ error: "Huurperiode komt niet overeen met de gekozen datums. Ververs de pagina en probeer opnieuw." });
     }
     if (rentalDays > 365) {
       return res.status(400).json({ error: "Maximale huurperiode is 365 dagen. Neem contact op voor langere periodes." });
@@ -256,7 +284,7 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
     }
 
     // Serializable transaction: availability check + blocked-date check + create are atomic
-    const newOrder = await prisma.$transaction(async (tx) => {
+    const newOrder = await withSerializableRetry(() => prisma.$transaction(async (tx) => {
       const conflictingOrders = await tx.order.findMany({
         where: {
           machineId: orderData.machineId,
@@ -308,7 +336,7 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
           machinePrice: machine.pricePerDay,
           startDate,
           endDate,
-          rentalDays: Number(orderData.rentalDays),
+          rentalDays,
           deliveryType: orderData.deliveryType,
           deliveryAddress: orderData.deliveryAddress || "",
           customerName: orderData.customerName,
@@ -327,7 +355,7 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
           paymentStatus: "awaiting"
         }
       });
-    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }));
 
     // Trigger transactional emails asynchronously
     const emailData = {
@@ -343,7 +371,7 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
       ...newOrder,
       startDate: newOrder.startDate.toISOString().split("T")[0],
       endDate: newOrder.endDate.toISOString().split("T")[0],
-      addons: JSON.parse(newOrder.addons)
+      addons: safeParseAddons(newOrder.addons)
     });
   } catch (error: any) {
     if (error?.message === "CONFLICT_ORDER") {
@@ -357,6 +385,9 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
         error: "De machine is niet beschikbaar op bepaalde datums in de opgegeven periode",
         blockedDates: [{ date: error.date, reason: error.reason }]
       });
+    }
+    if (error?.code === "P2034" || error?.code === "40001") {
+      return res.status(409).json({ error: "Er is veel vraag naar deze machine. Probeer het over enkele seconden opnieuw." });
     }
     console.error("Error creating order:", error);
     res.status(500).json({ error: "Failed to create order" });
@@ -382,7 +413,7 @@ ordersRouter.put("/:id/payment", requireAdmin as any, async (req: AuthenticatedR
       ...updatedOrder,
       startDate: updatedOrder.startDate.toISOString().split("T")[0],
       endDate: updatedOrder.endDate.toISOString().split("T")[0],
-      addons: JSON.parse(updatedOrder.addons || "[]")
+      addons: safeParseAddons(updatedOrder.addons)
     });
   } catch (error) {
     console.error("Error updating payment status:", error);
@@ -396,10 +427,9 @@ ordersRouter.put("/:id/cancel", requireAuth as any, async (req: AuthenticatedReq
 
   try {
     const order = await prisma.order.findUnique({ where: { id } });
-    if (!order) return res.status(404).json({ error: "Bestelling niet gevonden" });
-
-    if (req.user?.role !== "admin" && order.customerId !== req.user?.id) {
-      return res.status(403).json({ error: "U heeft geen toestemming om deze bestelling te annuleren" });
+    // Same 404 for "not found" and "not yours" — don't confirm order IDs exist
+    if (!order || (req.user?.role !== "admin" && order.customerId !== req.user?.id)) {
+      return res.status(404).json({ error: "Bestelling niet gevonden" });
     }
 
     if (order.status !== "In behandeling") {
@@ -425,7 +455,7 @@ ordersRouter.put("/:id/cancel", requireAuth as any, async (req: AuthenticatedReq
       ...updatedOrder,
       startDate: updatedOrder.startDate.toISOString().split("T")[0],
       endDate: updatedOrder.endDate.toISOString().split("T")[0],
-      addons: JSON.parse(updatedOrder.addons || "[]")
+      addons: safeParseAddons(updatedOrder.addons)
     });
   } catch (error) {
     console.error("Error cancelling order:", error);
@@ -444,10 +474,8 @@ ordersRouter.post("/:id/rating", requireAuth as any, async (req: AuthenticatedRe
 
   try {
     const order = await prisma.order.findUnique({ where: { id } });
-    if (!order) return res.status(404).json({ error: "Bestelling niet gevonden" });
-
-    if (req.user?.role !== "admin" && order.customerId !== req.user?.id) {
-      return res.status(403).json({ error: "U heeft geen toestemming" });
+    if (!order || (req.user?.role !== "admin" && order.customerId !== req.user?.id)) {
+      return res.status(404).json({ error: "Bestelling niet gevonden" });
     }
 
     const orderRating = await prisma.orderRating.upsert({
@@ -469,10 +497,8 @@ ordersRouter.get("/:id/rating", requireAuth as any, async (req: AuthenticatedReq
 
   try {
     const order = await prisma.order.findUnique({ where: { id } });
-    if (!order) return res.status(404).json({ error: "Bestelling niet gevonden" });
-
-    if (req.user?.role !== "admin" && order.customerId !== req.user?.id) {
-      return res.status(403).json({ error: "U heeft geen toestemming" });
+    if (!order || (req.user?.role !== "admin" && order.customerId !== req.user?.id)) {
+      return res.status(404).json({ error: "Bestelling niet gevonden" });
     }
 
     const rating = await prisma.orderRating.findUnique({ where: { orderId: id } });
@@ -537,7 +563,7 @@ ordersRouter.put("/:id/status", requireAdmin as any, async (req: AuthenticatedRe
       ...updatedOrder,
       startDate: updatedOrder.startDate.toISOString().split("T")[0],
       endDate: updatedOrder.endDate.toISOString().split("T")[0],
-      addons: JSON.parse(updatedOrder.addons || "[]")
+      addons: safeParseAddons(updatedOrder.addons)
     });
   } catch (error) {
     console.error("Error updating order status:", error);

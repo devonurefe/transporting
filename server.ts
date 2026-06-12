@@ -118,13 +118,18 @@ async function startServer() {
   } else {
     console.log("Serving static production build from /dist...");
     const distPath = path.join(process.cwd(), "dist");
-    app.use(express.static(distPath));
+    // Vite hashes asset filenames, so /assets can be cached forever;
+    // index.html must always revalidate to pick up new deploys
+    app.use("/assets", express.static(path.join(distPath, "assets"), { maxAge: "1y", immutable: true }));
+    app.use("/images", express.static(path.join(distPath, "images"), { maxAge: "7d" }));
+    app.use(express.static(distPath, { maxAge: "1h", index: false }));
     app.get("*", (req, res) => {
+      res.setHeader("Cache-Control", "no-cache");
       res.sendFile(path.join(distPath, "index.html"));
     });
   }
 
-  app.listen(PORT, "0.0.0.0", () => {
+  const server = app.listen(PORT, "0.0.0.0", () => {
     console.log(`\n======================================================`);
     console.log(`🚀 HuurGo Server Running on http://localhost:${PORT}`);
     console.log(`📦 Serving full-stack React SPA`);
@@ -154,6 +159,24 @@ async function startServer() {
     // Daily rental reminder scheduler — fires at 07:00 server time each day
     scheduleDailyReminders();
   });
+
+  // Graceful shutdown: let in-flight requests finish before Render recycles the instance
+  const gracefulShutdown = (signal: string) => {
+    console.log(`${signal} received — closing server gracefully...`);
+    server.close(async () => {
+      try {
+        await prisma.$disconnect();
+      } finally {
+        process.exit(0);
+      }
+    });
+    setTimeout(() => {
+      console.error("Forced shutdown after 30s timeout");
+      process.exit(1);
+    }, 30_000).unref();
+  };
+  process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
+  process.on("SIGINT", () => gracefulShutdown("SIGINT"));
 }
 
 function scheduleDailyReminders() {

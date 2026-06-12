@@ -57,7 +57,7 @@ model BlockedDate {
   reason    String
   machine   Machine @relation(fields: [machineId], references: [id], onDelete: Cascade)
 
-  @@index([machineId, date])
+  @@unique([machineId, date])
 }
 
 model Customer {
@@ -72,6 +72,7 @@ model Customer {
   avatarUrl         String?
   isEmailVerified      Boolean   @default(false)
   verificationToken    String?
+  verificationExpiry   DateTime?
   passwordResetToken   String?
   passwordResetExpiry  DateTime?
   createdAt            DateTime  @default(now())
@@ -115,7 +116,7 @@ model Order {
   createdAt       DateTime  @default(now())
   customerId      String?
   addons          String
-  invoiceNumber   String?
+  invoiceNumber   String?   @unique
   paymentStatus   String    @default("awaiting")
 
   customer        Customer? @relation(fields: [customerId], references: [id])

@@ -35,6 +35,25 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
   const [editingMachine, setEditingMachine] = useState<Machine | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
 
+  // Delete confirmation modal — admin must type the machine name to confirm
+  const [deleteTarget, setDeleteTarget] = useState<Machine | null>(null);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget || deleteConfirmText.trim() !== deleteTarget.name) return;
+    setIsDeleting(true);
+    const success = await deleteMachine(deleteTarget.id);
+    setIsDeleting(false);
+    if (success) {
+      onAddSystemLog("fleet", adminUser?.name ?? "Admin", `Hoogwerker permanent verwijderd: ${deleteTarget.name}`);
+      setDeleteTarget(null);
+      setDeleteConfirmText("");
+    } else {
+      alert(t("Fout bij het verwijderen.", "Error deleting machine.", "Silme sırasında bir hata oluştu."));
+    }
+  };
+
   // Form parameters
   const [editName, setEditName] = useState("");
   const [editCategory, setEditCategory] = useState<any>("schaarlift");
@@ -329,16 +348,9 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                         </button>
 
                         <button
-                          onClick={async () => {
-                            if (confirm(t("Weet u zeker dat u permanent wilt verwijderen?", "Are you sure you want to permanently delete this?", "Bunu kalıcı olarak silmek istediğinizden emin misiniz?"))) {
-                              const success = await deleteMachine(m.id);
-                              if (success) {
-                                onAddSystemLog("fleet", adminUser?.name ?? "Admin", `Hoogwerker permanent verwijderd: ${m.name}`);
-                                alert(t("Machine succesvol verwijderd!", "Machine successfully deleted!", "Makine başarıyla silindi!"));
-                              } else {
-                                alert(t("Fout bij het verwijderen.", "Error deleting machine.", "Silme sırasında bir hata oluştu."));
-                              }
-                            }
+                          onClick={() => {
+                            setDeleteConfirmText("");
+                            setDeleteTarget(m);
                           }}
                           className="text-rose-600 hover:text-rose-800 font-bold text-xs bg-rose-50 hover:bg-rose-100 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer border-none shadow-sm flex items-center justify-center space-x-1"
                         >
@@ -784,6 +796,70 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                 </div>
               </form>
 
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Delete confirmation modal — type-to-confirm guards against accidental deletes */}
+      <AnimatePresence>
+        {deleteTarget && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm"
+              onClick={() => setDeleteTarget(null)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="relative w-full max-w-md bg-white border border-slate-200 rounded-2xl p-6 shadow-2xl"
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <div className="h-9 w-9 bg-rose-50 text-rose-600 rounded-xl flex items-center justify-center">
+                  <Trash2 className="h-4 w-4" />
+                </div>
+                <h3 className="text-sm font-extrabold text-slate-900">
+                  {t("Machine permanent verwijderen", "Permanently delete machine", "Makineyi kalıcı olarak sil")}
+                </h3>
+              </div>
+              <p className="text-xs text-slate-600 leading-relaxed mb-4">
+                {t(
+                  "Dit kan niet ongedaan worden gemaakt. Typ de naam van de machine om te bevestigen:",
+                  "This cannot be undone. Type the machine name to confirm:",
+                  "Bu işlem geri alınamaz. Onaylamak için makinenin adını yazın:"
+                )}
+              </p>
+              <p className="text-xs font-mono font-bold text-slate-900 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 mb-3 select-all">
+                {deleteTarget.name}
+              </p>
+              <input
+                type="text"
+                value={deleteConfirmText}
+                onChange={(e) => setDeleteConfirmText(e.target.value)}
+                placeholder={t("Naam van de machine", "Machine name", "Makine adı")}
+                className="w-full text-xs border border-slate-300 rounded-xl px-3 py-2.5 mb-4 focus:outline-none focus:ring-2 focus:ring-rose-400"
+                autoFocus
+              />
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => setDeleteTarget(null)}
+                  className="text-xs font-bold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-4 py-2.5 rounded-xl transition-colors cursor-pointer border-none"
+                >
+                  {t("Annuleren", "Cancel", "İptal")}
+                </button>
+                <button
+                  onClick={handleConfirmDelete}
+                  disabled={deleteConfirmText.trim() !== deleteTarget.name || isDeleting}
+                  className="text-xs font-extrabold text-white bg-rose-600 hover:bg-rose-700 disabled:opacity-40 disabled:cursor-not-allowed px-4 py-2.5 rounded-xl transition-colors cursor-pointer border-none flex items-center gap-1.5"
+                >
+                  {isDeleting && <span className="h-3 w-3 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+                  {t("Definitief verwijderen", "Delete permanently", "Kalıcı olarak sil")}
+                </button>
+              </div>
             </motion.div>
           </div>
         )}

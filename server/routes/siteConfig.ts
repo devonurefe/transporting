@@ -37,13 +37,30 @@ siteConfigRouter.get("/site-config", async (req: AuthenticatedRequest, res: Resp
   }
 });
 
+// Whitelist of editable SiteConfig fields — never pass req.body straight to Prisma
+const SITE_CONFIG_FIELDS = [
+  "siteName", "heroTagline", "heroTitle", "heroSubtitle",
+  "menuHomeLabel", "menuCatalogLabel", "menuAdvisorLabel", "menuOrdersLabel", "menuAdminLabel"
+] as const;
+
+function pickSiteConfigFields(body: any): Record<string, string> {
+  const data: Record<string, string> = {};
+  for (const field of SITE_CONFIG_FIELDS) {
+    if (typeof body?.[field] === "string" && body[field].length <= 1000) {
+      data[field] = body[field];
+    }
+  }
+  return data;
+}
+
 // POST site config
 siteConfigRouter.post("/site-config", requireAdmin as any, async (req: AuthenticatedRequest, res: Response) => {
   try {
+    const data = pickSiteConfigFields(req.body);
     const updated = await prisma.siteConfig.upsert({
       where: { id: "default" },
-      update: req.body,
-      create: { id: "default", ...req.body }
+      update: data,
+      create: { ...defaultSiteConfig, ...data, id: "default" }
     });
     res.json({ success: true, siteConfig: updated });
   } catch (error) {
@@ -106,18 +123,44 @@ siteConfigRouter.post("/campaign-rules", requireAdmin as any, async (req: Authen
 });
 
 // POST categories
+function sanitizeCategory(cat: any): { id: string; label: string; listLabel: string; desc: string; heights: string; price: string; infoContent?: any } | null {
+  if (!cat || typeof cat.id !== "string" || !/^[a-z0-9-]{1,50}$/.test(cat.id)) return null;
+  const str = (v: any, max: number) => (typeof v === "string" ? v.slice(0, max) : "");
+  return {
+    id: cat.id,
+    label: str(cat.label, 100),
+    listLabel: str(cat.listLabel, 100),
+    desc: str(cat.desc, 1000),
+    heights: str(cat.heights, 200),
+    price: str(cat.price, 200),
+    infoContent: cat.infoContent && typeof cat.infoContent === "object" ? cat.infoContent : undefined,
+  };
+}
+
 siteConfigRouter.post("/categories", requireAdmin as any, async (req: AuthenticatedRequest, res: Response) => {
   try {
     if (Array.isArray(req.body)) {
-      await prisma.category.deleteMany();
-      for (const cat of req.body) {
-        await prisma.category.create({ data: cat });
+      if (req.body.length > 50) {
+        return res.status(400).json({ error: "Maximaal 50 categorieën toegestaan" });
       }
+      const cats = req.body.map(sanitizeCategory);
+      if (cats.some(c => c === null)) {
+        return res.status(400).json({ error: "Ongeldige categorie-gegevens" });
+      }
+      // Replace atomically — a failure mid-way must not leave the table half-empty
+      await prisma.$transaction([
+        prisma.category.deleteMany(),
+        ...cats.map(cat => prisma.category.create({ data: cat! })),
+      ]);
     } else {
+      const cat = sanitizeCategory(req.body);
+      if (!cat) {
+        return res.status(400).json({ error: "Ongeldige categorie-gegevens" });
+      }
       await prisma.category.upsert({
-        where: { id: req.body.id },
-        update: req.body,
-        create: req.body
+        where: { id: cat.id },
+        update: cat,
+        create: cat
       });
     }
     const categories = await prisma.category.findMany();

@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 
 const prisma = new PrismaClient();
 
@@ -760,7 +761,13 @@ async function main() {
 
   console.log("Seeding admin (upsert)...");
   const adminEmail = "admin@huurgo.nl";
-  const adminPassword = process.env.ADMIN_DEFAULT_PASSWORD || "admin123";
+  // Never seed a guessable password: without ADMIN_DEFAULT_PASSWORD a random
+  // one is generated and printed once to the deploy log
+  let adminPassword = process.env.ADMIN_DEFAULT_PASSWORD;
+  if (!adminPassword) {
+    adminPassword = crypto.randomBytes(12).toString("base64url");
+    console.warn(`[Seed] ADMIN_DEFAULT_PASSWORD not set — generated admin password (save it now, shown only once): ${adminPassword}`);
+  }
   const adminPasswordHash = await bcrypt.hash(adminPassword, 10);
   await prisma.admin.upsert({
     where: { email: adminEmail },

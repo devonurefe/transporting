@@ -61,7 +61,8 @@ authRouter.post("/register", async (req: AuthenticatedRequest, res: Response) =>
         address: validated.address || null,
         avatarUrl: validated.avatarUrl || null,
         isEmailVerified: autoVerify,
-        verificationToken: autoVerify ? null : verificationToken
+        verificationToken: autoVerify ? null : verificationToken,
+        verificationExpiry: autoVerify ? null : new Date(Date.now() + 24 * 60 * 60 * 1000)
       }
     });
 
@@ -281,15 +282,16 @@ authRouter.get("/verify", async (req: Request, res: Response) => {
       where: { verificationToken: token }
     });
 
-    if (!customer) {
-      return res.redirect("/?verified=false&error=" + encodeURIComponent("De verificatielink is ongeldig of verlopen."));
+    if (!customer || (customer.verificationExpiry && customer.verificationExpiry < new Date())) {
+      return res.redirect("/?verified=false&error=" + encodeURIComponent("De verificatielink is ongeldig of verlopen. Vraag een nieuwe aan."));
     }
 
     await prisma.customer.update({
       where: { id: customer.id },
       data: {
         isEmailVerified: true,
-        verificationToken: null
+        verificationToken: null,
+        verificationExpiry: null
       }
     });
 
@@ -392,7 +394,7 @@ authRouter.post("/resend-verification", async (req: Request, res: Response) => {
     const newToken = crypto.randomBytes(32).toString("hex");
     await prisma.customer.update({
       where: { id: customer.id },
-      data: { verificationToken: newToken }
+      data: { verificationToken: newToken, verificationExpiry: new Date(Date.now() + 24 * 60 * 60 * 1000) }
     });
 
     const protocol = req.secure || req.headers["x-forwarded-proto"] === "https" ? "https" : "http";

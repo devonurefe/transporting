@@ -39,10 +39,20 @@ import path from "path";
 
 // POST /api/upload - Stores image as base64 data URL in the database (no disk writes = persistent across Render deploys)
 const MAX_UPLOAD_SIZE_BYTES = 3 * 1024 * 1024; // 3MB limit for DB storage
-const ALLOWED_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp", ".gif", ".svg"];
+// SVG deliberately excluded — it can carry scripts (stored XSS when rendered)
+const ALLOWED_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp", ".gif"];
 const EXT_TO_MIME: Record<string, string> = {
   ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png",
-  ".webp": "image/webp", ".gif": "image/gif", ".svg": "image/svg+xml"
+  ".webp": "image/webp", ".gif": "image/gif"
+};
+
+// Magic bytes per format — the decoded content must match the claimed extension
+const MAGIC_BYTES: Record<string, (buf: Buffer) => boolean> = {
+  ".jpg": buf => buf[0] === 0xff && buf[1] === 0xd8,
+  ".jpeg": buf => buf[0] === 0xff && buf[1] === 0xd8,
+  ".png": buf => buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47,
+  ".webp": buf => buf.toString("ascii", 0, 4) === "RIFF" && buf.toString("ascii", 8, 12) === "WEBP",
+  ".gif": buf => buf.toString("ascii", 0, 3) === "GIF",
 };
 
 apiRouter.post("/upload", requireAdmin as any, async (req, res) => {
@@ -65,6 +75,11 @@ apiRouter.post("/upload", requireAdmin as any, async (req, res) => {
       return res.status(400).json({ error: `Bestand te groot. Maximum grootte: ${MAX_UPLOAD_SIZE_BYTES / (1024 * 1024)}MB` });
     }
 
+    const header = Buffer.from(base64Content.slice(0, 24), "base64");
+    if (header.length < 12 || !MAGIC_BYTES[ext]?.(header)) {
+      return res.status(400).json({ error: "Bestandsinhoud komt niet overeen met het bestandstype" });
+    }
+
     // Return as data URL — stored directly in the DB, survives server restarts/redeploys
     const mimeType = EXT_TO_MIME[ext] ?? "image/jpeg";
     const dataUrl = `data:${mimeType};base64,${base64Content}`;
@@ -73,6 +88,6 @@ apiRouter.post("/upload", requireAdmin as any, async (req, res) => {
     res.json({ success: true, url: dataUrl });
   } catch (error: any) {
     console.error("Error processing uploaded image:", error);
-    res.status(500).json({ error: "Failed to process uploaded image: " + error.message });
+    res.status(500).json({ error: "Afbeelding kon niet worden verwerkt" });
   }
 });

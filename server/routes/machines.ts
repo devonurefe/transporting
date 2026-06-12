@@ -266,6 +266,6 @@ machinesRouter.delete("/:id", requireAdmin as any, async (req: AuthenticatedRequ
     res.json({ success: true, message: "Machine deleted successfully" });
   } catch (error: any) {
     console.error("Error deleting machine:", error);
-    res.status(500).json({ error: "Failed to delete machine: " + error.message });
+    res.status(500).json({ error: "Machine kon niet worden verwijderd" });
   }
 });

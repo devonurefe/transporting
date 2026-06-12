@@ -66,7 +66,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
     } else if (nextStatus === "Onderweg") {
       lines.push("Uw machine is onderweg! 🚐", "", `De *${machine}* (ref: *${order.id}*) wordt vandaag bezorgd.`, "", "De chauffeur neemt contact op bij aankomst.", "", "Met vriendelijke groet,", "*HuurGo*");
     } else if (nextStatus === "Voltooid") {
-      lines.push("Bedankt voor uw huur! 🙏", "", `Uw huurperiode voor de *${machine}* (ref: *${order.id}*) is afgerond.`, "", "We hopen u snel weer van dienst te zijn!", "", "*HuurGo*");
+      lines.push("Bedankt voor uw huur! 🦾", "", `Uw huurperiode voor de *${machine}* (ref: *${order.id}*) is afgerond.`, "", "We hopen u snel weer van dienst te zijn!", "", "*HuurGo*");
     } else if (nextStatus === "Geannuleerd") {
       lines.push("Annulering bevestigd ❌", "", `Uw boeking *${order.id}* is helaas geannuleerd.`, "", "Heeft u vragen? Neem gerust contact op.", "", "*HuurGo*");
     } else {

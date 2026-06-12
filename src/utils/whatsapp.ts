@@ -40,10 +40,11 @@ export function buildWhatsAppUrl(
     const start = item.startDate || "–";
     const end = item.endDate || "–";
     const itemDays = totals && cartItems.length === 1 ? totals.days : null;
+    const itemSubtotal = totals && cartItems.length === 1 ? totals.subtotal : null;
     lines.push(`▸ *${item.machine.name}*`);
     lines.push(`   📅 Periode:  ${start}  →  ${end}`);
-    if (itemDays) {
-      lines.push(`   💶 ${itemDays} ${itemDays === 1 ? "dag" : "dagen"} × ${euroCompact(item.machine.pricePerDay)} = *${euroCompact(item.machine.pricePerDay * itemDays)}*`);
+    if (itemDays && itemSubtotal) {
+      lines.push(`   💶 ${itemDays} ${itemDays === 1 ? "dag" : "dagen"} — *${euroCompact(itemSubtotal)}*`);
     } else {
       lines.push(`   💶 Tarief: ${euroCompact(item.machine.pricePerDay)}/dag`);
     }

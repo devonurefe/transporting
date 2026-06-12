@@ -414,6 +414,15 @@ export default function CatalogSection({
                             {machine.oneDayPrice && machine.oneDayPrice < machine.pricePerDay && (
                               <div className="text-[9px] text-amber-600 font-bold mt-0.5">1 dag: €{formatPrice(machine.oneDayPrice)} actie</div>
                             )}
+                            {machine.twoDayPrice && (
+                              <div className="text-[9px] text-violet-600 font-bold mt-0.5">2 dgn: €{formatPrice(machine.twoDayPrice)}</div>
+                            )}
+                            {machine.weekendPrice && !machine.twoDayPrice && (
+                              <div className="text-[9px] text-violet-600 font-bold mt-0.5">weekend: €{formatPrice(machine.weekendPrice)}</div>
+                            )}
+                            {machine.weekendPrice && machine.twoDayPrice && (
+                              <div className="text-[9px] text-violet-500 font-bold mt-0.5">wknd: €{formatPrice(machine.weekendPrice)}</div>
+                            )}
                             {(() => { const d = computeDiscounts(machine); return (<>
                               {d.weekly > 0 && <div className="text-[9px] text-emerald-600 font-bold mt-0.5">week −{d.weekly}%</div>}
                               {d.monthly > 0 && <div className="text-[9px] text-teal-600 font-bold mt-0.5">maand −{d.monthly}%</div>}

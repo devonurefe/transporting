@@ -55,11 +55,18 @@ export default function BookingPriceSummary({ selectedMachine, sums }: BookingPr
       <div className="flex items-center gap-3 p-4 bg-slate-50 border-b border-slate-100">
         <div className="h-14 w-20 rounded-xl overflow-hidden bg-slate-200 shrink-0">
           <img
-            src={selectedMachine.imageUrl}
+            src={selectedMachine.imageUrl || selectedMachine.additionalImages?.[0] || "/placeholder-machine.webp"}
             alt=""
             className="h-full w-full object-cover"
             referrerPolicy="no-referrer"
-            onError={(e) => { e.currentTarget.src = "/placeholder-machine.webp"; }}
+            onError={(e) => {
+              const fallback = selectedMachine.additionalImages?.[0];
+              if (fallback && e.currentTarget.src !== fallback) {
+                e.currentTarget.src = fallback;
+              } else {
+                e.currentTarget.src = "/placeholder-machine.webp";
+              }
+            }}
           />
         </div>
         <div className="min-w-0 flex-1">

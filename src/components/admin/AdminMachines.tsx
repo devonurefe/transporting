@@ -8,6 +8,7 @@ import { Plus, Trash2, Wrench, X, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useAppStore } from "../../store/appStore";
 import { useAuthStore } from "../../store/authStore";
+import { resizeImage } from "../../utils/image";
 import { Machine } from "../../types";
 
 interface AdminMachinesProps {
@@ -67,41 +68,28 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
     setIsUploadingEditAdditional(true);
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      const reader = new FileReader();
-      const uploadPromise = new Promise<void>((resolve) => {
-        reader.onload = async (uploadEvent) => {
-          const base64 = uploadEvent.target?.result as string;
-          try {
-            const token = localStorage.getItem("hwh_admin_token") || localStorage.getItem("hwh_token");
-            const res = await fetch("/api/upload", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                ...(token ? { Authorization: `Bearer ${token}` } : {})
-              },
-              body: JSON.stringify({
-                fileName: file.name,
-                base64Data: base64
-              })
-            });
-
-            if (res.ok) {
-              const data = await res.json();
-              setEditAdditionalImages((prev) => [...prev, data.url]);
-              onAddSystemLog("fleet", "Beheerder", t("Ek resim eklendi: ", "Extra image added: ", "Ek resim eklendi: ") + file.name);
-            } else {
-              alert(t("Uploaden mislukt voor: ", "Upload failed for: ", "Yükleme başarısız: ") + file.name);
-            }
-          } catch (err) {
-            console.error(err);
-            alert(t("Fout bij uploaden afbeelding.", "Error uploading image.", "Resim yükleme hatası."));
-          } finally {
-            resolve();
-          }
-        };
-        reader.readAsDataURL(file);
-      });
-      await uploadPromise;
+      try {
+        const base64 = await resizeImage(file);
+        const token = localStorage.getItem("hwh_admin_token") || localStorage.getItem("hwh_token");
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+          },
+          body: JSON.stringify({ fileName: file.name, base64Data: base64 })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setEditAdditionalImages((prev) => [...prev, data.url]);
+          onAddSystemLog("fleet", "Beheerder", t("Extra afbeelding toegevoegd: ", "Extra image added: ", "Ek resim eklendi: ") + file.name);
+        } else {
+          alert(t("Uploaden mislukt voor: ", "Upload failed for: ", "Yükleme başarısız: ") + file.name);
+        }
+      } catch (err) {
+        console.error(err);
+        alert(t("Fout bij uploaden afbeelding.", "Error uploading image.", "Resim yükleme hatası."));
+      }
     }
     setIsUploadingEditAdditional(false);
   };
@@ -137,38 +125,30 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
     if (!file) return;
 
     setIsUploadingEditImage(true);
-    const reader = new FileReader();
-    reader.onload = async (uploadEvent) => {
-      const base64 = uploadEvent.target?.result as string;
-      try {
-        const token = localStorage.getItem("hwh_admin_token") || localStorage.getItem("hwh_token");
-        const res = await fetch("/api/upload", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {})
-          },
-          body: JSON.stringify({
-            fileName: file.name,
-            base64Data: base64
-          })
-        });
-
-        if (res.ok) {
-          const data = await res.json();
-          setEditImageUrl(data.url);
-          onAddSystemLog("fleet", "Beheerder", t("Machine-afbeelding vervangen: ", "Machine image replaced: ", "Makine resmi değiştirildi: ") + file.name);
-        } else {
-          alert(t("Uploaden mislukt.", "Upload failed.", "Yükleme başarısız."));
-        }
-      } catch (err) {
-        console.error(err);
-        alert(t("Fout bij uploaden afbeelding.", "Error uploading image.", "Resim yükleme hatası."));
-      } finally {
-        setIsUploadingEditImage(false);
+    try {
+      const base64 = await resizeImage(file);
+      const token = localStorage.getItem("hwh_admin_token") || localStorage.getItem("hwh_token");
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({ fileName: file.name, base64Data: base64 })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setEditImageUrl(data.url);
+        onAddSystemLog("fleet", "Beheerder", t("Machine-afbeelding vervangen: ", "Machine image replaced: ", "Makine resmi değiştirildi: ") + file.name);
+      } else {
+        alert(t("Uploaden mislukt.", "Upload failed.", "Yükleme başarısız."));
       }
-    };
-    reader.readAsDataURL(file);
+    } catch (err) {
+      console.error(err);
+      alert(t("Fout bij uploaden afbeelding.", "Error uploading image.", "Resim yükleme hatası."));
+    } finally {
+      setIsUploadingEditImage(false);
+    }
   };
 
   const handleSaveEdit = async (e: React.FormEvent) => {
@@ -574,6 +554,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                               <div className="absolute right-3 top-1.5 h-4 w-4 border-2 border-amber-600 border-t-transparent rounded-full animate-spin" />
                             )}
                           </div>
+                          <p className="text-[10px] text-slate-400 mt-1">Aanbevolen: liggende foto (4:3 of 16:9), min. 800×600 px, JPG/WebP, max 3 MB. Wordt automatisch verkleind.</p>
                         </div>
                       </div>
 

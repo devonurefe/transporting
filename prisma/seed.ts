@@ -106,7 +106,8 @@ const defaultMachines = [
     height: 12.2,
     reach: 6.1,
     weight: 1400,
-    pricePerDay: 50,
+    pricePerDay: 95,   // regular day rate (= twoDayPrice/2)
+    oneDayPrice: 50,   // 1-dag actie "Slechts 1 dag korting!"
     powerType: "Elektrisch",
     imageUrl: "https://images.unsplash.com/photo-EEOKpOFzpN4?q=80&w=600&auto=format&fit=crop",
     imageAlt: "Nifty 120 aanhangerhoogwerker met trekhaak",
@@ -130,7 +131,8 @@ const defaultMachines = [
     height: 12.2,
     reach: 6.1,
     weight: 1400,
-    pricePerDay: 50,
+    pricePerDay: 95,
+    oneDayPrice: 50,
     powerType: "Elektrisch",
     imageUrl: "https://images.unsplash.com/photo-EEOKpOFzpN4?q=80&w=600&auto=format&fit=crop",
     imageAlt: "Nifty 120 aanhangerhoogwerker met trekhaak",
@@ -154,7 +156,8 @@ const defaultMachines = [
     height: 12.2,
     reach: 6.1,
     weight: 1400,
-    pricePerDay: 50,
+    pricePerDay: 95,
+    oneDayPrice: 50,
     powerType: "Elektrisch",
     imageUrl: "https://images.unsplash.com/photo-EEOKpOFzpN4?q=80&w=600&auto=format&fit=crop",
     imageAlt: "Nifty 120 aanhangerhoogwerker met trekhaak",
@@ -178,7 +181,8 @@ const defaultMachines = [
     height: 17.1,
     reach: 8.7,
     weight: 2160,
-    pricePerDay: 60,
+    pricePerDay: 120,  // regular day rate (= twoDayPrice/2)
+    oneDayPrice: 60,   // 1-dag actie
     powerType: "Hybride",
     imageUrl: "https://images.unsplash.com/photo-EEOKpOFzpN4?q=80&w=600&auto=format&fit=crop",
     imageAlt: "Nifty 170 zware aanhangerhoogwerker",
@@ -715,14 +719,27 @@ async function main() {
     });
     // Back-fill the three flat-rate price fields that were added 2026-06.
     // Only write them when the column is still null (first run after db push).
-    const wp = (mach as any).weekendPrice ?? null;
-    const tdp = (mach as any).twoDayPrice ?? null;
-    const wkp = (mach as any).weeklyPrice ?? null;
-    const mp = (mach as any).monthlyPrice ?? null;
-    if (wp !== null) await prisma.machine.updateMany({ where: { id: mach.id, weekendPrice: null }, data: { weekendPrice: wp } });
-    if (tdp !== null) await prisma.machine.updateMany({ where: { id: mach.id, twoDayPrice: null }, data: { twoDayPrice: tdp } });
-    if (wkp !== null) await prisma.machine.updateMany({ where: { id: mach.id, weeklyPrice: null }, data: { weeklyPrice: wkp } });
-    if (mp !== null) await prisma.machine.updateMany({ where: { id: mach.id, monthlyPrice: null }, data: { monthlyPrice: mp } });
+    const wp  = (mach as any).weekendPrice ?? null;
+    const tdp = (mach as any).twoDayPrice  ?? null;
+    const wkp = (mach as any).weeklyPrice  ?? null;
+    const mp  = (mach as any).monthlyPrice ?? null;
+    const odp = (mach as any).oneDayPrice  ?? null;
+    if (wp  !== null) await prisma.machine.updateMany({ where: { id: mach.id, weekendPrice: null }, data: { weekendPrice: wp } });
+    if (tdp !== null) await prisma.machine.updateMany({ where: { id: mach.id, twoDayPrice:  null }, data: { twoDayPrice:  tdp } });
+    if (wkp !== null) await prisma.machine.updateMany({ where: { id: mach.id, weeklyPrice:  null }, data: { weeklyPrice:  wkp } });
+    if (mp  !== null) await prisma.machine.updateMany({ where: { id: mach.id, monthlyPrice: null }, data: { monthlyPrice: mp } });
+    if (odp !== null) await prisma.machine.updateMany({ where: { id: mach.id, oneDayPrice:  null }, data: { oneDayPrice:  odp } });
+  }
+
+  // Correct pricePerDay for Nifty actie-machines: it was seeded as the actie price (50/60)
+  // but must be the regular day rate (95/120 = twoDayPrice/2) for correct multi-day calculations.
+  // Only corrects if price is still at the original wrong value — preserves any intentional admin edits.
+  console.log("Correcting Nifty regular day rates (pricePerDay)...");
+  for (const [id, wrongPrice, correctPrice] of [
+    ["nifty-120-1", 50, 95], ["nifty-120-2", 50, 95], ["nifty-120-3", 50, 95],
+    ["nifty-170", 60, 120]
+  ] as [string, number, number][]) {
+    await prisma.machine.updateMany({ where: { id, pricePerDay: wrongPrice }, data: { pricePerDay: correctPrice } });
   }
 
   console.log("Seeding blocked dates (upsert)...");

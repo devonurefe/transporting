@@ -200,7 +200,9 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
     // Flat-rate pricing mirrors BookingSection.tsx calculateItemSubtotal
     let serverSubtotal: number;
     const m = machine as any;
-    if (rentalDays === 2 && m.twoDayPrice) {
+    if (rentalDays === 1 && m.oneDayPrice) {
+      serverSubtotal = m.oneDayPrice;
+    } else if (rentalDays === 2 && m.twoDayPrice) {
       serverSubtotal = m.twoDayPrice;
     } else if ((rentalDays === 2 || rentalDays === 3) && m.weekendPrice) {
       serverSubtotal = m.weekendPrice;

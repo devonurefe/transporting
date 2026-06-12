@@ -11,7 +11,8 @@ export interface Machine {
   height: number; // in meters
   reach: number; // in meters
   weight: number; // in kg
-  pricePerDay: number; // in EUR
+  pricePerDay: number; // in EUR — regular day rate (used for multi-day fallback)
+  oneDayPrice?: number; // optional 1-day actie price (e.g. "Slechts 1 dag korting!")
   powerType: "Elektrisch" | "Diesel" | "Hybride";
   imageUrl: string;
   imageAlt: string;

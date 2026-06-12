@@ -16,6 +16,7 @@ model Machine {
   reach                   Float
   weight                  Float
   pricePerDay             Float
+  oneDayPrice             Float?
   powerType               String
   imageUrl                String
   imageAlt                String

@@ -89,6 +89,8 @@ export default function BookingSection({
   // Calculate item subtotal using flat-rate prices when available,
   // otherwise fall back to pricePerDay × days × (1 - discountPercent/100)
   const calculateItemSubtotal = (machine: Machine, days: number, profile: string, rules: CampaignRule[]): number => {
+    // 1-day actie flat rate
+    if (days === 1 && machine.oneDayPrice) return machine.oneDayPrice;
     // 2-day weekday flat rate (takes priority over weekendPrice for exactly 2 days)
     if (days === 2 && machine.twoDayPrice) {
       return machine.twoDayPrice;
@@ -387,6 +389,7 @@ export default function BookingSection({
       if (leadItem) {
         if (totalDays >= 28) discountLabel = "Maandkorting";
         else if (totalDays >= 5) discountLabel = "Weekkorting";
+        else if (totalDays === 1 && leadItem.oneDayPrice && leadItem.oneDayPrice < leadItem.pricePerDay) discountLabel = "1-Dag Actie";
 
         const activeRules = campaignRules.filter(r => r.isActive);
         const matchingRuleName = activeRules.find(rule => {
@@ -439,6 +442,8 @@ export default function BookingSection({
       discountLabel = "Maandkorting";
     } else if (days >= 5) {
       discountLabel = "Weekkorting";
+    } else if (days === 1 && selectedMachine.oneDayPrice && selectedMachine.oneDayPrice < selectedMachine.pricePerDay) {
+      discountLabel = "1-Dag Actie";
     }
 
     const activeRules = campaignRules.filter(r => r.isActive);

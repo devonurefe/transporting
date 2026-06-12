@@ -41,6 +41,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
   const [editReach, setEditReach] = useState("");
   const [editWeight, setEditWeight] = useState("");
   const [editPrice, setEditPrice] = useState("");
+  const [editOneDayPrice, setEditOneDayPrice] = useState("");
   const [editPower, setEditPower] = useState<any>("Elektrisch");
   const [editDescription, setEditDescription] = useState("");
   const [editSuitable, setEditSuitable] = useState("");
@@ -113,6 +114,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
     setEditReach(String(m.reach || 0));
     setEditWeight(String(m.weight || 1500));
     setEditPrice(String(m.pricePerDay));
+    setEditOneDayPrice(m.oneDayPrice ? String(m.oneDayPrice) : "");
     setEditPower(m.powerType || "Elektrisch");
     setEditDescription(m.description || "");
     setEditSuitable(Array.isArray(m.suitableFor) ? m.suitableFor.join(", ") : String(m.suitableFor || ""));
@@ -238,6 +240,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
       reach: Number(editReach),
       weight: Number(editWeight),
       pricePerDay: Number(editPrice),
+      oneDayPrice: editOneDayPrice ? Number(editOneDayPrice) : undefined,
       powerType: editPower,
       imageUrl: editImageUrl,
       description: editDescription,
@@ -650,6 +653,17 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                     </div>
 
                     <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-slate-100 pt-3">
+                      <div className="space-y-1">
+                        <label className="text-xs text-slate-700 block font-bold">{t("1 Dag Actie €", "1 Day Promo €", "1 Gün Kampanya €")}</label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="any"
+                          value={editOneDayPrice}
+                          onChange={(e) => setEditOneDayPrice(e.target.value)}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
+                        />
+                      </div>
                       <div className="space-y-1">
                         <label className="text-xs text-slate-700 block font-bold">{t("2 Dagen (doordeweeks) €", "2 Days (weekdays) €", "2 Gün (hafta içi) €")}</label>
                         <input

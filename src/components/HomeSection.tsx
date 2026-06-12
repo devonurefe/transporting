@@ -100,6 +100,17 @@ export default function HomeSection({
     return map;
   }, [machines]);
 
+  // First machine image per category for card thumbnails
+  const imageByCategory = React.useMemo(() => {
+    const map: Record<string, string> = {};
+    machines.forEach(m => {
+      if (!m.imageUrl) return;
+      const key = SCHAARLIFT_VARIANTS.has(m.category) ? "schaarlift" : m.category;
+      if (!map[key]) map[key] = m.imageUrl;
+    });
+    return map;
+  }, [machines]);
+
   const HOME_ORDER = ["schaarlift", "spin", "mastlift", "kamersteiger", "ladderlift", "ecolift", "aanhanger"];
 
   const displayCategories = customCategories
@@ -178,6 +189,7 @@ export default function HomeSection({
             const Icon = CATEGORY_ICONS[cat.id] ?? Truck;
             const bg = bgClasses[i % bgClasses.length];
             const isLast = displayCategories.length % 2 !== 0 && i === displayCategories.length - 1;
+            const catImage = imageByCategory[cat.id];
 
             return (
               <motion.button
@@ -186,26 +198,41 @@ export default function HomeSection({
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: i * 0.05 }}
                 onClick={() => onSearch("", cat.id)}
-                className={`bg-gradient-to-br ${bg} border rounded-2xl p-4 text-left cursor-pointer hover:shadow-md active:scale-[0.98] transition-all${isLast ? " col-span-2" : ""}`}
+                className={`bg-gradient-to-br ${bg} border rounded-2xl overflow-hidden text-left cursor-pointer hover:shadow-md active:scale-[0.98] transition-all${isLast ? " col-span-2" : ""}`}
               >
-                <div className="flex items-center justify-between mb-3">
-                  <div className="p-2 bg-white/70 rounded-xl">
-                    <Icon className="h-5 w-5 text-slate-600" />
+                {catImage ? (
+                  <div className={`relative overflow-hidden ${isLast ? "h-28 sm:h-36" : "h-24 sm:h-28"}`}>
+                    <img
+                      src={catImage}
+                      alt={cat.label}
+                      className="w-full h-full object-cover"
+                      referrerPolicy="no-referrer"
+                      onError={(e) => { e.currentTarget.parentElement!.style.display = "none"; }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent pointer-events-none" />
                   </div>
-                </div>
-                <p className="font-bold text-[12px] text-slate-800 leading-snug mb-3 line-clamp-2">
-                  {cat.listLabel || cat.label}
-                </p>
-                <div className="space-y-1.5 mt-auto">
-                  <div className="flex items-baseline gap-1.5">
-                    <p className="text-[9px] font-black uppercase tracking-wider text-slate-400 w-10 shrink-0">Hoogte</p>
-                    <p className="text-sm font-bold text-slate-700">{cat.heights}</p>
+                ) : (
+                  <div className="px-4 pt-4 pb-0">
+                    <div className="p-2 bg-white/70 rounded-xl w-fit">
+                      <Icon className="h-5 w-5 text-slate-600" />
+                    </div>
                   </div>
-                  <div className="flex items-baseline gap-1.5">
-                    <p className="text-[9px] font-black uppercase tracking-wider text-slate-400 w-10 shrink-0">All-in</p>
-                    <p className="text-sm font-extrabold text-emerald-600">
-                      {livePriceByCategory[cat.id] !== undefined ? `v.a. €${livePriceByCategory[cat.id]}/dag` : cat.price}
-                    </p>
+                )}
+                <div className="p-4 pt-3">
+                  <p className="font-bold text-[12px] text-slate-800 leading-snug mb-3 line-clamp-2">
+                    {cat.listLabel || cat.label}
+                  </p>
+                  <div className="space-y-1.5">
+                    <div className="flex items-baseline gap-1.5">
+                      <p className="text-[9px] font-black uppercase tracking-wider text-slate-400 w-10 shrink-0">Hoogte</p>
+                      <p className="text-sm font-bold text-slate-700">{cat.heights}</p>
+                    </div>
+                    <div className="flex items-baseline gap-1.5">
+                      <p className="text-[9px] font-black uppercase tracking-wider text-slate-400 w-10 shrink-0">All-in</p>
+                      <p className="text-sm font-extrabold text-emerald-600">
+                        {livePriceByCategory[cat.id] !== undefined ? `v.a. €${livePriceByCategory[cat.id]}/dag` : cat.price}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </motion.button>

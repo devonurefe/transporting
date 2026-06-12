@@ -1,6 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { calculateItemSubtotal, calculateRentalDays, evaluateDiscountPercent } from "../utils/pricing";
+import { calculateItemSubtotal, calculateRentalDays, evaluateDiscountPercent, isStrictWeekend } from "../utils/pricing";
 import { Machine, CampaignRule } from "../types";
+
+// Reference weekdays (UTC): 2026-06-08 = Monday, 2026-06-12 = Friday, 2026-06-13 = Saturday
+const MON = "2026-06-08";
+const FRI = "2026-06-12";
+const SAT = "2026-06-13";
 
 // Nifty 120 — the real price card from the MB Hoogwerkers price list
 const nifty120 = {
@@ -37,26 +42,60 @@ describe("calculateRentalDays", () => {
   });
 });
 
+describe("isStrictWeekend", () => {
+  it("2 days starting Saturday = weekend", () => {
+    expect(isStrictWeekend(SAT, 2)).toBe(true);
+  });
+  it("2 days starting Monday = not weekend", () => {
+    expect(isStrictWeekend(MON, 2)).toBe(false);
+  });
+  it("3 days starting Friday = weekend", () => {
+    expect(isStrictWeekend(FRI, 3)).toBe(true);
+  });
+  it("3 days starting Monday = not weekend", () => {
+    expect(isStrictWeekend(MON, 3)).toBe(false);
+  });
+  it("no date = not weekend (safe default)", () => {
+    expect(isStrictWeekend(undefined, 2)).toBe(false);
+  });
+  it("1 day is never weekend", () => {
+    expect(isStrictWeekend(SAT, 1)).toBe(false);
+  });
+});
+
 describe("calculateItemSubtotal — flat rates", () => {
   it("1 day uses oneDayPrice actie", () => {
-    expect(calculateItemSubtotal(nifty120, 1, "Particulier", noRules)).toBe(50);
+    expect(calculateItemSubtotal(nifty120, 1, "Particulier", noRules, MON)).toBe(50);
   });
 
-  it("2 days uses twoDayPrice over weekendPrice", () => {
-    expect(calculateItemSubtotal(nifty120, 2, "Particulier", noRules)).toBe(190);
+  it("2 weekday days (Mon-Tue) use twoDayPrice, not weekendPrice", () => {
+    expect(calculateItemSubtotal(nifty120, 2, "Particulier", noRules, MON)).toBe(190);
   });
 
-  it("2 days falls back to weekendPrice when no twoDayPrice", () => {
+  it("2 weekend days (Sat-Sun) use weekendPrice over twoDayPrice", () => {
+    expect(calculateItemSubtotal(nifty120, 2, "Particulier", noRules, SAT)).toBe(150);
+  });
+
+  it("2 weekend days fall back to weekendPrice when no twoDayPrice", () => {
     const m = { ...nifty120, twoDayPrice: undefined } as Machine;
-    expect(calculateItemSubtotal(m, 2, "Particulier", noRules)).toBe(150);
+    expect(calculateItemSubtotal(m, 2, "Particulier", noRules, SAT)).toBe(150);
   });
 
-  it("3 days uses weekendPrice", () => {
-    expect(calculateItemSubtotal(nifty120, 3, "Particulier", noRules)).toBe(150);
+  it("2 weekday days with no twoDayPrice → pricePerDay × 2", () => {
+    const m = { ...nifty120, twoDayPrice: undefined } as Machine;
+    expect(calculateItemSubtotal(m, 2, "Particulier", noRules, MON)).toBe(2 * 95);
+  });
+
+  it("3 weekend days (Fri-Sun) use weekendPrice", () => {
+    expect(calculateItemSubtotal(nifty120, 3, "Particulier", noRules, FRI)).toBe(150);
+  });
+
+  it("3 weekday days (Mon-Wed) have no flat rate → pricePerDay × 3", () => {
+    expect(calculateItemSubtotal(nifty120, 3, "Particulier", noRules, MON)).toBe(3 * 95);
   });
 
   it("4 days has no flat rate → pricePerDay × 4", () => {
-    expect(calculateItemSubtotal(nifty120, 4, "Particulier", noRules)).toBe(4 * 95);
+    expect(calculateItemSubtotal(nifty120, 4, "Particulier", noRules, MON)).toBe(4 * 95);
   });
 
   it("5 days uses weeklyPrice", () => {

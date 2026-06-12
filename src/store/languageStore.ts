@@ -76,6 +76,19 @@ const dictionary: TranslationDictionary = {
   step1Opt3Title: { nl: "Zelf ophalen", en: "Self pickup", tr: "Kendi alımı" },
   step1AddonsTitle: { nl: "Kies Extra Opties & Services", en: "Choose Extra Options & Services", tr: "Ekstra Seçenekler & Hizmetler" },
 
+  // Availability calendar (date-range picker)
+  calSelectPeriod: { nl: "Selecteer huurperiode", en: "Select rental period", tr: "Kiralama dönemi seçin" },
+  calChange: { nl: "Wijzig", en: "Change", tr: "Değiştir" },
+  calTitle: { nl: "Kies uw huurperiode", en: "Choose your rental period", tr: "Kiralama döneminizi seçin" },
+  calClose: { nl: "Sluiten", en: "Close", tr: "Kapat" },
+  calPrevMonth: { nl: "Vorige maand", en: "Previous month", tr: "Önceki ay" },
+  calNextMonth: { nl: "Volgende maand", en: "Next month", tr: "Sonraki ay" },
+  calLegendAvailable: { nl: "Beschikbaar", en: "Available", tr: "Müsait" },
+  calLegendSelected: { nl: "Geselecteerd", en: "Selected", tr: "Seçili" },
+  calLegendUnavailable: { nl: "Niet beschikbaar", en: "Unavailable", tr: "Müsait değil" },
+  calReset: { nl: "Herstel", en: "Reset", tr: "Sıfırla" },
+  calConfirm: { nl: "Bevestigen", en: "Confirm", tr: "Onayla" },
+
   // Booking Success
   successTitle: { nl: "Reservering Aangevraagd", en: "Reservation Requested", tr: "Rezervasyon Talep Edildi" },
   successPending: { nl: "Nog niet bevestigd", en: "Not yet confirmed", tr: "Henüz onaylanmadı" },

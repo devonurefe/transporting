@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { CartItem, DeliveryType, Machine } from "../../types";
 import { buildWhatsAppUrl } from "../../utils/whatsapp";
 import BookingPriceSummary from "./BookingPriceSummary";
+import DateRangeCalendar from "./DateRangeCalendar";
 import { useLanguageStore } from "../../store/languageStore";
 
 interface BookingStep1Props {
@@ -26,6 +27,7 @@ interface BookingStep1Props {
   isAvailable: boolean;
   handleNextStep: () => void;
   setActiveTab: (tab: string) => void;
+  customerProfile: string;
   sums?: {
     days: number; rawSubtotal: number; subtotal: number; discountAmount: number; discountLabel: string;
     transport: number; driver: number; addonCost: number; addonDetails: { id: string; name: string; price: number }[];
@@ -49,11 +51,11 @@ export default function BookingStep1({
   isAvailable,
   handleNextStep,
   setActiveTab,
+  customerProfile,
   sums,
   selectedMachine
 }: BookingStep1Props) {
   const t = useLanguageStore((state) => state.t);
-  const todayStr = new Date().toISOString().split('T')[0];
   const [previewMachine, setPreviewMachine] = useState<Machine | null>(null);
 
   return (
@@ -136,34 +138,14 @@ export default function BookingStep1({
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-2 border-t border-slate-200">
-                  <div className="space-y-1.5">
-                    <label className="text-[10.5px] text-slate-500 block font-bold">{t("step1StartDate")}</label>
-                    <div className="flex items-center bg-white rounded-xl px-2.5 py-2 border border-slate-200 focus-within:border-indigo-500 transition-colors shadow-sm">
-                      <Calendar className="h-4 w-4 text-slate-400 mr-2 shrink-0" />
-                      <input
-                        type="date"
-                        min={todayStr}
-                        value={item.startDate}
-                        onChange={(e) => onUpdateCartItemDates(item.id, e.target.value, item.endDate || "")}
-                        className="bg-transparent border-none text-xs text-slate-800 outline-none w-full cursor-pointer font-bold focus:ring-0"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="text-[10.5px] text-slate-500 block font-bold">{t("step1EndDate")}</label>
-                    <div className="flex items-center bg-white rounded-xl px-2.5 py-2 border border-slate-200 focus-within:border-indigo-500 transition-colors shadow-sm">
-                      <Calendar className="h-4 w-4 text-slate-400 mr-2 shrink-0" />
-                      <input
-                        type="date"
-                        min={item.startDate || todayStr}
-                        value={item.endDate}
-                        onChange={(e) => onUpdateCartItemDates(item.id, item.startDate || "", e.target.value)}
-                        className="bg-transparent border-none text-xs text-slate-800 outline-none w-full cursor-pointer font-bold focus:ring-0"
-                      />
-                    </div>
-                  </div>
+                <div className="pt-2 border-t border-slate-200">
+                  <DateRangeCalendar
+                    machine={item.machine}
+                    startDate={item.startDate}
+                    endDate={item.endDate}
+                    profile={customerProfile}
+                    onConfirm={(s, e) => onUpdateCartItemDates(item.id, s, e)}
+                  />
                 </div>
 
                 {/* Item Availability status bar */}

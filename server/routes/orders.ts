@@ -231,15 +231,19 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
       const billing = addon.billing ?? "flat";
       return sum + (billing === "daily" ? price * rentalDays : price);
     }, 0);
-    // Flat-rate pricing mirrors BookingSection.tsx calculateItemSubtotal
+    // Flat-rate pricing mirrors src/utils/pricing.ts calculateItemSubtotal.
+    // Strict weekend: 2 days starting Saturday (Sat+Sun) or 3 days starting Friday
+    // (Fri+Sat+Sun). startDate is a UTC-parsed Date, so getUTCDay() is timezone-safe.
     let serverSubtotal: number;
     const m = machine as any;
+    const dow = startDate.getUTCDay();
+    const strictWeekend = (rentalDays === 2 && dow === 6) || (rentalDays === 3 && dow === 5);
     if (rentalDays === 1 && m.oneDayPrice) {
       serverSubtotal = m.oneDayPrice;
+    } else if (strictWeekend && m.weekendPrice) {
+      serverSubtotal = m.weekendPrice;
     } else if (rentalDays === 2 && m.twoDayPrice) {
       serverSubtotal = m.twoDayPrice;
-    } else if ((rentalDays === 2 || rentalDays === 3) && m.weekendPrice) {
-      serverSubtotal = m.weekendPrice;
     } else if (rentalDays >= 5 && rentalDays < 28 && m.weeklyPrice) {
       const fullWeeks = Math.floor(rentalDays / 5);
       const remainder = rentalDays % 5;

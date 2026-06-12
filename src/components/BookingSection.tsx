@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { Machine, Order, DeliveryType, UserProfile, CartItem } from "../types";
 import { useAppStore } from "../store/appStore";
 import { checkAvailability } from "../utils/availability";
-import { calculateItemSubtotal } from "../utils/pricing";
+import { calculateItemSubtotal, isStrictWeekend } from "../utils/pricing";
 
 // Import modular Step components
 import { buildWhatsAppUrl } from "../utils/whatsapp";
@@ -281,7 +281,7 @@ export default function BookingSection({
         totalDays += days;
 
         const itemRaw = item.machine.pricePerDay * days;
-        const itemSub = calculateItemSubtotal(item.machine, days, customerProfile, campaignRules);
+        const itemSub = calculateItemSubtotal(item.machine, days, customerProfile, campaignRules, itemStart);
         const itemDisc = Math.max(0, itemRaw - itemSub);
         rawSubtotal += itemRaw;
         discountAmount += itemDisc;
@@ -307,12 +307,12 @@ export default function BookingSection({
 
       let discountLabel = "Korting";
       const leadItem = cartItems[0]?.machine;
+      const leadStart = cartItems[0]?.startDate;
       if (leadItem) {
         if (totalDays >= 28) discountLabel = "Maandkorting";
         else if (totalDays >= 5) discountLabel = "Weekkorting";
-        else if (totalDays === 3 && leadItem.weekendPrice) discountLabel = "Weekendprijs";
+        else if (isStrictWeekend(leadStart, totalDays) && leadItem.weekendPrice) discountLabel = "Weekendprijs";
         else if (totalDays === 2 && leadItem.twoDayPrice) discountLabel = "2-Dag Prijs";
-        else if (totalDays === 2 && leadItem.weekendPrice) discountLabel = "Weekendprijs";
         else if (totalDays === 1 && leadItem.oneDayPrice && leadItem.oneDayPrice < leadItem.pricePerDay) discountLabel = "1-Dag Actie";
 
         const activeRules = campaignRules.filter(r => r.isActive);
@@ -358,7 +358,7 @@ export default function BookingSection({
     const days = Math.max(1, Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1);
 
     const rawSubtotal = selectedMachine.pricePerDay * days;
-    const itemSub = calculateItemSubtotal(selectedMachine, days, customerProfile, campaignRules);
+    const itemSub = calculateItemSubtotal(selectedMachine, days, customerProfile, campaignRules, startDate);
     const discountAmount = Math.max(0, rawSubtotal - itemSub);
 
     let discountLabel = "Korting";
@@ -366,12 +366,10 @@ export default function BookingSection({
       discountLabel = "Maandkorting";
     } else if (days >= 5) {
       discountLabel = "Weekkorting";
-    } else if (days === 3 && selectedMachine.weekendPrice) {
+    } else if (isStrictWeekend(startDate, days) && selectedMachine.weekendPrice) {
       discountLabel = "Weekendprijs";
     } else if (days === 2 && selectedMachine.twoDayPrice) {
       discountLabel = "2-Dag Prijs";
-    } else if (days === 2 && selectedMachine.weekendPrice) {
-      discountLabel = "Weekendprijs";
     } else if (days === 1 && selectedMachine.oneDayPrice && selectedMachine.oneDayPrice < selectedMachine.pricePerDay) {
       discountLabel = "1-Dag Actie";
     }
@@ -554,7 +552,7 @@ export default function BookingSection({
             const timeDiff = end.getTime() - start.getTime();
             const days = Math.max(1, Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1);
 
-            const itemSubtotal = calculateItemSubtotal(item.machine, days, customerProfile, campaignRules);
+            const itemSubtotal = calculateItemSubtotal(item.machine, days, customerProfile, campaignRules, item.startDate);
             const transport = (deliveryType === "delivery_by_us" && i === 0) ? 150 : 0;
             const trailerCost = (deliveryType === "trailer_rental" && i === 0) ? 25 * days : 0;
             const driver = 0;
@@ -735,6 +733,7 @@ export default function BookingSection({
                     })}
                     handleNextStep={handleNextStep}
                     setActiveTab={setActiveTab}
+                    customerProfile={customerProfile}
                     sums={sums}
                     selectedMachine={cartItems.length > 0 ? cartItems[0].machine : null}
                   />

@@ -14,6 +14,18 @@ export function calculateRentalDays(startDate: string | Date, endDate: string | 
   return Math.max(1, Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1);
 }
 
+// Strict weekend: a 2-day rental on Sat+Sun (start = Saturday), or a 3-day rental
+// on Fri+Sat+Sun (start = Friday). getUTCDay(): 0=Sun, 5=Fri, 6=Sat. Dates are
+// "YYYY-MM-DD" → parsed as UTC midnight, so getUTCDay() is timezone-safe.
+// Mirrored by server/routes/orders.ts — keep identical.
+export function isStrictWeekend(startDate: string | Date | undefined, days: number): boolean {
+  if (!startDate) return false; // no date → not a weekend (safe default)
+  const dow = new Date(startDate).getUTCDay();
+  if (days === 2) return dow === 6; // Saturday → Sat+Sun
+  if (days === 3) return dow === 5; // Friday → Fri+Sat+Sun
+  return false;
+}
+
 export function evaluateDiscountPercent(machine: Machine, days: number, profile: string, rules: CampaignRule[]): number {
   let highestDiscount = 0;
 
@@ -53,18 +65,17 @@ export function evaluateDiscountPercent(machine: Machine, days: number, profile:
 
 // Calculate item subtotal using flat-rate prices when available,
 // otherwise fall back to pricePerDay × days × (1 - discountPercent/100).
+// `startDate` ("YYYY-MM-DD") enables real-weekend detection for the 2/3-day tiers.
 // Mirrored by the server validation in server/routes/orders.ts — any change
 // here must be applied there too, or orders fail with "Totaalbedrag klopt niet".
-export function calculateItemSubtotal(machine: Machine, days: number, profile: string, rules: CampaignRule[]): number {
+export function calculateItemSubtotal(machine: Machine, days: number, profile: string, rules: CampaignRule[], startDate?: string | Date): number {
   // 1-day actie flat rate
   if (days === 1 && machine.oneDayPrice) return machine.oneDayPrice;
-  // 2-day weekday flat rate (takes priority over weekendPrice for exactly 2 days)
-  if (days === 2 && machine.twoDayPrice) {
-    return machine.twoDayPrice;
-  }
-  // Weekend flat rate: 2–3 days (if no twoDayPrice for 2 days, or always for 3 days)
-  if ((days === 2 || days === 3) && machine.weekendPrice) {
-    return machine.weekendPrice;
+  // Short rentals (2–3 days): real weekend (Sat+Sun / Fri+Sat+Sun) gets weekendPrice;
+  // a 2-day weekday rental gets twoDayPrice; otherwise fall through to the day rate.
+  if (days === 2 || days === 3) {
+    if (isStrictWeekend(startDate, days) && machine.weekendPrice) return machine.weekendPrice;
+    if (days === 2 && machine.twoDayPrice) return machine.twoDayPrice;
   }
 
   // Weekly flat rate: 5–27 days

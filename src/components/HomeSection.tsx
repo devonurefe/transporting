@@ -93,11 +93,11 @@ export default function HomeSection({
 
   const SCHAARLIFT_VARIANTS = new Set(["schaarlift", "schaarlift-smal", "schaarlift-6m"]);
 
-  // Live minimum price per category from loaded machine data
+  // Live minimum price per category (each schaarlift sub-type keeps its own key)
   const livePriceByCategory = React.useMemo(() => {
     const map: Record<string, number> = {};
     machines.forEach(m => {
-      const key = SCHAARLIFT_VARIANTS.has(m.category) ? "schaarlift" : m.category;
+      const key = m.category;
       if (map[key] === undefined || m.pricePerDay < map[key]) map[key] = m.pricePerDay;
     });
     return map;
@@ -207,15 +207,14 @@ export default function HomeSection({
                 className={`bg-gradient-to-br ${bg} border rounded-2xl overflow-hidden text-left cursor-pointer hover:shadow-md active:scale-[0.98] transition-all${isLast ? " col-span-2" : ""}`}
               >
                 {catImage ? (
-                  <div className={`relative overflow-hidden ${isLast ? "h-28 sm:h-36" : "h-24 sm:h-28"}`}>
+                  <div className={`relative overflow-hidden bg-white/60 ${isLast ? "h-24 sm:h-28" : "h-20 sm:h-24"}`}>
                     <img
                       src={catImage}
                       alt={cat.label}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-contain p-1.5"
                       referrerPolicy="no-referrer"
                       onError={(e) => { e.currentTarget.parentElement!.style.display = "none"; }}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent pointer-events-none" />
                   </div>
                 ) : (
                   <div className="px-4 pt-4 pb-0">

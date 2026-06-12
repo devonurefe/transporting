@@ -119,7 +119,7 @@ export default function HomeSection({
   const displayCategories = customCategories
     .filter(c => !SKIP_IDS.has(c.id))
     .map(c => c.id === "schaarlift"
-      ? { ...c, label: "Schaarliften", listLabel: "Schaarliften", heights: "6m - 10m", price: "v.a. €65/dag" }
+      ? { ...c, label: "Schaarliften 6-8-10", listLabel: "Schaarliften 6-8-10", heights: "6 / 8 / 10 m", price: "v.a. €49/dag" }
       : c
     )
     .sort((a, b) => {
@@ -224,7 +224,7 @@ export default function HomeSection({
                   </div>
                 )}
                 <div className="p-4 pt-3">
-                  <p className="font-bold text-xs text-slate-800 leading-snug mb-3 line-clamp-2">
+                  <p className="font-bold text-xs text-slate-800 leading-snug mb-3 line-clamp-2 min-h-[2.25rem]">
                     {cat.listLabel || cat.label}
                   </p>
                   <div className="space-y-1.5">

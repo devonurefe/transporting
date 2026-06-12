@@ -80,12 +80,14 @@ model Customer {
 }
 
 model Admin {
-  id           String   @id @default(uuid())
-  email        String   @unique
-  passwordHash String
-  name         String
-  role         String   @default("admin")
-  createdAt    DateTime @default(now())
+  id                  String    @id @default(uuid())
+  email               String    @unique
+  passwordHash        String
+  name                String
+  role                String    @default("admin")
+  createdAt           DateTime  @default(now())
+  passwordResetToken  String?
+  passwordResetExpiry DateTime?
 }
 
 model InvoiceCounter {

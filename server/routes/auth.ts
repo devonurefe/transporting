@@ -309,26 +309,36 @@ authRouter.post("/forgot-password", async (req: Request, res: Response) => {
     return res.status(400).json({ error: "E-mailadres is verplicht." });
   }
 
-  try {
-    const customer = await prisma.customer.findUnique({ where: { email: email.trim().toLowerCase() } });
+  const normalizedEmail = email.trim().toLowerCase();
+  const SUCCESS_MSG = { success: true, message: "Als dit e-mailadres bekend is, ontvangt u een resetlink." };
 
-    // Always return success to prevent email enumeration
-    if (!customer) {
-      return res.json({ success: true, message: "Als dit e-mailadres bekend is, ontvangt u een resetlink." });
+  try {
+    const appUrl = process.env.APP_URL || `${req.secure || req.headers["x-forwarded-proto"] === "https" ? "https" : "http"}://${req.get("host") || "localhost:3000"}`;
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    const resetExpiry = new Date(Date.now() + 60 * 60 * 1000);
+
+    // Check admin table first
+    const admin = await prisma.admin.findUnique({ where: { email: normalizedEmail } });
+    if (admin) {
+      await prisma.admin.update({
+        where: { id: admin.id },
+        data: { passwordResetToken: resetToken, passwordResetExpiry: resetExpiry }
+      });
+      await emailService.sendPasswordResetEmail(admin.email, admin.name, resetToken, appUrl);
+      return res.json(SUCCESS_MSG);
     }
 
-    const resetToken = crypto.randomBytes(32).toString("hex");
-    const resetExpiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+    // Check customer table
+    const customer = await prisma.customer.findUnique({ where: { email: normalizedEmail } });
+    if (!customer) return res.json(SUCCESS_MSG); // Always succeed — prevent email enumeration
 
     await prisma.customer.update({
       where: { id: customer.id },
       data: { passwordResetToken: resetToken, passwordResetExpiry: resetExpiry }
     });
-
-    const appUrl = process.env.APP_URL || `${req.secure || req.headers["x-forwarded-proto"] === "https" ? "https" : "http"}://${req.get("host") || "localhost:3000"}`;
     await emailService.sendPasswordResetEmail(customer.email, customer.name, resetToken, appUrl);
 
-    return res.json({ success: true, message: "Als dit e-mailadres bekend is, ontvangt u een resetlink." });
+    return res.json(SUCCESS_MSG);
   } catch (error) {
     console.error("Forgot password error:", error);
     return res.status(500).json({ error: "Wachtwoord reset mislukt." });
@@ -341,26 +351,36 @@ authRouter.post("/reset-password", async (req: Request, res: Response) => {
   if (!token || !newPassword || typeof token !== "string" || typeof newPassword !== "string") {
     return res.status(400).json({ error: "Token en nieuw wachtwoord zijn verplicht." });
   }
-  if (newPassword.length < 6) {
-    return res.status(400).json({ error: "Wachtwoord moet minimaal 6 tekens bevatten." });
+  if (newPassword.length < 8) {
+    return res.status(400).json({ error: "Wachtwoord moet minimaal 8 tekens bevatten." });
   }
 
   try {
-    const customer = await prisma.customer.findFirst({
-      where: {
-        passwordResetToken: token,
-        passwordResetExpiry: { gt: new Date() }
-      }
-    });
+    const now = new Date();
 
+    // Check admin reset token first
+    const admin = await prisma.admin.findFirst({
+      where: { passwordResetToken: token, passwordResetExpiry: { gt: now } }
+    });
+    if (admin) {
+      await prisma.admin.update({
+        where: { id: admin.id },
+        data: { passwordHash: await hashPassword(newPassword), passwordResetToken: null, passwordResetExpiry: null }
+      });
+      return res.json({ success: true, message: "Wachtwoord succesvol gewijzigd. U kunt nu inloggen." });
+    }
+
+    // Check customer reset token
+    const customer = await prisma.customer.findFirst({
+      where: { passwordResetToken: token, passwordResetExpiry: { gt: now } }
+    });
     if (!customer) {
       return res.status(400).json({ error: "Resetlink is ongeldig of verlopen. Vraag een nieuwe aan." });
     }
 
-    const passwordHash = await hashPassword(newPassword);
     await prisma.customer.update({
       where: { id: customer.id },
-      data: { passwordHash, passwordResetToken: null, passwordResetExpiry: null }
+      data: { passwordHash: await hashPassword(newPassword), passwordResetToken: null, passwordResetExpiry: null }
     });
 
     return res.json({ success: true, message: "Wachtwoord succesvol gewijzigd. U kunt nu inloggen." });

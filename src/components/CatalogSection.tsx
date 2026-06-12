@@ -412,25 +412,33 @@ export default function CatalogSection({
                             </div>
                             <div className="text-[9px] text-slate-400 font-mono mt-0.5">per dag</div>
                             {machine.oneDayPrice && machine.oneDayPrice < machine.pricePerDay && (
-                              <div className="text-[9px] text-amber-600 font-bold mt-0.5">1 dag: €{formatPrice(machine.oneDayPrice)} actie</div>
+                              <div className="text-[9px] text-amber-600 font-bold mt-0.5">1 dag actie €{formatPrice(machine.oneDayPrice)}</div>
                             )}
-                            {machine.twoDayPrice && (
-                              <div className="text-[9px] text-violet-600 font-bold mt-0.5">2 dgn: €{formatPrice(machine.twoDayPrice)}</div>
-                            )}
-                            {machine.weekendPrice && !machine.twoDayPrice && (
-                              <div className="text-[9px] text-violet-600 font-bold mt-0.5">weekend: €{formatPrice(machine.weekendPrice)}</div>
-                            )}
-                            {machine.weekendPrice && machine.twoDayPrice && (
-                              <div className="text-[9px] text-violet-500 font-bold mt-0.5">wknd: €{formatPrice(machine.weekendPrice)}</div>
-                            )}
-                            {(() => { const d = computeDiscounts(machine); return (<>
-                              {d.weekly > 0 && <div className="text-[9px] text-emerald-600 font-bold mt-0.5">week −{d.weekly}%</div>}
-                              {d.monthly > 0 && <div className="text-[9px] text-teal-600 font-bold mt-0.5">maand −{d.monthly}%</div>}
-                            </>); })()}
                           </div>
                         </div>
 
-                        {/* Spec row — height / reach + usage badge */}
+                        {/* Tarieven — clean uniform flat-rate strip */}
+                        {(machine.weekendPrice || machine.weeklyPrice || machine.monthlyPrice) && (
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            {machine.weekendPrice && (
+                              <span className="text-[9px] font-mono font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
+                                weekend <span className="font-bold text-slate-800">€{formatPrice(machine.weekendPrice)}</span>
+                              </span>
+                            )}
+                            {machine.weeklyPrice && (
+                              <span className="text-[9px] font-mono font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
+                                week <span className="font-bold text-slate-800">€{formatPrice(machine.weeklyPrice)}</span>
+                              </span>
+                            )}
+                            {machine.monthlyPrice && (
+                              <span className="text-[9px] font-mono font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
+                                maand <span className="font-bold text-slate-800">€{formatPrice(machine.monthlyPrice)}</span>
+                              </span>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Spec row — height / reach */}
                         <div className="flex items-center gap-3 text-[10px] font-mono text-slate-600 border-t border-slate-100 pt-2.5">
                           <span className="flex items-center gap-1" title="Werkhoogte">
                             <ArrowUpToLine className="h-3.5 w-3.5 text-indigo-500 shrink-0" />
@@ -442,15 +450,6 @@ export default function CatalogSection({
                               {machine.reach}m
                             </span>
                           )}
-                          <span className={`ml-auto text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${
-                            machine.powerType === "Diesel"
-                              ? "bg-orange-50 text-orange-600 border border-orange-100"
-                              : machine.powerType === "Hybride"
-                              ? "bg-blue-50 text-blue-700 border border-blue-100"
-                              : "bg-emerald-50 text-emerald-700 border border-emerald-100"
-                          }`}>
-                            {machine.powerType === "Diesel" ? "Buiten" : machine.powerType === "Hybride" ? "Flexibel" : "Binnen & buiten"}
-                          </span>
                         </div>
 
                         {/* SuitableFor — max 2 plain text chips */}

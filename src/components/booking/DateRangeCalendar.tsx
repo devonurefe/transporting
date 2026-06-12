@@ -11,7 +11,7 @@ import { useAppStore } from "../../store/appStore";
 import { useLanguageStore } from "../../store/languageStore";
 import { checkAvailability, SimpleOrder } from "../../utils/availability";
 import { calculateRentalDays, calculateItemSubtotal } from "../../utils/pricing";
-import { euro } from "../../utils/format";
+import { euro, withVat } from "../../utils/format";
 
 interface DateRangeCalendarProps {
   machine: Machine;
@@ -47,6 +47,7 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
   const t = useLanguageStore((s) => s.t);
   const blockedDates = useAppStore((s) => s.blockedDates);
   const campaignRules = useAppStore((s) => s.campaignRules);
+  const vatDisplay = useAppStore((s) => s.vatDisplay);
 
   const today = todayStr || new Date().toISOString().split("T")[0];
   const todayYear = Number(today.split("-")[0]);
@@ -303,7 +304,7 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
               {validRange && (
                 <div className="mx-4 mb-2 flex items-center justify-between bg-indigo-50 border border-indigo-100 rounded-xl px-3 py-2">
                   <span className="text-[11px] font-bold text-indigo-900">{days} {days === 1 ? "dag" : "dagen"}</span>
-                  <span className="text-sm font-black font-mono text-indigo-700">{euro(subtotal)} <span className="text-[9px] font-normal text-indigo-400">excl. btw</span></span>
+                  <span className="text-sm font-black font-mono text-indigo-700">{euro(withVat(subtotal, vatDisplay))} <span className="text-[9px] font-normal text-indigo-400">{vatDisplay === "incl" ? "incl. btw" : "excl. btw"}</span></span>
                 </div>
               )}
 

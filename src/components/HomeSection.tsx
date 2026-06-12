@@ -19,6 +19,8 @@ import {
 } from "lucide-react";
 import { motion } from "motion/react";
 import { buildWhatsAppGeneralUrl } from "../utils/whatsapp";
+import { withVat } from "../utils/format";
+import VatToggle from "./VatToggle";
 
 type IconComponent = React.FC<LucideProps>;
 
@@ -81,6 +83,7 @@ export default function HomeSection({
 }: HomeSectionProps) {
   const siteConfig = useAppStore((state) => state.siteConfig);
   const machines = useAppStore((state) => state.machines);
+  const vatDisplay = useAppStore((state) => state.vatDisplay);
   const language = useLanguageStore((state) => state.language);
   const t = useLanguageStore((state) => state.t);
 
@@ -184,6 +187,9 @@ export default function HomeSection({
 
       {/* ── CATEGORY CARDS ── */}
       <div className="bg-white px-4 sm:px-6 pt-6 pb-10">
+        <div className="max-w-2xl mx-auto flex justify-end mb-3">
+          <VatToggle />
+        </div>
         <div className="max-w-2xl mx-auto grid grid-cols-2 gap-3">
           {displayCategories.map((cat, i) => {
             const Icon = CATEGORY_ICONS[cat.id] ?? Truck;
@@ -230,7 +236,9 @@ export default function HomeSection({
                     <div className="flex items-baseline gap-1.5">
                       <p className="text-[9px] font-black uppercase tracking-wider text-slate-400 w-10 shrink-0">All-in</p>
                       <p className="text-sm font-extrabold text-emerald-600">
-                        {livePriceByCategory[cat.id] !== undefined ? `v.a. €${livePriceByCategory[cat.id]}/dag` : cat.price}
+                        {livePriceByCategory[cat.id] !== undefined
+                          ? `v.a. €${(() => { const v = withVat(livePriceByCategory[cat.id], vatDisplay); return v % 1 === 0 ? String(v) : v.toFixed(2).replace(".", ","); })()}/dag`
+                          : cat.price}
                       </p>
                     </div>
                   </div>

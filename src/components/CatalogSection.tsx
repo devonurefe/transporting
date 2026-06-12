@@ -28,6 +28,8 @@ import { categoryIconMap } from "./icons/CategoryIcons";
 import { useLanguageStore } from "../store/languageStore";
 import { useAppStore } from "../store/appStore";
 import { checkAvailability } from "../utils/availability";
+import { withVat } from "../utils/format";
+import VatToggle from "./VatToggle";
 
 const professionIconMap: Record<string, LucideIcon> = {
   Schilder: Paintbrush,
@@ -90,6 +92,10 @@ export default function CatalogSection({
   const t = useLanguageStore((state) => state.t);
   const orders = useAppStore((state) => state.orders);
   const blockedDates = useAppStore((state) => state.blockedDates);
+  const vatDisplay = useAppStore((state) => state.vatDisplay);
+  // Display-only VAT conversion for every price shown in this section
+  const vp = (p: number) => withVat(p, vatDisplay);
+  const vatLabel = vatDisplay === "incl" ? "incl. btw" : "excl. btw";
 
   const today = new Date().toISOString().split("T")[0];
   const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
@@ -257,22 +263,25 @@ export default function CatalogSection({
             })}
           </nav>
 
-          {/* Row 2: Search */}
-          <div className="relative flex items-center bg-slate-50 rounded-xl border border-slate-200/80 px-3 py-2 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-colors">
-            <Search className="h-4 w-4 text-slate-400 shrink-0 mr-2" />
-            <input
-              id="catalog-search"
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Zoek op type, hoogte, beroep..."
-              className="w-full text-xs bg-transparent border-none outline-none text-slate-800 placeholder-slate-400"
-            />
-            {searchQuery && (
-              <button onClick={() => setSearchQuery("")} className="text-slate-400 hover:text-slate-600 ml-2 cursor-pointer">
-                <X className="h-3.5 w-3.5" />
-              </button>
-            )}
+          {/* Row 2: Search + VAT display toggle */}
+          <div className="flex items-center gap-2">
+            <div className="relative flex flex-1 items-center bg-slate-50 rounded-xl border border-slate-200/80 px-3 py-2 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-colors">
+              <Search className="h-4 w-4 text-slate-400 shrink-0 mr-2" />
+              <input
+                id="catalog-search"
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Zoek op type, hoogte, beroep..."
+                className="w-full text-xs bg-transparent border-none outline-none text-slate-800 placeholder-slate-400"
+              />
+              {searchQuery && (
+                <button onClick={() => setSearchQuery("")} className="text-slate-400 hover:text-slate-600 ml-2 cursor-pointer">
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
+            <VatToggle />
           </div>
         </div>
 
@@ -408,11 +417,11 @@ export default function CatalogSection({
                           </div>
                           <div className="text-right shrink-0">
                             <div className="text-xl font-mono font-extrabold text-slate-900 leading-none">
-                              €{formatPrice(machine.pricePerDay)}
+                              €{formatPrice(vp(machine.pricePerDay))}
                             </div>
-                            <div className="text-[9px] text-slate-400 font-mono mt-0.5">per dag</div>
+                            <div className="text-[9px] text-slate-400 font-mono mt-0.5">per dag {vatLabel}</div>
                             {machine.oneDayPrice && machine.oneDayPrice < machine.pricePerDay && (
-                              <div className="text-[9px] text-amber-600 font-bold mt-0.5">1 dag actie €{formatPrice(machine.oneDayPrice)}</div>
+                              <div className="text-[9px] text-amber-600 font-bold mt-0.5">1 dag actie €{formatPrice(vp(machine.oneDayPrice))}</div>
                             )}
                           </div>
                         </div>
@@ -422,17 +431,17 @@ export default function CatalogSection({
                           <div className="flex flex-wrap items-center gap-1.5">
                             {machine.weekendPrice && (
                               <span className="text-[9px] font-mono font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
-                                weekend <span className="font-bold text-slate-800">€{formatPrice(machine.weekendPrice)}</span>
+                                weekend <span className="font-bold text-slate-800">€{formatPrice(vp(machine.weekendPrice))}</span>
                               </span>
                             )}
                             {machine.weeklyPrice && (
                               <span className="text-[9px] font-mono font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
-                                week <span className="font-bold text-slate-800">€{formatPrice(machine.weeklyPrice)}</span>
+                                week <span className="font-bold text-slate-800">€{formatPrice(vp(machine.weeklyPrice))}</span>
                               </span>
                             )}
                             {machine.monthlyPrice && (
                               <span className="text-[9px] font-mono font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
-                                maand <span className="font-bold text-slate-800">€{formatPrice(machine.monthlyPrice)}</span>
+                                maand <span className="font-bold text-slate-800">€{formatPrice(vp(machine.monthlyPrice))}</span>
                               </span>
                             )}
                           </div>
@@ -775,7 +784,7 @@ export default function CatalogSection({
                       const m = machines.find(item => item.id === id);
                       return (
                         <div key={id} className="col-span-1 font-mono font-extrabold text-[#14b8a6] text-sm text-center sm:text-left">
-                          {m ? `€ ${m.pricePerDay}` : "—"}
+                          {m ? `€ ${formatPrice(vp(m.pricePerDay))}` : "—"}
                         </div>
                       );
                     })}
@@ -1009,17 +1018,20 @@ export default function CatalogSection({
 
                     {/* B — Prijs & Boeken */}
                     <div className="bg-gradient-to-br from-indigo-50 to-slate-50 border border-indigo-100 rounded-2xl p-4 space-y-3">
-                      <div>
-                        <p className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">Dagtarief</p>
-                        <p className="text-3xl font-mono font-extrabold text-slate-900 leading-none">
-                          €{formatPrice(selectedDetailMachine.pricePerDay)}
-                        </p>
-                        <p className="text-[10px] text-slate-400 font-mono mt-0.5">excl. BTW per dag</p>
-                        {selectedDetailMachine.oneDayPrice && selectedDetailMachine.oneDayPrice < selectedDetailMachine.pricePerDay && (
-                          <p className="text-[10px] font-bold text-amber-600 mt-1">
-                            1 dag actie: €{formatPrice(selectedDetailMachine.oneDayPrice)}
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <p className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">Dagtarief</p>
+                          <p className="text-3xl font-mono font-extrabold text-slate-900 leading-none">
+                            €{formatPrice(vp(selectedDetailMachine.pricePerDay))}
                           </p>
-                        )}
+                          <p className="text-[10px] text-slate-400 font-mono mt-0.5">{vatDisplay === "incl" ? "incl. BTW" : "excl. BTW"} per dag</p>
+                          {selectedDetailMachine.oneDayPrice && selectedDetailMachine.oneDayPrice < selectedDetailMachine.pricePerDay && (
+                            <p className="text-[10px] font-bold text-amber-600 mt-1">
+                              1 dag actie: €{formatPrice(vp(selectedDetailMachine.oneDayPrice))}
+                            </p>
+                          )}
+                        </div>
+                        <VatToggle size="xs" />
                       </div>
                       {(() => { const d = computeDiscounts(selectedDetailMachine); return (d.weekly > 0 || d.monthly > 0) ? (
                         <div className="flex gap-2 flex-wrap">
@@ -1041,33 +1053,33 @@ export default function CatalogSection({
                           {selectedDetailMachine.oneDayPrice && selectedDetailMachine.oneDayPrice < selectedDetailMachine.pricePerDay && (
                             <div className="flex items-center px-3 py-1.5 bg-amber-50 border-b border-amber-100">
                               <span className="text-amber-700 font-bold flex-1">1 dag actie</span>
-                              <span className="font-mono font-extrabold text-amber-700">€{formatPrice(selectedDetailMachine.oneDayPrice)}</span>
+                              <span className="font-mono font-extrabold text-amber-700">€{formatPrice(vp(selectedDetailMachine.oneDayPrice))}</span>
                             </div>
                           )}
                           {selectedDetailMachine.twoDayPrice && (
                             <div className="flex items-center px-3 py-1.5 bg-white border-b border-slate-100">
                               <span className="text-slate-600 flex-1">2 dagen (doordeweeks)</span>
-                              <span className="font-mono font-bold text-slate-800">€{formatPrice(selectedDetailMachine.twoDayPrice)}</span>
+                              <span className="font-mono font-bold text-slate-800">€{formatPrice(vp(selectedDetailMachine.twoDayPrice))}</span>
                             </div>
                           )}
                           {selectedDetailMachine.weekendPrice && (
                             <div className="flex items-center px-3 py-1.5 bg-white border-b border-slate-100">
                               <span className="text-slate-600 flex-1">Weekend (2–3 dagen)</span>
-                              <span className="font-mono font-bold text-slate-800">€{formatPrice(selectedDetailMachine.weekendPrice)}</span>
+                              <span className="font-mono font-bold text-slate-800">€{formatPrice(vp(selectedDetailMachine.weekendPrice))}</span>
                             </div>
                           )}
                           {selectedDetailMachine.weeklyPrice && (() => { const d = computeDiscounts(selectedDetailMachine); return (
                             <div className="flex items-center px-3 py-1.5 bg-emerald-50 border-b border-emerald-100">
                               <span className="text-emerald-700 font-semibold flex-1">Werkweek (5 dagen)</span>
                               {d.weekly > 0 && <span className="text-[9px] font-bold text-emerald-600 bg-emerald-100 px-1.5 py-0.5 rounded-full mr-2">−{d.weekly}%</span>}
-                              <span className="font-mono font-extrabold text-emerald-700">€{formatPrice(selectedDetailMachine.weeklyPrice)}</span>
+                              <span className="font-mono font-extrabold text-emerald-700">€{formatPrice(vp(selectedDetailMachine.weeklyPrice))}</span>
                             </div>
                           ); })()}
                           {selectedDetailMachine.monthlyPrice && (() => { const d = computeDiscounts(selectedDetailMachine); return (
                             <div className="flex items-center px-3 py-1.5 bg-teal-50">
                               <span className="text-teal-700 font-semibold flex-1">4 weken (28 dagen)</span>
                               {d.monthly > 0 && <span className="text-[9px] font-bold text-teal-600 bg-teal-100 px-1.5 py-0.5 rounded-full mr-2">−{d.monthly}%</span>}
-                              <span className="font-mono font-extrabold text-teal-700">€{formatPrice(selectedDetailMachine.monthlyPrice)}</span>
+                              <span className="font-mono font-extrabold text-teal-700">€{formatPrice(vp(selectedDetailMachine.monthlyPrice))}</span>
                             </div>
                           ); })()}
                         </div>

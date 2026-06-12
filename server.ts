@@ -242,6 +242,29 @@ async function applyDataMigrations() {
       });
       console.log("[Migration] Updated ecolift category label → Pecolift.");
     }
+
+    // One-time: assign official fleet photos to all machines (marker row in
+    // InvoiceCounter so admin image changes are never overwritten afterwards)
+    const FLEET_PHOTOS_MIGRATION = "migration-fleet-photos-2026-06";
+    const photosDone = await prisma.invoiceCounter.findUnique({ where: { id: FLEET_PHOTOS_MIGRATION } });
+    if (!photosDone) {
+      const fleetMachineIds = [
+        "nifty-120-1", "nifty-120-2", "nifty-120-3", "nifty-170",
+        "hinowa-15-70", "hinowa-17-75",
+        "optimum-8-1", "optimum-8-2", "compact-8-1", "compact-8-2",
+        "compact-10n-1", "compact-10n-2", "dingli-6m",
+        "altrex-rs44", "star-10", "skyjack-sj16", "bravi-mini-hd", "jlg-1230es",
+        "ladderlift-18", "ladderlift-21-1", "ladderlift-21-2", "ecolift",
+      ];
+      for (const machineId of fleetMachineIds) {
+        await prisma.machine.updateMany({
+          where: { id: machineId },
+          data: { imageUrl: `/images/machines/${machineId}.webp` }
+        });
+      }
+      await prisma.invoiceCounter.create({ data: { id: FLEET_PHOTOS_MIGRATION, lastNumber: 1 } });
+      console.log("[Migration] Official fleet photos assigned to all machines.");
+    }
   } catch (err) {
     console.warn("[Migration] Could not apply data migrations:", err instanceof Error ? err.message : err);
   }

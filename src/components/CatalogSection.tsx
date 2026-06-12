@@ -359,7 +359,7 @@ export default function CatalogSection({
 
                       {/* IMAGE with category + powerType overlay — clickable to open detail modal */}
                       <div
-                        className="relative aspect-[4/3] w-full overflow-hidden bg-slate-100 cursor-pointer"
+                        className="relative aspect-[4/3] w-full overflow-hidden bg-white cursor-pointer"
                         onClick={() => {
                           setSelectedDetailMachine(machine);
                           onAddSystemLog?.("system", currentUser?.name ?? "Gast", `Bekijkt specificaties: "${machine.name}"`);
@@ -369,7 +369,7 @@ export default function CatalogSection({
                           src={machine.imageUrl || (machine.additionalImages?.[0] ?? "/placeholder-machine.webp")}
                           alt={machine.imageAlt}
                           loading="lazy"
-                          className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                          className="h-full w-full object-contain group-hover:scale-105 transition-transform duration-500 ease-out"
                           referrerPolicy="no-referrer"
                           onError={(e) => {
                             const fallback = machine.additionalImages?.[0];
@@ -953,7 +953,7 @@ export default function CatalogSection({
                             key={activeDetailImageIndex}
                             src={allDetailImages[activeDetailImageIndex] ?? "/placeholder-machine.webp"}
                             alt={`${selectedDetailMachine.name} — foto ${activeDetailImageIndex + 1}`}
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-contain"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}

@@ -548,5 +548,60 @@ export const emailService = {
       subject: "Wachtwoord resetten - HuurGo",
       html: htmlContent
     });
-  }
+  },
+
+  /**
+   * Send cancellation alert to admin when a customer cancels an order
+   */
+  sendAdminCancelAlert: async (order: EmailOrderData) => {
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f8fafc; color: #1e293b; margin: 0; padding: 20px; }
+          .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 24px; border: 1px solid #e2e8f0; overflow: hidden; }
+          .header { background: #dc2626; padding: 30px; text-align: center; color: #ffffff; }
+          .header h1 { margin: 0; font-size: 22px; font-weight: 800; }
+          .content { padding: 40px 30px; }
+          .details-grid { display: grid; gap: 14px; margin: 24px 0; background: #f8fafc; padding: 20px; border-radius: 16px; border: 1px solid #edf2f7; }
+          .details-item { border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; }
+          .details-item:last-child { border-bottom: none; padding-bottom: 0; }
+          .label { font-size: 10px; text-transform: uppercase; color: #64748b; font-weight: bold; }
+          .value { font-size: 13px; font-weight: 600; color: #0f172a; margin-top: 2px; }
+          .btn { display: inline-block; background: #dc2626; color: #fff; text-decoration: none; padding: 12px 30px; border-radius: 12px; font-weight: 800; font-size: 14px; margin-top: 20px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header"><h1>❌ RESERVERING GEANNULEERD</h1><p>Admin alert voor HuurGo.nl</p></div>
+          <div class="content">
+            <p>Een klant heeft zojuist een reservering geannuleerd via het klantenportaal.</p>
+            <div class="details-grid">
+              <div class="details-item"><div class="label">Reservering ID</div><div class="value" style="color:#dc2626; font-family:monospace;">${order.id}</div></div>
+              <div class="details-item"><div class="label">Klant</div><div class="value">${esc(order.customerName)} — ${esc(order.customerEmail)}</div></div>
+              <div class="details-item"><div class="label">Machine</div><div class="value">${esc(order.machineName)}</div></div>
+              <div class="details-item"><div class="label">Periode</div><div class="value">${order.startDate} t/m ${order.endDate} (${order.rentalDays}d)</div></div>
+              <div class="details-item"><div class="label">Waarde (vervallen)</div><div class="value" style="color:#dc2626;">€ ${order.totalAmount.toFixed(2)}</div></div>
+            </div>
+            <div style="text-align:center;"><a href="${APP_URL}/admin" class="btn">Bekijk in Admin Dashboard</a></div>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    if (!resend) {
+      console.log(`[EmailService] [MOCK] Admin cancel alert simulated for ${order.id}.`);
+      return true;
+    }
+
+    return sendWithRetry({
+      from: SENDER_EMAIL,
+      to: ADMIN_ALERT_EMAIL,
+      subject: `❌ Annulering ${order.id} — ${order.customerName} — €${order.totalAmount.toFixed(2)}`,
+      html: htmlContent,
+    });
+  },
 };

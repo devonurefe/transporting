@@ -459,8 +459,7 @@ ordersRouter.put("/:id/cancel", requireAuth as any, async (req: AuthenticatedReq
       customerPhone: updatedOrder.customerPhone || ""
     };
     emailService.sendStatusUpdate(emailData).catch(err => console.error("Cancel email error:", err));
-    emailService.sendAdminAlert({ ...emailData, customerPhone: updatedOrder.customerPhone || "" })
-      .catch(err => console.error("Admin cancel alert error:", err));
+    emailService.sendAdminCancelAlert(emailData).catch(err => console.error("Admin cancel alert error:", err));
 
     res.json({
       ...updatedOrder,

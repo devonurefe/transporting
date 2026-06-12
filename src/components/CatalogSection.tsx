@@ -276,7 +276,9 @@ export default function CatalogSection({
   };
 
   const formatPrice = (p: number): string =>
-    p % 1 === 0 ? String(Math.round(p)) : p.toFixed(2).replace(".", ",");
+    p % 1 === 0
+      ? Math.round(p).toLocaleString("nl-NL")
+      : p.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   const formatShortDate = (iso: string): string => {
     const d = new Date(iso);
@@ -469,8 +471,8 @@ export default function CatalogSection({
               </div>
             )}
 
-            {/* Grid layout */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Grid layout — wider cards: 2-col from sm, 3-col only at xl */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5 sm:gap-6">
               <AnimatePresence mode="popLayout">
                 {filteredMachines.map((machine) => {
                   return (
@@ -490,7 +492,7 @@ export default function CatalogSection({
                         const nextDate = !available ? getNextAvailableDate(machine.id) : null;
                         const availText = available ? "Beschikbaar" : nextDate ? `Vrij ${formatShortDate(nextDate)}` : "Vol geboekt";
                         return (
-                          <div className={`absolute top-3 left-3 z-20 flex items-center gap-1 py-0.5 px-2 rounded-full text-[9px] font-bold shadow ${
+                          <div className={`absolute top-3 left-3 z-20 flex items-center gap-1 py-1 px-2.5 rounded-full text-[10px] font-bold shadow-sm ${
                             available
                               ? "bg-emerald-50 border border-emerald-200 text-emerald-700"
                               : "bg-amber-50 border border-amber-200 text-amber-700"
@@ -524,13 +526,13 @@ export default function CatalogSection({
                             }}
                             className="h-3 w-3 accent-indigo-600 cursor-pointer"
                           />
-                          <span className="text-[9px] font-bold text-slate-700 select-none">Vergelijk</span>
+                          <span className="text-[10px] font-bold text-slate-700 select-none">Vergelijk</span>
                         </label>
                       </div>
 
                       {/* IMAGE with category + powerType overlay — clickable to open detail modal */}
                       <div
-                        className="relative aspect-[4/3] w-full overflow-hidden bg-white cursor-pointer"
+                        className="relative aspect-[3/2] w-full overflow-hidden bg-slate-50 cursor-pointer"
                         onClick={() => {
                           setSelectedDetailMachine(machine);
                           onAddSystemLog?.("system", currentUser?.name ?? "Gast", `Bekijkt specificaties: "${machine.name}"`);
@@ -555,7 +557,7 @@ export default function CatalogSection({
                           <span className="text-[10px] font-bold text-white/95 uppercase tracking-wider leading-none">
                             {machine.categoryLabel}
                           </span>
-                          <span className="text-[8px] font-mono font-bold text-white/80 bg-black/30 backdrop-blur-sm px-1.5 py-0.5 rounded-md">
+                          <span className="text-[10px] font-semibold text-white/90 bg-black/30 backdrop-blur-sm px-2 py-0.5 rounded-md">
                             {machine.powerType}
                           </span>
                         </div>
@@ -578,32 +580,32 @@ export default function CatalogSection({
                             </h3>
                           </div>
                           <div className="text-right shrink-0">
-                            <div className="text-xl font-mono font-extrabold text-slate-900 leading-none">
+                            <div className="text-xl font-display font-black leading-none bg-gradient-to-br from-indigo-600 to-violet-600 bg-clip-text text-transparent">
                               €{formatPrice(vp(machine.pricePerDay))}
                             </div>
-                            <div className="text-[9px] text-slate-400 font-mono mt-0.5">per dag {vatLabel}</div>
+                            <div className="text-[10px] text-slate-400 mt-0.5">per dag {vatLabel}</div>
                             {machine.oneDayPrice && machine.oneDayPrice < machine.pricePerDay && (
-                              <div className="text-[9px] text-amber-600 font-bold mt-0.5">1 dag actie €{formatPrice(vp(machine.oneDayPrice))}</div>
+                              <div className="text-[10px] text-amber-600 font-bold mt-0.5">1 dag actie €{formatPrice(vp(machine.oneDayPrice))}</div>
                             )}
                           </div>
                         </div>
 
-                        {/* Tarieven — clean uniform flat-rate strip */}
+                        {/* Tarieven — colorful rate pills */}
                         {(machine.weekendPrice || machine.weeklyPrice || machine.monthlyPrice) && (
                           <div className="flex flex-wrap items-center gap-1.5">
                             {machine.weekendPrice && (
-                              <span className="text-[9px] font-mono font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
-                                weekend <span className="font-bold text-slate-800">€{formatPrice(vp(machine.weekendPrice))}</span>
+                              <span className="text-[10px] font-semibold text-violet-700 bg-violet-50 border border-violet-100 px-2 py-0.5 rounded-md">
+                                wknd <span className="font-extrabold">€{formatPrice(vp(machine.weekendPrice))}</span>
                               </span>
                             )}
                             {machine.weeklyPrice && (
-                              <span className="text-[9px] font-mono font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
-                                week <span className="font-bold text-slate-800">€{formatPrice(vp(machine.weeklyPrice))}</span>
+                              <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-md">
+                                week <span className="font-extrabold">€{formatPrice(vp(machine.weeklyPrice))}</span>
                               </span>
                             )}
                             {machine.monthlyPrice && (
-                              <span className="text-[9px] font-mono font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
-                                maand <span className="font-bold text-slate-800">€{formatPrice(vp(machine.monthlyPrice))}</span>
+                              <span className="text-[10px] font-semibold text-teal-700 bg-teal-50 border border-teal-100 px-2 py-0.5 rounded-md">
+                                maand <span className="font-extrabold">€{formatPrice(vp(machine.monthlyPrice))}</span>
                               </span>
                             )}
                           </div>
@@ -626,44 +628,44 @@ export default function CatalogSection({
                         {/* SuitableFor — max 2 plain text chips */}
                         <div className="flex items-center gap-1.5 flex-wrap">
                           {(machine.suitableFor ?? []).length === 0 && (
-                            <span className="text-[9px] text-slate-400 italic">Algemeen gebruik</span>
+                            <span className="text-[10px] text-slate-400 italic">Algemeen gebruik</span>
                           )}
                           {(machine.suitableFor ?? []).slice(0, 2).map((prof) => (
                             <span
                               key={prof}
-                              className="text-[9px] font-semibold text-slate-600 bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 px-2 py-0.5 rounded-full transition-colors duration-150 cursor-default select-none"
+                              className="text-[10px] font-semibold text-slate-600 bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 px-2 py-0.5 rounded-full transition-colors duration-150 cursor-default select-none"
                             >
                               {prof}
                             </span>
                           ))}
                           {(machine.suitableFor ?? []).length > 2 && (
-                            <span className="text-[9px] text-slate-400 font-semibold px-1 select-none">+{machine.suitableFor.length - 2} meer</span>
+                            <span className="text-[10px] text-slate-400 font-semibold px-1 select-none">+{machine.suitableFor.length - 2} meer</span>
                           )}
                         </div>
 
                         {/* Campaign badge */}
                         {machine.campaignText && (
-                          <div className="flex items-center gap-1.5 text-[9px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-lg w-fit">
+                          <div className="flex items-center gap-1.5 text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-lg w-fit">
                             <Zap className="h-3 w-3 text-amber-500" />
                             {machine.campaignText}
                             {machine.campaignDiscountPercent && ` −${machine.campaignDiscountPercent}%`}
                           </div>
                         )}
 
-                        {/* Action buttons */}
-                        <div className="flex gap-2 mt-auto pt-1">
+                        {/* Action buttons — primary CTA is dominant */}
+                        <div className="flex gap-2 mt-auto pt-1.5">
                           <button
                             onClick={() => {
                               setSelectedDetailMachine(machine);
                               onAddSystemLog?.("system", currentUser?.name ?? "Gast", `Bekijkt specificaties: "${machine.name}"`);
                             }}
-                            className="flex-1 py-2.5 rounded-xl border border-indigo-200 hover:border-indigo-400 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 hover:text-indigo-900 text-[11px] font-bold transition-all duration-200 active:scale-[0.97] cursor-pointer"
+                            className="flex-none px-3 py-3 rounded-xl border border-slate-200 hover:border-slate-300 bg-transparent hover:bg-slate-50 text-slate-600 hover:text-slate-800 text-[11px] font-semibold transition-all duration-200 active:scale-[0.97] cursor-pointer"
                           >
                             {t("btnSpecifications")}
                           </button>
                           <button
                             onClick={() => onSelectMachineForBooking(machine)}
-                            className="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-[11px] font-bold transition-all duration-200 active:scale-[0.97] cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
+                            className="flex-1 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-xs font-bold transition-all duration-200 active:scale-[0.97] cursor-pointer flex items-center justify-center gap-1.5 shadow-sm hover:shadow-md"
                           >
                             <ShoppingBag className="h-3.5 w-3.5" />
                             {t("btnRentNow")}

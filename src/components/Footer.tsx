@@ -6,6 +6,7 @@
 import React from "react";
 import { Mail, MapPin, Clock } from "lucide-react";
 import { useLanguageStore } from "../store/languageStore";
+import { HuurGoLogo } from "./Header";
 
 interface FooterProps {
   siteName: string;
@@ -24,10 +25,7 @@ export default function Footer({ siteName, setActiveTab: _setActiveTab, setShowC
 
           {/* Brand + email */}
           <div className="space-y-4 flex flex-col items-start">
-            <div className="flex items-baseline gap-0.5">
-              <span className="font-display text-2xl font-extrabold text-emerald-400">huur</span>
-              <span className="font-display text-2xl font-extrabold text-orange-400">go.</span>
-            </div>
+            <HuurGoLogo className="h-9" dark />
             <p className="text-xs text-slate-400 leading-loose max-w-xs">
               Professionele verhuur van gecertificeerde hoogwerkers, schaarliften en mastliften voor zzp'ers, aannemers en particulieren door heel Nederland.
             </p>

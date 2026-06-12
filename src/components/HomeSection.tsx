@@ -133,7 +133,7 @@ export default function HomeSection({
 
       {/* ── HERO IMAGE — sade, metin yok ── */}
       <div
-        className="relative bg-slate-900 bg-cover bg-center bg-no-repeat overflow-hidden min-h-[260px] sm:min-h-[380px]"
+        className="relative bg-slate-900 bg-cover bg-center bg-no-repeat overflow-hidden min-h-[260px] sm:min-h-[400px] lg:min-h-[480px]"
         style={{ backgroundImage: "url('/hero-huurgo-v2.jpg')" }}
       >
         <div className="absolute inset-0 bg-black/15 pointer-events-none" />
@@ -154,7 +154,7 @@ export default function HomeSection({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.07 }}
-            className="font-display text-2xl sm:text-3xl font-black tracking-tight text-slate-900"
+            className="font-display text-3xl sm:text-4xl font-black tracking-tight text-slate-900 leading-tight"
           >
             {language === "nl" && siteConfig.heroTitle ? siteConfig.heroTitle : t("heroTitle")}
           </motion.h1>
@@ -187,10 +187,10 @@ export default function HomeSection({
 
       {/* ── CATEGORY CARDS ── */}
       <div className="bg-white px-4 sm:px-6 pt-6 pb-10">
-        <div className="max-w-2xl mx-auto flex justify-end mb-3">
+        <div className="max-w-5xl mx-auto flex justify-end mb-3">
           <VatToggle />
         </div>
-        <div className="max-w-2xl mx-auto grid grid-cols-2 gap-3">
+        <div className="max-w-5xl mx-auto grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           {displayCategories.map((cat, i) => {
             const Icon = CATEGORY_ICONS[cat.id] ?? Truck;
             const bg = bgClasses[i % bgClasses.length];
@@ -224,19 +224,19 @@ export default function HomeSection({
                   </div>
                 )}
                 <div className="p-4 pt-3">
-                  <p className="font-bold text-[12px] text-slate-800 leading-snug mb-3 line-clamp-2">
+                  <p className="font-bold text-xs text-slate-800 leading-snug mb-3 line-clamp-2">
                     {cat.listLabel || cat.label}
                   </p>
                   <div className="space-y-1.5">
                     <div className="flex items-baseline gap-1.5">
-                      <p className="text-[9px] font-black uppercase tracking-wider text-slate-400 w-10 shrink-0">Hoogte</p>
+                      <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 w-10 shrink-0">Hoogte</p>
                       <p className="text-sm font-bold text-slate-700">{cat.heights}</p>
                     </div>
                     <div className="flex items-baseline gap-1.5">
-                      <p className="text-[9px] font-black uppercase tracking-wider text-slate-400 w-10 shrink-0">All-in</p>
+                      <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 w-10 shrink-0">All-in</p>
                       <p className="text-sm font-extrabold text-emerald-600">
                         {livePriceByCategory[cat.id] !== undefined
-                          ? `v.a. €${(() => { const v = withVat(livePriceByCategory[cat.id], vatDisplay); return v % 1 === 0 ? String(v) : v.toFixed(2).replace(".", ","); })()}/dag`
+                          ? `v.a. €${(() => { const v = withVat(livePriceByCategory[cat.id], vatDisplay); return v % 1 === 0 ? Math.round(v).toLocaleString("nl-NL") : v.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); })()}/dag`
                           : cat.price}
                       </p>
                     </div>

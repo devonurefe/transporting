@@ -28,9 +28,9 @@ const MyOrdersSection = lazy(() => import("./components/MyOrdersSection"));
 // Premium Loading Indicator Component
 function LoadingSpinner() {
   return (
-    <div className="min-h-[60vh] flex flex-col items-center justify-center space-y-4">
-      <Loader2 className="h-10 w-10 text-indigo-600 animate-spin" />
-      <span className="text-xs text-slate-500 font-mono tracking-wider uppercase font-semibold">Laden van premium module...</span>
+    <div className="min-h-[60vh] flex flex-col items-center justify-center space-y-3">
+      <Loader2 className="h-8 w-8 text-indigo-500 animate-spin" />
+      <span className="text-sm text-slate-400 font-medium">Laden...</span>
     </div>
   );
 }
@@ -469,7 +469,7 @@ export default function App() {
   };
 
   return (
-    <div className="relative min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans antialiased text-sm pb-14 md:pb-0">
+    <div className="relative min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans antialiased pb-16 sm:pb-0">
 
       {/* JSON-LD Structured Data for Google */}
       <script

@@ -98,7 +98,7 @@ export const emailService = {
           <div class="content">
             <span class="order-id">Reservering ID: ${order.id}</span>
             <p>Beste <strong>${esc(order.customerName)}</strong>,</p>
-            <p>Hartelijk dank voor uw reservering bij HuurGo. Onze logistieke afdeling en AI-planner hebben uw reservering direct gereserveerd en in behandeling genomen. Hieronder vindt u de specificaties:</p>
+            <p>Hartelijk dank voor uw reservering bij HuurGo. Ons verhuurteam heeft uw reservering direct in behandeling genomen. Hieronder vindt u de specificaties:</p>
             
             <div class="details-grid">
               <div class="details-item">
@@ -139,7 +139,7 @@ export const emailService = {
             </div>
           </div>
           <div class="footer">
-            © ${new Date().getFullYear()} HuurGo B.V. • BMWT-gecertificeerd verhuurnetwerk • Alphen aan den Rijn, Nederland
+            © ${new Date().getFullYear()} HuurGo / MB Hoogwerkers B.V. • BMWT-gecertificeerd verhuurnetwerk • Zoeterwoude, Nederland
           </div>
         </div>
       </body>
@@ -330,7 +330,7 @@ export const emailService = {
             </div>
           </div>
           <div class="footer">
-            © ${new Date().getFullYear()} HuurGo B.V. • BMWT-gecertificeerd verhuurnetwerk • Alphen aan den Rijn, Nederland
+            © ${new Date().getFullYear()} HuurGo / MB Hoogwerkers B.V. • BMWT-gecertificeerd verhuurnetwerk • Zoeterwoude, Nederland
           </div>
         </div>
       </body>
@@ -406,7 +406,7 @@ export const emailService = {
             </div>
           </div>
           <div class="footer">
-            © ${new Date().getFullYear()} HuurGo B.V. • BMWT-gecertificeerd verhuurnetwerk • Alphen aan den Rijn, Nederland
+            © ${new Date().getFullYear()} HuurGo / MB Hoogwerkers B.V. • BMWT-gecertificeerd verhuurnetwerk • Zoeterwoude, Nederland
           </div>
         </div>
       </body>
@@ -433,7 +433,7 @@ export const emailService = {
    */
   sendRentalReminder: async (order: EmailOrderData) => {
     const isPickup = order.deliveryType === "self_pickup";
-    const deliveryText = isPickup ? "Zelf afhalen bij HuurGo, Distributieweg 12, Amsterdam" : `Bezorging op adres: ${esc(order.deliveryAddress || "")}`;
+    const deliveryText = isPickup ? "Zelf afhalen bij MB Hoogwerkers, Produktieweg 20, 2382 PB Zoeterwoude" : `Bezorging op adres: ${esc(order.deliveryAddress || "")}`;
 
     const htmlContent = `
       <!DOCTYPE html>
@@ -471,7 +471,7 @@ export const emailService = {
             </div>
             <p style="font-size: 13px; color: #475569;">Zorg dat de opstelplaats toegankelijk is. Bij vragen kunt u contact opnemen via WhatsApp.</p>
           </div>
-          <div class="footer">© ${new Date().getFullYear()} HuurGo B.V. • BMWT-gecertificeerd verhuurnetwerk</div>
+          <div class="footer">© ${new Date().getFullYear()} HuurGo / MB Hoogwerkers B.V. • BMWT-gecertificeerd verhuurnetwerk</div>
         </div>
       </body>
       </html>
@@ -529,7 +529,7 @@ export const emailService = {
               <a href="${resetUrl}" style="color:#4f46e5;">${resetUrl}</a>
             </div>
           </div>
-          <div class="footer">© ${new Date().getFullYear()} HuurGo B.V. • BMWT-gecertificeerd verhuurnetwerk</div>
+          <div class="footer">© ${new Date().getFullYear()} HuurGo / MB Hoogwerkers B.V. • BMWT-gecertificeerd verhuurnetwerk</div>
         </div>
       </body>
       </html>

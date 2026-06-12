@@ -1,0 +1,339 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { Calendar, ChevronLeft, ChevronRight, Check, RotateCcw, X } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
+import { Machine } from "../../types";
+import { useAppStore } from "../../store/appStore";
+import { useLanguageStore } from "../../store/languageStore";
+import { checkAvailability, SimpleOrder } from "../../utils/availability";
+import { calculateRentalDays, calculateItemSubtotal } from "../../utils/pricing";
+import { euro, withVat } from "../../utils/format";
+
+interface DateRangeCalendarProps {
+  machine: Machine;
+  startDate: string;          // committed selection "YYYY-MM-DD" or ""
+  endDate: string;            // committed selection "YYYY-MM-DD" or ""
+  profile: string;            // customerProfile, for the live price preview
+  onConfirm: (start: string, end: string) => void;
+  todayStr?: string;          // injectable for tests
+}
+
+const MONTHS_NL = ["januari", "februari", "maart", "april", "mei", "juni", "juli", "augustus", "september", "oktober", "november", "december"];
+const DOW_NL = ["MA", "DI", "WO", "DO", "VR", "ZA", "ZO"];
+
+// --- Timezone-safe "YYYY-MM-DD" helpers: never call .toISOString() on a Date built
+// with the local-time constructor, that shifts the day in non-UTC zones. ---
+function toKey(y: number, mIdx: number, d: number): string {
+  return `${y}-${String(mIdx + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+}
+function addDaysKey(key: string, n: number): string {
+  const [y, m, d] = key.split("-").map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d) + n * 86400000);
+  return toKey(dt.getUTCFullYear(), dt.getUTCMonth(), dt.getUTCDate());
+}
+function mondayIndex(jsDay: number): number {
+  return (jsDay + 6) % 7; // getUTCDay() Sun=0..Sat=6 → Mon=0..Sun=6
+}
+function formatShort(key: string): string {
+  const [, m, d] = key.split("-").map(Number);
+  return `${d} ${MONTHS_NL[m - 1].slice(0, 3)}`;
+}
+
+export default function DateRangeCalendar({ machine, startDate, endDate, profile, onConfirm, todayStr }: DateRangeCalendarProps) {
+  const t = useLanguageStore((s) => s.t);
+  const blockedDates = useAppStore((s) => s.blockedDates);
+  const campaignRules = useAppStore((s) => s.campaignRules);
+  const vatDisplay = useAppStore((s) => s.vatDisplay);
+
+  const today = todayStr || new Date().toISOString().split("T")[0];
+  const todayYear = Number(today.split("-")[0]);
+  const todayMonth = Number(today.split("-")[1]) - 1;
+
+  const [isOpen, setIsOpen] = useState(false);
+  const [orders, setOrders] = useState<SimpleOrder[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [draftStart, setDraftStart] = useState(startDate);
+  const [draftEnd, setDraftEnd] = useState(endDate);
+
+  const initMonth = startDate || today;
+  const [viewYear, setViewYear] = useState(Number(initMonth.split("-")[0]));
+  const [viewMonth, setViewMonth] = useState(Number(initMonth.split("-")[1]) - 1);
+
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  const open = () => {
+    setDraftStart(startDate);
+    setDraftEnd(endDate);
+    const m = startDate || today;
+    setViewYear(Number(m.split("-")[0]));
+    setViewMonth(Number(m.split("-")[1]) - 1);
+    setIsOpen(true);
+  };
+  const close = () => {
+    setIsOpen(false);
+    triggerRef.current?.focus();
+  };
+
+  // Fetch this machine's occupancy on open (works for guests via public endpoint)
+  useEffect(() => {
+    if (!isOpen) return;
+    let cancelled = false;
+    setLoading(true);
+    fetch(`/api/orders/availability?machineId=${encodeURIComponent(machine.id)}`)
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => { if (!cancelled) setOrders(Array.isArray(data) ? data : []); })
+      .catch(() => { if (!cancelled) setOrders([]); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [isOpen, machine.id]);
+
+  // Escape closes; basic focus management + Tab trap within the dialog
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") { e.preventDefault(); close(); return; }
+      if (e.key === "Tab" && dialogRef.current) {
+        const focusable = dialogRef.current.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), [href], input, [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [isOpen]);
+
+  // Max selectable end: walk forward from start until the first unavailable day,
+  // so a range can never span a blocked/booked day. Only constrains while no end yet.
+  const maxEnd = useMemo(() => {
+    if (!draftStart || draftEnd) return "";
+    let cap = draftStart;
+    let cursor = draftStart;
+    for (let i = 0; i < 366; i++) {
+      const next = addDaysKey(cursor, 1);
+      if (!checkAvailability(machine.id, next, next, orders, blockedDates, today).available) break;
+      cap = next; cursor = next;
+    }
+    return cap;
+  }, [draftStart, draftEnd, orders, blockedDates, machine.id, today]);
+
+  const grid = useMemo(() => {
+    const firstDow = new Date(Date.UTC(viewYear, viewMonth, 1)).getUTCDay();
+    const lead = mondayIndex(firstDow);
+    const daysInMonth = new Date(Date.UTC(viewYear, viewMonth + 1, 0)).getUTCDate();
+    type Cell = { key: string; day: number; status: "past" | "unavailable" | "available" | "capped"; selectable: boolean; isStart: boolean; isEnd: boolean; inRange: boolean } | null;
+    const cells: Cell[] = [];
+    for (let i = 0; i < lead; i++) cells.push(null);
+    for (let d = 1; d <= daysInMonth; d++) {
+      const key = toKey(viewYear, viewMonth, d);
+      let status: "past" | "unavailable" | "available" | "capped";
+      if (key < today) status = "past";
+      else if (!checkAvailability(machine.id, key, key, orders, blockedDates, today).available) status = "unavailable";
+      else status = "available";
+      const isCapped = status === "available" && !!draftStart && !draftEnd && maxEnd !== "" && key > maxEnd;
+      cells.push({
+        key,
+        day: d,
+        status: isCapped ? "capped" : status,
+        selectable: status === "available" && !isCapped,
+        isStart: key === draftStart,
+        isEnd: key === draftEnd,
+        inRange: !!draftStart && !!draftEnd && key > draftStart && key < draftEnd,
+      });
+    }
+    while (cells.length % 7 !== 0) cells.push(null);
+    return cells;
+  }, [viewYear, viewMonth, orders, blockedDates, draftStart, draftEnd, maxEnd, machine.id, today]);
+
+  const onDayClick = (key: string, selectable: boolean) => {
+    if (!selectable) return;
+    if (!draftStart || (draftStart && draftEnd)) { setDraftStart(key); setDraftEnd(""); return; }
+    if (key < draftStart) { setDraftStart(key); setDraftEnd(""); return; }
+    if (key === draftStart) { setDraftEnd(key); return; }
+    // key > draftStart and already ≤ maxEnd (capped days aren't selectable); validate defensively
+    if (checkAvailability(machine.id, draftStart, key, orders, blockedDates, today).available) setDraftEnd(key);
+  };
+
+  const canPrev = !(viewYear === todayYear && viewMonth === todayMonth);
+  const goPrev = () => {
+    if (!canPrev) return;
+    if (viewMonth === 0) { setViewMonth(11); setViewYear(viewYear - 1); } else setViewMonth(viewMonth - 1);
+  };
+  const goNext = () => {
+    if (viewMonth === 11) { setViewMonth(0); setViewYear(viewYear + 1); } else setViewMonth(viewMonth + 1);
+  };
+
+  const validRange = !!draftStart && !!draftEnd && checkAvailability(machine.id, draftStart, draftEnd, orders, blockedDates, today).available;
+  const days = validRange ? calculateRentalDays(draftStart, draftEnd) : 0;
+  const subtotal = validRange ? calculateItemSubtotal(machine, days, profile, campaignRules, draftStart) : 0;
+
+  const confirm = () => { if (!validRange) return; onConfirm(draftStart, draftEnd); close(); };
+  const reset = () => { setDraftStart(""); setDraftEnd(""); };
+
+  const buttonLabel = startDate && endDate
+    ? `${formatShort(startDate)} – ${formatShort(endDate)} · ${calculateRentalDays(startDate, endDate)} ${calculateRentalDays(startDate, endDate) === 1 ? "dag" : "dagen"}`
+    : t("calSelectPeriod");
+
+  const dayAria = (key: string, status: string) => {
+    const [y, m, d] = key.split("-").map(Number);
+    const label = `${d} ${MONTHS_NL[m - 1]} ${y}`;
+    const stateNl = status === "unavailable" ? t("calLegendUnavailable")
+      : status === "available" ? t("calLegendAvailable") : "";
+    return stateNl ? `${label}, ${stateNl}` : label;
+  };
+
+  return (
+    <>
+      <button
+        ref={triggerRef}
+        type="button"
+        onClick={open}
+        className={`w-full flex items-center gap-2.5 bg-white rounded-xl px-3 py-2.5 border transition-colors shadow-sm cursor-pointer text-left ${
+          startDate && endDate ? "border-indigo-300 text-slate-800" : "border-slate-200 text-slate-500 hover:border-indigo-300"
+        }`}
+      >
+        <Calendar className="h-4 w-4 text-indigo-500 shrink-0" />
+        <span className="text-xs font-bold flex-1">{buttonLabel}</span>
+        <span className="text-[10px] text-indigo-600 font-bold shrink-0">{startDate && endDate ? t("calChange") : ""}</span>
+      </button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={close}
+              className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm"
+            />
+            <motion.div
+              ref={dialogRef}
+              role="dialog"
+              aria-modal="true"
+              aria-label={`${t("calTitle")} — ${machine.name}`}
+              initial={{ opacity: 0, scale: 0.96, y: 12 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: 12 }}
+              transition={{ type: "spring", stiffness: 360, damping: 28 }}
+              className="relative z-50 w-full max-w-sm bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]"
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
+                <div className="min-w-0">
+                  <h4 className="text-sm font-black text-slate-900 truncate">{t("calTitle")}</h4>
+                  <p className="text-[10px] text-slate-400 truncate">{machine.name}</p>
+                </div>
+                <button type="button" onClick={close} aria-label={t("calClose")} className="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 cursor-pointer transition-colors shrink-0">
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              {/* Month navigation */}
+              <div className="flex items-center justify-between px-4 pt-3">
+                <button
+                  type="button"
+                  onClick={goPrev}
+                  disabled={!canPrev}
+                  aria-label={t("calPrevMonth")}
+                  className={`p-1.5 rounded-lg transition-colors ${canPrev ? "hover:bg-slate-100 text-slate-600 cursor-pointer" : "text-slate-200 cursor-not-allowed"}`}
+                >
+                  <ChevronLeft className="h-5 w-5" />
+                </button>
+                <span className="text-sm font-bold text-slate-800 capitalize">{MONTHS_NL[viewMonth]} {viewYear}</span>
+                <button type="button" onClick={goNext} aria-label={t("calNextMonth")} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-600 cursor-pointer transition-colors">
+                  <ChevronRight className="h-5 w-5" />
+                </button>
+              </div>
+
+              {/* Grid */}
+              <div className="px-4 pt-2 pb-1" aria-busy={loading}>
+                <div className="grid grid-cols-7 gap-1 mb-1">
+                  {DOW_NL.map((d) => (
+                    <div key={d} className="text-center text-[9px] font-black text-slate-400 py-1 select-none">{d}</div>
+                  ))}
+                </div>
+                <div className="grid grid-cols-7 gap-1">
+                  {grid.map((cell, i) => {
+                    if (!cell) return <div key={`e-${i}`} />;
+                    const { key, day, status, selectable, isStart, isEnd, inRange } = cell;
+                    const base = "relative h-9 rounded-lg text-xs font-bold flex items-center justify-center transition-colors";
+                    let cls = "";
+                    if (isStart || isEnd) cls = "bg-amber-500 text-white shadow-sm";
+                    else if (inRange) cls = "bg-amber-100 text-amber-900";
+                    else if (status === "available") cls = "bg-emerald-50 text-emerald-800 hover:bg-emerald-100 cursor-pointer";
+                    else if (status === "unavailable") cls = "bg-rose-50 text-rose-300 cursor-not-allowed";
+                    else cls = "text-slate-300 cursor-not-allowed"; // past / capped
+                    return (
+                      <button
+                        key={key}
+                        type="button"
+                        disabled={!selectable}
+                        aria-label={dayAria(key, status)}
+                        aria-pressed={isStart || isEnd || inRange}
+                        onClick={() => onDayClick(key, selectable)}
+                        className={`${base} ${cls} border-none`}
+                      >
+                        {day}
+                        {status === "unavailable" && (
+                          <span aria-hidden className="absolute bottom-1 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full bg-rose-500" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Legend */}
+              <div className="flex items-center justify-center gap-3 px-4 py-2 text-[9.5px] text-slate-500 font-semibold">
+                <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-emerald-200 border border-emerald-400" />{t("calLegendAvailable")}</span>
+                <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-amber-400" />{t("calLegendSelected")}</span>
+                <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-rose-300" />{t("calLegendUnavailable")}</span>
+              </div>
+
+              {/* Price preview */}
+              {validRange && (
+                <div className="mx-4 mb-2 flex items-center justify-between bg-indigo-50 border border-indigo-100 rounded-xl px-3 py-2">
+                  <span className="text-[11px] font-bold text-indigo-900">{days} {days === 1 ? "dag" : "dagen"}</span>
+                  <span className="text-sm font-black font-mono text-indigo-700">{euro(withVat(subtotal, vatDisplay))} <span className="text-[9px] font-normal text-indigo-400">{vatDisplay === "incl" ? "incl. btw" : "excl. btw"}</span></span>
+                </div>
+              )}
+
+              {/* Footer actions */}
+              <div className="flex items-center gap-2 px-4 py-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={reset}
+                  className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold transition-colors cursor-pointer"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" />
+                  {t("calReset")}
+                </button>
+                <button
+                  type="button"
+                  onClick={confirm}
+                  disabled={!validRange}
+                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold transition-all border-none ${
+                    validRange ? "bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer shadow-sm active:scale-95" : "bg-slate-100 text-slate-400 cursor-not-allowed"
+                  }`}
+                >
+                  <Check className="h-4 w-4" />
+                  {t("calConfirm")}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </>
+  );
+}

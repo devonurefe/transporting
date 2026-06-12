@@ -28,6 +28,8 @@ import { categoryIconMap } from "./icons/CategoryIcons";
 import { useLanguageStore } from "../store/languageStore";
 import { useAppStore } from "../store/appStore";
 import { checkAvailability } from "../utils/availability";
+import { withVat } from "../utils/format";
+import VatToggle from "./VatToggle";
 
 const professionIconMap: Record<string, LucideIcon> = {
   Schilder: Paintbrush,
@@ -65,6 +67,168 @@ interface CatalogSectionProps {
   currentUser?: { name: string } | null;
 }
 
+// Per-model extra specs (platformhoogte, draagvermogen, afmeting, breedte etc.)
+// Unit variants (-1/-2/-3 suffix) fall back to the base key via getExtraSpecs().
+const MACHINE_SPECS: Record<string, Array<{ label: string; value: string }>> = {
+  "nifty-120": [
+    { label: "Platformhoogte",    value: "10,2 m" },
+    { label: "Platformafmeting",  value: "76 × 163 cm" },
+    { label: "Draagvermogen",     value: "200 kg (2 pers.)" },
+    { label: "Transportbreedte",  value: "159 cm" },
+    { label: "Transportlengte",   value: "468 cm" },
+    { label: "Transporthoogte",   value: "180 cm" },
+    { label: "Kogelgewicht",      value: "ca. 75 kg" },
+    { label: "Rijbewijs",         value: "Categorie B vereist" },
+    { label: "Opsteltijd",        value: "± 5 min" },
+    { label: "Stroomopname",      value: "230 V / accu" },
+  ],
+  "nifty-170": [
+    { label: "Platformhoogte",      value: "15,1 m" },
+    { label: "Platformafmeting",    value: "76 × 163 cm" },
+    { label: "Draagvermogen",       value: "200 kg (2 pers.)" },
+    { label: "Transportbreedte",    value: "179 cm" },
+    { label: "Transporthoogte",     value: "ca. 190 cm" },
+    { label: "Rijbewijs",           value: "Categorie B vereist" },
+    { label: "Opsteltijd",          value: "± 10 min" },
+    { label: "Aandrijving rijden",  value: "Diesel + elektrisch" },
+  ],
+  "hinowa-15-70": [
+    { label: "Platformhoogte",          value: "13,4 m" },
+    { label: "Platformafmeting",        value: "70 × 120 cm" },
+    { label: "Draagvermogen",           value: "200 kg (2 pers.)" },
+    { label: "Rupsbreedte",             value: "79 cm (59 cm ingetrokken)" },
+    { label: "Min. poortbreedte",       value: "60 cm" },
+    { label: "Max. helling (rijden)",   value: "25°" },
+    { label: "Stabilisatoren",          value: "4× automatisch" },
+    { label: "Rijden in geheven stand", value: "Niet toegestaan" },
+  ],
+  "hinowa-17-75": [
+    { label: "Platformhoogte",          value: "15,06 m" },
+    { label: "Platformafmeting",        value: "70 × 120 cm" },
+    { label: "Draagvermogen",           value: "200 kg (2 pers.)" },
+    { label: "Rupsbreedte",             value: "89 cm" },
+    { label: "Min. poortbreedte",       value: "90 cm" },
+    { label: "Max. helling (rijden)",   value: "20°" },
+    { label: "Stabilisatoren",          value: "4× automatisch" },
+    { label: "Rijden in geheven stand", value: "Niet toegestaan" },
+  ],
+  "optimum-8": [
+    { label: "Platformhoogte",     value: "5,76 m" },
+    { label: "Platformafmeting",   value: "136 × 69 cm (uitschuif: 256 × 69 cm)" },
+    { label: "Draagvermogen",      value: "230 kg (2 pers.)" },
+    { label: "Machinebreedte",     value: "76 cm" },
+    { label: "Accu",               value: "4 × 6 V / 24 V" },
+    { label: "Non-marking banden", value: "Ja" },
+    { label: "Max. helling",       value: "25 %" },
+  ],
+  "compact-8": [
+    { label: "Platformhoogte",     value: "6,17 m" },
+    { label: "Platformafmeting",   value: "165 × 76 cm (uitschuif: 265 × 76 cm)" },
+    { label: "Draagvermogen",      value: "230 kg (2 pers.)" },
+    { label: "Machinebreedte",     value: "82 cm" },
+    { label: "Accu",               value: "4 × 6 V / 24 V" },
+    { label: "Non-marking banden", value: "Ja" },
+    { label: "Max. helling",       value: "25 %" },
+  ],
+  "compact-10n": [
+    { label: "Platformhoogte",     value: "7,96 m" },
+    { label: "Platformafmeting",   value: "126 × 81 cm (uitschuif: 251 × 81 cm)" },
+    { label: "Draagvermogen",      value: "450 kg (2 pers.)" },
+    { label: "Machinebreedte",     value: "81 cm" },
+    { label: "Accu",               value: "4 × 6 V / 24 V" },
+    { label: "Non-marking banden", value: "Ja" },
+    { label: "Min. deuropening",   value: "81 cm breed" },
+  ],
+  "dingli-6m": [
+    { label: "Platformhoogte",     value: "4,0 m" },
+    { label: "Platformafmeting",   value: "74 × 60 cm" },
+    { label: "Draagvermogen",      value: "230 kg" },
+    { label: "Machinebreedte",     value: "74 cm" },
+    { label: "Accu",               value: "2 × 12 V / 24 V" },
+    { label: "Non-marking banden", value: "Ja" },
+    { label: "Min. deuropening",   value: "74 cm breed" },
+  ],
+  "altrex-rs44": [
+    { label: "Platformhoogte",   value: "2,0 m" },
+    { label: "Platformafmeting", value: "ca. 135 × 60 cm" },
+    { label: "Draagvermogen",    value: "200 kg" },
+    { label: "Machinebreedte",   value: "75 cm" },
+    { label: "Materiaal",        value: "Aluminium" },
+    { label: "Wielen",           value: "4× met vergrendeling" },
+    { label: "Montagetijd",      value: "± 5 min" },
+    { label: "Norm",             value: "NEN-EN 1004" },
+  ],
+  "star-10": [
+    { label: "Platformhoogte",     value: "8,0 m" },
+    { label: "Platformafmeting",   value: "80 × 120 cm" },
+    { label: "Draagvermogen",      value: "230 kg (1 pers.)" },
+    { label: "Machinebreedte",     value: "78 cm" },
+    { label: "Accu",               value: "24 V" },
+    { label: "Draairadius",        value: "0 cm (zero-radius)" },
+    { label: "Non-marking banden", value: "Ja" },
+  ],
+  "skyjack-sj16": [
+    { label: "Platformhoogte",     value: "4,6 m" },
+    { label: "Platformafmeting",   value: "74 × 76 cm" },
+    { label: "Draagvermogen",      value: "136 kg (1 pers.)" },
+    { label: "Machinebreedte",     value: "74 cm" },
+    { label: "Accu",               value: "24 V" },
+    { label: "Draairadius",        value: "0 cm (zero-radius)" },
+    { label: "Non-marking banden", value: "Ja" },
+  ],
+  "bravi-mini-hd": [
+    { label: "Platformhoogte",     value: "2,9 m" },
+    { label: "Platformafmeting",   value: "70 × 70 cm" },
+    { label: "Draagvermogen",      value: "200 kg" },
+    { label: "Machinebreedte",     value: "69 cm" },
+    { label: "Accu",               value: "24 V" },
+    { label: "Min. deuropening",   value: "69 cm breed" },
+    { label: "Liftvriendelijk",    value: "Ja (smal profiel)" },
+    { label: "Non-marking banden", value: "Ja" },
+  ],
+  "jlg-1230es": [
+    { label: "Platformhoogte",     value: "3,65 m (12 ft)" },
+    { label: "Platformafmeting",   value: "76 × 68 cm" },
+    { label: "Draagvermogen",      value: "227 kg" },
+    { label: "Machinebreedte",     value: "76 cm" },
+    { label: "Accu",               value: "24 V" },
+    { label: "Non-marking banden", value: "Ja" },
+    { label: "Rijden geheven",     value: "Niet toegestaan" },
+  ],
+  "ladderlift-18": [
+    { label: "Max. belasting",    value: "200 kg (goederen)" },
+    { label: "Bandenbreedte",     value: "ca. 40 cm" },
+    { label: "Transportsnelheid", value: "ca. 0,4 m/s" },
+    { label: "Stroomvereiste",    value: "230 V / 16 A" },
+    { label: "Personentransport", value: "Niet toegestaan" },
+    { label: "Opsteltijd",        value: "± 15 min" },
+    { label: "Bereik (etages)",   value: "t/m ca. 5e verdieping" },
+  ],
+  "ladderlift-21": [
+    { label: "Max. belasting",    value: "250 kg (goederen)" },
+    { label: "Bandenbreedte",     value: "ca. 40 cm" },
+    { label: "Transportsnelheid", value: "ca. 0,5 m/s" },
+    { label: "Stroomvereiste",    value: "230 V / 16 A" },
+    { label: "Personentransport", value: "Niet toegestaan" },
+    { label: "Opsteltijd",        value: "± 20 min" },
+    { label: "Bereik (etages)",   value: "t/m ca. 7e verdieping" },
+  ],
+  "ecolift": [
+    { label: "Platformhoogte",   value: "2,2 m" },
+    { label: "Platformafmeting", value: "65 × 65 cm" },
+    { label: "Draagvermogen",    value: "150 kg (incl. persoon)" },
+    { label: "Machinebreedte",   value: "69 cm" },
+    { label: "Bediening",        value: "Handmatig (zwengel)" },
+    { label: "Energiebron",      value: "Geen (geen accu / stroom)" },
+    { label: "Min. deuropening", value: "70 cm breed" },
+    { label: "Norm",             value: "CE gecertificeerd" },
+  ],
+};
+
+// Look up extra specs: exact ID first, then strip trailing unit suffix (-1/-2/-3).
+const getExtraSpecs = (id: string) =>
+  MACHINE_SPECS[id] ?? MACHINE_SPECS[id.replace(/-[123]$/, "")] ?? [];
+
 function computeDiscounts(m: Machine) {
   // Use pricePerDay as the regular day rate baseline for discount % calculation
   const weekly = m.weeklyPrice && m.pricePerDay > 0
@@ -90,6 +254,10 @@ export default function CatalogSection({
   const t = useLanguageStore((state) => state.t);
   const orders = useAppStore((state) => state.orders);
   const blockedDates = useAppStore((state) => state.blockedDates);
+  const vatDisplay = useAppStore((state) => state.vatDisplay);
+  // Display-only VAT conversion for every price shown in this section
+  const vp = (p: number) => withVat(p, vatDisplay);
+  const vatLabel = vatDisplay === "incl" ? "incl. btw" : "excl. btw";
 
   const today = new Date().toISOString().split("T")[0];
   const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
@@ -257,22 +425,25 @@ export default function CatalogSection({
             })}
           </nav>
 
-          {/* Row 2: Search */}
-          <div className="relative flex items-center bg-slate-50 rounded-xl border border-slate-200/80 px-3 py-2 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-colors">
-            <Search className="h-4 w-4 text-slate-400 shrink-0 mr-2" />
-            <input
-              id="catalog-search"
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Zoek op type, hoogte, beroep..."
-              className="w-full text-xs bg-transparent border-none outline-none text-slate-800 placeholder-slate-400"
-            />
-            {searchQuery && (
-              <button onClick={() => setSearchQuery("")} className="text-slate-400 hover:text-slate-600 ml-2 cursor-pointer">
-                <X className="h-3.5 w-3.5" />
-              </button>
-            )}
+          {/* Row 2: Search + VAT display toggle */}
+          <div className="flex items-center gap-2">
+            <div className="relative flex flex-1 items-center bg-slate-50 rounded-xl border border-slate-200/80 px-3 py-2 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-colors">
+              <Search className="h-4 w-4 text-slate-400 shrink-0 mr-2" />
+              <input
+                id="catalog-search"
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Zoek op type, hoogte, beroep..."
+                className="w-full text-xs bg-transparent border-none outline-none text-slate-800 placeholder-slate-400"
+              />
+              {searchQuery && (
+                <button onClick={() => setSearchQuery("")} className="text-slate-400 hover:text-slate-600 ml-2 cursor-pointer">
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
+            <VatToggle />
           </div>
         </div>
 
@@ -408,20 +579,37 @@ export default function CatalogSection({
                           </div>
                           <div className="text-right shrink-0">
                             <div className="text-xl font-mono font-extrabold text-slate-900 leading-none">
-                              €{formatPrice(machine.pricePerDay)}
+                              €{formatPrice(vp(machine.pricePerDay))}
                             </div>
-                            <div className="text-[9px] text-slate-400 font-mono mt-0.5">per dag</div>
+                            <div className="text-[9px] text-slate-400 font-mono mt-0.5">per dag {vatLabel}</div>
                             {machine.oneDayPrice && machine.oneDayPrice < machine.pricePerDay && (
-                              <div className="text-[9px] text-amber-600 font-bold mt-0.5">1 dag: €{formatPrice(machine.oneDayPrice)} actie</div>
+                              <div className="text-[9px] text-amber-600 font-bold mt-0.5">1 dag actie €{formatPrice(vp(machine.oneDayPrice))}</div>
                             )}
-                            {(() => { const d = computeDiscounts(machine); return (<>
-                              {d.weekly > 0 && <div className="text-[9px] text-emerald-600 font-bold mt-0.5">week −{d.weekly}%</div>}
-                              {d.monthly > 0 && <div className="text-[9px] text-teal-600 font-bold mt-0.5">maand −{d.monthly}%</div>}
-                            </>); })()}
                           </div>
                         </div>
 
-                        {/* Spec row — height / reach + usage badge */}
+                        {/* Tarieven — clean uniform flat-rate strip */}
+                        {(machine.weekendPrice || machine.weeklyPrice || machine.monthlyPrice) && (
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            {machine.weekendPrice && (
+                              <span className="text-[9px] font-mono font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
+                                weekend <span className="font-bold text-slate-800">€{formatPrice(vp(machine.weekendPrice))}</span>
+                              </span>
+                            )}
+                            {machine.weeklyPrice && (
+                              <span className="text-[9px] font-mono font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
+                                week <span className="font-bold text-slate-800">€{formatPrice(vp(machine.weeklyPrice))}</span>
+                              </span>
+                            )}
+                            {machine.monthlyPrice && (
+                              <span className="text-[9px] font-mono font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
+                                maand <span className="font-bold text-slate-800">€{formatPrice(vp(machine.monthlyPrice))}</span>
+                              </span>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Spec row — height / reach */}
                         <div className="flex items-center gap-3 text-[10px] font-mono text-slate-600 border-t border-slate-100 pt-2.5">
                           <span className="flex items-center gap-1" title="Werkhoogte">
                             <ArrowUpToLine className="h-3.5 w-3.5 text-indigo-500 shrink-0" />
@@ -433,15 +621,6 @@ export default function CatalogSection({
                               {machine.reach}m
                             </span>
                           )}
-                          <span className={`ml-auto text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${
-                            machine.powerType === "Diesel"
-                              ? "bg-orange-50 text-orange-600 border border-orange-100"
-                              : machine.powerType === "Hybride"
-                              ? "bg-blue-50 text-blue-700 border border-blue-100"
-                              : "bg-emerald-50 text-emerald-700 border border-emerald-100"
-                          }`}>
-                            {machine.powerType === "Diesel" ? "Buiten" : machine.powerType === "Hybride" ? "Flexibel" : "Binnen & buiten"}
-                          </span>
                         </div>
 
                         {/* SuitableFor — max 2 plain text chips */}
@@ -767,7 +946,7 @@ export default function CatalogSection({
                       const m = machines.find(item => item.id === id);
                       return (
                         <div key={id} className="col-span-1 font-mono font-extrabold text-[#14b8a6] text-sm text-center sm:text-left">
-                          {m ? `€ ${m.pricePerDay}` : "—"}
+                          {m ? `€ ${formatPrice(vp(m.pricePerDay))}` : "—"}
                         </div>
                       );
                     })}
@@ -1001,73 +1180,68 @@ export default function CatalogSection({
 
                     {/* B — Prijs & Boeken */}
                     <div className="bg-gradient-to-br from-indigo-50 to-slate-50 border border-indigo-100 rounded-2xl p-4 space-y-3">
-                      <div className="flex items-end justify-between">
+                      <div className="flex items-start justify-between">
                         <div>
                           <p className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">Dagtarief</p>
                           <p className="text-3xl font-mono font-extrabold text-slate-900 leading-none">
-                            €{formatPrice(selectedDetailMachine.pricePerDay)}
+                            €{formatPrice(vp(selectedDetailMachine.pricePerDay))}
                           </p>
-                          <p className="text-[10px] text-slate-400 font-mono mt-0.5">excl. BTW per dag</p>
+                          <p className="text-[10px] text-slate-400 font-mono mt-0.5">{vatDisplay === "incl" ? "incl. BTW" : "excl. BTW"} per dag</p>
                           {selectedDetailMachine.oneDayPrice && selectedDetailMachine.oneDayPrice < selectedDetailMachine.pricePerDay && (
                             <p className="text-[10px] font-bold text-amber-600 mt-1">
-                              1 dag actie: €{formatPrice(selectedDetailMachine.oneDayPrice)}
+                              1 dag actie: €{formatPrice(vp(selectedDetailMachine.oneDayPrice))}
                             </p>
                           )}
                         </div>
-                        <div className="space-y-1 text-right">
-                          {(() => { const d = computeDiscounts(selectedDetailMachine); return (<>
-                            {d.weekly > 0 && (
-                              <div className="flex items-center gap-1.5 justify-end">
-                                <span className="text-[10px] font-mono text-slate-500">werkweek (5d)</span>
-                                <span className="text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 rounded-full">−{d.weekly}%</span>
-                              </div>
-                            )}
-                            {d.monthly > 0 && (
-                              <div className="flex items-center gap-1.5 justify-end">
-                                <span className="text-[10px] font-mono text-slate-500">4 weken (28d)</span>
-                                <span className="text-xs font-bold text-teal-600 bg-teal-50 border border-teal-100 px-1.5 py-0.5 rounded-full">−{d.monthly}%</span>
-                              </div>
-                            )}
-                          </>); })()}
-                        </div>
+                        <VatToggle size="xs" />
                       </div>
+                      {(() => { const d = computeDiscounts(selectedDetailMachine); return (d.weekly > 0 || d.monthly > 0) ? (
+                        <div className="flex gap-2 flex-wrap">
+                          {d.weekly > 0 && (
+                            <span className="text-xs font-bold text-emerald-700 bg-emerald-100 border border-emerald-200 px-2.5 py-1 rounded-full">
+                              werkweek −{d.weekly}%
+                            </span>
+                          )}
+                          {d.monthly > 0 && (
+                            <span className="text-xs font-bold text-teal-700 bg-teal-100 border border-teal-200 px-2.5 py-1 rounded-full">
+                              4 weken −{d.monthly}%
+                            </span>
+                          )}
+                        </div>
+                      ) : null; })()}
                       {/* Tarieventabel — alle ingestelde flattarieven */}
                       {(selectedDetailMachine.oneDayPrice || selectedDetailMachine.twoDayPrice || selectedDetailMachine.weekendPrice || selectedDetailMachine.weeklyPrice || selectedDetailMachine.monthlyPrice) && (
                         <div className="border border-slate-200 rounded-xl overflow-hidden text-[10px]">
                           {selectedDetailMachine.oneDayPrice && selectedDetailMachine.oneDayPrice < selectedDetailMachine.pricePerDay && (
-                            <div className="flex justify-between items-center px-3 py-1.5 bg-amber-50 border-b border-amber-100">
-                              <span className="text-amber-700 font-bold">1 dag actie</span>
-                              <span className="font-mono font-extrabold text-amber-700">€{formatPrice(selectedDetailMachine.oneDayPrice)}</span>
+                            <div className="flex items-center px-3 py-1.5 bg-amber-50 border-b border-amber-100">
+                              <span className="text-amber-700 font-bold flex-1">1 dag actie</span>
+                              <span className="font-mono font-extrabold text-amber-700">€{formatPrice(vp(selectedDetailMachine.oneDayPrice))}</span>
                             </div>
                           )}
                           {selectedDetailMachine.twoDayPrice && (
-                            <div className="flex justify-between items-center px-3 py-1.5 bg-white border-b border-slate-100">
-                              <span className="text-slate-600">2 dagen (doordeweeks)</span>
-                              <span className="font-mono font-bold text-slate-800">€{formatPrice(selectedDetailMachine.twoDayPrice)}</span>
+                            <div className="flex items-center px-3 py-1.5 bg-white border-b border-slate-100">
+                              <span className="text-slate-600 flex-1">2 dagen (doordeweeks)</span>
+                              <span className="font-mono font-bold text-slate-800">€{formatPrice(vp(selectedDetailMachine.twoDayPrice))}</span>
                             </div>
                           )}
                           {selectedDetailMachine.weekendPrice && (
-                            <div className="flex justify-between items-center px-3 py-1.5 bg-white border-b border-slate-100">
-                              <span className="text-slate-600">Weekend (2–3 dagen)</span>
-                              <span className="font-mono font-bold text-slate-800">€{formatPrice(selectedDetailMachine.weekendPrice)}</span>
+                            <div className="flex items-center px-3 py-1.5 bg-white border-b border-slate-100">
+                              <span className="text-slate-600 flex-1">Weekend (2–3 dagen)</span>
+                              <span className="font-mono font-bold text-slate-800">€{formatPrice(vp(selectedDetailMachine.weekendPrice))}</span>
                             </div>
                           )}
                           {selectedDetailMachine.weeklyPrice && (() => { const d = computeDiscounts(selectedDetailMachine); return (
-                            <div className="flex justify-between items-center px-3 py-1.5 bg-emerald-50 border-b border-emerald-100">
-                              <span className="text-emerald-700 font-semibold">Werkweek (5 dagen)</span>
-                              <span className="flex items-center gap-1.5">
-                                {d.weekly > 0 && <span className="text-[9px] font-bold text-emerald-600 bg-emerald-100 px-1.5 py-0.5 rounded-full">−{d.weekly}%</span>}
-                                <span className="font-mono font-extrabold text-emerald-700">€{formatPrice(selectedDetailMachine.weeklyPrice)}</span>
-                              </span>
+                            <div className="flex items-center px-3 py-1.5 bg-emerald-50 border-b border-emerald-100">
+                              <span className="text-emerald-700 font-semibold flex-1">Werkweek (5 dagen)</span>
+                              {d.weekly > 0 && <span className="text-[9px] font-bold text-emerald-600 bg-emerald-100 px-1.5 py-0.5 rounded-full mr-2">−{d.weekly}%</span>}
+                              <span className="font-mono font-extrabold text-emerald-700">€{formatPrice(vp(selectedDetailMachine.weeklyPrice))}</span>
                             </div>
                           ); })()}
                           {selectedDetailMachine.monthlyPrice && (() => { const d = computeDiscounts(selectedDetailMachine); return (
-                            <div className="flex justify-between items-center px-3 py-1.5 bg-teal-50">
-                              <span className="text-teal-700 font-semibold">4 weken (28 dagen)</span>
-                              <span className="flex items-center gap-1.5">
-                                {d.monthly > 0 && <span className="text-[9px] font-bold text-teal-600 bg-teal-100 px-1.5 py-0.5 rounded-full">−{d.monthly}%</span>}
-                                <span className="font-mono font-extrabold text-teal-700">€{formatPrice(selectedDetailMachine.monthlyPrice)}</span>
-                              </span>
+                            <div className="flex items-center px-3 py-1.5 bg-teal-50">
+                              <span className="text-teal-700 font-semibold flex-1">4 weken (28 dagen)</span>
+                              {d.monthly > 0 && <span className="text-[9px] font-bold text-teal-600 bg-teal-100 px-1.5 py-0.5 rounded-full mr-2">−{d.monthly}%</span>}
+                              <span className="font-mono font-extrabold text-teal-700">€{formatPrice(vp(selectedDetailMachine.monthlyPrice))}</span>
                             </div>
                           ); })()}
                         </div>
@@ -1100,28 +1274,51 @@ export default function CatalogSection({
                     {/* D — Technische Specificaties */}
                     <div className="space-y-2">
                       <p className="text-[10px] font-mono text-slate-400 uppercase tracking-wider font-bold">Technische Specificaties</p>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 flex flex-col gap-0.5">
-                          <span className="text-[10px] text-slate-400 font-mono">Werkhoogte</span>
-                          <span className="font-mono font-bold text-slate-900 text-sm">{selectedDetailMachine.height} m</span>
+                      <div className="divide-y divide-slate-100 rounded-xl border border-slate-200 overflow-hidden">
+                        <div className="flex items-center justify-between px-3 py-2 bg-white">
+                          <span className="text-[10px] font-mono text-slate-400">Type machine</span>
+                          <span className="text-sm font-bold text-slate-900">{selectedDetailMachine.categoryLabel}</span>
                         </div>
-                        <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 flex flex-col gap-0.5">
-                          <span className="text-[10px] text-slate-400 font-mono">Aandrijving</span>
-                          <span className={`font-bold text-sm ${selectedDetailMachine.powerType === "Diesel" ? "text-orange-600" : selectedDetailMachine.powerType === "Hybride" ? "text-blue-700" : "text-emerald-700"}`}>
+                        <div className="flex items-center justify-between px-3 py-2 bg-white">
+                          <span className="text-[10px] font-mono text-slate-400">Werkhoogte</span>
+                          <span className="text-sm font-bold text-slate-900 font-mono">{selectedDetailMachine.height} m</span>
+                        </div>
+                        {selectedDetailMachine.reach > 0 && (
+                          <div className="flex items-center justify-between px-3 py-2 bg-white">
+                            <span className="text-[10px] font-mono text-slate-400">Uitreik</span>
+                            <span className="text-sm font-bold text-slate-900 font-mono">{selectedDetailMachine.reach} m</span>
+                          </div>
+                        )}
+                        <div className="flex items-center justify-between px-3 py-2 bg-white">
+                          <span className="text-[10px] font-mono text-slate-400">Gewicht</span>
+                          <span className="text-sm font-bold text-slate-900 font-mono">{selectedDetailMachine.weight.toLocaleString("nl-NL")} kg</span>
+                        </div>
+                        <div className="flex items-center justify-between px-3 py-2 bg-white">
+                          <span className="text-[10px] font-mono text-slate-400">Aandrijving</span>
+                          <span className={`text-sm font-bold font-mono ${selectedDetailMachine.powerType === "Diesel" ? "text-orange-600" : selectedDetailMachine.powerType === "Hybride" ? "text-blue-700" : "text-emerald-700"}`}>
                             {selectedDetailMachine.powerType}
                           </span>
                         </div>
-                        {selectedDetailMachine.reach > 0 && (
-                          <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 flex flex-col gap-0.5">
-                            <span className="text-[10px] text-slate-400 font-mono">Uitreik</span>
-                            <span className="font-mono font-bold text-slate-900 text-sm">{selectedDetailMachine.reach} m</span>
+                        {getExtraSpecs(selectedDetailMachine.id).map((spec) => (
+                          <div key={spec.label} className="flex items-center justify-between px-3 py-2 bg-white">
+                            <span className="text-[10px] font-mono text-slate-400">{spec.label}</span>
+                            <span className="text-sm font-bold text-slate-700 text-right max-w-[55%]">{spec.value}</span>
                           </div>
-                        )}
-                        <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 flex flex-col gap-0.5">
-                          <span className="text-[10px] text-slate-400 font-mono">Gewicht</span>
-                          <span className="font-mono font-bold text-slate-900 text-sm">{selectedDetailMachine.weight.toLocaleString("nl-NL")} kg</span>
-                        </div>
+                        ))}
                       </div>
+                      {selectedDetailMachine.packageContents && (() => {
+                        const items = selectedDetailMachine.packageContents!.split(";").map(s => s.trim()).filter(Boolean);
+                        return items.length > 0 ? (
+                          <div className="space-y-1.5 pt-1">
+                            <p className="text-[10px] font-mono text-slate-400 uppercase tracking-wider font-bold">Inbegrepen</p>
+                            {items.map((item, i) => (
+                              <div key={i} className="flex items-start gap-2 text-xs text-slate-600">
+                                <span className="text-emerald-500 font-black shrink-0 mt-0.5 select-none">✓</span>{item}
+                              </div>
+                            ))}
+                          </div>
+                        ) : null;
+                      })()}
                     </div>
 
                     {/* E — Geschikt voor */}

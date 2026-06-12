@@ -71,6 +71,10 @@ interface AppState {
 
   campaignRules: CampaignRule[];
   updateCampaignRules: (rules: CampaignRule[]) => void;
+
+  // VAT display preference (display only — never affects calculation)
+  vatDisplay: "excl" | "incl";
+  setVatDisplay: (mode: "excl" | "incl") => void;
 }
 
 const defaultCategories: Category[] = [
@@ -127,6 +131,18 @@ export const useAppStore = create<AppState>((set, get) => ({
   })(),
   isLoading: false,
   error: null,
+  vatDisplay: (() => {
+    try {
+      const stored = localStorage.getItem("hwh_vat_display");
+      if (stored === "incl" || stored === "excl") return stored;
+    } catch { /* ignore */ }
+    return "excl" as const;
+  })(),
+
+  setVatDisplay: (mode) => {
+    try { localStorage.setItem("hwh_vat_display", mode); } catch { /* ignore */ }
+    set({ vatDisplay: mode });
+  },
 
   fetchMachines: async () => {
     try {

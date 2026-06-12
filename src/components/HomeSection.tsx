@@ -19,6 +19,8 @@ import {
 } from "lucide-react";
 import { motion } from "motion/react";
 import { buildWhatsAppGeneralUrl } from "../utils/whatsapp";
+import { withVat } from "../utils/format";
+import VatToggle from "./VatToggle";
 
 type IconComponent = React.FC<LucideProps>;
 
@@ -81,6 +83,7 @@ export default function HomeSection({
 }: HomeSectionProps) {
   const siteConfig = useAppStore((state) => state.siteConfig);
   const machines = useAppStore((state) => state.machines);
+  const vatDisplay = useAppStore((state) => state.vatDisplay);
   const language = useLanguageStore((state) => state.language);
   const t = useLanguageStore((state) => state.t);
 
@@ -90,12 +93,23 @@ export default function HomeSection({
 
   const SCHAARLIFT_VARIANTS = new Set(["schaarlift", "schaarlift-smal", "schaarlift-6m"]);
 
-  // Live minimum price per category from loaded machine data
+  // Live minimum price per category (each schaarlift sub-type keeps its own key)
   const livePriceByCategory = React.useMemo(() => {
     const map: Record<string, number> = {};
     machines.forEach(m => {
-      const key = SCHAARLIFT_VARIANTS.has(m.category) ? "schaarlift" : m.category;
+      const key = m.category;
       if (map[key] === undefined || m.pricePerDay < map[key]) map[key] = m.pricePerDay;
+    });
+    return map;
+  }, [machines]);
+
+  // First machine image per category for card thumbnails
+  const imageByCategory = React.useMemo(() => {
+    const map: Record<string, string> = {};
+    machines.forEach(m => {
+      if (!m.imageUrl) return;
+      const key = SCHAARLIFT_VARIANTS.has(m.category) ? "schaarlift" : m.category;
+      if (!map[key]) map[key] = m.imageUrl;
     });
     return map;
   }, [machines]);
@@ -119,8 +133,8 @@ export default function HomeSection({
 
       {/* ── HERO IMAGE — sade, metin yok ── */}
       <div
-        className="relative bg-slate-900 bg-cover bg-center bg-no-repeat overflow-hidden min-h-[220px] sm:min-h-[280px]"
-        style={{ backgroundImage: "url('/hero-bg.jpg')" }}
+        className="relative bg-slate-900 bg-cover bg-center bg-no-repeat overflow-hidden min-h-[260px] sm:min-h-[380px]"
+        style={{ backgroundImage: "url('/hero-huurgo-v2.jpg')" }}
       >
         <div className="absolute inset-0 bg-black/15 pointer-events-none" />
       </div>
@@ -173,11 +187,15 @@ export default function HomeSection({
 
       {/* ── CATEGORY CARDS ── */}
       <div className="bg-white px-4 sm:px-6 pt-6 pb-10">
+        <div className="max-w-2xl mx-auto flex justify-end mb-3">
+          <VatToggle />
+        </div>
         <div className="max-w-2xl mx-auto grid grid-cols-2 gap-3">
           {displayCategories.map((cat, i) => {
             const Icon = CATEGORY_ICONS[cat.id] ?? Truck;
             const bg = bgClasses[i % bgClasses.length];
             const isLast = displayCategories.length % 2 !== 0 && i === displayCategories.length - 1;
+            const catImage = imageByCategory[cat.id];
 
             return (
               <motion.button
@@ -186,26 +204,42 @@ export default function HomeSection({
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: i * 0.05 }}
                 onClick={() => onSearch("", cat.id)}
-                className={`bg-gradient-to-br ${bg} border rounded-2xl p-4 text-left cursor-pointer hover:shadow-md active:scale-[0.98] transition-all${isLast ? " col-span-2" : ""}`}
+                className={`bg-gradient-to-br ${bg} border rounded-2xl overflow-hidden text-left cursor-pointer hover:shadow-md active:scale-[0.98] transition-all${isLast ? " col-span-2" : ""}`}
               >
-                <div className="flex items-center justify-between mb-3">
-                  <div className="p-2 bg-white/70 rounded-xl">
-                    <Icon className="h-5 w-5 text-slate-600" />
+                {catImage ? (
+                  <div className={`relative overflow-hidden bg-white/60 ${isLast ? "h-24 sm:h-28" : "h-20 sm:h-24"}`}>
+                    <img
+                      src={catImage}
+                      alt={cat.label}
+                      className="w-full h-full object-contain p-1.5"
+                      referrerPolicy="no-referrer"
+                      onError={(e) => { e.currentTarget.parentElement!.style.display = "none"; }}
+                    />
                   </div>
-                </div>
-                <p className="font-bold text-[12px] text-slate-800 leading-snug mb-3 line-clamp-2">
-                  {cat.listLabel || cat.label}
-                </p>
-                <div className="space-y-1.5 mt-auto">
-                  <div className="flex items-baseline gap-1.5">
-                    <p className="text-[9px] font-black uppercase tracking-wider text-slate-400 w-10 shrink-0">Hoogte</p>
-                    <p className="text-sm font-bold text-slate-700">{cat.heights}</p>
+                ) : (
+                  <div className="px-4 pt-4 pb-0">
+                    <div className="p-2 bg-white/70 rounded-xl w-fit">
+                      <Icon className="h-5 w-5 text-slate-600" />
+                    </div>
                   </div>
-                  <div className="flex items-baseline gap-1.5">
-                    <p className="text-[9px] font-black uppercase tracking-wider text-slate-400 w-10 shrink-0">All-in</p>
-                    <p className="text-sm font-extrabold text-emerald-600">
-                      {livePriceByCategory[cat.id] !== undefined ? `v.a. €${livePriceByCategory[cat.id]}/dag` : cat.price}
-                    </p>
+                )}
+                <div className="p-4 pt-3">
+                  <p className="font-bold text-[12px] text-slate-800 leading-snug mb-3 line-clamp-2">
+                    {cat.listLabel || cat.label}
+                  </p>
+                  <div className="space-y-1.5">
+                    <div className="flex items-baseline gap-1.5">
+                      <p className="text-[9px] font-black uppercase tracking-wider text-slate-400 w-10 shrink-0">Hoogte</p>
+                      <p className="text-sm font-bold text-slate-700">{cat.heights}</p>
+                    </div>
+                    <div className="flex items-baseline gap-1.5">
+                      <p className="text-[9px] font-black uppercase tracking-wider text-slate-400 w-10 shrink-0">All-in</p>
+                      <p className="text-sm font-extrabold text-emerald-600">
+                        {livePriceByCategory[cat.id] !== undefined
+                          ? `v.a. €${(() => { const v = withVat(livePriceByCategory[cat.id], vatDisplay); return v % 1 === 0 ? String(v) : v.toFixed(2).replace(".", ","); })()}/dag`
+                          : cat.price}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </motion.button>

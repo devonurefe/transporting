@@ -1009,73 +1009,65 @@ export default function CatalogSection({
 
                     {/* B — Prijs & Boeken */}
                     <div className="bg-gradient-to-br from-indigo-50 to-slate-50 border border-indigo-100 rounded-2xl p-4 space-y-3">
-                      <div className="flex items-end justify-between">
-                        <div>
-                          <p className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">Dagtarief</p>
-                          <p className="text-3xl font-mono font-extrabold text-slate-900 leading-none">
-                            €{formatPrice(selectedDetailMachine.pricePerDay)}
+                      <div>
+                        <p className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">Dagtarief</p>
+                        <p className="text-3xl font-mono font-extrabold text-slate-900 leading-none">
+                          €{formatPrice(selectedDetailMachine.pricePerDay)}
+                        </p>
+                        <p className="text-[10px] text-slate-400 font-mono mt-0.5">excl. BTW per dag</p>
+                        {selectedDetailMachine.oneDayPrice && selectedDetailMachine.oneDayPrice < selectedDetailMachine.pricePerDay && (
+                          <p className="text-[10px] font-bold text-amber-600 mt-1">
+                            1 dag actie: €{formatPrice(selectedDetailMachine.oneDayPrice)}
                           </p>
-                          <p className="text-[10px] text-slate-400 font-mono mt-0.5">excl. BTW per dag</p>
-                          {selectedDetailMachine.oneDayPrice && selectedDetailMachine.oneDayPrice < selectedDetailMachine.pricePerDay && (
-                            <p className="text-[10px] font-bold text-amber-600 mt-1">
-                              1 dag actie: €{formatPrice(selectedDetailMachine.oneDayPrice)}
-                            </p>
+                        )}
+                      </div>
+                      {(() => { const d = computeDiscounts(selectedDetailMachine); return (d.weekly > 0 || d.monthly > 0) ? (
+                        <div className="flex gap-2 flex-wrap">
+                          {d.weekly > 0 && (
+                            <span className="text-xs font-bold text-emerald-700 bg-emerald-100 border border-emerald-200 px-2.5 py-1 rounded-full">
+                              werkweek −{d.weekly}%
+                            </span>
+                          )}
+                          {d.monthly > 0 && (
+                            <span className="text-xs font-bold text-teal-700 bg-teal-100 border border-teal-200 px-2.5 py-1 rounded-full">
+                              4 weken −{d.monthly}%
+                            </span>
                           )}
                         </div>
-                        <div className="space-y-1 text-right">
-                          {(() => { const d = computeDiscounts(selectedDetailMachine); return (<>
-                            {d.weekly > 0 && (
-                              <div className="flex items-center gap-1.5 justify-end">
-                                <span className="text-[10px] font-mono text-slate-500">werkweek (5d)</span>
-                                <span className="text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 rounded-full">−{d.weekly}%</span>
-                              </div>
-                            )}
-                            {d.monthly > 0 && (
-                              <div className="flex items-center gap-1.5 justify-end">
-                                <span className="text-[10px] font-mono text-slate-500">4 weken (28d)</span>
-                                <span className="text-xs font-bold text-teal-600 bg-teal-50 border border-teal-100 px-1.5 py-0.5 rounded-full">−{d.monthly}%</span>
-                              </div>
-                            )}
-                          </>); })()}
-                        </div>
-                      </div>
+                      ) : null; })()}
                       {/* Tarieventabel — alle ingestelde flattarieven */}
                       {(selectedDetailMachine.oneDayPrice || selectedDetailMachine.twoDayPrice || selectedDetailMachine.weekendPrice || selectedDetailMachine.weeklyPrice || selectedDetailMachine.monthlyPrice) && (
                         <div className="border border-slate-200 rounded-xl overflow-hidden text-[10px]">
                           {selectedDetailMachine.oneDayPrice && selectedDetailMachine.oneDayPrice < selectedDetailMachine.pricePerDay && (
-                            <div className="flex justify-between items-center px-3 py-1.5 bg-amber-50 border-b border-amber-100">
-                              <span className="text-amber-700 font-bold">1 dag actie</span>
+                            <div className="flex items-center px-3 py-1.5 bg-amber-50 border-b border-amber-100">
+                              <span className="text-amber-700 font-bold flex-1">1 dag actie</span>
                               <span className="font-mono font-extrabold text-amber-700">€{formatPrice(selectedDetailMachine.oneDayPrice)}</span>
                             </div>
                           )}
                           {selectedDetailMachine.twoDayPrice && (
-                            <div className="flex justify-between items-center px-3 py-1.5 bg-white border-b border-slate-100">
-                              <span className="text-slate-600">2 dagen (doordeweeks)</span>
+                            <div className="flex items-center px-3 py-1.5 bg-white border-b border-slate-100">
+                              <span className="text-slate-600 flex-1">2 dagen (doordeweeks)</span>
                               <span className="font-mono font-bold text-slate-800">€{formatPrice(selectedDetailMachine.twoDayPrice)}</span>
                             </div>
                           )}
                           {selectedDetailMachine.weekendPrice && (
-                            <div className="flex justify-between items-center px-3 py-1.5 bg-white border-b border-slate-100">
-                              <span className="text-slate-600">Weekend (2–3 dagen)</span>
+                            <div className="flex items-center px-3 py-1.5 bg-white border-b border-slate-100">
+                              <span className="text-slate-600 flex-1">Weekend (2–3 dagen)</span>
                               <span className="font-mono font-bold text-slate-800">€{formatPrice(selectedDetailMachine.weekendPrice)}</span>
                             </div>
                           )}
                           {selectedDetailMachine.weeklyPrice && (() => { const d = computeDiscounts(selectedDetailMachine); return (
-                            <div className="flex justify-between items-center px-3 py-1.5 bg-emerald-50 border-b border-emerald-100">
-                              <span className="text-emerald-700 font-semibold">Werkweek (5 dagen)</span>
-                              <span className="flex items-center gap-1.5">
-                                {d.weekly > 0 && <span className="text-[9px] font-bold text-emerald-600 bg-emerald-100 px-1.5 py-0.5 rounded-full">−{d.weekly}%</span>}
-                                <span className="font-mono font-extrabold text-emerald-700">€{formatPrice(selectedDetailMachine.weeklyPrice)}</span>
-                              </span>
+                            <div className="flex items-center px-3 py-1.5 bg-emerald-50 border-b border-emerald-100">
+                              <span className="text-emerald-700 font-semibold flex-1">Werkweek (5 dagen)</span>
+                              {d.weekly > 0 && <span className="text-[9px] font-bold text-emerald-600 bg-emerald-100 px-1.5 py-0.5 rounded-full mr-2">−{d.weekly}%</span>}
+                              <span className="font-mono font-extrabold text-emerald-700">€{formatPrice(selectedDetailMachine.weeklyPrice)}</span>
                             </div>
                           ); })()}
                           {selectedDetailMachine.monthlyPrice && (() => { const d = computeDiscounts(selectedDetailMachine); return (
-                            <div className="flex justify-between items-center px-3 py-1.5 bg-teal-50">
-                              <span className="text-teal-700 font-semibold">4 weken (28 dagen)</span>
-                              <span className="flex items-center gap-1.5">
-                                {d.monthly > 0 && <span className="text-[9px] font-bold text-teal-600 bg-teal-100 px-1.5 py-0.5 rounded-full">−{d.monthly}%</span>}
-                                <span className="font-mono font-extrabold text-teal-700">€{formatPrice(selectedDetailMachine.monthlyPrice)}</span>
-                              </span>
+                            <div className="flex items-center px-3 py-1.5 bg-teal-50">
+                              <span className="text-teal-700 font-semibold flex-1">4 weken (28 dagen)</span>
+                              {d.monthly > 0 && <span className="text-[9px] font-bold text-teal-600 bg-teal-100 px-1.5 py-0.5 rounded-full mr-2">−{d.monthly}%</span>}
+                              <span className="font-mono font-extrabold text-teal-700">€{formatPrice(selectedDetailMachine.monthlyPrice)}</span>
                             </div>
                           ); })()}
                         </div>
@@ -1108,28 +1100,45 @@ export default function CatalogSection({
                     {/* D — Technische Specificaties */}
                     <div className="space-y-2">
                       <p className="text-[10px] font-mono text-slate-400 uppercase tracking-wider font-bold">Technische Specificaties</p>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 flex flex-col gap-0.5">
-                          <span className="text-[10px] text-slate-400 font-mono">Werkhoogte</span>
-                          <span className="font-mono font-bold text-slate-900 text-sm">{selectedDetailMachine.height} m</span>
+                      <div className="divide-y divide-slate-100 rounded-xl border border-slate-200 overflow-hidden">
+                        <div className="flex items-center justify-between px-3 py-2 bg-white">
+                          <span className="text-[10px] font-mono text-slate-400">Type machine</span>
+                          <span className="text-sm font-bold text-slate-900">{selectedDetailMachine.categoryLabel}</span>
                         </div>
-                        <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 flex flex-col gap-0.5">
-                          <span className="text-[10px] text-slate-400 font-mono">Aandrijving</span>
-                          <span className={`font-bold text-sm ${selectedDetailMachine.powerType === "Diesel" ? "text-orange-600" : selectedDetailMachine.powerType === "Hybride" ? "text-blue-700" : "text-emerald-700"}`}>
+                        <div className="flex items-center justify-between px-3 py-2 bg-white">
+                          <span className="text-[10px] font-mono text-slate-400">Werkhoogte</span>
+                          <span className="text-sm font-bold text-slate-900 font-mono">{selectedDetailMachine.height} m</span>
+                        </div>
+                        {selectedDetailMachine.reach > 0 && (
+                          <div className="flex items-center justify-between px-3 py-2 bg-white">
+                            <span className="text-[10px] font-mono text-slate-400">Uitreik</span>
+                            <span className="text-sm font-bold text-slate-900 font-mono">{selectedDetailMachine.reach} m</span>
+                          </div>
+                        )}
+                        <div className="flex items-center justify-between px-3 py-2 bg-white">
+                          <span className="text-[10px] font-mono text-slate-400">Gewicht</span>
+                          <span className="text-sm font-bold text-slate-900 font-mono">{selectedDetailMachine.weight.toLocaleString("nl-NL")} kg</span>
+                        </div>
+                        <div className="flex items-center justify-between px-3 py-2 bg-white">
+                          <span className="text-[10px] font-mono text-slate-400">Aandrijving</span>
+                          <span className={`text-sm font-bold font-mono ${selectedDetailMachine.powerType === "Diesel" ? "text-orange-600" : selectedDetailMachine.powerType === "Hybride" ? "text-blue-700" : "text-emerald-700"}`}>
                             {selectedDetailMachine.powerType}
                           </span>
                         </div>
-                        {selectedDetailMachine.reach > 0 && (
-                          <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 flex flex-col gap-0.5">
-                            <span className="text-[10px] text-slate-400 font-mono">Uitreik</span>
-                            <span className="font-mono font-bold text-slate-900 text-sm">{selectedDetailMachine.reach} m</span>
-                          </div>
-                        )}
-                        <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 flex flex-col gap-0.5">
-                          <span className="text-[10px] text-slate-400 font-mono">Gewicht</span>
-                          <span className="font-mono font-bold text-slate-900 text-sm">{selectedDetailMachine.weight.toLocaleString("nl-NL")} kg</span>
-                        </div>
                       </div>
+                      {selectedDetailMachine.packageContents && (() => {
+                        const items = selectedDetailMachine.packageContents!.split(";").map(s => s.trim()).filter(Boolean);
+                        return items.length > 0 ? (
+                          <div className="space-y-1.5 pt-1">
+                            <p className="text-[10px] font-mono text-slate-400 uppercase tracking-wider font-bold">Inbegrepen</p>
+                            {items.map((item, i) => (
+                              <div key={i} className="flex items-start gap-2 text-xs text-slate-600">
+                                <span className="text-emerald-500 font-black shrink-0 mt-0.5 select-none">✓</span>{item}
+                              </div>
+                            ))}
+                          </div>
+                        ) : null;
+                      })()}
                     </div>
 
                     {/* E — Geschikt voor */}

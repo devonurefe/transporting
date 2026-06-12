@@ -134,7 +134,7 @@ export default function HomeSection({
       {/* ── HERO IMAGE — sade, metin yok ── */}
       <div
         className="relative bg-slate-900 bg-cover bg-center bg-no-repeat overflow-hidden min-h-[260px] sm:min-h-[380px]"
-        style={{ backgroundImage: "url('/hero-bg.jpg')" }}
+        style={{ backgroundImage: "url('/hero-huurgo-v2.jpg')" }}
       >
         <div className="absolute inset-0 bg-black/15 pointer-events-none" />
       </div>

@@ -134,6 +134,12 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
     return res.status(400).json({ error: "Ongeldig e-mailadres" });
   }
 
+  // customerProfile whitelist (prevents XSS/injection via stored profile)
+  const VALID_PROFILES = ["Schilder", "Particulier", "Installateur", "Hovenier", "Aannemer", "Glazenwasser", "Stukadoor", "Magazijn", "Gevelreiniger"];
+  if (orderData.customerProfile && !VALID_PROFILES.includes(String(orderData.customerProfile))) {
+    return res.status(400).json({ error: "Profiel type niet ondersteund" });
+  }
+
   // Date validation
   if (!orderData.startDate || !orderData.endDate) {
     return res.status(400).json({ error: "Start- en einddatum zijn verplicht" });

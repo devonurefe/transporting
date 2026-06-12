@@ -525,8 +525,16 @@ export default function App() {
       {/* Background ambient lighting */}
       <div className="absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-indigo-500/5 to-transparent pointer-events-none -z-10" />
 
+      {/* A11y: keyboard/screen-reader users can jump past the navigation */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:bg-indigo-600 focus:text-white focus:px-4 focus:py-2 focus:rounded-xl focus:text-sm focus:font-bold"
+      >
+        Direct naar inhoud
+      </a>
+
       {/* Main Navigation Header */}
-      <Header 
+      <Header
         activeTab={activeTab} 
         setActiveTab={setActiveTab} 
         notifications={notifications}
@@ -543,7 +551,7 @@ export default function App() {
 
 
       {/* Primary Workspace Sections */}
-      <main className="flex-grow">
+      <main id="main-content" className="flex-grow">
         <Suspense fallback={<LoadingSpinner />}>
           <AnimatePresence mode="wait">
             <Routes location={location}>

@@ -370,6 +370,43 @@ authRouter.post("/reset-password", async (req: Request, res: Response) => {
   }
 });
 
+// POST /api/auth/change-password — logged-in admin or customer changes own password
+authRouter.post("/change-password", authenticateToken, requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+  const { currentPassword, newPassword } = req.body;
+  if (!currentPassword || !newPassword || typeof currentPassword !== "string" || typeof newPassword !== "string") {
+    return res.status(400).json({ error: "Huidig en nieuw wachtwoord zijn verplicht." });
+  }
+  if (newPassword.length < 8) {
+    return res.status(400).json({ error: "Nieuw wachtwoord moet minimaal 8 tekens bevatten." });
+  }
+
+  try {
+    if (req.user!.role === "admin") {
+      const admin = await prisma.admin.findUnique({ where: { id: req.user!.id } });
+      if (!admin || !(await comparePassword(currentPassword, admin.passwordHash))) {
+        return res.status(400).json({ error: "Huidig wachtwoord is onjuist." });
+      }
+      await prisma.admin.update({
+        where: { id: admin.id },
+        data: { passwordHash: await hashPassword(newPassword) }
+      });
+    } else {
+      const customer = await prisma.customer.findUnique({ where: { id: req.user!.id } });
+      if (!customer || !(await comparePassword(currentPassword, customer.passwordHash))) {
+        return res.status(400).json({ error: "Huidig wachtwoord is onjuist." });
+      }
+      await prisma.customer.update({
+        where: { id: customer.id },
+        data: { passwordHash: await hashPassword(newPassword) }
+      });
+    }
+    return res.json({ success: true, message: "Wachtwoord succesvol gewijzigd." });
+  } catch (error) {
+    console.error("Change password error:", error);
+    return res.status(500).json({ error: "Wachtwoord wijzigen mislukt." });
+  }
+});
+
 // POST /api/auth/resend-verification
 authRouter.post("/resend-verification", async (req: Request, res: Response) => {
   const { email } = req.body;

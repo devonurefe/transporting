@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with th
 **HuurGo** — full-stack Dutch-language rental marketplace for aerial lifts, scissor lifts, spider platforms and ladder lifts. Operated by MB Hoogwerkers B.V. (Zoeterwoude). Features a real-time availability calendar, multi-step checkout with WhatsApp payment flow, PDF invoice generation, and a comprehensive admin console.
 
 **Live URL:** hoogwerkerhub.onrender.com  
-**Deploy:** push to `main` → Render auto-deploys (build: `npm run build && npx prisma db push --accept-data-loss`, start: `node dist/server.js`)  
+**Deploy:** push to `main` → Render auto-deploys (build: `npm run build && node scripts/preparePush.mjs && npx prisma db push`, start: `node dist/server.js`)
 **No PRs, no branches** — push directly to `main`.
 
 ---

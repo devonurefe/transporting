@@ -32,6 +32,47 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
     return nl;
   };
 
+  // Password change state
+  const [pwCurrent, setPwCurrent] = useState("");
+  const [pwNew, setPwNew] = useState("");
+  const [pwRepeat, setPwRepeat] = useState("");
+  const [pwBusy, setPwBusy] = useState(false);
+  const [pwMessage, setPwMessage] = useState<{ ok: boolean; text: string } | null>(null);
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPwMessage(null);
+    if (pwNew.length < 8) {
+      setPwMessage({ ok: false, text: t("Nieuw wachtwoord moet minimaal 8 tekens bevatten.", "New password must be at least 8 characters.", "Yeni şifre en az 8 karakter olmalı.") });
+      return;
+    }
+    if (pwNew !== pwRepeat) {
+      setPwMessage({ ok: false, text: t("Wachtwoorden komen niet overeen.", "Passwords do not match.", "Şifreler eşleşmiyor.") });
+      return;
+    }
+    setPwBusy(true);
+    try {
+      const token = localStorage.getItem("hwh_admin_token") || localStorage.getItem("hwh_token");
+      const res = await fetch("/api/auth/change-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify({ currentPassword: pwCurrent, newPassword: pwNew })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setPwMessage({ ok: true, text: t("Wachtwoord succesvol gewijzigd.", "Password changed successfully.", "Şifre başarıyla değiştirildi.") });
+        setPwCurrent(""); setPwNew(""); setPwRepeat("");
+        onAddSystemLog("system", adminUser?.name ?? "Admin", "Admin wachtwoord gewijzigd");
+      } else {
+        setPwMessage({ ok: false, text: data.error || t("Wachtwoord wijzigen mislukt.", "Password change failed.", "Şifre değiştirilemedi.") });
+      }
+    } catch {
+      setPwMessage({ ok: false, text: t("Netwerkfout. Probeer opnieuw.", "Network error. Try again.", "Ağ hatası. Tekrar deneyin.") });
+    } finally {
+      setPwBusy(false);
+    }
+  };
+
   // Campaign Rule form state
   const [ruleName, setRuleName] = useState("");
   const [ruleScope, setRuleScope] = useState<"global" | "category" | "product" | "role">("global");
@@ -768,6 +809,66 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
           )}
         </AnimatePresence>
 
+      </div>
+
+      {/* Security: change admin password */}
+      <div className="glass-panel p-6 rounded-3xl space-y-4">
+        <div className="border-b border-slate-200 pb-3">
+          <h3 className="font-display font-bold text-sm text-slate-900">
+            🔐 {t("Beveiliging — Wachtwoord wijzigen", "Security — Change password", "Güvenlik — Şifre değiştir")}
+          </h3>
+          <p className="text-[11px] text-slate-500 mt-0.5">
+            {t("Wijzig hier het wachtwoord van uw admin-account.", "Change your admin account password here.", "Admin hesabınızın şifresini buradan değiştirin.")}
+          </p>
+        </div>
+        <form onSubmit={handleChangePassword} className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+          <div className="space-y-1">
+            <label className="text-xs text-slate-700 block font-bold">{t("Huidig wachtwoord", "Current password", "Mevcut şifre")}</label>
+            <input
+              type="password"
+              value={pwCurrent}
+              onChange={(e) => setPwCurrent(e.target.value)}
+              required
+              autoComplete="current-password"
+              className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs text-slate-700 block font-bold">{t("Nieuw wachtwoord (min. 8)", "New password (min. 8)", "Yeni şifre (min. 8)")}</label>
+            <input
+              type="password"
+              value={pwNew}
+              onChange={(e) => setPwNew(e.target.value)}
+              required
+              autoComplete="new-password"
+              className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs text-slate-700 block font-bold">{t("Herhaal nieuw wachtwoord", "Repeat new password", "Yeni şifreyi tekrarla")}</label>
+            <input
+              type="password"
+              value={pwRepeat}
+              onChange={(e) => setPwRepeat(e.target.value)}
+              required
+              autoComplete="new-password"
+              className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500"
+            />
+          </div>
+          <div className="md:col-span-3 flex items-center justify-between gap-3">
+            {pwMessage ? (
+              <span className={`text-xs font-bold ${pwMessage.ok ? "text-emerald-600" : "text-rose-600"}`}>{pwMessage.text}</span>
+            ) : <span />}
+            <button
+              type="submit"
+              disabled={pwBusy}
+              className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white font-extrabold text-xs rounded-xl transition-all cursor-pointer border-none shadow-sm flex items-center gap-1.5"
+            >
+              {pwBusy && <span className="h-3 w-3 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+              {t("Wachtwoord opslaan", "Save password", "Şifreyi kaydet")}
+            </button>
+          </div>
+        </form>
       </div>
     </motion.div>
   );

@@ -180,39 +180,59 @@ async function startServer() {
 }
 
 function scheduleDailyReminders() {
-  const fireReminders = async () => {
+  // Last-sent date persisted in InvoiceCounter (lastNumber = YYYYMMDD): a restart
+  // around 07:00 neither skips that day's reminders nor sends them twice
+  const REMINDER_MARKER = "daily-reminders-last";
+  const todayStamp = () => Number(new Date().toISOString().split("T")[0].replace(/-/g, ""));
+
+  const sendBatch = async () => {
     try {
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      const tomorrowStr = tomorrow.toISOString().split("T")[0];
-      const tomorrowStart = new Date(tomorrowStr + "T00:00:00.000Z");
-      const tomorrowEnd = new Date(tomorrowStr + "T23:59:59.999Z");
+      const stamp = todayStamp();
+      const marker = await prisma.invoiceCounter.findUnique({ where: { id: REMINDER_MARKER } });
+      if (marker?.lastNumber === stamp) {
+        console.log("[Reminders] Already sent today — skipping.");
+      } else {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const tomorrowStr = tomorrow.toISOString().split("T")[0];
+        const tomorrowStart = new Date(tomorrowStr + "T00:00:00.000Z");
+        const tomorrowEnd = new Date(tomorrowStr + "T23:59:59.999Z");
 
-      const orders = await prisma.order.findMany({
-        where: {
-          startDate: { gte: tomorrowStart, lte: tomorrowEnd },
-          status: { in: ["Goedgekeurd", "Onderweg"] }
-        }
-      });
-
-      let sent = 0;
-      for (const order of orders) {
-        const ok = await emailService.sendRentalReminder({
-          ...order,
-          startDate: order.startDate.toISOString().split("T")[0],
-          endDate: order.endDate.toISOString().split("T")[0],
-          customerPhone: order.customerPhone || ""
+        const orders = await prisma.order.findMany({
+          where: {
+            startDate: { gte: tomorrowStart, lte: tomorrowEnd },
+            status: { in: ["Goedgekeurd", "Onderweg"] }
+          }
         });
-        if (ok) sent++;
-      }
 
-      if (orders.length > 0) {
-        console.log(`[Reminders] Sent ${sent}/${orders.length} reminders for ${tomorrowStr}`);
+        let sent = 0;
+        for (const order of orders) {
+          const ok = await emailService.sendRentalReminder({
+            ...order,
+            startDate: order.startDate.toISOString().split("T")[0],
+            endDate: order.endDate.toISOString().split("T")[0],
+            customerPhone: order.customerPhone || ""
+          });
+          if (ok) sent++;
+        }
+
+        await prisma.invoiceCounter.upsert({
+          where: { id: REMINDER_MARKER },
+          create: { id: REMINDER_MARKER, lastNumber: stamp },
+          update: { lastNumber: stamp }
+        });
+
+        if (orders.length > 0) {
+          console.log(`[Reminders] Sent ${sent}/${orders.length} reminders for ${tomorrowStr}`);
+        }
       }
     } catch (err) {
       console.error("[Reminders] Failed to send daily reminders:", err);
     }
+  };
 
+  const fireReminders = async () => {
+    await sendBatch();
     // Schedule next run in 24 hours
     setTimeout(fireReminders, 24 * 60 * 60 * 1000);
   };
@@ -226,6 +246,17 @@ function scheduleDailyReminders() {
 
   setTimeout(fireReminders, msUntil7am);
   console.log(`[Reminders] Scheduler armed — first run in ${Math.round(msUntil7am / 60000)} minutes`);
+
+  // Catch-up: if the server (re)started after 07:00 and today's batch wasn't
+  // sent yet (deploy/restart during the window), send it now
+  if (now.getHours() >= 7) {
+    prisma.invoiceCounter.findUnique({ where: { id: REMINDER_MARKER } }).then(marker => {
+      if (marker?.lastNumber !== todayStamp()) {
+        console.log("[Reminders] Missed 07:00 run detected — sending catch-up batch...");
+        sendBatch();
+      }
+    }).catch(() => {});
+  }
 }
 
 async function autoSeedIfEmpty() {
@@ -287,6 +318,24 @@ async function applyDataMigrations() {
       }
       await prisma.invoiceCounter.create({ data: { id: FLEET_PHOTOS_MIGRATION, lastNumber: 1 } });
       console.log("[Migration] Official fleet photos assigned to all machines.");
+    }
+
+    // Seed the reminder marker on first deploy of the idempotent scheduler so the
+    // catch-up logic doesn't re-send a batch the old code already sent at 07:00
+    const reminderMarker = await prisma.invoiceCounter.findUnique({ where: { id: "daily-reminders-last" } });
+    if (!reminderMarker) {
+      const stamp = Number(new Date().toISOString().split("T")[0].replace(/-/g, ""));
+      await prisma.invoiceCounter.create({ data: { id: "daily-reminders-last", lastNumber: stamp } });
+    }
+
+    // Loud warning if the admin account still uses the old seeded default password
+    const seededAdmin = await prisma.admin.findUnique({ where: { email: "admin@huurgo.nl" } });
+    if (seededAdmin) {
+      const bcrypt = (await import("bcryptjs")).default;
+      if (await bcrypt.compare("admin123", seededAdmin.passwordHash)) {
+        console.error("🚨 [SECURITY] Admin account admin@huurgo.nl still uses the default password 'admin123'!");
+        console.error("🚨 [SECURITY] Change it immediately via the admin panel (Wachtwoord wijzigen).");
+      }
     }
   } catch (err) {
     console.warn("[Migration] Could not apply data migrations:", err instanceof Error ? err.message : err);

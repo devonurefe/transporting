@@ -521,7 +521,7 @@ export default function CatalogSection({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.18 }}
-              className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+              className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4"
               onClick={() => setPricingPreviewMachine(null)}
             >
               <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />

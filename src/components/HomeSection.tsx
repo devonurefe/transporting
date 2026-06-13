@@ -109,9 +109,10 @@ export default function HomeSection({
   const imageByCategory = React.useMemo(() => {
     const map: Record<string, string> = {};
     activeMachines.forEach(m => {
-      if (!m.imageUrl) return;
+      const img = m.imageUrl || m.additionalImages?.[0] || "";
+      if (!img) return;
       const key = SCHAARLIFT_VARIANTS.has(m.category) ? "schaarlift" : m.category;
-      if (!map[key]) map[key] = m.imageUrl;
+      if (!map[key]) map[key] = img;
     });
     return map;
   }, [activeMachines]);

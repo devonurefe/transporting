@@ -12,7 +12,7 @@ interface AdminPlanningProps {
   adminLanguage: string;
 }
 
-export default function AdminPlanning({ adminLanguage: _adminLanguage }: AdminPlanningProps) {
+export default function AdminPlanning({ adminLanguage }: AdminPlanningProps) {
   const orders = useAppStore((state) => state.orders);
   const blockedDates = useAppStore((state) => state.blockedDates);
   const machines = useAppStore((state) => state.machines);
@@ -20,6 +20,14 @@ export default function AdminPlanning({ adminLanguage: _adminLanguage }: AdminPl
   const [view, setView] = useState<"today" | "tomorrow" | "week">("today");
   const [weekOffset, setWeekOffset] = useState(0);
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
+
+  const al = (nl: string, en: string, tr: string) => {
+    if (adminLanguage === "tr") return tr;
+    if (adminLanguage === "en") return en;
+    return nl;
+  };
+
+  const locale = adminLanguage === "tr" ? "tr-TR" : adminLanguage === "en" ? "en-US" : "nl-NL";
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -68,9 +76,9 @@ export default function AdminPlanning({ adminLanguage: _adminLanguage }: AdminPl
   );
 
   const deliveryLabel = (type: string) => {
-    if (type === "delivery_by_us") return "Bezorging";
-    if (type === "trailer_rental") return "Aanhanger";
-    return "Ophalen";
+    if (type === "delivery_by_us") return al("Bezorging", "Delivery", "Teslimat");
+    if (type === "trailer_rental") return al("Aanhanger", "Trailer", "Treyler");
+    return al("Ophalen", "Pickup", "Teslim Al");
   };
 
   const isToday = (d: Date) => d.toISOString().split("T")[0] === todayStr;
@@ -94,6 +102,7 @@ export default function AdminPlanning({ adminLanguage: _adminLanguage }: AdminPl
     blocked: any[];
     dateLabel: string;
   }) {
+    const isTargetToday = targetStr === todayStr;
     return (
       <div className="space-y-4">
         <div className="text-center py-2.5 bg-amber-50 border border-amber-200 rounded-xl">
@@ -104,13 +113,17 @@ export default function AdminPlanning({ adminLanguage: _adminLanguage }: AdminPl
           <div className="bg-white border border-slate-200 rounded-2xl p-4 space-y-3 shadow-sm">
             <h3 className="text-xs font-black text-slate-700 flex items-center gap-2">
               <Truck className="h-4 w-4 text-indigo-500" />
-              Vertrek {targetStr === todayStr ? "vandaag" : "morgen"}
+              {isTargetToday
+                ? al("Vertrek vandaag", "Departing today", "Bugün hareket ediyor")
+                : al("Vertrek morgen", "Departing tomorrow", "Yarın hareket ediyor")}
               <span className="ml-auto bg-indigo-100 text-indigo-700 text-[10px] font-mono px-2 py-0.5 rounded-full">
                 {departing.length}
               </span>
             </h3>
             {departing.length === 0 ? (
-              <p className="text-xs text-slate-400 text-center py-6">Geen machines vertrekken</p>
+              <p className="text-xs text-slate-400 text-center py-6">
+                {al("Geen machines vertrekken", "No machines departing", "Hareket eden makine yok")}
+              </p>
             ) : (
               <div className="space-y-2">
                 {departing.map((o) => (
@@ -127,7 +140,7 @@ export default function AdminPlanning({ adminLanguage: _adminLanguage }: AdminPl
                       <p className="text-xs font-bold text-slate-800 truncate">{o.machineName}</p>
                       <p className="text-[10px] text-slate-500">{o.customerName}</p>
                       <p className="text-[10px] text-indigo-600 font-semibold">
-                        {deliveryLabel(o.deliveryType)} · {o.rentalDays} dag{o.rentalDays !== 1 ? "en" : ""}
+                        {deliveryLabel(o.deliveryType)} · {o.rentalDays} {al("dag", "day", "gün")}{o.rentalDays !== 1 ? (adminLanguage === "nl" ? "en" : "s") : ""}
                       </p>
                     </div>
                     <span className={`shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded-md ${statusBadge(o.status)}`}>
@@ -143,13 +156,17 @@ export default function AdminPlanning({ adminLanguage: _adminLanguage }: AdminPl
           <div className="bg-white border border-slate-200 rounded-2xl p-4 space-y-3 shadow-sm">
             <h3 className="text-xs font-black text-slate-700 flex items-center gap-2">
               <RotateCcw className="h-4 w-4 text-teal-500" />
-              Retour {targetStr === todayStr ? "vandaag" : "morgen"}
+              {isTargetToday
+                ? al("Retour vandaag", "Returning today", "Bugün geri dönüyor")
+                : al("Retour morgen", "Returning tomorrow", "Yarın geri dönüyor")}
               <span className="ml-auto bg-teal-100 text-teal-700 text-[10px] font-mono px-2 py-0.5 rounded-full">
                 {returning.length}
               </span>
             </h3>
             {returning.length === 0 ? (
-              <p className="text-xs text-slate-400 text-center py-6">Geen machines keren terug</p>
+              <p className="text-xs text-slate-400 text-center py-6">
+                {al("Geen machines keren terug", "No machines returning", "Geri dönen makine yok")}
+              </p>
             ) : (
               <div className="space-y-2">
                 {returning.map((o) => (
@@ -184,7 +201,7 @@ export default function AdminPlanning({ adminLanguage: _adminLanguage }: AdminPl
           <div className="bg-white border border-red-100 rounded-2xl p-4 space-y-3 shadow-sm">
             <h3 className="text-xs font-black text-slate-700 flex items-center gap-2">
               <Lock className="h-4 w-4 text-red-500" />
-              Geblokkeerd
+              {al("Geblokkeerd", "Blocked", "Bloke")}
               <span className="ml-auto bg-red-100 text-red-700 text-[10px] font-mono px-2 py-0.5 rounded-full">{blocked.length}</span>
             </h3>
             <div className="flex flex-wrap gap-2">
@@ -201,7 +218,7 @@ export default function AdminPlanning({ adminLanguage: _adminLanguage }: AdminPl
 
         {departing.length === 0 && returning.length === 0 && blocked.length === 0 && (
           <div className="text-center py-16 text-slate-400 text-sm">
-            Geen activiteit gepland.
+            {al("Geen activiteit gepland.", "No activity planned.", "Planlanan aktivite yok.")}
           </div>
         )}
       </div>
@@ -222,14 +239,22 @@ export default function AdminPlanning({ adminLanguage: _adminLanguage }: AdminPl
         <div>
           <h2 className="font-display text-lg font-black text-slate-900 flex items-center gap-2">
             <CalendarDays className="h-5 w-5 text-amber-500" />
-            Planningsoverzicht
+            {al("Planningsoverzicht", "Planning Overview", "Planlama Özeti")}
           </h2>
           <p className="text-xs text-slate-500 mt-0.5">
-            Dagelijks en wekelijks overzicht van machinevertrek en ‑retour
+            {al(
+              "Dagelijks en wekelijks overzicht van machinevertrek en ‑retour",
+              "Daily and weekly overview of machine departures and returns",
+              "Günlük ve haftalık makine hareket özeti"
+            )}
           </p>
         </div>
         <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 self-start sm:self-auto">
-          {([["today", "Vandaag"], ["tomorrow", "Morgen"], ["week", "Week"]] as const).map(([v, label]) => (
+          {([
+            ["today",    al("Vandaag", "Today",    "Bugün")],
+            ["tomorrow", al("Morgen",  "Tomorrow", "Yarın")],
+            ["week",     al("Week",    "Week",     "Hafta")],
+          ] as const).map(([v, label]) => (
             <button
               key={v}
               type="button"
@@ -251,7 +276,7 @@ export default function AdminPlanning({ adminLanguage: _adminLanguage }: AdminPl
           departing={departingToday}
           returning={returningToday}
           blocked={blockedToday}
-          dateLabel={today.toLocaleDateString("nl-NL", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+          dateLabel={today.toLocaleDateString(locale, { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
         />
       )}
 
@@ -262,7 +287,7 @@ export default function AdminPlanning({ adminLanguage: _adminLanguage }: AdminPl
           departing={departingTomorrow}
           returning={returningTomorrow}
           blocked={blockedTomorrow}
-          dateLabel={tomorrowDate.toLocaleDateString("nl-NL", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+          dateLabel={tomorrowDate.toLocaleDateString(locale, { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
         />
       )}
 
@@ -276,26 +301,32 @@ export default function AdminPlanning({ adminLanguage: _adminLanguage }: AdminPl
               onClick={() => setWeekOffset((o) => o - 1)}
               className="flex items-center gap-1 text-xs font-bold text-slate-600 hover:text-slate-900 cursor-pointer border-none bg-transparent px-3 py-2 rounded-lg hover:bg-slate-100 transition-colors"
             >
-              <ChevronLeft className="h-4 w-4" /> Vorige
+              <ChevronLeft className="h-4 w-4" /> {al("Vorige", "Prev", "Önceki")}
             </button>
             <div className="text-xs font-black text-slate-800 text-center">
-              {weekDays[0].toLocaleDateString("nl-NL", { day: "numeric", month: "short" })}
-              {" – "}
-              {weekDays[6].toLocaleDateString("nl-NL", { day: "numeric", month: "short", year: "numeric" })}
-              {weekOffset === 0 && <span className="ml-2 text-amber-600 font-medium">(deze week)</span>}
+              <div>
+                {weekDays[0].toLocaleDateString(locale, { day: "numeric", month: "short" })}
+                {" – "}
+                {weekDays[6].toLocaleDateString(locale, { day: "numeric", month: "short", year: "numeric" })}
+              </div>
+              {weekOffset === 0 && (
+                <div className="text-[10px] text-amber-600 font-medium mt-0.5">
+                  {al("deze week", "this week", "bu hafta")}
+                </div>
+              )}
             </div>
             <button
               type="button"
               onClick={() => setWeekOffset((o) => o + 1)}
               className="flex items-center gap-1 text-xs font-bold text-slate-600 hover:text-slate-900 cursor-pointer border-none bg-transparent px-3 py-2 rounded-lg hover:bg-slate-100 transition-colors"
             >
-              Volgende <ChevronRight className="h-4 w-4" />
+              {al("Volgende", "Next", "Sonraki")} <ChevronRight className="h-4 w-4" />
             </button>
           </div>
 
           {/* 7-column day grid — horizontal scroll on mobile */}
           <div className="overflow-x-auto -mx-2 px-2 sm:mx-0 sm:px-0 pb-1">
-          <div className="grid grid-cols-7 gap-1.5 min-w-[560px] sm:min-w-0">
+          <div className="grid grid-cols-7 gap-1.5 min-w-[700px] sm:min-w-0">
             {weekDays.map((day, idx) => {
               const dayStr = day.toISOString().split("T")[0];
               const departing = activeOrders.filter((o) => o.startDate === dayStr);
@@ -312,7 +343,7 @@ export default function AdminPlanning({ adminLanguage: _adminLanguage }: AdminPl
                 >
                   <div className={`text-center pb-1 border-b mb-0.5 ${current ? "border-amber-200" : "border-slate-100"}`}>
                     <div className={`text-[10px] uppercase tracking-wide font-bold ${current ? "text-amber-600" : "text-slate-400"}`}>
-                      {day.toLocaleDateString("nl-NL", { weekday: "short" })}
+                      {day.toLocaleDateString(locale, { weekday: "short" })}
                     </div>
                     <div className={`text-sm font-black leading-tight ${current ? "text-amber-700" : "text-slate-800"}`}>
                       {day.getDate()}
@@ -325,7 +356,7 @@ export default function AdminPlanning({ adminLanguage: _adminLanguage }: AdminPl
                       type="button"
                       title={`${o.machineName} → ${o.customerName}`}
                       onClick={() => setSelectedOrder(o)}
-                      className="bg-indigo-100 text-indigo-800 rounded-md px-1.5 py-1 text-[10px] font-semibold truncate flex items-center gap-1 hover:bg-indigo-200 transition-colors cursor-pointer border-none w-full text-left min-h-[28px]"
+                      className="bg-indigo-100 text-indigo-800 rounded-md px-1.5 py-1 text-[10px] font-semibold truncate flex items-center gap-1 hover:bg-indigo-200 transition-colors cursor-pointer border-none w-full text-left min-h-[32px]"
                       style={{ touchAction: "manipulation" }}
                     >
                       <Truck className="h-3 w-3 shrink-0" />
@@ -339,7 +370,7 @@ export default function AdminPlanning({ adminLanguage: _adminLanguage }: AdminPl
                       type="button"
                       title={`${o.machineName} ← ${o.customerName}`}
                       onClick={() => setSelectedOrder(o)}
-                      className="bg-teal-100 text-teal-800 rounded-md px-1.5 py-1 text-[10px] font-semibold truncate flex items-center gap-1 hover:bg-teal-200 transition-colors cursor-pointer border-none w-full text-left min-h-[28px]"
+                      className="bg-teal-100 text-teal-800 rounded-md px-1.5 py-1 text-[10px] font-semibold truncate flex items-center gap-1 hover:bg-teal-200 transition-colors cursor-pointer border-none w-full text-left min-h-[32px]"
                       style={{ touchAction: "manipulation" }}
                     >
                       <RotateCcw className="h-3 w-3 shrink-0" />
@@ -350,11 +381,11 @@ export default function AdminPlanning({ adminLanguage: _adminLanguage }: AdminPl
                   {blocked.map((b, i) => (
                     <div
                       key={`b-${i}`}
-                      title={b.reason || "Geblokkeerd"}
-                      className="bg-red-100 text-red-700 rounded-md px-1.5 py-1 text-[10px] font-semibold truncate flex items-center gap-1 min-h-[28px]"
+                      title={b.reason || al("Geblokkeerd", "Blocked", "Bloke")}
+                      className="bg-red-100 text-red-700 rounded-md px-1.5 py-1 text-[10px] font-semibold truncate flex items-center gap-1 min-h-[32px]"
                     >
                       <Lock className="h-3 w-3 shrink-0" />
-                      <span className="truncate">{machineMap.get(b.machineId)?.split(" ")[0] ?? "Geblokkeerd"}</span>
+                      <span className="truncate">{machineMap.get(b.machineId)?.split(" ")[0] ?? al("Geblokkeerd", "Blocked", "Bloke")}</span>
                     </div>
                   ))}
 
@@ -371,15 +402,15 @@ export default function AdminPlanning({ adminLanguage: _adminLanguage }: AdminPl
           <div className="flex items-center gap-5 text-[10px] text-slate-500 pt-1">
             <div className="flex items-center gap-1.5">
               <span className="h-2.5 w-2.5 rounded-sm bg-indigo-200 inline-block" />
-              Vertrek
+              {al("Vertrek", "Departure", "Hareket")}
             </div>
             <div className="flex items-center gap-1.5">
               <span className="h-2.5 w-2.5 rounded-sm bg-teal-200 inline-block" />
-              Retour
+              {al("Retour", "Return", "Geri Dönüş")}
             </div>
             <div className="flex items-center gap-1.5">
               <span className="h-2.5 w-2.5 rounded-sm bg-red-200 inline-block" />
-              Geblokkeerd
+              {al("Geblokkeerd", "Blocked", "Bloke")}
             </div>
           </div>
         </div>
@@ -388,7 +419,7 @@ export default function AdminPlanning({ adminLanguage: _adminLanguage }: AdminPl
       {/* ── ORDER DETAIL POPUP ─────────────────────────────────────── */}
       <AnimatePresence>
         {selectedOrder && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -401,7 +432,7 @@ export default function AdminPlanning({ adminLanguage: _adminLanguage }: AdminPl
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 12 }}
               transition={{ type: "spring", stiffness: 380, damping: 28 }}
-              className="relative z-50 w-full max-w-sm bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200"
+              className="relative z-[60] w-full max-w-sm bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200"
             >
               {/* Top stripe */}
               <div className="h-1 bg-gradient-to-r from-teal-400 via-indigo-500 to-amber-400" />
@@ -432,7 +463,9 @@ export default function AdminPlanning({ adminLanguage: _adminLanguage }: AdminPl
               <div className="px-5 pb-5 space-y-3">
                 {/* Klant */}
                 <div className="bg-slate-50 rounded-2xl p-3 space-y-2">
-                  <p className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">Klant</p>
+                  <p className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">
+                    {al("Klant", "Customer", "Müşteri")}
+                  </p>
                   <p className="text-sm font-bold text-slate-900">{selectedOrder.customerName}</p>
                   {selectedOrder.customerPhone && (
                     <a href={`tel:${selectedOrder.customerPhone}`} className="flex items-center gap-2 text-xs text-indigo-600 no-underline hover:text-indigo-800">
@@ -454,23 +487,23 @@ export default function AdminPlanning({ adminLanguage: _adminLanguage }: AdminPl
                 {/* Periode & Logistiek */}
                 <div className="divide-y divide-slate-100 rounded-2xl border border-slate-200 overflow-hidden text-xs">
                   <div className="flex items-center justify-between px-3 py-2">
-                    <span className="text-slate-400 font-mono text-[10px]">Periode</span>
+                    <span className="text-slate-400 font-mono text-[10px]">{al("Periode", "Period", "Dönem")}</span>
                     <span className="font-bold text-slate-800">{fmt(selectedOrder.startDate)} – {fmt(selectedOrder.endDate)}</span>
                   </div>
                   <div className="flex items-center justify-between px-3 py-2">
-                    <span className="text-slate-400 font-mono text-[10px]">Dagen</span>
-                    <span className="font-bold text-slate-800">{selectedOrder.rentalDays} dag{selectedOrder.rentalDays !== 1 ? "en" : ""}</span>
+                    <span className="text-slate-400 font-mono text-[10px]">{al("Dagen", "Days", "Günler")}</span>
+                    <span className="font-bold text-slate-800">{selectedOrder.rentalDays} {al("dag", "day", "gün")}{selectedOrder.rentalDays !== 1 ? (adminLanguage === "nl" ? "en" : "s") : ""}</span>
                   </div>
                   <div className="flex items-center justify-between px-3 py-2">
-                    <span className="text-slate-400 font-mono text-[10px]">Logistiek</span>
+                    <span className="text-slate-400 font-mono text-[10px]">{al("Logistiek", "Logistics", "Lojistik")}</span>
                     <span className="font-bold text-slate-800">{deliveryLabel(selectedOrder.deliveryType)}</span>
                   </div>
                   <div className="flex items-center justify-between px-3 py-2">
-                    <span className="text-slate-400 font-mono text-[10px]">Profiel</span>
+                    <span className="text-slate-400 font-mono text-[10px]">{al("Profiel", "Profile", "Profil")}</span>
                     <span className="font-bold text-slate-800">{selectedOrder.customerProfile}</span>
                   </div>
                   <div className="flex items-center justify-between px-3 py-2 bg-indigo-50">
-                    <span className="text-indigo-600 font-mono text-[10px] font-bold">Totaal</span>
+                    <span className="text-indigo-600 font-mono text-[10px] font-bold">{al("Totaal", "Total", "Toplam")}</span>
                     <span className="font-extrabold text-indigo-700 font-mono">€ {selectedOrder.totalAmount?.toFixed(2)}</span>
                   </div>
                 </div>
@@ -487,7 +520,7 @@ export default function AdminPlanning({ adminLanguage: _adminLanguage }: AdminPl
                   onClick={() => setSelectedOrder(null)}
                   className="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all cursor-pointer border-none"
                 >
-                  Sluiten
+                  {al("Sluiten", "Close", "Kapat")}
                 </button>
               </div>
             </motion.div>

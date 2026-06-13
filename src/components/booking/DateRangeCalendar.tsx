@@ -264,7 +264,7 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
                 <div className="px-4 pt-2 pb-1" aria-busy={loading}>
                   <div className="grid grid-cols-7 gap-1 mb-1">
                     {DOW_NL.map((d) => (
-                      <div key={d} className="text-center text-[9px] font-black text-slate-400 py-1 select-none">{d}</div>
+                      <div key={d} className="text-center text-[10px] font-black text-slate-400 py-1 select-none">{d}</div>
                     ))}
                   </div>
                   <div className="grid grid-cols-7 gap-1">
@@ -299,7 +299,7 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
                 </div>
 
                 {/* Legend */}
-                <div className="flex items-center justify-center gap-3 px-4 py-2 text-[9.5px] text-slate-500 font-semibold">
+                <div className="flex items-center justify-center gap-3 px-4 py-2 text-xs text-slate-500 font-semibold">
                   <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-emerald-200 border border-emerald-400" />{t("calLegendAvailable")}</span>
                   <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-amber-400" />{t("calLegendSelected")}</span>
                   <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-rose-300" />{t("calLegendUnavailable")}</span>
@@ -309,8 +309,8 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
               {/* Price preview — outside scroll, always visible above footer */}
               {validRange && (
                 <div className="mx-4 mb-2 flex items-center justify-between bg-indigo-50 border border-indigo-100 rounded-xl px-3 py-2">
-                  <span className="text-[11px] font-bold text-indigo-900">{days} {days === 1 ? "dag" : "dagen"}</span>
-                  <span className="text-sm font-black font-mono text-indigo-700">{euro(withVat(subtotal, vatDisplay))} <span className="text-[9px] font-normal text-indigo-400">{vatDisplay === "incl" ? "incl. btw" : "excl. btw"}</span></span>
+                  <span className="text-xs font-bold text-indigo-900">{days} {days === 1 ? "dag" : "dagen"}</span>
+                  <span className="text-sm font-black font-mono text-indigo-700">{euro(withVat(subtotal, vatDisplay))} <span className="text-[10px] font-normal text-indigo-400">{vatDisplay === "incl" ? "incl. btw" : "excl. btw"}</span></span>
                 </div>
               )}
 

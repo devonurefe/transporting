@@ -574,12 +574,12 @@ export default function CatalogSection({
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
                         {row.badge && (
-                          <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${
+                          <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-full ${
                             row.highlight === "green" ? "bg-emerald-100 text-emerald-700" : "bg-teal-100 text-teal-700"
                           }`}>{row.badge}</span>
                         )}
                         {row.highlight === "fire" && (
-                          <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700">Actie</span>
+                          <span className="text-[10px] font-black px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700">Actie</span>
                         )}
                         <span className={`font-mono font-extrabold text-sm ${
                           row.highlight === "fire" ? "text-amber-700" :

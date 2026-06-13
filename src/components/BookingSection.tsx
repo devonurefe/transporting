@@ -684,7 +684,7 @@ export default function BookingSection({
                           </svg>
                         ) : s.number}
                       </div>
-                      <span className={`text-[9.5px] tracking-wider font-extrabold uppercase mt-2.5 ${
+                      <span className={`text-[10px] tracking-wider font-extrabold uppercase mt-2.5 ${
                         isCurrent ? "text-indigo-600" : isActive ? "text-teal-600" : "text-slate-400"
                       }`}>
                         {s.label}

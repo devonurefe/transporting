@@ -17,7 +17,7 @@ export default function VatToggle({ size = "sm" }: VatToggleProps) {
   const vatDisplay = useAppStore((s) => s.vatDisplay);
   const setVatDisplay = useAppStore((s) => s.setVatDisplay);
 
-  const pad = size === "xs" ? "px-2 py-0.5 text-[9px]" : "px-2.5 py-1 text-[10px]";
+  const pad = size === "xs" ? "px-2 py-0.5 text-[10px]" : "px-2.5 py-1 text-[10px]";
 
   return (
     <div

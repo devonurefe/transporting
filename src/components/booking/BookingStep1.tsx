@@ -132,7 +132,7 @@ export default function BookingStep1({
                       <button
                         type="button"
                         onClick={() => setPreviewMachine(item.machine)}
-                        className="text-[10px] text-indigo-600 hover:text-indigo-800 font-semibold bg-transparent border-none cursor-pointer p-0 transition-colors"
+                        className="text-xs text-indigo-600 hover:text-indigo-800 font-semibold bg-transparent border-none cursor-pointer p-0 transition-colors"
                       >
                         Tarieven &amp; specificaties →
                       </button>
@@ -142,7 +142,7 @@ export default function BookingStep1({
                     <button
                       type="button"
                       onClick={() => setActiveTab("catalog")}
-                      className="text-[10px] text-slate-400 hover:text-indigo-600 transition-colors border-none bg-transparent cursor-pointer font-medium"
+                      className="text-xs text-slate-400 hover:text-indigo-600 transition-colors border-none bg-transparent cursor-pointer font-medium"
                     >
                       Ander model
                     </button>
@@ -168,7 +168,7 @@ export default function BookingStep1({
                 </div>
 
                 {/* Item Availability status bar */}
-                <div className={`p-2.5 rounded-xl border text-[11px] flex items-center space-x-2 shadow-sm ${
+                <div className={`p-2.5 rounded-xl border text-xs flex items-center space-x-2 shadow-sm ${
                   availability.available
                     ? "bg-teal-50 border-teal-200 text-teal-800 font-semibold"
                     : "bg-rose-50 border-rose-200 text-rose-700 font-semibold"
@@ -194,7 +194,7 @@ export default function BookingStep1({
                     })()}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 p-2.5 rounded-xl border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-[11px] font-bold transition-all shadow-sm"
+                    className="flex items-center justify-center gap-2 p-2.5 rounded-xl border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold transition-all shadow-sm"
                   >
                     <MessageCircle className="h-4 w-4 text-emerald-600 shrink-0" />
                     <span>Overleg datums via WhatsApp</span>
@@ -226,10 +226,10 @@ export default function BookingStep1({
               </span>
               <div>
                 <h4 className="text-xs font-bold text-slate-900">Wij bezorgen</h4>
-                <span className="text-[9.5px] text-slate-400 block">Binnen 20 km straal</span>
+                <span className="text-[10px] text-slate-400 block">Binnen 20 km straal</span>
               </div>
             </div>
-            <p className="text-[10.5px] text-slate-500 leading-normal">
+            <p className="text-xs text-slate-500 leading-normal">
               Wij leveren de machine af en halen hem terug op.
             </p>
             <span className="text-xs font-semibold text-slate-700 mt-2 block">€150,- heen + terug</span>
@@ -253,10 +253,10 @@ export default function BookingStep1({
               </span>
               <div>
                 <h4 className="text-xs font-bold text-slate-900">Aanhanger huren</h4>
-                <span className="text-[9.5px] text-slate-400 block">Eigen auto, onze aanhanger</span>
+                <span className="text-[10px] text-slate-400 block">Eigen auto, onze aanhanger</span>
               </div>
             </div>
-            <p className="text-[10.5px] text-slate-500 leading-normal">
+            <p className="text-xs text-slate-500 leading-normal">
               U rijdt zelf met uw eigen voertuig en onze aanhanger.
             </p>
             <span className="text-xs font-semibold text-slate-700 mt-2 block">€25,- per dag</span>
@@ -280,10 +280,10 @@ export default function BookingStep1({
               </span>
               <div>
                 <h4 className="text-xs font-bold text-slate-900">Zelf ophalen</h4>
-                <span className="text-[9.5px] text-slate-400 block">Zoeterwoude depot</span>
+                <span className="text-[10px] text-slate-400 block">Zoeterwoude depot</span>
               </div>
             </div>
-            <p className="text-[10.5px] text-slate-500 leading-normal">
+            <p className="text-xs text-slate-500 leading-normal">
               Ophalen bij ons depot — gratis.
             </p>
             <span className="text-xs font-semibold text-slate-700 mt-2 block">Kosteloos</span>
@@ -295,7 +295,7 @@ export default function BookingStep1({
       <div className="space-y-3 pt-4 border-t border-slate-200">
         <div className="flex justify-between items-center">
           <span className="text-xs text-slate-500 font-semibold">{t("step1AddonsTitle")}</span>
-          <span className="text-[10px] text-slate-400">Optioneel</span>
+          <span className="text-xs text-slate-400">Optioneel</span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">

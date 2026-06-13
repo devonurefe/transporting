@@ -218,7 +218,7 @@ export default function HomeSection({
                     key={`${m.id}-${i}`}
                     type="button"
                     onClick={() => onSearch("", m.category)}
-                    className="bg-white border border-amber-200 rounded-full px-3 py-1 text-[11px] font-bold text-amber-800 shrink-0 inline-flex items-center gap-1.5 shadow-sm hover:bg-amber-100 hover:border-amber-300 transition-colors cursor-pointer"
+                    className="bg-white border border-amber-200 rounded-full px-3 py-1 text-xs font-bold text-amber-800 shrink-0 inline-flex items-center gap-1.5 shadow-sm hover:bg-amber-100 hover:border-amber-300 transition-colors cursor-pointer"
                   >
                     <Zap className="h-3 w-3 text-amber-500" />
                     {baseName}

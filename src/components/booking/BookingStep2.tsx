@@ -112,7 +112,7 @@ export default function BookingStep2({
             </div>
             <div>
               <h4 className="font-bold text-sm text-slate-900">Doorgaan als gast</h4>
-              <p className="text-[11px] text-slate-500 mt-1 leading-normal">
+              <p className="text-xs text-slate-500 mt-1 leading-normal">
                 Snel boeken zonder account. U vult alleen uw contactgegevens in.
               </p>
             </div>
@@ -131,7 +131,7 @@ export default function BookingStep2({
             </div>
             <div>
               <h4 className="font-bold text-sm text-slate-900">Inloggen</h4>
-              <p className="text-[11px] text-slate-500 mt-1 leading-normal">
+              <p className="text-xs text-slate-500 mt-1 leading-normal">
                 Log in via het klantportaal — uw gegevens worden automatisch ingevuld.
               </p>
             </div>
@@ -167,7 +167,7 @@ export default function BookingStep2({
         <span>Contactgegevens & Bedrijfsprofiel</span>
       </h3>
 
-      <p className="text-[11px] text-slate-600 leading-relaxed border-b border-slate-100 pb-2">
+      <p className="text-xs text-slate-600 leading-relaxed border-b border-slate-100 pb-2">
         {currentUser ? (
           <>Hieronder staan uw gegevens vooraf ingevuld op basis van uw geactiveerde profiel <strong>{currentUser.name}</strong>. Controleer deze velden voor de BMWT-verhuuromslag.</>
         ) : (
@@ -262,18 +262,18 @@ export default function BookingStep2({
               <span className="text-indigo-750 text-indigo-700">Bezorgadres in Nederland</span>
             </label>
 
-            <span className="text-[10px] text-slate-400 font-mono font-bold">
+            <span className="text-xs text-slate-400 font-medium">
               Volledig ondersteund in Zuid- & Noord-Holland
             </span>
           </div>
 
           {/* Interactive Address lookup grid */}
           <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3 shadow-inner">
-            <span className="text-[10.5px] font-black text-slate-800 block">Sneladresvinder (Nederlands Postcodesysteem)</span>
+            <span className="text-xs font-black text-slate-800 block">Sneladresvinder (Nederlands Postcodesysteem)</span>
             
             <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
               <div className="sm:col-span-12 md:col-span-5 space-y-1">
-                <label className="text-[10.5px] text-slate-500 block font-bold">Postcode</label>
+                <label className="text-xs text-slate-500 block font-bold">Postcode</label>
                 <input
                   type="text"
                   placeholder="bijv. 2404 CB"
@@ -284,7 +284,7 @@ export default function BookingStep2({
               </div>
 
               <div className="sm:col-span-12 md:col-span-4 space-y-1">
-                <label className="text-[10.5px] text-slate-500 block font-bold">Huisnummer</label>
+                <label className="text-xs text-slate-500 block font-bold">Huisnummer</label>
                 <input
                   type="text"
                   placeholder="bijv. 14"
@@ -313,14 +313,14 @@ export default function BookingStep2({
             </div>
 
             {addressSuccessMsg && (
-              <div className="text-[11px] text-teal-700 font-bold font-mono flex items-center space-x-1.5 pt-1">
+              <div className="text-xs text-teal-700 font-bold flex items-center space-x-1.5 pt-1">
                 <Check className="h-4 w-4 shrink-0 bg-teal-50 text-teal-700 p-0.5 rounded-full" />
                 <span>{addressSuccessMsg}</span>
               </div>
             )}
 
             <div className="pt-2">
-              <label className="text-[10px] text-slate-500 block font-bold uppercase tracking-wider mb-1">Geselecteerd Afleveradres (of handmatig aanpassen)</label>
+              <label className="text-xs text-slate-500 block font-bold uppercase tracking-wider mb-1">Geselecteerd Afleveradres (of handmatig aanpassen)</label>
               <textarea
                 rows={2}
                 required={deliveryType === "delivery_by_us"}

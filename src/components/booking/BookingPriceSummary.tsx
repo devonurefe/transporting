@@ -72,7 +72,7 @@ export default function BookingPriceSummary({ selectedMachine, sums }: BookingPr
         <div className="min-w-0 flex-1">
           <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wide leading-none mb-1">{t("priceSummaryReservation")}</p>
           <h4 className="text-sm font-extrabold text-slate-900 leading-snug">{selectedMachine.name}</h4>
-          <span className="text-[11px] text-indigo-600 font-bold font-mono">{euroCompact(selectedMachine.pricePerDay)}/dag</span>
+          <span className="text-xs text-indigo-600 font-bold font-mono">{euroCompact(selectedMachine.pricePerDay)}/dag</span>
         </div>
       </div>
 
@@ -126,8 +126,8 @@ export default function BookingPriceSummary({ selectedMachine, sums }: BookingPr
 
         {/* BTW */}
         <div className="flex justify-between items-center text-slate-400 border-t border-slate-100 pt-3">
-          <span className="text-[11px]">BTW 21%</span>
-          <span className="text-[11px] font-mono">{euro(sums.vat)}</span>
+          <span className="text-xs">BTW 21%</span>
+          <span className="text-xs font-mono">{euro(sums.vat)}</span>
         </div>
 
         {/* Total */}

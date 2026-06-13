@@ -207,14 +207,16 @@ export default function HomeSection({
             <motion.div
               className="gap-4 whitespace-nowrap flex"
               animate={{ x: ["0%", "-50%"] }}
-              transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
+              transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
             >
               {doubled.map((m, i) => {
                 const baseName = m.name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "").trim();
                 return (
-                  <span
+                  <button
                     key={`${m.id}-${i}`}
-                    className="bg-white border border-amber-200 rounded-full px-3 py-1 text-[11px] font-bold text-amber-800 shrink-0 inline-flex items-center gap-1.5 shadow-sm"
+                    type="button"
+                    onClick={() => onSearch("", m.category)}
+                    className="bg-white border border-amber-200 rounded-full px-3 py-1 text-[11px] font-bold text-amber-800 shrink-0 inline-flex items-center gap-1.5 shadow-sm hover:bg-amber-100 hover:border-amber-300 transition-colors cursor-pointer"
                   >
                     <Zap className="h-3 w-3 text-amber-500" />
                     {baseName}
@@ -224,7 +226,7 @@ export default function HomeSection({
                     {m.campaignText && (
                       <span className="text-amber-500">{m.campaignText}</span>
                     )}
-                  </span>
+                  </button>
                 );
               })}
             </motion.div>
@@ -274,14 +276,14 @@ export default function HomeSection({
                   <p className="font-bold text-xs text-slate-800 leading-snug mb-3 line-clamp-2 min-h-[2.25rem]">
                     {cat.listLabel || cat.label}
                   </p>
-                  <div className="space-y-1.5">
-                    <div className="flex items-baseline gap-1.5">
-                      <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 w-10 shrink-0">Hoogte</p>
-                      <p className="text-sm font-bold text-slate-700">{cat.heights}</p>
+                  <div className="space-y-2">
+                    <div>
+                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 leading-none mb-0.5">Hoogte</p>
+                      <p className="text-sm font-bold text-slate-700 leading-tight">{cat.heights}</p>
                     </div>
-                    <div className="flex items-baseline gap-1.5">
-                      <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 w-10 shrink-0">All-in</p>
-                      <p className="text-sm font-extrabold text-emerald-600">
+                    <div>
+                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 leading-none mb-0.5">All-in</p>
+                      <p className="text-sm font-extrabold text-emerald-600 leading-tight">
                         {livePriceByCategory[cat.id] !== undefined
                           ? `v.a. €${(() => { const v = withVat(livePriceByCategory[cat.id], vatDisplay); return v % 1 === 0 ? Math.round(v).toLocaleString("nl-NL") : v.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); })()}/dag`
                           : cat.price}

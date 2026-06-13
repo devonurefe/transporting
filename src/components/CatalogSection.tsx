@@ -1100,13 +1100,6 @@ export default function CatalogSection({
                           {selectedDetailMachine.campaignDiscountPercent ? ` −${selectedDetailMachine.campaignDiscountPercent}%` : ""}
                         </div>
                       )}
-                      <button
-                        onClick={() => { setSelectedDetailMachine(null); onSelectMachineForBooking(selectedDetailMachine); }}
-                        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold transition-all shadow-md cursor-pointer"
-                      >
-                        <ShoppingBag className="h-4 w-4" />
-                        {t("btnRentNow")}
-                      </button>
                     </div>
 
                     {/* C — Omschrijving */}
@@ -1258,12 +1251,19 @@ export default function CatalogSection({
               })()}
               
               {/* Footer */}
-              <div className="pt-4 border-t border-slate-200 flex justify-end shrink-0 mt-3">
+              <div className="pt-4 border-t border-slate-200 flex items-center gap-3 shrink-0 mt-3">
                 <button
                   onClick={() => setSelectedDetailMachine(null)}
                   className="px-5 py-2 hover:bg-slate-100 bg-slate-100 border border-slate-200 text-slate-600 hover:text-slate-800 rounded-xl text-xs font-bold transition-all cursor-pointer"
                 >
                   Sluiten
+                </button>
+                <button
+                  onClick={() => { setSelectedDetailMachine(null); onSelectMachineForBooking(selectedDetailMachine!); }}
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold transition-all shadow-md cursor-pointer"
+                >
+                  <ShoppingBag className="h-4 w-4" />
+                  {t("btnRentNow")}
                 </button>
               </div>
 

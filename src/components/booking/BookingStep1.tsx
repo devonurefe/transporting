@@ -120,7 +120,13 @@ export default function BookingStep1({
                     </div>
                     <div>
                       <h4 className="text-xs font-extrabold text-slate-900">{item.machine.name}</h4>
-                      <p className="text-[10px] text-slate-500 font-medium font-mono">Tarief: <span className="text-teal-700 font-bold">€{item.machine.pricePerDay},-</span> / dag</p>
+                      <button
+                        type="button"
+                        onClick={() => setPreviewMachine(item.machine)}
+                        className="text-[10px] text-indigo-600 hover:text-indigo-800 font-semibold bg-transparent border-none cursor-pointer p-0 transition-colors"
+                      >
+                        Tarieven &amp; specificaties →
+                      </button>
                     </div>
                   </div>
                   <div className="flex items-center gap-1.5">

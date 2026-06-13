@@ -370,11 +370,17 @@ export default function CatalogSection({
 
     // Deduplicate: show only the first unit (representative) per model
     const seen = new Set<string>();
-    return filtered.filter(machine => {
+    const deduped = filtered.filter(machine => {
       const base = getBaseName(machine.name);
       if (seen.has(base)) return false;
       seen.add(base);
       return true;
+    });
+
+    // Sort: ascending by height so 6m → 8m → 10m within schaarliften; then by price
+    return deduped.sort((a, b) => {
+      if (a.height !== b.height) return a.height - b.height;
+      return a.pricePerDay - b.pricePerDay;
     });
   }, [machines, selectedCategory, searchQuery]);
 

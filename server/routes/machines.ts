@@ -122,8 +122,18 @@ machinesRouter.post("/", requireAdmin as any, async (req: AuthenticatedRequest, 
     monthlyPrice,
     packageContents,
     additionalImages,
-    specs
+    specs: rawSpecsCreate
   } = req.body;
+
+  const sanitizeSpecs = (raw: unknown) => {
+    if (!Array.isArray(raw) || raw.length === 0) return null;
+    const cleaned = raw
+      .map((s: any) => ({ label: String(s?.label ?? "").slice(0, 80), value: String(s?.value ?? "").slice(0, 200) }))
+      .filter(s => s.label.trim() && s.value.trim())
+      .slice(0, 30);
+    return cleaned.length > 0 ? cleaned : null;
+  };
+  const specs = sanitizeSpecs(rawSpecsCreate);
 
   try {
     const categoryLabel = await getCategoryLabel(category);
@@ -201,8 +211,17 @@ machinesRouter.put("/:id", requireAdmin as any, async (req: AuthenticatedRequest
     monthlyPrice,
     packageContents,
     additionalImages,
-    specs
+    specs: rawSpecsPut
   } = req.body;
+
+  const specsUpdate = rawSpecsPut !== undefined
+    ? (Array.isArray(rawSpecsPut) && rawSpecsPut.length > 0
+        ? rawSpecsPut
+            .map((s: any) => ({ label: String(s?.label ?? "").slice(0, 80), value: String(s?.value ?? "").slice(0, 200) }))
+            .filter((s: any) => s.label.trim() && s.value.trim())
+            .slice(0, 30)
+        : null)
+    : undefined;
 
   try {
     const categoryLabel = await getCategoryLabel(category);
@@ -233,7 +252,7 @@ machinesRouter.put("/:id", requireAdmin as any, async (req: AuthenticatedRequest
         monthlyPrice: monthlyPrice !== undefined && monthlyPrice !== null && monthlyPrice !== "" ? Number(monthlyPrice) : null,
         packageContents: packageContents !== undefined ? packageContents : null,
         additionalImages: Array.isArray(additionalImages) ? additionalImages : [],
-        specs: specs !== undefined ? (Array.isArray(specs) && specs.length > 0 ? specs : null) : undefined
+        specs: specsUpdate
       }
     });
 

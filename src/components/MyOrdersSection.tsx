@@ -418,7 +418,7 @@ export default function MyOrdersSection({
                       <input
                         type="password"
                         required
-                        minLength={6}
+                        minLength={8}
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
                         placeholder="Minimaal 6 tekens"

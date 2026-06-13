@@ -219,6 +219,11 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
       return res.status(400).json({ error: "Prijs niet actueel. Ververs de pagina en probeer opnieuw." });
     }
 
+    // Load campaign rules for server-side discount mirror
+    const siteConf = await prisma.siteConfig.findUnique({ where: { id: "default" } });
+    const campaignRules: Array<{ scope: string; scopeValue: string; discountPercent: number; isActive: boolean }> =
+      Array.isArray((siteConf as any)?.campaignRules) ? (siteConf as any).campaignRules : [];
+
     // Server-side financial recalculation — prevent subtotal/VAT/total manipulation.
     // rentalDays is recomputed from the dates (inclusive, same formula as
     // BookingSection.tsx) — never trusted from the client, otherwise a 30-day
@@ -268,16 +273,28 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
       }
       serverSubtotal = fullMonths * m.monthlyPrice + remainderCost;
     } else {
+      // Mirrors src/utils/pricing.ts evaluateDiscountPercent: take the HIGHEST discount,
+      // do not stack volume + campaign discounts. Campaign rules are also applied here.
       const rawSubtotal = machine.pricePerDay * rentalDays;
-      let serverDiscountAmount = 0;
+      let highestDiscountPercent = 0;
       if (rentalDays >= 30 && machine.monthlyDiscountPercent) {
-        serverDiscountAmount = rawSubtotal * (machine.monthlyDiscountPercent / 100);
+        highestDiscountPercent = Math.max(highestDiscountPercent, machine.monthlyDiscountPercent);
       } else if (rentalDays >= 7 && machine.weeklyDiscountPercent) {
-        serverDiscountAmount = rawSubtotal * (machine.weeklyDiscountPercent / 100);
+        highestDiscountPercent = Math.max(highestDiscountPercent, machine.weeklyDiscountPercent);
+      }
+      const profile = String(orderData.customerProfile || "").toLowerCase();
+      for (const rule of campaignRules.filter(r => r.isActive)) {
+        let matches = false;
+        if (rule.scope === "global") matches = true;
+        else if (rule.scope === "category") matches = machine.category.toLowerCase() === rule.scopeValue.toLowerCase();
+        else if (rule.scope === "product") matches = machine.id === rule.scopeValue;
+        else if (rule.scope === "role") matches = profile === rule.scopeValue.toLowerCase();
+        if (matches) highestDiscountPercent = Math.max(highestDiscountPercent, rule.discountPercent);
       }
       if (machine.campaignDiscountPercent) {
-        serverDiscountAmount += rawSubtotal * (machine.campaignDiscountPercent / 100);
+        highestDiscountPercent = Math.max(highestDiscountPercent, machine.campaignDiscountPercent);
       }
+      let serverDiscountAmount = rawSubtotal * (highestDiscountPercent / 100);
       if (machine.campaignDiscountAmount) {
         serverDiscountAmount += (machine.campaignDiscountAmount as number);
       }

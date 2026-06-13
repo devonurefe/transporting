@@ -90,12 +90,12 @@ describe("calculateItemSubtotal — flat rates", () => {
     expect(calculateItemSubtotal(nifty120, 3, "Particulier", noRules, FRI)).toBe(150);
   });
 
-  it("3 weekday days (Mon-Wed) have no flat rate → pricePerDay × 3", () => {
-    expect(calculateItemSubtotal(nifty120, 3, "Particulier", noRules, MON)).toBe(3 * 95);
+  it("3 weekday days (Mon-Wed) use weeklyPrice when available", () => {
+    expect(calculateItemSubtotal(nifty120, 3, "Particulier", noRules, MON)).toBe(335);
   });
 
-  it("4 days has no flat rate → pricePerDay × 4", () => {
-    expect(calculateItemSubtotal(nifty120, 4, "Particulier", noRules, MON)).toBe(4 * 95);
+  it("4 days uses weeklyPrice when available", () => {
+    expect(calculateItemSubtotal(nifty120, 4, "Particulier", noRules, MON)).toBe(335);
   });
 
   it("5 days uses weeklyPrice", () => {

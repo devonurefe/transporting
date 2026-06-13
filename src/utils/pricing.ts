@@ -71,12 +71,18 @@ export function evaluateDiscountPercent(machine: Machine, days: number, profile:
 export function calculateItemSubtotal(machine: Machine, days: number, profile: string, rules: CampaignRule[], startDate?: string | Date): number {
   // 1-day actie flat rate
   if (days === 1 && machine.oneDayPrice) return machine.oneDayPrice;
-  // Short rentals (2–3 days): real weekend (Sat+Sun / Fri+Sat+Sun) gets weekendPrice;
-  // a 2-day weekday rental gets twoDayPrice; otherwise fall through to the day rate.
-  if (days === 2 || days === 3) {
+
+  // 2-day: weekend (Sat+Sun) → weekendPrice; weekday → twoDayPrice
+  if (days === 2) {
     if (isStrictWeekend(startDate, days) && machine.weekendPrice) return machine.weekendPrice;
-    if (days === 2 && machine.twoDayPrice) return machine.twoDayPrice;
+    if (machine.twoDayPrice) return machine.twoDayPrice;
   }
+
+  // 3-day weekend (Fri+Sat+Sun) gets weekendPrice; otherwise weeklyPrice applies from 3 days up
+  if (days === 3 && isStrictWeekend(startDate, days) && machine.weekendPrice) return machine.weekendPrice;
+
+  // 3 or 4 days: if weeklyPrice is set, charge the flat weekly rate (same as 5 days)
+  if ((days === 3 || days === 4) && machine.weeklyPrice) return machine.weeklyPrice;
 
   // Weekly flat rate: 5–27 days
   if (days >= 5 && days < 28 && machine.weeklyPrice) {

@@ -452,7 +452,7 @@ export default function CatalogSection({
                             )}
                             {machine.weeklyPrice && (
                               <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-md">
-                                week <span className="font-extrabold">€{formatPrice(vp(machine.weeklyPrice))}</span>
+                                3–5d <span className="font-extrabold">€{formatPrice(vp(machine.weeklyPrice))}</span>
                               </span>
                             )}
                             {machine.monthlyPrice && (
@@ -1083,7 +1083,7 @@ export default function CatalogSection({
                           )}
                           {selectedDetailMachine.weeklyPrice && (() => { const d = computeDiscounts(selectedDetailMachine); return (
                             <div className="flex items-center px-3 py-1.5 bg-emerald-50 border-b border-emerald-100">
-                              <span className="text-emerald-700 font-semibold flex-1">Werkweek (5 dagen)</span>
+                              <span className="text-emerald-700 font-semibold flex-1">3–5 dagen (werkweek)</span>
                               {d.weekly > 0 && <span className="text-[9px] font-bold text-emerald-600 bg-emerald-100 px-1.5 py-0.5 rounded-full mr-2">−{d.weekly}%</span>}
                               <span className="font-mono font-extrabold text-emerald-700">€{formatPrice(vp(selectedDetailMachine.weeklyPrice))}</span>
                             </div>

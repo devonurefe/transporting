@@ -15,6 +15,7 @@ import {
   ArrowUpFromLine,
   Leaf,
   Columns2,
+  Zap,
   type LucideProps
 } from "lucide-react";
 import { motion } from "motion/react";
@@ -185,6 +186,52 @@ export default function HomeSection({
         </div>
       </div>
 
+      {/* ── CAMPAIGN TICKER STRIP ── */}
+      {(() => {
+        const seen = new Set<string>();
+        const campaignMachines = machines.filter(m =>
+          (m.oneDayPrice && m.oneDayPrice < m.pricePerDay) || m.campaignText || m.campaignDiscountPercent
+        ).filter(m => {
+          const baseName = m.name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "").trim();
+          if (seen.has(baseName)) return false;
+          seen.add(baseName);
+          return true;
+        });
+
+        if (campaignMachines.length === 0) return null;
+
+        const doubled = [...campaignMachines, ...campaignMachines];
+
+        return (
+          <div className="bg-amber-50 border-y border-amber-100 py-2 overflow-hidden">
+            <motion.div
+              className="gap-4 whitespace-nowrap flex"
+              animate={{ x: ["0%", "-50%"] }}
+              transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
+            >
+              {doubled.map((m, i) => {
+                const baseName = m.name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "").trim();
+                return (
+                  <span
+                    key={`${m.id}-${i}`}
+                    className="bg-white border border-amber-200 rounded-full px-3 py-1 text-[11px] font-bold text-amber-800 shrink-0 inline-flex items-center gap-1.5 shadow-sm"
+                  >
+                    <Zap className="h-3 w-3 text-amber-500" />
+                    {baseName}
+                    {m.oneDayPrice && m.oneDayPrice < m.pricePerDay && (
+                      <span className="text-amber-500">1 dag €{withVat(m.oneDayPrice, vatDisplay) % 1 === 0 ? Math.round(withVat(m.oneDayPrice, vatDisplay)) : withVat(m.oneDayPrice, vatDisplay).toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    )}
+                    {m.campaignText && (
+                      <span className="text-amber-500">{m.campaignText}</span>
+                    )}
+                  </span>
+                );
+              })}
+            </motion.div>
+          </div>
+        );
+      })()}
+
       {/* ── CATEGORY CARDS ── */}
       <div className="bg-white px-4 sm:px-6 pt-6 pb-10">
         <div className="max-w-5xl mx-auto flex justify-end mb-3">
@@ -228,12 +275,12 @@ export default function HomeSection({
                     {cat.listLabel || cat.label}
                   </p>
                   <div className="space-y-1.5">
-                    <div>
-                      <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-0.5">Hoogte</p>
+                    <div className="flex items-baseline gap-1.5">
+                      <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 w-10 shrink-0">Hoogte</p>
                       <p className="text-sm font-bold text-slate-700">{cat.heights}</p>
                     </div>
-                    <div>
-                      <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-0.5">All-in</p>
+                    <div className="flex items-baseline gap-1.5">
+                      <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 w-10 shrink-0">All-in</p>
                       <p className="text-sm font-extrabold text-emerald-600">
                         {livePriceByCategory[cat.id] !== undefined
                           ? `v.a. €${(() => { const v = withVat(livePriceByCategory[cat.id], vatDisplay); return v % 1 === 0 ? Math.round(v).toLocaleString("nl-NL") : v.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); })()}/dag`

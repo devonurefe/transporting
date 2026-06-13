@@ -16,8 +16,85 @@ interface FooterProps {
 
 export default function Footer({ siteName, setActiveTab: _setActiveTab, setShowContactModal }: FooterProps) {
   const t = useLanguageStore((state) => state.t);
+  const REVIEWS = [
+    {
+      name: "Pieter van den Berg",
+      date: "2 maanden geleden",
+      text: "Super service! De Nifty 120 was binnen 5 minuten opgesteld, perfect voor mijn dakgoot klus. Fijne communicatie via WhatsApp en eerlijk advies. Aanrader!",
+    },
+    {
+      name: "Erik Janssen",
+      date: "3 maanden geleden",
+      text: "Machine was goed onderhouden en op tijd geleverd. Prima prijs-kwaliteitverhouding. Inmiddels voor het tweede project bij MB Hoogwerkers gehuurd.",
+    },
+    {
+      name: "Sandra Bakker",
+      date: "1 maand geleden",
+      text: "De rupshoogwerker paste precies door ons 80 cm tuinpoortje. Uitstekend advies vooraf over welke machine het beste paste. Zeker een aanrader!",
+    },
+    {
+      name: "J. de Vries Schildersbedrijf",
+      date: "5 maanden geleden",
+      text: "Als aannemer huur ik regelmatig bij MB Hoogwerkers. Altijd betrouwbaar materiaal, eerlijk advies en scherpe tarieven. Echt een topper in de regio.",
+    },
+    {
+      name: "Thomas Willems",
+      date: "6 weken geleden",
+      text: "Ladderlift was perfect voor onze verhuizing naar de 4e verdieping. Vriendelijke en snelle service. Zeker voor herhaling vatbaar!",
+    },
+  ];
+
   return (
     <footer className="bg-slate-950 border-t border-slate-800 pb-20 md:pb-0">
+
+      {/* ── GOOGLE REVIEWS ── */}
+      <div className="bg-slate-950 border-b border-slate-800">
+        <div className="py-10 sm:py-12 px-5 sm:px-8 lg:px-10 mx-auto max-w-7xl">
+
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-6">
+            <div className="flex items-center gap-3">
+              <span className="h-9 w-9 rounded-full bg-white flex items-center justify-center shrink-0">
+                <span className="text-base font-black" style={{ background: "linear-gradient(135deg, #4285F4 25%, #EA4335 50%, #FBBC05 75%, #34A853 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>G</span>
+              </span>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-white font-bold text-base leading-none">4.9</span>
+                  <span className="text-amber-400 text-sm leading-none">★★★★★</span>
+                </div>
+                <p className="text-[11px] text-slate-400 mt-0.5">Beoordeeld door klanten op Google</p>
+              </div>
+            </div>
+            <a
+              href="https://www.google.com/maps/place/MB+Hoogwerkers+bv/@52.1398936,4.5166788,18z"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[11px] text-slate-400 hover:text-white transition-colors no-underline sm:ml-auto"
+            >
+              Bekijk alle reviews op Google →
+            </a>
+          </div>
+
+          {/* Review cards */}
+          <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none">
+            {REVIEWS.map((r) => (
+              <div
+                key={r.name}
+                className="bg-slate-900 border border-slate-700 rounded-2xl p-4 min-w-[260px] sm:min-w-0 flex-shrink-0 sm:flex-shrink space-y-2"
+              >
+                <div className="text-amber-400 text-sm leading-none">★★★★★</div>
+                <p className="text-sm text-slate-300 leading-relaxed line-clamp-3">{r.text}</p>
+                <div className="flex items-center justify-between pt-1">
+                  <span className="text-xs font-bold text-white">{r.name}</span>
+                  <span className="text-[10px] text-slate-500">{r.date}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+        </div>
+      </div>
+
       <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-10 py-14 sm:py-16">
 
         {/* Top row — 2 columns, left aligned */}

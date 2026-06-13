@@ -418,19 +418,17 @@ export default function CatalogSection({
                         </div>
 
                         {/* Tarieven — single button replacing pills */}
-                        {(machine.oneDayPrice || machine.weekendPrice || machine.twoDayPrice || machine.weeklyPrice || machine.monthlyPrice) && (
-                          <button
-                            type="button"
-                            onClick={(e) => { e.stopPropagation(); setPricingPreviewMachine(machine); }}
-                            className="w-full flex items-center justify-between px-3 py-2 rounded-xl border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 hover:border-emerald-300 text-emerald-700 text-[11px] font-semibold transition-all cursor-pointer group"
-                          >
-                            <span className="flex items-center gap-1.5">
-                              <Zap className="h-3 w-3 text-emerald-500 shrink-0" />
-                              Alle tarieven &amp; kortingen
-                            </span>
-                            <span className="text-emerald-500 group-hover:text-emerald-700 transition-colors text-[10px] font-mono">→</span>
-                          </button>
-                        )}
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); setPricingPreviewMachine(machine); }}
+                          className="w-full flex items-center justify-between px-3 py-2 rounded-xl border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 hover:border-emerald-300 text-emerald-700 text-[11px] font-semibold transition-all cursor-pointer group"
+                        >
+                          <span className="flex items-center gap-1.5">
+                            <Zap className="h-3 w-3 text-emerald-500 shrink-0" />
+                            Alle tarieven &amp; kortingen
+                          </span>
+                          <span className="text-emerald-500 group-hover:text-emerald-700 transition-colors text-[10px] font-mono">→</span>
+                        </button>
 
                         {/* Spec + SuitableFor — single row */}
                         <div className="flex items-center gap-2 flex-wrap text-[10px] font-mono text-slate-600 border-t border-slate-100 pt-2.5">
@@ -681,82 +679,81 @@ export default function CatalogSection({
                       )}
                     </div>
 
-                    {/* B — Prijs & Boeken */}
-                    <div className="bg-gradient-to-br from-indigo-50 to-slate-50 border border-indigo-100 rounded-2xl p-4 space-y-3">
-                      <div className="flex items-start justify-between">
+                    {/* B — Tarieven (compact tier table) */}
+                    <div className="border border-slate-200 rounded-2xl overflow-hidden">
+                      {/* Header: dagtarief + BTW toggle */}
+                      <div className="px-4 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between gap-2">
                         <div>
-                          <p className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">Dagtarief</p>
-                          <p className="text-3xl font-mono font-extrabold text-slate-900 leading-none">
-                            €{formatPrice(vp(selectedDetailMachine.pricePerDay))}
-                          </p>
-                          <p className="text-[10px] text-slate-400 font-mono mt-0.5">{vatDisplay === "incl" ? "incl. BTW" : "excl. BTW"} per dag</p>
-                          {selectedDetailMachine.oneDayPrice && selectedDetailMachine.oneDayPrice < selectedDetailMachine.pricePerDay && (
-                            <p className="text-[10px] font-bold text-amber-600 mt-1">
-                              1 dag actie: €{formatPrice(vp(selectedDetailMachine.oneDayPrice))}
-                            </p>
-                          )}
+                          <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">Dagtarief</span>
+                          <div className="flex items-baseline gap-1.5 mt-0.5">
+                            <span className="text-xl font-display font-black text-slate-900">€{formatPrice(vp(selectedDetailMachine.pricePerDay))}</span>
+                            <span className="text-[10px] text-slate-400">{vatLabel} p/dag</span>
+                          </div>
                         </div>
                         <VatToggle size="xs" />
                       </div>
-                      {(() => { const d = computeDiscounts(selectedDetailMachine); return (d.weekly > 0 || d.monthly > 0) ? (
-                        <div className="flex gap-2 flex-wrap">
-                          {d.weekly > 0 && (
-                            <span className="text-xs font-bold text-emerald-700 bg-emerald-100 border border-emerald-200 px-2.5 py-1 rounded-full">
-                              werkweek −{d.weekly}%
+                      {/* Tier rows */}
+                      <div className="divide-y divide-slate-100">
+                        {selectedDetailMachine.oneDayPrice && selectedDetailMachine.oneDayPrice < selectedDetailMachine.pricePerDay && (
+                          <div className="flex items-center px-4 py-2.5 bg-amber-50">
+                            <div className="flex-1">
+                              <p className="text-xs font-bold text-amber-700">1 dag actie</p>
+                              <p className="text-[10px] text-amber-500">Ma – Vr</p>
+                            </div>
+                            <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 mr-2">Actie</span>
+                            <span className="font-mono font-extrabold text-sm text-amber-700">€{formatPrice(vp(selectedDetailMachine.oneDayPrice))}</span>
+                          </div>
+                        )}
+                        {(() => {
+                          const twoDay = selectedDetailMachine.twoDayPrice ?? (selectedDetailMachine.pricePerDay * 2);
+                          return (
+                            <div className="flex items-center px-4 py-2.5 bg-white">
+                              <div className="flex-1">
+                                <p className="text-xs font-bold text-slate-800">2 dagen (doordeweeks)</p>
+                                <p className="text-[10px] text-slate-400">Ma – Do</p>
+                              </div>
+                              <span className="font-mono font-extrabold text-sm text-slate-900">€{formatPrice(vp(twoDay))}</span>
+                            </div>
+                          );
+                        })()}
+                        {selectedDetailMachine.weekendPrice && (
+                          <div className="flex items-center px-4 py-2.5 bg-violet-50">
+                            <div className="flex-1">
+                              <p className="text-xs font-bold text-violet-700">Weekend</p>
+                              <p className="text-[10px] text-violet-400">Za – Zo  /  Vr – Zo</p>
+                            </div>
+                            <span className="font-mono font-extrabold text-sm text-violet-700">€{formatPrice(vp(selectedDetailMachine.weekendPrice))}</span>
+                          </div>
+                        )}
+                        {selectedDetailMachine.weeklyPrice && (() => { const d = computeDiscounts(selectedDetailMachine); return (
+                          <div className="flex items-center px-4 py-2.5 bg-emerald-50">
+                            <div className="flex-1">
+                              <p className="text-xs font-bold text-emerald-700">3–5 dagen (werkweek)</p>
+                              <p className="text-[10px] text-emerald-400">Ma – Vr</p>
+                            </div>
+                            {d.weekly > 0 && <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 mr-2">−{d.weekly}%</span>}
+                            <span className="font-mono font-extrabold text-sm text-emerald-700">€{formatPrice(vp(selectedDetailMachine.weeklyPrice))}</span>
+                          </div>
+                        ); })()}
+                        {selectedDetailMachine.monthlyPrice && (() => { const d = computeDiscounts(selectedDetailMachine); return (
+                          <div className="flex items-center px-4 py-2.5 bg-teal-50">
+                            <div className="flex-1">
+                              <p className="text-xs font-bold text-teal-700">4 weken (28 dagen)</p>
+                              <p className="text-[10px] text-teal-400">Langlopend</p>
+                            </div>
+                            {d.monthly > 0 && <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-teal-100 text-teal-700 mr-2">−{d.monthly}%</span>}
+                            <span className="font-mono font-extrabold text-sm text-teal-700">€{formatPrice(vp(selectedDetailMachine.monthlyPrice))}</span>
+                          </div>
+                        ); })()}
+                        {selectedDetailMachine.campaignText && (
+                          <div className="flex items-center gap-1.5 px-4 py-2.5 bg-amber-50">
+                            <Zap className="h-3 w-3 text-amber-500 shrink-0" />
+                            <span className="text-[11px] font-bold text-amber-700">
+                              {selectedDetailMachine.campaignText}{selectedDetailMachine.campaignDiscountPercent ? ` −${selectedDetailMachine.campaignDiscountPercent}%` : ""}
                             </span>
-                          )}
-                          {d.monthly > 0 && (
-                            <span className="text-xs font-bold text-teal-700 bg-teal-100 border border-teal-200 px-2.5 py-1 rounded-full">
-                              4 weken −{d.monthly}%
-                            </span>
-                          )}
-                        </div>
-                      ) : null; })()}
-                      {/* Tarieventabel — alle ingestelde flattarieven */}
-                      {(selectedDetailMachine.oneDayPrice || selectedDetailMachine.twoDayPrice || selectedDetailMachine.weekendPrice || selectedDetailMachine.weeklyPrice || selectedDetailMachine.monthlyPrice) && (
-                        <div className="border border-slate-200 rounded-xl overflow-hidden text-[10px]">
-                          {selectedDetailMachine.oneDayPrice && selectedDetailMachine.oneDayPrice < selectedDetailMachine.pricePerDay && (
-                            <div className="flex items-center px-3 py-1.5 bg-amber-50 border-b border-amber-100">
-                              <span className="text-amber-700 font-bold flex-1">1 dag actie</span>
-                              <span className="font-mono font-extrabold text-amber-700">€{formatPrice(vp(selectedDetailMachine.oneDayPrice))}</span>
-                            </div>
-                          )}
-                          {selectedDetailMachine.twoDayPrice && (
-                            <div className="flex items-center px-3 py-1.5 bg-white border-b border-slate-100">
-                              <span className="text-slate-600 flex-1">2 dagen (doordeweeks)</span>
-                              <span className="font-mono font-bold text-slate-800">€{formatPrice(vp(selectedDetailMachine.twoDayPrice))}</span>
-                            </div>
-                          )}
-                          {selectedDetailMachine.weekendPrice && (
-                            <div className="flex items-center px-3 py-1.5 bg-white border-b border-slate-100">
-                              <span className="text-slate-600 flex-1">Weekend (2–3 dagen)</span>
-                              <span className="font-mono font-bold text-slate-800">€{formatPrice(vp(selectedDetailMachine.weekendPrice))}</span>
-                            </div>
-                          )}
-                          {selectedDetailMachine.weeklyPrice && (() => { const d = computeDiscounts(selectedDetailMachine); return (
-                            <div className="flex items-center px-3 py-1.5 bg-emerald-50 border-b border-emerald-100">
-                              <span className="text-emerald-700 font-semibold flex-1">3–5 dagen (werkweek)</span>
-                              {d.weekly > 0 && <span className="text-[9px] font-bold text-emerald-600 bg-emerald-100 px-1.5 py-0.5 rounded-full mr-2">−{d.weekly}%</span>}
-                              <span className="font-mono font-extrabold text-emerald-700">€{formatPrice(vp(selectedDetailMachine.weeklyPrice))}</span>
-                            </div>
-                          ); })()}
-                          {selectedDetailMachine.monthlyPrice && (() => { const d = computeDiscounts(selectedDetailMachine); return (
-                            <div className="flex items-center px-3 py-1.5 bg-teal-50">
-                              <span className="text-teal-700 font-semibold flex-1">4 weken (28 dagen)</span>
-                              {d.monthly > 0 && <span className="text-[9px] font-bold text-teal-600 bg-teal-100 px-1.5 py-0.5 rounded-full mr-2">−{d.monthly}%</span>}
-                              <span className="font-mono font-extrabold text-teal-700">€{formatPrice(vp(selectedDetailMachine.monthlyPrice))}</span>
-                            </div>
-                          ); })()}
-                        </div>
-                      )}
-
-                      {selectedDetailMachine.campaignText && (
-                        <div className="flex items-center gap-1.5 text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-xl w-fit">
-                          <Zap className="h-3.5 w-3.5 text-amber-500 shrink-0" />
-                          {selectedDetailMachine.campaignText}
-                          {selectedDetailMachine.campaignDiscountPercent ? ` −${selectedDetailMachine.campaignDiscountPercent}%` : ""}
-                        </div>
-                      )}
+                          </div>
+                        )}
+                      </div>
                     </div>
 
                     {/* C — Omschrijving */}
@@ -940,9 +937,8 @@ export default function CatalogSection({
           if (m.oneDayPrice && m.oneDayPrice < m.pricePerDay) {
             rows.push({ period: "1 dag actie", when: "Ma – Vr", price: m.oneDayPrice, highlight: "fire" });
           }
-          if (m.twoDayPrice) {
-            rows.push({ period: "2 dagen (doordeweeks)", when: "Ma – Do", price: m.twoDayPrice });
-          }
+          // Always show 2-day: use twoDayPrice if set, otherwise pricePerDay × 2
+          rows.push({ period: "2 dagen (doordeweeks)", when: "Ma – Do", price: m.twoDayPrice ?? (m.pricePerDay * 2) });
           if (m.weekendPrice) {
             rows.push({ period: "Weekend", when: "Za – Zo  /  Vr – Zo", price: m.weekendPrice, highlight: "violet" });
           }
@@ -969,11 +965,11 @@ export default function CatalogSection({
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 40, scale: 0.97 }}
                 transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-                className="relative bg-white w-full sm:max-w-sm rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden"
+                className="relative bg-white w-full sm:max-w-sm rounded-t-3xl sm:rounded-2xl shadow-2xl flex flex-col max-h-[90dvh] sm:max-h-[85vh]"
                 onClick={(e) => e.stopPropagation()}
               >
                 {/* Header */}
-                <div className="px-5 pt-5 pb-3 border-b border-slate-100 flex items-start justify-between gap-3">
+                <div className="px-5 pt-5 pb-3 border-b border-slate-100 flex items-start justify-between gap-3 shrink-0">
                   <div>
                     <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-500 mb-0.5">{m.categoryLabel}</p>
                     <h3 className="font-display font-black text-slate-900 text-base leading-snug">{m.name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "")}</h3>
@@ -990,8 +986,8 @@ export default function CatalogSection({
                   </button>
                 </div>
 
-                {/* Tier table */}
-                <div className="divide-y divide-slate-100">
+                {/* Tier table — scrollable on mobile */}
+                <div className="divide-y divide-slate-100 overflow-y-auto flex-1">
                   {rows.map((row, i) => (
                     <div
                       key={i}
@@ -1035,7 +1031,7 @@ export default function CatalogSection({
                 </div>
 
                 {/* BTW toggle + CTA */}
-                <div className="px-5 pb-5 pt-4 space-y-3 bg-slate-50 border-t border-slate-100">
+                <div className="px-5 pt-4 space-y-3 bg-slate-50 border-t border-slate-100 shrink-0" style={{ paddingBottom: "max(1.25rem, env(safe-area-inset-bottom))" }}>
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] text-slate-500">Weergave</span>
                     <VatToggle size="xs" />

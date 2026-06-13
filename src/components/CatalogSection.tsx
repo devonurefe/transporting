@@ -136,6 +136,7 @@ export default function CatalogSection({
   const [showCompareModal, setShowCompareModal] = useState<boolean>(false);
   const [selectedDetailMachine, setSelectedDetailMachine] = useState<Machine | null>(null);
   const [activeDetailImageIndex, setActiveDetailImageIndex] = useState<number>(0);
+  const [pricingPreviewMachine, setPricingPreviewMachine] = useState<Machine | null>(null);
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
@@ -442,25 +443,19 @@ export default function CatalogSection({
                           </div>
                         </div>
 
-                        {/* Tarieven — colorful rate pills */}
-                        {(machine.weekendPrice || machine.weeklyPrice || machine.monthlyPrice) && (
-                          <div className="flex flex-wrap items-center gap-1.5">
-                            {machine.weekendPrice && (
-                              <span className="text-[10px] font-semibold text-violet-700 bg-violet-50 border border-violet-100 px-2 py-0.5 rounded-md">
-                                wknd <span className="font-extrabold">€{formatPrice(vp(machine.weekendPrice))}</span>
-                              </span>
-                            )}
-                            {machine.weeklyPrice && (
-                              <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-md">
-                                3–5d <span className="font-extrabold">€{formatPrice(vp(machine.weeklyPrice))}</span>
-                              </span>
-                            )}
-                            {machine.monthlyPrice && (
-                              <span className="text-[10px] font-semibold text-teal-700 bg-teal-50 border border-teal-100 px-2 py-0.5 rounded-md">
-                                maand <span className="font-extrabold">€{formatPrice(vp(machine.monthlyPrice))}</span>
-                              </span>
-                            )}
-                          </div>
+                        {/* Tarieven — single button replacing pills */}
+                        {(machine.oneDayPrice || machine.weekendPrice || machine.twoDayPrice || machine.weeklyPrice || machine.monthlyPrice) && (
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); setPricingPreviewMachine(machine); }}
+                            className="w-full flex items-center justify-between px-3 py-2 rounded-xl border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 hover:border-emerald-300 text-emerald-700 text-[11px] font-semibold transition-all cursor-pointer group"
+                          >
+                            <span className="flex items-center gap-1.5">
+                              <Zap className="h-3 w-3 text-emerald-500 shrink-0" />
+                              Alle tarieven &amp; kortingen
+                            </span>
+                            <span className="text-emerald-500 group-hover:text-emerald-700 transition-colors text-[10px] font-mono">→</span>
+                          </button>
                         )}
 
                         {/* Spec + SuitableFor — single row */}
@@ -1276,6 +1271,133 @@ export default function CatalogSection({
           </div>
         )}
       </AnimatePresence>
+
+      {/* ── PRICING PREVIEW MODAL ─────────────────────────────────── */}
+      <AnimatePresence>
+        {pricingPreviewMachine && (() => {
+          const m = pricingPreviewMachine;
+          const d = computeDiscounts(m);
+          const vp = (n: number) => withVat(n, vatDisplay);
+          const rows: { period: string; when: string; price: number; badge?: string; highlight?: "fire" | "green" | "teal" | "violet" }[] = [];
+
+          if (m.oneDayPrice && m.oneDayPrice < m.pricePerDay) {
+            rows.push({ period: "1 dag actie", when: "Ma – Vr", price: m.oneDayPrice, highlight: "fire" });
+          }
+          if (m.twoDayPrice) {
+            rows.push({ period: "2 dagen (doordeweeks)", when: "Ma – Do", price: m.twoDayPrice });
+          }
+          if (m.weekendPrice) {
+            rows.push({ period: "Weekend", when: "Za – Zo  /  Vr – Zo", price: m.weekendPrice, highlight: "violet" });
+          }
+          if (m.weeklyPrice) {
+            rows.push({ period: "3 – 5 dagen (werkweek)", when: "Ma – Vr", price: m.weeklyPrice, badge: d.weekly > 0 ? `−${d.weekly}%` : undefined, highlight: "green" });
+          }
+          if (m.monthlyPrice) {
+            rows.push({ period: "4 weken (28 dagen)", when: "Langlopend", price: m.monthlyPrice, badge: d.monthly > 0 ? `−${d.monthly}%` : undefined, highlight: "teal" });
+          }
+
+          return (
+            <motion.div
+              key="pricing-modal"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.18 }}
+              className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+              onClick={() => setPricingPreviewMachine(null)}
+            >
+              <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+              <motion.div
+                initial={{ opacity: 0, y: 40, scale: 0.97 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 40, scale: 0.97 }}
+                transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+                className="relative bg-white w-full sm:max-w-sm rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Header */}
+                <div className="px-5 pt-5 pb-3 border-b border-slate-100 flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-500 mb-0.5">{m.categoryLabel}</p>
+                    <h3 className="font-display font-black text-slate-900 text-base leading-snug">{m.name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "")}</h3>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      Dagtarief <span className="font-bold text-slate-800">€{formatPrice(vp(m.pricePerDay))}</span> <span className="text-slate-400">{vatLabel}</span>
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setPricingPreviewMachine(null)}
+                    className="shrink-0 h-8 w-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer border-none bg-transparent"
+                  >
+                    <X className="h-4.5 w-4.5" />
+                  </button>
+                </div>
+
+                {/* Tier table */}
+                <div className="divide-y divide-slate-100">
+                  {rows.map((row, i) => (
+                    <div
+                      key={i}
+                      className={`flex items-center gap-3 px-5 py-3 ${
+                        row.highlight === "fire" ? "bg-amber-50" :
+                        row.highlight === "green" ? "bg-emerald-50" :
+                        row.highlight === "teal" ? "bg-teal-50" :
+                        row.highlight === "violet" ? "bg-violet-50" : "bg-white"
+                      }`}
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-xs font-bold leading-tight ${
+                          row.highlight === "fire" ? "text-amber-700" :
+                          row.highlight === "green" ? "text-emerald-700" :
+                          row.highlight === "teal" ? "text-teal-700" :
+                          row.highlight === "violet" ? "text-violet-700" : "text-slate-800"
+                        }`}>{row.period}</p>
+                        <p className="text-[10px] text-slate-400 font-medium mt-0.5">{row.when}</p>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        {row.badge && (
+                          <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${
+                            row.highlight === "green" ? "bg-emerald-100 text-emerald-700" : "bg-teal-100 text-teal-700"
+                          }`}>{row.badge}</span>
+                        )}
+                        {row.highlight === "fire" && (
+                          <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700">Actie</span>
+                        )}
+                        <span className={`font-mono font-extrabold text-sm ${
+                          row.highlight === "fire" ? "text-amber-700" :
+                          row.highlight === "green" ? "text-emerald-700" :
+                          row.highlight === "teal" ? "text-teal-700" :
+                          row.highlight === "violet" ? "text-violet-700" : "text-slate-900"
+                        }`}>€{formatPrice(vp(row.price))}</span>
+                      </div>
+                    </div>
+                  ))}
+                  {rows.length === 0 && (
+                    <div className="px-5 py-6 text-center text-xs text-slate-400">Alleen dagprijs beschikbaar</div>
+                  )}
+                </div>
+
+                {/* BTW toggle + CTA */}
+                <div className="px-5 pb-5 pt-4 space-y-3 bg-slate-50 border-t border-slate-100">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-slate-500">Weergave</span>
+                    <VatToggle size="xs" />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => { setPricingPreviewMachine(null); onSelectMachineForBooking(m); }}
+                    className="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm transition-all cursor-pointer flex items-center justify-center gap-2 shadow-md"
+                  >
+                    <ShoppingBag className="h-4 w-4" />
+                    Huur Nu
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          );
+        })()}
+      </AnimatePresence>
+
     </div>
   );
 }

@@ -356,6 +356,7 @@ export default function AdminPlanning({ adminLanguage }: AdminPlanningProps) {
                       type="button"
                       title={`${o.machineName} → ${o.customerName}`}
                       onClick={() => setSelectedOrder(o)}
+                      onTouchEnd={(e) => { e.preventDefault(); setSelectedOrder(o); }}
                       className="bg-indigo-100 text-indigo-800 rounded-md px-1.5 py-1 text-[10px] font-semibold truncate flex items-center gap-1 hover:bg-indigo-200 transition-colors cursor-pointer border-none w-full text-left min-h-[32px]"
                       style={{ touchAction: "manipulation" }}
                     >
@@ -370,6 +371,7 @@ export default function AdminPlanning({ adminLanguage }: AdminPlanningProps) {
                       type="button"
                       title={`${o.machineName} ← ${o.customerName}`}
                       onClick={() => setSelectedOrder(o)}
+                      onTouchEnd={(e) => { e.preventDefault(); setSelectedOrder(o); }}
                       className="bg-teal-100 text-teal-800 rounded-md px-1.5 py-1 text-[10px] font-semibold truncate flex items-center gap-1 hover:bg-teal-200 transition-colors cursor-pointer border-none w-full text-left min-h-[32px]"
                       style={{ touchAction: "manipulation" }}
                     >

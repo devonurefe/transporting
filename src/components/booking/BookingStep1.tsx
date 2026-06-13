@@ -138,23 +138,14 @@ export default function BookingStep1({
                       </button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      type="button"
-                      onClick={() => setActiveTab("catalog")}
-                      className="text-xs text-slate-400 hover:text-indigo-600 transition-colors border-none bg-transparent cursor-pointer font-medium"
-                    >
-                      Ander model
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => onRemoveCartItem(item.id)}
-                      className="p-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 transition-colors border-none cursor-pointer"
-                      title="Verwijderen"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => onRemoveCartItem(item.id)}
+                    className="p-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 transition-colors border-none cursor-pointer"
+                    title="Verwijderen"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
                 </div>
 
                 <div className="pt-2 border-t border-slate-200">

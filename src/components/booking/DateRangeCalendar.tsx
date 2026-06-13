@@ -211,7 +211,7 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
 
       <AnimatePresence>
         {isOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -228,7 +228,7 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96, y: 12 }}
               transition={{ type: "spring", stiffness: 360, damping: 28 }}
-              className="relative z-50 w-full max-w-sm bg-white rounded-3xl shadow-2xl border border-slate-200 flex flex-col max-h-[90dvh] overflow-hidden"
+              className="relative z-[60] w-full max-w-sm bg-white rounded-3xl shadow-2xl border border-slate-200 flex flex-col max-h-[90dvh] overflow-hidden"
             >
               {/* Header */}
               <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">

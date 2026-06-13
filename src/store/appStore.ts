@@ -502,6 +502,8 @@ export const useAppStore = create<AppState>((set, get) => ({
       method: "POST",
       headers: { "Content-Type": "application/json", ...getAuthHeaders() },
       body: JSON.stringify(rules)
+    }).then((res) => {
+      if (res.ok) get().fetchCampaignRules();
     }).catch(() => console.warn("Failed to save campaign rules to DB, localStorage fallback active."));
   }
 }));

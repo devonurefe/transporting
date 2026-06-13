@@ -46,6 +46,7 @@ function formatShort(key: string): string {
 export default function DateRangeCalendar({ machine, startDate, endDate, profile, onConfirm, todayStr }: DateRangeCalendarProps) {
   const t = useLanguageStore((s) => s.t);
   const blockedDates = useAppStore((s) => s.blockedDates);
+  const fetchBlockedDates = useAppStore((s) => s.fetchBlockedDates);
   const campaignRules = useAppStore((s) => s.campaignRules);
   const vatDisplay = useAppStore((s) => s.vatDisplay);
 
@@ -79,9 +80,10 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
     triggerRef.current?.focus();
   };
 
-  // Fetch this machine's occupancy on open (works for guests via public endpoint)
+  // Fetch fresh occupancy + blocked dates every time the calendar opens
   useEffect(() => {
     if (!isOpen) return;
+    fetchBlockedDates(); // ensure blockedDates in store are current
     let cancelled = false;
     setLoading(true);
     fetch(`/api/orders/availability?machineId=${encodeURIComponent(machine.id)}`)
@@ -90,7 +92,8 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
       .catch(() => { if (!cancelled) setOrders([]); })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
-  }, [isOpen, machine.id]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, machine.id]); // fetchBlockedDates is a stable Zustand action — omitting is safe
 
   // Escape closes; basic focus management + Tab trap within the dialog
   useEffect(() => {

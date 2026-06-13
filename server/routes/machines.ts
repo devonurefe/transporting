@@ -252,7 +252,8 @@ machinesRouter.put("/:id", requireAdmin as any, async (req: AuthenticatedRequest
         monthlyPrice: monthlyPrice !== undefined && monthlyPrice !== null && monthlyPrice !== "" ? Number(monthlyPrice) : null,
         packageContents: packageContents !== undefined ? packageContents : null,
         additionalImages: Array.isArray(additionalImages) ? additionalImages : [],
-        specs: specsUpdate
+        specs: specsUpdate,
+        isActive: req.body.isActive !== undefined ? Boolean(req.body.isActive) : undefined
       }
     });
 
@@ -264,6 +265,23 @@ machinesRouter.put("/:id", requireAdmin as any, async (req: AuthenticatedRequest
   } catch (error: any) {
     console.error("Error updating machine:", error);
     res.status(500).json({ error: "Machine bijwerken mislukt" });
+  }
+});
+
+// PATCH toggle machine active status (admin only, lightweight endpoint)
+machinesRouter.patch("/:id/toggle-active", requireAdmin as any, async (req: AuthenticatedRequest, res: Response) => {
+  const { id } = req.params;
+  try {
+    const machine = await prisma.machine.findUnique({ where: { id }, select: { isActive: true } });
+    if (!machine) return res.status(404).json({ error: "Machine niet gevonden" });
+    const updated = await prisma.machine.update({
+      where: { id },
+      data: { isActive: !machine.isActive }
+    });
+    res.json({ id: updated.id, isActive: updated.isActive });
+  } catch (error: any) {
+    console.error("Error toggling machine status:", error);
+    res.status(500).json({ error: "Status wijzigen mislukt" });
   }
 });
 

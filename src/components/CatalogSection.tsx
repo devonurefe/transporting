@@ -171,30 +171,33 @@ export default function CatalogSection({
   // Strip " (Unit N)" suffix to get base model name for grouping
   const getBaseName = (name: string) => name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "").trim();
 
-  // Count total physical units per base model name (from ALL machines, not filtered)
+  // Only show active machines everywhere in the catalog
+  const activeMachines = useMemo(() => machines.filter(m => m.isActive !== false), [machines]);
+
+  // Count total physical units per base model name (active only)
   const stockCountByBase = useMemo(() => {
     const counts: Record<string, number> = {};
-    machines.forEach(m => {
+    activeMachines.forEach(m => {
       const base = getBaseName(m.name);
       counts[base] = (counts[base] || 0) + 1;
     });
     return counts;
-  }, [machines]);
+  }, [activeMachines]);
 
   // Map base name → all unit IDs (used by BookingSection for auto-assignment)
   const unitIdsByBase = useMemo(() => {
     const map: Record<string, string[]> = {};
-    machines.forEach(m => {
+    activeMachines.forEach(m => {
       const base = getBaseName(m.name);
       if (!map[base]) map[base] = [];
       map[base].push(m.id);
     });
     return map;
-  }, [machines]);
+  }, [activeMachines]);
 
   // Filtered Machines — category + search only, deduplicated to show ONE card per model
   const filteredMachines = useMemo(() => {
-    const filtered = machines.filter((machine) => {
+    const filtered = activeMachines.filter((machine) => {
       const matchesCategory = selectedCategory === "all"
         ? machine.category !== "klussensets"
         : selectedCategory === "schaarlift-group"
@@ -226,7 +229,7 @@ export default function CatalogSection({
       if (a.height !== b.height) return a.height - b.height;
       return a.pricePerDay - b.pricePerDay;
     });
-  }, [machines, selectedCategory, searchQuery]);
+  }, [activeMachines, selectedCategory, searchQuery]);
 
   return (
     <div className="relative min-h-[calc(100vh-3.5rem)] py-6 sm:py-10 px-5 sm:px-6 lg:px-8">

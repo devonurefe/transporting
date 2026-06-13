@@ -94,26 +94,28 @@ export default function HomeSection({
 
   const SCHAARLIFT_VARIANTS = new Set(["schaarlift", "schaarlift-smal", "schaarlift-6m"]);
 
+  const activeMachines = React.useMemo(() => machines.filter(m => m.isActive !== false), [machines]);
+
   // Live minimum price per category (each schaarlift sub-type keeps its own key)
   const livePriceByCategory = React.useMemo(() => {
     const map: Record<string, number> = {};
-    machines.forEach(m => {
+    activeMachines.forEach(m => {
       const key = m.category;
       if (map[key] === undefined || m.pricePerDay < map[key]) map[key] = m.pricePerDay;
     });
     return map;
-  }, [machines]);
+  }, [activeMachines]);
 
   // First machine image per category for card thumbnails
   const imageByCategory = React.useMemo(() => {
     const map: Record<string, string> = {};
-    machines.forEach(m => {
+    activeMachines.forEach(m => {
       if (!m.imageUrl) return;
       const key = SCHAARLIFT_VARIANTS.has(m.category) ? "schaarlift" : m.category;
       if (!map[key]) map[key] = m.imageUrl;
     });
     return map;
-  }, [machines]);
+  }, [activeMachines]);
 
   const HOME_ORDER = ["schaarlift", "spin", "mastlift", "kamersteiger", "ladderlift", "ecolift", "aanhanger"];
 

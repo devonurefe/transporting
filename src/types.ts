@@ -30,6 +30,7 @@ export interface Machine {
   packageContents?: string; // Semicolon separated included items checklist
   additionalImages?: string[];
   specs?: { label: string; value: string }[];
+  isActive?: boolean;
 }
 
 export type DeliveryType = "self_pickup" | "delivery_by_us" | "trailer_rental";

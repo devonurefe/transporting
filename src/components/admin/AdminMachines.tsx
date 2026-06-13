@@ -41,6 +41,27 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Toggle machine active/inactive
+  const [togglingId, setTogglingId] = useState<string | null>(null);
+  const handleToggleActive = async (m: Machine) => {
+    setTogglingId(m.id);
+    const token = localStorage.getItem("hwh_admin_token");
+    try {
+      const res = await fetch(`/api/machines/${m.id}/toggle-active`, {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const { isActive } = await res.json();
+        useAppStore.setState((state) => ({
+          machines: state.machines.map(mc => mc.id === m.id ? { ...mc, isActive } : mc)
+        }));
+        onAddSystemLog("fleet", adminUser?.name ?? "Admin", `Machine ${m.name} ${isActive ? "geactiveerd" : "gedeactiveerd"}`);
+      }
+    } catch { /* ignore */ }
+    setTogglingId(null);
+  };
+
   const handleConfirmDelete = async () => {
     if (!deleteTarget || deleteConfirmText.trim() !== deleteTarget.name) return;
     setIsDeleting(true);
@@ -316,8 +337,9 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
             </thead>
             <tbody className="divide-y divide-slate-100">
               {machines.map((m) => {
+                const inactive = m.isActive === false;
                 return (
-                   <tr key={m.id} className="hover:bg-slate-50 transition-colors">
+                   <tr key={m.id} className={`hover:bg-slate-50 transition-colors ${inactive ? "opacity-50" : ""}`}>
                     <td className="py-3 font-bold text-slate-800 flex items-center space-x-2.5">
                       <div className="h-11 w-16 rounded-lg overflow-hidden shrink-0 border border-slate-200 bg-slate-100">
                         <img
@@ -345,6 +367,19 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                     <td className="py-3 font-mono text-teal-600 font-bold">€ {m.pricePerDay}</td>
                     <td className="py-3 text-right pr-4">
                       <div className="flex items-center justify-end space-x-1.5 ml-auto">
+                        <button
+                          onClick={() => handleToggleActive(m)}
+                          disabled={togglingId === m.id}
+                          title={inactive ? t("Activeer machine", "Activate", "Etkinleştir") : t("Deactiveer machine", "Deactivate", "Devre Dışı")}
+                          className={`font-bold text-xs px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer border-none shadow-sm ${
+                            inactive
+                              ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                              : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+                          } disabled:opacity-50`}
+                        >
+                          {togglingId === m.id ? "..." : inactive ? t("Activeer", "Activate", "Etkinleştir") : t("Actief", "Active", "Aktif")}
+                        </button>
+
                         <button
                           onClick={() => handleStartEdit(m)}
                           className="text-indigo-600 hover:text-indigo-800 font-bold text-xs bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer border-none shadow-sm flex items-center justify-center space-x-1"

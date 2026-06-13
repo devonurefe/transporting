@@ -328,6 +328,44 @@ async function applyDataMigrations() {
       await prisma.invoiceCounter.create({ data: { id: "daily-reminders-last", lastNumber: stamp } });
     }
 
+    // Restore missing fleet photos: only update machines whose imageUrl is empty
+    // (admin-set non-empty imageUrls are never touched)
+    const FLEET_RESTORE = "migration-fleet-photos-restore-2026-06";
+    const restoreDone = await prisma.invoiceCounter.findUnique({ where: { id: FLEET_RESTORE } });
+    if (!restoreDone) {
+      const knownImages: Record<string, string> = {
+        "nifty-120-1": "/images/machines/nifty-120-1.webp",
+        "nifty-120-2": "/images/machines/nifty-120-2.webp",
+        "nifty-120-3": "/images/machines/nifty-120-3.webp",
+        "nifty-170":   "/images/machines/nifty-170.webp",
+        "hinowa-15-70": "/images/machines/hinowa-15-70.webp",
+        "hinowa-17-75": "/images/machines/hinowa-17-75.webp",
+        "optimum-8-1": "/images/machines/optimum-8-1.webp",
+        "optimum-8-2": "/images/machines/optimum-8-2.webp",
+        "compact-8-1": "/images/machines/compact-8-1.webp",
+        "compact-8-2": "/images/machines/compact-8-2.webp",
+        "compact-10n-1": "/images/machines/compact-10n-1.webp",
+        "compact-10n-2": "/images/machines/compact-10n-2.webp",
+        "dingli-6m":   "/images/machines/dingli-6m.webp",
+        "altrex-rs44": "/images/machines/altrex-rs44.webp",
+        "star-10":     "/images/machines/star-10.webp",
+        "skyjack-sj16": "/images/machines/skyjack-sj16.webp",
+        "bravi-mini-hd": "/images/machines/bravi-mini-hd.webp",
+        "jlg-1230es":  "/images/machines/jlg-1230es.webp",
+        "ladderlift-18": "/images/machines/ladderlift-18.webp",
+        "ladderlift-21-1": "/images/machines/ladderlift-21-1.webp",
+        "ladderlift-21-2": "/images/machines/ladderlift-21-2.webp",
+        "ecolift":     "/images/machines/ecolift.webp",
+      };
+      let restored = 0;
+      for (const [id, url] of Object.entries(knownImages)) {
+        const r = await prisma.machine.updateMany({ where: { id, imageUrl: "" }, data: { imageUrl: url } });
+        restored += r.count;
+      }
+      await prisma.invoiceCounter.create({ data: { id: FLEET_RESTORE, lastNumber: restored } });
+      if (restored > 0) console.log(`[Migration] Restored ${restored} empty machine image URLs.`);
+    }
+
     // Loud warning if the admin account still uses the old seeded default password
     const seededAdmin = await prisma.admin.findUnique({ where: { email: "admin@huurgo.nl" } });
     if (seededAdmin) {

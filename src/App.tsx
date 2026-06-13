@@ -366,7 +366,9 @@ export default function App() {
   // Triggered when search is executed from landing hero
   const handleLandingPageSearch = (query: string, category: string) => {
     setSearchQuery(query);
-    setSelectedCategory(category || "all");
+    // "schaarlift" on homepage = all scissor lifts group in catalog
+    const mapped = category === "schaarlift" ? "schaarlift-group" : (category || "all");
+    setSelectedCategory(mapped);
     navigate("/catalog");
   };
 

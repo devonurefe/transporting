@@ -10,6 +10,7 @@ import { useAppStore } from "../../store/appStore";
 import { useAuthStore } from "../../store/authStore";
 import { resizeImage } from "../../utils/image";
 import { Machine } from "../../types";
+import { getSpecsForMachine } from "../../utils/machineSpecs";
 
 interface AdminMachinesProps {
   key?: string;
@@ -138,7 +139,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
     setEditCampaignDiscountAmount(m.campaignDiscountAmount ? String(m.campaignDiscountAmount) : "");
     setEditAdditionalImages(m.additionalImages || []);
     setEditPackageContents(m.packageContents || "");
-    setEditSpecs(Array.isArray((m as any).specs) ? (m as any).specs : []);
+    setEditSpecs(getSpecsForMachine(m.id, (m as any).specs));
   };
 
   const handleEditImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {

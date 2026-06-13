@@ -41,6 +41,9 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Loading state for edit button — gives immediate feedback before heavy form renders
+  const [pendingEditId, setPendingEditId] = useState<string | null>(null);
+
   // Toggle machine active/inactive
   const [togglingId, setTogglingId] = useState<string | null>(null);
   const handleToggleActive = async (m: Machine) => {
@@ -137,8 +140,11 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
   };
 
   const handleStartEdit = (m: Machine) => {
-    setEditingMachine(m);
-    setEditName(m.name);
+    setPendingEditId(m.id);
+    // Let React paint the button loading state before the heavy form render
+    requestAnimationFrame(() => {
+      setEditingMachine(m);
+      setEditName(m.name);
     setEditCategory(m.category);
     setEditHeight(String(m.height));
     setEditReach(String(m.reach || 0));
@@ -161,6 +167,8 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
     setEditAdditionalImages(m.additionalImages || []);
     setEditPackageContents(m.packageContents || "");
     setEditSpecs(getSpecsForMachine(m.id, (m as any).specs));
+    setPendingEditId(null);
+    });
   };
 
   const handleEditImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -382,10 +390,14 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
 
                         <button
                           onClick={() => handleStartEdit(m)}
-                          className="text-indigo-600 hover:text-indigo-800 font-bold text-xs bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer border-none shadow-sm flex items-center justify-center space-x-1"
+                          disabled={!!pendingEditId || !!editingMachine}
+                          style={{ touchAction: "manipulation" }}
+                          className="text-indigo-600 hover:text-indigo-800 font-bold text-xs bg-indigo-50 hover:bg-indigo-100 px-2.5 py-2 rounded-lg transition-colors cursor-pointer border-none shadow-sm flex items-center justify-center space-x-1 disabled:opacity-60 disabled:cursor-not-allowed"
                         >
-                          <Wrench className="h-3 w-3 shrink-0" />
-                          <span>{t("Aanpassen", "Modify", "Düzenle")}</span>
+                          {pendingEditId === m.id
+                            ? <span className="h-3 w-3 rounded-full border-2 border-indigo-400 border-t-transparent animate-spin shrink-0" />
+                            : <Wrench className="h-3 w-3 shrink-0" />}
+                          <span>{pendingEditId === m.id ? "..." : t("Aanpassen", "Modify", "Düzenle")}</span>
                         </button>
 
                         <button

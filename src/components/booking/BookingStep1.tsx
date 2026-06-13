@@ -127,12 +127,12 @@ export default function BookingStep1({
                       />
                       <div className="absolute inset-0 bg-black/0 group-hover/thumb:bg-black/20 transition-colors duration-200 rounded-xl" />
                     </div>
-                    <div>
-                      <h4 className="text-xs font-extrabold text-slate-900">{item.machine.name}</h4>
+                    <div className="min-w-0 pt-1">
+                      <h4 className="text-xs font-extrabold text-slate-900 truncate max-w-[160px] sm:max-w-[220px]">{item.machine.name}</h4>
                       <button
                         type="button"
                         onClick={() => setPreviewMachine(item.machine)}
-                        className="text-xs text-indigo-600 hover:text-indigo-800 font-semibold bg-transparent border-none cursor-pointer p-0 transition-colors"
+                        className="text-xs text-indigo-600 hover:text-indigo-800 font-semibold bg-transparent border-none cursor-pointer p-0 transition-colors mt-1 block"
                       >
                         Tarieven &amp; specificaties →
                       </button>

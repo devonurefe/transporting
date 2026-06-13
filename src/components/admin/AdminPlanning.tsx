@@ -293,8 +293,9 @@ export default function AdminPlanning({ adminLanguage: _adminLanguage }: AdminPl
             </button>
           </div>
 
-          {/* 7-column day grid */}
-          <div className="grid grid-cols-7 gap-1.5">
+          {/* 7-column day grid — horizontal scroll on mobile */}
+          <div className="overflow-x-auto -mx-2 px-2 sm:mx-0 sm:px-0 pb-1">
+          <div className="grid grid-cols-7 gap-1.5 min-w-[560px] sm:min-w-0">
             {weekDays.map((day, idx) => {
               const dayStr = day.toISOString().split("T")[0];
               const departing = activeOrders.filter((o) => o.startDate === dayStr);
@@ -305,15 +306,15 @@ export default function AdminPlanning({ adminLanguage: _adminLanguage }: AdminPl
               return (
                 <div
                   key={idx}
-                  className={`rounded-xl border p-1.5 min-h-[130px] flex flex-col gap-1 ${
+                  className={`rounded-xl border p-1.5 min-h-[140px] flex flex-col gap-1 ${
                     current ? "border-amber-400 bg-amber-50" : "border-slate-200 bg-white"
                   }`}
                 >
                   <div className={`text-center pb-1 border-b mb-0.5 ${current ? "border-amber-200" : "border-slate-100"}`}>
-                    <div className={`text-[9px] uppercase tracking-wide font-bold ${current ? "text-amber-600" : "text-slate-400"}`}>
+                    <div className={`text-[10px] uppercase tracking-wide font-bold ${current ? "text-amber-600" : "text-slate-400"}`}>
                       {day.toLocaleDateString("nl-NL", { weekday: "short" })}
                     </div>
-                    <div className={`text-xs font-black leading-tight ${current ? "text-amber-700" : "text-slate-800"}`}>
+                    <div className={`text-sm font-black leading-tight ${current ? "text-amber-700" : "text-slate-800"}`}>
                       {day.getDate()}
                     </div>
                   </div>
@@ -324,9 +325,10 @@ export default function AdminPlanning({ adminLanguage: _adminLanguage }: AdminPl
                       type="button"
                       title={`${o.machineName} → ${o.customerName}`}
                       onClick={() => setSelectedOrder(o)}
-                      className="bg-indigo-100 text-indigo-800 rounded px-1 py-0.5 text-[9px] font-semibold truncate flex items-center gap-0.5 hover:bg-indigo-200 transition-colors cursor-pointer border-none w-full text-left"
+                      className="bg-indigo-100 text-indigo-800 rounded-md px-1.5 py-1 text-[10px] font-semibold truncate flex items-center gap-1 hover:bg-indigo-200 transition-colors cursor-pointer border-none w-full text-left min-h-[28px]"
+                      style={{ touchAction: "manipulation" }}
                     >
-                      <Truck className="h-2.5 w-2.5 shrink-0" />
+                      <Truck className="h-3 w-3 shrink-0" />
                       <span className="truncate">{o.machineName.split(" ")[0]}</span>
                     </button>
                   ))}
@@ -337,9 +339,10 @@ export default function AdminPlanning({ adminLanguage: _adminLanguage }: AdminPl
                       type="button"
                       title={`${o.machineName} ← ${o.customerName}`}
                       onClick={() => setSelectedOrder(o)}
-                      className="bg-teal-100 text-teal-800 rounded px-1 py-0.5 text-[9px] font-semibold truncate flex items-center gap-0.5 hover:bg-teal-200 transition-colors cursor-pointer border-none w-full text-left"
+                      className="bg-teal-100 text-teal-800 rounded-md px-1.5 py-1 text-[10px] font-semibold truncate flex items-center gap-1 hover:bg-teal-200 transition-colors cursor-pointer border-none w-full text-left min-h-[28px]"
+                      style={{ touchAction: "manipulation" }}
                     >
-                      <RotateCcw className="h-2.5 w-2.5 shrink-0" />
+                      <RotateCcw className="h-3 w-3 shrink-0" />
                       <span className="truncate">{o.machineName.split(" ")[0]}</span>
                     </button>
                   ))}
@@ -348,19 +351,20 @@ export default function AdminPlanning({ adminLanguage: _adminLanguage }: AdminPl
                     <div
                       key={`b-${i}`}
                       title={b.reason || "Geblokkeerd"}
-                      className="bg-red-100 text-red-700 rounded px-1 py-0.5 text-[9px] font-semibold truncate flex items-center gap-0.5"
+                      className="bg-red-100 text-red-700 rounded-md px-1.5 py-1 text-[10px] font-semibold truncate flex items-center gap-1 min-h-[28px]"
                     >
-                      <Lock className="h-2.5 w-2.5 shrink-0" />
+                      <Lock className="h-3 w-3 shrink-0" />
                       <span className="truncate">{machineMap.get(b.machineId)?.split(" ")[0] ?? "Geblokkeerd"}</span>
                     </div>
                   ))}
 
                   {departing.length === 0 && returning.length === 0 && blocked.length === 0 && (
-                    <div className="flex-1 flex items-center justify-center text-slate-300 text-[9px]">—</div>
+                    <div className="flex-1 flex items-center justify-center text-slate-300 text-xs">—</div>
                   )}
                 </div>
               );
             })}
+          </div>
           </div>
 
           {/* Legend */}

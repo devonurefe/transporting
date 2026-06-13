@@ -121,7 +121,8 @@ machinesRouter.post("/", requireAdmin as any, async (req: AuthenticatedRequest, 
     weeklyPrice,
     monthlyPrice,
     packageContents,
-    additionalImages
+    additionalImages,
+    specs
   } = req.body;
 
   try {
@@ -152,7 +153,8 @@ machinesRouter.post("/", requireAdmin as any, async (req: AuthenticatedRequest, 
         weeklyPrice: weeklyPrice ? Number(weeklyPrice) : null,
         monthlyPrice: monthlyPrice ? Number(monthlyPrice) : null,
         packageContents: packageContents || null,
-        additionalImages: Array.isArray(additionalImages) ? additionalImages : []
+        additionalImages: Array.isArray(additionalImages) ? additionalImages : [],
+        specs: Array.isArray(specs) && specs.length > 0 ? specs : null
       }
     });
 
@@ -198,7 +200,8 @@ machinesRouter.put("/:id", requireAdmin as any, async (req: AuthenticatedRequest
     weeklyPrice,
     monthlyPrice,
     packageContents,
-    additionalImages
+    additionalImages,
+    specs
   } = req.body;
 
   try {
@@ -229,7 +232,8 @@ machinesRouter.put("/:id", requireAdmin as any, async (req: AuthenticatedRequest
         weeklyPrice: weeklyPrice !== undefined && weeklyPrice !== null && weeklyPrice !== "" ? Number(weeklyPrice) : null,
         monthlyPrice: monthlyPrice !== undefined && monthlyPrice !== null && monthlyPrice !== "" ? Number(monthlyPrice) : null,
         packageContents: packageContents !== undefined ? packageContents : null,
-        additionalImages: Array.isArray(additionalImages) ? additionalImages : []
+        additionalImages: Array.isArray(additionalImages) ? additionalImages : [],
+        specs: specs !== undefined ? (Array.isArray(specs) && specs.length > 0 ? specs : null) : undefined
       }
     });
 

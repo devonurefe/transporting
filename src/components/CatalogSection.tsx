@@ -225,9 +225,11 @@ const MACHINE_SPECS: Record<string, Array<{ label: string; value: string }>> = {
   ],
 };
 
-// Look up extra specs: exact ID first, then strip trailing unit suffix (-1/-2/-3).
-const getExtraSpecs = (id: string) =>
-  MACHINE_SPECS[id] ?? MACHINE_SPECS[id.replace(/-[123]$/, "")] ?? [];
+// Look up extra specs: machine.specs (admin-edited) takes priority, then hardcoded fallback.
+function getExtraSpecs(id: string, machineSpecs?: unknown): Array<{ label: string; value: string }> {
+  if (Array.isArray(machineSpecs) && machineSpecs.length > 0) return machineSpecs as Array<{ label: string; value: string }>;
+  return MACHINE_SPECS[id] ?? MACHINE_SPECS[id.replace(/-[123]$/, "")] ?? [];
+}
 
 function computeDiscounts(m: Machine) {
   // Use pricePerDay as the regular day rate baseline for discount % calculation
@@ -1125,7 +1127,7 @@ export default function CatalogSection({
 
                     {/* A — Afbeeldingen */}
                     <div className="space-y-2">
-                      <div className="aspect-video w-full rounded-2xl overflow-hidden bg-slate-950 border border-slate-200 shadow-sm relative group">
+                      <div className="aspect-video w-full rounded-2xl overflow-hidden bg-white border border-slate-200 shadow-sm relative group">
                         <AnimatePresence mode="wait">
                           <motion.img
                             key={activeDetailImageIndex}
@@ -1165,7 +1167,7 @@ export default function CatalogSection({
                         <div className="flex gap-2 overflow-x-auto py-0.5 scrollbar-none">
                           {allDetailImages.map((url, i) => (
                             <button key={i} type="button" onClick={() => setActiveDetailImageIndex(i)}
-                              className={`relative h-11 w-16 rounded-lg overflow-hidden border-2 shrink-0 transition-all cursor-pointer ${i === activeDetailImageIndex ? "border-indigo-600 ring-2 ring-indigo-500/20" : "border-slate-200 hover:border-slate-400"}`}
+                              className={`relative h-11 w-16 rounded-lg overflow-hidden border-2 shrink-0 transition-all cursor-pointer bg-white ${i === activeDetailImageIndex ? "border-indigo-600 ring-2 ring-indigo-500/20" : "border-slate-200 hover:border-slate-400"}`}
                             >
                               <img src={url} alt={`Foto ${i + 1}`} className="w-full h-full object-cover"
                                 referrerPolicy="no-referrer"
@@ -1298,7 +1300,7 @@ export default function CatalogSection({
                             {selectedDetailMachine.powerType}
                           </span>
                         </div>
-                        {getExtraSpecs(selectedDetailMachine.id).map((spec) => (
+                        {getExtraSpecs(selectedDetailMachine.id, (selectedDetailMachine as any).specs).map((spec) => (
                           <div key={spec.label} className="flex items-center justify-between px-3 py-2 bg-white">
                             <span className="text-[10px] font-mono text-slate-400">{spec.label}</span>
                             <span className="text-sm font-bold text-slate-700 text-right max-w-[55%]">{spec.value}</span>

@@ -79,6 +79,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
   const [editAdditionalImages, setEditAdditionalImages] = useState<string[]>([]);
   const [isUploadingEditAdditional, setIsUploadingEditAdditional] = useState(false);
   const [editPackageContents, setEditPackageContents] = useState("");
+  const [editSpecs, setEditSpecs] = useState<{ label: string; value: string }[]>([]);
 
   const handleEditAdditionalImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -137,6 +138,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
     setEditCampaignDiscountAmount(m.campaignDiscountAmount ? String(m.campaignDiscountAmount) : "");
     setEditAdditionalImages(m.additionalImages || []);
     setEditPackageContents(m.packageContents || "");
+    setEditSpecs(Array.isArray((m as any).specs) ? (m as any).specs : []);
   };
 
   const handleEditImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -254,7 +256,10 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
       campaignDiscountPercent: editCampaignDiscountPercent ? Number(editCampaignDiscountPercent) : undefined,
       campaignDiscountAmount: editCampaignDiscountAmount ? Number(editCampaignDiscountAmount) : undefined,
       packageContents: editPackageContents.trim() || undefined,
-      additionalImages: editAdditionalImages
+      additionalImages: editAdditionalImages,
+      specs: editSpecs.filter(s => s.label.trim() && s.value.trim()).length > 0
+        ? editSpecs.filter(s => s.label.trim() && s.value.trim())
+        : undefined,
     });
 
     setIsUpdating(false);
@@ -643,6 +648,55 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                         )}
                         className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white resize-none"
                       />
+                    </div>
+
+                    {/* Specs editor */}
+                    <div className="space-y-2 md:col-span-2">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs text-slate-700 block font-bold">
+                          {t("Technische specificaties (popup-tabel)", "Technical specs (popup table)", "Teknik özellikler (popup tablosu)")}
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => setEditSpecs(prev => [...prev, { label: "", value: "" }])}
+                          className="text-xs font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded-lg transition-colors cursor-pointer border-none flex items-center gap-1"
+                        >
+                          <Plus className="h-3 w-3" />
+                          {t("Rij toevoegen", "Add row", "Satır ekle")}
+                        </button>
+                      </div>
+                      {editSpecs.length === 0 && (
+                        <p className="text-[10px] text-slate-400 italic">
+                          {t("Nog geen specificaties. Klik op 'Rij toevoegen'.", "No specs yet. Click 'Add row'.", "Henüz özellik yok. 'Satır ekle' butonuna tıkla.")}
+                        </p>
+                      )}
+                      <div className="space-y-1.5">
+                        {editSpecs.map((spec, idx) => (
+                          <div key={idx} className="flex items-center gap-2">
+                            <input
+                              type="text"
+                              placeholder={t("Label (bijv. Capaciteit)", "Label (e.g. Capacity)", "Etiket (örn. Kapasite)")}
+                              value={spec.label}
+                              onChange={e => setEditSpecs(prev => prev.map((s, i) => i === idx ? { ...s, label: e.target.value } : s))}
+                              className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
+                            />
+                            <input
+                              type="text"
+                              placeholder={t("Waarde (bijv. 230 kg)", "Value (e.g. 230 kg)", "Değer (örn. 230 kg)")}
+                              value={spec.value}
+                              onChange={e => setEditSpecs(prev => prev.map((s, i) => i === idx ? { ...s, value: e.target.value } : s))}
+                              className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setEditSpecs(prev => prev.filter((_, i) => i !== idx))}
+                              className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-500 hover:text-rose-700 transition-colors cursor-pointer border-none shrink-0"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
                     </div>
 
                     <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-slate-100 pt-3">

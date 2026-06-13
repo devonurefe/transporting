@@ -228,12 +228,12 @@ export default function HomeSection({
                     {cat.listLabel || cat.label}
                   </p>
                   <div className="space-y-1.5">
-                    <div className="flex items-baseline gap-1.5">
-                      <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 w-10 shrink-0">Hoogte</p>
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-0.5">Hoogte</p>
                       <p className="text-sm font-bold text-slate-700">{cat.heights}</p>
                     </div>
-                    <div className="flex items-baseline gap-1.5">
-                      <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 w-10 shrink-0">All-in</p>
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-0.5">All-in</p>
                       <p className="text-sm font-extrabold text-emerald-600">
                         {livePriceByCategory[cat.id] !== undefined
                           ? `v.a. €${(() => { const v = withVat(livePriceByCategory[cat.id], vatDisplay); return v % 1 === 0 ? Math.round(v).toLocaleString("nl-NL") : v.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); })()}/dag`

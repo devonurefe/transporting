@@ -33,6 +33,7 @@ model Machine {
   monthlyPrice            Float?
   packageContents         String?
   additionalImages        Json?
+  specs                   Json?
   blockedDates            BlockedDate[]
   updatedAt               DateTime      @updatedAt @default(now())
 

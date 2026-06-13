@@ -29,6 +29,7 @@ export interface Machine {
   monthlyPrice?: number; // flat rate for 28-day booking
   packageContents?: string; // Semicolon separated included items checklist
   additionalImages?: string[];
+  specs?: { label: string; value: string }[];
 }
 
 export type DeliveryType = "self_pickup" | "delivery_by_us" | "trailer_rental";

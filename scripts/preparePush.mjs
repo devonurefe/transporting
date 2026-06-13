@@ -100,6 +100,193 @@ try {
   console.log(`[preparePush] Upserted ${seedMachines.length} seed machines (6m + 10m schaarliften)`);
 } catch (err) {
   console.warn("[preparePush] Skipped machine upsert:", err?.message ?? err);
+}
+
+// Back-fill hardcoded specs into DB for all known machines (only when specs is still null).
+// Admin can override via AdminMachines panel; this just pre-populates on first deploy.
+const MACHINE_SPECS = {
+  "nifty-120": [
+    { label: "Platformhoogte",    value: "10,2 m" },
+    { label: "Platformafmeting",  value: "76 × 163 cm" },
+    { label: "Draagvermogen",     value: "200 kg (2 pers.)" },
+    { label: "Transportbreedte",  value: "159 cm" },
+    { label: "Transportlengte",   value: "468 cm" },
+    { label: "Transporthoogte",   value: "180 cm" },
+    { label: "Kogelgewicht",      value: "ca. 75 kg" },
+    { label: "Rijbewijs",         value: "Categorie B vereist" },
+    { label: "Opsteltijd",        value: "± 5 min" },
+    { label: "Stroomopname",      value: "230 V / accu" },
+  ],
+  "nifty-170": [
+    { label: "Platformhoogte",      value: "15,1 m" },
+    { label: "Platformafmeting",    value: "76 × 163 cm" },
+    { label: "Draagvermogen",       value: "200 kg (2 pers.)" },
+    { label: "Transportbreedte",    value: "179 cm" },
+    { label: "Transporthoogte",     value: "ca. 190 cm" },
+    { label: "Rijbewijs",           value: "Categorie B vereist" },
+    { label: "Opsteltijd",          value: "± 10 min" },
+    { label: "Aandrijving rijden",  value: "Diesel + elektrisch" },
+  ],
+  "hinowa-15-70": [
+    { label: "Platformhoogte",          value: "13,4 m" },
+    { label: "Platformafmeting",        value: "70 × 120 cm" },
+    { label: "Draagvermogen",           value: "200 kg (2 pers.)" },
+    { label: "Rupsbreedte",             value: "79 cm (59 cm ingetrokken)" },
+    { label: "Min. poortbreedte",       value: "60 cm" },
+    { label: "Max. helling (rijden)",   value: "25°" },
+    { label: "Stabilisatoren",          value: "4× automatisch" },
+    { label: "Rijden in geheven stand", value: "Niet toegestaan" },
+  ],
+  "hinowa-17-75": [
+    { label: "Platformhoogte",          value: "15,06 m" },
+    { label: "Platformafmeting",        value: "70 × 120 cm" },
+    { label: "Draagvermogen",           value: "200 kg (2 pers.)" },
+    { label: "Rupsbreedte",             value: "89 cm" },
+    { label: "Min. poortbreedte",       value: "90 cm" },
+    { label: "Max. helling (rijden)",   value: "20°" },
+    { label: "Stabilisatoren",          value: "4× automatisch" },
+    { label: "Rijden in geheven stand", value: "Niet toegestaan" },
+  ],
+  "optimum-8": [
+    { label: "Platformhoogte",     value: "5,76 m" },
+    { label: "Platformafmeting",   value: "136 × 69 cm (uitschuif: 256 × 69 cm)" },
+    { label: "Draagvermogen",      value: "230 kg (2 pers.)" },
+    { label: "Machinebreedte",     value: "76 cm" },
+    { label: "Accu",               value: "4 × 6 V / 24 V" },
+    { label: "Non-marking banden", value: "Ja" },
+    { label: "Max. helling",       value: "25 %" },
+  ],
+  "compact-8": [
+    { label: "Platformhoogte",     value: "6,17 m" },
+    { label: "Platformafmeting",   value: "165 × 76 cm (uitschuif: 265 × 76 cm)" },
+    { label: "Draagvermogen",      value: "230 kg (2 pers.)" },
+    { label: "Machinebreedte",     value: "82 cm" },
+    { label: "Accu",               value: "4 × 6 V / 24 V" },
+    { label: "Non-marking banden", value: "Ja" },
+    { label: "Max. helling",       value: "25 %" },
+  ],
+  "compact-10n": [
+    { label: "Platformhoogte",     value: "7,96 m" },
+    { label: "Platformafmeting",   value: "126 × 81 cm (uitschuif: 251 × 81 cm)" },
+    { label: "Draagvermogen",      value: "450 kg (2 pers.)" },
+    { label: "Machinebreedte",     value: "81 cm" },
+    { label: "Accu",               value: "4 × 6 V / 24 V" },
+    { label: "Non-marking banden", value: "Ja" },
+    { label: "Min. deuropening",   value: "81 cm breed" },
+  ],
+  "compact-10n-1": [
+    { label: "Platformhoogte",     value: "7,96 m" },
+    { label: "Platformafmeting",   value: "126 × 81 cm (uitschuif: 251 × 81 cm)" },
+    { label: "Draagvermogen",      value: "450 kg (2 pers.)" },
+    { label: "Machinebreedte",     value: "81 cm" },
+    { label: "Accu",               value: "4 × 6 V / 24 V" },
+    { label: "Non-marking banden", value: "Ja" },
+    { label: "Min. deuropening",   value: "81 cm breed" },
+  ],
+  "compact-10n-2": [
+    { label: "Platformhoogte",     value: "7,96 m" },
+    { label: "Platformafmeting",   value: "126 × 81 cm (uitschuif: 251 × 81 cm)" },
+    { label: "Draagvermogen",      value: "450 kg (2 pers.)" },
+    { label: "Machinebreedte",     value: "81 cm" },
+    { label: "Accu",               value: "4 × 6 V / 24 V" },
+    { label: "Non-marking banden", value: "Ja" },
+    { label: "Min. deuropening",   value: "81 cm breed" },
+  ],
+  "dingli-6m": [
+    { label: "Platformhoogte",     value: "4,0 m" },
+    { label: "Platformafmeting",   value: "74 × 60 cm" },
+    { label: "Draagvermogen",      value: "230 kg" },
+    { label: "Machinebreedte",     value: "74 cm" },
+    { label: "Accu",               value: "2 × 12 V / 24 V" },
+    { label: "Non-marking banden", value: "Ja" },
+    { label: "Min. deuropening",   value: "74 cm breed" },
+  ],
+  "altrex-rs44": [
+    { label: "Platformhoogte",   value: "2,0 m" },
+    { label: "Platformafmeting", value: "ca. 135 × 60 cm" },
+    { label: "Draagvermogen",    value: "200 kg" },
+    { label: "Machinebreedte",   value: "75 cm" },
+    { label: "Materiaal",        value: "Aluminium" },
+    { label: "Wielen",           value: "4× met vergrendeling" },
+    { label: "Montagetijd",      value: "± 5 min" },
+    { label: "Norm",             value: "NEN-EN 1004" },
+  ],
+  "star-10": [
+    { label: "Platformhoogte",     value: "8,0 m" },
+    { label: "Platformafmeting",   value: "80 × 120 cm" },
+    { label: "Draagvermogen",      value: "230 kg (1 pers.)" },
+    { label: "Machinebreedte",     value: "78 cm" },
+    { label: "Accu",               value: "24 V" },
+    { label: "Draairadius",        value: "0 cm (zero-radius)" },
+    { label: "Non-marking banden", value: "Ja" },
+  ],
+  "skyjack-sj16": [
+    { label: "Platformhoogte",     value: "4,6 m" },
+    { label: "Platformafmeting",   value: "74 × 76 cm" },
+    { label: "Draagvermogen",      value: "136 kg (1 pers.)" },
+    { label: "Machinebreedte",     value: "74 cm" },
+    { label: "Accu",               value: "24 V" },
+    { label: "Draairadius",        value: "0 cm (zero-radius)" },
+    { label: "Non-marking banden", value: "Ja" },
+  ],
+  "bravi-mini-hd": [
+    { label: "Platformhoogte",     value: "2,9 m" },
+    { label: "Platformafmeting",   value: "70 × 70 cm" },
+    { label: "Draagvermogen",      value: "200 kg" },
+    { label: "Machinebreedte",     value: "69 cm" },
+    { label: "Accu",               value: "24 V" },
+    { label: "Min. deuropening",   value: "69 cm breed" },
+    { label: "Liftvriendelijk",    value: "Ja (smal profiel)" },
+    { label: "Non-marking banden", value: "Ja" },
+  ],
+  "jlg-1230es": [
+    { label: "Platformhoogte",     value: "3,65 m (12 ft)" },
+    { label: "Platformafmeting",   value: "76 × 68 cm" },
+    { label: "Draagvermogen",      value: "227 kg" },
+    { label: "Machinebreedte",     value: "76 cm" },
+    { label: "Accu",               value: "24 V" },
+    { label: "Non-marking banden", value: "Ja" },
+    { label: "Rijden geheven",     value: "Niet toegestaan" },
+  ],
+  "ladderlift-18": [
+    { label: "Max. belasting",    value: "200 kg (goederen)" },
+    { label: "Bandenbreedte",     value: "ca. 40 cm" },
+    { label: "Transportsnelheid", value: "ca. 0,4 m/s" },
+    { label: "Stroomvereiste",    value: "230 V / 16 A" },
+    { label: "Personentransport", value: "Niet toegestaan" },
+    { label: "Opsteltijd",        value: "± 15 min" },
+    { label: "Bereik (etages)",   value: "t/m ca. 5e verdieping" },
+  ],
+  "ladderlift-21": [
+    { label: "Max. belasting",    value: "250 kg (goederen)" },
+    { label: "Bandenbreedte",     value: "ca. 40 cm" },
+    { label: "Transportsnelheid", value: "ca. 0,5 m/s" },
+    { label: "Stroomvereiste",    value: "230 V / 16 A" },
+    { label: "Personentransport", value: "Niet toegestaan" },
+    { label: "Opsteltijd",        value: "± 20 min" },
+    { label: "Bereik (etages)",   value: "t/m ca. 7e verdieping" },
+  ],
+  "ecolift": [
+    { label: "Platformhoogte",   value: "2,2 m" },
+    { label: "Platformafmeting", value: "65 × 65 cm" },
+    { label: "Draagvermogen",    value: "150 kg (incl. persoon)" },
+    { label: "Machinebreedte",   value: "69 cm" },
+    { label: "Bediening",        value: "Handmatig (zwengel)" },
+    { label: "Energiebron",      value: "Geen (geen accu / stroom)" },
+    { label: "Min. deuropening", value: "70 cm breed" },
+    { label: "Norm",             value: "CE gecertificeerd" },
+  ],
+};
+
+try {
+  let backfilled = 0;
+  for (const [id, specs] of Object.entries(MACHINE_SPECS)) {
+    const result = await prisma.machine.updateMany({ where: { id, specs: null }, data: { specs } });
+    backfilled += result.count;
+  }
+  if (backfilled > 0) console.log(`[preparePush] Back-filled specs for ${backfilled} machines`);
+} catch (err) {
+  console.warn("[preparePush] Skipped specs backfill:", err?.message ?? err);
 } finally {
   await prisma.$disconnect();
 }

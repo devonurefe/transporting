@@ -611,22 +611,19 @@ export default function CatalogSection({
                           </div>
                         )}
 
-                        {/* Spec row — height / reach */}
-                        <div className="flex items-center gap-3 text-[10px] font-mono text-slate-600 border-t border-slate-100 pt-2.5">
-                          <span className="flex items-center gap-1" title="Werkhoogte">
+                        {/* Spec + SuitableFor — single row */}
+                        <div className="flex items-center gap-2 flex-wrap text-[10px] font-mono text-slate-600 border-t border-slate-100 pt-2.5">
+                          <span className="flex items-center gap-1 shrink-0" title="Werkhoogte">
                             <ArrowUpToLine className="h-3.5 w-3.5 text-indigo-500 shrink-0" />
                             <span className="font-bold text-slate-800">{machine.height}m</span>
                           </span>
                           {machine.reach > 0 && (
-                            <span className="flex items-center gap-1" title="Uitreik">
+                            <span className="flex items-center gap-1 shrink-0" title="Uitreik">
                               <ArrowRightLeft className="h-3.5 w-3.5 text-indigo-400 shrink-0" />
                               {machine.reach}m
                             </span>
                           )}
-                        </div>
-
-                        {/* SuitableFor — max 2 plain text chips */}
-                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-slate-300 select-none shrink-0">·</span>
                           {(machine.suitableFor ?? []).length === 0 && (
                             <span className="text-[10px] text-slate-400 italic">Algemeen gebruik</span>
                           )}

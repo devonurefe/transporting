@@ -12,6 +12,8 @@ import BookingPriceSummary from "./BookingPriceSummary";
 import DateRangeCalendar from "./DateRangeCalendar";
 import { useLanguageStore } from "../../store/languageStore";
 import { getSpecsForMachine } from "../../utils/machineSpecs";
+import { withVat } from "../../utils/format";
+import { useAppStore } from "../../store/appStore";
 
 interface BookingStep1Props {
   cartItems: CartItem[];
@@ -57,6 +59,7 @@ export default function BookingStep1({
   selectedMachine
 }: BookingStep1Props) {
   const t = useLanguageStore((state) => state.t);
+  const vatDisplay = useAppStore((state) => state.vatDisplay);
   const [previewMachine, setPreviewMachine] = useState<Machine | null>(null);
 
   return (
@@ -443,6 +446,37 @@ export default function BookingStep1({
                           ))}
                         </tbody>
                       </table>
+                    </div>
+                  );
+                })()}
+
+                {/* Pricing tier table */}
+                {(() => {
+                  const m = previewMachine;
+                  const vp = (n: number) => withVat(n, vatDisplay);
+                  const vatLabel = vatDisplay === "incl" ? "incl. BTW" : "excl. BTW";
+                  const rows: { label: string; sub: string; price: number; highlight?: string }[] = [];
+                  const hasActie = !!(m.oneDayPrice && m.oneDayPrice < m.pricePerDay);
+                  rows.push({ label: hasActie ? "1 dag actie" : "1 dag", sub: "Ma – Vr", price: vp(hasActie ? m.oneDayPrice! : m.pricePerDay), highlight: hasActie ? "amber" : undefined });
+                  rows.push({ label: "2 dagen (doordeweeks)", sub: "Ma – Do", price: vp(m.twoDayPrice ?? m.pricePerDay * 2) });
+                  if (m.weekendPrice) rows.push({ label: "Weekend", sub: "Za – Zo", price: vp(m.weekendPrice), highlight: "violet" });
+                  if (m.weeklyPrice) rows.push({ label: "3–5 dagen (werkweek)", sub: "Ma – Vr", price: vp(m.weeklyPrice), highlight: "green" });
+                  if (m.monthlyPrice) rows.push({ label: "4 weken (28 dagen)", sub: "Langlopend", price: vp(m.monthlyPrice), highlight: "teal" });
+                  return (
+                    <div className="border border-slate-100 rounded-xl overflow-hidden">
+                      <div className="flex items-center justify-between px-3 py-1.5 bg-slate-50 border-b border-slate-100">
+                        <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Tarieven</span>
+                        <span className="text-[9px] text-slate-400">{vatLabel}</span>
+                      </div>
+                      {rows.map((r, i) => (
+                        <div key={i} className={`flex items-center px-3 py-2 border-b border-slate-50 last:border-0 ${r.highlight === "amber" ? "bg-amber-50" : r.highlight === "violet" ? "bg-violet-50" : r.highlight === "green" ? "bg-emerald-50" : r.highlight === "teal" ? "bg-teal-50" : "bg-white"}`}>
+                          <div className="flex-1">
+                            <p className={`text-[11px] font-bold ${r.highlight === "amber" ? "text-amber-700" : r.highlight === "violet" ? "text-violet-700" : r.highlight === "green" ? "text-emerald-700" : r.highlight === "teal" ? "text-teal-700" : "text-slate-800"}`}>{r.label}</p>
+                            <p className={`text-[9px] ${r.highlight === "amber" ? "text-amber-400" : r.highlight === "violet" ? "text-violet-400" : r.highlight === "green" ? "text-emerald-400" : r.highlight === "teal" ? "text-teal-400" : "text-slate-400"}`}>{r.sub}</p>
+                          </div>
+                          <span className={`font-mono font-extrabold text-xs ${r.highlight === "amber" ? "text-amber-700" : r.highlight === "violet" ? "text-violet-700" : r.highlight === "green" ? "text-emerald-700" : r.highlight === "teal" ? "text-teal-700" : "text-slate-900"}`}>€{r.price % 1 === 0 ? r.price.toFixed(0) : r.price.toFixed(2)}</span>
+                        </div>
+                      ))}
                     </div>
                   );
                 })()}

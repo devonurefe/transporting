@@ -898,10 +898,11 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                 placeholder={t("Naam van de machine", "Machine name", "Makine adı")}
                 className="w-full text-xs border border-slate-300 rounded-xl px-3 py-2.5 mb-4 focus:outline-none focus:ring-2 focus:ring-rose-400"
                 autoFocus
+                autoComplete="off"
               />
               <div className="flex justify-end gap-2">
                 <button
-                  onClick={() => setDeleteTarget(null)}
+                  onClick={() => { setDeleteTarget(null); setDeleteConfirmText(""); }}
                   className="text-xs font-bold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-4 py-2.5 rounded-xl transition-colors cursor-pointer border-none"
                 >
                   {t("Annuleren", "Cancel", "İptal")}

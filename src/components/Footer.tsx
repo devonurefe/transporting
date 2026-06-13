@@ -76,7 +76,7 @@ export default function Footer({ siteName, setActiveTab: _setActiveTab, setShowC
           </div>
 
           {/* Review cards */}
-          <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {REVIEWS.map((r) => (
               <div
                 key={r.name}

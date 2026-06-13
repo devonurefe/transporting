@@ -694,16 +694,20 @@ export default function CatalogSection({
                       </div>
                       {/* Tier rows */}
                       <div className="divide-y divide-slate-100">
-                        {selectedDetailMachine.oneDayPrice && selectedDetailMachine.oneDayPrice < selectedDetailMachine.pricePerDay && (
-                          <div className="flex items-center px-4 py-2.5 bg-amber-50">
-                            <div className="flex-1">
-                              <p className="text-xs font-bold text-amber-700">1 dag actie</p>
-                              <p className="text-[10px] text-amber-500">Ma – Vr</p>
+                        {(() => {
+                          const hasActie = !!(selectedDetailMachine.oneDayPrice && selectedDetailMachine.oneDayPrice < selectedDetailMachine.pricePerDay);
+                          const oneP = hasActie ? selectedDetailMachine.oneDayPrice! : selectedDetailMachine.pricePerDay;
+                          return (
+                            <div className={`flex items-center px-4 py-2.5 ${hasActie ? "bg-amber-50" : "bg-white"}`}>
+                              <div className="flex-1">
+                                <p className={`text-xs font-bold ${hasActie ? "text-amber-700" : "text-slate-800"}`}>{hasActie ? "1 dag actie" : "1 dag"}</p>
+                                <p className={`text-[10px] ${hasActie ? "text-amber-500" : "text-slate-400"}`}>Ma – Vr</p>
+                              </div>
+                              {hasActie && <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 mr-2">Actie</span>}
+                              <span className={`font-mono font-extrabold text-sm ${hasActie ? "text-amber-700" : "text-slate-900"}`}>€{formatPrice(vp(oneP))}</span>
                             </div>
-                            <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 mr-2">Actie</span>
-                            <span className="font-mono font-extrabold text-sm text-amber-700">€{formatPrice(vp(selectedDetailMachine.oneDayPrice))}</span>
-                          </div>
-                        )}
+                          );
+                        })()}
                         {(() => {
                           const twoDay = selectedDetailMachine.twoDayPrice ?? (selectedDetailMachine.pricePerDay * 2);
                           return (
@@ -720,7 +724,7 @@ export default function CatalogSection({
                           <div className="flex items-center px-4 py-2.5 bg-violet-50">
                             <div className="flex-1">
                               <p className="text-xs font-bold text-violet-700">Weekend</p>
-                              <p className="text-[10px] text-violet-400">Za – Zo  /  Vr – Zo</p>
+                              <p className="text-[10px] text-violet-400">Za – Zo</p>
                             </div>
                             <span className="font-mono font-extrabold text-sm text-violet-700">€{formatPrice(vp(selectedDetailMachine.weekendPrice))}</span>
                           </div>
@@ -934,13 +938,18 @@ export default function CatalogSection({
           const vp = (n: number) => withVat(n, vatDisplay);
           const rows: { period: string; when: string; price: number; badge?: string; highlight?: "fire" | "green" | "teal" | "violet" }[] = [];
 
-          if (m.oneDayPrice && m.oneDayPrice < m.pricePerDay) {
-            rows.push({ period: "1 dag actie", when: "Ma – Vr", price: m.oneDayPrice, highlight: "fire" });
-          }
+          // 1 dag: always first row; actie highlight only when cheaper than day rate
+          const oneDayHasActie = !!(m.oneDayPrice && m.oneDayPrice < m.pricePerDay);
+          rows.push({
+            period: oneDayHasActie ? "1 dag actie" : "1 dag",
+            when: "Ma – Vr",
+            price: oneDayHasActie ? m.oneDayPrice! : m.pricePerDay,
+            highlight: oneDayHasActie ? "fire" : undefined,
+          });
           // Always show 2-day: use twoDayPrice if set, otherwise pricePerDay × 2
           rows.push({ period: "2 dagen (doordeweeks)", when: "Ma – Do", price: m.twoDayPrice ?? (m.pricePerDay * 2) });
           if (m.weekendPrice) {
-            rows.push({ period: "Weekend", when: "Za – Zo  /  Vr – Zo", price: m.weekendPrice, highlight: "violet" });
+            rows.push({ period: "Weekend", when: "Za – Zo", price: m.weekendPrice, highlight: "violet" });
           }
           if (m.weeklyPrice) {
             rows.push({ period: "3 – 5 dagen (werkweek)", when: "Ma – Vr", price: m.weeklyPrice, badge: d.weekly > 0 ? `−${d.weekly}%` : undefined, highlight: "green" });

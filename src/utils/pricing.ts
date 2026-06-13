@@ -14,15 +14,14 @@ export function calculateRentalDays(startDate: string | Date, endDate: string | 
   return Math.max(1, Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1);
 }
 
-// Strict weekend: a 2-day rental on Sat+Sun (start = Saturday), or a 3-day rental
-// on Fri+Sat+Sun (start = Friday). getUTCDay(): 0=Sun, 5=Fri, 6=Sat. Dates are
-// "YYYY-MM-DD" → parsed as UTC midnight, so getUTCDay() is timezone-safe.
+// Strict weekend: a 2-day rental on Sat+Sun (start = Saturday).
+// getUTCDay(): 0=Sun, 6=Sat. Dates are "YYYY-MM-DD" → parsed as UTC midnight,
+// so getUTCDay() is timezone-safe.
 // Mirrored by server/routes/orders.ts — keep identical.
 export function isStrictWeekend(startDate: string | Date | undefined, days: number): boolean {
   if (!startDate) return false; // no date → not a weekend (safe default)
   const dow = new Date(startDate).getUTCDay();
   if (days === 2) return dow === 6; // Saturday → Sat+Sun
-  if (days === 3) return dow === 5; // Friday → Fri+Sat+Sun
   return false;
 }
 
@@ -78,8 +77,7 @@ export function calculateItemSubtotal(machine: Machine, days: number, profile: s
     if (machine.twoDayPrice) return machine.twoDayPrice;
   }
 
-  // 3-day weekend (Fri+Sat+Sun) gets weekendPrice; otherwise weeklyPrice applies from 3 days up
-  if (days === 3 && isStrictWeekend(startDate, days) && machine.weekendPrice) return machine.weekendPrice;
+  // weeklyPrice applies from 3 days up
 
   // 3 or 4 days: if weeklyPrice is set, charge the flat weekly rate (same as 5 days)
   if ((days === 3 || days === 4) && machine.weeklyPrice) return machine.weeklyPrice;

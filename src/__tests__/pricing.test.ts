@@ -49,8 +49,8 @@ describe("isStrictWeekend", () => {
   it("2 days starting Monday = not weekend", () => {
     expect(isStrictWeekend(MON, 2)).toBe(false);
   });
-  it("3 days starting Friday = weekend", () => {
-    expect(isStrictWeekend(FRI, 3)).toBe(true);
+  it("3 days starting Friday = not weekend (weekend is Sat+Sun only)", () => {
+    expect(isStrictWeekend(FRI, 3)).toBe(false);
   });
   it("3 days starting Monday = not weekend", () => {
     expect(isStrictWeekend(MON, 3)).toBe(false);
@@ -86,8 +86,8 @@ describe("calculateItemSubtotal — flat rates", () => {
     expect(calculateItemSubtotal(m, 2, "Particulier", noRules, MON)).toBe(2 * 95);
   });
 
-  it("3 weekend days (Fri-Sun) use weekendPrice", () => {
-    expect(calculateItemSubtotal(nifty120, 3, "Particulier", noRules, FRI)).toBe(150);
+  it("3 days starting Friday → weeklyPrice (weekend is Sat+Sun only)", () => {
+    expect(calculateItemSubtotal(nifty120, 3, "Particulier", noRules, FRI)).toBe(335);
   });
 
   it("3 weekday days (Mon-Wed) use weeklyPrice when available", () => {

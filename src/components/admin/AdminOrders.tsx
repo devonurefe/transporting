@@ -37,9 +37,30 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
   const updateOrderStatus = useAppStore((state) => state.updateOrderStatus);
   const adminUser = useAuthStore((state) => state.user);
 
-  const displayOrders = statusFilter && statusFilter.length > 0
+  const [dateFilter, setDateFilter] = useState<"all" | "today" | "tomorrow" | "week">("all");
+
+  const todayISO = new Date().toISOString().split("T")[0];
+  const tomorrowISO = (() => { const d = new Date(); d.setDate(d.getDate() + 1); return d.toISOString().split("T")[0]; })();
+  const weekStartISO = (() => {
+    const d = new Date(); const dow = d.getDay(); d.setDate(d.getDate() - (dow === 0 ? 6 : dow - 1));
+    return d.toISOString().split("T")[0];
+  })();
+  const weekEndISO = (() => {
+    const d = new Date(); const dow = d.getDay(); d.setDate(d.getDate() + (dow === 0 ? 0 : 7 - dow));
+    return d.toISOString().split("T")[0];
+  })();
+
+  const statusFiltered = statusFilter && statusFilter.length > 0
     ? orders.filter(o => statusFilter.includes(o.status))
     : orders;
+
+  const displayOrders = dateFilter === "today"
+    ? statusFiltered.filter(o => o.startDate <= todayISO && o.endDate >= todayISO)
+    : dateFilter === "tomorrow"
+    ? statusFiltered.filter(o => o.startDate <= tomorrowISO && o.endDate >= tomorrowISO)
+    : dateFilter === "week"
+    ? statusFiltered.filter(o => o.startDate <= weekEndISO && o.endDate >= weekStartISO)
+    : statusFiltered;
 
   const t = (nl: string, en: string, tr: string) => {
     if (adminLanguage === "tr") return tr;
@@ -222,6 +243,27 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
               </button>
             )}
           </div>
+        </div>
+
+        {/* Date filter */}
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {(["all", "today", "tomorrow", "week"] as const).map((f) => {
+            const label = f === "all" ? "Alle" : f === "today" ? "Vandaag" : f === "tomorrow" ? "Morgen" : "Deze Week";
+            return (
+              <button
+                key={f}
+                type="button"
+                onClick={() => setDateFilter(f)}
+                className={`px-3 py-1.5 rounded-full text-[11px] font-bold transition-all border cursor-pointer ${
+                  dateFilter === f
+                    ? "bg-indigo-600 text-white border-indigo-700 shadow-sm"
+                    : "bg-white text-slate-500 border-slate-200 hover:border-slate-300 hover:text-slate-700"
+                }`}
+              >
+                {label}
+              </button>
+            );
+          })}
         </div>
 
         {statusError && (

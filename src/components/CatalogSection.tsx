@@ -133,6 +133,7 @@ export default function CatalogSection({
   };
 
   const [selectedDetailMachine, setSelectedDetailMachine] = useState<Machine | null>(null);
+  const [detailSource, setDetailSource] = useState<"pricing" | "info">("pricing");
   const [activeDetailImageIndex, setActiveDetailImageIndex] = useState<number>(0);
   const [pricingPreviewMachine, setPricingPreviewMachine] = useState<Machine | null>(null);
   useEffect(() => {
@@ -362,6 +363,7 @@ export default function CatalogSection({
                         className="relative aspect-[3/2] w-full overflow-hidden bg-white cursor-pointer"
                         onClick={() => {
                           setSelectedDetailMachine(machine);
+                          setDetailSource("pricing");
                           onAddSystemLog?.("system", currentUser?.name ?? "Gast", `Bekijkt specificaties: "${machine.name}"`);
                         }}
                       >
@@ -473,6 +475,7 @@ export default function CatalogSection({
                           <button
                             onClick={() => {
                               setSelectedDetailMachine(machine);
+                              setDetailSource("info");
                               onAddSystemLog?.("system", currentUser?.name ?? "Gast", `Bekijkt specificaties: "${machine.name}"`);
                             }}
                             className="advice-btn flex-none px-3 py-3 rounded-xl border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 hover:border-indigo-300 text-indigo-700 hover:text-indigo-900 text-[11px] font-semibold transition-all duration-200 active:scale-[0.97] cursor-pointer"
@@ -507,7 +510,7 @@ export default function CatalogSection({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => setSelectedDetailMachine(null)}
+              onClick={() => { setSelectedDetailMachine(null); setDetailSource("pricing"); }}
               className="fixed inset-0 bg-slate-900/40 backdrop-blur-md"
             />
 
@@ -532,7 +535,7 @@ export default function CatalogSection({
                   </h3>
                 </div>
                 <button
-                  onClick={() => setSelectedDetailMachine(null)}
+                  onClick={() => { setSelectedDetailMachine(null); setDetailSource("pricing"); }}
                   className="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
                 >
                   <X className="h-5 w-5" />
@@ -679,8 +682,8 @@ export default function CatalogSection({
                       )}
                     </div>
 
-                    {/* B — Tarieven (compact tier table) */}
-                    <div className="border border-slate-200 rounded-2xl overflow-hidden">
+                    {/* B — Tarieven (compact tier table) — verborgen vanuit "Geschikt voor mij?" */}
+                    {detailSource === "pricing" && <div className="border border-slate-200 rounded-2xl overflow-hidden">
                       {/* Header: dagtarief + BTW toggle */}
                       <div className="px-4 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between gap-2">
                         <div>
@@ -758,7 +761,7 @@ export default function CatalogSection({
                           </div>
                         )}
                       </div>
-                    </div>
+                    </div>}
 
                     {/* C — Omschrijving */}
                     <div className="space-y-1.5">
@@ -911,7 +914,7 @@ export default function CatalogSection({
               {/* Footer */}
               <div className="pt-4 border-t border-slate-200 flex items-center gap-3 shrink-0 mt-3">
                 <button
-                  onClick={() => setSelectedDetailMachine(null)}
+                  onClick={() => { setSelectedDetailMachine(null); setDetailSource("pricing"); }}
                   className="px-5 py-2 hover:bg-slate-100 bg-slate-100 border border-slate-200 text-slate-600 hover:text-slate-800 rounded-xl text-xs font-bold transition-all cursor-pointer"
                 >
                   Sluiten

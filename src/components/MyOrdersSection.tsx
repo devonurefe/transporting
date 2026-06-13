@@ -102,6 +102,7 @@ export default function MyOrdersSection({
   }, []);
 
   const { login, register, updateProfile, resendVerification, logout } = useAuthStore();
+  const isAuthLoading = useAuthStore((state) => state.isLoading);
 
 
 
@@ -511,10 +512,20 @@ export default function MyOrdersSection({
 
                   <button
                     type="submit"
-                    className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl transition-all shadow-md hover:scale-[1.01] active:opacity-95 cursor-pointer flex items-center justify-center space-x-1.5 border-none"
+                    disabled={isAuthLoading}
+                    className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold text-xs rounded-xl transition-all shadow-md hover:scale-[1.01] active:opacity-95 cursor-pointer flex items-center justify-center space-x-1.5 border-none"
                   >
-                    <CheckCircle className="h-4 w-4 text-emerald-450" />
-                    <span>Beveiligd Inloggen</span>
+                    {isAuthLoading ? (
+                      <>
+                        <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                        <span>Bezig met inloggen...</span>
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle className="h-4 w-4" />
+                        <span>Beveiligd Inloggen</span>
+                      </>
+                    )}
                   </button>
 
                   <div className="text-center">

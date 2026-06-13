@@ -241,8 +241,8 @@ export default function App() {
 
   // Triggering notifications dynamically
   const triggerNotification = useCallback((
-    title: string, 
-    message: string, 
+    title: string,
+    message: string,
     type: "info" | "success" | "warning",
     persist: boolean = true
   ) => {
@@ -254,9 +254,17 @@ export default function App() {
       read: false,
       timestamp: new Date().toISOString()
     };
-    
+
     if (persist) {
-      setNotifications((prev) => [newNotif, ...prev]);
+      setNotifications((prev) => {
+        // Skip if same title+message already in the list within the last 2 seconds
+        const recent = prev.find(n =>
+          n.title === title && n.message === message &&
+          Date.now() - new Date(n.timestamp).getTime() < 2000
+        );
+        if (recent) return prev;
+        return [newNotif, ...prev];
+      });
     }
     
     // Set active popup toast

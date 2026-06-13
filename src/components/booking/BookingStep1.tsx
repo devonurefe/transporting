@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from "react";
-import { Calendar, Building2, X, Truck, Sparkles, ShieldAlert, ArrowRight, MessageCircle, ArrowUpToLine, ArrowRightLeft } from "lucide-react";
+import { Calendar, Building2, X, Truck, ShieldAlert, ArrowRight, MessageCircle, ArrowUpToLine, ArrowRightLeft } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { CartItem, DeliveryType, Machine } from "../../types";
 import { buildWhatsAppUrl } from "../../utils/whatsapp";
@@ -192,32 +192,32 @@ export default function BookingStep1({
       )}
 
       {/* Logistical preference setup */}
-      <div className="space-y-3.5 pt-4 border-t border-slate-200">
-        <span className="text-xs text-slate-600 font-bold uppercase tracking-wider font-mono">{t("step1TransportOpts")}</span>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="space-y-3 pt-4 border-t border-slate-200">
+        <span className="text-xs text-slate-500 font-semibold">{t("step1TransportOpts")}</span>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {/* Opt 1 — Wij bezorgen */}
           <div
             onClick={() => setDeliveryType("delivery_by_us")}
-            className={`p-4 rounded-2xl border transition-all cursor-pointer ${
+            className={`p-4 rounded-xl border transition-all cursor-pointer ${
               deliveryType === "delivery_by_us"
-                ? "bg-indigo-50 border-indigo-400 shadow-sm"
-                : "bg-white border-slate-200 hover:border-indigo-300 shadow-sm"
+                ? "bg-indigo-50 border-indigo-400 ring-1 ring-indigo-300"
+                : "bg-white border-slate-200 hover:border-slate-300"
             }`}
           >
             <div className="flex items-center space-x-2.5 mb-2">
-              <span className="h-7 w-7 rounded-lg bg-indigo-50 flex items-center justify-center">
-                <Truck className="h-4 w-4 text-indigo-600" />
+              <span className={`h-7 w-7 rounded-lg flex items-center justify-center ${deliveryType === "delivery_by_us" ? "bg-indigo-100" : "bg-slate-100"}`}>
+                <Truck className={`h-4 w-4 ${deliveryType === "delivery_by_us" ? "text-indigo-600" : "text-slate-500"}`} />
               </span>
               <div>
-                <h4 className="text-xs font-bold text-slate-900"><span className="text-indigo-500 font-mono">Optie 1 · </span>Wij bezorgen</h4>
-                <span className="text-[9.5px] text-slate-400 block font-mono">Binnen 20 km straal</span>
+                <h4 className="text-xs font-bold text-slate-900">Wij bezorgen</h4>
+                <span className="text-[9.5px] text-slate-400 block">Binnen 20 km straal</span>
               </div>
             </div>
-            <p className="text-[10.5px] text-slate-600 leading-normal">
-              Wij leveren de machine af en halen hem terug op. Geef uw afleveradres op in de volgende stap.
+            <p className="text-[10.5px] text-slate-500 leading-normal">
+              Wij leveren de machine af en halen hem terug op.
             </p>
-            <span className="text-xs font-mono font-bold text-indigo-600 mt-2 block">€75,- / rit (heen + terug = €150,-)</span>
+            <span className="text-xs font-semibold text-slate-700 mt-2 block">€150,- heen + terug</span>
           </div>
 
           {/* Opt 2 — Aanhanger huren */}
@@ -226,25 +226,25 @@ export default function BookingStep1({
               setDeliveryType("trailer_rental");
               setDeliveryAddress("");
             }}
-            className={`p-4 rounded-2xl border transition-all cursor-pointer ${
+            className={`p-4 rounded-xl border transition-all cursor-pointer ${
               deliveryType === "trailer_rental"
-                ? "bg-indigo-50 border-indigo-400 shadow-sm"
-                : "bg-white border-slate-200 hover:border-indigo-300 shadow-sm"
+                ? "bg-indigo-50 border-indigo-400 ring-1 ring-indigo-300"
+                : "bg-white border-slate-200 hover:border-slate-300"
             }`}
           >
             <div className="flex items-center space-x-2.5 mb-2">
-              <span className="h-7 w-7 rounded-lg bg-amber-50 flex items-center justify-center">
-                <Truck className="h-4 w-4 text-amber-600" />
+              <span className={`h-7 w-7 rounded-lg flex items-center justify-center ${deliveryType === "trailer_rental" ? "bg-indigo-100" : "bg-slate-100"}`}>
+                <Truck className={`h-4 w-4 ${deliveryType === "trailer_rental" ? "text-indigo-600" : "text-slate-500"}`} />
               </span>
               <div>
-                <h4 className="text-xs font-bold text-slate-900"><span className="text-amber-500 font-mono">Optie 2 · </span>Onze aanhanger huren</h4>
-                <span className="text-[9.5px] text-slate-400 block font-mono">Eigen auto, onze aanhanger</span>
+                <h4 className="text-xs font-bold text-slate-900">Aanhanger huren</h4>
+                <span className="text-[9.5px] text-slate-400 block">Eigen auto, onze aanhanger</span>
               </div>
             </div>
-            <p className="text-[10.5px] text-slate-600 leading-normal">
-              U rijdt zelf met uw eigen voertuig en gebruikt onze aanhanger om de machine te vervoeren.
+            <p className="text-[10.5px] text-slate-500 leading-normal">
+              U rijdt zelf met uw eigen voertuig en onze aanhanger.
             </p>
-            <span className="text-xs font-mono font-bold text-amber-700 mt-2 block">€25,- / dag (aanhanger)</span>
+            <span className="text-xs font-semibold text-slate-700 mt-2 block">€25,- per dag</span>
           </div>
 
           {/* Opt 3 — Zelf ophalen */}
@@ -253,37 +253,34 @@ export default function BookingStep1({
               setDeliveryType("self_pickup");
               setDeliveryAddress("");
             }}
-            className={`p-4 rounded-2xl border transition-all cursor-pointer ${
+            className={`p-4 rounded-xl border transition-all cursor-pointer ${
               deliveryType === "self_pickup"
-                ? "bg-indigo-50 border-indigo-400 shadow-sm"
-                : "bg-white border-slate-200 hover:border-indigo-300 shadow-sm"
+                ? "bg-indigo-50 border-indigo-400 ring-1 ring-indigo-300"
+                : "bg-white border-slate-200 hover:border-slate-300"
             }`}
           >
             <div className="flex items-center space-x-2.5 mb-2">
-              <span className="h-7 w-7 rounded-lg bg-teal-50 flex items-center justify-center">
-                <Building2 className="h-4 w-4 text-teal-600" />
+              <span className={`h-7 w-7 rounded-lg flex items-center justify-center ${deliveryType === "self_pickup" ? "bg-indigo-100" : "bg-slate-100"}`}>
+                <Building2 className={`h-4 w-4 ${deliveryType === "self_pickup" ? "text-indigo-600" : "text-slate-500"}`} />
               </span>
               <div>
-                <h4 className="text-xs font-bold text-slate-900"><span className="text-teal-500 font-mono">Optie 3 · </span>Zelf ophalen</h4>
-                <span className="text-[9.5px] text-slate-400 block font-mono">Zoeterwoude depot</span>
+                <h4 className="text-xs font-bold text-slate-900">Zelf ophalen</h4>
+                <span className="text-[9.5px] text-slate-400 block">Zoeterwoude depot</span>
               </div>
             </div>
-            <p className="text-[10.5px] text-slate-600 leading-normal">
-              U haalt de machine kosteloos op bij ons depot in Zoeterwoude. Controleer of de machine in uw auto of aanhanger past.
+            <p className="text-[10.5px] text-slate-500 leading-normal">
+              Ophalen bij ons depot — gratis.
             </p>
-            <span className="text-xs font-mono font-bold text-teal-600 mt-2 block">Kosteloos / € 0,-</span>
+            <span className="text-xs font-semibold text-slate-700 mt-2 block">Kosteloos</span>
           </div>
         </div>
       </div>
 
-      {/* Shopping Basket & Add-ons Selection Row */}
-      <div className="space-y-3.5 pt-5 border-t border-slate-200">
+      {/* Extra opties */}
+      <div className="space-y-3 pt-4 border-t border-slate-200">
         <div className="flex justify-between items-center">
-          <span className="text-xs text-indigo-700 font-bold uppercase tracking-wider font-mono flex items-center space-x-1.5">
-            <Sparkles className="h-4 w-4 text-indigo-600" />
-            <span>{t("step1AddonsTitle")}</span>
-          </span>
-          <span className="text-[10px] text-slate-500 font-mono">Combineer naar wens</span>
+          <span className="text-xs text-slate-500 font-semibold">{t("step1AddonsTitle")}</span>
+          <span className="text-[10px] text-slate-400">Optioneel</span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -469,12 +466,12 @@ export default function BookingStep1({
                         <span className="text-[9px] text-slate-400">{vatLabel}</span>
                       </div>
                       {rows.map((r, i) => (
-                        <div key={i} className={`flex items-center px-3 py-2 border-b border-slate-50 last:border-0 ${r.highlight === "amber" ? "bg-amber-50" : r.highlight === "violet" ? "bg-violet-50" : r.highlight === "green" ? "bg-emerald-50" : r.highlight === "teal" ? "bg-teal-50" : "bg-white"}`}>
+                        <div key={i} className={`flex items-center px-3 py-2 border-b border-slate-50 last:border-0 ${r.highlight === "amber" ? "bg-amber-50" : "bg-white"}`}>
                           <div className="flex-1">
-                            <p className={`text-[11px] font-bold ${r.highlight === "amber" ? "text-amber-700" : r.highlight === "violet" ? "text-violet-700" : r.highlight === "green" ? "text-emerald-700" : r.highlight === "teal" ? "text-teal-700" : "text-slate-800"}`}>{r.label}</p>
-                            <p className={`text-[9px] ${r.highlight === "amber" ? "text-amber-400" : r.highlight === "violet" ? "text-violet-400" : r.highlight === "green" ? "text-emerald-400" : r.highlight === "teal" ? "text-teal-400" : "text-slate-400"}`}>{r.sub}</p>
+                            <p className={`text-[11px] font-bold ${r.highlight === "amber" ? "text-amber-700" : "text-slate-800"}`}>{r.label}</p>
+                            <p className="text-[9px] text-slate-400">{r.sub}</p>
                           </div>
-                          <span className={`font-mono font-extrabold text-xs ${r.highlight === "amber" ? "text-amber-700" : r.highlight === "violet" ? "text-violet-700" : r.highlight === "green" ? "text-emerald-700" : r.highlight === "teal" ? "text-teal-700" : "text-slate-900"}`}>€{r.price % 1 === 0 ? r.price.toFixed(0) : r.price.toFixed(2)}</span>
+                          <span className={`font-mono font-extrabold text-xs ${r.highlight === "amber" ? "text-amber-700" : "text-slate-900"}`}>€{r.price % 1 === 0 ? r.price.toFixed(0) : r.price.toFixed(2)}</span>
                         </div>
                       ))}
                     </div>

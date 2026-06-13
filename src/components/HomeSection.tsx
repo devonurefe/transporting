@@ -256,11 +256,11 @@ export default function HomeSection({
                 className={`bg-gradient-to-br ${bg} border rounded-2xl overflow-hidden text-left cursor-pointer hover:shadow-md active:scale-[0.98] transition-all${isLast ? " col-span-2" : ""}`}
               >
                 {catImage ? (
-                  <div className={`relative overflow-hidden bg-white/60 ${isLast ? "h-24 sm:h-28" : "h-20 sm:h-24"}`}>
+                  <div className={`relative overflow-hidden bg-slate-100 ${isLast ? "h-24 sm:h-28" : "h-20 sm:h-24"}`}>
                     <img
                       src={catImage}
                       alt={cat.label}
-                      className="w-full h-full object-contain p-1.5"
+                      className="w-full h-full object-cover"
                       referrerPolicy="no-referrer"
                       onError={(e) => { e.currentTarget.parentElement!.style.display = "none"; }}
                     />

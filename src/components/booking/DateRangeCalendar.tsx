@@ -225,7 +225,7 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96, y: 12 }}
               transition={{ type: "spring", stiffness: 360, damping: 28 }}
-              className="relative z-50 w-full max-w-sm bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]"
+              className="relative z-50 w-full max-w-sm bg-white rounded-3xl shadow-2xl border border-slate-200 flex flex-col max-h-[90dvh] overflow-hidden"
             >
               {/* Header */}
               <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
@@ -238,69 +238,72 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
                 </button>
               </div>
 
-              {/* Month navigation */}
-              <div className="flex items-center justify-between px-4 pt-3">
-                <button
-                  type="button"
-                  onClick={goPrev}
-                  disabled={!canPrev}
-                  aria-label={t("calPrevMonth")}
-                  className={`p-1.5 rounded-lg transition-colors ${canPrev ? "hover:bg-slate-100 text-slate-600 cursor-pointer" : "text-slate-200 cursor-not-allowed"}`}
-                >
-                  <ChevronLeft className="h-5 w-5" />
-                </button>
-                <span className="text-sm font-bold text-slate-800 capitalize">{MONTHS_NL[viewMonth]} {viewYear}</span>
-                <button type="button" onClick={goNext} aria-label={t("calNextMonth")} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-600 cursor-pointer transition-colors">
-                  <ChevronRight className="h-5 w-5" />
-                </button>
-              </div>
-
-              {/* Grid */}
-              <div className="px-4 pt-2 pb-1" aria-busy={loading}>
-                <div className="grid grid-cols-7 gap-1 mb-1">
-                  {DOW_NL.map((d) => (
-                    <div key={d} className="text-center text-[9px] font-black text-slate-400 py-1 select-none">{d}</div>
-                  ))}
+              {/* Scrollable body: month nav + grid + legend */}
+              <div className="flex-1 min-h-0 overflow-y-auto">
+                {/* Month navigation */}
+                <div className="flex items-center justify-between px-4 pt-3">
+                  <button
+                    type="button"
+                    onClick={goPrev}
+                    disabled={!canPrev}
+                    aria-label={t("calPrevMonth")}
+                    className={`p-1.5 rounded-lg transition-colors ${canPrev ? "hover:bg-slate-100 text-slate-600 cursor-pointer" : "text-slate-200 cursor-not-allowed"}`}
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </button>
+                  <span className="text-sm font-bold text-slate-800 capitalize">{MONTHS_NL[viewMonth]} {viewYear}</span>
+                  <button type="button" onClick={goNext} aria-label={t("calNextMonth")} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-600 cursor-pointer transition-colors">
+                    <ChevronRight className="h-5 w-5" />
+                  </button>
                 </div>
-                <div className="grid grid-cols-7 gap-1">
-                  {grid.map((cell, i) => {
-                    if (!cell) return <div key={`e-${i}`} />;
-                    const { key, day, status, selectable, isStart, isEnd, inRange } = cell;
-                    const base = "relative h-9 rounded-lg text-xs font-bold flex items-center justify-center transition-colors";
-                    let cls = "";
-                    if (isStart || isEnd) cls = "bg-amber-500 text-white shadow-sm";
-                    else if (inRange) cls = "bg-amber-100 text-amber-900";
-                    else if (status === "available") cls = "bg-emerald-50 text-emerald-800 hover:bg-emerald-100 cursor-pointer";
-                    else if (status === "unavailable") cls = "bg-rose-50 text-rose-300 cursor-not-allowed";
-                    else cls = "text-slate-300 cursor-not-allowed"; // past / capped
-                    return (
-                      <button
-                        key={key}
-                        type="button"
-                        disabled={!selectable}
-                        aria-label={dayAria(key, status)}
-                        aria-pressed={isStart || isEnd || inRange}
-                        onClick={() => onDayClick(key, selectable)}
-                        className={`${base} ${cls} border-none`}
-                      >
-                        {day}
-                        {status === "unavailable" && (
-                          <span aria-hidden className="absolute bottom-1 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full bg-rose-500" />
-                        )}
-                      </button>
-                    );
-                  })}
+
+                {/* Grid */}
+                <div className="px-4 pt-2 pb-1" aria-busy={loading}>
+                  <div className="grid grid-cols-7 gap-1 mb-1">
+                    {DOW_NL.map((d) => (
+                      <div key={d} className="text-center text-[9px] font-black text-slate-400 py-1 select-none">{d}</div>
+                    ))}
+                  </div>
+                  <div className="grid grid-cols-7 gap-1">
+                    {grid.map((cell, i) => {
+                      if (!cell) return <div key={`e-${i}`} />;
+                      const { key, day, status, selectable, isStart, isEnd, inRange } = cell;
+                      const base = "relative h-9 rounded-lg text-xs font-bold flex items-center justify-center transition-colors";
+                      let cls = "";
+                      if (isStart || isEnd) cls = "bg-amber-500 text-white shadow-sm";
+                      else if (inRange) cls = "bg-amber-100 text-amber-900";
+                      else if (status === "available") cls = "bg-emerald-50 text-emerald-800 hover:bg-emerald-100 cursor-pointer";
+                      else if (status === "unavailable") cls = "bg-rose-50 text-rose-300 cursor-not-allowed";
+                      else cls = "text-slate-300 cursor-not-allowed"; // past / capped
+                      return (
+                        <button
+                          key={key}
+                          type="button"
+                          disabled={!selectable}
+                          aria-label={dayAria(key, status)}
+                          aria-pressed={isStart || isEnd || inRange}
+                          onClick={() => onDayClick(key, selectable)}
+                          className={`${base} ${cls} border-none`}
+                        >
+                          {day}
+                          {status === "unavailable" && (
+                            <span aria-hidden className="absolute bottom-1 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full bg-rose-500" />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Legend */}
+                <div className="flex items-center justify-center gap-3 px-4 py-2 text-[9.5px] text-slate-500 font-semibold">
+                  <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-emerald-200 border border-emerald-400" />{t("calLegendAvailable")}</span>
+                  <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-amber-400" />{t("calLegendSelected")}</span>
+                  <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-rose-300" />{t("calLegendUnavailable")}</span>
                 </div>
               </div>
 
-              {/* Legend */}
-              <div className="flex items-center justify-center gap-3 px-4 py-2 text-[9.5px] text-slate-500 font-semibold">
-                <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-emerald-200 border border-emerald-400" />{t("calLegendAvailable")}</span>
-                <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-amber-400" />{t("calLegendSelected")}</span>
-                <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-rose-300" />{t("calLegendUnavailable")}</span>
-              </div>
-
-              {/* Price preview */}
+              {/* Price preview — outside scroll, always visible above footer */}
               {validRange && (
                 <div className="mx-4 mb-2 flex items-center justify-between bg-indigo-50 border border-indigo-100 rounded-xl px-3 py-2">
                   <span className="text-[11px] font-bold text-indigo-900">{days} {days === 1 ? "dag" : "dagen"}</span>
@@ -308,7 +311,7 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
                 </div>
               )}
 
-              {/* Footer actions */}
+              {/* Footer actions — always visible */}
               <div className="flex items-center gap-2 px-4 py-3 border-t border-slate-100">
                 <button
                   type="button"

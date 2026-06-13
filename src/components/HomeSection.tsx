@@ -36,14 +36,14 @@ const CATEGORY_ICONS: Record<string, IconComponent> = {
 };
 
 const bgClasses = [
-  "from-blue-50 to-indigo-100 border-blue-100",
-  "from-amber-50 to-orange-100 border-amber-100",
-  "from-rose-50 to-pink-100 border-rose-100",
-  "from-teal-50 to-emerald-100 border-teal-100",
-  "from-cyan-50 to-blue-100 border-cyan-100",
-  "from-violet-50 to-purple-100 border-violet-100",
-  "from-emerald-50 to-green-100 border-emerald-100",
-  "from-orange-50 to-amber-100 border-orange-100",
+  "from-white to-slate-50 border-slate-200",
+  "from-white to-slate-50 border-slate-200",
+  "from-white to-slate-50 border-slate-200",
+  "from-white to-slate-50 border-slate-200",
+  "from-white to-slate-50 border-slate-200",
+  "from-white to-slate-50 border-slate-200",
+  "from-white to-slate-50 border-slate-200",
+  "from-white to-slate-50 border-slate-200",
 ];
 
 interface HomeSectionProps {

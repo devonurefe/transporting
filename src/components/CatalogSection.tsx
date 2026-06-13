@@ -532,7 +532,7 @@ export default function CatalogSection({
 
                       {/* IMAGE with category + powerType overlay — clickable to open detail modal */}
                       <div
-                        className="relative aspect-[3/2] w-full overflow-hidden bg-slate-50 cursor-pointer"
+                        className="relative aspect-[3/2] w-full overflow-hidden bg-white cursor-pointer"
                         onClick={() => {
                           setSelectedDetailMachine(machine);
                           onAddSystemLog?.("system", currentUser?.name ?? "Gast", `Bekijkt specificaties: "${machine.name}"`);
@@ -656,7 +656,7 @@ export default function CatalogSection({
                               setSelectedDetailMachine(machine);
                               onAddSystemLog?.("system", currentUser?.name ?? "Gast", `Bekijkt specificaties: "${machine.name}"`);
                             }}
-                            className="flex-none px-3 py-3 rounded-xl border border-slate-200 hover:border-slate-300 bg-transparent hover:bg-slate-50 text-slate-600 hover:text-slate-800 text-[11px] font-semibold transition-all duration-200 active:scale-[0.97] cursor-pointer"
+                            className="advice-btn flex-none px-3 py-3 rounded-xl border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 hover:border-indigo-300 text-indigo-700 hover:text-indigo-900 text-[11px] font-semibold transition-all duration-200 active:scale-[0.97] cursor-pointer"
                           >
                             {t("btnSpecifications")}
                           </button>

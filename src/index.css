@@ -152,6 +152,18 @@
   border: 1px solid rgba(79, 70, 229, 0.15);
 }
 
+/* Subtle ring-pulse for "Geschikt voor mij?" advice button */
+@keyframes adviceRing {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+  50%       { box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18); }
+}
+.advice-btn {
+  animation: adviceRing 2.8s ease-in-out infinite;
+}
+.advice-btn:hover {
+  animation: none;
+}
+
 @keyframes pulseGlow {
   0%, 100% {
     opacity: 0.3;

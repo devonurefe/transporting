@@ -62,14 +62,14 @@ export default function Footer({ siteName, setActiveTab: _setActiveTab, setShowC
                   <span className="text-white font-bold text-base leading-none">4.9</span>
                   <span className="text-amber-400 text-sm leading-none">★★★★★</span>
                 </div>
-                <p className="text-[11px] text-slate-400 mt-0.5">Beoordeeld door klanten op Google</p>
+                <p className="text-xs text-slate-400 mt-0.5">Beoordeeld door klanten op Google</p>
               </div>
             </div>
             <a
               href="https://www.google.com/maps/place/MB+Hoogwerkers+bv/@52.1398936,4.5166788,18z"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[11px] text-slate-400 hover:text-white transition-colors no-underline sm:ml-auto"
+              className="text-xs text-slate-400 hover:text-white transition-colors no-underline sm:ml-auto"
             >
               Bekijk alle reviews op Google →
             </a>
@@ -114,7 +114,7 @@ export default function Footer({ siteName, setActiveTab: _setActiveTab, setShowC
 
           {/* Hours & Location */}
           <div className="space-y-4 flex flex-col items-start">
-            <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500">{t("footerHours")}</h4>
+            <h4 className="text-xs font-black uppercase tracking-widest text-slate-500">{t("footerHours")}</h4>
             <div className="flex flex-col gap-4 text-xs text-slate-400">
               <div className="flex items-start gap-3">
                 <span className="h-8 w-8 rounded-xl bg-slate-800 flex items-center justify-center shrink-0">
@@ -122,7 +122,7 @@ export default function Footer({ siteName, setActiveTab: _setActiveTab, setShowC
                 </span>
                 <div className="leading-relaxed">
                   <span className="font-semibold text-slate-200 block">{t("footerHoursLine")}</span>
-                  <span className="text-slate-500 text-[11px]">{t("footerClosed")}</span>
+                  <span className="text-slate-500 text-xs">{t("footerClosed")}</span>
                 </div>
               </div>
               <div className="flex items-start gap-3">
@@ -131,7 +131,7 @@ export default function Footer({ siteName, setActiveTab: _setActiveTab, setShowC
                 </span>
                 <div className="leading-relaxed">
                   <span className="font-semibold text-slate-200 block">Zoeterwoude (HQ)</span>
-                  <span className="text-slate-500 text-[11px]">Produktieweg 20, 2382 PB</span>
+                  <span className="text-slate-500 text-xs">Produktieweg 20, 2382 PB</span>
                 </div>
               </div>
             </div>
@@ -140,11 +140,11 @@ export default function Footer({ siteName, setActiveTab: _setActiveTab, setShowC
         </div>
 
         {/* Bottom row */}
-        <div className="pt-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-[10.5px] text-slate-600">
+        <div className="pt-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs text-slate-600">
           <span>© 2026 HuurGo / MB Hoogwerkers B.V. · KvK 67438237 · BTW NL856990656B01</span>
           <div className="flex gap-3">
-            <span className="text-[10px] font-bold bg-slate-800/60 border border-slate-700 text-slate-500 px-2.5 py-1 rounded-md">TÜV Gecertificeerd</span>
-            <span className="text-[10px] font-bold bg-slate-800/60 border border-slate-700 text-slate-500 px-2.5 py-1 rounded-md">Cat. 1-3B</span>
+            <span className="text-xs font-bold bg-slate-800/60 border border-slate-700 text-slate-500 px-2.5 py-1 rounded-md">TÜV Gecertificeerd</span>
+            <span className="text-xs font-bold bg-slate-800/60 border border-slate-700 text-slate-500 px-2.5 py-1 rounded-md">Cat. 1-3B</span>
           </div>
         </div>
 

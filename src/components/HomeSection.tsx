@@ -280,11 +280,11 @@ export default function HomeSection({
                   </p>
                   <div className="space-y-2">
                     <div>
-                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 leading-none mb-0.5">Hoogte</p>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 leading-none mb-0.5">Hoogte</p>
                       <p className="text-sm font-bold text-slate-700 leading-tight">{cat.heights}</p>
                     </div>
                     <div>
-                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 leading-none mb-0.5">All-in</p>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 leading-none mb-0.5">All-in</p>
                       <p className="text-sm font-extrabold text-emerald-600 leading-tight">
                         {livePriceByCategory[cat.id] !== undefined
                           ? `v.a. €${(() => { const v = withVat(livePriceByCategory[cat.id], vatDisplay); return v % 1 === 0 ? Math.round(v).toLocaleString("nl-NL") : v.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); })()}/dag`

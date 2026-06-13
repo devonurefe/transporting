@@ -123,10 +123,10 @@ export default function Header({
                 <span className="inline-block font-display text-sm sm:text-lg lg:text-xl font-extrabold tracking-tight bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-800 bg-clip-text text-transparent">
                   HubAdmin Portal
                 </span>
-                <div className="hidden sm:flex items-center space-x-1 text-[10px] font-mono tracking-wider uppercase">
-                  <span className="text-amber-400 font-bold flex items-center space-x-1">
-                    <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-ping inline-block mr-1" />
-                    <span>Beheerder Actief</span>
+                <div className="hidden sm:flex items-center space-x-1">
+                  <span className="text-amber-500 text-xs font-semibold flex items-center gap-1.5">
+                    <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-ping inline-block" />
+                    Beheerder Actief
                   </span>
                 </div>
               </div>
@@ -170,7 +170,7 @@ export default function Header({
                   <span>{tab.label}</span>
                   
                   {tab.badge && (
-                    <span className="ml-1 text-[8.5px] font-black bg-indigo-50 text-indigo-600 border border-indigo-100 px-1.5 py-0.5 rounded-full">
+                    <span className="ml-1 text-[10px] font-black bg-indigo-50 text-indigo-600 border border-indigo-100 px-1.5 py-0.5 rounded-full">
                       {tab.badge}
                     </span>
                   )}
@@ -218,7 +218,7 @@ export default function Header({
                 onClick={toggleLanguage}
                 className="flex items-center space-x-1 px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-bold text-slate-700 transition-all cursor-pointer select-none shrink-0 shadow-xs"
               >
-                <span className="font-mono uppercase">{language}</span>
+                <span className="font-bold uppercase">{language}</span>
               </button>
 
               {/* Notification Button */}
@@ -261,7 +261,7 @@ export default function Header({
                           {notifications.length > 0 && (
                             <button
                               onClick={clearNotifications}
-                              className="flex items-center space-x-1 text-[11px] text-slate-500 hover:text-rose-600 transition-colors"
+                              className="flex items-center space-x-1 text-xs text-slate-500 hover:text-rose-600 transition-colors"
                             >
                               <Trash2 className="h-3 w-3" />
                               <span>Wissen</span>
@@ -278,7 +278,7 @@ export default function Header({
                             notifications.map((n) => (
                               <div
                                 key={n.id}
-                                className="group relative flex space-x-2.5 p-2 rounded-lg bg-slate-50 hover:bg-slate-100/80 transition-colors border border-slate-100"
+                                className="group relative flex space-x-2.5 p-3 rounded-lg bg-slate-50 hover:bg-slate-100/80 transition-colors border border-slate-100"
                               >
                                 <div className="mt-0.5">
                                   {n.type === "success" ? (
@@ -291,10 +291,10 @@ export default function Header({
                                   <h5 className="text-xs font-semibold text-slate-800 group-hover:text-indigo-600 transition-colors">
                                     {n.title}
                                   </h5>
-                                  <p className="text-[11px] text-slate-500 leading-snug mt-0.5">
+                                  <p className="text-xs text-slate-500 leading-snug mt-0.5">
                                     {n.message}
                                   </p>
-                                  <span className="text-[9px] font-mono text-slate-500 mt-1 block">
+                                  <span className="text-[10px] text-slate-400 mt-1 block">
                                     {new Date(n.timestamp).toLocaleTimeString("nl-NL", {
                                       hour: "2-digit",
                                       minute: "2-digit",
@@ -369,7 +369,7 @@ export default function Header({
                 }`}
               >
                 <Icon className={`h-4.5 w-4.5 ${isActive ? "text-indigo-600" : "text-slate-400"}`} />
-                <span className="text-[9.5px] mt-1 font-medium leading-none">{tab.label}</span>
+                <span className="text-[10px] mt-0.5 font-medium leading-none">{tab.label}</span>
                 
                 {tab.id === "booking" && cartItems.length > 0 && (
                   <span className="absolute top-1.5 right-1/2 translate-x-5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-emerald-500 px-1 text-[8px] font-black text-slate-950 shadow-[0_0_8px_rgba(16,185,129,0.4)]">

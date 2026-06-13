@@ -12,6 +12,7 @@ import Footer from "./components/Footer";
 import ContactModal from "./components/ContactModal";
 import PWAInstallBanner from "./components/PWAInstallBanner";
 import ToastNotification from "./components/ToastNotification";
+import CookieBanner from "./components/CookieBanner";
 import { Machine, Order, AppNotification, UserProfile, CartItem } from "./types";
 import { useAuthStore } from "./store/authStore";
 import { useAppStore } from "./store/appStore";
@@ -327,6 +328,7 @@ export default function App() {
 
   const addMachine = useAppStore((state) => state.addMachine);
   const updateOrderStatus = useAppStore((state) => state.updateOrderStatus);
+  const fetchBlockedDates = useAppStore((state) => state.fetchBlockedDates);
 
   const getAuthHeaders = () => {
     const isAdminPath = location.pathname.startsWith("/admin");
@@ -379,6 +381,7 @@ export default function App() {
     const endStr = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
     clearCart();
     addToCart(machine, todayStr, endStr);
+    fetchBlockedDates();
     setActiveTab("booking");
     
     // Live visitor logging
@@ -756,6 +759,8 @@ export default function App() {
         </>
       )}
 
+      {/* Cookie consent banner */}
+      <CookieBanner />
 
     </div>
   );

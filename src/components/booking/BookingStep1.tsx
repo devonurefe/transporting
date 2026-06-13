@@ -11,6 +11,7 @@ import { buildWhatsAppUrl } from "../../utils/whatsapp";
 import BookingPriceSummary from "./BookingPriceSummary";
 import DateRangeCalendar from "./DateRangeCalendar";
 import { useLanguageStore } from "../../store/languageStore";
+import { getSpecsForMachine } from "../../utils/machineSpecs";
 
 interface BookingStep1Props {
   cartItems: CartItem[];
@@ -425,6 +426,26 @@ export default function BookingStep1({
                   )}
                   <span className="ml-auto font-mono font-extrabold text-indigo-700 text-sm">€{previewMachine.pricePerDay},-<span className="text-[10px] font-normal text-slate-400">/dag</span></span>
                 </div>
+
+                {/* Detailed spec table */}
+                {(() => {
+                  const specs = getSpecsForMachine(previewMachine.id, (previewMachine as any).specs);
+                  if (specs.length === 0) return null;
+                  return (
+                    <div className="border border-slate-100 rounded-xl overflow-hidden">
+                      <table className="w-full text-[10px]">
+                        <tbody>
+                          {specs.map((s, i) => (
+                            <tr key={i} className={i % 2 === 0 ? "bg-slate-50" : "bg-white"}>
+                              <td className="py-1.5 px-3 font-semibold text-slate-500 w-1/2">{s.label}</td>
+                              <td className="py-1.5 px-3 font-bold text-slate-800">{s.value}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  );
+                })()}
 
                 <button
                   onClick={() => setPreviewMachine(null)}

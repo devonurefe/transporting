@@ -35,16 +35,15 @@ const CATEGORY_ICONS: Record<string, IconComponent> = {
   kamersteiger: Columns2,
 };
 
-const bgClasses = [
-  "from-white to-slate-50 border-slate-200",
-  "from-white to-slate-50 border-slate-200",
-  "from-white to-slate-50 border-slate-200",
-  "from-white to-slate-50 border-slate-200",
-  "from-white to-slate-50 border-slate-200",
-  "from-white to-slate-50 border-slate-200",
-  "from-white to-slate-50 border-slate-200",
-  "from-white to-slate-50 border-slate-200",
-];
+const CAT_GRADIENT: Record<string, string> = {
+  schaarlift:   "from-indigo-100 to-indigo-200",
+  spin:         "from-teal-100 to-teal-200",
+  aanhanger:    "from-amber-100 to-amber-200",
+  mastlift:     "from-violet-100 to-violet-200",
+  ladderlift:   "from-blue-100 to-blue-200",
+  ecolift:      "from-emerald-100 to-emerald-200",
+  kamersteiger: "from-slate-100 to-slate-200",
+};
 
 interface HomeSectionProps {
   onSearch: (query: string, category: string) => void;
@@ -238,15 +237,14 @@ export default function HomeSection({
 
       {/* ── CATEGORY CARDS ── */}
       <div className="bg-white px-4 sm:px-6 pt-6 pb-10">
-        <div className="max-w-5xl mx-auto flex justify-end mb-3">
+        <div className="max-w-3xl mx-auto flex justify-end mb-3">
           <VatToggle />
         </div>
-        <div className="max-w-5xl mx-auto grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="max-w-3xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-3">
           {displayCategories.map((cat, i) => {
             const Icon = CATEGORY_ICONS[cat.id] ?? Truck;
-            const bg = bgClasses[i % bgClasses.length];
-            const isLast = displayCategories.length % 2 !== 0 && i === displayCategories.length - 1;
             const catImage = imageByCategory[cat.id];
+            const fallbackGradient = CAT_GRADIENT[cat.id] ?? "from-slate-100 to-slate-200";
 
             return (
               <motion.button
@@ -255,34 +253,19 @@ export default function HomeSection({
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: i * 0.05 }}
                 onClick={() => onSearch("", cat.id)}
-                className={`bg-gradient-to-br ${bg} border rounded-2xl overflow-hidden text-left cursor-pointer hover:shadow-md active:scale-[0.98] transition-all${isLast ? " col-span-2" : ""}`}
+                className="bg-white border border-slate-200 rounded-2xl overflow-hidden text-left cursor-pointer hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] transition-all flex flex-row items-stretch"
               >
-                {catImage ? (
-                  <div className={`relative overflow-hidden bg-slate-100 ${isLast ? "h-24 sm:h-28" : "h-20 sm:h-24"}`}>
-                    <img
-                      src={catImage}
-                      alt={cat.label}
-                      className="w-full h-full object-cover"
-                      referrerPolicy="no-referrer"
-                      onError={(e) => { e.currentTarget.parentElement!.style.display = "none"; }}
-                    />
-                  </div>
-                ) : (
-                  <div className="px-4 pt-4 pb-0">
-                    <div className="p-2 bg-white/70 rounded-xl w-fit">
-                      <Icon className="h-5 w-5 text-slate-600" />
-                    </div>
-                  </div>
-                )}
-                <div className="p-4 pt-3">
-                  <p className="font-bold text-xs text-slate-800 leading-snug mb-3 line-clamp-2 min-h-[2.25rem]">
+                {/* Left — text info */}
+                <div className="flex-1 p-4 flex flex-col justify-center gap-2 min-w-0">
+                  <p className="font-display font-black text-sm text-slate-900 leading-snug line-clamp-2">
                     {cat.listLabel || cat.label}
                   </p>
-                  <div className="space-y-2">
+                  <div className="flex items-center gap-3 flex-wrap">
                     <div>
                       <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 leading-none mb-0.5">Hoogte</p>
-                      <p className="text-sm font-bold text-slate-700 leading-tight">{cat.heights}</p>
+                      <p className="text-xs font-bold text-slate-700">{cat.heights}</p>
                     </div>
+                    <div className="w-px h-6 bg-slate-200 shrink-0" />
                     <div>
                       <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 leading-none mb-0.5">All-in</p>
                       <p className="text-sm font-extrabold text-emerald-600 leading-tight">
@@ -291,6 +274,28 @@ export default function HomeSection({
                           : cat.price}
                       </p>
                     </div>
+                  </div>
+                </div>
+
+                {/* Right — machine photo */}
+                <div className="w-28 sm:w-36 shrink-0 relative overflow-hidden">
+                  {catImage ? (
+                    <img
+                      src={catImage}
+                      alt={cat.label}
+                      className="w-full h-full object-cover"
+                      referrerPolicy="no-referrer"
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                        (e.currentTarget.nextElementSibling as HTMLElement | null)?.style.setProperty("display", "flex");
+                      }}
+                    />
+                  ) : null}
+                  {/* Gradient fallback (shown when no photo or photo fails) */}
+                  <div
+                    className={`absolute inset-0 bg-gradient-to-br ${fallbackGradient} flex items-center justify-center ${catImage ? "hidden" : "flex"}`}
+                  >
+                    <Icon className="h-8 w-8 text-slate-500/50" />
                   </div>
                 </div>
               </motion.button>

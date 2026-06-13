@@ -94,6 +94,13 @@ app.get("/sitemap.xml", (_req, res) => {
     { loc: "https://huurgo.nl/", priority: "1.0", changefreq: "weekly" },
     { loc: "https://huurgo.nl/catalog", priority: "0.9", changefreq: "daily" },
     { loc: "https://huurgo.nl/booking", priority: "0.8", changefreq: "weekly" },
+    { loc: "https://huurgo.nl/catalog?category=schaarlift", priority: "0.85", changefreq: "daily" },
+    { loc: "https://huurgo.nl/catalog?category=spin", priority: "0.85", changefreq: "daily" },
+    { loc: "https://huurgo.nl/catalog?category=aanhanger", priority: "0.80", changefreq: "daily" },
+    { loc: "https://huurgo.nl/catalog?category=mastlift", priority: "0.80", changefreq: "daily" },
+    { loc: "https://huurgo.nl/catalog?category=ladderlift", priority: "0.80", changefreq: "daily" },
+    { loc: "https://huurgo.nl/catalog?category=ecolift", priority: "0.75", changefreq: "weekly" },
+    { loc: "https://huurgo.nl/catalog?category=kamersteiger", priority: "0.75", changefreq: "weekly" },
   ];
   const urlset = urls
     .map(

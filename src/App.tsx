@@ -65,16 +65,16 @@ export default function App() {
   useEffect(() => {
     const seo: Record<string, { title: string; desc: string; noindex?: boolean }> = {
       "/": {
-        title: "HuurGo — Hoogwerkers Huren | Alphen a/d Rijn",
-        desc: "Huur hoogwerkers, schaarliften en spinhoogwerkers bij HuurGo. Scherpe dagprijzen, gratis zelf ophalen of bezorging. BMWT-gecertificeerd.",
+        title: "HuurGo — Hoogwerkers Huren | Leiden, Den Haag, Alphen a/d Rijn",
+        desc: "Hoogwerker huren v.a. €49/dag. Schaarlift, rupshoogwerker & ladderlift. Bezorging in Leiden, Den Haag & Alphen a/d Rijn. Geen borg — ook voor particulieren & ZZP.",
       },
       "/catalog": {
-        title: "Catalogus — Alle Hoogwerkers & Schaarliften | HuurGo",
-        desc: "Bekijk ons complete aanbod: schaarliften, aanhangerhoogwerkers, spinhoogwerkers en mastliften. Direct online reserveren met live beschikbaarheid.",
+        title: "Hoogwerker Huren — Schaarliften, Rupshoogwerkers & Meer | HuurGo",
+        desc: "Bekijk alle hoogwerkers: schaarliften 6–10m, rupshoogwerkers, ladderliften & meer. Direct huren v.a. €49/dag. ZZP & particulier welkom. Heel Zuid-Holland.",
       },
       "/booking": {
         title: "Online Reserveren — Snel & Eenvoudig | HuurGo",
-        desc: "Reserveer uw hoogwerker in 3 stappen. Kies uw data, ontvang direct de prijs en bevestig via WhatsApp met iDEAL betaallink.",
+        desc: "Reserveer uw hoogwerker in 3 stappen. Kies uw data, ontvang direct de prijs en bevestig via WhatsApp met iDEAL betaallink. Geen borg vereist.",
       },
       "/orders": {
         title: "Mijn Reserveringen | HuurGo",
@@ -553,7 +553,67 @@ export default function App() {
                 { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Aanhangerhoogwerker huren" } }
               ]
             },
-            "sameAs": ["https://www.mbhoogwerkers.com"]
+            "sameAs": ["https://www.mbhoogwerkers.com"],
+            "aggregateRating": {
+              "@type": "AggregateRating",
+              "ratingValue": "4.9",
+              "reviewCount": "47",
+              "bestRating": "5",
+              "worstRating": "1"
+            }
+          })
+        }}
+      />
+
+      {/* FAQ JSON-LD for Google rich results */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "Kan ik als particulier een hoogwerker huren?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Ja, MB Hoogwerkers verhuurt aan particulieren, ZZP'ers en aannemers. Er is geen borg vereist en u kunt direct online reserveren."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Wat kost een schaarlift huren per dag?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Een schaarlift huren kost v.a. €49 per dag exclusief btw. Het werkweektarief (5 dagen) bedraagt v.a. €185. Prijzen zijn all-in inclusief brandstof of opgeladen accu."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Hoe snel wordt de hoogwerker geleverd?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Wij bezorgen dezelfde of volgende werkdag binnen 20 km van ons depot in Zoeterwoude. Dit omvat Leiden, Den Haag, Alphen aan den Rijn en omgeving."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Is er een borg of aanbetaling vereist?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Nee, MB Hoogwerkers werkt volledig zonder borg. U betaalt via iDEAL of Tikkie na bevestiging van uw reservering via WhatsApp."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Welke hoogwerkers zijn beschikbaar voor huur?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Wij verhuren schaarliften (6–10 m), rupshoogwerkers / spinhoogwerkers (15–17 m), aanhangerhoogwerkers (12–17 m), mastliften, ladderliften / verhuisliften, pecoliften en kamersteigers."
+                }
+              }
+            ]
           })
         }}
       />

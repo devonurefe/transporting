@@ -111,3 +111,15 @@ export function calculateItemSubtotal(machine: Machine, days: number, profile: s
   }
   return Math.max(0, rawSubtotal - discountAmount);
 }
+
+// Derives discount percentages for badge display from flat-rate fields.
+// Used by CatalogSection cards and MachineDetailModal.
+export function computeDiscounts(m: Machine): { weekly: number; monthly: number } {
+  const weekly = m.weeklyPrice && m.pricePerDay > 0
+    ? Math.round((1 - m.weeklyPrice / (5 * m.pricePerDay)) * 100)
+    : (m.weeklyDiscountPercent ?? 0);
+  const monthly = m.monthlyPrice && m.pricePerDay > 0
+    ? Math.round((1 - m.monthlyPrice / (28 * m.pricePerDay)) * 100)
+    : (m.monthlyDiscountPercent ?? 0);
+  return { weekly: Math.max(0, weekly), monthly: Math.max(0, monthly) };
+}

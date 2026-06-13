@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect, useCallback, lazy, Suspense } from "react";
+import React, { useState, useEffect, useRef, useCallback, lazy, Suspense } from "react";
 import { Loader2, MessageCircle } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
@@ -135,6 +135,29 @@ export default function App() {
   useEffect(() => {
     checkAuth();
   }, [checkAuth]);
+
+  // Detect fresh login (not session restore) and nudge user back to booking if cart has items
+  const prevUserIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!authChecked) return;
+    const uid = storeUser?.id ?? null;
+    if (uid && !prevUserIdRef.current && storeUser?.role !== "admin") {
+      const items = useAppStore.getState().cartItems;
+      if (items.length > 0) {
+        // Use a short timeout so triggerNotification is available after render
+        setTimeout(() => {
+          triggerNotification(
+            "Winkelwagen bewaard",
+            "Je hebt nog een machine geselecteerd. Ga naar Boeken om door te gaan.",
+            "info",
+            false
+          );
+        }, 400);
+      }
+    }
+    prevUserIdRef.current = uid;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storeUser?.id, authChecked]);
 
   useEffect(() => {
     if (storeUser) {

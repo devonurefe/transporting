@@ -4,16 +4,15 @@
  */
 
 import React, { useState } from "react";
-import { Calendar, Building2, X, Truck, ShieldAlert, ArrowRight, MessageCircle, ArrowUpToLine, ArrowRightLeft } from "lucide-react";
+import { Calendar, Building2, X, Truck, ShieldAlert, ArrowRight, MessageCircle, ChevronLeft } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { CartItem, DeliveryType, Machine } from "../../types";
 import { buildWhatsAppUrl } from "../../utils/whatsapp";
 import BookingPriceSummary from "./BookingPriceSummary";
 import DateRangeCalendar from "./DateRangeCalendar";
 import { useLanguageStore } from "../../store/languageStore";
-import { getSpecsForMachine } from "../../utils/machineSpecs";
-import { withVat } from "../../utils/format";
 import { useAppStore } from "../../store/appStore";
+import MachineDetailModal from "../MachineDetailModal";
 
 interface BookingStep1Props {
   cartItems: CartItem[];
@@ -65,6 +64,16 @@ export default function BookingStep1({
   return (
     <div className="bg-white border border-slate-200 shadow-sm p-6 rounded-3xl space-y-6">
       <div className="border-b border-slate-100 pb-4">
+        <div className="flex items-center justify-between mb-3">
+          <button
+            type="button"
+            onClick={() => setActiveTab("catalog")}
+            className="flex items-center gap-1 text-xs text-slate-400 hover:text-indigo-600 transition-colors cursor-pointer bg-transparent border-none p-0 font-medium"
+          >
+            <ChevronLeft className="h-3.5 w-3.5" />
+            Terug naar catalogus
+          </button>
+        </div>
         <h3 className="font-display font-black text-base text-slate-900 flex items-center space-x-2">
           <Calendar className="h-5 w-5 text-indigo-600" />
           <span>{t("step1Title")}</span>
@@ -201,7 +210,7 @@ export default function BookingStep1({
       <div className="space-y-3 pt-4 border-t border-slate-200">
         <span className="text-xs text-slate-500 font-semibold">{t("step1TransportOpts")}</span>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {/* Opt 1 — Wij bezorgen */}
           <div
             onClick={() => setDeliveryType("delivery_by_us")}
@@ -365,134 +374,16 @@ export default function BookingStep1({
           <ArrowRight className="h-4 w-4" />
         </button>
       </div>
-      {/* Machine detail preview popup */}
+      {/* Machine detail modal — full shared component */}
       <AnimatePresence>
         {previewMachine && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setPreviewMachine(null)}
-              className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm"
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 12 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 12 }}
-              transition={{ type: "spring", stiffness: 380, damping: 28 }}
-              className="relative z-50 w-full max-w-sm bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200"
-            >
-              {/* Top stripe */}
-              <div className="h-1 bg-gradient-to-r from-teal-400 via-indigo-500 to-amber-400" />
-
-              {/* Image */}
-              <div className="aspect-video w-full overflow-hidden bg-slate-100 relative">
-                <img
-                  src={previewMachine.imageUrl}
-                  alt={previewMachine.imageAlt}
-                  className="w-full h-full object-cover"
-                  referrerPolicy="no-referrer"
-                  onError={(e) => { e.currentTarget.src = "/placeholder-machine.webp"; }}
-                />
-                <div className="absolute inset-x-0 bottom-0 px-3 py-2 bg-gradient-to-t from-black/60 to-transparent flex items-end justify-between">
-                  <span className="text-[10px] font-bold text-white/90 uppercase tracking-wider">{previewMachine.categoryLabel}</span>
-                  <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md ${
-                    previewMachine.powerType === "Diesel" ? "bg-orange-500/80 text-white"
-                    : previewMachine.powerType === "Hybride" ? "bg-blue-500/80 text-white"
-                    : "bg-emerald-500/80 text-white"
-                  }`}>{previewMachine.powerType}</span>
-                </div>
-                <button
-                  onClick={() => setPreviewMachine(null)}
-                  className="absolute top-2 right-2 p-1.5 rounded-xl bg-black/40 hover:bg-black/60 text-white cursor-pointer transition-colors"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-
-              {/* Content */}
-              <div className="p-4 space-y-3">
-                <div>
-                  <h3 className="font-display font-black text-base text-slate-900 leading-snug">{previewMachine.name}</h3>
-                  <p className="text-xs text-slate-500 leading-relaxed mt-1 line-clamp-3">{previewMachine.description}</p>
-                </div>
-
-                {/* Specs */}
-                <div className="flex items-center gap-3 text-xs font-mono text-slate-600 border-t border-slate-100 pt-3">
-                  <span className="flex items-center gap-1">
-                    <ArrowUpToLine className="h-3.5 w-3.5 text-indigo-500" />
-                    <span className="font-bold text-slate-800">{previewMachine.height}m</span>
-                  </span>
-                  {previewMachine.reach > 0 && (
-                    <span className="flex items-center gap-1">
-                      <ArrowRightLeft className="h-3.5 w-3.5 text-indigo-400" />
-                      {previewMachine.reach}m
-                    </span>
-                  )}
-                  <span className="ml-auto font-mono font-extrabold text-indigo-700 text-sm">€{previewMachine.pricePerDay},-<span className="text-[10px] font-normal text-slate-400">/dag</span></span>
-                </div>
-
-                {/* Detailed spec table */}
-                {(() => {
-                  const specs = getSpecsForMachine(previewMachine.id, (previewMachine as any).specs);
-                  if (specs.length === 0) return null;
-                  return (
-                    <div className="border border-slate-100 rounded-xl overflow-hidden">
-                      <table className="w-full text-[10px]">
-                        <tbody>
-                          {specs.map((s, i) => (
-                            <tr key={i} className={i % 2 === 0 ? "bg-slate-50" : "bg-white"}>
-                              <td className="py-1.5 px-3 font-semibold text-slate-500 w-1/2">{s.label}</td>
-                              <td className="py-1.5 px-3 font-bold text-slate-800">{s.value}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  );
-                })()}
-
-                {/* Pricing tier table */}
-                {(() => {
-                  const m = previewMachine;
-                  const vp = (n: number) => withVat(n, vatDisplay);
-                  const vatLabel = vatDisplay === "incl" ? "incl. BTW" : "excl. BTW";
-                  const rows: { label: string; sub: string; price: number; highlight?: string }[] = [];
-                  const hasActie = !!(m.oneDayPrice && m.oneDayPrice < m.pricePerDay);
-                  rows.push({ label: hasActie ? "1 dag actie" : "1 dag", sub: "Ma – Vr", price: vp(hasActie ? m.oneDayPrice! : m.pricePerDay), highlight: hasActie ? "amber" : undefined });
-                  rows.push({ label: "2 dagen (doordeweeks)", sub: "Ma – Do", price: vp(m.twoDayPrice ?? m.pricePerDay * 2) });
-                  if (m.weekendPrice) rows.push({ label: "Weekend", sub: "Za – Zo", price: vp(m.weekendPrice), highlight: "violet" });
-                  if (m.weeklyPrice) rows.push({ label: "3–5 dagen (werkweek)", sub: "Ma – Vr", price: vp(m.weeklyPrice), highlight: "green" });
-                  if (m.monthlyPrice) rows.push({ label: "4 weken (28 dagen)", sub: "Langlopend", price: vp(m.monthlyPrice), highlight: "teal" });
-                  return (
-                    <div className="border border-slate-100 rounded-xl overflow-hidden">
-                      <div className="flex items-center justify-between px-3 py-1.5 bg-slate-50 border-b border-slate-100">
-                        <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Tarieven</span>
-                        <span className="text-[9px] text-slate-400">{vatLabel}</span>
-                      </div>
-                      {rows.map((r, i) => (
-                        <div key={i} className={`flex items-center px-3 py-2 border-b border-slate-50 last:border-0 ${r.highlight === "amber" ? "bg-amber-50" : "bg-white"}`}>
-                          <div className="flex-1">
-                            <p className={`text-[11px] font-bold ${r.highlight === "amber" ? "text-amber-700" : "text-slate-800"}`}>{r.label}</p>
-                            <p className="text-[9px] text-slate-400">{r.sub}</p>
-                          </div>
-                          <span className={`font-mono font-extrabold text-xs ${r.highlight === "amber" ? "text-amber-700" : "text-slate-900"}`}>€{r.price % 1 === 0 ? r.price.toFixed(0) : r.price.toFixed(2)}</span>
-                        </div>
-                      ))}
-                    </div>
-                  );
-                })()}
-
-                <button
-                  onClick={() => setPreviewMachine(null)}
-                  className="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all cursor-pointer"
-                >
-                  Sluiten
-                </button>
-              </div>
-            </motion.div>
-          </div>
+          <MachineDetailModal
+            machine={previewMachine}
+            onClose={() => setPreviewMachine(null)}
+            onBook={() => setPreviewMachine(null)}
+            vatDisplay={vatDisplay}
+            showPricing={true}
+          />
         )}
       </AnimatePresence>
     </div>

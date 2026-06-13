@@ -182,5 +182,5 @@ export const MACHINE_SPECS: Record<string, SpecRow[]> = {
 /** Returns DB specs if set, otherwise falls back to hardcoded defaults. */
 export function getSpecsForMachine(id: string, dbSpecs?: unknown): SpecRow[] {
   if (Array.isArray(dbSpecs) && dbSpecs.length > 0) return dbSpecs as SpecRow[];
-  return MACHINE_SPECS[id] ?? MACHINE_SPECS[id.replace(/-[12]$/, "")] ?? [];
+  return MACHINE_SPECS[id] ?? MACHINE_SPECS[id.replace(/-\d+$/, "")] ?? [];
 }

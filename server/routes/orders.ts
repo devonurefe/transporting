@@ -275,7 +275,8 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
       }
       if (machine.campaignDiscountPercent) {
         serverDiscountAmount += rawSubtotal * (machine.campaignDiscountPercent / 100);
-      } else if (machine.campaignDiscountAmount) {
+      }
+      if (machine.campaignDiscountAmount) {
         serverDiscountAmount += (machine.campaignDiscountAmount as number);
       }
       serverSubtotal = Math.max(0, rawSubtotal - serverDiscountAmount);

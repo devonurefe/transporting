@@ -29,7 +29,7 @@ export function evaluateDiscountPercent(machine: Machine, days: number, profile:
   let highestDiscount = 0;
 
   // 1. Weekly/Monthly volume discounts
-  if (days >= 30 && machine.monthlyDiscountPercent) {
+  if (days >= 28 && machine.monthlyDiscountPercent) {
     highestDiscount = Math.max(highestDiscount, machine.monthlyDiscountPercent);
   } else if (days >= 6 && machine.weeklyDiscountPercent) {
     highestDiscount = Math.max(highestDiscount, machine.weeklyDiscountPercent);

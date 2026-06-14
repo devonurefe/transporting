@@ -317,7 +317,7 @@ export default function BookingSection({
       if (leadItem) {
         if (totalDays >= 28) discountLabel = "Maandkorting";
         else if (totalDays >= 5) discountLabel = "Weekkorting";
-        else if (isStrictWeekend(leadStart, totalDays) && leadItem.weekendPrice) discountLabel = "Weekendprijs";
+        else if (isStrictWeekend(leadStart, leadCartDays) && leadItem.weekendPrice) discountLabel = "Weekendprijs";
         else if (totalDays === 2 && leadItem.twoDayPrice) discountLabel = "2-Dag Prijs";
         else if (totalDays === 1 && leadItem.oneDayPrice && leadItem.oneDayPrice < leadItem.pricePerDay) discountLabel = "1-Dag Actie";
 

@@ -284,7 +284,7 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
       // do not stack volume + campaign discounts. Campaign rules are also applied here.
       const rawSubtotal = machine.pricePerDay * rentalDays;
       let highestDiscountPercent = 0;
-      if (rentalDays >= 30 && machine.monthlyDiscountPercent) {
+      if (rentalDays >= 28 && machine.monthlyDiscountPercent) {
         highestDiscountPercent = Math.max(highestDiscountPercent, machine.monthlyDiscountPercent);
       } else if (rentalDays >= 6 && machine.weeklyDiscountPercent) {
         highestDiscountPercent = Math.max(highestDiscountPercent, machine.weeklyDiscountPercent);

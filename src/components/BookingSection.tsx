@@ -375,6 +375,7 @@ export default function BookingSection({
       // Tier label for flat-rate price display (single-item cart only)
       let tierLabel: string | null = null;
       let isFlatRate = false;
+      let weeklyBreakdown: { weeks: number; pricePerWeek: number; remainder: number; dailyRate: number } | null = null;
       if (cartItems.length === 1 && leadItem) {
         if (totalDays === 1 && leadItem.oneDayPrice) {
           tierLabel = "1-Dag Actie"; isFlatRate = true;
@@ -384,6 +385,10 @@ export default function BookingSection({
           tierLabel = "2-Daags Tarief (ma-vr)"; isFlatRate = true;
         } else if ((totalDays === 3 || totalDays === 4 || totalDays === 5) && leadItem.weeklyPrice) {
           tierLabel = "Werkweek-tarief (3-5 dgn)"; isFlatRate = true;
+        } else if (totalDays >= 6 && totalDays <= 27 && leadItem.weeklyPrice) {
+          const wks = Math.floor(totalDays / 5);
+          const rem = totalDays % 5;
+          weeklyBreakdown = { weeks: wks, pricePerWeek: leadItem.weeklyPrice, remainder: rem, dailyRate: leadItem.pricePerDay };
         } else if (totalDays >= 28 && leadItem.monthlyPrice) {
           tierLabel = "Maandtarief"; isFlatRate = true;
         }
@@ -406,7 +411,8 @@ export default function BookingSection({
         spansWeekend,
         effectiveDailyRate,
         tierLabel,
-        isFlatRate
+        isFlatRate,
+        weeklyBreakdown
       };
     }
 
@@ -477,6 +483,7 @@ export default function BookingSection({
 
     let tierLabel: string | null = null;
     let isFlatRate = false;
+    let weeklyBreakdown: { weeks: number; pricePerWeek: number; remainder: number; dailyRate: number } | null = null;
     if (days === 1 && selectedMachine.oneDayPrice) {
       tierLabel = "1-Dag Actie"; isFlatRate = true;
     } else if (days === 2 && isStrictWeekend(startDate, 2) && selectedMachine.weekendPrice) {
@@ -485,6 +492,10 @@ export default function BookingSection({
       tierLabel = "2-Daags Tarief (ma-vr)"; isFlatRate = true;
     } else if ((days === 3 || days === 4 || days === 5) && selectedMachine.weeklyPrice) {
       tierLabel = "Werkweek-tarief (3-5 dgn)"; isFlatRate = true;
+    } else if (days >= 6 && days <= 27 && selectedMachine.weeklyPrice) {
+      const wks = Math.floor(days / 5);
+      const rem = days % 5;
+      weeklyBreakdown = { weeks: wks, pricePerWeek: selectedMachine.weeklyPrice, remainder: rem, dailyRate: selectedMachine.pricePerDay };
     } else if (days >= 28 && selectedMachine.monthlyPrice) {
       tierLabel = "Maandtarief"; isFlatRate = true;
     }
@@ -506,7 +517,8 @@ export default function BookingSection({
       spansWeekend,
       effectiveDailyRate,
       tierLabel,
-      isFlatRate
+      isFlatRate,
+      weeklyBreakdown
     };
   };
 

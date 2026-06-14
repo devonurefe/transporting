@@ -66,6 +66,7 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
 
   const triggerRef = useRef<HTMLButtonElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
+  const openedAtRef = useRef(0);
 
   const open = () => {
     setDraftStart(startDate);
@@ -74,10 +75,11 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
     setViewYear(Number(m.split("-")[0]));
     setViewMonth(Number(m.split("-")[1]) - 1);
     setIsOpen(true);
+    openedAtRef.current = Date.now();
   };
   const close = () => {
     setIsOpen(false);
-    triggerRef.current?.focus();
+    // Intentionally no focus() call here — it causes re-tap issues on iOS
   };
 
   // Fetch fresh occupancy + blocked dates every time the calendar opens
@@ -200,6 +202,7 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
         ref={triggerRef}
         type="button"
         onClick={open}
+        style={{ touchAction: "manipulation" }}
         className={`w-full flex items-center gap-2.5 bg-white rounded-xl px-3 py-2.5 border transition-colors shadow-sm cursor-pointer text-left ${
           startDate && endDate ? "border-indigo-300 text-slate-800" : "border-slate-200 text-slate-500 hover:border-indigo-300"
         }`}
@@ -216,11 +219,17 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={close}
+              onPointerDown={(e) => {
+                // Guard against phantom touch-through right after open (< 350 ms)
+                if (Date.now() - openedAtRef.current < 350) return;
+                e.stopPropagation();
+                close();
+              }}
               className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm"
             />
             <motion.div
               ref={dialogRef}
+              onClick={(e) => e.stopPropagation()}
               role="dialog"
               aria-modal="true"
               aria-label={`${t("calTitle")} — ${machine.name}`}

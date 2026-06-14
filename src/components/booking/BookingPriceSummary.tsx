@@ -30,6 +30,7 @@ interface BookingPriceSummaryProps {
     effectiveDailyRate?: number | null;
     tierLabel?: string | null;
     isFlatRate?: boolean;
+    weeklyBreakdown?: { weeks: number; pricePerWeek: number; remainder: number; dailyRate: number } | null;
   };
 }
 
@@ -87,8 +88,23 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
       {/* Price breakdown */}
       <div className="p-4 space-y-3">
 
-        {/* Days × rate OR flat-rate tier */}
-        {sums.isFlatRate && sums.tierLabel ? (
+        {/* Days × rate, flat-rate tier, or weekly linear breakdown */}
+        {sums.weeklyBreakdown ? (
+          <div className="space-y-1.5">
+            <div className="flex justify-between items-center">
+              <span className="text-xs text-slate-600">{sums.weeklyBreakdown.weeks}× Wekelijks Tarief (5 dgn)</span>
+              <span className="text-xs font-bold text-slate-800 font-mono">{euro(sums.weeklyBreakdown.weeks * sums.weeklyBreakdown.pricePerWeek)}</span>
+            </div>
+            {sums.weeklyBreakdown.remainder > 0 && (
+              <div className="flex justify-between items-center">
+                <span className="text-xs text-slate-600">
+                  {sums.weeklyBreakdown.remainder} {sums.weeklyBreakdown.remainder === 1 ? 'dag' : 'dagen'} × {euroCompact(sums.weeklyBreakdown.dailyRate)}
+                </span>
+                <span className="text-xs font-bold text-slate-800 font-mono">{euro(sums.weeklyBreakdown.remainder * sums.weeklyBreakdown.dailyRate)}</span>
+              </div>
+            )}
+          </div>
+        ) : sums.isFlatRate && sums.tierLabel ? (
           <div className="flex justify-between items-center">
             <span className="text-xs text-slate-600">1× {sums.tierLabel}</span>
             <span className="text-xs font-bold text-slate-800 font-mono">{euro(sums.subtotal)}</span>
@@ -102,12 +118,12 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
           </div>
         )}
 
-        {/* Info strip — only for non-flat-rate discounts, weekend spans, and linear weekly rate */}
-        {((!sums.isFlatRate && sums.discountAmount > 0) || sums.spansWeekend || sums.effectiveDailyRate) && (
+        {/* Info strip — for discounts, weekend spans, and linear weekly rate badge */}
+        {((!sums.weeklyBreakdown && !sums.isFlatRate && sums.discountAmount > 0) || sums.spansWeekend || (!sums.weeklyBreakdown && sums.effectiveDailyRate)) && (
           <div className="rounded-xl border border-slate-100 bg-slate-50 p-3 space-y-2.5">
 
-            {/* Effectief dagtarief uitleg (6–27 dagen) */}
-            {sums.effectiveDailyRate != null && sums.days >= 6 && (
+            {/* Effectief dagtarief uitleg (6–27 dagen) — hidden when weeklyBreakdown is shown */}
+            {!sums.weeklyBreakdown && sums.effectiveDailyRate != null && sums.days >= 6 && (
               <div className="flex items-start gap-2">
                 <TrendingDown className="h-3.5 w-3.5 text-indigo-500 mt-0.5 shrink-0" />
                 <div className="text-xs leading-snug">
@@ -121,8 +137,8 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
               </div>
             )}
 
-            {/* Discount row — hidden for flat-rate tiers (already shown via tier label) */}
-            {!sums.isFlatRate && sums.discountAmount > 0 && (
+            {/* Discount row — hidden for flat-rate and weekly breakdown tiers */}
+            {!sums.weeklyBreakdown && !sums.isFlatRate && sums.discountAmount > 0 && (
               <div className={`flex justify-between items-center text-emerald-700 text-xs font-semibold${(sums.effectiveDailyRate != null && sums.days >= 6) || sums.spansWeekend ? " pt-2 border-t border-slate-200" : ""}`}>
                 <span className="flex items-center gap-1">
                   <TrendingDown className="h-3.5 w-3.5 shrink-0" />
@@ -134,7 +150,7 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
 
             {/* Gratis weekendopslag */}
             {sums.spansWeekend && (
-              <div className={`flex items-center gap-2 text-xs text-blue-700${(!sums.isFlatRate && sums.discountAmount > 0) || (sums.effectiveDailyRate != null && sums.days >= 6) ? " pt-2 border-t border-slate-200" : ""}`}>
+              <div className={`flex items-center gap-2 text-xs text-blue-700${(!sums.weeklyBreakdown && !sums.isFlatRate && sums.discountAmount > 0) || (!sums.weeklyBreakdown && sums.effectiveDailyRate != null && sums.days >= 6) ? " pt-2 border-t border-slate-200" : ""}`}>
                 <span className="shrink-0">🗓</span>
                 <span>
                   <span className="font-semibold">Gratis weekendopslag</span>

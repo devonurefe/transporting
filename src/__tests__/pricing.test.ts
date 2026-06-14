@@ -102,12 +102,16 @@ describe("calculateItemSubtotal — flat rates", () => {
     expect(calculateItemSubtotal(nifty120, 5, "Particulier", noRules)).toBe(335);
   });
 
-  it("7 days = 1 week + 2 days pro-rata", () => {
-    expect(calculateItemSubtotal(nifty120, 7, "Particulier", noRules)).toBe(335 + 2 * 95);
+  it("6 days = linear weekly rate (6 × weeklyPrice/5)", () => {
+    expect(calculateItemSubtotal(nifty120, 6, "Particulier", noRules)).toBe(Math.round(6 * (335 / 5)));
   });
 
-  it("27 days = 5 weeks + 2 days pro-rata (still weekly tier)", () => {
-    expect(calculateItemSubtotal(nifty120, 27, "Particulier", noRules)).toBe(5 * 335 + 2 * 95);
+  it("7 days = linear weekly rate (7 × weeklyPrice/5)", () => {
+    expect(calculateItemSubtotal(nifty120, 7, "Particulier", noRules)).toBe(Math.round(7 * (335 / 5)));
+  });
+
+  it("27 days = linear weekly rate (27 × weeklyPrice/5)", () => {
+    expect(calculateItemSubtotal(nifty120, 27, "Particulier", noRules)).toBe(Math.round(27 * (335 / 5)));
   });
 
   it("28 days uses monthlyPrice", () => {

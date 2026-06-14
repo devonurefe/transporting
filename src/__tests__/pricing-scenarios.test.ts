@@ -121,12 +121,14 @@ describe("Huurperiode berekening", () => {
   it("28 aaneengesloten dagen", () => expect(calculateRentalDays("2026-06-01", "2026-06-28")).toBe(28));
 });
 
-describe("Pro-rata wekelijks (nifty-120)", () => {
+describe("Pro-rata wekelijks (nifty-120) — lineair weeklyPrice/5 per dag", () => {
   const nifty = machines.find(m => m.id === "nifty-120-1")! as Machine;
-  it("7 dagen = 1 werkweek + 2 dag dagprijs", () =>
-    expect(calculateItemSubtotal(nifty, 7, "Particulier", noRules)).toBe(335 + 2 * 95));
-  it("27 dagen = 5 werkweken + 2 dag dagprijs", () =>
-    expect(calculateItemSubtotal(nifty, 27, "Particulier", noRules)).toBe(5 * 335 + 2 * 95));
-  it("33 dagen = 1 maand + 5-dag werkweek resto", () =>
+  it("6 dagen = 6 × weeklyPrice/5", () =>
+    expect(calculateItemSubtotal(nifty, 6, "Particulier", noRules)).toBe(Math.round(6 * (335 / 5))));
+  it("7 dagen = 7 × weeklyPrice/5", () =>
+    expect(calculateItemSubtotal(nifty, 7, "Particulier", noRules)).toBe(Math.round(7 * (335 / 5))));
+  it("27 dagen = 27 × weeklyPrice/5", () =>
+    expect(calculateItemSubtotal(nifty, 27, "Particulier", noRules)).toBe(Math.round(27 * (335 / 5))));
+  it("33 dagen = 1 maand + 5-dag werkweek resto (monthly bloc ongewijzigd)", () =>
     expect(calculateItemSubtotal(nifty, 33, "Particulier", noRules)).toBe(490 + 335));
 });

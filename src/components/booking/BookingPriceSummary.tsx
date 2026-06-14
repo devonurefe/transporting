@@ -24,6 +24,9 @@ interface BookingPriceSummaryProps {
     vat: number;
     total: number;
     deliveryType?: string;
+    weekendDays?: number;
+    spansWeekend?: boolean;
+    effectiveDailyRate?: number | null;
   };
 }
 
@@ -87,14 +90,48 @@ export default function BookingPriceSummary({ selectedMachine, sums }: BookingPr
           <span className="text-xs font-bold text-slate-800 font-mono">{euro(sums.rawSubtotal)}</span>
         </div>
 
-        {/* Discount */}
-        {sums.discountAmount > 0 && (
-          <div className="flex justify-between items-center bg-emerald-50 -mx-4 px-4 py-2 rounded-lg">
-            <span className="text-xs text-emerald-700 font-semibold flex items-center gap-1">
-              <TrendingDown className="h-3.5 w-3.5" />
-              {sums.discountLabel}
-            </span>
-            <span className="text-xs font-bold text-emerald-700 font-mono">− {euro(sums.discountAmount)}</span>
+        {/* Info strip — altijd zichtbaar als er iets te melden is */}
+        {(sums.discountAmount > 0 || sums.spansWeekend || sums.effectiveDailyRate) && (
+          <div className="rounded-xl border border-slate-100 bg-slate-50 p-3 space-y-2.5">
+
+            {/* Effectief dagtarief uitleg (6–27 dagen) */}
+            {sums.effectiveDailyRate != null && sums.days >= 6 && (
+              <div className="flex items-start gap-2">
+                <TrendingDown className="h-3.5 w-3.5 text-indigo-500 mt-0.5 shrink-0" />
+                <div className="text-xs leading-snug">
+                  <p className="font-semibold text-slate-700">Werkweektarief toegepast</p>
+                  <p className="text-slate-500 mt-0.5">
+                    {sums.days} dagen ×{" "}
+                    <span className="font-semibold text-indigo-600">{euroCompact(sums.effectiveDailyRate)}/dag</span>
+                    <span className="ml-1.5 line-through text-slate-400">{euroCompact(selectedMachine.pricePerDay)}/dag</span>
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Indirim satırı */}
+            {sums.discountAmount > 0 && (
+              <div className={`flex justify-between items-center text-emerald-700 text-xs font-semibold${(sums.effectiveDailyRate != null && sums.days >= 6) || sums.spansWeekend ? " pt-2 border-t border-slate-200" : ""}`}>
+                <span className="flex items-center gap-1">
+                  <TrendingDown className="h-3.5 w-3.5 shrink-0" />
+                  {sums.discountLabel}
+                </span>
+                <span className="font-mono">− {euro(sums.discountAmount)}</span>
+              </div>
+            )}
+
+            {/* Gratis weekendopslag */}
+            {sums.spansWeekend && (
+              <div className={`flex items-center gap-2 text-xs text-blue-700${sums.discountAmount > 0 || (sums.effectiveDailyRate != null && sums.days >= 6) ? " pt-2 border-t border-slate-200" : ""}`}>
+                <span className="shrink-0">🗓</span>
+                <span>
+                  <span className="font-semibold">Gratis weekendopslag</span>
+                  {" — "}
+                  {(sums.weekendDays ?? 0) === 1 ? "1 weekend dag" : `${sums.weekendDays} weekend dagen`} inbegrepen
+                </span>
+              </div>
+            )}
+
           </div>
         )}
 

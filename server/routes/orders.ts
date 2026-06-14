@@ -256,12 +256,10 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
       serverSubtotal = m.weekendPrice;
     } else if (rentalDays === 2 && m.twoDayPrice) {
       serverSubtotal = m.twoDayPrice;
-    } else if ((rentalDays === 3 || rentalDays === 4) && m.weeklyPrice) {
+    } else if ((rentalDays === 3 || rentalDays === 4 || rentalDays === 5) && m.weeklyPrice) {
       serverSubtotal = m.weeklyPrice;
-    } else if (rentalDays >= 5 && rentalDays < 28 && m.weeklyPrice) {
-      const fullWeeks = Math.floor(rentalDays / 5);
-      const remainder = rentalDays % 5;
-      serverSubtotal = fullWeeks * m.weeklyPrice + remainder * machine.pricePerDay;
+    } else if (rentalDays >= 6 && rentalDays < 28 && m.weeklyPrice) {
+      serverSubtotal = Math.round(rentalDays * (m.weeklyPrice / 5));
     } else if (rentalDays >= 28 && m.monthlyPrice) {
       const fullMonths = Math.floor(rentalDays / 28);
       const remainder = rentalDays % 28;

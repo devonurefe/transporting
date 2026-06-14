@@ -79,14 +79,12 @@ export function calculateItemSubtotal(machine: Machine, days: number, profile: s
 
   // weeklyPrice applies from 3 days up
 
-  // 3 or 4 days: if weeklyPrice is set, charge the flat weekly rate (same as 5 days)
-  if ((days === 3 || days === 4) && machine.weeklyPrice) return machine.weeklyPrice;
+  // 3–5 days: flat weekly rate
+  if ((days === 3 || days === 4 || days === 5) && machine.weeklyPrice) return machine.weeklyPrice;
 
-  // Weekly flat rate: 5–27 days
-  if (days >= 5 && days < 28 && machine.weeklyPrice) {
-    const fullWeeks = Math.floor(days / 5);
-    const remainder = days % 5;
-    return fullWeeks * machine.weeklyPrice + remainder * machine.pricePerDay;
+  // 6–27 days: linear rate derived from weeklyPrice (weeklyPrice/5 per day — always ≤ pricePerDay)
+  if (days >= 6 && days < 28 && machine.weeklyPrice) {
+    return Math.round(days * (machine.weeklyPrice / 5));
   }
 
   // Monthly flat rate: 28+ days
@@ -110,6 +108,22 @@ export function calculateItemSubtotal(machine: Machine, days: number, profile: s
     discountAmount += machine.campaignDiscountAmount;
   }
   return Math.max(0, rawSubtotal - discountAmount);
+}
+
+// Counts Saturday + Sunday days within a rental range (both ends inclusive).
+// Used to detect weekend-spanning rentals for "Gratis weekendopslag" badge.
+export function countWeekendDays(startDate: string | Date, endDate: string | Date): number {
+  const cur = new Date(startDate);
+  const end = new Date(endDate);
+  cur.setUTCHours(0, 0, 0, 0);
+  end.setUTCHours(0, 0, 0, 0);
+  let count = 0;
+  while (cur <= end) {
+    const dow = cur.getUTCDay();
+    if (dow === 0 || dow === 6) count++;
+    cur.setUTCDate(cur.getUTCDate() + 1);
+  }
+  return count;
 }
 
 // Derives discount percentages for badge display from flat-rate fields.

@@ -221,95 +221,97 @@ export default function Header({
                 <span className="font-bold uppercase">{language}</span>
               </button>
 
-              {/* Notification Button */}
-              <div className="relative">
-                <button
-                  onClick={() => {
-                    setShowNotifDropdown(!showNotifDropdown);
-                    if (!showNotifDropdown) markAllNotificationsAsRead();
-                  }}
-                  className="relative p-2 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-all"
-                >
-                  <Bell className="h-5 w-5" />
-                  {unreadCount > 0 && (
-                    <span className="absolute top-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-indigo-500 text-[10px] font-bold text-white ring-2 ring-white">
-                      {unreadCount}
-                    </span>
-                  )}
-                </button>
+              {/* Notification Bell — only visible to logged-in members */}
+              {currentUser && (
+                <div className="relative">
+                  <button
+                    onClick={() => {
+                      setShowNotifDropdown(!showNotifDropdown);
+                      if (!showNotifDropdown) markAllNotificationsAsRead();
+                    }}
+                    className="relative p-2 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-all"
+                  >
+                    <Bell className="h-5 w-5" />
+                    {unreadCount > 0 && (
+                      <span className="absolute top-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-indigo-500 text-[10px] font-bold text-white ring-2 ring-white">
+                        {unreadCount}
+                      </span>
+                    )}
+                  </button>
 
-                {/* Notifications Dropdown */}
-                <AnimatePresence>
-                  {showNotifDropdown && (
-                    <>
-                      <div 
-                        className="fixed inset-0 z-10" 
-                        onClick={() => setShowNotifDropdown(false)} 
-                      />
-                      <motion.div
-                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                        transition={{ duration: 0.2 }}
-                        className="absolute right-0 mt-3.5 w-72 sm:w-80 origin-top-right rounded-xl border border-slate-200 bg-white p-4 shadow-xl z-20"
-                      >
-                        <div className="flex items-center justify-between border-b border-slate-100 pb-2.5 mb-2.5">
-                          <div className="flex items-center space-x-1.5">
-                            <Bell className="h-4 w-4 text-indigo-600" />
-                            <h4 className="font-display font-bold text-sm text-slate-900">Live Updates</h4>
-                          </div>
-                          {notifications.length > 0 && (
-                            <button
-                              onClick={clearNotifications}
-                              className="flex items-center space-x-1 text-xs text-slate-500 hover:text-rose-600 transition-colors"
-                            >
-                              <Trash2 className="h-3 w-3" />
-                              <span>Wissen</span>
-                            </button>
-                          )}
-                        </div>
-
-                        <div className="max-h-60 overflow-y-auto space-y-2 pr-1">
-                          {notifications.length === 0 ? (
-                            <div className="py-6 text-center text-xs text-slate-400">
-                              Geen nieuwe meldingen beschikbaar.
+                  {/* Notifications Dropdown */}
+                  <AnimatePresence>
+                    {showNotifDropdown && (
+                      <>
+                        <div
+                          className="fixed inset-0 z-10"
+                          onClick={() => setShowNotifDropdown(false)}
+                        />
+                        <motion.div
+                          initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                          transition={{ duration: 0.2 }}
+                          className="absolute right-0 mt-3.5 w-72 sm:w-80 origin-top-right rounded-xl border border-slate-200 bg-white p-4 shadow-xl z-20"
+                        >
+                          <div className="flex items-center justify-between border-b border-slate-100 pb-2.5 mb-2.5">
+                            <div className="flex items-center space-x-1.5">
+                              <Bell className="h-4 w-4 text-indigo-600" />
+                              <h4 className="font-display font-bold text-sm text-slate-900">Mijn Meldingen</h4>
                             </div>
-                          ) : (
-                            notifications.map((n) => (
-                              <div
-                                key={n.id}
-                                className="group relative flex space-x-2.5 p-3 rounded-lg bg-slate-50 hover:bg-slate-100/80 transition-colors border border-slate-100"
+                            {notifications.length > 0 && (
+                              <button
+                                onClick={clearNotifications}
+                                className="flex items-center space-x-1 text-xs text-slate-500 hover:text-rose-600 transition-colors"
                               >
-                                <div className="mt-0.5">
-                                  {n.type === "success" ? (
-                                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                                  ) : (
-                                    <Sparkles className="h-4 w-4 text-indigo-500" />
-                                  )}
-                                </div>
-                                <div className="flex-1">
-                                  <h5 className="text-xs font-semibold text-slate-800 group-hover:text-indigo-600 transition-colors">
-                                    {n.title}
-                                  </h5>
-                                  <p className="text-xs text-slate-500 leading-snug mt-0.5">
-                                    {n.message}
-                                  </p>
-                                  <span className="text-[10px] text-slate-400 mt-1 block">
-                                    {new Date(n.timestamp).toLocaleTimeString("nl-NL", {
-                                      hour: "2-digit",
-                                      minute: "2-digit",
-                                    })}
-                                  </span>
-                                </div>
+                                <Trash2 className="h-3 w-3" />
+                                <span>Wissen</span>
+                              </button>
+                            )}
+                          </div>
+
+                          <div className="max-h-60 overflow-y-auto space-y-2 pr-1">
+                            {notifications.length === 0 ? (
+                              <div className="py-6 text-center text-xs text-slate-400">
+                                Geen nieuwe meldingen beschikbaar.
                               </div>
-                            ))
-                          )}
-                        </div>
-                      </motion.div>
-                    </>
-                  )}
-                </AnimatePresence>
-              </div>
+                            ) : (
+                              notifications.map((n) => (
+                                <div
+                                  key={n.id}
+                                  className="group relative flex space-x-2.5 p-3 rounded-lg bg-slate-50 hover:bg-slate-100/80 transition-colors border border-slate-100"
+                                >
+                                  <div className="mt-0.5">
+                                    {n.type === "success" ? (
+                                      <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                                    ) : (
+                                      <Sparkles className="h-4 w-4 text-indigo-500" />
+                                    )}
+                                  </div>
+                                  <div className="flex-1">
+                                    <h5 className="text-xs font-semibold text-slate-800 group-hover:text-indigo-600 transition-colors">
+                                      {n.title}
+                                    </h5>
+                                    <p className="text-xs text-slate-500 leading-snug mt-0.5">
+                                      {n.message}
+                                    </p>
+                                    <span className="text-[10px] text-slate-400 mt-1 block">
+                                      {new Date(n.timestamp).toLocaleTimeString("nl-NL", {
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                      })}
+                                    </span>
+                                  </div>
+                                </div>
+                              ))
+                            )}
+                          </div>
+                        </motion.div>
+                      </>
+                    )}
+                  </AnimatePresence>
+                </div>
+              )}
 
               {/* Customer Avatar indicator */}
               {currentUser ? (

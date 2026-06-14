@@ -364,9 +364,12 @@ export default function MyOrdersSection({
 
     if (success) {
       onAddSystemLog?.("signup", regName.trim(), `Nieuw klantaccount aangemaakt.`);
+      const needsVerification = useAuthStore.getState().isUnverified;
       onTriggerNotification(
         "Registratie Voltooid",
-        `Account aangemaakt! U kunt nu direct inloggen met uw e-mailadres.`,
+        needsVerification
+          ? `Account aangemaakt! Controleer uw e-mail om uw account te activeren.`
+          : `Account aangemaakt! U kunt nu direct inloggen met uw e-mailadres.`,
         "success"
       );
       const justRegisteredEmail = regEmail.trim();

@@ -235,6 +235,16 @@ authRouter.put("/profile", requireAuth as any, async (req: AuthenticatedRequest,
   if (!name || !name.trim()) {
     return res.status(400).json({ error: "Naam is verplicht" });
   }
+  if (avatarUrl && avatarUrl.trim()) {
+    try {
+      const parsed = new URL(avatarUrl.trim());
+      if (!["http:", "https:"].includes(parsed.protocol)) {
+        return res.status(400).json({ error: "Avatar URL moet een geldige https:// link zijn." });
+      }
+    } catch {
+      return res.status(400).json({ error: "Avatar URL is ongeldig." });
+    }
+  }
 
   try {
     const updatedCustomer = await prisma.customer.update({

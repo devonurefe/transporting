@@ -29,7 +29,7 @@ export function checkAvailability(
   blockedDates: SimpleBlockedDate[],
   todayStr?: string
 ) {
-  if (!start || !end) return { available: true, blocked: false, overlap: false, reason: "" };
+  if (!start || !end) return { available: false, blocked: false, overlap: false, reason: "Selecteer een begin- en einddatum." };
 
   const requestedStart = new Date(start).getTime();
   const requestedEnd = new Date(end).getTime();

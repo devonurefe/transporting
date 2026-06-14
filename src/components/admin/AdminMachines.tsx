@@ -60,8 +60,12 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
           machines: state.machines.map(mc => mc.id === m.id ? { ...mc, isActive } : mc)
         }));
         onAddSystemLog("fleet", adminUser?.name ?? "Admin", `Machine ${m.name} ${isActive ? "geactiveerd" : "gedeactiveerd"}`);
+      } else {
+        alert(t("Fout bij het wijzigen van de machinestatus.", "Error toggling machine status.", "Makine durumu değiştirilirken hata oluştu."));
       }
-    } catch { /* ignore */ }
+    } catch {
+      alert(t("Netwerkfout bij het wijzigen van de machinestatus.", "Network error toggling machine status.", "Makine durumu değiştirilirken ağ hatası."));
+    }
     setTogglingId(null);
   };
 

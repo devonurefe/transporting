@@ -111,7 +111,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         throw new Error(data.error || "Registratie mislukt");
       }
 
-      set({ isLoading: false });
+      set({ isLoading: false, isUnverified: !data.autoVerified });
       return true;
     } catch (err: any) {
       set({ error: err.message, isLoading: false });

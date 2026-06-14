@@ -39,12 +39,22 @@ export function buildWhatsAppUrl(
   for (const item of cartItems) {
     const start = item.startDate || "–";
     const end = item.endDate || "–";
-    const itemDays = totals && cartItems.length === 1 ? totals.days : null;
-    const itemSubtotal = totals && cartItems.length === 1 ? totals.subtotal : null;
+    // Compute per-item days from item dates; single-cart uses authoritative totals
+    let perItemDays: number | null = null;
+    let perItemSubtotal: number | null = null;
+    if (totals && cartItems.length === 1) {
+      perItemDays = totals.days;
+      perItemSubtotal = totals.subtotal;
+    } else if (item.startDate && item.endDate) {
+      const diff = new Date(item.endDate).getTime() - new Date(item.startDate).getTime();
+      perItemDays = Math.max(1, Math.ceil(diff / (1000 * 3600 * 24)) + 1);
+    }
     lines.push(`▸ *${item.machine.name}*`);
     lines.push(`   📅 Periode:  ${start}  →  ${end}`);
-    if (itemDays && itemSubtotal) {
-      lines.push(`   💶 ${itemDays} ${itemDays === 1 ? "dag" : "dagen"} — *${euroCompact(itemSubtotal)}*`);
+    if (perItemDays && perItemSubtotal) {
+      lines.push(`   💶 ${perItemDays} ${perItemDays === 1 ? "dag" : "dagen"} — *${euroCompact(perItemSubtotal)}*`);
+    } else if (perItemDays) {
+      lines.push(`   💶 ${perItemDays} ${perItemDays === 1 ? "dag" : "dagen"} × ${euroCompact(item.machine.pricePerDay)}/dag`);
     } else {
       lines.push(`   💶 Tarief: ${euroCompact(item.machine.pricePerDay)}/dag`);
     }

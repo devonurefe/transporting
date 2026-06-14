@@ -126,7 +126,9 @@ export const emailService = {
             </div>
 
             <div class="price-block">
-              <div class="label">Totaal Overeenkomst (incl. BTW)</div>
+              <div style="font-size:12px; color:#64748b;">Subtotaal (excl. 21% BTW): &nbsp; € ${(order.totalAmount / 1.21).toFixed(2)}</div>
+              <div style="font-size:12px; color:#64748b; margin-top:4px;">BTW 21%: &nbsp; € ${(order.totalAmount - order.totalAmount / 1.21).toFixed(2)}</div>
+              <div class="label" style="margin-top:12px;">Totaal Overeenkomst (incl. BTW)</div>
               <div class="price-amount">€ ${order.totalAmount.toFixed(2)}</div>
             </div>
 

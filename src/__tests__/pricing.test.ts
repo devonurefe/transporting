@@ -118,7 +118,11 @@ describe("calculateItemSubtotal — flat rates", () => {
     expect(calculateItemSubtotal(nifty120, 28, "Particulier", noRules)).toBe(490);
   });
 
-  it("33 days = 1 month + 5-day week remainder", () => {
+  it("31 days = 1 month + 3-day linear remainder (round(3 * weeklyPrice/5))", () => {
+    expect(calculateItemSubtotal(nifty120, 31, "Particulier", noRules)).toBe(490 + Math.round(3 * 335 / 5));
+  });
+
+  it("33 days = 1 month + 5-day linear remainder (round(5 * weeklyPrice/5) = weeklyPrice)", () => {
     expect(calculateItemSubtotal(nifty120, 33, "Particulier", noRules)).toBe(490 + 335);
   });
 

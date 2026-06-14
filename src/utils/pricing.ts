@@ -92,7 +92,7 @@ export function calculateItemSubtotal(machine: Machine, days: number, profile: s
     const fullMonths = Math.floor(days / 28);
     const remainder = days % 28;
     let remainderCost: number;
-    if (remainder >= 5 && machine.weeklyPrice) {
+    if (remainder >= 3 && machine.weeklyPrice) {
       remainderCost = Math.round(remainder * (machine.weeklyPrice / 5));
     } else {
       remainderCost = remainder * machine.pricePerDay;

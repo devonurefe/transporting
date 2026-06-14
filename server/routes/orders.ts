@@ -273,7 +273,7 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
       const fullMonths = Math.floor(rentalDays / 28);
       const remainder = rentalDays % 28;
       let remainderCost: number;
-      if (remainder >= 5 && m.weeklyPrice) {
+      if (remainder >= 3 && m.weeklyPrice) {
         remainderCost = Math.round(remainder * (m.weeklyPrice / 5));
       } else {
         remainderCost = remainder * machine.pricePerDay;

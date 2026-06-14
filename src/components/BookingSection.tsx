@@ -266,6 +266,11 @@ export default function BookingSection({
           deliveryType
         };
       }
+      // Lead item dates pre-computed for transport/trailer cost (only item[0] pays these)
+      const leadCartStart = cartItems[0]?.startDate;
+      const leadCartEnd = cartItems[0]?.endDate;
+      const leadCartDays = (leadCartStart && leadCartEnd) ? calculateRentalDays(leadCartStart, leadCartEnd) : 1;
+
       let totalDays = 0;
       let rawSubtotal = 0;
       let discountAmount = 0;
@@ -289,7 +294,8 @@ export default function BookingSection({
       }
 
       const transport = deliveryType === "delivery_by_us" ? 150 : 0;
-      const trailerCost = deliveryType === "trailer_rental" ? 25 * totalDays : 0;
+      // Trailer only charged for item[0]'s rental period — use leadCartDays, not totalDays
+      const trailerCost = deliveryType === "trailer_rental" ? 25 * leadCartDays : 0;
       const driver = 0;
 
       // Addon calculation
@@ -307,7 +313,7 @@ export default function BookingSection({
 
       let discountLabel = "Korting";
       const leadItem = cartItems[0]?.machine;
-      const leadStart = cartItems[0]?.startDate;
+      const leadStart = leadCartStart;
       if (leadItem) {
         if (totalDays >= 28) discountLabel = "Maandkorting";
         else if (totalDays >= 5) discountLabel = "Weekkorting";
@@ -331,8 +337,8 @@ export default function BookingSection({
         }
       }
 
-      const leadEnd = cartItems[0]?.endDate;
-      const leadItemDays = (leadStart && leadEnd) ? calculateRentalDays(leadStart, leadEnd) : totalDays;
+      const leadEnd = leadCartEnd;
+      const leadItemDays = leadCartDays;
       const weekendDays = (leadStart && leadEnd) ? countWeekendDays(leadStart, leadEnd) : 0;
       const strictWeekendLead = isStrictWeekend(leadStart, leadItemDays);
       const spansWeekend = weekendDays > 0 && !strictWeekendLead;
@@ -618,7 +624,6 @@ export default function BookingSection({
             }
           }
 
-          setIsSubmitting(false);
           if (firstSuccessfulOrder) {
             setSuccessOrders(placedOrders);
             if (paymentGateway === "whatsapp") {
@@ -647,6 +652,7 @@ export default function BookingSection({
             setBookingError("Er is een fout opgetreden bij het verwerken van uw boeking. Controleer uw gegevens en probeer het opnieuw.");
           }
         }
+        setIsSubmitting(false);
         } catch (err: any) {
         setIsSubmitting(false);
         const msg: string = err?.message || "";

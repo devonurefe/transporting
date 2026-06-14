@@ -31,7 +31,7 @@ export function evaluateDiscountPercent(machine: Machine, days: number, profile:
   // 1. Weekly/Monthly volume discounts
   if (days >= 30 && machine.monthlyDiscountPercent) {
     highestDiscount = Math.max(highestDiscount, machine.monthlyDiscountPercent);
-  } else if (days >= 7 && machine.weeklyDiscountPercent) {
+  } else if (days >= 6 && machine.weeklyDiscountPercent) {
     highestDiscount = Math.max(highestDiscount, machine.weeklyDiscountPercent);
   }
 
@@ -93,7 +93,7 @@ export function calculateItemSubtotal(machine: Machine, days: number, profile: s
     const remainder = days % 28;
     let remainderCost: number;
     if (remainder >= 5 && machine.weeklyPrice) {
-      remainderCost = Math.floor(remainder / 5) * machine.weeklyPrice + (remainder % 5) * machine.pricePerDay;
+      remainderCost = Math.round(remainder * (machine.weeklyPrice / 5));
     } else {
       remainderCost = remainder * machine.pricePerDay;
     }

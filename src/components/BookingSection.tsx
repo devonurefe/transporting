@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { Machine, Order, DeliveryType, UserProfile, CartItem } from "../types";
 import { useAppStore } from "../store/appStore";
 import { checkAvailability } from "../utils/availability";
-import { calculateItemSubtotal, isStrictWeekend, countWeekendDays } from "../utils/pricing";
+import { calculateItemSubtotal, isStrictWeekend, countWeekendDays, calculateRentalDays } from "../utils/pricing";
 
 // Import modular Step components
 import { buildWhatsAppUrl } from "../utils/whatsapp";
@@ -332,12 +332,12 @@ export default function BookingSection({
       }
 
       const leadEnd = cartItems[0]?.endDate;
+      const leadItemDays = (leadStart && leadEnd) ? calculateRentalDays(leadStart, leadEnd) : totalDays;
       const weekendDays = (leadStart && leadEnd) ? countWeekendDays(leadStart, leadEnd) : 0;
-      const strictWeekendLead = isStrictWeekend(leadStart, totalDays);
+      const strictWeekendLead = isStrictWeekend(leadStart, leadItemDays);
       const spansWeekend = weekendDays > 0 && !strictWeekendLead;
-      const leadMachine = leadItem;
-      const effectiveDailyRate = (totalDays >= 6 && totalDays < 28 && leadMachine?.weeklyPrice)
-        ? leadMachine.weeklyPrice / 5
+      const effectiveDailyRate = (totalDays >= 6 && totalDays < 28 && leadItem?.weeklyPrice)
+        ? leadItem.weeklyPrice / 5
         : null;
 
       return {
@@ -582,7 +582,7 @@ export default function BookingSection({
             const addonsList: { id: string; name: string; price: number; billing: "daily" | "flat" }[] = [];
             if (selectedAddons.includes("safety")) {
               addonCost += 15 * days;
-              addonsList.push({ id: "safety", name: "Gecertificeerd Harnas & Veiligheidskit", price: 15 * days, billing: "daily" });
+              addonsList.push({ id: "safety", name: "Gecertificeerd Harnas & Veiligheidskit", price: 15 * days, billing: "flat" });
             }
 
             const itemVat = (itemSubtotal + transport + trailerCost + driver + addonCost) * 0.21;

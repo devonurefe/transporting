@@ -22,6 +22,12 @@ function makeLocale(adminLanguage: string) {
   return adminLanguage === "tr" ? "tr-TR" : adminLanguage === "en" ? "en-US" : "nl-NL";
 }
 
+// Formats a Date as "YYYY-MM-DD" using LOCAL calendar day, not UTC.
+// toISOString() returns UTC which is one day behind in UTC+ timezones (NL = UTC+1/+2).
+function fmtLocalDate(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
 // ── DayPanel — defined OUTSIDE AdminPlanning so React doesn't remount it ──
 interface DayPanelProps {
   targetStr: string;
@@ -186,13 +192,40 @@ const WeekGrid = React.memo(function WeekGrid({
 }: WeekGridProps) {
   const al = makeAl(adminLanguage);
 
+  const departingByDate = useMemo(() => {
+    const m = new Map<string, AnyOrder[]>();
+    for (const o of activeOrders) {
+      if (!m.has(o.startDate)) m.set(o.startDate, []);
+      m.get(o.startDate)!.push(o);
+    }
+    return m;
+  }, [activeOrders]);
+
+  const returningByDate = useMemo(() => {
+    const m = new Map<string, AnyOrder[]>();
+    for (const o of activeOrders) {
+      if (!m.has(o.endDate)) m.set(o.endDate, []);
+      m.get(o.endDate)!.push(o);
+    }
+    return m;
+  }, [activeOrders]);
+
+  const blockedByDate = useMemo(() => {
+    const m = new Map<string, typeof blockedDates>();
+    for (const b of blockedDates) {
+      if (!m.has(b.date)) m.set(b.date, []);
+      m.get(b.date)!.push(b);
+    }
+    return m;
+  }, [blockedDates]);
+
   return (
     <div className="grid grid-cols-7 gap-1.5 min-w-[700px] sm:min-w-0">
       {weekDays.map((day, idx) => {
-        const dayStr = day.toISOString().split("T")[0];
-        const departing = activeOrders.filter((o) => o.startDate === dayStr);
-        const returning = activeOrders.filter((o) => o.endDate === dayStr);
-        const blocked = blockedDates.filter((b) => b.date === dayStr);
+        const dayStr = fmtLocalDate(day);
+        const departing = departingByDate.get(dayStr) ?? [];
+        const returning = returningByDate.get(dayStr) ?? [];
+        const blocked = blockedByDate.get(dayStr) ?? [];
         const current = dayStr === todayStr;
 
         return (
@@ -284,14 +317,23 @@ export default function AdminPlanning({ adminLanguage }: AdminPlanningProps) {
     d.setHours(0, 0, 0, 0);
     return d;
   }, []);
-  const todayStr = today.toISOString().split("T")[0];
+  const todayStr = useMemo(() => fmtLocalDate(today), [today]);
 
   const tomorrowDate = useMemo(() => {
     const d = new Date(today);
     d.setDate(d.getDate() + 1);
     return d;
   }, [today]);
-  const tomorrowStr = tomorrowDate.toISOString().split("T")[0];
+  const tomorrowStr = useMemo(() => fmtLocalDate(tomorrowDate), [tomorrowDate]);
+
+  const todayLabel = useMemo(
+    () => today.toLocaleDateString(locale, { weekday: "long", day: "numeric", month: "long", year: "numeric" }),
+    [today, locale]
+  );
+  const tomorrowLabel = useMemo(
+    () => tomorrowDate.toLocaleDateString(locale, { weekday: "long", day: "numeric", month: "long", year: "numeric" }),
+    [tomorrowDate, locale]
+  );
 
   const weekStart = useMemo(() => {
     const d = new Date(today);
@@ -403,7 +445,7 @@ export default function AdminPlanning({ adminLanguage }: AdminPlanningProps) {
           departing={departingToday}
           returning={returningToday}
           blocked={blockedToday}
-          dateLabel={today.toLocaleDateString(locale, { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+          dateLabel={todayLabel}
           adminLanguage={adminLanguage}
           onSelectOrder={handleSelectOrder}
         />
@@ -417,7 +459,7 @@ export default function AdminPlanning({ adminLanguage }: AdminPlanningProps) {
           departing={departingTomorrow}
           returning={returningTomorrow}
           blocked={blockedTomorrow}
-          dateLabel={tomorrowDate.toLocaleDateString(locale, { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+          dateLabel={tomorrowLabel}
           adminLanguage={adminLanguage}
           onSelectOrder={handleSelectOrder}
         />

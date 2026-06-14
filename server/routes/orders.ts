@@ -236,6 +236,15 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
       return res.status(400).json({ error: "Maximale huurperiode is 365 dagen. Neem contact op voor langere periodes." });
     }
     const transportCostClient = Number(orderData.transportCost || 0);
+    // Server-side transport cost guard — client cannot fake delivery fee
+    {
+      const dt = orderData.deliveryType as string;
+      const valid =
+        dt === "self_pickup"      ? transportCostClient === 0
+        : dt === "delivery_by_us" ? (transportCostClient === 0 || transportCostClient === 150)
+        : /* trailer_rental */      (transportCostClient === 0 || Math.abs(transportCostClient - 25 * rentalDays) < 0.01);
+      if (!valid) return res.status(400).json({ error: "Ongeldig transportbedrag" });
+    }
     const driverCostClient = Number(orderData.driverCost || 0);
     const addonsTotal = (Array.isArray(orderData.addons) ? orderData.addons : []).reduce((sum: number, a: any) => {
       const addon = typeof a === "object" && a !== null ? a : {};
@@ -265,7 +274,7 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
       const remainder = rentalDays % 28;
       let remainderCost: number;
       if (remainder >= 5 && m.weeklyPrice) {
-        remainderCost = Math.floor(remainder / 5) * m.weeklyPrice + (remainder % 5) * machine.pricePerDay;
+        remainderCost = Math.round(remainder * (m.weeklyPrice / 5));
       } else {
         remainderCost = remainder * machine.pricePerDay;
       }
@@ -277,7 +286,7 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
       let highestDiscountPercent = 0;
       if (rentalDays >= 30 && machine.monthlyDiscountPercent) {
         highestDiscountPercent = Math.max(highestDiscountPercent, machine.monthlyDiscountPercent);
-      } else if (rentalDays >= 7 && machine.weeklyDiscountPercent) {
+      } else if (rentalDays >= 6 && machine.weeklyDiscountPercent) {
         highestDiscountPercent = Math.max(highestDiscountPercent, machine.weeklyDiscountPercent);
       }
       const profile = String(orderData.customerProfile || "").toLowerCase();

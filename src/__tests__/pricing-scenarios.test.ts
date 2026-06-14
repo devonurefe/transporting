@@ -123,10 +123,14 @@ describe("Huurperiode berekening", () => {
 
 describe("Lineair wekelijks tarief (nifty-120)", () => {
   const nifty = machines.find(m => m.id === "nifty-120-1")! as Machine;
+  it("6 dagen eerste lineaire dag (round(6 * weeklyPrice/5))", () =>
+    expect(calculateItemSubtotal(nifty, 6, "Particulier", noRules)).toBe(Math.round(6 * 335 / 5)));
   it("7 dagen lineair tarief (round(7 * weeklyPrice/5))", () =>
     expect(calculateItemSubtotal(nifty, 7, "Particulier", noRules)).toBe(Math.round(7 * 335 / 5)));
   it("27 dagen lineair tarief (round(27 * weeklyPrice/5))", () =>
     expect(calculateItemSubtotal(nifty, 27, "Particulier", noRules)).toBe(Math.round(27 * 335 / 5)));
   it("33 dagen = 1 maand + 5-dag werkweek resto", () =>
     expect(calculateItemSubtotal(nifty, 33, "Particulier", noRules)).toBe(490 + 335));
+  it("34 dagen = 1 maand + 6-dag lineair resto", () =>
+    expect(calculateItemSubtotal(nifty, 34, "Particulier", noRules)).toBe(490 + Math.round(6 * 335 / 5)));
 });

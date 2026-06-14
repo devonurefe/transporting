@@ -247,8 +247,8 @@ function scheduleDailyReminders() {
   // First fire: calculate ms until 07:00 today/tomorrow
   const now = new Date();
   const next7am = new Date(now);
-  next7am.setHours(7, 0, 0, 0);
-  if (next7am <= now) next7am.setDate(next7am.getDate() + 1);
+  next7am.setUTCHours(7, 0, 0, 0);  // 07:00 UTC = 08:00 Amsterdam (winter) / 09:00 (summer)
+  if (next7am <= now) next7am.setUTCDate(next7am.getUTCDate() + 1);
   const msUntil7am = next7am.getTime() - now.getTime();
 
   setTimeout(fireReminders, msUntil7am);
@@ -256,7 +256,7 @@ function scheduleDailyReminders() {
 
   // Catch-up: if the server (re)started after 07:00 and today's batch wasn't
   // sent yet (deploy/restart during the window), send it now
-  if (now.getHours() >= 7) {
+  if (now.getUTCHours() >= 7) {
     prisma.invoiceCounter.findUnique({ where: { id: REMINDER_MARKER } }).then(marker => {
       if (marker?.lastNumber !== todayStamp()) {
         console.log("[Reminders] Missed 07:00 run detected — sending catch-up batch...");

@@ -176,6 +176,12 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
       });
       if (res.ok) {
         const updated = await res.json();
+        // Update Zustand store so the order list reflects the new payment status immediately
+        useAppStore.setState((state: any) => ({
+          orders: state.orders.map((o: any) =>
+            o.id === orderId ? { ...o, paymentStatus: updated.paymentStatus } : o
+          )
+        }));
         onAddSystemLog("status", adminUser?.name ?? "Admin", `Betaling ${paymentStatus === "paid" ? "ontvangen" : "bijgewerkt"} voor order ${orderId}.`);
         if (selectedDetailOrder?.id === orderId) {
           setSelectedDetailOrder((prev: any) => ({ ...prev, paymentStatus: updated.paymentStatus }));

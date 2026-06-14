@@ -97,22 +97,33 @@ export default function BookingSection({
       .catch(() => {});
   }, []);
 
-  const lastMachineIdRef = React.useRef<string | null>(null);
+  const lastMachineIdsRef = React.useRef<string>("");
 
   useEffect(() => {
-    const leadMachine = cartItems.length > 0 ? cartItems[0].machine : selectedMachine;
-    if (leadMachine && leadMachine.id !== lastMachineIdRef.current) {
-      lastMachineIdRef.current = leadMachine.id;
+    const allMachines = cartItems.length > 0
+      ? cartItems.map(item => item.machine)
+      : (selectedMachine ? [selectedMachine] : []);
+
+    if (allMachines.length === 0) return;
+
+    const leadMachine = allMachines[0];
+    const machineIdsKey = allMachines.map(m => m.id).sort().join(",");
+
+    if (machineIdsKey !== lastMachineIdsRef.current) {
+      lastMachineIdsRef.current = machineIdsKey;
       if (leadMachine.category === "aanhanger" || leadMachine.category === "ecolift") {
         setDeliveryType("self_pickup");
       } else {
         setDeliveryType("delivery_by_us");
       }
-      // Fetch availability scoped to this machine only
-      fetch(`/api/orders/availability?machineId=${encodeURIComponent(leadMachine.id)}`)
-        .then((res) => (res.ok ? res.json() : []))
-        .then((data) => setAllOrders(data))
-        .catch(() => {});
+      // Fetch availability for ALL machines in cart to correctly guard multi-machine bookings
+      Promise.all(
+        allMachines.map(m =>
+          fetch(`/api/orders/availability?machineId=${encodeURIComponent(m.id)}`)
+            .then(res => res.ok ? res.json() : [])
+            .catch(() => [])
+        )
+      ).then(results => setAllOrders(results.flat()));
     }
   }, [selectedMachine, cartItems]);
 
@@ -196,19 +207,24 @@ export default function BookingSection({
     let dateIsBlocked = false;
     let reasonTxt = "";
 
+    // O(1) per-day lookup instead of O(n) find() inside the iteration loop
+    const blockedMap = new Map<string, string>(
+      blockedDaysList
+        .filter((b: any) => b.machineId === machineId)
+        .map((b: any) => [b.date as string, (b.reason as string) || "Geblokkeerd door beheerder / Onderhoud"])
+    );
+
     const sDate = new Date(start);
     const eDate = new Date(end);
     let curr = new Date(sDate);
-
-    // Limit safety block check to 1000 days
     let safetyCounter = 0;
     while (curr <= eDate && safetyCounter < 1000) {
       safetyCounter++;
       const currStr = curr.toISOString().split('T')[0];
-      const blockedMatch = blockedDaysList.find((b: any) => b.machineId === machineId && b.date === currStr);
-      if (blockedMatch) {
+      const reason = blockedMap.get(currStr);
+      if (reason !== undefined) {
         dateIsBlocked = true;
-        reasonTxt = blockedMatch.reason || "Geblokkeerd door beheerder / Onderhoud";
+        reasonTxt = reason;
         break;
       }
       curr.setDate(curr.getDate() + 1);

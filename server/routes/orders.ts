@@ -241,17 +241,21 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
     if (rentalDays > 365) {
       return res.status(400).json({ error: "Maximale huurperiode is 365 dagen. Neem contact op voor langere periodes." });
     }
+    // Compute authoritative transport cost server-side — never trust the client value
+    const dt = orderData.deliveryType as string;
+    const authTransport =
+      dt === "self_pickup"      ? 0
+      : dt === "delivery_by_us" ? 150
+      : /* trailer_rental */      25 * rentalDays;
     const transportCostClient = Number(orderData.transportCost || 0);
-    // Server-side transport cost guard — client cannot fake delivery fee
-    {
-      const dt = orderData.deliveryType as string;
-      const valid =
-        dt === "self_pickup"      ? transportCostClient === 0
-        : dt === "delivery_by_us" ? (transportCostClient === 0 || transportCostClient === 150)
-        : /* trailer_rental */      (transportCostClient === 0 || Math.abs(transportCostClient - 25 * rentalDays) < 0.01);
-      if (!valid) return res.status(400).json({ error: "Ongeldig transportbedrag" });
+    if (Math.abs(transportCostClient - authTransport) > 0.01) {
+      return res.status(400).json({ error: "Ongeldig transportbedrag" });
     }
+    // driverCost is always 0 in the current flow; reject non-zero to prevent manipulation
     const driverCostClient = Number(orderData.driverCost || 0);
+    if (driverCostClient !== 0) {
+      return res.status(400).json({ error: "Ongeldig chauffeurskostenbedrag" });
+    }
     const addonsTotal = (Array.isArray(orderData.addons) ? orderData.addons : []).reduce((sum: number, a: any) => {
       const addon = typeof a === "object" && a !== null ? a : {};
       const price = Number(addon.price || 0);
@@ -376,7 +380,7 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
         data: {
           id: `HWH-${crypto.randomBytes(4).toString("hex").toUpperCase()}`,
           machineId: orderData.machineId,
-          machineName: orderData.machineName,
+          machineName: machine.name,  // always from DB — never trust client (stored XSS risk)
           machinePrice: machine.pricePerDay,
           startDate,
           endDate,
@@ -388,11 +392,11 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
           customerEmail: orderData.customerEmail,
           customerPhone: orderData.customerPhone,
           customerProfile: orderData.customerProfile || "Particulier",
-          subtotal: Number(orderData.subtotal),
-          transportCost: Number(orderData.transportCost || 0),
-          driverCost: Number(orderData.driverCost || 0),
-          vatAmount: Number(orderData.vatAmount),
-          totalAmount: Number(orderData.totalAmount),
+          subtotal: serverSubtotal,   // server-computed — never store client values
+          transportCost: authTransport,
+          driverCost: 0,
+          vatAmount: serverVat,
+          totalAmount: serverTotal,
           status: "In behandeling",
           customerId: resolvedCustomerId,
           addons: JSON.stringify(orderData.addons || []),
@@ -522,10 +526,11 @@ ordersRouter.post("/:id/rating", requireAuth as any, async (req: AuthenticatedRe
       return res.status(404).json({ error: "Bestelling niet gevonden" });
     }
 
+    const safeComment = comment ? String(comment).slice(0, 2000) : null;
     const orderRating = await prisma.orderRating.upsert({
       where: { orderId: id },
-      create: { orderId: id, rating: Number(rating), comment: comment || null },
-      update: { rating: Number(rating), comment: comment || null }
+      create: { orderId: id, rating: Number(rating), comment: safeComment },
+      update: { rating: Number(rating), comment: safeComment }
     });
 
     res.json(orderRating);
@@ -625,9 +630,10 @@ ordersRouter.post("/send-reminders", async (req: AuthenticatedRequest, res: Resp
   if (!secret) {
     return res.status(503).json({ error: "Reminder endpoint niet geconfigureerd (stel REMINDER_SECRET in)" });
   }
-  const keyBuf = Buffer.from(String(providedKey || ""));
-  const secretBuf = Buffer.from(secret);
-  if (keyBuf.length !== secretBuf.length || !crypto.timingSafeEqual(keyBuf, secretBuf)) {
+  // Hash both sides to fixed length before comparing — prevents secret-length leakage
+  const keyHash = crypto.createHash("sha256").update(String(providedKey || "")).digest();
+  const secHash = crypto.createHash("sha256").update(secret).digest();
+  if (!crypto.timingSafeEqual(keyHash, secHash)) {
     return res.status(401).json({ error: "Ongeldige sleutel" });
   }
 

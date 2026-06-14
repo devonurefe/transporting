@@ -89,6 +89,14 @@ function validateMachineInput(body: any): { valid: boolean; error?: string } {
     if (isNaN(v) || v < 0) return { valid: false, error: "Campagne kortingsbedrag moet 0 of groter zijn." };
   }
 
+  for (const f of ["weekendPrice", "twoDayPrice", "weeklyPrice", "monthlyPrice", "oneDayPrice"] as const) {
+    if (body[f] !== undefined && body[f] !== null && body[f] !== "") {
+      const v = Number(body[f]);
+      if (isNaN(v) || v <= 0) return { valid: false, error: `${f} moet een positief getal groter dan 0 zijn.` };
+      if (v > 100000) return { valid: false, error: `${f} mag maximaal €100.000 zijn.` };
+    }
+  }
+
   return { valid: true };
 }
 

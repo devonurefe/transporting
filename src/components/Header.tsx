@@ -29,18 +29,7 @@ import { AppNotification, UserProfile, CartItem } from "../types";
 
 export function HuurGoLogo({ className = "h-8", dark = false }: { className?: string; dark?: boolean }) {
   return (
-    <div className={`flex items-center gap-3 ${className}`}>
-      {/* Green accent bar — scales with container height */}
-      <svg viewBox="0 0 8 44" className="h-full w-auto shrink-0" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="44" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#22c55e"/>
-            <stop offset="100%" stopColor="#15803d"/>
-          </linearGradient>
-        </defs>
-        <rect width="8" height="44" rx="4" fill="url(#barGrad)"/>
-      </svg>
-
+    <div className={`flex items-center gap-2 ${className}`}>
       {/* Wordmark */}
       <div className="flex flex-col leading-none select-none">
         <div className="flex items-baseline gap-0">

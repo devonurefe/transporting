@@ -149,7 +149,7 @@ export default function HomeSection({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
-            className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-600"
+            className="text-xs font-bold uppercase tracking-[0.12em] text-emerald-600"
           >
             {t("heroTagline")}
           </motion.p>
@@ -182,7 +182,7 @@ export default function HomeSection({
               className="inline-flex items-center justify-center space-x-3 w-full max-w-sm py-3.5 px-6 rounded-2xl bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-sm transition-all shadow-md hover:shadow-lg active:scale-[0.98] no-underline"
             >
               <MessageCircle className="h-5 w-5 shrink-0" />
-              <span>Direct advies nodig? WhatsApp ons!</span>
+              <span>Direct advies? WhatsApp ons!</span>
             </a>
           </motion.div>
         </div>

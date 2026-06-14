@@ -99,10 +99,10 @@ export function buildWhatsAppUrl(
  * Builds a simple WhatsApp URL for general inquiries (no cart context).
  */
 export function buildWhatsAppGeneralUrl(categoryLabel?: string): string {
-  let message = "Hallo HuurGo! Ik heb een vraag over het huren van een hoogwerker.";
+  let message = "Hallo HuurGo! Ik heb een vraag over het huren van een hoogwerker. Alvast bedankt! 🦾";
 
   if (categoryLabel) {
-    message = `Hallo HuurGo! Ik ben geïnteresseerd in het huren van een ${categoryLabel}. Kunt u mij adviseren?`;
+    message = `Hallo HuurGo! Ik ben geïnteresseerd in het huren van een ${categoryLabel}. Kunt u mij adviseren? 🦾`;
   }
 
   const encodedText = encodeURIComponent(message);
@@ -121,7 +121,7 @@ export function buildWhatsAppOrderStatusUrl(orderId?: string, machineName?: stri
     machineName ? `🏗️ Machine: ${machineName}` : "",
     "",
     "Kunt u mij informeren over de huidige status en wanneer ik de bevestiging kan verwachten?",
-    "Alvast bedankt!",
+    "Alvast bedankt! 🦾",
   ].filter(Boolean);
   return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(lines.join("\n"))}`;
 }
@@ -153,7 +153,7 @@ export function buildWhatsAppAdviceUrl(jobDescription?: string): string {
     jobDescription ? `Klus: ${jobDescription}` : "",
     "",
     "Kunt u mij adviseren welke machine het meest geschikt is?",
-    "Alvast bedankt!",
+    "Alvast bedankt! 🦾",
   ].filter(Boolean);
   return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(lines.join("\n"))}`;
 }

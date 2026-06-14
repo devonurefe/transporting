@@ -784,7 +784,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                 </div>
 
                 {/* Row 2: Status actions */}
-                {selectedDetailOrder.status !== "Geannuleerd" && selectedDetailOrder.status !== "Voltooid" && (
+                {selectedDetailOrder.status !== "Geannuleerd" && selectedDetailOrder.status !== "Voltooid" && selectedDetailOrder.status !== "Onderweg" && (
                   <div className="flex items-center justify-between gap-2 pt-3 border-t border-slate-100">
                     <button
                       type="button"

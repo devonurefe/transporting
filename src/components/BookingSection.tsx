@@ -602,7 +602,7 @@ export default function BookingSection({
               endDate: item.endDate,
               rentalDays: days,
               deliveryType,
-              deliveryAddress,
+              deliveryAddress: deliveryType === "self_pickup" ? null : deliveryAddress,
               customerName,
               customerEmail,
               customerPhone,

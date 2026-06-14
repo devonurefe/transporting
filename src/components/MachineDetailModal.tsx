@@ -172,7 +172,7 @@ export default function MachineDetailModal({
               {machine.categoryLabel || "Vloot Details"} • {machine.powerType}
             </span>
             <h3 className="font-display text-2xl font-black text-slate-900 tracking-tight mt-0.5">
-              {machine.name}
+              {machine.name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "")}
             </h3>
           </div>
           <button

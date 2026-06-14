@@ -48,8 +48,8 @@ export default function BookingSuccess({
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!password || password.length < 6) {
-      setRegisterError("Wachtwoord moet minimaal 6 tekens bevatten.");
+    if (!password || password.length < 8) {
+      setRegisterError("Wachtwoord moet minimaal 8 tekens bevatten.");
       return;
     }
     setIsRegistering(true);

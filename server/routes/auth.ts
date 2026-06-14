@@ -10,7 +10,7 @@ export const authRouter = Router();
 
 const registerSchema = z.object({
   email: z.string().email("Ongeldig e-mailadres"),
-  password: z.string().min(6, "Wachtwoord moet minimaal 6 tekens bevatten"),
+  password: z.string().min(8, "Wachtwoord moet minimaal 8 tekens bevatten"),
   name: z.string().min(2, "Naam is verplicht"),
   phone: z.string().optional(),
   profile: z.string().optional(),

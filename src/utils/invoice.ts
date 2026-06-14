@@ -74,8 +74,16 @@ export function printInvoice(orderOrOrders: Order | Order[], clientCompanyName?:
     paymentStatusColor = "#dc2626";
   } else {
     documentTitle = "OFFICIËLE HUUROVEREENKOMST & FACTUUR";
-    paymentStatusLabel = "BETAALD";
-    paymentStatusColor = "#059669";
+    if (primaryOrder.paymentStatus === "paid") {
+      paymentStatusLabel = "BETAALD";
+      paymentStatusColor = "#059669";
+    } else if (primaryOrder.paymentStatus === "refunded") {
+      paymentStatusLabel = "TERUGBETAALD";
+      paymentStatusColor = "#7c3aed";
+    } else {
+      paymentStatusLabel = "OPENSTAAND";
+      paymentStatusColor = "#d97706";
+    }
   }
 
   // Delivery details display

@@ -348,8 +348,8 @@ export default function MyOrdersSection({
       setRegError("Naam, e-mail en wachtwoord zijn verplicht.");
       return;
     }
-    if (regPassword.trim().length < 6) {
-      onTriggerNotification("Registratie Mislukt", "Wachtwoord moet minimaal 6 tekens bevatten.", "warning");
+    if (regPassword.trim().length < 8) {
+      onTriggerNotification("Registratie Mislukt", "Wachtwoord moet minimaal 8 tekens bevatten.", "warning");
       return;
     }
 
@@ -1197,7 +1197,7 @@ export default function MyOrdersSection({
             </div>
           </div>
           <a
-            href="https://wa.me/31645617283"
+            href={`https://wa.me/${(import.meta as any).env?.VITE_WHATSAPP_NUMBER ?? "31611848899"}`}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center space-x-1.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition-all hover:scale-[1.02] active:scale-98 shadow-sm cursor-pointer whitespace-nowrap border-none"

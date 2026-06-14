@@ -72,12 +72,12 @@ export const emailService = {
         <title>Reserveringsbevestiging HuurGo</title>
         <style>
           body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f8fafc; color: #1e293b; margin: 0; padding: 20px; }
-          .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 24px; border: 1px border-slate-200; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+          .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 24px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
           .header { background: linear-gradient(135deg, #4f46e5, #3b82f6); padding: 40px 30px; text-align: center; color: #ffffff; }
           .header h1 { margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.025em; }
           .header p { margin: 8px 0 0 0; font-size: 14px; opacity: 0.9; }
           .content { padding: 40px 30px; }
-          .order-id { font-mono; display: inline-block; background: #f1f5f9; padding: 6px 12px; border-radius: 9999px; font-weight: bold; color: #4f46e5; font-size: 13px; margin-bottom: 20px; }
+          .order-id { font-family: monospace; display: inline-block; background: #f1f5f9; padding: 6px 12px; border-radius: 9999px; font-weight: bold; color: #4f46e5; font-size: 13px; margin-bottom: 20px; }
           .details-grid { display: grid; grid-template-columns: 1fr; gap: 16px; margin: 24px 0; background: #f8fafc; padding: 20px; border-radius: 16px; }
           .details-item { border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; }
           .details-item:last-child { border-bottom: none; padding-bottom: 0; }

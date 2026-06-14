@@ -344,10 +344,16 @@ export default function BookingSection({
       const trailerCost = deliveryType === "trailer_rental" ? 25 * leadCartDays : 0;
       const driver = 0;
 
-      // Pre-compute weekend metrics here so surcharge is included in the total
+      // spansWeekend: true if ANY cart item's rental period includes weekend days
+      // but is NOT a strict Sat+Sun 2-day rental (those already have weekendPrice priced in)
+      const spansWeekend = cartItems.some(item => {
+        const s = item.startDate || "";
+        const e = item.endDate || "";
+        if (!s || !e) return false;
+        const d = calculateRentalDays(s, e);
+        return countWeekendDays(s, e) > 0 && !isStrictWeekend(s, d);
+      });
       const weekendDays = (leadCartStart && leadCartEnd) ? countWeekendDays(leadCartStart, leadCartEnd) : 0;
-      const strictWeekendLead = isStrictWeekend(leadCartStart, leadCartDays);
-      const spansWeekend = weekendDays > 0 && !strictWeekendLead;
 
       // Addon calculation
       let addonCost = 0;

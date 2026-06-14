@@ -171,8 +171,8 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
     setEditCampaignDiscountAmount(m.campaignDiscountAmount ? String(m.campaignDiscountAmount) : "");
     setEditAdditionalImages(m.additionalImages || []);
     setEditPackageContents(m.packageContents || "");
-    setEditSpecs(getSpecsForMachine(m.id, (m as any).specs));
-    setEditBufferDays((m as any).bufferDays ?? 0);
+    setEditSpecs(getSpecsForMachine(m.id, m.specs));
+    setEditBufferDays(m.bufferDays ?? 0);
     setPendingEditId(null);
     });
   };
@@ -297,7 +297,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
         ? editSpecs.filter(s => s.label.trim() && s.value.trim())
         : undefined,
       bufferDays: editBufferDays,
-    } as any);
+    });
 
     setIsUpdating(false);
     if (success) {

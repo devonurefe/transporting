@@ -310,7 +310,7 @@ export default function BookingSection({
       const leadStart = cartItems[0]?.startDate;
       if (leadItem) {
         if (totalDays >= 28) discountLabel = "Maandkorting";
-        else if (totalDays >= 5) discountLabel = "Weekkorting";
+        else if (totalDays >= 3 && leadItem.weeklyPrice) discountLabel = "Weekkorting";
         else if (isStrictWeekend(leadStart, totalDays) && leadItem.weekendPrice) discountLabel = "Weekendprijs";
         else if (totalDays === 2 && leadItem.twoDayPrice) discountLabel = "2-Dag Prijs";
         else if (totalDays === 1 && leadItem.oneDayPrice && leadItem.oneDayPrice < leadItem.pricePerDay) discountLabel = "1-Dag Actie";
@@ -377,7 +377,7 @@ export default function BookingSection({
     let discountLabel = "Korting";
     if (days >= 28) {
       discountLabel = "Maandkorting";
-    } else if (days >= 5) {
+    } else if (days >= 3 && selectedMachine.weeklyPrice) {
       discountLabel = "Weekkorting";
     } else if (isStrictWeekend(startDate, days) && selectedMachine.weekendPrice) {
       discountLabel = "Weekendprijs";

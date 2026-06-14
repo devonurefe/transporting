@@ -111,7 +111,7 @@ export default function BookingPriceSummary({ selectedMachine, sums }: BookingPr
 
             {/* Indirim satırı */}
             {sums.discountAmount > 0 && (
-              <div className={`flex justify-between items-center text-emerald-700 text-xs font-semibold${(sums.effectiveDailyRate != null && sums.days >= 6) || sums.spansWeekend ? " pt-2 border-t border-slate-200" : ""}`}>
+              <div className={`flex justify-between items-center text-emerald-700 text-xs font-semibold${sums.effectiveDailyRate != null && sums.days >= 6 ? " pt-2 border-t border-slate-200" : ""}`}>
                 <span className="flex items-center gap-1">
                   <TrendingDown className="h-3.5 w-3.5 shrink-0" />
                   {sums.discountLabel}

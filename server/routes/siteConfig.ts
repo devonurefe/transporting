@@ -5,7 +5,7 @@ import { AuthenticatedRequest } from "../middleware/auth.js";
 
 export const siteConfigRouter = Router();
 
-const CORRECT_SUBTITLE = "MB Hoogwerkers verhuurt hoogwerkers, schaarliften en ladderliften aan ZZP'ers en particulieren. Geen gedoe, direct online geregeld. Kies uw machine en boek eenvoudig via WhatsApp.";
+const CORRECT_SUBTITLE = "HuurGo verhuurt gecertificeerde hoogwerkers, schaarliften, mastliften en ladderliften aan ZZP'ers, aannemers en particulieren door heel Nederland. Meer dan 50 BMWT-gecertificeerde machines, direct beschikbaar.";
 
 const defaultSiteConfig = {
   id: "default",
@@ -23,8 +23,8 @@ const defaultSiteConfig = {
 siteConfigRouter.get("/site-config", async (req: AuthenticatedRequest, res: Response) => {
   try {
     let config = await prisma.siteConfig.findUnique({ where: { id: "default" } });
-    // Auto-fix stale AI-assistent text that may be stored in DB
-    if (config?.heroSubtitle?.includes("AI-assistent") || config?.heroSubtitle?.includes("AI assistant")) {
+    // Auto-fix stale subtitle text that may be stored in DB
+    if (config?.heroSubtitle?.includes("AI-assistent") || config?.heroSubtitle?.includes("AI assistant") || config?.heroSubtitle?.includes("MB Hoogwerkers")) {
       config = await prisma.siteConfig.update({
         where: { id: "default" },
         data: { heroSubtitle: CORRECT_SUBTITLE }
@@ -107,7 +107,7 @@ siteConfigRouter.post("/campaign-rules", requireAdmin as any, async (req: Authen
         siteName: "HuurGo",
         heroTagline: "Professionele Hoogwerker Verhuur",
         heroTitle: "De juiste machine, snel en veilig geregeld.",
-        heroSubtitle: "MB Hoogwerkers verhuurt hoogwerkers, schaarliften en ladderliften aan ZZP'ers en particulieren.",
+        heroSubtitle: CORRECT_SUBTITLE,
         menuHomeLabel: "Home",
         menuCatalogLabel: "Catalogus",
         menuOrdersLabel: "Mijn Account",

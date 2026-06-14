@@ -237,6 +237,7 @@ export default function BookingStep1({
             onClick={() => {
               setDeliveryType("trailer_rental");
               setDeliveryAddress("");
+              setDeliveryTimeSlot("");
             }}
             className={`p-4 rounded-xl border transition-all cursor-pointer ${
               deliveryType === "trailer_rental"
@@ -264,6 +265,7 @@ export default function BookingStep1({
             onClick={() => {
               setDeliveryType("self_pickup");
               setDeliveryAddress("");
+              setDeliveryTimeSlot("");
             }}
             className={`p-4 rounded-xl border transition-all cursor-pointer ${
               deliveryType === "self_pickup"

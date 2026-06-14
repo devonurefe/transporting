@@ -331,12 +331,11 @@ export default function BookingSection({
         }
       }
 
-      const leadStart = cartItems[0]?.startDate;
       const leadEnd = cartItems[0]?.endDate;
       const weekendDays = (leadStart && leadEnd) ? countWeekendDays(leadStart, leadEnd) : 0;
       const strictWeekendLead = isStrictWeekend(leadStart, totalDays);
       const spansWeekend = weekendDays > 0 && !strictWeekendLead;
-      const leadMachine = cartItems[0]?.machine;
+      const leadMachine = leadItem;
       const effectiveDailyRate = (totalDays >= 6 && totalDays < 28 && leadMachine?.weeklyPrice)
         ? leadMachine.weeklyPrice / 5
         : null;

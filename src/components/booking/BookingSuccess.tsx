@@ -103,6 +103,10 @@ export default function BookingSuccess({
         ? "Aanhanger huren"
         : "Bezorging door ons",
     },
+    ...(successOrder.deliveryType === "delivery_by_us" && successOrder.deliveryTimeSlot
+      ? [{ label: "Bezorgmoment", value: successOrder.deliveryTimeSlot === "morning" ? "Ochtend (07:00–09:00)" : "Middag (13:00–17:00)" }]
+      : []
+    ),
     ...(successOrder.deliveryAddress ? [{ label: t("specAddress"), value: successOrder.deliveryAddress }] : []),
     { label: t("specTotal"), value: euro(combinedTotal), price: true },
   ];

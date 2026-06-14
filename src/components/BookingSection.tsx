@@ -388,7 +388,7 @@ export default function BookingSection({
         } else if (totalDays >= 6 && totalDays <= 27 && leadItem.weeklyPrice) {
           const wks = Math.floor(totalDays / 5);
           const rem = totalDays % 5;
-          weeklyBreakdown = { weeks: wks, pricePerWeek: leadItem.weeklyPrice, remainder: rem, dailyRate: leadItem.pricePerDay };
+          weeklyBreakdown = { weeks: wks, pricePerWeek: leadItem.weeklyPrice, remainder: rem, dailyRate: Math.round(leadItem.weeklyPrice / 5) };
         } else if (totalDays >= 28 && leadItem.monthlyPrice) {
           tierLabel = "Maandtarief"; isFlatRate = true;
         }
@@ -495,7 +495,7 @@ export default function BookingSection({
     } else if (days >= 6 && days <= 27 && selectedMachine.weeklyPrice) {
       const wks = Math.floor(days / 5);
       const rem = days % 5;
-      weeklyBreakdown = { weeks: wks, pricePerWeek: selectedMachine.weeklyPrice, remainder: rem, dailyRate: selectedMachine.pricePerDay };
+      weeklyBreakdown = { weeks: wks, pricePerWeek: selectedMachine.weeklyPrice, remainder: rem, dailyRate: Math.round(selectedMachine.weeklyPrice / 5) };
     } else if (days >= 28 && selectedMachine.monthlyPrice) {
       tierLabel = "Maandtarief"; isFlatRate = true;
     }

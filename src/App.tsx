@@ -187,6 +187,8 @@ export default function App() {
       // Auth check is complete and confirmed no user — safe to clear admin mode
       setCurrentUser(null);
       setIsAdminMode(false);
+      setVatDisplay("incl");
+      localStorage.setItem("hwh_vat_display", "incl");
     }
     // When authChecked=false (still loading), don't touch isAdminMode
     // so the admin panel stays visible while the token is being verified

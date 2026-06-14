@@ -618,6 +618,11 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                                 {selectedDetailOrder.deliveryAddress}
                               </p>
                             )}
+                            {selectedDetailOrder.deliveryTimeSlot && selectedDetailOrder.deliveryType === "delivery_by_us" && (
+                              <p className="text-[11px] text-indigo-600 font-semibold mt-0.5">
+                                Bezorgmoment: {selectedDetailOrder.deliveryTimeSlot === "morning" ? "Ochtend (07:00–09:00)" : "Middag (13:00–17:00)"}
+                              </p>
+                            )}
                           </div>
                         </div>
                       </div>

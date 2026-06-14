@@ -36,6 +36,7 @@ interface EmailOrderData {
   customerProfile?: string | null;
   deliveryType: string;
   deliveryAddress: string | null;
+  deliveryTimeSlot?: string | null;
   totalAmount: number;
   status: string;
 }
@@ -113,6 +114,12 @@ export const emailService = {
                 <div class="label">Leveringsmethode</div>
                 <div class="value">${deliveryMethodText}</div>
               </div>
+              ${!isPickup && order.deliveryTimeSlot ? `
+              <div class="details-item">
+                <div class="label">Bezorgmoment</div>
+                <div class="value">${order.deliveryTimeSlot === 'morning' ? 'Ochtend (07:00–09:00)' : 'Middag (13:00–17:00)'}</div>
+              </div>
+              ` : ''}
               ${!isPickup && order.deliveryAddress ? `
               <div class="details-item">
                 <div class="label">Bezorgadres</div>

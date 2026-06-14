@@ -36,6 +36,9 @@ interface BookingStep1Props {
     vat: number; total: number; deliveryType?: string;
   };
   selectedMachine?: Machine | null;
+  deliveryDistanceKm?: number | null;
+  deliveryTimeSlot: string;
+  setDeliveryTimeSlot: (slot: string) => void;
 }
 
 export default function BookingStep1({
@@ -55,7 +58,10 @@ export default function BookingStep1({
   setActiveTab,
   customerProfile,
   sums,
-  selectedMachine
+  selectedMachine,
+  deliveryDistanceKm,
+  deliveryTimeSlot,
+  setDeliveryTimeSlot
 }: BookingStep1Props) {
   const t = useLanguageStore((state) => state.t);
   const vatDisplay = useAppStore((state) => state.vatDisplay);
@@ -282,6 +288,47 @@ export default function BookingStep1({
         </div>
       </div>
 
+      {/* Distance warning — shown when PDOK returns >20 km */}
+      {deliveryDistanceKm && deliveryDistanceKm > 20 && deliveryType === "delivery_by_us" && (
+        <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 flex items-start gap-2">
+          <ShieldAlert className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+          <div>
+            <span className="font-bold block">Bezorgadres buiten 20 km straal</span>
+            <span>Dit adres ligt ±{deliveryDistanceKm} km van ons depot. Bezorging is mogelijk, maar neem contact op voor een offerte op maat.</span>
+          </div>
+        </div>
+      )}
+
+      {/* Delivery time slot — only for "Wij bezorgen" */}
+      {deliveryType === "delivery_by_us" && (
+        <div className="space-y-3 pt-4 border-t border-slate-200">
+          <div className="flex justify-between items-center">
+            <span className="text-xs text-slate-500 font-semibold">Gewenst bezorgmoment</span>
+            <span className="text-[10px] text-rose-500 font-semibold uppercase tracking-wide">Verplicht</span>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { id: "morning", label: "Ochtend", time: "07:00 – 09:00" },
+              { id: "afternoon", label: "Middag", time: "13:00 – 17:00" },
+            ].map(slot => (
+              <button
+                key={slot.id}
+                type="button"
+                onClick={() => setDeliveryTimeSlot(slot.id)}
+                className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer ${
+                  deliveryTimeSlot === slot.id
+                    ? "bg-indigo-50 border-indigo-400 ring-1 ring-indigo-300"
+                    : "bg-white border-slate-200 hover:border-slate-300"
+                }`}
+              >
+                <span className="text-xs font-bold text-slate-900 block">{slot.label}</span>
+                <span className="text-[10px] text-slate-400 font-mono">{slot.time}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Extra opties */}
       <div className="space-y-3 pt-4 border-t border-slate-200">
         <div className="flex justify-between items-center">
@@ -346,7 +393,7 @@ export default function BookingStep1({
       {/* Mobile price summary — shows after all selections, before Doorgaan */}
       {sums && (
         <div className="lg:hidden pt-2">
-          <BookingPriceSummary selectedMachine={selectedMachine ?? null} sums={sums} />
+          <BookingPriceSummary selectedMachine={selectedMachine ?? null} machineCount={cartItems.length || 1} sums={sums} />
         </div>
       )}
 
@@ -354,10 +401,10 @@ export default function BookingStep1({
       <div className="flex flex-col sm:flex-row sm:justify-end gap-3 pt-4 border-t border-slate-100">
         <button
           onClick={handleNextStep}
-          disabled={!isAvailable || cartItems.length === 0}
+          disabled={!isAvailable || cartItems.length === 0 || (deliveryType === "delivery_by_us" && !deliveryTimeSlot)}
           className={`font-semibold text-xs w-full sm:w-auto px-6 py-3.5 rounded-xl transition-all flex items-center justify-center space-x-1.5 border-none shadow-md order-1 sm:order-2 ${
-            isAvailable && cartItems.length > 0
-              ? "bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer active:scale-95 shadow-indigo-200" 
+            isAvailable && cartItems.length > 0 && !(deliveryType === "delivery_by_us" && !deliveryTimeSlot)
+              ? "bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer active:scale-95 shadow-indigo-200"
               : "bg-slate-100 text-slate-400 cursor-not-allowed"
           }`}
         >

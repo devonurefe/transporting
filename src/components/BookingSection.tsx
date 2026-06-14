@@ -19,6 +19,17 @@ import BookingPriceSummary from "./booking/BookingPriceSummary";
 
 type AvailabilityOrder = Pick<Order, "id" | "machineId" | "startDate" | "endDate" | "status">;
 
+const MB_LAT = 52.1398936;
+const MB_LON = 4.5166788;
+
+function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
 interface BookingSectionProps {
   selectedMachine: Machine | null;
   onCreateReservation: (orderData: Partial<Order>) => Promise<Order | null>;
@@ -107,6 +118,10 @@ export default function BookingSection({
 
   // Addon / Shopping Cart Options state
   const [selectedAddons, setSelectedAddons] = useState<string[]>([]);
+
+  // Delivery distance & time slot
+  const [deliveryDistanceKm, setDeliveryDistanceKm] = useState<number | null>(null);
+  const [deliveryTimeSlot, setDeliveryTimeSlot] = useState<string>("");
 
   const paymentGateway = "whatsapp";
 
@@ -346,6 +361,23 @@ export default function BookingSection({
         ? leadItem.weeklyPrice / 5
         : null;
 
+      // Tier label for flat-rate price display (single-item cart only)
+      let tierLabel: string | null = null;
+      let isFlatRate = false;
+      if (cartItems.length === 1 && leadItem) {
+        if (totalDays === 1 && leadItem.oneDayPrice) {
+          tierLabel = "1-Dag Actie"; isFlatRate = true;
+        } else if (totalDays === 2 && isStrictWeekend(leadStart, 2) && leadItem.weekendPrice) {
+          tierLabel = "Weekendtarief (za+zo)"; isFlatRate = true;
+        } else if (totalDays === 2 && leadItem.twoDayPrice) {
+          tierLabel = "2-Daags Tarief (ma-vr)"; isFlatRate = true;
+        } else if ((totalDays === 3 || totalDays === 4 || totalDays === 5) && leadItem.weeklyPrice) {
+          tierLabel = "Werkweek-tarief (3-5 dgn)"; isFlatRate = true;
+        } else if (totalDays >= 28 && leadItem.monthlyPrice) {
+          tierLabel = "Maandtarief"; isFlatRate = true;
+        }
+      }
+
       return {
         days: totalDays,
         rawSubtotal,
@@ -361,7 +393,9 @@ export default function BookingSection({
         deliveryType,
         weekendDays,
         spansWeekend,
-        effectiveDailyRate
+        effectiveDailyRate,
+        tierLabel,
+        isFlatRate
       };
     }
 
@@ -430,6 +464,20 @@ export default function BookingSection({
       ? selectedMachine.weeklyPrice / 5
       : null;
 
+    let tierLabel: string | null = null;
+    let isFlatRate = false;
+    if (days === 1 && selectedMachine.oneDayPrice) {
+      tierLabel = "1-Dag Actie"; isFlatRate = true;
+    } else if (days === 2 && isStrictWeekend(startDate, 2) && selectedMachine.weekendPrice) {
+      tierLabel = "Weekendtarief (za+zo)"; isFlatRate = true;
+    } else if (days === 2 && selectedMachine.twoDayPrice) {
+      tierLabel = "2-Daags Tarief (ma-vr)"; isFlatRate = true;
+    } else if ((days === 3 || days === 4 || days === 5) && selectedMachine.weeklyPrice) {
+      tierLabel = "Werkweek-tarief (3-5 dgn)"; isFlatRate = true;
+    } else if (days >= 28 && selectedMachine.monthlyPrice) {
+      tierLabel = "Maandtarief"; isFlatRate = true;
+    }
+
     return {
       days,
       rawSubtotal,
@@ -445,7 +493,9 @@ export default function BookingSection({
       deliveryType,
       weekendDays,
       spansWeekend,
-      effectiveDailyRate
+      effectiveDailyRate,
+      tierLabel,
+      isFlatRate
     };
   };
 
@@ -504,6 +554,16 @@ export default function BookingSection({
           : bestDoc.weergavenaam;
         setDeliveryAddress(resolvedAddress);
         setAddressSuccessMsg(`✓ Gevalideerd adres gevonden: ${resolvedAddress}`);
+
+        // Distance check — parse PDOK centroide_ll "POINT(lon lat)"
+        const centroide = bestDoc.centroide_ll as string | undefined;
+        if (centroide) {
+          const m = centroide.match(/POINT\(([^ ]+) ([^ )]+)\)/);
+          if (m) {
+            const km = Math.round(haversineKm(parseFloat(m[2]), parseFloat(m[1]), MB_LAT, MB_LON));
+            setDeliveryDistanceKm(km > 20 ? km : null);
+          }
+        }
       } else {
         setAddressSuccessMsg("");
         setValidationError("Adres kon niet automatisch worden gevonden. Vul alstublieft uw adres handmatig in.");
@@ -535,6 +595,10 @@ export default function BookingSection({
       });
       if (anyUnavailable) {
         setValidationError("Eén of meer machines in uw winkelwagen zijn niet beschikbaar voor de gekozen datums.");
+        return;
+      }
+      if (deliveryType === "delivery_by_us" && !deliveryTimeSlot) {
+        setValidationError("Kies een gewenst bezorgmoment (ochtend of middag) om door te gaan.");
         return;
       }
       setStep(2);
@@ -601,6 +665,7 @@ export default function BookingSection({
               rentalDays: days,
               deliveryType,
               deliveryAddress: deliveryType === "self_pickup" ? null : deliveryAddress,
+              deliveryTimeSlot: deliveryType === "delivery_by_us" ? deliveryTimeSlot || undefined : undefined,
               customerName,
               customerEmail,
               customerPhone,
@@ -736,7 +801,7 @@ export default function BookingSection({
               <div className="lg:col-span-8 space-y-6">
 
                 {step === 1 && (
-                  <BookingStep1 
+                  <BookingStep1
                     cartItems={cartItems}
                     getItemAvailability={getItemAvailability}
                     onRemoveCartItem={onRemoveCartItem}
@@ -761,6 +826,9 @@ export default function BookingSection({
                     customerProfile={customerProfile}
                     sums={sums}
                     selectedMachine={cartItems.length > 0 ? cartItems[0].machine : null}
+                    deliveryDistanceKm={deliveryDistanceKm}
+                    deliveryTimeSlot={deliveryTimeSlot}
+                    setDeliveryTimeSlot={setDeliveryTimeSlot}
                   />
                 )}
 

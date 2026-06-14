@@ -201,6 +201,12 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
     return res.status(400).json({ error: "Bezorgadres is te lang (max 500 tekens)" });
   }
 
+  // deliveryTimeSlot enum validation
+  const VALID_TIME_SLOTS = ["morning", "afternoon"];
+  if (orderData.deliveryTimeSlot && !VALID_TIME_SLOTS.includes(String(orderData.deliveryTimeSlot))) {
+    return res.status(400).json({ error: "Ongeldig bezorgmoment" });
+  }
+
   // customerPhone format validation (optional field, but if provided must look like a phone number)
   if (orderData.customerPhone) {
     const phoneClean = String(orderData.customerPhone).replace(/[\s\-().+]/g, "");
@@ -377,6 +383,7 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
           rentalDays,
           deliveryType: orderData.deliveryType,
           deliveryAddress: orderData.deliveryAddress || "",
+          deliveryTimeSlot: orderData.deliveryTimeSlot ? String(orderData.deliveryTimeSlot) : null,
           customerName: orderData.customerName,
           customerEmail: orderData.customerEmail,
           customerPhone: orderData.customerPhone,

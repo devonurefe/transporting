@@ -105,9 +105,10 @@ model Order {
   startDate       DateTime
   endDate         DateTime
   rentalDays      Int
-  deliveryType    String
-  deliveryAddress String?
-  customerName    String
+  deliveryType      String
+  deliveryAddress   String?
+  deliveryTimeSlot  String?
+  customerName      String
   customerEmail   String
   customerPhone   String?
   customerProfile String?

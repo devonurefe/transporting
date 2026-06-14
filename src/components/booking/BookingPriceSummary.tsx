@@ -28,6 +28,8 @@ interface BookingPriceSummaryProps {
     weekendDays?: number;
     spansWeekend?: boolean;
     effectiveDailyRate?: number | null;
+    tierLabel?: string | null;
+    isFlatRate?: boolean;
   };
 }
 
@@ -85,16 +87,23 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
       {/* Price breakdown */}
       <div className="p-4 space-y-3">
 
-        {/* Days × rate */}
-        <div className="flex justify-between items-center">
-          <span className="text-xs text-slate-600">
-            {sums.days} {sums.days === 1 ? 'dag' : 'dagen'} × {euroCompact(selectedMachine.pricePerDay)}
-          </span>
-          <span className="text-xs font-bold text-slate-800 font-mono">{euro(sums.rawSubtotal)}</span>
-        </div>
+        {/* Days × rate OR flat-rate tier */}
+        {sums.isFlatRate && sums.tierLabel ? (
+          <div className="flex justify-between items-center">
+            <span className="text-xs text-slate-600">1× {sums.tierLabel}</span>
+            <span className="text-xs font-bold text-slate-800 font-mono">{euro(sums.subtotal)}</span>
+          </div>
+        ) : (
+          <div className="flex justify-between items-center">
+            <span className="text-xs text-slate-600">
+              {sums.days} {sums.days === 1 ? 'dag' : 'dagen'} × {euroCompact(selectedMachine.pricePerDay)}
+            </span>
+            <span className="text-xs font-bold text-slate-800 font-mono">{euro(sums.rawSubtotal)}</span>
+          </div>
+        )}
 
-        {/* Info strip — altijd zichtbaar als er iets te melden is */}
-        {(sums.discountAmount > 0 || sums.spansWeekend || sums.effectiveDailyRate) && (
+        {/* Info strip — only for non-flat-rate discounts, weekend spans, and linear weekly rate */}
+        {((!sums.isFlatRate && sums.discountAmount > 0) || sums.spansWeekend || sums.effectiveDailyRate) && (
           <div className="rounded-xl border border-slate-100 bg-slate-50 p-3 space-y-2.5">
 
             {/* Effectief dagtarief uitleg (6–27 dagen) */}
@@ -112,8 +121,8 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
               </div>
             )}
 
-            {/* Indirim satırı */}
-            {sums.discountAmount > 0 && (
+            {/* Discount row — hidden for flat-rate tiers (already shown via tier label) */}
+            {!sums.isFlatRate && sums.discountAmount > 0 && (
               <div className={`flex justify-between items-center text-emerald-700 text-xs font-semibold${(sums.effectiveDailyRate != null && sums.days >= 6) || sums.spansWeekend ? " pt-2 border-t border-slate-200" : ""}`}>
                 <span className="flex items-center gap-1">
                   <TrendingDown className="h-3.5 w-3.5 shrink-0" />
@@ -125,7 +134,7 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
 
             {/* Gratis weekendopslag */}
             {sums.spansWeekend && (
-              <div className={`flex items-center gap-2 text-xs text-blue-700${sums.discountAmount > 0 || (sums.effectiveDailyRate != null && sums.days >= 6) ? " pt-2 border-t border-slate-200" : ""}`}>
+              <div className={`flex items-center gap-2 text-xs text-blue-700${(!sums.isFlatRate && sums.discountAmount > 0) || (sums.effectiveDailyRate != null && sums.days >= 6) ? " pt-2 border-t border-slate-200" : ""}`}>
                 <span className="shrink-0">🗓</span>
                 <span>
                   <span className="font-semibold">Gratis weekendopslag</span>

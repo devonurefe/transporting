@@ -103,6 +103,7 @@ export default function Footer({ siteName, setActiveTab: _setActiveTab, setShowC
           {/* Brand + email */}
           <div className="space-y-4 flex flex-col items-start">
             <HuurGoLogo className="h-9" dark />
+            <p className="text-[10px] text-slate-500 -mt-1">HuurGo is een initiatief van MB Hoogwerkers</p>
             <p className="text-xs text-slate-400 leading-loose max-w-xs">
               Professionele verhuur van gecertificeerde hoogwerkers, schaarliften en mastliften voor zzp'ers, aannemers en particulieren door heel Nederland.
             </p>

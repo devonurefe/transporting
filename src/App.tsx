@@ -131,6 +131,7 @@ export default function App() {
   const checkAuth = useAuthStore((state) => state.checkAuth);
   const storeUser = useAuthStore((state) => state.user);
   const authChecked = useAuthStore((state) => state.authChecked);
+  const setVatDisplay = useAppStore((state) => state.setVatDisplay);
 
   useEffect(() => {
     checkAuth();
@@ -190,6 +191,19 @@ export default function App() {
     // When authChecked=false (still loading), don't touch isAdminMode
     // so the admin panel stays visible while the token is being verified
   }, [storeUser, authChecked, setIsAdminMode, navigate, location.pathname]);
+
+  useEffect(() => {
+    if (!currentUser) return;
+    const PROFESSIONAL = new Set([
+      "ZZP", "Bedrijf", "Schilder", "Hovenier", "Hovenier / Groenverzorging",
+      "Glazenwasser", "Glazenwasser / Gevelreiniger", "Aannemer",
+      "Installateur", "Installateur / Elektricien", "Dakdekker / Gevelwerker",
+      "Industrieel Onderhoud", "Metselaar", "Stukadoor", "Magazijn", "Gevelreiniger"
+    ]);
+    const mode = PROFESSIONAL.has(currentUser.profileType) ? "excl" : "incl";
+    setVatDisplay(mode);
+    localStorage.setItem("hwh_vat_display", mode);
+  }, [currentUser?.id, setVatDisplay]);
 
   // System and Activity Logs
   const [systemLogs, setSystemLogs] = useState<any[]>([

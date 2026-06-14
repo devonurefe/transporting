@@ -45,6 +45,7 @@ export interface Order {
   rentalDays: number;
   deliveryType: DeliveryType;
   deliveryAddress?: string;
+  deliveryTimeSlot?: string;
   customerName: string;
   customerEmail: string;
   customerPhone: string;

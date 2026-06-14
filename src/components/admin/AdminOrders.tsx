@@ -38,6 +38,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
   const adminUser = useAuthStore((state) => state.user);
 
   const [dateFilter, setDateFilter] = useState<"all" | "today" | "tomorrow" | "week">("all");
+  const [searchText, setSearchText] = useState("");
 
   const todayISO = new Date().toISOString().split("T")[0];
   const tomorrowISO = (() => { const d = new Date(); d.setDate(d.getDate() + 1); return d.toISOString().split("T")[0]; })();
@@ -54,13 +55,24 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
     ? orders.filter(o => statusFilter.includes(o.status))
     : orders;
 
-  const displayOrders = dateFilter === "today"
-    ? statusFiltered.filter(o => o.startDate <= todayISO && o.endDate >= todayISO)
-    : dateFilter === "tomorrow"
-    ? statusFiltered.filter(o => o.startDate <= tomorrowISO && o.endDate >= tomorrowISO)
-    : dateFilter === "week"
-    ? statusFiltered.filter(o => o.startDate <= weekEndISO && o.endDate >= weekStartISO)
+  const q = searchText.trim().toLowerCase();
+  const textFiltered = q
+    ? statusFiltered.filter(o =>
+        o.id.toLowerCase().includes(q) ||
+        o.customerName.toLowerCase().includes(q) ||
+        (o.customerEmail || "").toLowerCase().includes(q) ||
+        (o.customerPhone || "").includes(q) ||
+        getBaseName(o.machineName).toLowerCase().includes(q)
+      )
     : statusFiltered;
+
+  const displayOrders = dateFilter === "today"
+    ? textFiltered.filter(o => o.startDate <= todayISO && o.endDate >= todayISO)
+    : dateFilter === "tomorrow"
+    ? textFiltered.filter(o => o.startDate <= tomorrowISO && o.endDate >= tomorrowISO)
+    : dateFilter === "week"
+    ? textFiltered.filter(o => o.startDate <= weekEndISO && o.endDate >= weekStartISO)
+    : textFiltered;
 
   const t = (nl: string, en: string, tr: string) => {
     if (adminLanguage === "tr") return tr;
@@ -243,6 +255,26 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
               </button>
             )}
           </div>
+        </div>
+
+        {/* Free-text search */}
+        <div className="relative">
+          <input
+            type="text"
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            placeholder={t("Zoek op naam, e-mail, ID of machine...", "Search by name, email, ID or machine...", "Ad, e-posta, ID veya makineye göre ara...")}
+            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-indigo-400 focus:bg-white placeholder:text-slate-400"
+          />
+          {searchText && (
+            <button
+              type="button"
+              onClick={() => setSearchText("")}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 bg-transparent border-none cursor-pointer p-0"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
         </div>
 
         {/* Date filter */}

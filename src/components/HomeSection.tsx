@@ -272,7 +272,7 @@ export default function HomeSection({
                       <p className="text-sm font-extrabold text-emerald-600 leading-tight">
                         {livePriceByCategory[cat.id] !== undefined
                           ? `v.a. €${(() => { const v = withVat(livePriceByCategory[cat.id], vatDisplay); return v % 1 === 0 ? Math.round(v).toLocaleString("nl-NL") : v.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); })()}/dag`
-                          : cat.price}
+                          : "Prijs op aanvraag"}
                       </p>
                     </div>
                   </div>

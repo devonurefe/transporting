@@ -164,14 +164,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       clearTimeout(timeoutId);
 
       if (res.status === 401 || res.status === 403) {
-        // Token is genuinely invalid/expired — clear it
+        // Token is genuinely invalid/expired — clear it and notify user
         if (isAdminMode) {
           localStorage.removeItem("hwh_admin_token");
           localStorage.removeItem("hwh_admin_mode");
         } else {
           localStorage.removeItem("hwh_token");
         }
-        set({ token: null, user: null, isAuthenticated: false, isAdmin: false, isLoading: false, authChecked: true });
+        set({ token: null, user: null, isAuthenticated: false, isAdmin: false, isLoading: false, authChecked: true, error: "Uw sessie is verlopen. Meld u opnieuw aan." });
         return;
       }
 

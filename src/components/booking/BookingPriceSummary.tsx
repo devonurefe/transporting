@@ -11,6 +11,7 @@ import { euro, euroCompact } from "../../utils/format";
 
 interface BookingPriceSummaryProps {
   selectedMachine: Machine | null;
+  machineCount?: number;
   sums: {
     days: number;
     rawSubtotal: number;
@@ -30,7 +31,7 @@ interface BookingPriceSummaryProps {
   };
 }
 
-export default function BookingPriceSummary({ selectedMachine, sums }: BookingPriceSummaryProps) {
+export default function BookingPriceSummary({ selectedMachine, machineCount = 1, sums }: BookingPriceSummaryProps) {
   const t = useLanguageStore((state) => state.t);
 
   if (!selectedMachine) {
@@ -74,8 +75,10 @@ export default function BookingPriceSummary({ selectedMachine, sums }: BookingPr
         </div>
         <div className="min-w-0 flex-1">
           <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wide leading-none mb-1">{t("priceSummaryReservation")}</p>
-          <h4 className="text-sm font-extrabold text-slate-900 leading-snug">{selectedMachine.name}</h4>
-          <span className="text-xs text-indigo-600 font-bold font-mono">{euroCompact(selectedMachine.pricePerDay)}/dag</span>
+          <h4 className="text-sm font-extrabold text-slate-900 leading-snug">
+            {machineCount > 1 ? `${machineCount} machines gereserveerd` : selectedMachine.name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "")}
+          </h4>
+          {machineCount === 1 && <span className="text-xs text-indigo-600 font-bold font-mono">{euroCompact(selectedMachine.pricePerDay)}/dag</span>}
         </div>
       </div>
 
@@ -161,8 +164,14 @@ export default function BookingPriceSummary({ selectedMachine, sums }: BookingPr
           </div>
         ))}
 
+        {/* Subtotaal excl. BTW */}
+        <div className="flex justify-between items-center text-slate-600 border-t border-slate-100 pt-3">
+          <span className="text-xs">Subtotaal (excl. BTW)</span>
+          <span className="text-xs font-bold text-slate-800 font-mono">{euro(priceExVat)}</span>
+        </div>
+
         {/* BTW */}
-        <div className="flex justify-between items-center text-slate-400 border-t border-slate-100 pt-3">
+        <div className="flex justify-between items-center text-slate-400">
           <span className="text-xs">BTW 21%</span>
           <span className="text-xs font-mono">{euro(sums.vat)}</span>
         </div>

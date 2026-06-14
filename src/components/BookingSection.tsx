@@ -505,13 +505,11 @@ export default function BookingSection({
         setDeliveryAddress(resolvedAddress);
         setAddressSuccessMsg(`✓ Gevalideerd adres gevonden: ${resolvedAddress}`);
       } else {
-        setDeliveryAddress("");
         setAddressSuccessMsg("");
         setValidationError("Adres kon niet automatisch worden gevonden. Vul alstublieft uw adres handmatig in.");
       }
     } catch (err: any) {
       clearTimeout(timeoutId);
-      setDeliveryAddress("");
       setAddressSuccessMsg("");
       if (err?.name === "AbortError") {
         setValidationError("Adres opzoeken mislukt (time-out). Vul alstublieft uw adres handmatig in.");
@@ -803,7 +801,7 @@ export default function BookingSection({
 
               {/* Price summary — desktop only, sticky right column */}
               <div className="hidden lg:block lg:col-span-4 lg:sticky lg:top-24 space-y-4">
-                <BookingPriceSummary selectedMachine={cartItems && cartItems.length > 0 ? cartItems[0].machine : null} sums={sums} />
+                <BookingPriceSummary selectedMachine={cartItems && cartItems.length > 0 ? cartItems[0].machine : null} machineCount={cartItems.length || 1} sums={sums} />
               </div>
 
             </motion.div>

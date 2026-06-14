@@ -74,13 +74,27 @@ export default function BookingSuccess({
     }
   };
 
+  const allOrders = successOrders.length > 0 ? successOrders : [successOrder];
+  const combinedTotal = allOrders.reduce((sum, o) => sum + o.totalAmount, 0);
+  const isMulti = allOrders.length > 1;
+
+  const machineEntries = isMulti
+    ? allOrders.map((o, i) => ({
+        label: `Machine ${i + 1}`,
+        value: `${o.machineName.replace(/\s*\(Unit\s+\d+\)\s*$/i, "")} — ${o.startDate} t/m ${o.endDate}`,
+        highlight: true,
+      }))
+    : [
+        { label: t("specMachine"), value: successOrder.machineName, highlight: true },
+        {
+          label: t("specPeriod"),
+          value: `${successOrder.startDate} t/m ${successOrder.endDate} (${successOrder.rentalDays} ${successOrder.rentalDays === 1 ? "dag" : "dagen"})`,
+        },
+      ];
+
   const specs = [
     { label: t("specRenter"), value: successOrder.customerName },
-    { label: t("specMachine"), value: successOrder.machineName, highlight: true },
-    {
-      label: t("specPeriod"),
-      value: `${successOrder.startDate} t/m ${successOrder.endDate} (${successOrder.rentalDays} ${successOrder.rentalDays === 1 ? "dag" : "dagen"})`,
-    },
+    ...machineEntries,
     {
       label: t("specCollection"),
       value: successOrder.deliveryType === "self_pickup"
@@ -90,7 +104,7 @@ export default function BookingSuccess({
         : "Bezorging door ons",
     },
     ...(successOrder.deliveryAddress ? [{ label: t("specAddress"), value: successOrder.deliveryAddress }] : []),
-    { label: t("specTotal"), value: euro(successOrder.totalAmount), price: true },
+    { label: t("specTotal"), value: euro(combinedTotal), price: true },
   ];
 
   return (

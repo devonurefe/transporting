@@ -776,7 +776,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-xs text-slate-700 block font-bold">{t("Weekend (2-3 dgn) €", "Weekend (2-3 days) €", "Hafta Sonu (2-3 gün) €")}</label>
+                        <label className="text-xs text-slate-700 block font-bold">{t("Za+Zo 2-dag €", "Sat+Sun 2-day €", "Cmt+Paz 2 gün €")}</label>
                         <input
                           type="number"
                           min="0"

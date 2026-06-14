@@ -130,6 +130,9 @@ export default function BookingSection({
   // Addon / Shopping Cart Options state
   const [selectedAddons, setSelectedAddons] = useState<string[]>([]);
 
+  // Weekend work declaration (required when rental spans a weekend)
+  const [weekendWorkAnswer, setWeekendWorkAnswer] = useState<'ja' | 'nee' | null>(null);
+
   // Delivery distance & time slot
   const [deliveryDistanceKm, setDeliveryDistanceKm] = useState<number | null>(null);
   const [deliveryTimeSlot, setDeliveryTimeSlot] = useState<string>("");
@@ -265,7 +268,8 @@ export default function BookingSection({
   };
 
   const getItemAvailability = (machineId: string, start: string, end: string) => {
-    return checkAvailability(machineId, start, end, allOrders, blockedDaysList);
+    const machine = cartItems.find(item => item.machine.id === machineId)?.machine;
+    return checkAvailability(machineId, start, end, allOrders, blockedDaysList, undefined, machine?.bufferDays ?? 0);
   };
 
   // Re-run checking whenever days or machine swap
@@ -340,6 +344,11 @@ export default function BookingSection({
       const trailerCost = deliveryType === "trailer_rental" ? 25 * leadCartDays : 0;
       const driver = 0;
 
+      // Pre-compute weekend metrics here so surcharge is included in the total
+      const weekendDays = (leadCartStart && leadCartEnd) ? countWeekendDays(leadCartStart, leadCartEnd) : 0;
+      const strictWeekendLead = isStrictWeekend(leadCartStart, leadCartDays);
+      const spansWeekend = weekendDays > 0 && !strictWeekendLead;
+
       // Addon calculation
       let addonCost = 0;
       const addonDetails: { id: string; name: string; price: number }[] = [];
@@ -347,6 +356,10 @@ export default function BookingSection({
       if (selectedAddons.includes("safety")) {
         addonCost += 15 * totalDays;
         addonDetails.push({ id: "safety", name: "Gecertificeerd Harnas & Veiligheidskit", price: 15 * totalDays });
+      }
+      if (weekendWorkAnswer === 'ja' && spansWeekend) {
+        addonCost += 75;
+        addonDetails.push({ id: "weekend_surcharge", name: "Weekendtoeslag", price: 75 });
       }
 
       const totalExcl = subtotal + transport + trailerCost + driver + addonCost;
@@ -379,11 +392,6 @@ export default function BookingSection({
         }
       }
 
-      const leadEnd = leadCartEnd;
-      const leadItemDays = leadCartDays;
-      const weekendDays = (leadStart && leadEnd) ? countWeekendDays(leadStart, leadEnd) : 0;
-      const strictWeekendLead = isStrictWeekend(leadStart, leadItemDays);
-      const spansWeekend = weekendDays > 0 && !strictWeekendLead;
       const effectiveDailyRate = (totalDays >= 6 && totalDays < 28 && leadItem?.weeklyPrice)
         ? leadItem.weeklyPrice / 5
         : null;
@@ -640,6 +648,14 @@ export default function BookingSection({
         setValidationError("Kies een gewenst bezorgmoment (ochtend of middag) om door te gaan.");
         return;
       }
+      if (deliveryType === "delivery_by_us" && deliveryDistanceKm !== null && deliveryDistanceKm > 20) {
+        setValidationError("Bezorging buiten 20 km is alleen op aanvraag. Neem contact op via WhatsApp.");
+        return;
+      }
+      if (sums.spansWeekend && weekendWorkAnswer === null) {
+        setValidationError("Geef aan of u in het weekend gaat werken om door te gaan.");
+        return;
+      }
       setStep(2);
     } else if (step === 2) {
       if (!customerName || !customerEmail || !customerPhone) {
@@ -690,6 +706,11 @@ export default function BookingSection({
             if (selectedAddons.includes("safety")) {
               addonCost += 15 * days;
               addonsList.push({ id: "safety", name: "Gecertificeerd Harnas & Veiligheidskit", price: 15 * days, billing: "flat" });
+            }
+            // Weekend surcharge: added once (on first item only) when customer declared weekend use
+            if (i === 0 && weekendWorkAnswer === 'ja' && sums.spansWeekend) {
+              addonCost += 75;
+              addonsList.push({ id: "weekend_surcharge", name: "Weekendtoeslag", price: 75, billing: "flat" });
             }
 
             const itemVat = (itemSubtotal + transport + trailerCost + driver + addonCost) * 0.21;
@@ -742,7 +763,7 @@ export default function BookingSection({
                 vat: placedOrders.reduce((s, o) => s + o.vatAmount, 0),
                 total: placedOrders.reduce((s, o) => s + o.totalAmount, 0)
               };
-              const waUrl = buildWhatsAppUrl(checkoutItems, deliveryType, customerName, customerEmail, customerPhone || undefined, orderTotals);
+              const waUrl = buildWhatsAppUrl(checkoutItems, deliveryType, customerName, customerEmail, customerPhone || undefined, orderTotals, weekendWorkAnswer ?? undefined);
               setWhatsappUrl(waUrl);
             } else {
               setWhatsappUrl("");
@@ -868,6 +889,9 @@ export default function BookingSection({
                     deliveryDistanceKm={deliveryDistanceKm}
                     deliveryTimeSlot={deliveryTimeSlot}
                     setDeliveryTimeSlot={setDeliveryTimeSlot}
+                    deliveryAddress={deliveryAddress}
+                    weekendWorkAnswer={weekendWorkAnswer}
+                    onWeekendWorkAnswer={setWeekendWorkAnswer}
                   />
                 )}
 

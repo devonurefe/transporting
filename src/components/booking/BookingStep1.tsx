@@ -7,7 +7,7 @@ import React, { useState } from "react";
 import { Calendar, Building2, X, Truck, ShieldAlert, ArrowRight, MessageCircle, ChevronLeft } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { CartItem, DeliveryType, Machine } from "../../types";
-import { buildWhatsAppUrl } from "../../utils/whatsapp";
+import { buildWhatsAppUrl, buildWhatsAppTransportInquiryUrl } from "../../utils/whatsapp";
 import BookingPriceSummary from "./BookingPriceSummary";
 import DateRangeCalendar from "./DateRangeCalendar";
 import { useLanguageStore } from "../../store/languageStore";
@@ -42,6 +42,9 @@ interface BookingStep1Props {
   deliveryDistanceKm?: number | null;
   deliveryTimeSlot: string;
   setDeliveryTimeSlot: (slot: string) => void;
+  deliveryAddress?: string;
+  weekendWorkAnswer?: 'ja' | 'nee' | null;
+  onWeekendWorkAnswer?: (answer: 'ja' | 'nee') => void;
 }
 
 export default function BookingStep1({
@@ -64,7 +67,10 @@ export default function BookingStep1({
   selectedMachine,
   deliveryDistanceKm,
   deliveryTimeSlot,
-  setDeliveryTimeSlot
+  setDeliveryTimeSlot,
+  deliveryAddress,
+  weekendWorkAnswer,
+  onWeekendWorkAnswer
 }: BookingStep1Props) {
   const t = useLanguageStore((state) => state.t);
   const vatDisplay = useAppStore((state) => state.vatDisplay);
@@ -293,14 +299,28 @@ export default function BookingStep1({
         </div>
       </div>
 
-      {/* Distance warning — shown when PDOK returns >20 km */}
+      {/* Distance >20 km — prijs op aanvraag, checkout blocked */}
       {deliveryDistanceKm && deliveryDistanceKm > 20 && deliveryType === "delivery_by_us" && (
-        <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 flex items-start gap-2">
-          <ShieldAlert className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
-          <div>
-            <span className="font-bold block">Bezorgadres buiten 20 km straal</span>
-            <span>Dit adres ligt ±{deliveryDistanceKm} km van ons depot. Bezorging is mogelijk, maar neem contact op voor een offerte op maat.</span>
+        <div className="p-4 bg-red-50 border border-red-200 rounded-xl space-y-3">
+          <div className="flex items-start gap-2">
+            <ShieldAlert className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-bold text-red-800">Buiten 20 km — Prijs op aanvraag</p>
+              <p className="text-xs text-red-600 mt-0.5 leading-relaxed">
+                Uw bezorgadres ligt ±{deliveryDistanceKm} km van ons depot in Zoeterwoude.
+                Voor bezorging op maat hanteren wij een maatwerkprijs — neem contact op via WhatsApp.
+              </p>
+            </div>
           </div>
+          <a
+            href={buildWhatsAppTransportInquiryUrl(cartItems, deliveryAddress ?? '', deliveryDistanceKm)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-2 w-full py-2.5 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-xl transition-colors"
+          >
+            <MessageCircle className="h-4 w-4 shrink-0" />
+            Vraag offerte aan via WhatsApp
+          </a>
         </div>
       )}
 
@@ -376,6 +396,48 @@ export default function BookingStep1({
         </div>
       </div>
 
+      {/* Weekend work declaration — required when rental spans Sat/Sun (not strict Sat+Sun weekend) */}
+      {sums?.spansWeekend && (
+        <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl space-y-3 pt-4 border-t border-slate-200">
+          <div>
+            <p className="text-sm font-bold text-amber-900">🗓 Gaat u in het weekend werken?</p>
+            <p className="text-xs text-amber-700 mt-1">
+              Uw huurperiode omvat weekend dagen. Machines mogen gratis staan, maar gebruik wordt geregistreerd.
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => onWeekendWorkAnswer?.('nee')}
+              className={`flex-1 py-2.5 rounded-xl border text-sm font-semibold transition-all cursor-pointer ${
+                weekendWorkAnswer === 'nee'
+                  ? 'bg-slate-800 text-white border-slate-800'
+                  : 'bg-white border-slate-300 text-slate-700 hover:border-slate-500'
+              }`}
+            >
+              Nee, niet werken
+            </button>
+            <button
+              type="button"
+              onClick={() => onWeekendWorkAnswer?.('ja')}
+              className={`flex-1 py-2.5 rounded-xl border text-sm font-semibold transition-all cursor-pointer ${
+                weekendWorkAnswer === 'ja'
+                  ? 'bg-orange-500 text-white border-orange-500'
+                  : 'bg-white border-slate-300 text-slate-700 hover:border-slate-500'
+              }`}
+            >
+              Ja, ik werk (+€75)
+            </button>
+          </div>
+          {weekendWorkAnswer === 'nee' && (
+            <p className="text-xs text-amber-700 leading-relaxed bg-amber-100 rounded-lg p-2.5">
+              ⚠️ Als gebruik van de machine op weekenddagen wordt geconstateerd via de urenteller,
+              wordt het standaard weekendtarief (€75) alsnog in rekening gebracht.
+            </p>
+          )}
+        </div>
+      )}
+
       {/* Dynamic inline warning banner replacement */}
       {validationError && (
         <motion.div
@@ -404,11 +466,19 @@ export default function BookingStep1({
 
       {/* Step control */}
       <div className="flex flex-col sm:flex-row sm:justify-end gap-3 pt-4 border-t border-slate-100">
+        {(() => {
+          const distanceBlocked = deliveryType === "delivery_by_us" && !!deliveryDistanceKm && deliveryDistanceKm > 20;
+          const weekendBlocked = !!(sums?.spansWeekend && weekendWorkAnswer === null);
+          const canProceed = isAvailable && cartItems.length > 0
+            && !(deliveryType === "delivery_by_us" && !deliveryTimeSlot)
+            && !distanceBlocked
+            && !weekendBlocked;
+          return (
         <button
           onClick={handleNextStep}
-          disabled={!isAvailable || cartItems.length === 0 || (deliveryType === "delivery_by_us" && !deliveryTimeSlot)}
+          disabled={!canProceed}
           className={`font-semibold text-xs w-full sm:w-auto px-6 py-3.5 rounded-xl transition-all flex items-center justify-center space-x-1.5 border-none shadow-md order-1 sm:order-2 ${
-            isAvailable && cartItems.length > 0 && !(deliveryType === "delivery_by_us" && !deliveryTimeSlot)
+            canProceed
               ? "bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer active:scale-95 shadow-indigo-200"
               : "bg-slate-100 text-slate-400 cursor-not-allowed"
           }`}
@@ -416,6 +486,8 @@ export default function BookingStep1({
           <span>Doorgaan naar gegevens</span>
           <ArrowRight className="h-4 w-4" />
         </button>
+          );
+        })()}
       </div>
       {/* Machine detail modal — full shared component */}
       <AnimatePresence>

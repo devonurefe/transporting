@@ -27,7 +27,8 @@ export function checkAvailability(
   end: string,
   orders: SimpleOrder[],
   blockedDates: SimpleBlockedDate[],
-  todayStr?: string
+  todayStr?: string,
+  bufferDays: number = 0
 ) {
   if (!start || !end) return { available: false, blocked: false, overlap: false, reason: "Selecteer een begin- en einddatum." };
 
@@ -46,11 +47,13 @@ export function checkAvailability(
   }
 
   // Check overlaps with active orders (skip cancelled)
+  // bufferDays extends the order's end date to block maintenance/charging time
+  const bufferMs = bufferDays * 86_400_000;
   const overlaps = orders.filter(o => {
     if (o.machineId !== machineId) return false;
     if (o.status === "Geannuleerd") return false;
     const orderStart = new Date(o.startDate).getTime();
-    const orderEnd = new Date(o.endDate).getTime();
+    const orderEnd = new Date(o.endDate).getTime() + bufferMs;
     return (requestedStart <= orderEnd && requestedEnd >= orderStart);
   });
 

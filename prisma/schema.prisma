@@ -34,6 +34,7 @@ model Machine {
   packageContents         String?
   additionalImages        Json?
   specs                   Json?
+  bufferDays              Int           @default(0)
   isActive                Boolean       @default(true)
   blockedDates            BlockedDate[]
   updatedAt               DateTime      @updatedAt @default(now())

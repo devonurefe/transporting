@@ -261,7 +261,8 @@ machinesRouter.put("/:id", requireAdmin as any, async (req: AuthenticatedRequest
         packageContents: packageContents !== undefined ? packageContents : null,
         additionalImages: Array.isArray(additionalImages) ? additionalImages : [],
         specs: specsUpdate,
-        isActive: req.body.isActive !== undefined ? Boolean(req.body.isActive) : undefined
+        isActive: req.body.isActive !== undefined ? Boolean(req.body.isActive) : undefined,
+        bufferDays: req.body.bufferDays !== undefined ? Math.min(2, Math.max(0, Math.round(Number(req.body.bufferDays)))) : undefined
       }
     });
 

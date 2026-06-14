@@ -31,6 +31,7 @@ export interface Machine {
   additionalImages?: string[];
   specs?: { label: string; value: string }[];
   isActive?: boolean;
+  bufferDays?: number; // 0=no buffer, 1=1-day maintenance buffer after each rental
 }
 
 export type DeliveryType = "self_pickup" | "delivery_by_us" | "trailer_rental";

@@ -109,6 +109,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
   const [isUploadingEditAdditional, setIsUploadingEditAdditional] = useState(false);
   const [editPackageContents, setEditPackageContents] = useState("");
   const [editSpecs, setEditSpecs] = useState<{ label: string; value: string }[]>([]);
+  const [editBufferDays, setEditBufferDays] = useState(0);
 
   const handleEditAdditionalImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -171,6 +172,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
     setEditAdditionalImages(m.additionalImages || []);
     setEditPackageContents(m.packageContents || "");
     setEditSpecs(getSpecsForMachine(m.id, (m as any).specs));
+    setEditBufferDays((m as any).bufferDays ?? 0);
     setPendingEditId(null);
     });
   };
@@ -294,7 +296,8 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
       specs: editSpecs.filter(s => s.label.trim() && s.value.trim()).length > 0
         ? editSpecs.filter(s => s.label.trim() && s.value.trim())
         : undefined,
-    });
+      bufferDays: editBufferDays,
+    } as any);
 
     setIsUpdating(false);
     if (success) {
@@ -871,6 +874,37 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                     </div>
 
                   </div>
+                </div>
+
+                {/* Onderhoudsbuffer toggle */}
+                <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50">
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <p className="text-sm font-bold text-slate-800">Onderhoudsbuffer na verhuur</p>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        Dag na huurperiode automatisch geblokkeerd voor opladen &amp; reiniging.
+                        Standaard uitgeschakeld.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setEditBufferDays(editBufferDays > 0 ? 0 : 1)}
+                      className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus:outline-none ${
+                        editBufferDays > 0 ? 'bg-orange-500' : 'bg-slate-300'
+                      }`}
+                      role="switch"
+                      aria-checked={editBufferDays > 0}
+                    >
+                      <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                        editBufferDays > 0 ? 'translate-x-6' : 'translate-x-1'
+                      }`} />
+                    </button>
+                  </div>
+                  {editBufferDays > 0 && (
+                    <p className="mt-2 text-xs text-orange-700 bg-orange-50 border border-orange-200 rounded-lg px-3 py-2">
+                      ✓ Actief — de dag na elke huurperiode wordt automatisch geblokkeerd in het beschikbaarheidssysteem.
+                    </p>
+                  )}
                 </div>
 
                 {/* Persistent Sticky Action Buttons Footer */}

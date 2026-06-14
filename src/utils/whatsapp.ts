@@ -26,7 +26,8 @@ export function buildWhatsAppUrl(
   customerName?: string,
   customerEmail?: string,
   customerPhone?: string,
-  totals?: OrderTotals
+  totals?: OrderTotals,
+  weekendWorkAnswer?: 'ja' | 'nee'
 ): string {
   const lines: string[] = [];
 
@@ -95,6 +96,19 @@ export function buildWhatsAppUrl(
     lines.push("");
   }
 
+  if (weekendWorkAnswer) {
+    lines.push("─────────────────────────────");
+    lines.push("🗓 *WEEKEND VERKLARING*");
+    lines.push("─────────────────────────────");
+    if (weekendWorkAnswer === 'ja') {
+      lines.push("✅ Klant gaat in het weekend werken (+€75 weekendtoeslag)");
+    } else {
+      lines.push("❌ Klant gaat NIET in het weekend werken");
+      lines.push("   ⚠️ Urenteller wordt gecontroleerd — bij gebruik alsnog standaard weekendtarief");
+    }
+    lines.push("");
+  }
+
   lines.push("💳 *Verzoek:*");
   lines.push("Stuur mij een iDEAL betaallink zodat ik");
   lines.push("de betaling direct kan afronden.");
@@ -117,6 +131,36 @@ export function buildWhatsAppGeneralUrl(categoryLabel?: string): string {
 
   const encodedText = encodeURIComponent(message);
   return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodedText}`;
+}
+
+/**
+ * Builds a WhatsApp URL for transport outside 20 km radius — redirects to custom quote flow.
+ */
+export function buildWhatsAppTransportInquiryUrl(
+  cartItems: CartItem[],
+  addressLabel: string,
+  distanceKm: number
+): string {
+  const machineLines = cartItems
+    .map(item => `▸ ${item.machine.name}  (${item.startDate || "–"} → ${item.endDate || "–"})`)
+    .join("\n");
+
+  const lines = [
+    `🚛 *Bezorgverzoek buiten 20 km — HuurGo*`,
+    `─────────────────────────────`,
+    `📦 *Machine(s):*`,
+    machineLines,
+    `─────────────────────────────`,
+    `📍 *Bezorgadres:* ${addressLabel || "Niet opgegeven"}`,
+    `📏 *Afstand tot depot:* ±${distanceKm} km`,
+    `─────────────────────────────`,
+    `💬 *Verzoek:*`,
+    `Ik wil graag een offerte ontvangen voor bezorging buiten de 20 km zone.`,
+    ``,
+    `Alvast bedankt! 🦾`,
+  ];
+
+  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(lines.join("\n"))}`;
 }
 
 /**

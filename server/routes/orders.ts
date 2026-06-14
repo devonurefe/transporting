@@ -324,6 +324,10 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
       return res.status(400).json({ error: "Totaalbedrag klopt niet. Ververs de pagina en probeer opnieuw." });
     }
 
+    // Buffer day logic: extend existing orders' end date when machine has maintenance buffer
+    const bufferDays = (machine as any).bufferDays ?? 0;
+    const bufferMs = bufferDays * 24 * 60 * 60 * 1000;
+
     // Resolve customer ID from auth token if present (outside transaction — read-only)
     let resolvedCustomerId: string | null = null;
     if (req.user && req.user.role !== "admin") {
@@ -333,15 +337,18 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
 
     // Serializable transaction: availability check + blocked-date check + create are atomic
     const newOrder = await withSerializableRetry(() => prisma.$transaction(async (tx) => {
-      const conflictingOrders = await tx.order.findMany({
+      // Fetch orders that could potentially conflict (started before or on the requested end date)
+      // Then apply buffer: an existing order blocks startDate..endDate+bufferDays
+      const potentialConflicts = await tx.order.findMany({
         where: {
           machineId: orderData.machineId,
           status: { not: "Geannuleerd" },
-          AND: [
-            { startDate: { lte: endDate } },
-            { endDate: { gte: startDate } }
-          ]
+          startDate: { lte: endDate }
         }
+      });
+      const conflictingOrders = potentialConflicts.filter(o => {
+        const bufferedEnd = new Date(o.endDate.getTime() + bufferMs);
+        return startDate <= bufferedEnd;
       });
 
       if (conflictingOrders.length > 0) {

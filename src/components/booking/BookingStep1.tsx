@@ -34,6 +34,9 @@ interface BookingStep1Props {
     days: number; rawSubtotal: number; subtotal: number; discountAmount: number; discountLabel: string;
     transport: number; driver: number; addonCost: number; addonDetails: { id: string; name: string; price: number }[];
     vat: number; total: number; deliveryType?: string;
+    weekendDays?: number; spansWeekend?: boolean; effectiveDailyRate?: number | null;
+    tierLabel?: string | null; isFlatRate?: boolean;
+    weeklyBreakdown?: { weeks: number; pricePerWeek: number; remainder: number; dailyRate: number } | null;
   };
   selectedMachine?: Machine | null;
   deliveryDistanceKm?: number | null;

@@ -331,7 +331,14 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                 </div>
                 <div className="text-xs font-semibold text-slate-700">{getBaseName(o.machineName)}</div>
                 <div className="flex justify-between items-center text-xs">
-                  <span className="text-slate-500">{o.startDate} · {o.rentalDays}d</span>
+                  <div>
+                    <span className="text-slate-500">{o.startDate} · {o.rentalDays}d</span>
+                    {o.deliveryTimeSlot && o.deliveryType === "delivery_by_us" && (
+                      <span className="ml-2 text-[9.5px] text-indigo-500 font-bold">
+                        {o.deliveryTimeSlot === "morning" ? "Ochtend" : "Middag"}
+                      </span>
+                    )}
+                  </div>
                   <span className="font-mono font-bold text-teal-600">€ {o.totalAmount.toFixed(2)}</span>
                 </div>
                 <div className="flex gap-2 pt-2 border-t border-slate-100">
@@ -415,12 +422,19 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                       </td>
                       <td className="py-3 px-3">
                         <span className="text-[11px] font-semibold text-slate-700 block">
-                          {o.deliveryType === "self_pickup" 
-                            ? t("Zelf Afhalen (Gratis)", "Self Pickup (Free)", "Kendim Teslim Alacağım (Ücretsiz)") 
+                          {o.deliveryType === "self_pickup"
+                            ? t("Zelf Afhalen (Gratis)", "Self Pickup (Free)", "Kendim Teslim Alacağım (Ücretsiz)")
+                            : o.deliveryType === "trailer_rental"
+                            ? t("Aanhanger huren", "Trailer Rental", "Treyler ile Taşıma")
                             : t("Bezorgservice", "Delivery Service", "Adrese Teslimat")}
                         </span>
+                        {o.deliveryTimeSlot && o.deliveryType === "delivery_by_us" && (
+                          <span className="block text-[9.5px] text-indigo-500 font-bold mt-0.5">
+                            {o.deliveryTimeSlot === "morning" ? "⏰ Ochtend 07:00–09:00" : "⏰ Middag 13:00–17:00"}
+                          </span>
+                        )}
                         {o.deliveryAddress && (
-                          <span className="block text-[9.5px] text-slate-450 text-slate-500 truncate max-w-[200px] mt-1.5 leading-tight" title={o.deliveryAddress}>
+                          <span className="block text-[9.5px] text-slate-500 truncate max-w-[200px] mt-1 leading-tight" title={o.deliveryAddress}>
                             {o.deliveryAddress}
                           </span>
                         )}

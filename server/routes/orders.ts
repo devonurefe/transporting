@@ -256,10 +256,16 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
     if (driverCostClient !== 0) {
       return res.status(400).json({ error: "Ongeldig chauffeurskostenbedrag" });
     }
-    const addonsTotal = (Array.isArray(orderData.addons) ? orderData.addons : []).reduce((sum: number, a: any) => {
-      const addon = typeof a === "object" && a !== null ? a : {};
-      const price = Number(addon.price || 0);
-      const billing = addon.billing ?? "flat";
+    const VALID_ADDON_IDS = new Set(["safety", "weekend_surcharge"]);
+    const rawAddons = Array.isArray(orderData.addons) ? orderData.addons : [];
+    for (const a of rawAddons) {
+      if (typeof a !== "object" || a === null || !VALID_ADDON_IDS.has(String(a.id ?? ""))) {
+        return res.status(400).json({ error: "Ongeldige toevoeging in bestelling" });
+      }
+    }
+    const addonsTotal = rawAddons.reduce((sum: number, a: any) => {
+      const price = Number(a.price || 0);
+      const billing = a.billing ?? "flat";
       return sum + (billing === "daily" ? price * rentalDays : price);
     }, 0);
     // Flat-rate pricing mirrors src/utils/pricing.ts calculateItemSubtotal.
@@ -324,10 +330,6 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
       return res.status(400).json({ error: "Totaalbedrag klopt niet. Ververs de pagina en probeer opnieuw." });
     }
 
-    // Buffer day logic: extend existing orders' end date when machine has maintenance buffer
-    const bufferDays = (machine as any).bufferDays ?? 0;
-    const bufferMs = bufferDays * 24 * 60 * 60 * 1000;
-
     // Resolve customer ID from auth token if present (outside transaction — read-only)
     let resolvedCustomerId: string | null = null;
     if (req.user && req.user.role !== "admin") {
@@ -337,6 +339,14 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
 
     // Serializable transaction: availability check + blocked-date check + create are atomic
     const newOrder = await withSerializableRetry(() => prisma.$transaction(async (tx) => {
+      // Re-fetch bufferDays inside the transaction so we always use the current value
+      // even if an admin changed it between the machine fetch above and now
+      const machineBuffer = await tx.machine.findUnique({
+        where: { id: orderData.machineId },
+        select: { bufferDays: true }
+      });
+      const bufferMs = (machineBuffer?.bufferDays ?? 0) * 24 * 60 * 60 * 1000;
+
       // Fetch orders that could potentially conflict (started before or on the requested end date)
       // Then apply buffer: an existing order blocks startDate..endDate+bufferDays
       const potentialConflicts = await tx.order.findMany({

@@ -214,7 +214,7 @@ export default function BookingStep1({
 
       {/* Logistical preference setup */}
       <div className="space-y-3 pt-4 border-t border-slate-200">
-        <span className="text-xs text-slate-500 font-semibold">{t("step1TransportOpts")}</span>
+        <h3 className="text-sm font-bold text-slate-800 tracking-wide">{t("step1TransportOpts")}</h3>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {/* Opt 1 — Wij bezorgen */}

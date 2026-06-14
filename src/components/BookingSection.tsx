@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Machine, Order, DeliveryType, UserProfile, CartItem } from "../types";
 import { useAppStore } from "../store/appStore";
@@ -122,6 +122,17 @@ export default function BookingSection({
   // Delivery distance & time slot
   const [deliveryDistanceKm, setDeliveryDistanceKm] = useState<number | null>(null);
   const [deliveryTimeSlot, setDeliveryTimeSlot] = useState<string>("");
+
+  // Clear stale distance when user switches away from delivery_by_us
+  useEffect(() => {
+    if (deliveryType !== "delivery_by_us") setDeliveryDistanceKm(null);
+  }, [deliveryType]);
+
+  // Wrapper for BookingStep2 textarea — clears PDOK distance on manual edit
+  const handleManualAddressChange = useCallback((address: string) => {
+    setDeliveryAddress(address);
+    setDeliveryDistanceKm(null);
+  }, []);
 
   const paymentGateway = "whatsapp";
 
@@ -851,7 +862,7 @@ export default function BookingSection({
                     isSearchingAddress={isSearchingAddress}
                     addressSuccessMsg={addressSuccessMsg}
                     deliveryAddress={deliveryAddress}
-                    setDeliveryAddress={setDeliveryAddress}
+                    setDeliveryAddress={handleManualAddressChange}
                     handleAddressLookup={handleAddressLookup}
                     validationError={validationError}
                     setValidationError={setValidationError}

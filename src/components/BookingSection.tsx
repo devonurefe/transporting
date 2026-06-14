@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { Machine, Order, DeliveryType, UserProfile, CartItem } from "../types";
 import { useAppStore } from "../store/appStore";
 import { checkAvailability } from "../utils/availability";
-import { calculateItemSubtotal, isStrictWeekend } from "../utils/pricing";
+import { calculateItemSubtotal, isStrictWeekend, countWeekendDays } from "../utils/pricing";
 
 // Import modular Step components
 import { buildWhatsAppUrl } from "../utils/whatsapp";
@@ -331,6 +331,16 @@ export default function BookingSection({
         }
       }
 
+      const leadStart = cartItems[0]?.startDate;
+      const leadEnd = cartItems[0]?.endDate;
+      const weekendDays = (leadStart && leadEnd) ? countWeekendDays(leadStart, leadEnd) : 0;
+      const strictWeekendLead = isStrictWeekend(leadStart, totalDays);
+      const spansWeekend = weekendDays > 0 && !strictWeekendLead;
+      const leadMachine = cartItems[0]?.machine;
+      const effectiveDailyRate = (totalDays >= 6 && totalDays < 28 && leadMachine?.weeklyPrice)
+        ? leadMachine.weeklyPrice / 5
+        : null;
+
       return {
         days: totalDays,
         rawSubtotal,
@@ -343,7 +353,10 @@ export default function BookingSection({
         addonDetails,
         vat,
         total,
-        deliveryType
+        deliveryType,
+        weekendDays,
+        spansWeekend,
+        effectiveDailyRate
       };
     }
 
@@ -406,6 +419,12 @@ export default function BookingSection({
     const vat = totalExcl * 0.21;
     const total = totalExcl + vat;
 
+    const weekendDays = countWeekendDays(startDate, endDate);
+    const spansWeekend = weekendDays > 0 && !isStrictWeekend(startDate, days);
+    const effectiveDailyRate = (days >= 6 && days < 28 && selectedMachine.weeklyPrice)
+      ? selectedMachine.weeklyPrice / 5
+      : null;
+
     return {
       days,
       rawSubtotal,
@@ -418,7 +437,10 @@ export default function BookingSection({
       addonDetails,
       vat,
       total,
-      deliveryType
+      deliveryType,
+      weekendDays,
+      spansWeekend,
+      effectiveDailyRate
     };
   };
 

@@ -321,6 +321,7 @@ export default function BookingSection({
       let rawSubtotal = 0;
       let discountAmount = 0;
       let subtotal = 0;
+      let campaignSavings = 0;
 
       for (const item of cartItems) {
         const itemStart = item.startDate || new Date().toISOString().split("T")[0];
@@ -333,10 +334,15 @@ export default function BookingSection({
 
         const itemRaw = item.machine.pricePerDay * days;
         const itemSub = calculateItemSubtotal(item.machine, days, customerProfile, campaignRules, itemStart);
+        const itemSubNoCampaign = calculateItemSubtotal(
+          { ...item.machine, campaignDiscountPercent: undefined, campaignDiscountAmount: undefined } as any,
+          days, customerProfile, [], itemStart
+        );
         const itemDisc = Math.max(0, itemRaw - itemSub);
         rawSubtotal += itemRaw;
         discountAmount += itemDisc;
         subtotal += itemSub;
+        campaignSavings += Math.max(0, itemSubNoCampaign - itemSub);
       }
 
       const transport = deliveryType === "delivery_by_us" ? 150 : 0;
@@ -442,7 +448,8 @@ export default function BookingSection({
         effectiveDailyRate,
         tierLabel,
         isFlatRate,
-        weeklyBreakdown
+        weeklyBreakdown,
+        campaignSavings
       };
     }
 
@@ -458,7 +465,12 @@ export default function BookingSection({
 
     const rawSubtotal = selectedMachine.pricePerDay * days;
     const itemSub = calculateItemSubtotal(selectedMachine, days, customerProfile, campaignRules, startDate);
+    const itemSubNoCampaign = calculateItemSubtotal(
+      { ...selectedMachine, campaignDiscountPercent: undefined, campaignDiscountAmount: undefined } as any,
+      days, customerProfile, [], startDate
+    );
     const discountAmount = Math.max(0, rawSubtotal - itemSub);
+    const campaignSavings = Math.max(0, itemSubNoCampaign - itemSub);
 
     let discountLabel = "Korting";
     if (days >= 28) {
@@ -548,7 +560,8 @@ export default function BookingSection({
       effectiveDailyRate,
       tierLabel,
       isFlatRate,
-      weeklyBreakdown
+      weeklyBreakdown,
+      campaignSavings
     };
   };
 

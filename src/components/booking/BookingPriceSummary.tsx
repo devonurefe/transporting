@@ -31,6 +31,7 @@ interface BookingPriceSummaryProps {
     tierLabel?: string | null;
     isFlatRate?: boolean;
     weeklyBreakdown?: { weeks: number; pricePerWeek: number; remainder: number; dailyRate: number } | null;
+    campaignSavings?: number;
   };
 }
 
@@ -145,6 +146,17 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
                   {sums.discountLabel}
                 </span>
                 <span className="font-mono">− {euro(sums.discountAmount)}</span>
+              </div>
+            )}
+
+            {/* Campaign savings — shown even on flat-rate tiers */}
+            {(sums.campaignSavings ?? 0) > 0 && (
+              <div className={`flex justify-between items-center text-amber-700 text-xs font-semibold${(sums.effectiveDailyRate != null && sums.days >= 6) || (!sums.isFlatRate && sums.discountAmount > 0) || sums.spansWeekend ? " pt-2 border-t border-slate-200" : ""}`}>
+                <span className="flex items-center gap-1">
+                  <TrendingDown className="h-3.5 w-3.5 shrink-0" />
+                  Campagnekorting
+                </span>
+                <span className="font-mono">− {euro(sums.campaignSavings!)}</span>
               </div>
             )}
 

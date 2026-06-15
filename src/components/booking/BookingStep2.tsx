@@ -34,6 +34,7 @@ interface BookingStep2Props {
   setStep: (step: number) => void;
   handleNextStep: () => void;
   setActiveTab?: (tab: string) => void;
+  deliveryDistanceKm?: number | null;
   isSubmitting?: boolean;
   bookingError?: string | null;
   sums?: {
@@ -86,6 +87,7 @@ export default function BookingStep2({
   setActiveTab,
   sums,
   selectedMachine,
+  deliveryDistanceKm,
   isSubmitting,
   bookingError
 }: BookingStep2Props) {
@@ -322,6 +324,18 @@ export default function BookingStep2({
               </div>
             )}
 
+            {deliveryDistanceKm !== null && deliveryDistanceKm !== undefined && deliveryDistanceKm > 20 && (
+              <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2">
+                <ShieldAlert className="h-4 w-4 text-red-500 shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-xs font-bold text-red-800">Buiten 20 km — Prijs op aanvraag</p>
+                  <p className="text-xs text-red-600 mt-0.5 leading-relaxed">
+                    Uw adres ligt ±{deliveryDistanceKm} km van ons depot. Neem contact op via WhatsApp voor een transportofferte op maat.
+                  </p>
+                </div>
+              </div>
+            )}
+
             <div className="pt-2">
               <label className="text-xs text-slate-500 block font-bold uppercase tracking-wider mb-1">Geselecteerd Afleveradres (of handmatig aanpassen)</label>
               <textarea
@@ -381,8 +395,8 @@ export default function BookingStep2({
 
         <button
           onClick={handleNextStep}
-          disabled={isSubmitting}
-          className="font-extrabold text-xs px-7 py-3.5 rounded-xl transition-all flex items-center justify-center space-x-2 disabled:opacity-50 cursor-pointer border-none shadow-md w-full sm:w-auto bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-emerald-100/50"
+          disabled={isSubmitting || !!(deliveryDistanceKm && deliveryDistanceKm > 20)}
+          className="font-extrabold text-xs px-7 py-3.5 rounded-xl transition-all flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer border-none shadow-md w-full sm:w-auto bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-emerald-100/50"
         >
           {isSubmitting ? (
             <>

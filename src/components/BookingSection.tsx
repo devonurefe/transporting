@@ -692,6 +692,10 @@ export default function BookingSection({
         setValidationError("Een afleveradres is verplicht bij bezorging door ons.");
         return;
       }
+      if (deliveryType === "delivery_by_us" && deliveryDistanceKm !== null && deliveryDistanceKm > 20) {
+        setValidationError("Bezorging buiten 20 km is alleen op aanvraag. Vraag een offerte aan via WhatsApp.");
+        return;
+      }
       handleCreateBooking();
     }
   };
@@ -939,6 +943,7 @@ export default function BookingSection({
                     setActiveTab={setActiveTab}
                     sums={sums}
                     selectedMachine={cartItems.length > 0 ? cartItems[0].machine : null}
+                    deliveryDistanceKm={deliveryDistanceKm}
                     isSubmitting={isSubmitting}
                     bookingError={bookingError}
                   />

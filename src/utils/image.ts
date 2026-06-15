@@ -5,8 +5,8 @@
 
 /**
  * Resizes an image file client-side using HTML5 Canvas.
- * Compresses the resulting image as JPEG with 80% quality.
- * 
+ * Compresses the resulting image as WebP at 80% quality (JPEG fallback).
+ *
  * @param file The uploaded Image File.
  * @param maxWidth Max width bound.
  * @param maxHeight Max height bound.
@@ -45,8 +45,13 @@ export function resizeImage(file: File, maxWidth = 1200, maxHeight = 1200): Prom
         }
 
         ctx.drawImage(img, 0, 0, width, height);
-        // Compress as JPEG at 80% quality
-        const dataUrl = canvas.toDataURL("image/jpeg", 0.8);
+        // Prefer WebP at 80% quality (smaller payloads); the server upload
+        // allowlist + magic-byte check already accept .webp. Browsers that
+        // ignore the WebP MIME return PNG/JPEG, so fall back to JPEG.
+        const webp = canvas.toDataURL("image/webp", 0.8);
+        const dataUrl = webp.startsWith("data:image/webp")
+          ? webp
+          : canvas.toDataURL("image/jpeg", 0.8);
         resolve(dataUrl);
       };
       img.onerror = () => reject(new Error("Görsel yüklenemedi."));

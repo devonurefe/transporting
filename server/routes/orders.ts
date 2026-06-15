@@ -184,6 +184,14 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
   if (endDate < startDate) {
     return res.status(400).json({ error: "Einddatum moet na de startdatum liggen" });
   }
+  // Reject bookings that start in the past — the frontend guard
+  // (BookingSection.tsx) is bypassable via a crafted request. Compare against
+  // the start of today in UTC, consistent with the getUTCDay() pricing logic.
+  const startOfToday = new Date();
+  startOfToday.setUTCHours(0, 0, 0, 0);
+  if (startDate < startOfToday) {
+    return res.status(400).json({ error: "Startdatum mag niet in het verleden liggen" });
+  }
 
   // Amount validation
   if (Number(orderData.totalAmount) <= 0 || isNaN(Number(orderData.totalAmount))) {

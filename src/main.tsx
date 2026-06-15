@@ -40,6 +40,22 @@ if (typeof window !== "undefined") {
 import { BrowserRouter } from 'react-router-dom';
 import ErrorBoundary from './components/ErrorBoundary.tsx';
 
+// Microsoft Clarity (heatmaps / session insights) — only injected when a project
+// ID is configured, so dev/CI stay clean and no tracking ships by default.
+// NOTE (KVKK/GDPR): EU visitors generally require cookie consent before tracking.
+// There is no consent banner yet — enable VITE_CLARITY_ID only once consent is in place.
+const CLARITY_ID = (import.meta as any).env?.VITE_CLARITY_ID;
+if (typeof window !== "undefined" && CLARITY_ID) {
+  (function (c: any, l: Document, a: string, r: string, i: string) {
+    c[a] = c[a] || function () { (c[a].q = c[a].q || []).push(arguments); };
+    const t = l.createElement(r) as HTMLScriptElement;
+    t.async = true;
+    t.src = "https://www.clarity.ms/tag/" + i;
+    const y = l.getElementsByTagName(r)[0];
+    y.parentNode?.insertBefore(t, y);
+  })(window, document, "clarity", "script", CLARITY_ID);
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>

@@ -191,12 +191,13 @@ All builders in `src/utils/whatsapp.ts`. Sign-off emoji: **🦾** (never 🙏).
 
 | Variable | Purpose |
 |---|---|
-| `DATABASE_URL` | `postgresql://...` (PostgreSQL only) |
+| `DATABASE_URL` | `postgresql://...` (PostgreSQL only). Append `?connection_limit=10&pool_timeout=20` in production to bound the Prisma pool and avoid "too many connections" under load. |
 | `JWT_SECRET` | JWT signing secret |
 | `RESEND_API_KEY` | Transactional email (optional — mock fallback if absent) |
 | `EMAIL_FROM` | Sender address (e.g. `noreply@huurgo.nl`) |
 | `ADMIN_EMAIL` | Admin alert recipient (e.g. `info@mbhoogwerkers.com`) |
 | `VITE_WHATSAPP_NUMBER` | WA number without `+` (e.g. `31611848899`) |
+| `VITE_CLARITY_ID` | Microsoft Clarity project ID (optional). Empty = no tracking. Requires cookie consent (KVKK/GDPR) before enabling for EU visitors. |
 | `APP_URL` | Production base URL (used in email links) |
 | `REMINDER_SECRET` | Secret for cron reminder endpoint |
 
@@ -216,3 +217,4 @@ All builders in `src/utils/whatsapp.ts`. Sign-off emoji: **🦾** (never 🙏).
 - **Admin calendar**: date input grid fixed (xs: → grid-cols-2); reason field → preset dropdown
 - **Image URL**: X button clears URL; no Unsplash fallback on PUT; placeholder shown correctly
 - **Security**: Helmet (HSTS + CSP + frameguard), serializable transactions, crypto order IDs, email retry, DB indexes
+- **Audit hardening**: backend rejects past `startDate` on orders; admin Orders flags stale unpaid `In behandeling` bookings (>48h) that block the agenda (warning only, no auto-cancel); `campaign-rules` POST payload validated/sanitized; machine `description` capped at 2000 chars; client image upload emits WebP (JPEG fallback); optional Microsoft Clarity via `VITE_CLARITY_ID` (CSP allows `*.clarity.ms`); recommend `connection_limit`/`pool_timeout` on `DATABASE_URL`

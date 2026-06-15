@@ -279,20 +279,39 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
     // Flat-rate pricing mirrors src/utils/pricing.ts calculateItemSubtotal.
     // Strict weekend: 2 days starting Saturday (Sat+Sun).
     // startDate is a UTC-parsed Date, so getUTCDay() is timezone-safe.
+    const profile = String(orderData.customerProfile || "").toLowerCase();
+
+    // Campaign discounts apply on top of flat rates (mirrors pricing.ts withCampaign).
+    // Volume discounts are already embedded in flat rates — not double-counted.
+    const withCampaign = (base: number): number => {
+      let pct = 0;
+      for (const rule of campaignRules.filter(r => r.isActive)) {
+        const matches = rule.scope === "global"
+          || (rule.scope === "category" && machine.category.toLowerCase() === rule.scopeValue.toLowerCase())
+          || (rule.scope === "product" && machine.id === rule.scopeValue)
+          || (rule.scope === "role" && profile === rule.scopeValue.toLowerCase());
+        if (matches) pct = Math.max(pct, rule.discountPercent);
+      }
+      if (machine.campaignDiscountPercent) pct = Math.max(pct, machine.campaignDiscountPercent as number);
+      let disc = base * (pct / 100);
+      if (machine.campaignDiscountAmount) disc += machine.campaignDiscountAmount as number;
+      return Math.max(0, base - disc);
+    };
+
     let serverSubtotal: number;
     const m = machine as any;
     const dow = startDate.getUTCDay();
     const strictWeekend = rentalDays === 2 && dow === 6;
     if (rentalDays === 1 && m.oneDayPrice) {
-      serverSubtotal = m.oneDayPrice;
+      serverSubtotal = withCampaign(m.oneDayPrice);
     } else if (rentalDays === 2 && strictWeekend && m.weekendPrice) {
-      serverSubtotal = m.weekendPrice;
+      serverSubtotal = withCampaign(m.weekendPrice);
     } else if (rentalDays === 2 && m.twoDayPrice) {
-      serverSubtotal = m.twoDayPrice;
+      serverSubtotal = withCampaign(m.twoDayPrice);
     } else if ((rentalDays === 3 || rentalDays === 4 || rentalDays === 5) && m.weeklyPrice) {
-      serverSubtotal = m.weeklyPrice;
+      serverSubtotal = withCampaign(m.weeklyPrice);
     } else if (rentalDays >= 6 && rentalDays < 28 && m.weeklyPrice) {
-      serverSubtotal = Math.round(rentalDays * (m.weeklyPrice / 5));
+      serverSubtotal = withCampaign(Math.round(rentalDays * (m.weeklyPrice / 5)));
     } else if (rentalDays >= 28 && m.monthlyPrice) {
       const fullMonths = Math.floor(rentalDays / 28);
       const remainder = rentalDays % 28;
@@ -302,7 +321,7 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
       } else {
         remainderCost = remainder * machine.pricePerDay;
       }
-      serverSubtotal = fullMonths * m.monthlyPrice + remainderCost;
+      serverSubtotal = withCampaign(fullMonths * m.monthlyPrice + remainderCost);
     } else {
       // Mirrors src/utils/pricing.ts evaluateDiscountPercent: take the HIGHEST discount,
       // do not stack volume + campaign discounts. Campaign rules are also applied here.
@@ -313,7 +332,6 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
       } else if (rentalDays >= 6 && machine.weeklyDiscountPercent) {
         highestDiscountPercent = Math.max(highestDiscountPercent, machine.weeklyDiscountPercent);
       }
-      const profile = String(orderData.customerProfile || "").toLowerCase();
       for (const rule of campaignRules.filter(r => r.isActive)) {
         let matches = false;
         if (rule.scope === "global") matches = true;

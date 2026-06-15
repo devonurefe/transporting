@@ -68,23 +68,40 @@ export function evaluateDiscountPercent(machine: Machine, days: number, profile:
 // Mirrored by the server validation in server/routes/orders.ts — any change
 // here must be applied there too, or orders fail with "Totaalbedrag klopt niet".
 export function calculateItemSubtotal(machine: Machine, days: number, profile: string, rules: CampaignRule[], startDate?: string | Date): number {
+  // Apply campaign discounts on top of a flat-rate base price.
+  // Volume discounts are already embedded in flat rates — only campaign rules
+  // and campaignDiscountPercent are applied here to avoid double-counting.
+  const withCampaign = (base: number): number => {
+    let pct = 0;
+    for (const rule of rules) {
+      if (!rule.isActive) continue;
+      const matches = rule.scope === "global"
+        || (rule.scope === "category" && machine.category.toLowerCase() === rule.scopeValue.toLowerCase())
+        || (rule.scope === "product" && machine.id === rule.scopeValue)
+        || (rule.scope === "role" && profile.toLowerCase() === rule.scopeValue.toLowerCase());
+      if (matches) pct = Math.max(pct, rule.discountPercent);
+    }
+    if (machine.campaignDiscountPercent) pct = Math.max(pct, machine.campaignDiscountPercent);
+    let disc = base * (pct / 100);
+    if (machine.campaignDiscountAmount) disc += machine.campaignDiscountAmount;
+    return Math.max(0, base - disc);
+  };
+
   // 1-day actie flat rate
-  if (days === 1 && machine.oneDayPrice) return machine.oneDayPrice;
+  if (days === 1 && machine.oneDayPrice) return withCampaign(machine.oneDayPrice);
 
   // 2-day: weekend (Sat+Sun) → weekendPrice; weekday → twoDayPrice
   if (days === 2) {
-    if (isStrictWeekend(startDate, days) && machine.weekendPrice) return machine.weekendPrice;
-    if (machine.twoDayPrice) return machine.twoDayPrice;
+    if (isStrictWeekend(startDate, days) && machine.weekendPrice) return withCampaign(machine.weekendPrice);
+    if (machine.twoDayPrice) return withCampaign(machine.twoDayPrice);
   }
 
-  // weeklyPrice applies from 3 days up
-
   // 3–5 days: flat weekly rate
-  if ((days === 3 || days === 4 || days === 5) && machine.weeklyPrice) return machine.weeklyPrice;
+  if ((days === 3 || days === 4 || days === 5) && machine.weeklyPrice) return withCampaign(machine.weeklyPrice);
 
-  // 6–27 days: linear rate derived from weeklyPrice (weeklyPrice/5 per day — always ≤ pricePerDay)
+  // 6–27 days: linear rate derived from weeklyPrice
   if (days >= 6 && days < 28 && machine.weeklyPrice) {
-    return Math.round(days * (machine.weeklyPrice / 5));
+    return withCampaign(Math.round(days * (machine.weeklyPrice / 5)));
   }
 
   // Monthly flat rate: 28+ days
@@ -97,10 +114,10 @@ export function calculateItemSubtotal(machine: Machine, days: number, profile: s
     } else {
       remainderCost = remainder * machine.pricePerDay;
     }
-    return fullMonths * machine.monthlyPrice + remainderCost;
+    return withCampaign(fullMonths * machine.monthlyPrice + remainderCost);
   }
 
-  // Fallback: pricePerDay × days with percentage discount
+  // Fallback: pricePerDay × days with full discount (volume + campaign)
   const rawSubtotal = machine.pricePerDay * days;
   const discountPercent = evaluateDiscountPercent(machine, days, profile, rules);
   let discountAmount = rawSubtotal * (discountPercent / 100);

@@ -350,7 +350,7 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
             />
           </div>
 
-          <div className="space-y-1 col-span-2">
+          <div className="space-y-1 md:col-span-2">
             <label className="text-xs text-slate-700 block font-bold">{t("Aandrijving", "Power Type", "Güç Tipi")}</label>
             <div className="flex space-x-4">
               {["Elektrisch", "Diesel", "Hybride"].map((power) => (
@@ -368,7 +368,7 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
             </div>
           </div>
 
-          <div className="space-y-1 col-span-2">
+          <div className="space-y-1 md:col-span-2">
             <label className="text-xs text-slate-700 block font-bold">{t("Doelgroepen (komma gescheiden)", "Audience (comma separated)", "Hedef Kitle (virgülle ayrılmış)")}</label>
             <input
               type="text"
@@ -379,7 +379,7 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
             />
           </div>
 
-          <div className="space-y-1 col-span-2">
+          <div className="space-y-1 md:col-span-2">
             <label className="text-xs text-slate-700 block font-bold">{t("Omschrijving", "Description", "Açıklama")}</label>
             <textarea
               rows={4}
@@ -391,7 +391,7 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
             />
           </div>
 
-          <div className="space-y-1 col-span-2">
+          <div className="space-y-1 md:col-span-2">
             <label className="text-xs text-slate-700 block font-bold">
               {t("Inbegrepen Pakketinhoud (Klusgids Set - puntkomma gescheiden)", "Included Package Contents (Semicolon separated)", "Dahil Olan Paket İçeriği (Noktalı virgülle ayrılmış)")}
             </label>
@@ -410,7 +410,7 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
           </div>
 
           {/* Specs editor */}
-          <div className="space-y-2 col-span-2">
+          <div className="space-y-2 md:col-span-2">
             <div className="flex items-center justify-between">
               <label className="text-xs text-slate-700 block font-bold">
                 {t("Technische specificaties (popup-tabel)", "Technical specs (popup table)", "Teknik özellikler (popup tablosu)")}
@@ -458,7 +458,7 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
             </div>
           </div>
 
-          <div className="col-span-2 grid grid-cols-1 md:grid-cols-4 gap-4 border-t border-slate-100 pt-3">
+          <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-4 gap-4 border-t border-slate-100 pt-3">
             <div className="space-y-1">
               <label className="text-xs text-slate-700 block font-bold">{t("1 Dag Actie €", "1 Day Promo €", "1 Gün Kampanya €")}</label>
               <input
@@ -521,7 +521,7 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
             </div>
           </div>
 
-          <div className="col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-slate-100 pt-3">
+          <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-slate-100 pt-3">
             <div className="space-y-1">
               <label className="text-xs text-slate-700 block font-bold">{t("Weekkorting (%)", "Weekly Discount (%)", "Haftalık İndirim (%)")}</label>
               <input
@@ -586,7 +586,7 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
             </div>
           </div>
 
-          <div className="space-y-2 col-span-2 border-t border-slate-100 pt-3">
+          <div className="space-y-2 md:col-span-2 border-t border-slate-100 pt-3">
             <label className="text-xs block font-bold text-slate-700">{t("Machine Afbeelding (Upload of URL)", "Machine Image (Upload or URL)", "Makine Resmi (Yükleme veya URL)")}</label>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center bg-slate-50/50 p-3 rounded-2xl border border-slate-200/60 shadow-inner">
               

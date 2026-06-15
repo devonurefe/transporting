@@ -235,7 +235,7 @@ export default function CatalogSection({
                   }}
                   className={`px-3.5 py-1.5 text-xs font-bold rounded-lg whitespace-nowrap transition-all border cursor-pointer flex items-center gap-1.5 ${
                     isActive
-                      ? "bg-indigo-600 text-white border-indigo-700 shadow-sm ring-2 ring-indigo-600/20"
+                      ? "bg-orange-500 text-white border-orange-600 shadow-sm ring-2 ring-orange-500/20"
                       : "bg-white text-slate-600 border-slate-200 hover:text-slate-900 hover:border-slate-300 hover:bg-slate-50"
                   }`}
                 >
@@ -251,7 +251,7 @@ export default function CatalogSection({
 
           {/* Row 2: Search + VAT display toggle */}
           <div className="flex items-center gap-2">
-            <div className="relative flex flex-1 items-center bg-slate-50 rounded-xl border border-slate-200/80 px-3 py-2 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-colors">
+            <div className="relative flex flex-1 items-center bg-slate-50 rounded-xl border border-slate-200/80 px-3 py-2 focus-within:border-orange-400 focus-within:ring-2 focus-within:ring-orange-400/20 transition-colors">
               <Search className="h-4 w-4 text-slate-400 shrink-0 mr-2" />
               <input
                 id="catalog-search"
@@ -277,7 +277,7 @@ export default function CatalogSection({
             {/* Micro Warning if list is empty */}
             {filteredMachines.length === 0 && (
               <div className="glass-panel p-12 text-center rounded-2xl flex flex-col items-center justify-center space-y-4 bg-white border border-slate-200 shadow-sm">
-                <Info className="h-8 w-8 text-indigo-600" />
+                <Info className="h-8 w-8 text-orange-500" />
                 <div>
                   <h3 className="font-display font-bold text-lg text-slate-900">Geen machines gevonden</h3>
                   <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto">
@@ -286,7 +286,7 @@ export default function CatalogSection({
                 </div>
                 <button
                   onClick={resetFilters}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-4 py-2 rounded-xl transition-colors shrink-0"
+                  className="bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold px-4 py-2 rounded-xl transition-colors shrink-0"
                 >
                   Zoekopdracht wissen
                 </button>
@@ -374,12 +374,12 @@ export default function CatalogSection({
                         {/* Name + Price */}
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex-1 min-w-0">
-                            <h3 className="font-display font-bold text-[15px] text-slate-900 leading-snug line-clamp-2 group-hover:text-indigo-700 transition-colors duration-200">
+                            <h3 className="font-display font-bold text-[15px] text-slate-900 leading-snug line-clamp-2 group-hover:text-orange-600 transition-colors duration-200">
                               {getBaseName(machine.name)}
                             </h3>
                           </div>
                           <div className="text-right shrink-0">
-                            <div className="text-xl font-display font-black leading-none bg-gradient-to-br from-indigo-600 to-violet-600 bg-clip-text text-transparent">
+                            <div className="text-xl font-display font-black leading-none bg-gradient-to-br from-orange-500 to-amber-500 bg-clip-text text-transparent">
                               €{formatPrice(vp(machine.pricePerDay))}
                             </div>
                             <div className="text-[10px] text-slate-400 mt-0.5">per dag {vatLabel}</div>
@@ -405,12 +405,12 @@ export default function CatalogSection({
                         {/* Spec + SuitableFor — single row */}
                         <div className="flex items-center gap-2 flex-wrap text-[10px] font-mono text-slate-600 border-t border-slate-100 pt-2.5">
                           <span className="flex items-center gap-1 shrink-0" title="Werkhoogte">
-                            <ArrowUpToLine className="h-3.5 w-3.5 text-indigo-500 shrink-0" />
+                            <ArrowUpToLine className="h-3.5 w-3.5 text-orange-500 shrink-0" />
                             <span className="font-bold text-slate-800">{machine.height}m</span>
                           </span>
                           {machine.reach > 0 && (
                             <span className="flex items-center gap-1 shrink-0" title="Uitreik">
-                              <ArrowRightLeft className="h-3.5 w-3.5 text-indigo-400 shrink-0" />
+                              <ArrowRightLeft className="h-3.5 w-3.5 text-orange-400 shrink-0" />
                               {machine.reach}m
                             </span>
                           )}
@@ -421,7 +421,7 @@ export default function CatalogSection({
                           {(machine.suitableFor ?? []).slice(0, 2).map((prof) => (
                             <span
                               key={prof}
-                              className="text-[10px] font-semibold text-slate-600 bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 px-2 py-0.5 rounded-full transition-colors duration-150 cursor-default select-none"
+                              className="text-[10px] font-semibold text-slate-600 bg-slate-100 hover:bg-orange-50 hover:text-orange-700 px-2 py-0.5 rounded-full transition-colors duration-150 cursor-default select-none"
                             >
                               {prof}
                             </span>
@@ -448,13 +448,13 @@ export default function CatalogSection({
                               setDetailSource("info");
                               onAddSystemLog?.("system", currentUser?.name ?? "Gast", `Bekijkt specificaties: "${machine.name}"`);
                             }}
-                            className="advice-btn flex-none px-3 py-3 rounded-xl border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 hover:border-indigo-300 text-indigo-700 hover:text-indigo-900 text-[11px] font-semibold transition-all duration-200 active:scale-[0.97] cursor-pointer"
+                            className="advice-btn flex-none px-3 py-3 rounded-xl border border-orange-200 bg-orange-50 hover:bg-orange-100 hover:border-orange-300 text-orange-700 hover:text-orange-900 text-[11px] font-semibold transition-all duration-200 active:scale-[0.97] cursor-pointer"
                           >
                             {t("btnSpecifications")}
                           </button>
                           <button
                             onClick={() => onSelectMachineForBooking(machine)}
-                            className="flex-1 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-xs font-bold transition-all duration-200 active:scale-[0.97] cursor-pointer flex items-center justify-center gap-1.5 shadow-sm hover:shadow-md"
+                            className="flex-1 py-3 rounded-xl bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white text-xs font-bold transition-all duration-200 active:scale-[0.97] cursor-pointer flex items-center justify-center gap-1.5 shadow-sm hover:shadow-md"
                           >
                             <ShoppingBag className="h-3.5 w-3.5" />
                             {t("btnRentNow")}
@@ -536,7 +536,7 @@ export default function CatalogSection({
                 {/* Header */}
                 <div className="px-5 pt-5 pb-3 border-b border-slate-100 flex items-start justify-between gap-3 shrink-0">
                   <div>
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-500 mb-0.5">{m.categoryLabel}</p>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-orange-500 mb-0.5">{m.categoryLabel}</p>
                     <h3 className="font-display font-black text-slate-900 text-base leading-snug">{m.name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "")}</h3>
                     <p className="text-xs text-slate-500 mt-0.5">
                       Dagtarief <span className="font-bold text-slate-800">€{formatPrice(vp(m.pricePerDay))}</span> <span className="text-slate-400">{vatLabel}</span>
@@ -604,7 +604,7 @@ export default function CatalogSection({
                   <button
                     type="button"
                     onClick={() => { setPricingPreviewMachine(null); onSelectMachineForBooking(m); }}
-                    className="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm transition-all cursor-pointer flex items-center justify-center gap-2 shadow-md"
+                    className="w-full py-3 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-sm transition-all cursor-pointer flex items-center justify-center gap-2 shadow-md"
                   >
                     <ShoppingBag className="h-4 w-4" />
                     Huur Nu

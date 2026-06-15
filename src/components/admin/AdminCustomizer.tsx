@@ -178,12 +178,15 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
     if (!file) return;
     setIsUploadingHero(true);
     try {
-      const base64 = await resizeImage(file);
+      const base64 = await resizeImage(file, 1920, 800);
+      // resizeImage may convert to WebP regardless of original format — derive extension from output
+      const isWebp = base64.startsWith("data:image/webp");
+      const uploadName = isWebp ? "hero.webp" : `hero${file.name.slice(file.name.lastIndexOf("."))}`;
       const token = localStorage.getItem("hwh_admin_token") || localStorage.getItem("hwh_token");
       const res = await fetch("/api/upload", {
         method: "POST",
         headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-        body: JSON.stringify({ fileName: file.name, base64Data: base64 })
+        body: JSON.stringify({ fileName: uploadName, base64Data: base64 })
       });
       if (res.ok) {
         const data = await res.json();

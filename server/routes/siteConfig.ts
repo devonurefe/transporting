@@ -46,7 +46,9 @@ const SITE_CONFIG_FIELDS = [
 function pickSiteConfigFields(body: any): Record<string, string> {
   const data: Record<string, string> = {};
   for (const field of SITE_CONFIG_FIELDS) {
-    if (typeof body?.[field] === "string" && body[field].length <= 1000) {
+    // heroImageUrl stores a base64 data URL — allow up to 5 MB; all other fields max 1 KB
+    const maxLen = field === "heroImageUrl" ? 5_000_000 : 1000;
+    if (typeof body?.[field] === "string" && body[field].length <= maxLen) {
       data[field] = body[field];
     }
   }

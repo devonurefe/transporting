@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from "react";
-import { CheckCircle2, Download, MessageCircle, ClipboardList, ArrowLeft } from "lucide-react";
+import { CheckCircle2, Download, MessageCircle, ClipboardList, ArrowLeft, Copy, Check as CheckIcon } from "lucide-react";
 import { motion } from "motion/react";
 import { Order, UserProfile } from "../../types";
 import { printInvoice } from "../../utils/invoice";
@@ -34,6 +34,7 @@ export default function BookingSuccess({
   whatsappUrl
 }: BookingSuccessProps) {
   const t = useLanguageStore((state) => state.t);
+  const [copied, setCopied] = useState(false);
   const [password, setPassword] = useState("");
   const [isRegistering, setIsRegistering] = useState(false);
   const [registerSuccess, setRegisterSuccess] = useState(false);
@@ -125,12 +126,23 @@ export default function BookingSuccess({
           <CheckCircle2 className="h-8 w-8" />
         </div>
         <h1 className="font-display text-xl font-black text-slate-900">{t("successTitle")}</h1>
-        <p className="text-xs text-slate-500 mt-1.5 max-w-sm mx-auto leading-relaxed">
-          Referentie:{" "}
-          <span className="font-mono font-bold text-slate-700">{successOrder.id}</span>
-          {" — "}
-          {t("successConfirmRef")}
-        </p>
+        <div className="flex items-center justify-center gap-2 mt-2 mb-1">
+          <span className="font-mono font-black text-lg text-slate-800 tracking-wider">{successOrder.id}</span>
+          <button
+            type="button"
+            onClick={() => {
+              navigator.clipboard.writeText(successOrder.id).then(() => {
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+              });
+            }}
+            className="flex items-center gap-1 px-2 py-1 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-500 hover:text-slate-700 text-[10px] font-bold transition-all cursor-pointer"
+          >
+            {copied ? <CheckIcon className="h-3 w-3 text-emerald-600" /> : <Copy className="h-3 w-3" />}
+            {copied ? "Gekopieerd!" : "Kopieer"}
+          </button>
+        </div>
+        <p className="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">{t("successConfirmRef")}</p>
         <span className="inline-block mt-3 text-[10px] font-mono uppercase bg-amber-50 border border-amber-200 text-amber-700 px-3 py-1 rounded-full font-bold tracking-wider">
           {t("successPending")}
         </span>

@@ -21,7 +21,8 @@ import {
   UserPlus,
   LogOut,
   Lock,
-  MessageSquare
+  MessageSquare,
+  AlertTriangle
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Order, UserProfile } from "../types";
@@ -57,6 +58,7 @@ export default function MyOrdersSection({
   const [ratings, setRatings] = useState<Record<string, number>>({});
   const [activeFilter, setActiveFilter] = useState<string>("all");
   const [cancellingOrderId, setCancellingOrderId] = useState<string | null>(null);
+  const [cancelModalOrderId, setCancelModalOrderId] = useState<string | null>(null);
   
   // Custom login forms state
   const [loginEmail, setLoginEmail] = useState("");
@@ -194,7 +196,7 @@ export default function MyOrdersSection({
   };
 
   const handleCancelOrder = async (orderId: string) => {
-    if (!confirm("Weet u zeker dat u deze bestelling wilt annuleren? Dit kan niet ongedaan worden gemaakt.")) return;
+    setCancelModalOrderId(null);
     setCancellingOrderId(orderId);
     const token = localStorage.getItem("hwh_token");
     try {
@@ -995,7 +997,7 @@ export default function MyOrdersSection({
                           {o.status === "In behandeling" && (
                             <button
                               disabled={cancellingOrderId === o.id}
-                              onClick={() => handleCancelOrder(o.id)}
+                              onClick={() => setCancelModalOrderId(o.id)}
                               className="flex items-center space-x-1 font-black text-[10px] bg-white hover:bg-rose-50 transition-colors text-rose-600 hover:text-rose-700 px-3 py-1.5 rounded-lg border border-rose-200 shadow-sm cursor-pointer disabled:opacity-50"
                             >
                               {cancellingOrderId === o.id ? (
@@ -1211,6 +1213,65 @@ export default function MyOrdersSection({
         </div>
 
       </div>
+
+      {/* Cancellation confirmation modal */}
+      <AnimatePresence>
+        {cancelModalOrderId && (
+          <motion.div
+            key="cancel-modal-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.18 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+            onClick={() => setCancelModalOrderId(null)}
+          >
+            <motion.div
+              key="cancel-modal-card"
+              initial={{ opacity: 0, scale: 0.95, y: 8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 8 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-sm p-6 space-y-5"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-start gap-4">
+                <div className="shrink-0 h-10 w-10 rounded-xl bg-rose-50 border border-rose-100 flex items-center justify-center">
+                  <AlertTriangle className="h-5 w-5 text-rose-500" />
+                </div>
+                <div>
+                  <h3 className="font-display font-black text-sm text-slate-900">Bestelling annuleren?</h3>
+                  <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                    Weet u zeker dat u bestelling <span className="font-mono font-bold text-slate-700">{cancelModalOrderId}</span> wilt annuleren?
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 space-y-1">
+                <p className="text-[11px] font-bold text-amber-800">Annuleringsbeleid</p>
+                <p className="text-[11px] text-amber-700 leading-relaxed">
+                  Gratis annuleren tot <strong>48 uur vóór de startdatum</strong>. Bij annulering binnen 48 uur kunnen kosten in rekening worden gebracht. Neem contact op via WhatsApp voor meer informatie.
+                </p>
+              </div>
+
+              <div className="flex gap-2 pt-1">
+                <button
+                  onClick={() => setCancelModalOrderId(null)}
+                  className="flex-1 py-2.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-bold transition-colors cursor-pointer"
+                >
+                  Nee, terug
+                </button>
+                <button
+                  onClick={() => handleCancelOrder(cancelModalOrderId)}
+                  className="flex-1 py-2.5 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold transition-colors cursor-pointer shadow-sm"
+                >
+                  Ja, annuleren
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -19,7 +19,7 @@ import {
   ChevronRight,
   type LucideProps
 } from "lucide-react";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 import { buildWhatsAppGeneralUrl } from "../utils/whatsapp";
 import { withVat } from "../utils/format";
 import VatToggle from "./VatToggle";
@@ -88,9 +88,44 @@ export default function HomeSection({
   const language = useLanguageStore((state) => state.language);
   const t = useLanguageStore((state) => state.t);
 
+  const [openFaq, setOpenFaq] = React.useState<number | null>(null);
+
   React.useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+
+  const FAQ_ITEMS = [
+    {
+      q: t("Hoe annuleer ik mijn huur?", "How do I cancel my rental?", "Kiralamamı nasıl iptal ederim?"),
+      a: t("Annuleren kan gratis tot 48 uur voor de startdatum via uw bestellingenoverzicht of via WhatsApp. Bij annulering binnen 48 uur kunnen annuleringskosten in rekening worden gebracht.",
+          "You can cancel free of charge up to 48 hours before the start date via your order overview or via WhatsApp. Cancellations within 48 hours may incur cancellation fees.",
+          "Başlangıç tarihinden 48 saat öncesine kadar ücretsiz iptal edebilirsiniz. 48 saat içinde iptallerde iptal ücreti uygulanabilir.")
+    },
+    {
+      q: t("Welk rijbewijs heb ik nodig?", "What driving licence do I need?", "Hangi ehliyete ihtiyacım var?"),
+      a: t("Voor aanhangerhoogwerkers tot 3.500 kg heeft u rijbewijs B nodig. Voor zwaardere combinaties is rijbewijs BE vereist. Twijfelt u? Wij adviseren u graag via WhatsApp.",
+          "For trailer lifts up to 3,500 kg you need a category B licence. For heavier combinations, a BE licence is required. Unsure? We're happy to advise via WhatsApp.",
+          "3.500 kg'a kadar römorklı araçlar için B ehliyeti yeterlidir. Daha ağır kombinasyonlar için BE gereklidir.")
+    },
+    {
+      q: t("Zijn de prijzen inclusief BTW?", "Are prices including VAT?", "Fiyatlar KDV dahil mi?"),
+      a: t("Onze tarieven zijn standaard exclusief 21% BTW. Via de BTW-knop bovenaan de catalogus schakelt u eenvoudig naar inclusief BTW om het werkelijke bedrag te zien.",
+          "Our rates are standard excluding 21% VAT. Use the VAT toggle at the top of the catalogue to switch to including VAT.",
+          "Fiyatlarımız standart olarak %21 KDV hariçtir. Katalog sayfasının üstündeki KDV düğmesiyle KDV dahil fiyatı görebilirsiniz.")
+    },
+    {
+      q: t("Wat zijn de bezorg- en transportkosten?", "What are delivery and transport costs?", "Teslimat ve nakliye ücretleri nelerdir?"),
+      a: t("Bezorging door ons: €150 all-in (heen en retour). Aanhanger huren: €25 per dag. Zelf ophalen in Zoeterwoude is gratis. Borg: €150 (wordt teruggestort na de huurperiode).",
+          "Delivery by us: €150 all-in (incl. return). Trailer rental: €25/day. Self pickup in Zoeterwoude is free. Deposit: €150 (refunded after the rental period).",
+          "Bizim tarafımızdan teslimat: €150 (gidiş-dönüş dahil). Römork kiralama: günlük €25. Zoeterwoude'dan kendi teslim alma ücretsizdir. Depozito: €150 (iade edilir).")
+    },
+    {
+      q: t("Hoe werkt de betaling?", "How does payment work?", "Ödeme nasıl çalışır?"),
+      a: t("Na uw online boeking sturen wij u via WhatsApp een betaallink (Tikkie of iDEAL). Na ontvangst van uw betaling wordt de boeking definitief bevestigd en ontvangt u een factuur per e-mail.",
+          "After your online booking, we send you a payment link via WhatsApp (Tikkie or iDEAL). Once payment is received, the booking is confirmed and you receive an invoice by email.",
+          "Online rezervasyonunuzun ardından WhatsApp üzerinden bir ödeme linki (Tikkie veya iDEAL) göndeririz. Ödeme alındıktan sonra rezervasyon onaylanır.")
+    },
+  ];
 
   const SCHAARLIFT_VARIANTS = new Set(["schaarlift", "schaarlift-smal", "schaarlift-6m"]);
 
@@ -258,6 +293,7 @@ export default function HomeSection({
                           <img
                             src={machineImage}
                             alt={baseName}
+                            loading="lazy"
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                           />
                         ) : (
@@ -373,6 +409,50 @@ export default function HomeSection({
               </motion.button>
             );
           })}
+        </div>
+      </div>
+
+      {/* ── FAQ SECTION ── */}
+      <div className="bg-slate-50 border-t border-slate-100 px-4 sm:px-6 py-8">
+        <div className="max-w-2xl mx-auto">
+          <div className="text-center mb-6">
+            <h2 className="font-display font-black text-xl text-slate-900">{t("Veelgestelde vragen", "Frequently asked questions", "Sık sorulan sorular")}</h2>
+            <p className="text-xs text-slate-500 mt-1">{t("Alles wat u wilt weten over hoogwerker huren", "Everything you need to know about renting aerial lifts", "Yüksek erişim kiralama hakkında bilmeniz gerekenler")}</p>
+          </div>
+          <div className="space-y-2">
+            {FAQ_ITEMS.map((item, i) => (
+              <div key={i} className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                  className="w-full flex items-center justify-between px-4 py-4 text-left cursor-pointer hover:bg-slate-50 transition-colors"
+                >
+                  <span className="font-bold text-sm text-slate-900 pr-4">{item.q}</span>
+                  <motion.span
+                    animate={{ rotate: openFaq === i ? 180 : 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="shrink-0 h-5 w-5 rounded-full bg-slate-100 flex items-center justify-center text-slate-500"
+                  >
+                    <ChevronRight className="h-3 w-3 rotate-90" />
+                  </motion.span>
+                </button>
+                <AnimatePresence initial={false}>
+                  {openFaq === i && (
+                    <motion.div
+                      key="answer"
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.22, ease: "easeInOut" }}
+                      className="overflow-hidden"
+                    >
+                      <p className="px-4 pb-4 text-sm text-slate-600 leading-relaxed border-t border-slate-100 pt-3">{item.a}</p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 

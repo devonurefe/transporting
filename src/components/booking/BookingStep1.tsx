@@ -156,8 +156,9 @@ export default function BookingStep1({
                   <button
                     type="button"
                     onClick={() => onRemoveCartItem(item.id)}
-                    className="p-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 transition-colors border-none cursor-pointer"
+                    className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 transition-colors border-none cursor-pointer"
                     title="Verwijderen"
+                    aria-label="Verwijderen uit winkelwagen"
                   >
                     <X className="h-4 w-4" />
                   </button>

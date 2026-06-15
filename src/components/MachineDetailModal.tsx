@@ -146,7 +146,10 @@ export default function MachineDetailModal({
     : null;
 
   return (
-    <div className="fixed inset-0 z-[60] overflow-y-auto flex items-start sm:items-center justify-center p-4">
+    <div
+      className="fixed inset-0 z-[60] overflow-y-auto flex items-start sm:items-center justify-center p-4"
+      style={{ paddingTop: "max(1rem, env(safe-area-inset-top))", paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
+    >
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -206,14 +209,14 @@ export default function MachineDetailModal({
               <div className="absolute inset-0 bg-gradient-to-t from-slate-950/30 via-transparent to-transparent pointer-events-none" />
               {allImages.length > 1 && (
                 <>
-                  <button type="button"
+                  <button type="button" aria-label="Vorige foto"
                     onClick={(e) => { e.stopPropagation(); setActiveImageIndex(p => p === 0 ? allImages.length - 1 : p - 1); }}
-                    className="absolute left-2.5 top-1/2 -translate-y-1/2 p-2 rounded-xl bg-slate-900/60 hover:bg-slate-900/80 text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer shadow-lg"
-                  ><ChevronLeft className="h-4 w-4" /></button>
-                  <button type="button"
+                    className="absolute left-2.5 top-1/2 -translate-y-1/2 min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-xl bg-slate-900/60 hover:bg-slate-900/80 text-white opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity cursor-pointer shadow-lg"
+                  ><ChevronLeft className="h-5 w-5" /></button>
+                  <button type="button" aria-label="Volgende foto"
                     onClick={(e) => { e.stopPropagation(); setActiveImageIndex(p => p === allImages.length - 1 ? 0 : p + 1); }}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 p-2 rounded-xl bg-slate-900/60 hover:bg-slate-900/80 text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer shadow-lg"
-                  ><ChevronRight className="h-4 w-4" /></button>
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-xl bg-slate-900/60 hover:bg-slate-900/80 text-white opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity cursor-pointer shadow-lg"
+                  ><ChevronRight className="h-5 w-5" /></button>
                   <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 bg-slate-950/40 px-2.5 py-1 rounded-full backdrop-blur-sm">
                     {allImages.map((_, i) => (
                       <button key={i} type="button" onClick={() => setActiveImageIndex(i)}

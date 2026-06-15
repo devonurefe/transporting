@@ -219,7 +219,8 @@ export default function Header({
               {/* Language Switcher */}
               <button
                 onClick={toggleLanguage}
-                className="flex items-center space-x-1 px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-bold text-slate-700 transition-all cursor-pointer select-none shrink-0 shadow-xs"
+                aria-label="Taal wisselen"
+                className="flex items-center justify-center space-x-1 min-h-[40px] px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-bold text-slate-700 transition-all cursor-pointer select-none shrink-0 shadow-xs"
               >
                 <span className="font-bold uppercase">{language}</span>
               </button>
@@ -232,7 +233,8 @@ export default function Header({
                       setShowNotifDropdown(!showNotifDropdown);
                       if (!showNotifDropdown) markAllNotificationsAsRead();
                     }}
-                    className="relative p-2 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-all"
+                    aria-label="Meldingen"
+                    className="relative min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-all"
                   >
                     <Bell className="h-5 w-5" />
                     {unreadCount > 0 && (

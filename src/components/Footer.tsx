@@ -14,35 +14,72 @@ interface FooterProps {
   setShowContactModal: (show: boolean) => void;
 }
 
+const REVIEWS = [
+  {
+    name: "Pieter van den Berg",
+    date: "2 maanden geleden",
+    text: "Super service! De Nifty 120 was binnen 5 minuten opgesteld, perfect voor mijn dakgoot klus. Fijne communicatie via WhatsApp en eerlijk advies. Aanrader!",
+  },
+  {
+    name: "Erik Janssen",
+    date: "3 maanden geleden",
+    text: "Machine was goed onderhouden en op tijd geleverd. Prima prijs-kwaliteitverhouding. Inmiddels voor het tweede project bij MB Hoogwerkers gehuurd.",
+  },
+  {
+    name: "Sandra Bakker",
+    date: "1 maand geleden",
+    text: "De rupshoogwerker paste precies door ons 80 cm tuinpoortje. Uitstekend advies vooraf over welke machine het beste paste. Zeker een aanrader!",
+  },
+  {
+    name: "J. de Vries Schildersbedrijf",
+    date: "5 maanden geleden",
+    text: "Als aannemer huur ik regelmatig bij MB Hoogwerkers. Altijd betrouwbaar materiaal, eerlijk advies en scherpe tarieven. Echt een topper in de regio.",
+  },
+  {
+    name: "Thomas Willems",
+    date: "6 weken geleden",
+    text: "Ladderlift was perfect voor onze verhuizing naar de 4e verdieping. Vriendelijke en snelle service. Zeker voor herhaling vatbaar!",
+  },
+  {
+    name: "Karin Hoogenbosch",
+    date: "4 maanden geleden",
+    text: "Vlotte service van begin tot eind. Machine was schoon en goed onderhouden, de instructie helder. Comfortabel werken op hoogte. Zeker een aanrader!",
+  },
+  {
+    name: "Frank Verhoeven Schilderwerken",
+    date: "2 weken geleden",
+    text: "Schaarlift op tijd afgeleverd en de chauffeur legde alles goed uit. Ideaal voor ons schilderproject op de tweede verdieping. Prima tarief voor de kwaliteit.",
+  },
+  {
+    name: "Bouwbedrijf Smits B.V.",
+    date: "7 maanden geleden",
+    text: "Al meerdere jaren vaste klant bij MB Hoogwerkers. Betrouwbaar materiaal, scherpe tarieven en altijd goed bereikbaar via WhatsApp. Een echte topper.",
+  },
+  {
+    name: "Anita Timmers",
+    date: "3 weken geleden",
+    text: "Mastlift paste precies door ons smalle poortje van 80 cm. Goede uitleg vooraf en het apparaat werkte de hele week foutloos. Fijn dat ze meedachten!",
+  },
+];
+
+function ReviewCard({ r }: { r: typeof REVIEWS[0] }) {
+  return (
+    <div className="bg-slate-900 border border-slate-700/60 rounded-2xl p-4 space-y-2.5">
+      <div className="text-amber-400 text-sm leading-none tracking-wide">★★★★★</div>
+      <p className="text-[13px] text-slate-300 leading-relaxed line-clamp-3">{r.text}</p>
+      <div className="flex items-center justify-between pt-0.5">
+        <span className="text-[11px] font-bold text-white">{r.name}</span>
+        <span className="text-[10px] text-slate-500">{r.date}</span>
+      </div>
+    </div>
+  );
+}
+
 export default function Footer({ siteName, setActiveTab: _setActiveTab, setShowContactModal }: FooterProps) {
   const t = useLanguageStore((state) => state.t);
-  const REVIEWS = [
-    {
-      name: "Pieter van den Berg",
-      date: "2 maanden geleden",
-      text: "Super service! De Nifty 120 was binnen 5 minuten opgesteld, perfect voor mijn dakgoot klus. Fijne communicatie via WhatsApp en eerlijk advies. Aanrader!",
-    },
-    {
-      name: "Erik Janssen",
-      date: "3 maanden geleden",
-      text: "Machine was goed onderhouden en op tijd geleverd. Prima prijs-kwaliteitverhouding. Inmiddels voor het tweede project bij MB Hoogwerkers gehuurd.",
-    },
-    {
-      name: "Sandra Bakker",
-      date: "1 maand geleden",
-      text: "De rupshoogwerker paste precies door ons 80 cm tuinpoortje. Uitstekend advies vooraf over welke machine het beste paste. Zeker een aanrader!",
-    },
-    {
-      name: "J. de Vries Schildersbedrijf",
-      date: "5 maanden geleden",
-      text: "Als aannemer huur ik regelmatig bij MB Hoogwerkers. Altijd betrouwbaar materiaal, eerlijk advies en scherpe tarieven. Echt een topper in de regio.",
-    },
-    {
-      name: "Thomas Willems",
-      date: "6 weken geleden",
-      text: "Ladderlift was perfect voor onze verhuizing naar de 4e verdieping. Vriendelijke en snelle service. Zeker voor herhaling vatbaar!",
-    },
-  ];
+
+  const leftCol = REVIEWS.filter((_, i) => i % 2 === 0);
+  const rightCol = REVIEWS.filter((_, i) => i % 2 !== 0);
 
   return (
     <footer className="bg-slate-950 border-t border-slate-800 pb-20 md:pb-0">
@@ -75,22 +112,38 @@ export default function Footer({ siteName, setActiveTab: _setActiveTab, setShowC
             </a>
           </div>
 
-          {/* Review cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {REVIEWS.map((r) => (
-              <div
-                key={r.name}
-                className="bg-slate-900 border border-slate-700 rounded-2xl p-4 min-w-[260px] sm:min-w-0 flex-shrink-0 sm:flex-shrink space-y-2"
-              >
-                <div className="text-amber-400 text-sm leading-none">★★★★★</div>
-                <p className="text-sm text-slate-300 leading-relaxed line-clamp-3">{r.text}</p>
-                <div className="flex items-center justify-between pt-1">
-                  <span className="text-xs font-bold text-white">{r.name}</span>
-                  <span className="text-[10px] text-slate-500">{r.date}</span>
-                </div>
+          {/* Review ticker */}
+          <div className="relative overflow-hidden review-ticker-wrap h-[370px] sm:h-[430px] cursor-default select-none">
+
+            {/* Top + bottom fade masks */}
+            <div className="absolute top-0 inset-x-0 h-14 bg-gradient-to-b from-slate-950 to-transparent z-10 pointer-events-none" />
+            <div className="absolute bottom-0 inset-x-0 h-14 bg-gradient-to-t from-slate-950 to-transparent z-10 pointer-events-none" />
+
+            {/* Mobile: single column */}
+            <div className="sm:hidden review-ticker flex flex-col gap-3">
+              {[...REVIEWS, ...REVIEWS].map((r, i) => (
+                <ReviewCard key={i} r={r} />
+              ))}
+            </div>
+
+            {/* Desktop: two columns at different speeds */}
+            <div className="hidden sm:flex gap-4">
+              <div className="flex-1 review-ticker flex flex-col gap-3">
+                {[...leftCol, ...leftCol].map((r, i) => (
+                  <ReviewCard key={i} r={r} />
+                ))}
               </div>
-            ))}
+              <div className="flex-1 review-ticker-b flex flex-col gap-3">
+                {[...rightCol, ...rightCol].map((r, i) => (
+                  <ReviewCard key={i} r={r} />
+                ))}
+              </div>
+            </div>
+
           </div>
+
+          {/* Hint */}
+          <p className="text-center text-[10px] text-slate-600 mt-4">Beweeg om te pauzeren</p>
 
         </div>
       </div>

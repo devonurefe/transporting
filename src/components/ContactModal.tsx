@@ -18,7 +18,10 @@ export default function ContactModal({ isOpen, onClose, onShowToast, onAddSystem
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 overflow-y-auto flex items-start justify-center p-4">
+        <div
+          className="fixed inset-0 z-[60] overflow-y-auto flex items-start justify-center p-4"
+          style={{ paddingTop: "max(1rem, env(safe-area-inset-top))", paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
+        >
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

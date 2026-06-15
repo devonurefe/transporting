@@ -92,13 +92,41 @@ siteConfigRouter.get("/campaign-rules", async (req: AuthenticatedRequest, res: R
   }
 });
 
+// Validate a single campaign rule. The shape { scope, scopeValue, discountPercent,
+// isActive } is trusted by server/routes/orders.ts for server-side discounting, so
+// reject anything malformed instead of storing raw req.body. id/name are preserved
+// for the admin UI (AdminCustomizer.tsx).
+function sanitizeCampaignRule(rule: any): { id: string; name: string; scope: string; scopeValue: string; discountPercent: number; isActive: boolean } | null {
+  if (!rule || typeof rule !== "object") return null;
+  const VALID_SCOPES = ["global", "category", "product", "role"];
+  const scope = typeof rule.scope === "string" ? rule.scope : "";
+  if (!VALID_SCOPES.includes(scope)) return null;
+  const discountPercent = Number(rule.discountPercent);
+  if (isNaN(discountPercent) || discountPercent < 0 || discountPercent > 100) return null;
+  return {
+    id: typeof rule.id === "string" ? rule.id.slice(0, 100) : `rule-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    name: typeof rule.name === "string" ? rule.name.slice(0, 100) : "",
+    scope,
+    scopeValue: typeof rule.scopeValue === "string" ? rule.scopeValue.slice(0, 100) : "",
+    discountPercent: Math.round(discountPercent),
+    isActive: rule.isActive === true,
+  };
+}
+
 // POST campaign rules (admin only)
 siteConfigRouter.post("/campaign-rules", requireAdmin as any, async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const rules = req.body;
-    if (!Array.isArray(rules)) {
+    if (!Array.isArray(req.body)) {
       return res.status(400).json({ error: "Expected an array of campaign rules" });
     }
+    if (req.body.length > 50) {
+      return res.status(400).json({ error: "Maximaal 50 campagneregels toegestaan" });
+    }
+    const sanitized = req.body.map(sanitizeCampaignRule);
+    if (sanitized.some(r => r === null)) {
+      return res.status(400).json({ error: "Ongeldige campagneregel-gegevens" });
+    }
+    const rules = sanitized as Array<{ scope: string; scopeValue: string; discountPercent: number; isActive: boolean }>;
     await prisma.siteConfig.upsert({
       where: { id: "default" },
       update: { campaignRules: rules },

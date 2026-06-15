@@ -82,6 +82,24 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
 
   const getBaseName = (name: string) => name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "").trim();
 
+  // Zombie/stale pending detection. An "In behandeling" order that is unpaid
+  // blocks the machine's availability indefinitely (server/routes/orders.ts only
+  // excludes "Geannuleerd" from conflict checks). We don't auto-cancel — the
+  // WhatsApp payment flow is manual — but we flag stale ones so an admin can act.
+  const STALE_PENDING_HOURS = 48;
+  const daysOpen = (o: any): number => {
+    const created = new Date(o.createdAt).getTime();
+    if (isNaN(created)) return 0;
+    return Math.floor((Date.now() - created) / (24 * 60 * 60 * 1000));
+  };
+  const isStalePending = (o: any): boolean => {
+    if (o.status !== "In behandeling" || o.paymentStatus === "paid") return false;
+    const created = new Date(o.createdAt).getTime();
+    if (isNaN(created)) return false;
+    return Date.now() - created > STALE_PENDING_HOURS * 60 * 60 * 1000;
+  };
+  const staleCount = orders.filter(isStalePending).length;
+
   const formatPhoneForWA = (phone: string): string => {
     const digits = phone.replace(/\D/g, "");
     if (digits.startsWith("00")) return digits.slice(2);
@@ -124,6 +142,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
   const [isUpdatingStatus, setIsUpdatingStatus] = useState<boolean>(false);
   const [isUpdatingPayment, setIsUpdatingPayment] = useState<boolean>(false);
   const [statusError, setStatusError] = useState<string | null>(null);
+  const [staleDismissed, setStaleDismissed] = useState<boolean>(false);
 
   const closeModal = () => {
     setSelectedDetailOrder(null);
@@ -311,6 +330,28 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
           </div>
         )}
 
+        {/* Stale pending warning — unconfirmed bookings that needlessly block the agenda */}
+        {staleCount > 0 && !staleDismissed && (
+          <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-xl px-3.5 py-3 text-xs text-amber-800 font-medium animate-fade-in">
+            <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 text-amber-500" />
+            <span className="flex-1">
+              {t(
+                `${staleCount} openstaande boeking(en) langer dan ${STALE_PENDING_HOURS} uur niet bevestigd en onbetaald — deze blokkeren mogelijk onnodig de agenda. Controleer of ze geannuleerd kunnen worden.`,
+                `${staleCount} pending booking(s) unconfirmed and unpaid for over ${STALE_PENDING_HOURS}h — these may be needlessly blocking the calendar. Review whether they can be cancelled.`,
+                `${staleCount} adet bekleyen rezervasyon ${STALE_PENDING_HOURS} saatten uzun süredir onaylanmadı ve ödenmedi — takvimi gereksiz yere bloke ediyor olabilir. İptal edilebilir mi kontrol edin.`
+              )}
+            </span>
+            <button
+              type="button"
+              onClick={() => setStaleDismissed(true)}
+              className="shrink-0 text-amber-500 hover:text-amber-700 bg-transparent border-none cursor-pointer p-0"
+              aria-label={t("Sluiten", "Dismiss", "Kapat")}
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        )}
+
         {/* Mobile card layout */}
         <div className="md:hidden space-y-3">
           {displayOrders.length === 0 ? (
@@ -335,7 +376,14 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                     {t(o.status, o.status, o.status)}
                   </span>
                 </div>
-                <div className="text-xs font-semibold text-slate-700">{getBaseName(o.machineName)}</div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-xs font-semibold text-slate-700">{getBaseName(o.machineName)}</span>
+                  {isStalePending(o) && (
+                    <span className="inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 border border-amber-200">
+                      <Clock className="h-2.5 w-2.5" /> {daysOpen(o)}d {t("open", "open", "açık")}
+                    </span>
+                  )}
+                </div>
                 <div className="flex justify-between items-center text-xs">
                   <div>
                     <span className="text-slate-500">{o.startDate} · {o.rentalDays}d</span>
@@ -412,6 +460,12 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                         title={t("Klik om contract details in te zien", "Click to view contract details", "Sözleşme detaylarını görmek için tıklayın")}
                       >
                         {o.id}
+                        {isStalePending(o) && (
+                          <span className="inline-flex items-center gap-1 ml-2 text-[9px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 border border-amber-200 align-middle"
+                            title={t("Onbevestigd en onbetaald — blokkeert mogelijk onnodig de agenda", "Unconfirmed and unpaid — may needlessly block the calendar", "Onaylanmadı ve ödenmedi — takvimi gereksiz bloke edebilir")}>
+                            <Clock className="h-2.5 w-2.5" /> {daysOpen(o)}d
+                          </span>
+                        )}
                       </td>
                       <td 
                         onClick={() => { setSelectedDetailOrder(o); setIsProposingDate(false); }}

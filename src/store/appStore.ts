@@ -169,7 +169,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       return;
     }
     try {
-      const res = await fetch("/api/orders", {
+      const res = await fetch("/api/orders?limit=500", {
         headers: getAuthHeaders()
       });
       if (res.ok) {

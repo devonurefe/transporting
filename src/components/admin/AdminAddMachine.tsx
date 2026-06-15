@@ -46,6 +46,7 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
   const [campaignText, setCampaignText] = useState("");
   const [campaignDiscountPercent, setCampaignDiscountPercent] = useState("");
   const [campaignDiscountAmount, setCampaignDiscountAmount] = useState("");
+  const [newBufferDays, setNewBufferDays] = useState(0);
   const [isAdding, setIsAdding] = useState<boolean>(false);
   const [imageUrl, setImageUrl] = useState("");
   const [isUploading, setIsUploading] = useState(false);
@@ -214,6 +215,7 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
       specs: newSpecs.filter(s => s.label.trim() && s.value.trim()).length > 0
         ? newSpecs.filter(s => s.label.trim() && s.value.trim())
         : undefined,
+      bufferDays: newBufferDays,
     });
 
     setIsAdding(false);
@@ -240,6 +242,7 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
       setAdditionalImages([]);
       setPackageContents("");
       setNewSpecs([]);
+      setNewBufferDays(0);
       setSubTab("machines");
     } else {
       alert(t("Fout bij opslaan.", "Error saving.", "Kaydetme hatası."));
@@ -668,6 +671,25 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
             </div>
           </div>
 
+        </div>
+
+        {/* Onderhoudsbuffer toggle */}
+        <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-bold text-slate-800">Onderhoudsbuffer na verhuur</p>
+              <p className="text-xs text-slate-500 mt-0.5">Dag na huurperiode automatisch geblokkeerd voor opladen & reiniging.</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setNewBufferDays(newBufferDays > 0 ? 0 : 1)}
+              className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus:outline-none ${newBufferDays > 0 ? 'bg-orange-500' : 'bg-slate-300'}`}
+              role="switch"
+              aria-checked={newBufferDays > 0}
+            >
+              <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${newBufferDays > 0 ? 'translate-x-6' : 'translate-x-1'}`} />
+            </button>
+          </div>
         </div>
 
         <div className="flex justify-end pt-4 border-t border-slate-200">

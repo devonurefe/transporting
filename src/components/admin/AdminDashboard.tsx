@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { ArrowUpRight } from "lucide-react";
 import { motion } from "motion/react";
 import { useAppStore } from "../../store/appStore";
@@ -22,8 +22,7 @@ export default function AdminDashboard({ setSubTab, setOrdersFilter, adminLangua
   const [hoveredSector, setHoveredSector] = useState<string | null>(null);
   const [hoveredTrendMonth, setHoveredTrendMonth] = useState<string | null>(null);
 
-  // Dynamic 6-month earnings trend calculations
-  const getLast6Months = () => {
+  const last6Months = useMemo(() => {
     const months = [];
     const now = new Date();
     for (let i = 5; i >= 0; i--) {
@@ -36,10 +35,9 @@ export default function AdminDashboard({ setSubTab, setOrdersFilter, adminLangua
       });
     }
     return months;
-  };
-  const last6Months = getLast6Months();
+  }, [adminLanguage]);
 
-  const monthlyRevenue = last6Months.map((m) => {
+  const monthlyRevenue = useMemo(() => last6Months.map((m) => {
     const amount = orders.reduce((sum, order) => {
       if (order.status === "Geannuleerd") return sum;
       const orderDate = new Date(order.createdAt);
@@ -48,11 +46,8 @@ export default function AdminDashboard({ setSubTab, setOrdersFilter, adminLangua
       }
       return sum;
     }, 0);
-    return {
-      ...m,
-      revenue: amount
-    };
-  });
+    return { ...m, revenue: amount };
+  }), [orders, last6Months]);
 
   const t = (nl: string, en: string, tr: string) => {
     if (adminLanguage === "tr") return tr;
@@ -60,28 +55,23 @@ export default function AdminDashboard({ setSubTab, setOrdersFilter, adminLangua
     return nl;
   };
   
-  // Sums for KPI dashboards
-  const activeRentals = orders.filter(o => o.status === "Goedgekeurd" || o.status === "Onderweg").length;
-  const pendingRegistrations = orders.filter(o => o.status === "In behandeling").length;
-  
-  const totalEarnings = orders.reduce((acc, current) => {
-    if (current.status === "Geannuleerd") return acc;
-    return acc + current.totalAmount;
-  }, 0);
-
-  // Dynamic statistics calculated from active orders
-  const profileEarnings = orders.reduce((acc, order) => {
-    if (order.status === "Geannuleerd") return acc;
-    const prof = order.customerProfile || "Particulier";
-    let key = "Particulier";
-    if (prof.toLowerCase().includes("schilder")) key = "Schilder";
-    else if (prof.toLowerCase().includes("hovenier") || prof.toLowerCase().includes("groen")) key = "Hovenier";
-    else if (prof.toLowerCase().includes("glazenwasser")) key = "Glazenwasser";
-    else if (prof.toLowerCase().includes("aannemer") || prof.toLowerCase().includes("bouw")) key = "Aannemer";
-    
-    acc[key] = (acc[key] || 0) + order.totalAmount;
-    return acc;
-  }, { Schilder: 0, Hovenier: 0, Glazenwasser: 0, Aannemer: 0, Particulier: 0 } as Record<string, number>);
+  // Sums for KPI dashboards — memoized to avoid re-running on every render
+  const { activeRentals, pendingRegistrations, totalEarnings, profileEarnings } = useMemo(() => ({
+    activeRentals: orders.filter(o => o.status === "Goedgekeurd" || o.status === "Onderweg").length,
+    pendingRegistrations: orders.filter(o => o.status === "In behandeling").length,
+    totalEarnings: orders.reduce((acc, o) => o.status === "Geannuleerd" ? acc : acc + o.totalAmount, 0),
+    profileEarnings: orders.reduce((acc, order) => {
+      if (order.status === "Geannuleerd") return acc;
+      const prof = order.customerProfile || "Particulier";
+      let key = "Particulier";
+      if (prof.toLowerCase().includes("schilder")) key = "Schilder";
+      else if (prof.toLowerCase().includes("hovenier") || prof.toLowerCase().includes("groen")) key = "Hovenier";
+      else if (prof.toLowerCase().includes("glazenwasser")) key = "Glazenwasser";
+      else if (prof.toLowerCase().includes("aannemer") || prof.toLowerCase().includes("bouw")) key = "Aannemer";
+      acc[key] = (acc[key] || 0) + order.totalAmount;
+      return acc;
+    }, { Schilder: 0, Hovenier: 0, Glazenwasser: 0, Aannemer: 0, Particulier: 0 } as Record<string, number>)
+  }), [orders]);
 
   const categoryCount = machines.reduce((acc, machine) => {
     const cat = machine.category;

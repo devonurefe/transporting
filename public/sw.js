@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const CACHE_NAME = "huurgo-cache-v2";
+const CACHE_NAME = "huurgo-cache-v3";
 const OFFLINE_URL = "/offline.html";
 
 const ASSETS_TO_CACHE = [
@@ -60,7 +60,26 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // For HTML, assets, images: use Stale-While-Revalidate
+  // For page navigations (HTML): network-first, so a new deploy shows up
+  // immediately. Fall back to the cached shell only when offline. Avoids the
+  // "stale screen for one extra reload" problem of stale-while-revalidate.
+  if (event.request.mode === "navigate") {
+    event.respondWith(
+      fetch(event.request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const copy = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put("/", copy));
+          }
+          return networkResponse;
+        })
+        .catch(() => caches.match(event.request).then((r) => r || caches.match("/")))
+    );
+    return;
+  }
+
+  // For hashed assets and images: Stale-While-Revalidate (filenames change per
+  // build, so serving cached-first here is safe and fast).
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       const fetchPromise = fetch(event.request)

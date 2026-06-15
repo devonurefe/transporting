@@ -3,6 +3,7 @@ import { machinesRouter } from "./machines.js";
 import { ordersRouter } from "./orders.js";
 import { blockedDatesRouter } from "./blockedDates.js";
 import { siteConfigRouter } from "./siteConfig.js";
+import { calendarRouter } from "./calendar.js";
 import { prisma } from "../../prisma/client.js";
 import { requireAdmin } from "../middleware/auth.js";
 
@@ -33,6 +34,7 @@ apiRouter.get("/health", async (req, res) => {
 apiRouter.use("/machines", machinesRouter);
 apiRouter.use("/orders", ordersRouter);
 apiRouter.use("/blocked-dates", blockedDatesRouter);
+apiRouter.use("/calendar", calendarRouter);
 apiRouter.use("/", siteConfigRouter);
 
 import path from "path";

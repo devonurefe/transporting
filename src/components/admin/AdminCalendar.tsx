@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from "react";
-import { Calendar, RefreshCw, Plus } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Calendar, RefreshCw, Plus, Copy, Check, Link2 } from "lucide-react";
 import { motion } from "motion/react";
 import { useAppStore } from "../../store/appStore";
 import { useAuthStore } from "../../store/authStore";
@@ -47,6 +47,25 @@ export default function AdminCalendar({ onAddSystemLog, adminLanguage }: AdminCa
   const blockReason = blockReasonPreset === "Anders..." ? blockReasonCustom : blockReasonPreset;
   const [isSubmittingBlock, setIsSubmittingBlock] = useState<boolean>(false);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+
+  // Google/iCal subscribe feed — fetch the secret-bearing URL for the admin.
+  const [feedUrl, setFeedUrl] = useState<string>("");
+  const [feedEnabled, setFeedEnabled] = useState<boolean | null>(null);
+  const [copied, setCopied] = useState<boolean>(false);
+  useEffect(() => {
+    const token = localStorage.getItem("hwh_admin_token");
+    fetch("/api/calendar/subscribe-url", token ? { headers: { Authorization: `Bearer ${token}` } } : undefined)
+      .then(r => r.ok ? r.json() : { enabled: false })
+      .then(d => { setFeedEnabled(!!d.enabled); setFeedUrl(d.url || ""); })
+      .catch(() => setFeedEnabled(false));
+  }, []);
+  const copyFeedUrl = async () => {
+    try {
+      await navigator.clipboard.writeText(feedUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch { /* clipboard unavailable */ }
+  };
   const handleBlockDateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedBlockMachineId || !blockDate) return;
@@ -141,7 +160,7 @@ export default function AdminCalendar({ onAddSystemLog, adminLanguage }: AdminCa
               </select>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-2 min-w-0">
                 <label className="text-xs text-slate-600 block font-semibold truncate">{t("Begindatum *", "Start Date *", "Başlangıç Tarihi *")}</label>
                 <input
@@ -149,7 +168,7 @@ export default function AdminCalendar({ onAddSystemLog, adminLanguage }: AdminCa
                   required
                   value={blockDate}
                   onChange={(e) => { setBlockDate(e.target.value); if (blockEndDate && blockEndDate < e.target.value) setBlockEndDate(""); }}
-                  className="bg-white border border-slate-200 text-slate-800 w-full rounded-xl px-2 py-2.5 text-sm outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 cursor-pointer transition-colors min-w-0"
+                  className="bg-white border border-slate-200 text-slate-800 w-full rounded-xl px-3 py-2.5 text-sm outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 cursor-pointer transition-colors min-w-0"
                 />
               </div>
               <div className="space-y-2 min-w-0">
@@ -159,7 +178,7 @@ export default function AdminCalendar({ onAddSystemLog, adminLanguage }: AdminCa
                   value={blockEndDate}
                   min={blockDate}
                   onChange={(e) => setBlockEndDate(e.target.value)}
-                  className="bg-white border border-slate-200 text-slate-800 w-full rounded-xl px-2 py-2.5 text-sm outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 cursor-pointer transition-colors min-w-0"
+                  className="bg-white border border-slate-200 text-slate-800 w-full rounded-xl px-3 py-2.5 text-sm outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 cursor-pointer transition-colors min-w-0"
                 />
               </div>
             </div>
@@ -246,18 +265,53 @@ export default function AdminCalendar({ onAddSystemLog, adminLanguage }: AdminCa
 
         </div>
 
-        {/* Google Calendar Linkage Card */}
+        {/* Google / iCal Subscribe Card */}
         <div className="border-t border-slate-200 pt-6 mt-6">
           <div className="flex items-center space-x-2">
-            <span className="inline-block h-2 w-2 rounded-full bg-slate-300 shrink-0" />
+            <Link2 className="h-3.5 w-3.5 text-slate-500 shrink-0" />
             <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
-              {t("Google Calendar Synchronisatie", "Google Calendar Sync", "Google Takvim Senkronizasyonu")}
+              {t("Google Agenda / iPhone Synchronisatie", "Google Calendar / iPhone Sync", "Google Takvim / iPhone Senkronizasyonu")}
             </h4>
-            <span className="text-[9px] font-bold bg-amber-100 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-full uppercase tracking-wider">Binnenkort</span>
+            {feedEnabled === false && (
+              <span className="text-[9px] font-bold bg-slate-100 text-slate-500 border border-slate-200 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                {t("Inactief", "Inactive", "Kapalı")}
+              </span>
+            )}
           </div>
           <p className="text-[11px] text-slate-500 mt-1.5">
-            {t("Integreer uw vlootagenda met Google Agenda voor automatische updates op mobiel en tablet.", "Integrate your fleet calendar with Google Calendar for automatic updates on mobile and tablet.", "Mobil ve tablet cihazlarda otomatik güncellemeler için filo takviminizi Google Takvim ile entegre edin.")}
+            {t("Abonneer uw telefoonagenda op deze link; blokkades en boekingen verschijnen automatisch (alleen-lezen, ververst periodiek).", "Subscribe your phone calendar to this link; blocks and bookings appear automatically (read-only, refreshes periodically).", "Telefon takviminizi bu bağlantıya abone edin; engellemeler ve rezervasyonlar otomatik görünür (salt-okunur, periyodik yenilenir).")}
           </p>
+
+          {feedEnabled && feedUrl && (
+            <div className="mt-3 space-y-2">
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  readOnly
+                  value={feedUrl}
+                  onFocus={(e) => e.currentTarget.select()}
+                  className="flex-1 min-w-0 bg-white border border-slate-200 text-slate-700 rounded-xl px-3 py-2.5 text-xs font-mono outline-none focus:border-amber-500"
+                />
+                <button
+                  type="button"
+                  onClick={copyFeedUrl}
+                  className="shrink-0 inline-flex items-center gap-1.5 min-h-[44px] px-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold transition-colors cursor-pointer border-none"
+                >
+                  {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                  <span>{copied ? t("Gekopieerd", "Copied", "Kopyalandı") : t("Kopieer", "Copy", "Kopyala")}</span>
+                </button>
+              </div>
+              <p className="text-[10px] text-slate-400 leading-relaxed">
+                {t("Google Agenda: Andere agenda's → Via URL. iPhone: Instellingen → Agenda → Account → Agenda-abonnement.", "Google Calendar: Other calendars → From URL. iPhone: Settings → Calendar → Account → Subscribed Calendar.", "Google Takvim: Diğer takvimler → URL'den. iPhone: Ayarlar → Takvim → Hesaplar → Abone Olunan Takvim.")}
+              </p>
+            </div>
+          )}
+
+          {feedEnabled === false && (
+            <p className="text-[10px] text-slate-400 mt-2 font-mono">
+              {t("Stel de omgevingsvariabele CALENDAR_FEED_TOKEN in om te activeren.", "Set the CALENDAR_FEED_TOKEN environment variable to activate.", "Etkinleştirmek için CALENDAR_FEED_TOKEN ortam değişkenini ayarlayın.")}
+            </p>
+          )}
         </div>
       </div>
     </motion.div>

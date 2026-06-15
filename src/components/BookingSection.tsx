@@ -837,13 +837,13 @@ export default function BookingSection({
                   <React.Fragment key={idx}>
                     {idx > 0 && (
                       <div className={`flex-grow h-0.5 transition-all duration-300 ${
-                        step >= s.number ? "bg-orange-400" : "bg-slate-200"
+                        step >= s.number ? "bg-slate-700" : "bg-slate-200"
                       }`} />
                     )}
                     <div className="flex flex-col items-center relative z-10">
                       <div className={`h-8 w-8 rounded-full border flex items-center justify-center font-mono font-bold text-xs transition-all duration-300 ${
                         isCurrent 
-                          ? "bg-orange-500 border-orange-500 text-white shadow-md scale-110"
+                          ? "bg-slate-800 border-slate-800 text-white shadow-md scale-110"
                           : isActive 
                             ? "bg-teal-50 border-teal-300 text-teal-700" 
                             : "bg-white border-slate-200 text-slate-400"
@@ -855,7 +855,7 @@ export default function BookingSection({
                         ) : s.number}
                       </div>
                       <span className={`text-[10px] tracking-wider font-extrabold uppercase mt-2.5 ${
-                        isCurrent ? "text-orange-500" : isActive ? "text-teal-600" : "text-slate-400"
+                        isCurrent ? "text-slate-800" : isActive ? "text-teal-600" : "text-slate-400"
                       }`}>
                         {s.label}
                       </span>

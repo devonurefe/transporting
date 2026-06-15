@@ -367,10 +367,10 @@ export default function Header({
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`relative flex flex-col items-center justify-center flex-grow h-full text-center transition-all ${
-                  isActive ? "text-orange-500 font-semibold" : "text-slate-500"
+                  isActive ? "text-slate-900 font-semibold" : "text-slate-500"
                 }`}
               >
-                <Icon className={`h-4.5 w-4.5 ${isActive ? "text-orange-500" : "text-slate-400"}`} />
+                <Icon className={`h-4.5 w-4.5 ${isActive ? "text-slate-900" : "text-slate-400"}`} />
                 <span className="text-[10px] mt-0.5 font-medium leading-none">{tab.label}</span>
                 
                 {tab.id === "booking" && cartItems.length > 0 && (

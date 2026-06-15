@@ -55,6 +55,8 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
   }
 
   const priceExVat = sums.subtotal + sums.transport + sums.driver + sums.addonCost;
+  // Weekend surcharge present → don't show "Gratis weekendopslag" (they ARE working, not storing)
+  const showWeekendFree = sums.spansWeekend && !sums.addonDetails.some(a => a.id === "weekend_surcharge");
 
   return (
     <div className="bg-white border border-slate-200 shadow-sm rounded-3xl overflow-hidden">
@@ -120,7 +122,7 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
         )}
 
         {/* Info strip — for discounts, weekend spans, and linear weekly rate badge */}
-        {((!sums.weeklyBreakdown && !sums.isFlatRate && sums.discountAmount > 0) || sums.spansWeekend || (!sums.weeklyBreakdown && sums.effectiveDailyRate)) && (
+        {((!sums.weeklyBreakdown && !sums.isFlatRate && sums.discountAmount > 0) || showWeekendFree || (!sums.weeklyBreakdown && sums.effectiveDailyRate)) && (
           <div className="rounded-xl border border-slate-100 bg-slate-50 p-3 space-y-2.5">
 
             {/* Effectief dagtarief uitleg (6–27 dagen) — hidden when weeklyBreakdown is shown */}
@@ -140,7 +142,7 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
 
             {/* Discount row — hidden for flat-rate and weekly breakdown tiers */}
             {!sums.weeklyBreakdown && !sums.isFlatRate && sums.discountAmount > 0 && (
-              <div className={`flex justify-between items-center text-emerald-700 text-xs font-semibold${(sums.effectiveDailyRate != null && sums.days >= 6) || sums.spansWeekend ? " pt-2 border-t border-slate-200" : ""}`}>
+              <div className={`flex justify-between items-center text-emerald-700 text-xs font-semibold${(sums.effectiveDailyRate != null && sums.days >= 6) || showWeekendFree ? " pt-2 border-t border-slate-200" : ""}`}>
                 <span className="flex items-center gap-1">
                   <TrendingDown className="h-3.5 w-3.5 shrink-0" />
                   {sums.discountLabel}
@@ -151,7 +153,7 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
 
             {/* Campaign savings — shown even on flat-rate tiers */}
             {(sums.campaignSavings ?? 0) > 0 && (
-              <div className={`flex justify-between items-center text-amber-700 text-xs font-semibold${(sums.effectiveDailyRate != null && sums.days >= 6) || (!sums.isFlatRate && sums.discountAmount > 0) || sums.spansWeekend ? " pt-2 border-t border-slate-200" : ""}`}>
+              <div className={`flex justify-between items-center text-amber-700 text-xs font-semibold${(sums.effectiveDailyRate != null && sums.days >= 6) || (!sums.isFlatRate && sums.discountAmount > 0) || showWeekendFree ? " pt-2 border-t border-slate-200" : ""}`}>
                 <span className="flex items-center gap-1">
                   <TrendingDown className="h-3.5 w-3.5 shrink-0" />
                   Campagnekorting
@@ -160,8 +162,8 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
               </div>
             )}
 
-            {/* Gratis weekendopslag */}
-            {sums.spansWeekend && (
+            {/* Gratis weekendopslag — only when user did NOT declare weekend work */}
+            {showWeekendFree && (
               <div className={`flex items-center gap-2 text-xs text-blue-700${(!sums.weeklyBreakdown && !sums.isFlatRate && sums.discountAmount > 0) || (!sums.weeklyBreakdown && sums.effectiveDailyRate != null && sums.days >= 6) ? " pt-2 border-t border-slate-200" : ""}`}>
                 <span className="shrink-0">🗓</span>
                 <span>

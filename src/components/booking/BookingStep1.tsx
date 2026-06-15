@@ -37,6 +37,7 @@ interface BookingStep1Props {
     weekendDays?: number; spansWeekend?: boolean; effectiveDailyRate?: number | null;
     tierLabel?: string | null; isFlatRate?: boolean;
     weeklyBreakdown?: { weeks: number; pricePerWeek: number; remainder: number; dailyRate: number } | null;
+    campaignSavings?: number;
   };
   selectedMachine?: Machine | null;
   deliveryDistanceKm?: number | null;

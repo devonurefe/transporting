@@ -39,6 +39,13 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
 
   const [dateFilter, setDateFilter] = useState<"all" | "today" | "tomorrow" | "week">("all");
   const [searchText, setSearchText] = useState("");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  const toggleSelect = (id: string) =>
+    setSelectedIds(prev => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s; });
+  const toggleSelectAll = () =>
+    setSelectedIds(prev => prev.size === displayOrders.length && displayOrders.every(o => prev.has(o.id)) ? new Set() : new Set(displayOrders.map(o => o.id)));
+  const clearSelection = () => setSelectedIds(new Set());
 
   const todayISO = new Date().toISOString().split("T")[0];
   const tomorrowISO = (() => { const d = new Date(); d.setDate(d.getDate() + 1); return d.toISOString().split("T")[0]; })();
@@ -434,6 +441,14 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
           <table className="w-full text-left text-xs border-collapse whitespace-nowrap">
             <thead>
               <tr className="border-b border-slate-200 text-slate-500">
+                <th className="pb-3.5 pr-3 w-8">
+                  <input
+                    type="checkbox"
+                    className="h-3.5 w-3.5 rounded accent-indigo-600 cursor-pointer"
+                    checked={displayOrders.length > 0 && displayOrders.every(o => selectedIds.has(o.id))}
+                    onChange={toggleSelectAll}
+                  />
+                </th>
                 <th className="pb-3.5 font-bold font-mono">ID</th>
                 <th className="pb-3.5 font-bold">{t("Huurder Details", "Tenant Details", "Kiracı Bilgileri")}</th>
                 <th className="pb-3.5 font-bold">{t("Besteld Object", "Ordered Item", "Kiralanan Makine")}</th>
@@ -446,15 +461,23 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
             <tbody className="divide-y divide-slate-100">
               {displayOrders.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-8 text-center text-slate-500">
+                  <td colSpan={8} className="py-8 text-center text-slate-500">
                     {t("Geen contracten beschikbaar in het beheerder log.", "No contracts available in the admin log.", "Yönetici kaydında kullanılabilir sözleşme bulunmamaktadır.")}
                   </td>
                 </tr>
               ) : (
                 displayOrders.map((o) => {
                   return (
-                    <tr key={o.id} className="hover:bg-slate-50 transition-colors group">
-                      <td 
+                    <tr key={o.id} className={`hover:bg-slate-50 transition-colors group ${selectedIds.has(o.id) ? "bg-indigo-50/60" : ""}`}>
+                      <td className="py-3 pr-3 pl-1 w-8">
+                        <input
+                          type="checkbox"
+                          className="h-3.5 w-3.5 rounded accent-indigo-600 cursor-pointer"
+                          checked={selectedIds.has(o.id)}
+                          onChange={() => toggleSelect(o.id)}
+                        />
+                      </td>
+                      <td
                         onClick={() => { setSelectedDetailOrder(o); setIsProposingDate(false); }}
                         className="py-3 px-3 font-mono font-bold text-indigo-600 cursor-pointer hover:underline text-xs"
                         title={t("Klik om contract details in te zien", "Click to view contract details", "Sözleşme detaylarını görmek için tıklayın")}
@@ -595,6 +618,59 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
           </table>
         </div>
       </div>
+
+      {/* Floating bulk action bar */}
+      <AnimatePresence>
+        {selectedIds.size > 0 && (
+          <motion.div
+            key="bulk-bar"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.18, ease: "easeOut" }}
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 bg-slate-900 text-white rounded-2xl shadow-xl px-4 py-3 border border-slate-700"
+          >
+            <span className="text-[11px] font-bold text-slate-300 shrink-0">
+              {selectedIds.size} geselecteerd
+            </span>
+            <div className="w-px h-4 bg-slate-600 mx-1 shrink-0" />
+            <button
+              type="button"
+              onClick={async () => {
+                const targets = displayOrders.filter(o => selectedIds.has(o.id) && o.status === "In behandeling" && o.paymentStatus === "paid");
+                for (const o of targets) {
+                  await handleUpdateStatus(o.id, "Goedgekeurd", `Bulk goedgekeurd: ${o.id} voor ${o.customerName}.`, o);
+                }
+                clearSelection();
+              }}
+              className="px-3 py-1.5 bg-teal-500 hover:bg-teal-400 text-slate-950 rounded-lg text-[11px] font-black transition-colors cursor-pointer border-none shrink-0"
+            >
+              Accorderen ({displayOrders.filter(o => selectedIds.has(o.id) && o.status === "In behandeling" && o.paymentStatus === "paid").length})
+            </button>
+            <button
+              type="button"
+              onClick={async () => {
+                const targets = displayOrders.filter(o => selectedIds.has(o.id) && o.paymentStatus !== "paid");
+                for (const o of targets) {
+                  await handleUpdatePaymentStatus(o.id, "paid");
+                }
+                clearSelection();
+              }}
+              className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-white rounded-lg text-[11px] font-bold transition-colors cursor-pointer border-none shrink-0"
+            >
+              Betaling ({displayOrders.filter(o => selectedIds.has(o.id) && o.paymentStatus !== "paid").length})
+            </button>
+            <button
+              type="button"
+              onClick={clearSelection}
+              className="ml-1 p-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-300 transition-colors cursor-pointer border-none shrink-0"
+              aria-label="Deselecteer alles"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* OVERLAY DETAILS MODAL */}
       <AnimatePresence>

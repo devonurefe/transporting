@@ -16,6 +16,7 @@ import {
   Leaf,
   Columns2,
   Zap,
+  ChevronRight,
   type LucideProps
 } from "lucide-react";
 import { motion } from "motion/react";
@@ -190,10 +191,10 @@ export default function HomeSection({
         </div>
       </div>
 
-      {/* ── CAMPAIGN TICKER STRIP ── */}
+      {/* ── CAMPAIGN CARDS SECTION ── */}
       {(() => {
         const seen = new Set<string>();
-        const campaignMachines = machines.filter(m =>
+        const campaignMachines = activeMachines.filter(m =>
           (m.oneDayPrice && m.oneDayPrice < m.pricePerDay) || m.campaignText || m.campaignDiscountPercent
         ).filter(m => {
           const baseName = m.name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "").trim();
@@ -204,36 +205,104 @@ export default function HomeSection({
 
         if (campaignMachines.length === 0) return null;
 
-        const doubled = [...campaignMachines, ...campaignMachines];
-
         return (
-          <div className="bg-amber-50 border-y border-amber-100 py-2 overflow-hidden">
-            <motion.div
-              className="gap-4 whitespace-nowrap flex"
-              animate={{ x: ["0%", "-50%"] }}
-              transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
-            >
-              {doubled.map((m, i) => {
-                const baseName = m.name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "").trim();
-                return (
-                  <button
-                    key={`${m.id}-${i}`}
-                    type="button"
-                    onClick={() => onSearch("", m.category)}
-                    className="bg-white border border-amber-200 rounded-full px-3 py-1 text-xs font-bold text-amber-800 shrink-0 inline-flex items-center gap-1.5 shadow-sm hover:bg-amber-100 hover:border-amber-300 transition-colors cursor-pointer"
-                  >
-                    <Zap className="h-3 w-3 text-amber-500" />
-                    {baseName}
-                    {m.oneDayPrice && m.oneDayPrice < m.pricePerDay && (
-                      <span className="text-amber-500">1 dag €{withVat(m.oneDayPrice, vatDisplay) % 1 === 0 ? Math.round(withVat(m.oneDayPrice, vatDisplay)) : withVat(m.oneDayPrice, vatDisplay).toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                    )}
-                    {m.campaignText && (
-                      <span className="text-amber-500">{m.campaignText}</span>
-                    )}
-                  </button>
-                );
-              })}
-            </motion.div>
+          <div className="bg-gradient-to-b from-amber-50 to-white border-b border-amber-100 px-4 sm:px-6 pt-6 pb-7">
+            {/* Header */}
+            <div className="flex items-end justify-between mb-4 max-w-5xl mx-auto">
+              <div>
+                <div className="flex items-center gap-2">
+                  <div className="bg-amber-500 rounded-lg p-1">
+                    <Zap className="h-4 w-4 text-white" />
+                  </div>
+                  <h2 className="font-display font-black text-xl text-slate-900">{t("Weekaanbiedingen", "Weekly Deals", "Haftalık Fırsatlar")}</h2>
+                </div>
+                <p className="text-xs text-slate-500 mt-1 ml-8">{t("Profiteer nu van onze speciale actieprijzen", "Take advantage of our special offers", "Özel fiyatlardan şimdi yararlanın")}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => onSearch("", "")}
+                className="flex items-center gap-1 text-xs font-bold text-amber-700 hover:text-amber-900 transition-colors shrink-0 pb-0.5"
+              >
+                {t("Bekijk alles", "View all", "Tümünü gör")} <ChevronRight className="h-3.5 w-3.5" />
+              </button>
+            </div>
+
+            {/* Cards — horizontal scroll on mobile, grid on sm+ */}
+            <div className="max-w-5xl mx-auto">
+              <div className="flex gap-4 overflow-x-auto pb-3 sm:pb-0 sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden snap-x snap-mandatory">
+                {campaignMachines.map((m, i) => {
+                  const baseName = m.name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "").trim();
+                  const machineImage = m.imageUrl || m.additionalImages?.[0];
+                  const hasDayDiscount = !!(m.oneDayPrice && m.oneDayPrice < m.pricePerDay);
+                  const campaignPct = m.campaignDiscountPercent;
+                  const displayPrice = withVat(m.oneDayPrice && m.oneDayPrice < m.pricePerDay ? m.oneDayPrice : m.pricePerDay, vatDisplay);
+                  const originalPrice = withVat(m.pricePerDay, vatDisplay);
+                  const fmtPrice = (p: number) => p % 1 === 0
+                    ? `€${Math.round(p)}`
+                    : `€${p.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                  const CatIcon = CATEGORY_ICONS[m.category] ?? Truck;
+
+                  return (
+                    <motion.button
+                      key={m.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.25, delay: i * 0.07 }}
+                      type="button"
+                      onClick={() => onSearch(baseName, m.category)}
+                      className="snap-start shrink-0 w-[200px] sm:w-auto bg-white rounded-2xl border border-amber-100 shadow-sm hover:shadow-lg hover:-translate-y-1 active:scale-[0.98] transition-all text-left overflow-hidden flex flex-col group"
+                    >
+                      {/* Image */}
+                      <div className="relative aspect-[3/2] w-full overflow-hidden bg-amber-50 shrink-0">
+                        {machineImage ? (
+                          <img
+                            src={machineImage}
+                            alt={baseName}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                        ) : (
+                          <div className={`w-full h-full bg-gradient-to-br ${CAT_GRADIENT[m.category] ?? "from-amber-100 to-amber-200"} flex items-center justify-center`}>
+                            <CatIcon className="h-10 w-10 text-slate-400" />
+                          </div>
+                        )}
+                        {/* Discount ribbon */}
+                        {(campaignPct || hasDayDiscount) && (
+                          <div className="absolute top-0 left-0 bg-amber-500 text-white text-[10px] font-black px-2.5 py-1 rounded-br-xl shadow-sm">
+                            {campaignPct ? `−${campaignPct}%` : "1 dag actie"}
+                          </div>
+                        )}
+                        {m.campaignText && (
+                          <div className="absolute top-0 right-0 bg-white/90 backdrop-blur-sm text-amber-700 text-[10px] font-bold rounded-bl-xl px-2.5 py-1 border-b border-l border-amber-100">
+                            {m.campaignText}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Content */}
+                      <div className="p-3.5 flex flex-col gap-2.5 flex-1">
+                        <p className="font-display font-black text-[13px] text-slate-900 leading-snug line-clamp-2">{baseName}</p>
+
+                        {/* Price block */}
+                        <div className="flex items-baseline gap-1.5 flex-wrap">
+                          <span className="text-base font-black text-amber-600">{fmtPrice(displayPrice)}</span>
+                          {hasDayDiscount && (
+                            <span className="text-[11px] text-slate-400 line-through">{fmtPrice(originalPrice)}</span>
+                          )}
+                          <span className="text-[11px] text-slate-400">/ dag</span>
+                        </div>
+
+                        {/* CTA button */}
+                        <div className="mt-auto pt-0.5">
+                          <div className="w-full text-center bg-amber-500 group-hover:bg-amber-600 text-white text-[11px] font-black py-2 px-3 rounded-xl transition-colors">
+                            {t("Direct boeken →", "Book now →", "Hemen rezervasyon →")}
+                          </div>
+                        </div>
+                      </div>
+                    </motion.button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         );
       })()}

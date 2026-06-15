@@ -35,6 +35,39 @@ interface BookingPriceSummaryProps {
   };
 }
 
+function Row({
+  label,
+  value,
+  accent,
+  dim,
+}: {
+  label: React.ReactNode;
+  value: string;
+  accent?: "emerald" | "amber";
+  dim?: boolean;
+}) {
+  const lCls = accent === "emerald"
+    ? "text-emerald-700 font-semibold"
+    : accent === "amber"
+    ? "text-amber-700 font-semibold"
+    : dim
+    ? "text-slate-400"
+    : "text-slate-600";
+  const vCls = accent === "emerald"
+    ? "text-emerald-700 font-semibold"
+    : accent === "amber"
+    ? "text-amber-700 font-semibold"
+    : dim
+    ? "text-slate-400"
+    : "text-slate-800 font-bold";
+  return (
+    <div className="flex justify-between items-center gap-3">
+      <span className={`text-xs leading-snug ${lCls}`}>{label}</span>
+      <span className={`text-xs font-mono shrink-0 ${vCls}`}>{value}</span>
+    </div>
+  );
+}
+
 export default function BookingPriceSummary({ selectedMachine, machineCount = 1, sums }: BookingPriceSummaryProps) {
   const t = useLanguageStore((state) => state.t);
 
@@ -55,8 +88,11 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
   }
 
   const priceExVat = sums.subtotal + sums.transport + sums.driver + sums.addonCost;
-  // Weekend surcharge present → don't show "Gratis weekendopslag" (they ARE working, not storing)
   const showWeekendFree = sums.spansWeekend && !sums.addonDetails.some(a => a.id === "weekend_surcharge");
+  const hasKortingen =
+    (!sums.weeklyBreakdown && !sums.isFlatRate && sums.discountAmount > 0) ||
+    (sums.campaignSavings ?? 0) > 0 ||
+    showWeekendFree;
 
   return (
     <div className="bg-white border border-slate-200 shadow-sm rounded-3xl overflow-hidden">
@@ -84,149 +120,139 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
           <h4 className="text-sm font-extrabold text-slate-900 leading-snug">
             {machineCount > 1 ? `${machineCount} machines gereserveerd` : selectedMachine.name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "")}
           </h4>
-          {machineCount === 1 && <span className="text-xs text-slate-600 font-bold font-mono">{euroCompact(selectedMachine.pricePerDay)}/dag</span>}
+          {machineCount === 1 && (
+            <span className="text-xs text-slate-600 font-bold font-mono">{euroCompact(selectedMachine.pricePerDay)}/dag</span>
+          )}
         </div>
       </div>
 
-      {/* Price breakdown */}
-      <div className="p-4 space-y-3">
+      {/* Breakdown body */}
+      <div className="p-4 flex flex-col gap-3">
 
-        {/* Days × rate, flat-rate tier, or weekly linear breakdown */}
-        {sums.weeklyBreakdown ? (
-          <div className="space-y-1.5">
-            <div className="flex justify-between items-center">
-              <span className="text-xs text-slate-600">{sums.weeklyBreakdown.weeks}× Wekelijks Tarief (5 dgn)</span>
-              <span className="text-xs font-bold text-slate-800 font-mono">{euro(sums.weeklyBreakdown.weeks * sums.weeklyBreakdown.pricePerWeek)}</span>
+        {/* ── BEREKENING ──────────────────────── */}
+        <div className="space-y-2">
+          <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Berekening</p>
+
+          {/* Werkweektarief badge (6-27 dagen, no weeklyBreakdown) */}
+          {!sums.weeklyBreakdown && !sums.isFlatRate && sums.effectiveDailyRate != null && sums.days >= 6 && (
+            <div className="flex items-center gap-1.5">
+              <TrendingDown className="h-3 w-3 text-emerald-500 shrink-0" />
+              <span className="text-[10px] text-emerald-700 font-semibold leading-snug">
+                Werkweektarief {euroCompact(sums.effectiveDailyRate)}/dag
+                <span className="ml-1.5 line-through text-slate-400 font-normal">{euroCompact(selectedMachine.pricePerDay)}/dag</span>
+              </span>
             </div>
-            {sums.weeklyBreakdown.remainder > 0 && (
-              <div className="flex justify-between items-center">
-                <span className="text-xs text-slate-600">
-                  {sums.weeklyBreakdown.remainder} {sums.weeklyBreakdown.remainder === 1 ? 'dag' : 'dagen'} × {euroCompact(sums.weeklyBreakdown.dailyRate)}
-                </span>
-                <span className="text-xs font-bold text-slate-800 font-mono">{euro(sums.weeklyBreakdown.remainder * sums.weeklyBreakdown.dailyRate)}</span>
-              </div>
-            )}
-          </div>
-        ) : sums.isFlatRate && sums.tierLabel ? (
-          <div className="flex justify-between items-center">
-            <span className="text-xs text-slate-600">1× {sums.tierLabel}</span>
-            <span className="text-xs font-bold text-slate-800 font-mono">{euro(sums.subtotal)}</span>
-          </div>
-        ) : (
-          <div className="flex justify-between items-center">
-            <span className="text-xs text-slate-600">
-              {sums.days} {sums.days === 1 ? 'dag' : 'dagen'} × {euroCompact(selectedMachine.pricePerDay)}
-            </span>
-            <span className="text-xs font-bold text-slate-800 font-mono">{euro(sums.rawSubtotal)}</span>
-          </div>
-        )}
+          )}
 
-        {/* Info strip — for discounts, weekend spans, linear weekly rate badge, or campaign savings */}
-        {((!sums.weeklyBreakdown && !sums.isFlatRate && sums.discountAmount > 0) || showWeekendFree || (!sums.weeklyBreakdown && sums.effectiveDailyRate) || (sums.campaignSavings ?? 0) > 0) && (
-          <div className="rounded-xl border border-slate-100 bg-slate-50 p-3 space-y-2.5">
+          {/* Rate line(s) */}
+          {sums.weeklyBreakdown ? (
+            <>
+              <Row
+                label={`${sums.weeklyBreakdown.weeks}× Wekelijks Tarief (5 dgn)`}
+                value={euro(sums.weeklyBreakdown.weeks * sums.weeklyBreakdown.pricePerWeek)}
+              />
+              {sums.weeklyBreakdown.remainder > 0 && (
+                <Row
+                  label={`${sums.weeklyBreakdown.remainder} ${sums.weeklyBreakdown.remainder === 1 ? "dag" : "dagen"} × ${euroCompact(sums.weeklyBreakdown.dailyRate)}`}
+                  value={euro(sums.weeklyBreakdown.remainder * sums.weeklyBreakdown.dailyRate)}
+                />
+              )}
+            </>
+          ) : sums.isFlatRate && sums.tierLabel ? (
+            <Row label={`1× ${sums.tierLabel}`} value={euro(sums.subtotal)} />
+          ) : (
+            <Row
+              label={`${sums.days} ${sums.days === 1 ? "dag" : "dagen"} × ${euroCompact(selectedMachine.pricePerDay)}`}
+              value={euro(sums.rawSubtotal)}
+            />
+          )}
+        </div>
 
-            {/* Effectief dagtarief uitleg (6–27 dagen) — hidden when weeklyBreakdown is shown */}
-            {!sums.weeklyBreakdown && sums.effectiveDailyRate != null && sums.days >= 6 && (
-              <div className="flex items-start gap-2">
-                <TrendingDown className="h-3.5 w-3.5 text-emerald-500 mt-0.5 shrink-0" />
-                <div className="text-xs leading-snug">
-                  <p className="font-semibold text-slate-700">Werkweektarief toegepast</p>
-                  <p className="text-slate-500 mt-0.5">
-                    {sums.days} dagen ×{" "}
-                    <span className="font-semibold text-emerald-600">{euroCompact(sums.effectiveDailyRate)}/dag</span>
-                    <span className="ml-1.5 line-through text-slate-400">{euroCompact(selectedMachine.pricePerDay)}/dag</span>
-                  </p>
+        {/* ── KORTINGEN (conditional) ─────────── */}
+        {hasKortingen && (
+          <>
+            <div className="h-px bg-slate-100" />
+            <div className="space-y-2">
+              <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Kortingen</p>
+
+              {!sums.weeklyBreakdown && !sums.isFlatRate && sums.discountAmount > 0 && (
+                <Row
+                  label={
+                    <span className="flex items-center gap-1">
+                      <TrendingDown className="h-3 w-3 shrink-0" />
+                      {sums.discountLabel}
+                    </span>
+                  }
+                  value={`− ${euro(sums.discountAmount)}`}
+                  accent="emerald"
+                />
+              )}
+
+              {(sums.campaignSavings ?? 0) > 0 && (
+                <Row
+                  label={
+                    <span className="flex items-center gap-1">
+                      <TrendingDown className="h-3 w-3 shrink-0" />
+                      Campagnekorting
+                    </span>
+                  }
+                  value={`− ${euro(sums.campaignSavings!)}`}
+                  accent="amber"
+                />
+              )}
+
+              {showWeekendFree && (
+                <div className="flex items-center gap-2 text-[11px] text-blue-700">
+                  <span className="shrink-0">🗓</span>
+                  <span>
+                    <span className="font-semibold">Gratis weekendopslag</span>
+                    {" — "}
+                    {(sums.weekendDays ?? 0) === 1 ? "1 weekend dag" : `${sums.weekendDays} weekend dagen`} inbegrepen
+                  </span>
                 </div>
-              </div>
-            )}
-
-            {/* Discount row — hidden for flat-rate and weekly breakdown tiers */}
-            {!sums.weeklyBreakdown && !sums.isFlatRate && sums.discountAmount > 0 && (
-              <div className={`flex justify-between items-center text-emerald-700 text-xs font-semibold${(sums.effectiveDailyRate != null && sums.days >= 6) || showWeekendFree ? " pt-2 border-t border-slate-200" : ""}`}>
-                <span className="flex items-center gap-1">
-                  <TrendingDown className="h-3.5 w-3.5 shrink-0" />
-                  {sums.discountLabel}
-                </span>
-                <span className="font-mono">− {euro(sums.discountAmount)}</span>
-              </div>
-            )}
-
-            {/* Campaign savings — shown even on flat-rate tiers */}
-            {(sums.campaignSavings ?? 0) > 0 && (
-              <div className={`flex justify-between items-center text-amber-700 text-xs font-semibold${(sums.effectiveDailyRate != null && sums.days >= 6) || (!sums.isFlatRate && sums.discountAmount > 0) || showWeekendFree ? " pt-2 border-t border-slate-200" : ""}`}>
-                <span className="flex items-center gap-1">
-                  <TrendingDown className="h-3.5 w-3.5 shrink-0" />
-                  Campagnekorting
-                </span>
-                <span className="font-mono">− {euro(sums.campaignSavings!)}</span>
-              </div>
-            )}
-
-            {/* Gratis weekendopslag — only when user did NOT declare weekend work */}
-            {showWeekendFree && (
-              <div className={`flex items-center gap-2 text-xs text-blue-700${(!sums.weeklyBreakdown && !sums.isFlatRate && sums.discountAmount > 0) || (!sums.weeklyBreakdown && sums.effectiveDailyRate != null && sums.days >= 6) ? " pt-2 border-t border-slate-200" : ""}`}>
-                <span className="shrink-0">🗓</span>
-                <span>
-                  <span className="font-semibold">Gratis weekendopslag</span>
-                  {" — "}
-                  {(sums.weekendDays ?? 0) === 1 ? "1 weekend dag" : `${sums.weekendDays} weekend dagen`} inbegrepen
-                </span>
-              </div>
-            )}
-
-          </div>
-        )}
-
-        {/* Delivery */}
-        {(sums.transport > 0 || sums.driver > 0) && (
-          <div className="flex justify-between items-center">
-            <span className="text-xs text-slate-600">
-              {sums.deliveryType === "trailer_rental" ? t("priceSummaryTrailer") : t("priceSummaryDelivery")}
-            </span>
-            <span className="text-xs font-bold text-slate-800 font-mono">{euro(sums.transport + sums.driver)}</span>
-          </div>
-        )}
-
-        {/* Self-pickup confirmation */}
-        {sums.transport === 0 && sums.driver === 0 && (
-          <div className="flex justify-between items-center">
-            <span className="text-xs text-slate-600">{t("priceSummaryPickup")}</span>
-            <span className="text-xs font-semibold text-emerald-600">{t("priceSummaryPickupFree")}</span>
-          </div>
-        )}
-
-        {/* Add-ons */}
-        {sums.addonCost > 0 && sums.addonDetails.map(addon => (
-          <div key={addon.id} className="flex justify-between items-center">
-            <span className="text-xs text-slate-600 truncate max-w-[160px]">{addon.name}</span>
-            <span className="text-xs font-bold text-slate-800 font-mono">{euro(Number(addon.price))}</span>
-          </div>
-        ))}
-
-        {/* Subtotaal excl. BTW */}
-        <div className="flex justify-between items-center text-slate-600 border-t border-slate-100 pt-3">
-          <span className="text-xs">Subtotaal (excl. BTW)</span>
-          <span className="text-xs font-bold text-slate-800 font-mono">{euro(priceExVat)}</span>
-        </div>
-
-        {/* BTW */}
-        <div className="flex justify-between items-center text-slate-400">
-          <span className="text-xs">BTW 21%</span>
-          <span className="text-xs font-mono">{euro(sums.vat)}</span>
-        </div>
-
-        {/* Total */}
-        <div className="bg-slate-900 -mx-4 px-4 py-4 rounded-b-none">
-          <div className="flex justify-between items-center">
-            <div>
-              <p className="text-[10px] text-slate-300 font-semibold uppercase tracking-wide">{t("priceSummaryTotal")}</p>
-              <p className="text-[10px] text-slate-400 mt-0.5">{t("priceSummaryInclVAT")}</p>
+              )}
             </div>
-            <span className="text-2xl font-black text-white font-mono">{euro(sums.total)}</span>
-          </div>
+          </>
+        )}
+
+        {/* ── BEZORGING & ADD-ONS ─────────────── */}
+        <div className="h-px bg-slate-100" />
+        <div className="space-y-2">
+          {sums.transport > 0 || sums.driver > 0 ? (
+            <Row
+              label={sums.deliveryType === "trailer_rental" ? t("priceSummaryTrailer") : t("priceSummaryDelivery")}
+              value={euro(sums.transport + sums.driver)}
+            />
+          ) : (
+            <div className="flex justify-between items-center gap-3">
+              <span className="text-xs text-slate-600">{t("priceSummaryPickup")}</span>
+              <span className="text-xs font-semibold text-emerald-600">{t("priceSummaryPickupFree")}</span>
+            </div>
+          )}
+
+          {sums.addonCost > 0 && sums.addonDetails.map(addon => (
+            <Row key={addon.id} label={addon.name} value={euro(Number(addon.price))} />
+          ))}
         </div>
 
+        {/* ── SUBTOTAAL + BTW ─────────────────── */}
+        <div className="h-px bg-slate-100" />
+        <div className="space-y-1.5">
+          <Row label="Subtotaal (excl. BTW)" value={euro(priceExVat)} />
+          <Row label="BTW 21%" value={euro(sums.vat)} dim />
+        </div>
 
+      </div>
+
+      {/* Total */}
+      <div className="bg-slate-900 px-4 py-4">
+        <div className="flex justify-between items-center">
+          <div>
+            <p className="text-[10px] text-slate-300 font-semibold uppercase tracking-wide">{t("priceSummaryTotal")}</p>
+            <p className="text-[10px] text-slate-400 mt-0.5">{t("priceSummaryInclVAT")}</p>
+          </div>
+          <span className="text-2xl font-black text-white font-mono">{euro(sums.total)}</span>
+        </div>
       </div>
 
       {/* Trust footer */}

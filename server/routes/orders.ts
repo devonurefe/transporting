@@ -261,15 +261,7 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
     } else if (rentalDays >= 6 && rentalDays < 28 && m.weeklyPrice) {
       serverSubtotal = Math.round(rentalDays * (m.weeklyPrice / 5));
     } else if (rentalDays >= 28 && m.monthlyPrice) {
-      const fullMonths = Math.floor(rentalDays / 28);
-      const remainder = rentalDays % 28;
-      let remainderCost: number;
-      if (remainder >= 5 && m.weeklyPrice) {
-        remainderCost = Math.floor(remainder / 5) * m.weeklyPrice + (remainder % 5) * machine.pricePerDay;
-      } else {
-        remainderCost = remainder * machine.pricePerDay;
-      }
-      serverSubtotal = fullMonths * m.monthlyPrice + remainderCost;
+      serverSubtotal = Math.ceil(Math.round(rentalDays * (m.monthlyPrice / 28)) / 5) * 5;
     } else {
       // Mirrors src/utils/pricing.ts evaluateDiscountPercent: take the HIGHEST discount,
       // do not stack volume + campaign discounts. Campaign rules are also applied here.

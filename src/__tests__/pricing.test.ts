@@ -118,16 +118,16 @@ describe("calculateItemSubtotal — flat rates", () => {
     expect(calculateItemSubtotal(nifty120, 28, "Particulier", noRules)).toBe(490);
   });
 
-  it("33 days = 1 month + 5-day week remainder", () => {
-    expect(calculateItemSubtotal(nifty120, 33, "Particulier", noRules)).toBe(490 + 335);
+  it("30 days = linear monthly rate (30 × monthlyPrice/28, ceil to €5)", () => {
+    expect(calculateItemSubtotal(nifty120, 30, "Particulier", noRules)).toBe(525);
   });
 
-  it("30 days = 1 month + 2 days at day rate", () => {
-    expect(calculateItemSubtotal(nifty120, 30, "Particulier", noRules)).toBe(490 + 2 * 95);
+  it("33 days = linear monthly rate (33 × monthlyPrice/28, ceil to €5)", () => {
+    expect(calculateItemSubtotal(nifty120, 33, "Particulier", noRules)).toBe(580);
   });
 
-  it("56 days = 2 months", () => {
-    expect(calculateItemSubtotal(nifty120, 56, "Particulier", noRules)).toBe(2 * 490);
+  it("56 days = linear monthly rate (56 × monthlyPrice/28, ceil to €5)", () => {
+    expect(calculateItemSubtotal(nifty120, 56, "Particulier", noRules)).toBe(980);
   });
 });
 

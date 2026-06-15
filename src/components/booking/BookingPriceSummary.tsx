@@ -94,12 +94,14 @@ export default function BookingPriceSummary({ selectedMachine, sums }: BookingPr
         {(sums.discountAmount > 0 || sums.spansWeekend || sums.effectiveDailyRate) && (
           <div className="rounded-xl border border-slate-100 bg-slate-50 p-3 space-y-2.5">
 
-            {/* Effectief dagtarief uitleg (6–27 dagen) */}
+            {/* Effectief dagtarief uitleg (6+ dagen) */}
             {sums.effectiveDailyRate != null && sums.days >= 6 && (
               <div className="flex items-start gap-2">
                 <TrendingDown className="h-3.5 w-3.5 text-indigo-500 mt-0.5 shrink-0" />
                 <div className="text-xs leading-snug">
-                  <p className="font-semibold text-slate-700">Werkweektarief toegepast</p>
+                  <p className="font-semibold text-slate-700">
+                    {sums.days >= 28 ? "Maandtarief toegepast" : "Werkweektarief toegepast"}
+                  </p>
                   <p className="text-slate-500 mt-0.5">
                     {sums.days} dagen ×{" "}
                     <span className="font-semibold text-indigo-600">{euroCompact(sums.effectiveDailyRate)}/dag</span>

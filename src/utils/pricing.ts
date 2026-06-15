@@ -87,17 +87,10 @@ export function calculateItemSubtotal(machine: Machine, days: number, profile: s
     return Math.round(days * (machine.weeklyPrice / 5));
   }
 
-  // Monthly flat rate: 28+ days
+  // 28+ days: linear rate derived from monthlyPrice, rounded up to nearest €5.
+  // Math.round before ceil avoids floating-point drift (e.g. 590/28×84 = 1770.0000000000002).
   if (days >= 28 && machine.monthlyPrice) {
-    const fullMonths = Math.floor(days / 28);
-    const remainder = days % 28;
-    let remainderCost: number;
-    if (remainder >= 5 && machine.weeklyPrice) {
-      remainderCost = Math.floor(remainder / 5) * machine.weeklyPrice + (remainder % 5) * machine.pricePerDay;
-    } else {
-      remainderCost = remainder * machine.pricePerDay;
-    }
-    return fullMonths * machine.monthlyPrice + remainderCost;
+    return Math.ceil(Math.round(days * (machine.monthlyPrice / 28)) / 5) * 5;
   }
 
   // Fallback: pricePerDay × days with percentage discount

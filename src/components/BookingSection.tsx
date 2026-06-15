@@ -337,9 +337,12 @@ export default function BookingSection({
       const strictWeekendLead = isStrictWeekend(leadStart, totalDays);
       const spansWeekend = weekendDays > 0 && !strictWeekendLead;
       const leadMachine = cartItems[0]?.machine;
-      const effectiveDailyRate = (totalDays >= 6 && totalDays < 28 && leadMachine?.weeklyPrice)
-        ? leadMachine.weeklyPrice / 5
-        : null;
+      const effectiveDailyRate =
+        (totalDays >= 6 && totalDays < 28 && leadMachine?.weeklyPrice)
+          ? leadMachine.weeklyPrice / 5
+          : (totalDays >= 28 && leadMachine?.monthlyPrice)
+            ? leadMachine.monthlyPrice / 28
+            : null;
 
       return {
         days: totalDays,
@@ -421,9 +424,12 @@ export default function BookingSection({
 
     const weekendDays = countWeekendDays(startDate, endDate);
     const spansWeekend = weekendDays > 0 && !isStrictWeekend(startDate, days);
-    const effectiveDailyRate = (days >= 6 && days < 28 && selectedMachine.weeklyPrice)
-      ? selectedMachine.weeklyPrice / 5
-      : null;
+    const effectiveDailyRate =
+      (days >= 6 && days < 28 && selectedMachine.weeklyPrice)
+        ? selectedMachine.weeklyPrice / 5
+        : (days >= 28 && selectedMachine.monthlyPrice)
+          ? selectedMachine.monthlyPrice / 28
+          : null;
 
     return {
       days,

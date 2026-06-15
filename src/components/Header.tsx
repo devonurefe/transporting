@@ -95,7 +95,10 @@ export default function Header({
   const toggleLanguage = useLanguageStore((state) => state.toggleLanguage);
   const t = useLanguageStore((state) => state.t);
 
-
+  // Close dropdown when user logs out so it doesn't reopen on next login
+  React.useEffect(() => {
+    if (!currentUser) setShowNotifDropdown(false);
+  }, [currentUser]);
   return (
     <>
       <header className={`sticky top-0 z-50 w-full border-b transition-all duration-300 ${

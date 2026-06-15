@@ -141,7 +141,7 @@ export default function AdminCalendar({ onAddSystemLog, adminLanguage }: AdminCa
               </select>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-2 min-w-0">
                 <label className="text-xs text-slate-600 block font-semibold truncate">{t("Begindatum *", "Start Date *", "Başlangıç Tarihi *")}</label>
                 <input
@@ -149,7 +149,7 @@ export default function AdminCalendar({ onAddSystemLog, adminLanguage }: AdminCa
                   required
                   value={blockDate}
                   onChange={(e) => { setBlockDate(e.target.value); if (blockEndDate && blockEndDate < e.target.value) setBlockEndDate(""); }}
-                  className="bg-white border border-slate-200 text-slate-800 w-full rounded-xl px-2 py-2.5 text-sm outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 cursor-pointer transition-colors min-w-0"
+                  className="bg-white border border-slate-200 text-slate-800 w-full rounded-xl px-3 py-2.5 text-sm outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 cursor-pointer transition-colors min-w-0"
                 />
               </div>
               <div className="space-y-2 min-w-0">
@@ -159,7 +159,7 @@ export default function AdminCalendar({ onAddSystemLog, adminLanguage }: AdminCa
                   value={blockEndDate}
                   min={blockDate}
                   onChange={(e) => setBlockEndDate(e.target.value)}
-                  className="bg-white border border-slate-200 text-slate-800 w-full rounded-xl px-2 py-2.5 text-sm outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 cursor-pointer transition-colors min-w-0"
+                  className="bg-white border border-slate-200 text-slate-800 w-full rounded-xl px-3 py-2.5 text-sm outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 cursor-pointer transition-colors min-w-0"
                 />
               </div>
             </div>

@@ -268,9 +268,11 @@ export default function HomeSection({
                 {campaignMachines.map((m, i) => {
                   const baseName = m.name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "").trim();
                   const machineImage = m.imageUrl || m.additionalImages?.[0];
+                  const campaignPct = m.campaignDiscountPercent ?? 0;
+                  const basePrice = m.oneDayPrice && m.oneDayPrice < m.pricePerDay ? m.oneDayPrice : m.pricePerDay;
+                  const effectivePrice = campaignPct > 0 ? basePrice * (1 - campaignPct / 100) : basePrice;
                   const hasDayDiscount = !!(m.oneDayPrice && m.oneDayPrice < m.pricePerDay);
-                  const campaignPct = m.campaignDiscountPercent;
-                  const displayPrice = withVat(m.oneDayPrice && m.oneDayPrice < m.pricePerDay ? m.oneDayPrice : m.pricePerDay, vatDisplay);
+                  const displayPrice = withVat(effectivePrice, vatDisplay);
                   const originalPrice = withVat(m.pricePerDay, vatDisplay);
                   const fmtPrice = (p: number) => p % 1 === 0
                     ? `€${Math.round(p)}`
@@ -321,7 +323,7 @@ export default function HomeSection({
                         {/* Price block */}
                         <div className="flex items-baseline gap-1.5 flex-wrap">
                           <span className="text-base font-black text-amber-600">{fmtPrice(displayPrice)}</span>
-                          {hasDayDiscount && (
+                          {(hasDayDiscount || campaignPct > 0) && (
                             <span className="text-[11px] text-slate-400 line-through">{fmtPrice(originalPrice)}</span>
                           )}
                           <span className="text-[11px] text-slate-400">/ dag</span>

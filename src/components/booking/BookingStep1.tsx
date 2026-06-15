@@ -239,7 +239,10 @@ export default function BookingStep1({
             <p className="text-xs text-slate-500 leading-normal">
               Wij leveren de machine af en halen hem terug op.
             </p>
-            <span className="text-xs font-semibold text-slate-700 mt-2 block">€150,- heen + terug</span>
+            <div className="mt-2 flex items-baseline gap-1">
+              <span className="text-sm font-black text-slate-900">€150,-</span>
+              <span className="text-[11px] text-slate-500 font-semibold">heen + terug</span>
+            </div>
           </div>
 
           {/* Opt 2 — Aanhanger huren */}
@@ -267,7 +270,10 @@ export default function BookingStep1({
             <p className="text-xs text-slate-500 leading-normal">
               U rijdt zelf met uw eigen voertuig en onze aanhanger.
             </p>
-            <span className="text-xs font-semibold text-slate-700 mt-2 block">€25,- per dag</span>
+            <div className="mt-2 flex items-baseline gap-1">
+              <span className="text-sm font-black text-slate-900">€25,-</span>
+              <span className="text-[11px] text-slate-500 font-semibold">per dag</span>
+            </div>
           </div>
 
           {/* Opt 3 — Zelf ophalen */}
@@ -295,7 +301,7 @@ export default function BookingStep1({
             <p className="text-xs text-slate-500 leading-normal">
               Ophalen bij ons depot — gratis.
             </p>
-            <span className="text-xs font-semibold text-slate-700 mt-2 block">Kosteloos</span>
+            <span className="text-sm font-black text-emerald-600 mt-2 block">Kosteloos</span>
           </div>
         </div>
       </div>

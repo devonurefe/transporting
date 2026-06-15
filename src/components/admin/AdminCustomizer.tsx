@@ -4,7 +4,8 @@
  */
 
 import React, { useState } from "react";
-import { Settings, Check, Trash2, Tag, Plus, ChevronDown } from "lucide-react";
+import { Settings, Check, Trash2, Tag, Plus, ChevronDown, Upload } from "lucide-react";
+import { resizeImage } from "../../utils/image";
 import { motion, AnimatePresence } from "motion/react";
 import { useAppStore } from "../../store/appStore";
 import { useAuthStore } from "../../store/authStore";
@@ -153,6 +154,7 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
   const [title, setTitle] = useState(siteConfig.heroTitle || "");
   const [subtitle, setSubtitle] = useState(siteConfig.heroSubtitle || "");
   const [heroImageUrl, setHeroImageUrl] = useState(siteConfig.heroImageUrl || "");
+  const [isUploadingHero, setIsUploadingHero] = useState(false);
   const [menuHome, setMenuHome] = useState(siteConfig.menuHomeLabel || "");
   const [menuCatalog, setMenuCatalog] = useState(siteConfig.menuCatalogLabel || "");
   const [menuOrders, setMenuOrders] = useState(siteConfig.menuOrdersLabel || "");
@@ -170,6 +172,32 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
       setMenuOrders(siteConfig.menuOrdersLabel || "");
     }
   }, [siteConfig]);
+
+  const handleHeroImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploadingHero(true);
+    try {
+      const base64 = await resizeImage(file);
+      const token = localStorage.getItem("hwh_admin_token") || localStorage.getItem("hwh_token");
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify({ fileName: file.name, base64Data: base64 })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setHeroImageUrl(data.url);
+      } else {
+        alert(t("Uploaden mislukt.", "Upload failed.", "Yükleme başarısız."));
+      }
+    } catch {
+      alert(t("Fout bij uploaden afbeelding.", "Error uploading image.", "Resim yükleme hatası."));
+    } finally {
+      setIsUploadingHero(false);
+      e.target.value = "";
+    }
+  };
 
   const handleSaveSiteConfig = async () => {
     setIsSavingConfig(true);
@@ -299,12 +327,26 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs text-slate-700 block font-bold">{t("Hero Afbeelding URL", "Hero Image URL", "Hero Görseli URL")}</label>
+              <label className="text-xs text-slate-700 block font-bold">{t("Hero Afbeelding", "Hero Image", "Hero Görseli")}</label>
+              <label className={`flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border-2 border-dashed cursor-pointer transition-colors ${isUploadingHero ? "border-amber-300 bg-amber-50 text-amber-600" : "border-slate-200 bg-white hover:border-amber-400 hover:bg-amber-50 text-slate-600 hover:text-amber-700"}`}>
+                {isUploadingHero ? (
+                  <>
+                    <span className="h-3.5 w-3.5 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+                    <span className="text-xs font-bold">{t("Uploaden...", "Uploading...", "Yükleniyor...")}</span>
+                  </>
+                ) : (
+                  <>
+                    <Upload className="h-4 w-4 shrink-0" />
+                    <span className="text-xs font-bold">{t("Afbeelding uploaden", "Upload image", "Resim yükle")}</span>
+                  </>
+                )}
+                <input type="file" accept="image/*" className="sr-only" disabled={isUploadingHero} onChange={handleHeroImageUpload} />
+              </label>
               <input
                 type="url"
                 value={heroImageUrl}
                 onChange={(e) => setHeroImageUrl(e.target.value)}
-                placeholder={t("https://... (leeg = standaard afbeelding)", "https://... (empty = default image)", "https://... (boş = varsayılan görsel)")}
+                placeholder={t("of URL plakken... (leeg = standaard)", "or paste URL... (empty = default)", "veya URL yapıştır... (boş = varsayılan)")}
                 className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white font-mono"
               />
               {heroImageUrl && (

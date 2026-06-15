@@ -186,8 +186,8 @@ export default function MachineDetailModal({
           </button>
         </div>
 
-        {/* Scrollable content */}
-        <div className="flex-1 overflow-y-auto space-y-5 pr-1 scrollbar-thin scrollbar-thumb-slate-200">
+        {/* Scrollable content — pb-20 on mobile to clear sticky bar */}
+        <div className="flex-1 overflow-y-auto space-y-5 pr-1 scrollbar-thin scrollbar-thumb-slate-200 pb-20 sm:pb-0">
 
           {/* A — Images */}
           <div className="space-y-2">
@@ -468,8 +468,8 @@ export default function MachineDetailModal({
 
         </div>
 
-        {/* Footer */}
-        <div className="pt-4 border-t border-slate-200 flex items-center gap-3 shrink-0 mt-3">
+        {/* Footer — desktop only; mobile uses the fixed sticky bar below */}
+        <div className="hidden sm:flex pt-4 border-t border-slate-200 items-center gap-3 shrink-0 mt-3">
           <button
             onClick={onClose}
             className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-600 hover:text-slate-800 rounded-xl text-xs font-bold transition-all cursor-pointer"
@@ -488,17 +488,23 @@ export default function MachineDetailModal({
 
       {/* Mobile sticky CTA — fixed at bottom, above modal z-index */}
       <div className="fixed bottom-0 inset-x-0 z-[70] sm:hidden" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
-        <div className="bg-white/95 backdrop-blur-sm border-t border-slate-200 shadow-2xl px-5 py-3">
-          <div className="flex items-center gap-3 max-w-sm mx-auto">
-            <div className="shrink-0">
-              <p className="text-[10px] text-slate-400 leading-none mb-0.5">vanaf</p>
-              <p className="text-xl font-black text-slate-900 font-mono leading-none">
-                €{formatPrice(vp(machine.pricePerDay))}<span className="text-[11px] font-normal text-slate-400 ml-0.5">/dag</span>
+        <div className="bg-white/95 backdrop-blur-sm border-t border-slate-200 shadow-2xl px-4 py-3">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={onClose}
+              className="px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-600 text-xs font-bold shrink-0 cursor-pointer"
+            >
+              Sluiten
+            </button>
+            <div className="shrink-0 px-1">
+              <p className="text-[9px] text-slate-400 leading-none">vanaf</p>
+              <p className="text-base font-black text-slate-900 font-mono leading-tight">
+                €{formatPrice(vp(machine.pricePerDay))}<span className="text-[10px] font-normal text-slate-400">/dag</span>
               </p>
             </div>
             <button
               onClick={() => { onClose(); onBook(machine); }}
-              className="flex-1 py-3.5 rounded-xl bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white text-sm font-bold flex items-center justify-center gap-2 shadow-md transition-colors cursor-pointer"
+              className="flex-1 py-3 rounded-xl bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white text-sm font-bold flex items-center justify-center gap-2 shadow-md transition-colors cursor-pointer"
             >
               <ShoppingBag className="h-4 w-4" />
               Huur Nu

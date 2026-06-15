@@ -7,6 +7,8 @@ import {
   ShoppingBag,
   Info,
   X,
+  Tag,
+  ChevronRight,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Machine } from "../types";
@@ -314,15 +316,15 @@ export default function CatalogSection({
                         const nextDate = !available ? getNextAvailableDate(machine.id) : null;
                         const availText = available ? "Beschikbaar" : nextDate ? `Vrij ${formatShortDate(nextDate)}` : "Vol geboekt";
                         return (
-                          <div className={`absolute top-3 left-3 z-20 flex items-center gap-1 py-1 px-2.5 rounded-full text-[10px] font-bold shadow-sm ${
+                          <div className={`absolute top-3 left-3 z-20 flex items-center gap-1.5 py-1 px-2.5 rounded-md text-[10px] font-bold shadow-sm backdrop-blur-sm ${
                             available
-                              ? "bg-emerald-50 border border-emerald-200 text-emerald-700"
-                              : "bg-amber-50 border border-amber-200 text-amber-700"
+                              ? "bg-slate-900/80 text-white"
+                              : "bg-white/90 border border-amber-200 text-amber-700"
                           }`}>
-                            <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${available ? "bg-emerald-500" : "bg-amber-400"}`} />
+                            <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${available ? "bg-emerald-400" : "bg-amber-400"}`} />
                             {availText}
                             {stock > 1 && (
-                              <span className={`font-black pl-0.5 ${available ? "text-emerald-600" : "text-amber-600"}`}>· {stock}×</span>
+                              <span className={`font-black pl-0.5 ${available ? "text-emerald-300" : "text-amber-600"}`}>· {stock}×</span>
                             )}
                           </div>
                         );
@@ -393,13 +395,13 @@ export default function CatalogSection({
                         <button
                           type="button"
                           onClick={(e) => { e.stopPropagation(); setPricingPreviewMachine(machine); }}
-                          className="w-full flex items-center justify-between px-3 py-2 rounded-xl border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 hover:border-emerald-300 text-emerald-700 text-[11px] font-semibold transition-all cursor-pointer group"
+                          className="w-full flex items-center justify-between px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 hover:border-slate-300 text-slate-600 text-[11px] font-semibold transition-all cursor-pointer group"
                         >
                           <span className="flex items-center gap-1.5">
-                            <Zap className="h-3 w-3 text-emerald-500 shrink-0" />
+                            <Tag className="h-3 w-3 text-slate-400 shrink-0" />
                             Alle tarieven &amp; kortingen
                           </span>
-                          <span className="text-emerald-500 group-hover:text-emerald-700 transition-colors text-[10px] font-mono">→</span>
+                          <ChevronRight className="h-3.5 w-3.5 text-slate-400 group-hover:text-slate-600 group-hover:translate-x-0.5 transition-all" />
                         </button>
 
                         {/* Spec + SuitableFor — single row */}

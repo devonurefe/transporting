@@ -200,6 +200,7 @@ All builders in `src/utils/whatsapp.ts`. Sign-off emoji: **🦾** (never 🙏).
 | `VITE_CLARITY_ID` | Microsoft Clarity project ID (optional). Empty = no tracking. Requires cookie consent (KVKK/GDPR) before enabling for EU visitors. |
 | `APP_URL` | Production base URL (used in email links) |
 | `REMINDER_SECRET` | Secret for cron reminder endpoint |
+| `CALENDAR_FEED_TOKEN` | Secret gating the read-only iCal feed at `/api/calendar/<token>/huurgo.ics` (blocked dates + bookings, for Google/iPhone calendar subscription). Empty = feature disabled. |
 
 `GEMINI_API_KEY` is no longer used — Gemini was fully removed.
 

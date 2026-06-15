@@ -585,8 +585,10 @@ export default function BookingSection({
     const timeoutId = setTimeout(() => controller.abort(), 8000);
 
     try {
+      // Use exact postcode filter (fq=postcode:XXXX99XX) so PDOK doesn't fuzzy-match
+      // to a different city. Also add huisnummer to the free-text query for best ranking.
       const response = await fetch(
-        `https://api.pdok.nl/bzk/locatieserver/search/v3_1/free?q=${cleanPostcode}+${encodeURIComponent(cleanHouse)}&fq=type:adres`,
+        `https://api.pdok.nl/bzk/locatieserver/search/v3_1/free?q=${cleanPostcode}+${encodeURIComponent(cleanHouse)}&fq=type:adres&fq=postcode:${cleanPostcode}`,
         { signal: controller.signal }
       );
       clearTimeout(timeoutId);
@@ -599,7 +601,15 @@ export default function BookingSection({
 
       if (data && data.response && data.response.docs && data.response.docs.length > 0) {
         const bestDoc = data.response.docs[0];
-        // Build address using user's house number, not the API's nearest match
+
+        // Sanity check: returned postcode must match what the user entered
+        const returnedPostcode = (bestDoc.postcode as string | undefined)?.replace(/\s/g, "").toUpperCase();
+        if (returnedPostcode && returnedPostcode !== cleanPostcode) {
+          setAddressSuccessMsg("");
+          setValidationError("Postcode niet gevonden. Controleer of de postcode klopt en probeer opnieuw.");
+          return;
+        }
+
         const street = bestDoc.straatnaam || bestDoc.straatnaam_verkort || "";
         const city = bestDoc.woonplaatsnaam || bestDoc.woonplaats || "";
         const resolvedAddress = street && city
@@ -619,7 +629,7 @@ export default function BookingSection({
         }
       } else {
         setAddressSuccessMsg("");
-        setValidationError("Adres kon niet automatisch worden gevonden. Vul alstublieft uw adres handmatig in.");
+        setValidationError("Adres kon niet automatisch worden gevonden. Controleer de postcode of vul het adres handmatig in.");
       }
     } catch (err: any) {
       clearTimeout(timeoutId);

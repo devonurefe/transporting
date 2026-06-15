@@ -143,6 +143,14 @@ const dictionary: TranslationDictionary = {
   adminTabAdd: { nl: "Machine Toevoegen", en: "Add Machine", tr: "Makine Ekle" },
   adminTabCustomizer: { nl: "Beheer Storefront", en: "Manage Storefront", tr: "Mağaza Ayarları" },
   adminTabLogs: { nl: "Bezoekers & Activiteit", en: "Visitors & Activity", tr: "Ziyaretçi & Aktivite" },
+  cookieText: {
+    nl: "Wij gebruiken functionele cookies en — met uw toestemming — analytische cookies om de site te verbeteren.",
+    en: "We use functional cookies and — with your consent — analytics cookies to improve the site.",
+    tr: "Siteyi iyileştirmek için işlevsel çerezler ve — izninizle — analitik çerezler kullanıyoruz.",
+  },
+  cookieMoreInfo: { nl: "Meer info", en: "More info", tr: "Daha fazla bilgi" },
+  cookieAccept: { nl: "Accepteren", en: "Accept", tr: "Kabul et" },
+  cookieReject: { nl: "Weigeren", en: "Decline", tr: "Reddet" },
 };
 
 interface LanguageState {

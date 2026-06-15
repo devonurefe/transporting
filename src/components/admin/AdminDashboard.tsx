@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useMemo } from "react";
-import { ArrowUpRight } from "lucide-react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
+import { ArrowUpRight, Bell, Smartphone, Calendar } from "lucide-react";
 import { motion } from "motion/react";
 import { useAppStore } from "../../store/appStore";
 
@@ -18,9 +18,15 @@ interface AdminDashboardProps {
 export default function AdminDashboard({ setSubTab, setOrdersFilter, adminLanguage }: AdminDashboardProps) {
   const machines = useAppStore((state) => state.machines);
   const orders = useAppStore((state) => state.orders);
-  
+  const fetchOrders = useAppStore((state) => state.fetchOrders);
+
   const [hoveredSector, setHoveredSector] = useState<string | null>(null);
   const [hoveredTrendMonth, setHoveredTrendMonth] = useState<string | null>(null);
+  const [hoveredMachine, setHoveredMachine] = useState<string | null>(null);
+  const [notifPermission, setNotifPermission] = useState<NotificationPermission | "unsupported">(
+    typeof window !== "undefined" && "Notification" in window ? Notification.permission : "unsupported"
+  );
+  const prevOrderCount = useRef(orders.length);
 
   const last6Months = useMemo(() => {
     const months = [];
@@ -90,6 +96,52 @@ export default function AdminDashboard({ setSubTab, setOrdersFilter, adminLangua
     acc[label] = (acc[label] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
+
+  // Machine utilization — last 90 days
+  const machineUtilization = useMemo(() => {
+    const now = new Date();
+    const cutoff = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+    const data: Record<string, { name: string; days: number; revenue: number }> = {};
+
+    orders
+      .filter(o => o.status !== "Geannuleerd")
+      .forEach(o => {
+        const start = new Date(o.startDate);
+        const end = new Date(o.endDate);
+        if (end < cutoff) return;
+        const effectiveStart = start < cutoff ? cutoff : start;
+        const days = Math.max(1, Math.ceil((end.getTime() - effectiveStart.getTime()) / (1000 * 60 * 60 * 24)));
+        const key = o.machineId;
+        if (!data[key]) data[key] = { name: o.machineName.replace(/\s*\(Unit\s+\d+\)\s*$/i, ""), days: 0, revenue: 0 };
+        data[key].days += days;
+        data[key].revenue += o.totalAmount;
+      });
+
+    return Object.entries(data)
+      .map(([id, d]) => ({ id, name: d.name, days: d.days, revenue: d.revenue, pct: Math.min(100, Math.round((d.days / 90) * 100)) }))
+      .sort((a, b) => b.pct - a.pct)
+      .slice(0, 10);
+  }, [orders]);
+
+  // Auto-refresh orders every 60 s + notify on new order
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      await fetchOrders();
+    }, 60_000);
+    return () => clearInterval(interval);
+  }, [fetchOrders]);
+
+  useEffect(() => {
+    if (notifPermission !== "granted") return;
+    if (orders.length > prevOrderCount.current) {
+      const diff = orders.length - prevOrderCount.current;
+      new Notification(`HuurGo — ${diff} nieuwe bestelling${diff > 1 ? "en" : ""}! 🦾`, {
+        body: "Er zijn nieuwe reserveringen binnengekomen. Klik om te bekijken.",
+        icon: "/icon-192.png",
+      });
+    }
+    prevOrderCount.current = orders.length;
+  }, [orders.length, notifPermission]);
 
   // Real month-over-month revenue trend
   const currentMonthRevenue = monthlyRevenue.at(-1)?.revenue ?? 0;
@@ -515,6 +567,138 @@ export default function AdminDashboard({ setSubTab, setOrdersFilter, adminLangua
           </table>
         </div>
       </div>
+
+      {/* Machine Utilization Heatmap — laatste 90 dagen */}
+      <div className="glass-panel p-6 rounded-3xl space-y-4 bg-white border border-slate-200 shadow-sm">
+        <div className="flex justify-between items-start border-b border-slate-200 pb-3">
+          <div>
+            <h4 className="font-display font-bold text-xs uppercase text-slate-500 tracking-wider">
+              {t("Machinebezetting", "Machine Utilization", "Makine Kullanımı")} — {t("laatste 90 dagen", "last 90 days", "son 90 gün")}
+            </h4>
+            <p className="text-[10px] text-slate-500 font-mono mt-0.5">
+              {t("Bezettingsgraad per machine op basis van verhuurde dagen", "Occupancy rate per machine based on rental days", "Kiralanan günlere göre makine başına doluluk oranı")}
+            </p>
+          </div>
+          {machineUtilization.length > 0 && (
+            <span className="text-[10px] font-mono text-slate-400 shrink-0 ml-3">
+              {machineUtilization.length} {t("machines", "machines", "makine")}
+            </span>
+          )}
+        </div>
+
+        {machineUtilization.length === 0 ? (
+          <p className="text-xs text-slate-400 text-center py-6">
+            {t("Geen verhuurdata in de laatste 90 dagen.", "No rental data in the last 90 days.", "Son 90 günde kiralama verisi yok.")}
+          </p>
+        ) : (
+          <div className="space-y-3">
+            {machineUtilization.map((m) => {
+              const isHov = hoveredMachine === m.id;
+              const barColor = m.pct >= 70 ? "bg-teal-500" : m.pct >= 30 ? "bg-amber-400" : "bg-rose-400";
+              return (
+                <div
+                  key={m.id}
+                  className="space-y-1 cursor-default group"
+                  onMouseEnter={() => setHoveredMachine(m.id)}
+                  onMouseLeave={() => setHoveredMachine(null)}
+                >
+                  <div className="flex items-center justify-between text-[10.5px]">
+                    <span className={`font-semibold truncate max-w-[55%] transition-colors ${isHov ? "text-slate-900" : "text-slate-600"}`}>{m.name}</span>
+                    <span className={`font-mono font-bold transition-colors ${m.pct >= 70 ? "text-teal-600" : m.pct >= 30 ? "text-amber-600" : "text-rose-500"}`}>
+                      {m.pct}% · {m.days}d · €{Math.round(m.revenue)}
+                    </span>
+                  </div>
+                  <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                    <div
+                      style={{ width: `${m.pct}%` }}
+                      className={`h-full rounded-full transition-all duration-500 ${barColor} ${isHov ? "brightness-110" : ""}`}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+            <div className="flex items-center gap-4 pt-2 text-[10px] text-slate-400 font-mono border-t border-slate-100">
+              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-teal-500 inline-block" /> ≥70% {t("hoog", "high", "yüksek")}</span>
+              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-amber-400 inline-block" /> 30–69% {t("gemiddeld", "medium", "orta")}</span>
+              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-rose-400 inline-block" /> &lt;30% {t("laag", "low", "düşük")}</span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Admin Tools — PWA + Google Calendar + Browser Meldingen */}
+      <div className="glass-panel p-6 rounded-3xl space-y-4 bg-white border border-slate-200 shadow-sm">
+        <h4 className="font-display font-bold text-xs uppercase text-slate-500 tracking-wider border-b border-slate-200 pb-3">
+          {t("Admin Tools", "Admin Tools", "Yönetici Araçları")}
+        </h4>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+
+          {/* PWA Install */}
+          <div className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100">
+            <span className="h-8 w-8 rounded-xl bg-orange-50 border border-orange-100 flex items-center justify-center shrink-0">
+              <Smartphone className="h-4 w-4 text-orange-500" />
+            </span>
+            <div className="min-w-0">
+              <p className="text-[11px] font-bold text-slate-800 leading-snug">{t("App installeren", "Install App", "Uygulamayı Kur")}</p>
+              <p className="text-[10px] text-slate-500 mt-0.5 leading-snug">
+                {t('Browser menu → "Aan beginscherm toevoegen" om HuurGo als app te gebruiken.', 'Browser menu → "Add to Home Screen" to use HuurGo as an app.', 'Tarayıcı menüsü → "Ana ekrana ekle".')}
+              </p>
+            </div>
+          </div>
+
+          {/* Google Calendar */}
+          <div className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100">
+            <span className="h-8 w-8 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0">
+              <Calendar className="h-4 w-4 text-blue-500" />
+            </span>
+            <div className="min-w-0">
+              <p className="text-[11px] font-bold text-slate-800 leading-snug">{t("Google Agenda", "Google Calendar", "Google Takvim")}</p>
+              <p className="text-[10px] text-slate-500 mt-0.5 leading-snug">
+                {t("Koppel de iCal-feed via Instellingen → Agenda in dit admin-panel.", "Connect the iCal feed via Settings → Calendar in this admin panel.", "Bu panelde Ayarlar → Takvim üzerinden iCal akışını bağlayın.")}
+              </p>
+            </div>
+          </div>
+
+          {/* Browser Notifications */}
+          <div className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100">
+            <span className={`h-8 w-8 rounded-xl flex items-center justify-center shrink-0 ${notifPermission === "granted" ? "bg-teal-50 border border-teal-100" : "bg-slate-100 border border-slate-200"}`}>
+              <Bell className={`h-4 w-4 ${notifPermission === "granted" ? "text-teal-500" : "text-slate-400"}`} />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-[11px] font-bold text-slate-800 leading-snug">
+                {notifPermission === "granted"
+                  ? t("Meldingen actief ✓", "Notifications active ✓", "Bildirimler Aktif ✓")
+                  : t("Browser meldingen", "Browser notifications", "Tarayıcı Bildirimleri")}
+              </p>
+              {notifPermission === "granted" ? (
+                <p className="text-[10px] text-teal-600 mt-0.5 font-semibold">
+                  {t("Nieuwe bestellingen worden gemeld.", "New orders will be notified.", "Yeni siparişler bildirilecek.")}
+                </p>
+              ) : notifPermission === "denied" ? (
+                <p className="text-[10px] text-rose-500 mt-0.5">
+                  {t("Geblokkeerd in browser. Zet aan via site-instellingen.", "Blocked in browser. Enable via site settings.", "Tarayıcıda engellendi. Site ayarlarından etkinleştirin.")}
+                </p>
+              ) : notifPermission === "unsupported" ? (
+                <p className="text-[10px] text-slate-400 mt-0.5">
+                  {t("Niet ondersteund door deze browser.", "Not supported by this browser.", "Bu tarayıcı desteklenmiyor.")}
+                </p>
+              ) : (
+                <button
+                  onClick={async () => {
+                    const perm = await Notification.requestPermission();
+                    setNotifPermission(perm);
+                  }}
+                  className="mt-1.5 text-[10px] font-bold text-white bg-slate-700 hover:bg-slate-800 px-2.5 py-1 rounded-lg transition-colors cursor-pointer border-none"
+                >
+                  {t("Inschakelen", "Enable", "Etkinleştir")} →
+                </button>
+              )}
+            </div>
+          </div>
+
+        </div>
+      </div>
+
     </motion.div>
   );
 }

@@ -485,6 +485,27 @@ export default function MachineDetailModal({
           </button>
         </div>
       </motion.div>
+
+      {/* Mobile sticky CTA — fixed at bottom, above modal z-index */}
+      <div className="fixed bottom-0 inset-x-0 z-[70] sm:hidden" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
+        <div className="bg-white/95 backdrop-blur-sm border-t border-slate-200 shadow-2xl px-5 py-3">
+          <div className="flex items-center gap-3 max-w-sm mx-auto">
+            <div className="shrink-0">
+              <p className="text-[10px] text-slate-400 leading-none mb-0.5">vanaf</p>
+              <p className="text-xl font-black text-slate-900 font-mono leading-none">
+                €{formatPrice(vp(machine.pricePerDay))}<span className="text-[11px] font-normal text-slate-400 ml-0.5">/dag</span>
+              </p>
+            </div>
+            <button
+              onClick={() => { onClose(); onBook(machine); }}
+              className="flex-1 py-3.5 rounded-xl bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white text-sm font-bold flex items-center justify-center gap-2 shadow-md transition-colors cursor-pointer"
+            >
+              <ShoppingBag className="h-4 w-4" />
+              Huur Nu
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

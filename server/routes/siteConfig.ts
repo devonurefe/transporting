@@ -39,7 +39,7 @@ siteConfigRouter.get("/site-config", async (req: AuthenticatedRequest, res: Resp
 
 // Whitelist of editable SiteConfig fields — never pass req.body straight to Prisma
 const SITE_CONFIG_FIELDS = [
-  "siteName", "heroTagline", "heroTitle", "heroSubtitle",
+  "siteName", "heroTagline", "heroTitle", "heroSubtitle", "heroImageUrl",
   "menuHomeLabel", "menuCatalogLabel", "menuAdvisorLabel", "menuOrdersLabel", "menuAdminLabel"
 ] as const;
 

@@ -20,6 +20,7 @@ interface SiteConfig {
   heroTagline: string;
   heroTitle: string;
   heroSubtitle: string;
+  heroImageUrl?: string;
   menuHomeLabel: string;
   menuCatalogLabel: string;
   menuOrdersLabel: string;
@@ -104,6 +105,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     heroTagline: "Snel & Makkelijk Hoogwerkers Huren",
     heroTitle: "Wat heeft u nodig?",
     heroSubtitle: "MB Hoogwerkers verhuurt hoogwerkers, schaarliften en ladderliften aan ZZP'ers en particulieren. Geen gedoe, direct online geregeld.",
+    heroImageUrl: "",
     menuHomeLabel: "Home",
     menuCatalogLabel: "Catalogus",
     menuOrdersLabel: "Mijn Account",

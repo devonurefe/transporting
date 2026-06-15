@@ -148,6 +148,7 @@ model SiteConfig {
   heroTagline      String
   heroTitle        String
   heroSubtitle     String
+  heroImageUrl     String?
   menuHomeLabel    String
   menuCatalogLabel  String
   menuAdvisorLabel  String?

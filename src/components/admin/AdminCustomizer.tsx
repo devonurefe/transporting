@@ -152,6 +152,7 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
   const [tagline, setTagline] = useState(siteConfig.heroTagline || "");
   const [title, setTitle] = useState(siteConfig.heroTitle || "");
   const [subtitle, setSubtitle] = useState(siteConfig.heroSubtitle || "");
+  const [heroImageUrl, setHeroImageUrl] = useState(siteConfig.heroImageUrl || "");
   const [menuHome, setMenuHome] = useState(siteConfig.menuHomeLabel || "");
   const [menuCatalog, setMenuCatalog] = useState(siteConfig.menuCatalogLabel || "");
   const [menuOrders, setMenuOrders] = useState(siteConfig.menuOrdersLabel || "");
@@ -163,6 +164,7 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
       setTagline(siteConfig.heroTagline || "");
       setTitle(siteConfig.heroTitle || "");
       setSubtitle(siteConfig.heroSubtitle || "");
+      setHeroImageUrl(siteConfig.heroImageUrl || "");
       setMenuHome(siteConfig.menuHomeLabel || "");
       setMenuCatalog(siteConfig.menuCatalogLabel || "");
       setMenuOrders(siteConfig.menuOrdersLabel || "");
@@ -176,6 +178,7 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
       heroTagline: tagline,
       heroTitle: title,
       heroSubtitle: subtitle,
+      heroImageUrl,
       menuHomeLabel: menuHome,
       menuCatalogLabel: menuCatalog,
       menuOrdersLabel: menuOrders,
@@ -293,6 +296,28 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
                 onChange={(e) => setSubtitle(e.target.value)}
                 className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 resize-none font-sans"
               />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs text-slate-700 block font-bold">{t("Hero Afbeelding URL", "Hero Image URL", "Hero Görseli URL")}</label>
+              <input
+                type="url"
+                value={heroImageUrl}
+                onChange={(e) => setHeroImageUrl(e.target.value)}
+                placeholder={t("https://... (leeg = standaard afbeelding)", "https://... (empty = default image)", "https://... (boş = varsayılan görsel)")}
+                className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white font-mono"
+              />
+              {heroImageUrl && (
+                <div className="rounded-xl overflow-hidden border border-slate-200 bg-slate-100 h-24">
+                  <img
+                    src={heroImageUrl}
+                    alt="Hero preview"
+                    className="w-full h-full object-cover"
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                  />
+                </div>
+              )}
+              <p className="text-[10px] text-slate-400">{t("Aanbevolen: 1920×600px JPEG ≤ 400 KB. Leeg laten = standaard hero.", "Recommended: 1920×600px JPEG ≤ 400 KB. Leave empty = default hero.", "Önerilen: 1920×600px JPEG ≤ 400 KB. Boş bırak = varsayılan hero.")}</p>
             </div>
 
           </div>

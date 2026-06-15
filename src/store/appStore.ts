@@ -100,17 +100,23 @@ export const useAppStore = create<AppState>((set, get) => ({
   machines: [],
   orders: [],
   customCategories: defaultCategories,
-  siteConfig: {
-    siteName: "HuurGo",
-    heroTagline: "Snel & Makkelijk Hoogwerkers Huren",
-    heroTitle: "Wat heeft u nodig?",
-    heroSubtitle: "MB Hoogwerkers verhuurt hoogwerkers, schaarliften en ladderliften aan ZZP'ers en particulieren. Geen gedoe, direct online geregeld.",
-    heroImageUrl: "",
-    menuHomeLabel: "Home",
-    menuCatalogLabel: "Catalogus",
-    menuOrdersLabel: "Mijn Account",
-    menuAdminLabel: "Portaal"
-  },
+  siteConfig: (() => {
+    try {
+      const cached = sessionStorage.getItem("hwh_site_config");
+      if (cached) return JSON.parse(cached);
+    } catch { /* ignore */ }
+    return {
+      siteName: "HuurGo",
+      heroTagline: "Snel & Makkelijk Hoogwerkers Huren",
+      heroTitle: "Wat heeft u nodig?",
+      heroSubtitle: "MB Hoogwerkers verhuurt hoogwerkers, schaarliften en ladderliften aan ZZP'ers en particulieren. Geen gedoe, direct online geregeld.",
+      heroImageUrl: "",
+      menuHomeLabel: "Home",
+      menuCatalogLabel: "Catalogus",
+      menuOrdersLabel: "Mijn Account",
+      menuAdminLabel: "Portaal"
+    };
+  })(),
   blockedDates: [],
   cartItems: (() => {
     try {
@@ -207,7 +213,9 @@ export const useAppStore = create<AppState>((set, get) => ({
     try {
       const res = await fetch("/api/site-config");
       if (res.ok) {
-        set({ siteConfig: await res.json(), error: null });
+        const data = await res.json();
+        set({ siteConfig: data, error: null });
+        try { sessionStorage.setItem("hwh_site_config", JSON.stringify(data)); } catch { /* quota exceeded — ignore */ }
       } else {
         const data = await res.json().catch(() => ({}));
         set({ error: data.error || "Fout bij ophalen site configuratie." });

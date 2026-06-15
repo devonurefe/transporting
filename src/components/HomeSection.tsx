@@ -136,8 +136,8 @@ export default function HomeSection({
 
       {/* ── HERO IMAGE — sade, metin yok ── */}
       <div
-        className="relative bg-slate-900 bg-cover bg-no-repeat overflow-hidden min-h-[260px] sm:min-h-[400px] lg:aspect-[16/5] [background-position:20%_center] sm:[background-position:center]"
-        style={{ backgroundImage: `url('${siteConfig.heroImageUrl || '/hero-huurgo-v2.jpg'}')` }}
+        className="relative bg-slate-900 bg-cover bg-no-repeat overflow-hidden min-h-[260px] sm:min-h-[400px] lg:min-h-0 [background-position:20%_center] sm:[background-position:center]"
+        style={{ backgroundImage: `url('${siteConfig.heroImageUrl || '/hero-huurgo-v2.jpg'}')`, aspectRatio: '16 / 5' }}
       >
         <div className="absolute inset-0 bg-black/15 pointer-events-none" />
       </div>

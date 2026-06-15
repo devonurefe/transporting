@@ -121,8 +121,8 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
           </div>
         )}
 
-        {/* Info strip — for discounts, weekend spans, and linear weekly rate badge */}
-        {((!sums.weeklyBreakdown && !sums.isFlatRate && sums.discountAmount > 0) || showWeekendFree || (!sums.weeklyBreakdown && sums.effectiveDailyRate)) && (
+        {/* Info strip — for discounts, weekend spans, linear weekly rate badge, or campaign savings */}
+        {((!sums.weeklyBreakdown && !sums.isFlatRate && sums.discountAmount > 0) || showWeekendFree || (!sums.weeklyBreakdown && sums.effectiveDailyRate) || (sums.campaignSavings ?? 0) > 0) && (
           <div className="rounded-xl border border-slate-100 bg-slate-50 p-3 space-y-2.5">
 
             {/* Effectief dagtarief uitleg (6–27 dagen) — hidden when weeklyBreakdown is shown */}

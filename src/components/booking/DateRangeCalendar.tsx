@@ -286,7 +286,8 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
                       else if (inRange) cls = "bg-amber-100 text-amber-900";
                       else if (status === "available") cls = "bg-emerald-50 text-emerald-800 hover:bg-emerald-100 cursor-pointer";
                       else if (status === "unavailable") cls = "bg-rose-50 text-rose-300 cursor-not-allowed";
-                      else cls = "text-slate-300 cursor-not-allowed"; // past / capped
+                      else if (status === "capped") cls = "bg-emerald-50 text-emerald-300 cursor-not-allowed"; // available after block, need new start
+                      else cls = "text-slate-300 cursor-not-allowed"; // past
                       return (
                         <button
                           key={key}
@@ -306,6 +307,13 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
                     })}
                   </div>
                 </div>
+
+                {/* Hint when capping is active */}
+                {maxEnd !== "" && !!draftStart && !draftEnd && (
+                  <p className="text-[10px] text-center text-slate-400 px-5 pb-1 leading-relaxed">
+                    Lichte data zijn beschikbaar — kies een <span className="font-semibold">nieuwe startdatum</span> ná de onderbrekingsperiode
+                  </p>
+                )}
 
                 {/* Legend */}
                 <div className="flex items-center justify-center gap-3 px-4 py-2 text-xs text-slate-500 font-semibold">

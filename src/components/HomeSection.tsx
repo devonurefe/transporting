@@ -349,13 +349,13 @@ export default function HomeSection({
                   </div>
                 </div>
 
-                {/* Right — machine photo */}
-                <div className="w-28 sm:w-36 shrink-0 relative overflow-hidden">
+                {/* Right — machine photo on white background */}
+                <div className="w-28 sm:w-36 shrink-0 relative overflow-hidden bg-white">
                   {catImage ? (
                     <img
                       src={catImage}
                       alt={cat.label}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-contain p-2"
                       referrerPolicy="no-referrer"
                       onError={(e) => {
                         e.currentTarget.style.display = "none";
@@ -363,11 +363,11 @@ export default function HomeSection({
                       }}
                     />
                   ) : null}
-                  {/* Gradient fallback (shown when no photo or photo fails) */}
+                  {/* Icon fallback (shown when no photo or photo fails) */}
                   <div
-                    className={`absolute inset-0 bg-gradient-to-br ${fallbackGradient} flex items-center justify-center ${catImage ? "hidden" : "flex"}`}
+                    className={`absolute inset-0 bg-white flex items-center justify-center ${catImage ? "hidden" : "flex"}`}
                   >
-                    <Icon className="h-8 w-8 text-slate-500/50" />
+                    <Icon className="h-8 w-8 text-slate-300" />
                   </div>
                 </div>
               </motion.button>

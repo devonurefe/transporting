@@ -36,10 +36,10 @@ const CATEGORY_ICONS: Record<string, IconComponent> = {
 };
 
 const CAT_GRADIENT: Record<string, string> = {
-  schaarlift:   "from-indigo-100 to-indigo-200",
+  schaarlift:   "from-slate-100 to-slate-200",
   spin:         "from-teal-100 to-teal-200",
   aanhanger:    "from-amber-100 to-amber-200",
-  mastlift:     "from-violet-100 to-violet-200",
+  mastlift:     "from-orange-100 to-amber-100",
   ladderlift:   "from-blue-100 to-blue-200",
   ecolift:      "from-emerald-100 to-emerald-200",
   kamersteiger: "from-slate-100 to-slate-200",

@@ -30,7 +30,7 @@ const MyOrdersSection = lazy(() => import("./components/MyOrdersSection"));
 function LoadingSpinner() {
   return (
     <div className="min-h-[60vh] flex flex-col items-center justify-center space-y-3">
-      <Loader2 className="h-8 w-8 text-indigo-500 animate-spin" />
+      <Loader2 className="h-8 w-8 text-slate-400 animate-spin" />
       <span className="text-sm text-slate-400 font-medium">Laden...</span>
     </div>
   );
@@ -638,12 +638,12 @@ export default function App() {
       />
 
       {/* Background ambient lighting */}
-      <div className="absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-indigo-500/5 to-transparent pointer-events-none -z-10" />
+      <div className="absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-slate-100/60 to-transparent pointer-events-none -z-10" />
 
       {/* A11y: keyboard/screen-reader users can jump past the navigation */}
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:bg-indigo-600 focus:text-white focus:px-4 focus:py-2 focus:rounded-xl focus:text-sm focus:font-bold"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:bg-slate-800 focus:text-white focus:px-4 focus:py-2 focus:rounded-xl focus:text-sm focus:font-bold"
       >
         Direct naar inhoud
       </a>

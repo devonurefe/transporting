@@ -33,7 +33,7 @@ export default function CookieBanner() {
         Wij gebruiken cookies voor optimale werking van de site.{" "}
         <a
           href="#privacy"
-          className="underline text-indigo-600 hover:text-indigo-800 transition-colors"
+          className="underline text-slate-600 hover:text-slate-800 transition-colors"
           onClick={(e) => {
             e.preventDefault();
             const el = document.getElementById("privacy");
@@ -45,7 +45,7 @@ export default function CookieBanner() {
       </p>
       <button
         onClick={handleAccept}
-        className="shrink-0 px-4 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-xs font-bold transition-colors cursor-pointer"
+        className="shrink-0 px-4 py-1.5 rounded-lg bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white text-xs font-bold transition-colors cursor-pointer"
       >
         Accepteren
       </button>

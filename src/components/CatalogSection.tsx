@@ -235,7 +235,7 @@ export default function CatalogSection({
                   }}
                   className={`px-3.5 py-1.5 text-xs font-bold rounded-lg whitespace-nowrap transition-all border cursor-pointer flex items-center gap-1.5 ${
                     isActive
-                      ? "bg-orange-500 text-white border-orange-600 shadow-sm ring-2 ring-orange-500/20"
+                      ? "bg-slate-800 text-white border-slate-900 shadow-sm"
                       : "bg-white text-slate-600 border-slate-200 hover:text-slate-900 hover:border-slate-300 hover:bg-slate-50"
                   }`}
                 >
@@ -379,7 +379,7 @@ export default function CatalogSection({
                             </h3>
                           </div>
                           <div className="text-right shrink-0">
-                            <div className="text-xl font-display font-black leading-none bg-gradient-to-br from-orange-500 to-amber-500 bg-clip-text text-transparent">
+                            <div className="text-xl font-display font-black leading-none text-slate-900">
                               €{formatPrice(vp(machine.pricePerDay))}
                             </div>
                             <div className="text-[10px] text-slate-400 mt-0.5">per dag {vatLabel}</div>
@@ -448,7 +448,7 @@ export default function CatalogSection({
                               setDetailSource("info");
                               onAddSystemLog?.("system", currentUser?.name ?? "Gast", `Bekijkt specificaties: "${machine.name}"`);
                             }}
-                            className="advice-btn flex-none px-3 py-3 rounded-xl border border-orange-200 bg-orange-50 hover:bg-orange-100 hover:border-orange-300 text-orange-700 hover:text-orange-900 text-[11px] font-semibold transition-all duration-200 active:scale-[0.97] cursor-pointer"
+                            className="advice-btn flex-none px-3 py-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300 text-slate-600 hover:text-slate-800 text-[11px] font-semibold transition-all duration-200 active:scale-[0.97] cursor-pointer"
                           >
                             {t("btnSpecifications")}
                           </button>
@@ -560,7 +560,7 @@ export default function CatalogSection({
                         row.highlight === "fire" ? "bg-amber-50" :
                         row.highlight === "green" ? "bg-emerald-50" :
                         row.highlight === "teal" ? "bg-teal-50" :
-                        row.highlight === "violet" ? "bg-violet-50" : "bg-white"
+                        row.highlight === "violet" ? "bg-amber-50" : "bg-white"
                       }`}
                     >
                       <div className="flex-1 min-w-0">
@@ -568,7 +568,7 @@ export default function CatalogSection({
                           row.highlight === "fire" ? "text-amber-700" :
                           row.highlight === "green" ? "text-emerald-700" :
                           row.highlight === "teal" ? "text-teal-700" :
-                          row.highlight === "violet" ? "text-violet-700" : "text-slate-800"
+                          row.highlight === "violet" ? "text-amber-700" : "text-slate-800"
                         }`}>{row.period}</p>
                         <p className="text-[10px] text-slate-400 font-medium mt-0.5">{row.when}</p>
                       </div>
@@ -585,7 +585,7 @@ export default function CatalogSection({
                           row.highlight === "fire" ? "text-amber-700" :
                           row.highlight === "green" ? "text-emerald-700" :
                           row.highlight === "teal" ? "text-teal-700" :
-                          row.highlight === "violet" ? "text-violet-700" : "text-slate-900"
+                          row.highlight === "violet" ? "text-amber-700" : "text-slate-900"
                         }`}>€{formatPrice(vp(row.price))}</span>
                       </div>
                     </div>

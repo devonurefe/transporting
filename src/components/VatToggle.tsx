@@ -33,7 +33,7 @@ export default function VatToggle({ size = "sm" }: VatToggleProps) {
           onClick={() => setVatDisplay(mode)}
           className={`${pad} font-bold rounded-full whitespace-nowrap transition-all cursor-pointer ${
             vatDisplay === mode
-              ? "bg-indigo-600 text-white shadow-sm"
+              ? "bg-slate-800 text-white shadow-sm"
               : "text-slate-500 hover:text-slate-800"
           }`}
         >

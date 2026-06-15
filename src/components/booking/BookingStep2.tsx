@@ -99,7 +99,7 @@ export default function BookingStep2({
     return (
       <div className="bg-white border border-slate-200 shadow-sm p-6 rounded-3xl space-y-6 animate-fade-in text-center py-10 text-slate-800">
         <h3 className="font-display font-black text-lg text-slate-900 flex items-center justify-center space-x-2">
-          <User className="h-5 w-5 text-indigo-600" />
+          <User className="h-5 w-5 text-slate-700" />
           <span>Hoe wilt u doorgaan?</span>
         </h3>
         <p className="text-xs text-slate-500 max-w-md mx-auto">
@@ -110,9 +110,9 @@ export default function BookingStep2({
           {/* Guest Card */}
           <div 
             onClick={() => setIsGuestConfirmed(true)}
-            className="p-5 rounded-2xl border border-slate-200 hover:border-indigo-500 bg-slate-50/50 hover:bg-indigo-50/10 cursor-pointer transition-all flex flex-col items-center text-center space-y-3 group"
+            className="p-5 rounded-2xl border border-slate-200 hover:border-slate-400 bg-slate-50/50 hover:bg-slate-50 cursor-pointer transition-all flex flex-col items-center text-center space-y-3 group"
           >
-            <div className="h-12 w-12 rounded-xl bg-slate-100 group-hover:bg-indigo-50 flex items-center justify-center text-slate-500 group-hover:text-indigo-600 transition-colors">
+            <div className="h-12 w-12 rounded-xl bg-slate-100 group-hover:bg-slate-100 flex items-center justify-center text-slate-500 group-hover:text-slate-700 transition-colors">
               <User className="h-6 w-6" />
             </div>
             <div>
@@ -121,7 +121,7 @@ export default function BookingStep2({
                 Snel boeken zonder account. U vult alleen uw contactgegevens in.
               </p>
             </div>
-            <button className="text-xs font-bold text-indigo-600 group-hover:text-indigo-700 mt-2 bg-transparent border-none cursor-pointer">
+            <button className="text-xs font-bold text-slate-600 group-hover:text-slate-800 mt-2 bg-transparent border-none cursor-pointer">
               Gast Verder &rarr;
             </button>
           </div>
@@ -129,9 +129,9 @@ export default function BookingStep2({
           {/* Login Card — redirects to customer portal */}
           <div
             onClick={() => setActiveTab && setActiveTab("orders")}
-            className="p-5 rounded-2xl border border-slate-200 hover:border-indigo-500 bg-slate-50/50 hover:bg-indigo-50/10 cursor-pointer transition-all flex flex-col items-center text-center space-y-3 group"
+            className="p-5 rounded-2xl border border-slate-200 hover:border-slate-400 bg-slate-50/50 hover:bg-slate-50 cursor-pointer transition-all flex flex-col items-center text-center space-y-3 group"
           >
-            <div className="h-12 w-12 rounded-xl bg-slate-100 group-hover:bg-indigo-50 flex items-center justify-center text-slate-500 group-hover:text-indigo-600 transition-colors">
+            <div className="h-12 w-12 rounded-xl bg-slate-100 group-hover:bg-slate-100 flex items-center justify-center text-slate-500 group-hover:text-slate-700 transition-colors">
               <LogIn className="h-6 w-6" />
             </div>
             <div>
@@ -140,7 +140,7 @@ export default function BookingStep2({
                 Log in via het klantportaal — uw gegevens worden automatisch ingevuld.
               </p>
             </div>
-            <button className="text-xs font-bold text-indigo-600 group-hover:text-indigo-700 mt-2 bg-transparent border-none cursor-pointer">
+            <button className="text-xs font-bold text-slate-600 group-hover:text-slate-800 mt-2 bg-transparent border-none cursor-pointer">
               Naar klantportaal &rarr;
             </button>
           </div>
@@ -168,7 +168,7 @@ export default function BookingStep2({
   return (
     <div className="bg-white border border-slate-200 shadow-sm p-6 rounded-3xl space-y-6 animate-fade-in">
       <h3 className="font-display font-black text-base text-slate-900 flex items-center space-x-2">
-        <User className="h-5 w-5 text-indigo-600" />
+        <User className="h-5 w-5 text-slate-700" />
         <span>Contactgegevens & Bedrijfsprofiel</span>
       </h3>
 
@@ -184,7 +184,7 @@ export default function BookingStep2({
         
         <div className="space-y-1.5">
           <label className="text-xs text-slate-700 block font-bold">Naam Contactpersoon</label>
-          <div className="flex items-center bg-white rounded-xl px-3 py-2.5 border border-slate-200 focus-within:border-indigo-500 transition-colors shadow-inner">
+          <div className="flex items-center bg-white rounded-xl px-3 py-2.5 border border-slate-200 focus-within:border-slate-400 transition-colors shadow-inner">
             <User className="h-4 w-4 text-slate-400 mr-2" />
             <input
               type="text"
@@ -199,7 +199,7 @@ export default function BookingStep2({
 
         <div className="space-y-1.5">
           <label className="text-xs text-slate-700 block font-bold">E-mail (Facturatie & SMS updates)</label>
-          <div className="flex items-center bg-white rounded-xl px-3 py-2.5 border border-slate-200 focus-within:border-indigo-500 transition-colors shadow-inner">
+          <div className="flex items-center bg-white rounded-xl px-3 py-2.5 border border-slate-200 focus-within:border-slate-400 transition-colors shadow-inner">
             <Mail className="h-4 w-4 text-slate-400 mr-2" />
             <input
               type="email"
@@ -214,7 +214,7 @@ export default function BookingStep2({
 
         <div className="space-y-1.5">
           <label className="text-xs text-slate-700 block font-bold">Telefoonnummer</label>
-          <div className="flex items-center bg-white rounded-xl px-3 py-2.5 border border-slate-200 focus-within:border-indigo-500 transition-colors shadow-inner">
+          <div className="flex items-center bg-white rounded-xl px-3 py-2.5 border border-slate-200 focus-within:border-slate-400 transition-colors shadow-inner">
             <Phone className="h-4 w-4 text-slate-400 mr-2" />
             <input
               type="tel"
@@ -232,10 +232,10 @@ export default function BookingStep2({
           <button
             type="button"
             onClick={() => setSectorOpen(o => !o)}
-            className="flex items-center justify-between w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-800 font-bold outline-none focus:border-indigo-500 cursor-pointer shadow-sm hover:border-slate-300 transition-colors"
+            className="flex items-center justify-between w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-800 font-bold outline-none focus:border-slate-400 cursor-pointer shadow-sm hover:border-slate-300 transition-colors"
           >
             <span className="flex items-center gap-2">
-              <selectedProfession.Icon className="h-4 w-4 text-indigo-500 shrink-0" />
+              <selectedProfession.Icon className="h-4 w-4 text-slate-500 shrink-0" />
               {selectedProfession.label}
             </span>
             <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform shrink-0 ${sectorOpen ? "rotate-180" : ""}`} />
@@ -247,9 +247,9 @@ export default function BookingStep2({
                   key={p.value}
                   type="button"
                   onClick={() => { setCustomerProfile(p.value); setSectorOpen(false); }}
-                  className={`flex items-center gap-2.5 w-full px-3 py-2.5 text-xs font-semibold text-left transition-colors cursor-pointer border-none ${customerProfile === p.value ? "bg-indigo-50 text-indigo-700" : "bg-white text-slate-700 hover:bg-slate-50"}`}
+                  className={`flex items-center gap-2.5 w-full px-3 py-2.5 text-xs font-semibold text-left transition-colors cursor-pointer border-none ${customerProfile === p.value ? "bg-slate-100 text-slate-900" : "bg-white text-slate-700 hover:bg-slate-50"}`}
                 >
-                  <p.Icon className={`h-4 w-4 shrink-0 ${customerProfile === p.value ? "text-indigo-600" : "text-slate-400"}`} />
+                  <p.Icon className={`h-4 w-4 shrink-0 ${customerProfile === p.value ? "text-slate-700" : "text-slate-400"}`} />
                   {p.label}
                 </button>
               ))}
@@ -263,8 +263,8 @@ export default function BookingStep2({
         <div className="pt-4 border-t border-slate-200 space-y-4">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
             <label className="text-xs text-slate-600 block font-black uppercase tracking-wider flex items-center space-x-1.5">
-              <MapPin className="h-4 w-4 text-indigo-600 shrink-0" />
-              <span className="text-indigo-750 text-indigo-700">Bezorgadres in Nederland</span>
+              <MapPin className="h-4 w-4 text-slate-600 shrink-0" />
+              <span className="text-slate-700">Bezorgadres in Nederland</span>
             </label>
 
             <span className="text-xs text-slate-400 font-medium">
@@ -284,7 +284,7 @@ export default function BookingStep2({
                   placeholder="bijv. 2404 CB"
                   value={postcode}
                   onChange={(e) => setPostcode(e.target.value)}
-                  className="w-full bg-white border border-slate-200 focus:border-indigo-500 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 font-bold outline-none font-mono tracking-wider uppercase focus:ring-0 placeholder:text-slate-350 shadow-sm"
+                  className="w-full bg-white border border-slate-200 focus:border-slate-400 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 font-bold outline-none font-mono tracking-wider uppercase focus:ring-0 placeholder:text-slate-350 shadow-sm"
                 />
               </div>
 
@@ -295,7 +295,7 @@ export default function BookingStep2({
                   placeholder="bijv. 14"
                   value={houseNumber}
                   onChange={(e) => setHouseNumber(e.target.value)}
-                  className="w-full bg-white border border-slate-200 focus:border-indigo-500 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 font-bold outline-none font-mono focus:ring-0 placeholder:text-slate-350 shadow-sm"
+                  className="w-full bg-white border border-slate-200 focus:border-slate-400 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 font-bold outline-none font-mono focus:ring-0 placeholder:text-slate-350 shadow-sm"
                 />
               </div>
 
@@ -303,7 +303,7 @@ export default function BookingStep2({
                 <button
                   onClick={handleAddressLookup}
                   disabled={isSearchingAddress}
-                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs py-3 rounded-xl transition-all cursor-pointer h-10 flex items-center justify-center space-x-1.5 shadow-sm active:scale-95 disabled:opacity-50 border-none"
+                  className="w-full bg-orange-500 hover:bg-orange-600 text-white font-extrabold text-xs py-3 rounded-xl transition-all cursor-pointer h-10 flex items-center justify-center space-x-1.5 shadow-sm active:scale-95 disabled:opacity-50 border-none"
                 >
                   {isSearchingAddress ? (
                     <span className="h-4.5 w-4.5 rounded-full border-2 border-white border-t-transparent animate-spin" />
@@ -344,7 +344,7 @@ export default function BookingStep2({
                 value={deliveryAddress}
                 onChange={(e) => setDeliveryAddress(e.target.value)}
                 placeholder="Kortingstraat 5, 2404 CB Alphen aan den Rijn"
-                className="w-full bg-white border border-slate-200 focus:border-indigo-500 rounded-xl px-4 py-2.5 text-xs text-slate-800 font-semibold outline-none transition-colors focus:ring-0 placeholder:text-slate-400 shadow-sm resize-none leading-relaxed"
+                className="w-full bg-white border border-slate-200 focus:border-slate-400 rounded-xl px-4 py-2.5 text-xs text-slate-800 font-semibold outline-none transition-colors focus:ring-0 placeholder:text-slate-400 shadow-sm resize-none leading-relaxed"
               />
             </div>
           </div>

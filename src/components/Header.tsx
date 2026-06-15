@@ -120,7 +120,7 @@ export default function Header({
                 <Lock className="h-5 w-5 text-slate-950 font-bold" />
               </div>
               <div>
-                <span className="inline-block font-display text-sm sm:text-lg lg:text-xl font-extrabold tracking-tight bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-800 bg-clip-text text-transparent">
+                <span className="inline-block font-display text-sm sm:text-lg lg:text-xl font-extrabold tracking-tight bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 bg-clip-text text-transparent">
                   HubAdmin Portal
                 </span>
                 <div className="hidden sm:flex items-center space-x-1">
@@ -162,15 +162,15 @@ export default function Header({
                   }}
                   className={`relative flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs lg:text-sm font-semibold tracking-wide transition-all duration-350 ${
                     isActive 
-                      ? "text-indigo-600 bg-indigo-50/60 shadow-[0_1px_2px_rgba(79,70,229,0.05)]" 
+                      ? "text-slate-900 bg-slate-100/70 shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
                       : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
                   }`}
                 >
-                  <Icon className={`h-4 w-4 ${isActive ? "text-indigo-600" : "text-slate-450"}`} />
+                  <Icon className={`h-4 w-4 ${isActive ? "text-slate-900" : "text-slate-450"}`} />
                   <span>{tab.label}</span>
                   
                   {tab.badge && (
-                    <span className="ml-1 text-[10px] font-black bg-indigo-50 text-indigo-600 border border-indigo-100 px-1.5 py-0.5 rounded-full">
+                    <span className="ml-1 text-[10px] font-black bg-slate-100 text-slate-700 border border-slate-200 px-1.5 py-0.5 rounded-full">
                       {tab.badge}
                     </span>
                   )}
@@ -184,7 +184,7 @@ export default function Header({
                   {isActive && (
                     <motion.div
                       layoutId="activeTabUnderline"
-                      className="absolute bottom-0 left-3 right-3 h-[2px] bg-gradient-to-r from-indigo-500 to-teal-400 rounded-full"
+                      className="absolute bottom-0 left-3 right-3 h-[2px] bg-gradient-to-r from-orange-400 to-amber-300 rounded-full"
                       transition={{ type: "spring", stiffness: 380, damping: 30 }}
                     />
                   )}
@@ -233,7 +233,7 @@ export default function Header({
                   >
                     <Bell className="h-5 w-5" />
                     {unreadCount > 0 && (
-                      <span className="absolute top-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-indigo-500 text-[10px] font-bold text-white ring-2 ring-white">
+                      <span className="absolute top-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-orange-500 text-[10px] font-bold text-white ring-2 ring-white">
                         {unreadCount}
                       </span>
                     )}
@@ -256,7 +256,7 @@ export default function Header({
                         >
                           <div className="flex items-center justify-between border-b border-slate-100 pb-2.5 mb-2.5">
                             <div className="flex items-center space-x-1.5">
-                              <Bell className="h-4 w-4 text-indigo-600" />
+                              <Bell className="h-4 w-4 text-slate-600" />
                               <h4 className="font-display font-bold text-sm text-slate-900">Mijn Meldingen</h4>
                             </div>
                             {notifications.length > 0 && (
@@ -285,11 +285,11 @@ export default function Header({
                                     {n.type === "success" ? (
                                       <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                                     ) : (
-                                      <Sparkles className="h-4 w-4 text-indigo-500" />
+                                      <Sparkles className="h-4 w-4 text-slate-400" />
                                     )}
                                   </div>
                                   <div className="flex-1">
-                                    <h5 className="text-xs font-semibold text-slate-800 group-hover:text-indigo-600 transition-colors">
+                                    <h5 className="text-xs font-semibold text-slate-800 group-hover:text-slate-900 transition-colors">
                                       {n.title}
                                     </h5>
                                     <p className="text-xs text-slate-500 leading-snug mt-0.5">
@@ -317,21 +317,21 @@ export default function Header({
               {currentUser ? (
                 <div 
                   onClick={() => setActiveTab("orders")}
-                  className="flex items-center bg-indigo-50 hover:bg-indigo-100 border border-indigo-100/50 p-1.5 sm:py-1.5 sm:px-3 rounded-xl cursor-pointer transition-all active:scale-95 shrink-0"
+                  className="flex items-center bg-slate-50 hover:bg-slate-100 border border-slate-200 p-1.5 sm:py-1.5 sm:px-3 rounded-xl cursor-pointer transition-all active:scale-95 shrink-0"
                 >
                   {currentUser.avatarUrl ? (
                     <img 
                        src={currentUser.avatarUrl} 
                        alt="" 
-                       className="h-6 w-6 rounded-full object-cover border border-indigo-200" 
+                       className="h-6 w-6 rounded-full object-cover border border-slate-200"
                        referrerPolicy="no-referrer"
                     />
                   ) : (
-                    <div className="h-6 w-6 rounded-full bg-gradient-to-tr from-indigo-500 to-indigo-600 text-white font-extrabold text-[10px] flex items-center justify-center border border-indigo-200 uppercase font-display select-none shrink-0 shadow-inner">
+                    <div className="h-6 w-6 rounded-full bg-gradient-to-tr from-slate-600 to-slate-700 text-white font-extrabold text-[10px] flex items-center justify-center border border-slate-300 uppercase font-display select-none shrink-0 shadow-inner">
                       {currentUser.name.charAt(0)}
                     </div>
                   )}
-                  <span className="hidden lg:inline-block text-xs font-bold text-indigo-700 truncate max-w-[100px] ml-2" title={currentUser.name}>
+                  <span className="hidden lg:inline-block text-xs font-bold text-slate-700 truncate max-w-[100px] ml-2" title={currentUser.name}>
                     {currentUser.name.split(' ')[0]}
                   </span>
                 </div>
@@ -367,10 +367,10 @@ export default function Header({
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`relative flex flex-col items-center justify-center flex-grow h-full text-center transition-all ${
-                  isActive ? "text-indigo-600 font-semibold" : "text-slate-500"
+                  isActive ? "text-orange-500 font-semibold" : "text-slate-500"
                 }`}
               >
-                <Icon className={`h-4.5 w-4.5 ${isActive ? "text-indigo-600" : "text-slate-400"}`} />
+                <Icon className={`h-4.5 w-4.5 ${isActive ? "text-orange-500" : "text-slate-400"}`} />
                 <span className="text-[10px] mt-0.5 font-medium leading-none">{tab.label}</span>
                 
                 {tab.id === "booking" && cartItems.length > 0 && (

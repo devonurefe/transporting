@@ -26,7 +26,7 @@ export default function ToastNotification({ toast, onClose }: ToastNotificationP
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -30, scale: 0.95 }}
           transition={{ type: "spring", stiffness: 350, damping: 25 }}
-          className="fixed top-24 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-sm sm:left-auto sm:right-4 sm:translate-x-0 sm:w-85 p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-slate-900/95 backdrop-blur-xl border border-white/10 shadow-2xl flex items-start space-x-2.5 sm:space-x-3 border-l-4 border-l-indigo-500 z-50"
+          className="fixed top-24 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-sm sm:left-auto sm:right-4 sm:translate-x-0 sm:w-85 p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-slate-900/95 backdrop-blur-xl border border-white/10 shadow-2xl flex items-start space-x-2.5 sm:space-x-3 border-l-4 border-l-orange-400 z-50"
         >
           <div className="mt-0.5 shrink-0">
             {toast.type === "success" ? (

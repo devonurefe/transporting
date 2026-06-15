@@ -81,7 +81,7 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
           <h4 className="text-sm font-extrabold text-slate-900 leading-snug">
             {machineCount > 1 ? `${machineCount} machines gereserveerd` : selectedMachine.name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "")}
           </h4>
-          {machineCount === 1 && <span className="text-xs text-indigo-600 font-bold font-mono">{euroCompact(selectedMachine.pricePerDay)}/dag</span>}
+          {machineCount === 1 && <span className="text-xs text-slate-600 font-bold font-mono">{euroCompact(selectedMachine.pricePerDay)}/dag</span>}
         </div>
       </div>
 
@@ -125,12 +125,12 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
             {/* Effectief dagtarief uitleg (6–27 dagen) — hidden when weeklyBreakdown is shown */}
             {!sums.weeklyBreakdown && sums.effectiveDailyRate != null && sums.days >= 6 && (
               <div className="flex items-start gap-2">
-                <TrendingDown className="h-3.5 w-3.5 text-indigo-500 mt-0.5 shrink-0" />
+                <TrendingDown className="h-3.5 w-3.5 text-emerald-500 mt-0.5 shrink-0" />
                 <div className="text-xs leading-snug">
                   <p className="font-semibold text-slate-700">Werkweektarief toegepast</p>
                   <p className="text-slate-500 mt-0.5">
                     {sums.days} dagen ×{" "}
-                    <span className="font-semibold text-indigo-600">{euroCompact(sums.effectiveDailyRate)}/dag</span>
+                    <span className="font-semibold text-emerald-600">{euroCompact(sums.effectiveDailyRate)}/dag</span>
                     <span className="ml-1.5 line-through text-slate-400">{euroCompact(selectedMachine.pricePerDay)}/dag</span>
                   </p>
                 </div>
@@ -202,11 +202,11 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
         </div>
 
         {/* Total */}
-        <div className="bg-indigo-600 -mx-4 px-4 py-4 rounded-b-none">
+        <div className="bg-slate-900 -mx-4 px-4 py-4 rounded-b-none">
           <div className="flex justify-between items-center">
             <div>
-              <p className="text-[10px] text-indigo-200 font-semibold uppercase tracking-wide">{t("priceSummaryTotal")}</p>
-              <p className="text-[10px] text-indigo-300 mt-0.5">{t("priceSummaryInclVAT")}</p>
+              <p className="text-[10px] text-slate-300 font-semibold uppercase tracking-wide">{t("priceSummaryTotal")}</p>
+              <p className="text-[10px] text-slate-400 mt-0.5">{t("priceSummaryInclVAT")}</p>
             </div>
             <span className="text-2xl font-black text-white font-mono">{euro(sums.total)}</span>
           </div>

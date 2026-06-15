@@ -69,7 +69,7 @@ export default class ErrorBoundary extends React.Component<Props, State> {
             <div className="flex flex-col sm:flex-row justify-center gap-3 pt-4 border-t border-slate-100">
               <button
                 onClick={this.handleReset}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-6 py-3 rounded-xl transition-all shadow-md shadow-indigo-100 cursor-pointer flex items-center justify-center space-x-1.5 border-none"
+                className="bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold px-6 py-3 rounded-xl transition-all shadow-md shadow-orange-100 cursor-pointer flex items-center justify-center space-x-1.5 border-none"
               >
                 <Home className="h-4 w-4" />
                 <span>Terug naar Home</span>

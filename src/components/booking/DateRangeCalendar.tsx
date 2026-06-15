@@ -204,12 +204,12 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
         onClick={open}
         style={{ touchAction: "manipulation" }}
         className={`w-full flex items-center gap-2.5 bg-white rounded-xl px-3 py-2.5 border transition-colors shadow-sm cursor-pointer text-left ${
-          startDate && endDate ? "border-indigo-300 text-slate-800" : "border-slate-200 text-slate-500 hover:border-indigo-300"
+          startDate && endDate ? "border-slate-300 text-slate-800" : "border-slate-200 text-slate-500 hover:border-slate-300"
         }`}
       >
-        <Calendar className="h-4 w-4 text-indigo-500 shrink-0" />
+        <Calendar className="h-4 w-4 text-slate-400 shrink-0" />
         <span className="text-xs font-bold flex-1">{buttonLabel}</span>
-        <span className="text-[10px] text-indigo-600 font-bold shrink-0">{startDate && endDate ? t("calChange") : ""}</span>
+        <span className="text-[10px] text-slate-500 font-bold shrink-0">{startDate && endDate ? t("calChange") : ""}</span>
       </button>
 
       <AnimatePresence>
@@ -317,9 +317,9 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
 
               {/* Price preview — outside scroll, always visible above footer */}
               {validRange && (
-                <div className="mx-4 mb-2 flex items-center justify-between bg-indigo-50 border border-indigo-100 rounded-xl px-3 py-2">
-                  <span className="text-xs font-bold text-indigo-900">{days} {days === 1 ? "dag" : "dagen"}</span>
-                  <span className="text-sm font-black font-mono text-indigo-700">{euro(withVat(subtotal, vatDisplay))} <span className="text-[10px] font-normal text-indigo-400">{vatDisplay === "incl" ? "incl. btw" : "excl. btw"}</span></span>
+                <div className="mx-4 mb-2 flex items-center justify-between bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
+                  <span className="text-xs font-bold text-slate-800">{days} {days === 1 ? "dag" : "dagen"}</span>
+                  <span className="text-sm font-black font-mono text-slate-900">{euro(withVat(subtotal, vatDisplay))} <span className="text-[10px] font-normal text-slate-400">{vatDisplay === "incl" ? "incl. btw" : "excl. btw"}</span></span>
                 </div>
               )}
 
@@ -338,7 +338,7 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
                   onClick={confirm}
                   disabled={!validRange}
                   className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold transition-all border-none ${
-                    validRange ? "bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer shadow-sm active:scale-95" : "bg-slate-100 text-slate-400 cursor-not-allowed"
+                    validRange ? "bg-orange-500 hover:bg-orange-600 text-white cursor-pointer shadow-sm active:scale-95" : "bg-slate-100 text-slate-400 cursor-not-allowed"
                   }`}
                 >
                   <Check className="h-4 w-4" />

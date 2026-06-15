@@ -83,14 +83,14 @@ export default function BookingStep1({
           <button
             type="button"
             onClick={() => setActiveTab("catalog")}
-            className="flex items-center gap-1 text-xs text-slate-400 hover:text-indigo-600 transition-colors cursor-pointer bg-transparent border-none p-0 font-medium"
+            className="flex items-center gap-1 text-xs text-slate-400 hover:text-slate-700 transition-colors cursor-pointer bg-transparent border-none p-0 font-medium"
           >
             <ChevronLeft className="h-3.5 w-3.5" />
             Terug naar catalogus
           </button>
         </div>
         <h3 className="font-display font-black text-base text-slate-900 flex items-center space-x-2">
-          <Calendar className="h-5 w-5 text-indigo-600" />
+          <Calendar className="h-5 w-5 text-slate-700" />
           <span>{t("step1Title")}</span>
         </h3>
         <p className="text-[11px] text-slate-400 mt-1">{t("step1Subtitle")}</p>
@@ -98,7 +98,7 @@ export default function BookingStep1({
 
       {cartItems.length === 0 ? (
         <div className="text-center py-10 space-y-4">
-          <div className="mx-auto h-12 w-12 bg-indigo-50 text-indigo-600 flex items-center justify-center rounded-full shadow-sm">
+          <div className="mx-auto h-12 w-12 bg-slate-100 text-slate-500 flex items-center justify-center rounded-full shadow-sm">
             <Building2 className="h-6 w-6" />
           </div>
           <div>
@@ -109,7 +109,7 @@ export default function BookingStep1({
           </div>
           <button
             onClick={() => setActiveTab("catalog")}
-            className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-xl text-xs font-bold text-white transition-all border-none cursor-pointer"
+            className="bg-slate-800 hover:bg-slate-900 px-4 py-2 rounded-xl text-xs font-bold text-white transition-all border-none cursor-pointer"
           >
             {t("step1BrowseCatalog")}
           </button>
@@ -127,7 +127,7 @@ export default function BookingStep1({
                 <div className="flex justify-between items-start gap-4">
                   <div className="flex items-center space-x-3">
                     <div
-                      className="h-12 w-12 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center font-mono text-[10px] text-slate-400 overflow-hidden shadow-sm cursor-pointer hover:ring-2 hover:ring-indigo-400 transition-all relative group/thumb"
+                      className="h-12 w-12 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center font-mono text-[10px] text-slate-400 overflow-hidden shadow-sm cursor-pointer hover:ring-2 hover:ring-slate-400 transition-all relative group/thumb"
                       onClick={() => setPreviewMachine(item.machine)}
                       title="Bekijk details"
                     >
@@ -147,7 +147,7 @@ export default function BookingStep1({
                       <button
                         type="button"
                         onClick={() => setPreviewMachine(item.machine)}
-                        className="text-xs text-indigo-600 hover:text-indigo-800 font-semibold bg-transparent border-none cursor-pointer p-0 transition-colors mt-1 block"
+                        className="text-xs text-slate-500 hover:text-slate-800 font-semibold bg-transparent border-none cursor-pointer p-0 transition-colors mt-1 block"
                       >
                         Tarieven &amp; specificaties →
                       </button>
@@ -222,13 +222,13 @@ export default function BookingStep1({
             onClick={() => setDeliveryType("delivery_by_us")}
             className={`p-4 rounded-xl border transition-all cursor-pointer ${
               deliveryType === "delivery_by_us"
-                ? "bg-indigo-50 border-indigo-400 ring-1 ring-indigo-300"
+                ? "bg-slate-50 border-slate-400 ring-1 ring-slate-200"
                 : "bg-white border-slate-200 hover:border-slate-300"
             }`}
           >
             <div className="flex items-center space-x-2.5 mb-2">
-              <span className={`h-7 w-7 rounded-lg flex items-center justify-center ${deliveryType === "delivery_by_us" ? "bg-indigo-100" : "bg-slate-100"}`}>
-                <Truck className={`h-4 w-4 ${deliveryType === "delivery_by_us" ? "text-indigo-600" : "text-slate-500"}`} />
+              <span className={`h-7 w-7 rounded-lg flex items-center justify-center ${deliveryType === "delivery_by_us" ? "bg-slate-200" : "bg-slate-100"}`}>
+                <Truck className={`h-4 w-4 ${deliveryType === "delivery_by_us" ? "text-slate-800" : "text-slate-500"}`} />
               </span>
               <div>
                 <h4 className="text-xs font-bold text-slate-900">Wij bezorgen</h4>
@@ -250,13 +250,13 @@ export default function BookingStep1({
             }}
             className={`p-4 rounded-xl border transition-all cursor-pointer ${
               deliveryType === "trailer_rental"
-                ? "bg-indigo-50 border-indigo-400 ring-1 ring-indigo-300"
+                ? "bg-slate-50 border-slate-400 ring-1 ring-slate-200"
                 : "bg-white border-slate-200 hover:border-slate-300"
             }`}
           >
             <div className="flex items-center space-x-2.5 mb-2">
-              <span className={`h-7 w-7 rounded-lg flex items-center justify-center ${deliveryType === "trailer_rental" ? "bg-indigo-100" : "bg-slate-100"}`}>
-                <Truck className={`h-4 w-4 ${deliveryType === "trailer_rental" ? "text-indigo-600" : "text-slate-500"}`} />
+              <span className={`h-7 w-7 rounded-lg flex items-center justify-center ${deliveryType === "trailer_rental" ? "bg-slate-200" : "bg-slate-100"}`}>
+                <Truck className={`h-4 w-4 ${deliveryType === "trailer_rental" ? "text-slate-800" : "text-slate-500"}`} />
               </span>
               <div>
                 <h4 className="text-xs font-bold text-slate-900">Aanhanger huren</h4>
@@ -278,13 +278,13 @@ export default function BookingStep1({
             }}
             className={`p-4 rounded-xl border transition-all cursor-pointer ${
               deliveryType === "self_pickup"
-                ? "bg-indigo-50 border-indigo-400 ring-1 ring-indigo-300"
+                ? "bg-slate-50 border-slate-400 ring-1 ring-slate-200"
                 : "bg-white border-slate-200 hover:border-slate-300"
             }`}
           >
             <div className="flex items-center space-x-2.5 mb-2">
-              <span className={`h-7 w-7 rounded-lg flex items-center justify-center ${deliveryType === "self_pickup" ? "bg-indigo-100" : "bg-slate-100"}`}>
-                <Building2 className={`h-4 w-4 ${deliveryType === "self_pickup" ? "text-indigo-600" : "text-slate-500"}`} />
+              <span className={`h-7 w-7 rounded-lg flex items-center justify-center ${deliveryType === "self_pickup" ? "bg-slate-200" : "bg-slate-100"}`}>
+                <Building2 className={`h-4 w-4 ${deliveryType === "self_pickup" ? "text-slate-800" : "text-slate-500"}`} />
               </span>
               <div>
                 <h4 className="text-xs font-bold text-slate-900">Zelf ophalen</h4>
@@ -342,7 +342,7 @@ export default function BookingStep1({
                 onClick={() => setDeliveryTimeSlot(slot.id)}
                 className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer ${
                   deliveryTimeSlot === slot.id
-                    ? "bg-indigo-50 border-indigo-400 ring-1 ring-indigo-300"
+                    ? "bg-slate-50 border-slate-400 ring-1 ring-slate-200"
                     : "bg-white border-slate-200 hover:border-slate-300"
                 }`}
               >
@@ -372,8 +372,8 @@ export default function BookingStep1({
             }}
             className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between ${
               selectedAddons.includes("safety") 
-                ? "bg-indigo-50 border-indigo-400 shadow-sm" 
-                : "bg-white border-slate-200 hover:border-indigo-300 shadow-sm"
+                ? "bg-slate-50 border-slate-400 shadow-sm"
+                : "bg-white border-slate-200 hover:border-slate-300 shadow-sm"
             }`}
           >
             <div>
@@ -383,14 +383,14 @@ export default function BookingStep1({
                   type="checkbox"
                   checked={selectedAddons.includes("safety")}
                   onChange={()=>{}}
-                  className="h-4 w-4 accent-indigo-600 rounded cursor-pointer"
+                  className="h-4 w-4 accent-orange-500 rounded cursor-pointer"
                 />
               </div>
               <p className="text-[10.5px] text-slate-600 leading-normal">
                 Luxe veiligheidsharnas combi, lijn met valdemper en TÜV goedgekeurde bouwhelm met gehoorbescherming.
               </p>
             </div>
-            <span className="text-xs font-mono font-bold text-indigo-700 mt-3 block">€15,- / per dag</span>
+            <span className="text-xs font-mono font-bold text-slate-700 mt-3 block">€15,- / per dag</span>
           </div>
 
         </div>
@@ -479,7 +479,7 @@ export default function BookingStep1({
           disabled={!canProceed}
           className={`font-semibold text-xs w-full sm:w-auto px-6 py-3.5 rounded-xl transition-all flex items-center justify-center space-x-1.5 border-none shadow-md order-1 sm:order-2 ${
             canProceed
-              ? "bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer active:scale-95 shadow-indigo-200"
+              ? "bg-orange-500 hover:bg-orange-600 text-white cursor-pointer active:scale-95 shadow-orange-200"
               : "bg-slate-100 text-slate-400 cursor-not-allowed"
           }`}
         >

@@ -49,7 +49,7 @@ export default function PWAInstallBanner() {
           exit={{ opacity: 0, y: 100, scale: 0.9 }}
           className="fixed bottom-20 md:bottom-6 left-4 z-50 max-w-sm p-4 rounded-3xl bg-slate-900 border border-slate-800 text-white shadow-2xl flex items-start space-x-3.5"
         >
-          <div className="text-xl p-2 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 shrink-0">
+          <div className="text-xl p-2 rounded-2xl bg-orange-500/10 border border-orange-500/20 shrink-0">
             🏗️
           </div>
           <div className="flex-1 min-w-0">
@@ -60,7 +60,7 @@ export default function PWAInstallBanner() {
             <div className="flex items-center space-x-2 mt-3">
               <button
                 onClick={handleInstallClick}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-extrabold px-3.5 py-1.5 rounded-xl border-none cursor-pointer shadow-sm active:scale-95 transition-all"
+                className="bg-orange-500 hover:bg-orange-600 text-white text-[10px] font-extrabold px-3.5 py-1.5 rounded-xl border-none cursor-pointer shadow-sm active:scale-95 transition-all"
               >
                 Nu installeren
               </button>

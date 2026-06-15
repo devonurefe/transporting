@@ -35,11 +35,11 @@ export default function ContactModal({ isOpen, onClose, onShowToast, onAddSystem
             className="w-full max-w-2xl bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden z-10 space-y-6 text-slate-800 animate-fade-in my-8"
           >
             {/* Top ambient header bar */}
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-teal-500 via-indigo-600 to-amber-500" />
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-400 via-orange-400 to-amber-400" />
             
             <div className="flex justify-between items-start">
               <div className="space-y-1">
-                <span className="text-[10px] text-indigo-600 font-display uppercase tracking-wider block font-bold">Klantenservice en Ondersteuning</span>
+                <span className="text-[10px] text-slate-500 font-display uppercase tracking-wider block font-bold">Klantenservice en Ondersteuning</span>
                 <h3 className="font-display text-2xl font-black text-slate-900 tracking-tight">Support & Live Advies Center</h3>
               </div>
               <button
@@ -54,7 +54,7 @@ export default function ContactModal({ isOpen, onClose, onShowToast, onAddSystem
               {/* Left Pane: Direct WhatsApp & Call channels */}
               <div className="md:col-span-5 flex flex-col justify-between space-y-5 bg-slate-50 p-4 rounded-2xl border border-slate-100">
                 <div className="space-y-3">
-                  <span className="text-[10px] font-display font-semibold text-indigo-600 uppercase tracking-wider block">Directe Communicatie</span>
+                  <span className="text-[10px] font-display font-semibold text-slate-500 uppercase tracking-wider block">Directe Communicatie</span>
                   <p className="text-[11.5px] leading-relaxed text-slate-500 font-medium">
                     Heeft u direct antwoord of advies nodig over de inzetbaarheid van een hoogwerker? Start direct een gesprek of bel ons hoofdkantoor.
                   </p>
@@ -82,7 +82,7 @@ export default function ContactModal({ isOpen, onClose, onShowToast, onAddSystem
                     href="tel:+31172456789"
                     className="w-full flex items-center p-3 rounded-xl bg-white hover:bg-slate-100/50 border border-slate-200 transition-all text-xs cursor-pointer gap-3 text-slate-700 group shadow-sm text-decoration-none"
                   >
-                    <div className="h-7 w-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                    <div className="h-7 w-7 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                       <Phone className="h-4 w-4" />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -96,7 +96,7 @@ export default function ContactModal({ isOpen, onClose, onShowToast, onAddSystem
                     href="mailto:mustafa@mbhoogwerkers.com"
                     className="w-full flex items-center p-3 rounded-xl bg-white hover:bg-slate-100/50 border border-slate-200 transition-all text-xs cursor-pointer gap-3 text-slate-700 group shadow-sm text-decoration-none"
                   >
-                    <div className="h-7 w-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                    <div className="h-7 w-7 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                       <Mail className="h-4 w-4" />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -138,7 +138,7 @@ export default function ContactModal({ isOpen, onClose, onShowToast, onAddSystem
                     name="ticketName"
                     required
                     placeholder="Uw Volledige Naam (of Bedrijfsnaam)"
-                    className="w-full bg-slate-50 border border-slate-200 focus:border-indigo-500 rounded-xl px-3 py-2 text-xs text-slate-800 placeholder-slate-440 outline-none focus:ring-1 focus:ring-indigo-500 font-medium"
+                    className="w-full bg-slate-50 border border-slate-200 focus:border-slate-400 rounded-xl px-3 py-2 text-xs text-slate-800 placeholder-slate-440 outline-none focus:ring-1 focus:ring-slate-300 font-medium"
                   />
 
                   <input
@@ -146,12 +146,12 @@ export default function ContactModal({ isOpen, onClose, onShowToast, onAddSystem
                     name="ticketContact"
                     required
                     placeholder="E-mail of telefoonnummer"
-                    className="w-full bg-slate-50 border border-slate-200 focus:border-indigo-500 rounded-xl px-3 py-2 text-xs text-slate-800 placeholder-slate-440 outline-none focus:ring-1 focus:ring-indigo-500 font-medium"
+                    className="w-full bg-slate-50 border border-slate-200 focus:border-slate-400 rounded-xl px-3 py-2 text-xs text-slate-800 placeholder-slate-440 outline-none focus:ring-1 focus:ring-slate-300 font-medium"
                   />
 
                   <select
                     name="ticketTopic"
-                    className="w-full bg-slate-50 border border-slate-200 focus:border-indigo-500 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:ring-1 focus:ring-indigo-500 font-semibold cursor-pointer"
+                    className="w-full bg-slate-50 border border-slate-200 focus:border-slate-400 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:ring-1 focus:ring-slate-300 font-semibold cursor-pointer"
                   >
                     <option value="Klantenservice">Klantenservice & Hulp</option>
                     <option value="AI Advies">Hulp bij AI Adviseur</option>
@@ -165,13 +165,13 @@ export default function ContactModal({ isOpen, onClose, onShowToast, onAddSystem
                     required
                     rows={3}
                     placeholder="Wat is uw specifieke vraag over de inzetbaarheid van ons materieel?"
-                    className="w-full bg-slate-50 border border-slate-200 focus:border-indigo-500 rounded-xl px-3 py-2 text-xs text-slate-800 placeholder-slate-440 outline-none focus:ring-1 focus:ring-indigo-500 resize-none font-sans font-medium"
+                    className="w-full bg-slate-50 border border-slate-200 focus:border-slate-400 rounded-xl px-3 py-2 text-xs text-slate-800 placeholder-slate-440 outline-none focus:ring-1 focus:ring-slate-300 resize-none font-sans font-medium"
                   />
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full py-2.5 bg-gradient-to-r from-teal-600 to-indigo-600 hover:from-teal-700 hover:to-indigo-700 text-white font-semibold text-xs rounded-xl shadow-sm hover:shadow transition-all cursor-pointer font-display shrink-0 border-none flex items-center justify-center space-x-1.5"
+                  className="w-full py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-semibold text-xs rounded-xl shadow-sm hover:shadow transition-all cursor-pointer font-display shrink-0 border-none flex items-center justify-center space-x-1.5"
                 >
                   <CheckCircle className="h-4 w-4 shrink-0 text-emerald-300" />
                   <span>Verstuur Bericht</span>
@@ -205,7 +205,7 @@ export default function ContactModal({ isOpen, onClose, onShowToast, onAddSystem
                   name="callbackPhone"
                   required
                   placeholder="Uw telefoonnummer (bijv. +31 6 ...)"
-                  className="flex-1 bg-slate-50 border border-slate-200 focus:border-indigo-500 rounded-xl px-4 py-2.5 text-xs text-slate-800 placeholder-slate-440 outline-none focus:ring-1 focus:ring-indigo-500 font-medium"
+                  className="flex-1 bg-slate-50 border border-slate-200 focus:border-slate-400 rounded-xl px-4 py-2.5 text-xs text-slate-800 placeholder-slate-440 outline-none focus:ring-1 focus:ring-slate-300 font-medium"
                 />
                 <button
                   type="submit"

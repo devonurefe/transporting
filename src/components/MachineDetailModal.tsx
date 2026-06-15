@@ -163,7 +163,7 @@ export default function MachineDetailModal({
         className="w-full max-w-4xl bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden z-[60] flex flex-col max-h-[90vh] my-8"
       >
         {/* Top gradient stripe */}
-        <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-teal-400 via-indigo-500 to-amber-400" />
+        <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-emerald-400 via-orange-400 to-amber-400" />
 
         {/* Header */}
         <div className="flex justify-between items-start mb-6 shrink-0">
@@ -217,7 +217,7 @@ export default function MachineDetailModal({
                   <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 bg-slate-950/40 px-2.5 py-1 rounded-full backdrop-blur-sm">
                     {allImages.map((_, i) => (
                       <button key={i} type="button" onClick={() => setActiveImageIndex(i)}
-                        className={`h-1.5 rounded-full transition-all cursor-pointer ${i === activeImageIndex ? "bg-indigo-400 w-3.5" : "bg-white/60 hover:bg-white w-1.5"}`}
+                        className={`h-1.5 rounded-full transition-all cursor-pointer ${i === activeImageIndex ? "bg-white w-3.5" : "bg-white/50 hover:bg-white w-1.5"}`}
                       />
                     ))}
                   </div>
@@ -228,7 +228,7 @@ export default function MachineDetailModal({
               <div className="flex gap-2 overflow-x-auto py-0.5 scrollbar-none">
                 {allImages.map((url, i) => (
                   <button key={i} type="button" onClick={() => setActiveImageIndex(i)}
-                    className={`relative h-11 w-16 rounded-lg overflow-hidden border-2 shrink-0 transition-all cursor-pointer bg-white ${i === activeImageIndex ? "border-indigo-600 ring-2 ring-indigo-500/20" : "border-slate-200 hover:border-slate-400"}`}
+                    className={`relative h-11 w-16 rounded-lg overflow-hidden border-2 shrink-0 transition-all cursor-pointer bg-white ${i === activeImageIndex ? "border-orange-500 ring-2 ring-orange-400/20" : "border-slate-200 hover:border-slate-400"}`}
                   >
                     <img src={url} alt={`Foto ${i + 1}`} className="w-full h-full object-cover"
                       referrerPolicy="no-referrer"
@@ -281,12 +281,12 @@ export default function MachineDetailModal({
                   );
                 })()}
                 {machine.weekendPrice && (
-                  <div className="flex items-center px-4 py-2.5 bg-violet-50">
+                  <div className="flex items-center px-4 py-2.5 bg-amber-50">
                     <div className="flex-1">
-                      <p className="text-xs font-bold text-violet-700">Weekend</p>
-                      <p className="text-[10px] text-violet-400">Za – Zo</p>
+                      <p className="text-xs font-bold text-amber-700">Weekend</p>
+                      <p className="text-[10px] text-amber-400">Za – Zo</p>
                     </div>
-                    <span className="font-mono font-extrabold text-sm text-violet-700">€{formatPrice(vp(machine.weekendPrice))}</span>
+                    <span className="font-mono font-extrabold text-sm text-amber-700">€{formatPrice(vp(machine.weekendPrice))}</span>
                   </div>
                 )}
                 {machine.weeklyPrice && (
@@ -385,7 +385,7 @@ export default function MachineDetailModal({
                 {machine.suitableFor.map((tag) => {
                   const TagIcon = professionIconMap[tag];
                   return (
-                    <span key={tag} className="flex items-center gap-1.5 bg-indigo-50 border border-indigo-100 text-indigo-700 px-2.5 py-1 rounded-full text-xs font-semibold">
+                    <span key={tag} className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 text-slate-700 px-2.5 py-1 rounded-full text-xs font-semibold">
                       {TagIcon && <TagIcon className="h-3 w-3 shrink-0" />}
                       {tag}
                     </span>
@@ -397,8 +397,8 @@ export default function MachineDetailModal({
 
           {/* F — Toepassing & Geschiktheid */}
           {catInfo && (catInfo.useCases?.length || catInfo.advantages?.length || catInfo.notFor?.length) ? (
-            <div className="bg-indigo-50/40 border border-indigo-100 rounded-2xl p-4 space-y-4">
-              <p className="text-xs text-indigo-700 uppercase tracking-wider font-bold">Toepassing & Geschiktheid</p>
+            <div className="bg-slate-50/60 border border-slate-100 rounded-2xl p-4 space-y-4">
+              <p className="text-xs text-slate-500 uppercase tracking-wider font-bold">Toepassing & Geschiktheid</p>
               {catInfo.useCases && catInfo.useCases.length > 0 && (
                 <div>
                   <p className="text-xs font-extrabold text-slate-600 uppercase tracking-wider mb-2">{t("infoUseCases")}</p>
@@ -417,7 +417,7 @@ export default function MachineDetailModal({
                   <ul className="space-y-1.5">
                     {catInfo.advantages.map((item, i) => (
                       <li key={i} className="flex items-start gap-2 text-xs text-slate-600 leading-snug">
-                        <span className="text-indigo-500 font-black shrink-0 mt-0.5 select-none">+</span>{item}
+                        <span className="text-orange-500 font-black shrink-0 mt-0.5 select-none">+</span>{item}
                       </li>
                     ))}
                   </ul>
@@ -460,7 +460,7 @@ export default function MachineDetailModal({
               <span className="bg-amber-100 border border-amber-200 text-amber-900 px-2 py-0.5 rounded text-[10px] uppercase tracking-wider font-extrabold">BMWT</span>
               <span>Jaarlijks veilig gekeurd</span>
             </div>
-            <span className="font-mono text-indigo-400">Art. {machine.id}</span>
+            <span className="font-mono text-slate-400">Art. {machine.id}</span>
           </div>
 
         </div>
@@ -475,7 +475,7 @@ export default function MachineDetailModal({
           </button>
           <button
             onClick={() => { onClose(); onBook(machine); }}
-            className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold transition-all shadow-md cursor-pointer active:scale-[0.98]"
+            className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-sm font-bold transition-all shadow-md cursor-pointer active:scale-[0.98]"
           >
             <ShoppingBag className="h-4 w-4" />
             Huur Nu

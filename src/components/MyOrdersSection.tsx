@@ -393,7 +393,7 @@ export default function MyOrdersSection({
   if (!currentUser) {
     return (
       <div className="relative min-h-[calc(100vh-4.5rem)] py-12 px-5 sm:px-6 lg:px-8 animate-fade-in">
-        <div className="absolute top-1/4 right-5 h-80 w-80 rounded-full bg-indigo-500/5 blur-[120px] -z-10" />
+        <div className="absolute top-1/4 right-5 h-80 w-80 rounded-full bg-slate-500/5 blur-[120px] -z-10" />
         <div className="absolute bottom-12 left-8 h-96 w-96 rounded-full bg-blue-500/3 blur-[140px] -z-10" />
 
         <div className="mx-auto max-w-4xl space-y-10">
@@ -401,7 +401,7 @@ export default function MyOrdersSection({
           {/* Header block */}
           <div className="text-center space-y-3">
             <h1 className="font-display text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900">
-              Welkom op het <span className="text-indigo-600">Klant Portaal</span>
+              Welkom op het <span className="text-slate-900">Klant Portaal</span>
             </h1>
             <p className="text-xs sm:text-sm text-slate-500 text-slate-600 max-w-xl mx-auto leading-relaxed">
               Log in om uw actieve huurcontracten te beheren, transportstatussen te volgen, live BMWT-certificaten te downloaden en facturen in te zien.
@@ -417,7 +417,7 @@ export default function MyOrdersSection({
                 <form onSubmit={handleResetPassword} className="space-y-4">
                   <div className="space-y-1.5">
                     <label className="text-xs text-slate-600 block font-semibold">Nieuw Wachtwoord</label>
-                    <div className="relative flex items-center bg-white rounded-xl border border-slate-200 px-3 py-2.5 focus-within:border-indigo-500 shadow-sm">
+                    <div className="relative flex items-center bg-white rounded-xl border border-slate-200 px-3 py-2.5 focus-within:border-slate-400 shadow-sm">
                       <Lock className="h-4 w-4 text-slate-400 shrink-0 mr-2.5" />
                       <input
                         type="password"
@@ -434,7 +434,7 @@ export default function MyOrdersSection({
                   <button
                     type="submit"
                     disabled={isResettingPassword}
-                    className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-bold text-xs rounded-xl transition-all cursor-pointer border-none"
+                    className="w-full py-3 bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white font-bold text-xs rounded-xl transition-all cursor-pointer border-none"
                   >
                     {isResettingPassword ? "Opslaan..." : "Wachtwoord Opslaan"}
                   </button>
@@ -447,7 +447,7 @@ export default function MyOrdersSection({
                 <CheckCircle className="h-10 w-10 text-emerald-500 mx-auto" />
                 <h2 className="text-base font-extrabold text-slate-900">Wachtwoord Gewijzigd!</h2>
                 <p className="text-xs text-slate-500">U kunt nu inloggen met uw nieuwe wachtwoord.</p>
-                <button onClick={() => setResetSuccess(false)} className="text-xs text-indigo-600 underline underline-offset-2 bg-transparent border-none cursor-pointer">
+                <button onClick={() => setResetSuccess(false)} className="text-xs text-slate-600 underline underline-offset-2 bg-transparent border-none cursor-pointer">
                   Naar inloggen
                 </button>
               </div>
@@ -460,7 +460,7 @@ export default function MyOrdersSection({
                 <button
                   onClick={() => { setIsRegistering(false); setLoginError(null); setRegError(null); }}
                   className={`flex-1 pb-3 text-sm font-bold border-b-2 transition-all cursor-pointer ${
-                    !isRegistering ? "text-indigo-600 border-indigo-600" : "text-slate-400 hover:text-slate-600 border-transparent"
+                    !isRegistering ? "text-slate-900 border-slate-800" : "text-slate-400 hover:text-slate-600 border-transparent"
                   }`}
                 >
                   Regulier Inloggen
@@ -468,7 +468,7 @@ export default function MyOrdersSection({
                 <button
                   onClick={() => { setIsRegistering(true); setLoginError(null); setRegError(null); }}
                   className={`flex-1 pb-3 text-sm font-bold border-b-2 transition-all cursor-pointer ${
-                    isRegistering ? "text-indigo-600 border-indigo-600" : "text-slate-400 hover:text-slate-600 border-transparent"
+                    isRegistering ? "text-slate-900 border-slate-800" : "text-slate-400 hover:text-slate-600 border-transparent"
                   }`}
                 >
                   Account Aanmaken
@@ -480,7 +480,7 @@ export default function MyOrdersSection({
                 <form onSubmit={handleManualLogin} className="space-y-4">
                   <div className="space-y-1.5">
                     <label className="text-xs text-slate-600 block font-semibold">Geregistreerd E-mailadres</label>
-                    <div className="relative flex items-center bg-white rounded-xl border border-slate-200 px-3 py-2.5 focus-within:border-indigo-500 transition-colors shadow-sm">
+                    <div className="relative flex items-center bg-white rounded-xl border border-slate-200 px-3 py-2.5 focus-within:border-slate-400 transition-colors shadow-sm">
                       <Mail className="h-4 w-4 text-slate-450 shrink-0 mr-2.5" />
                       <input
                         type="email"
@@ -495,7 +495,7 @@ export default function MyOrdersSection({
 
                   <div className="space-y-1.5">
                     <label className="text-xs text-slate-600 block font-semibold">Beveiligd Wachtwoord</label>
-                    <div className="relative flex items-center bg-white rounded-xl border border-slate-200 px-3 py-2.5 focus-within:border-indigo-500 transition-colors shadow-sm">
+                    <div className="relative flex items-center bg-white rounded-xl border border-slate-200 px-3 py-2.5 focus-within:border-slate-400 transition-colors shadow-sm">
                       <Lock className="h-4 w-4 text-slate-450 shrink-0 mr-2.5" />
                       <input
                         type="password"
@@ -516,7 +516,7 @@ export default function MyOrdersSection({
                   <button
                     type="submit"
                     disabled={isAuthLoading}
-                    className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold text-xs rounded-xl transition-all shadow-md hover:scale-[1.01] active:opacity-95 cursor-pointer flex items-center justify-center space-x-1.5 border-none"
+                    className="w-full py-3 bg-orange-500 hover:bg-orange-600 disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold text-xs rounded-xl transition-all shadow-md hover:scale-[1.01] active:opacity-95 cursor-pointer flex items-center justify-center space-x-1.5 border-none"
                   >
                     {isAuthLoading ? (
                       <>
@@ -535,7 +535,7 @@ export default function MyOrdersSection({
                     <button
                       type="button"
                       onClick={() => { setIsForgotPassword(true); setForgotSent(false); setForgotError(null); setForgotEmail(loginEmail); }}
-                      className="text-[11px] text-slate-500 hover:text-indigo-600 underline underline-offset-2 transition-colors bg-transparent border-none cursor-pointer"
+                      className="text-[11px] text-slate-500 hover:text-slate-700 underline underline-offset-2 transition-colors bg-transparent border-none cursor-pointer"
                     >
                       Wachtwoord vergeten?
                     </button>
@@ -545,12 +545,12 @@ export default function MyOrdersSection({
                     <motion.div
                       initial={{ opacity: 0, y: 5 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="bg-indigo-50 border border-indigo-100 rounded-2xl p-4 space-y-3"
+                      className="bg-slate-50 border border-slate-100 rounded-2xl p-4 space-y-3"
                     >
                       {!forgotSent ? (
                         <>
-                          <p className="text-[11px] text-indigo-800 font-semibold">Voer uw e-mailadres in om een resetlink te ontvangen.</p>
-                          <div className="relative flex items-center bg-white rounded-xl border border-slate-200 px-3 py-2.5 focus-within:border-indigo-500 shadow-sm">
+                          <p className="text-[11px] text-slate-700 font-semibold">Voer uw e-mailadres in om een resetlink te ontvangen.</p>
+                          <div className="relative flex items-center bg-white rounded-xl border border-slate-200 px-3 py-2.5 focus-within:border-slate-400 shadow-sm">
                             <Mail className="h-4 w-4 text-slate-400 shrink-0 mr-2.5" />
                             <input
                               type="email"
@@ -566,7 +566,7 @@ export default function MyOrdersSection({
                               type="button"
                               onClick={handleForgotPassword}
                               disabled={isSendingReset || !forgotEmail.trim()}
-                              className="flex-1 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold text-xs rounded-xl transition-all cursor-pointer border-none"
+                              className="flex-1 py-2 bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white font-bold text-xs rounded-xl transition-all cursor-pointer border-none"
                             >
                               {isSendingReset ? "Verzenden..." : "Resetlink Sturen"}
                             </button>
@@ -587,7 +587,7 @@ export default function MyOrdersSection({
                           <button
                             type="button"
                             onClick={() => { setIsForgotPassword(false); setForgotSent(false); }}
-                            className="text-[11px] text-indigo-600 underline underline-offset-2 bg-transparent border-none cursor-pointer"
+                            className="text-[11px] text-slate-600 underline underline-offset-2 bg-transparent border-none cursor-pointer"
                           >
                             Terug naar inloggen
                           </button>
@@ -631,7 +631,7 @@ export default function MyOrdersSection({
                       value={regName}
                       onChange={(e) => setRegName(e.target.value)}
                       placeholder="Jan de Vries"
-                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 outline-none focus:border-indigo-500 h-10 placeholder-slate-400 font-medium shadow-sm transition-colors"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 outline-none focus:border-slate-400 h-10 placeholder-slate-400 font-medium shadow-sm transition-colors"
                     />
                   </div>
 
@@ -643,13 +643,13 @@ export default function MyOrdersSection({
                       value={regEmail}
                       onChange={(e) => setRegEmail(e.target.value)}
                       placeholder="jan@schilder.nl"
-                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 outline-none focus:border-indigo-500 h-10 placeholder-slate-400 shadow-sm transition-colors"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 outline-none focus:border-slate-400 h-10 placeholder-slate-400 shadow-sm transition-colors"
                     />
                   </div>
 
                   <div className="space-y-1.5">
                     <label className="text-xs text-slate-600 block font-semibold">Beveiligd Wachtwoord</label>
-                    <div className="relative flex items-center bg-white rounded-xl border border-slate-200 px-3 py-2.5 focus-within:border-indigo-500 transition-colors shadow-sm">
+                    <div className="relative flex items-center bg-white rounded-xl border border-slate-200 px-3 py-2.5 focus-within:border-slate-400 transition-colors shadow-sm">
                       <Lock className="h-4 w-4 text-slate-450 shrink-0 mr-2.5" />
                       <input
                         type="password"
@@ -669,7 +669,7 @@ export default function MyOrdersSection({
                       value={regPhone}
                       onChange={(e) => setRegPhone(e.target.value)}
                       placeholder="+31 6 12345678"
-                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 outline-none focus:border-indigo-500 h-10 placeholder-slate-400 shadow-sm transition-colors"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 outline-none focus:border-slate-400 h-10 placeholder-slate-400 shadow-sm transition-colors"
                     />
                   </div>
 
@@ -680,7 +680,7 @@ export default function MyOrdersSection({
                       value={regCompany}
                       onChange={(e) => setRegCompany(e.target.value)}
                       placeholder="Zelfstandige of B.V."
-                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 outline-none focus:border-indigo-500 h-10 placeholder-slate-400 shadow-sm transition-colors"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 outline-none focus:border-slate-400 h-10 placeholder-slate-400 shadow-sm transition-colors"
                     />
                   </div>
 
@@ -690,7 +690,7 @@ export default function MyOrdersSection({
                       <select
                         value={regProfile}
                         onChange={(e) => setRegProfile(e.target.value)}
-                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-indigo-500 h-10 cursor-pointer shadow-sm font-bold"
+                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-slate-400 h-10 cursor-pointer shadow-sm font-bold"
                       >
                         <option value="Schilder">Schilder</option>
                         <option value="Hovenier / Groenverzorging">Hovenier / Groenverzorging</option>
@@ -706,7 +706,7 @@ export default function MyOrdersSection({
                     <div className="flex items-end">
                       <button
                         type="submit"
-                        className="w-full h-10 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition-all shadow-md active:scale-98 cursor-pointer flex items-center justify-center space-x-1 border-none"
+                        className="w-full h-10 bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs rounded-xl transition-all shadow-md active:scale-98 cursor-pointer flex items-center justify-center space-x-1 border-none"
                       >
                         <UserPlus className="h-4 w-4 text-emerald-300" />
                         <span>Versturen</span>
@@ -744,14 +744,14 @@ export default function MyOrdersSection({
   return (
     <div className="relative min-h-[calc(100vh-4.5rem)] py-10 px-5 sm:px-6 lg:px-8">
       {/* Absolute background effects */}
-      <div className="absolute top-1/4 right-5 h-80 w-80 rounded-full bg-indigo-500/5 blur-[120px] -z-10" />
+      <div className="absolute top-1/4 right-5 h-80 w-80 rounded-full bg-slate-500/5 blur-[120px] -z-10" />
       <div className="absolute bottom-12 left-8 h-96 w-96 rounded-full bg-blue-500/3 blur-[140px] -z-10" />
 
       <div className="mx-auto max-w-6xl space-y-8">
         
         {/* Core Customer profile header and logout control (Isolates single user perfectly) */}
         <section className="bg-white border border-slate-200 shadow-sm p-6 rounded-3xl relative overflow-hidden flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-          <div className="absolute top-0 right-0 h-32 w-32 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none" />
+          <div className="absolute top-0 right-0 h-32 w-32 bg-slate-500/5 rounded-full blur-2xl pointer-events-none" />
           
           <div className="flex items-center space-x-4">
             <div className="relative">
@@ -759,11 +759,11 @@ export default function MyOrdersSection({
                 <img 
                   src={currentUser.avatarUrl} 
                   alt={currentUser.name} 
-                  className="h-16 w-16 rounded-2xl object-cover border-2 border-indigo-500/40 shadow-inner"
+                  className="h-16 w-16 rounded-2xl object-cover border-2 border-slate-300 shadow-inner"
                   referrerPolicy="no-referrer"
                 />
               ) : (
-                <div className="h-16 w-16 rounded-2xl bg-gradient-to-tr from-indigo-500 to-indigo-600 text-white font-black text-xl flex items-center justify-center border-2 border-indigo-500/40 shadow-md uppercase select-none font-display">
+                <div className="h-16 w-16 rounded-2xl bg-gradient-to-tr from-slate-600 to-slate-700 text-white font-black text-xl flex items-center justify-center border-2 border-slate-300 shadow-md uppercase select-none font-display">
                   {currentUser.name.charAt(0)}
                 </div>
               )}
@@ -772,7 +772,7 @@ export default function MyOrdersSection({
             <div>
               <div className="flex items-center space-x-2">
                 <h2 className="font-display text-xl font-black text-slate-900">{currentUser.name}</h2>
-                <span className="text-[9px] font-mono bg-indigo-50 text-indigo-700 font-bold px-2 py-0.5 rounded-full border border-indigo-200">
+                <span className="text-[9px] font-mono bg-slate-100 text-slate-600 font-bold px-2 py-0.5 rounded-full border border-slate-200">
                   Actieve Klant (Sessie)
                 </span>
               </div>
@@ -831,7 +831,7 @@ export default function MyOrdersSection({
                     key={f.id}
                     onClick={() => setActiveFilter(f.id)}
                     className={`px-3 py-1.5 text-[10px] font-bold rounded-md transition-all border-none cursor-pointer leading-none ${
-                      activeFilter === f.id ? "bg-indigo-600 text-white" : "text-slate-500 hover:text-slate-850"
+                      activeFilter === f.id ? "bg-slate-800 text-white" : "text-slate-500 hover:text-slate-850"
                     }`}
                   >
                     {f.label}
@@ -844,8 +844,8 @@ export default function MyOrdersSection({
             <div className="space-y-4">
               {filteredOrders.length === 0 ? (
                 <div className="bg-white border border-slate-200 shadow-sm p-12 text-center rounded-2xl flex flex-col items-center justify-center space-y-4 animate-fade-in">
-                  <div className="h-10 w-10 rounded-full bg-indigo-50 flex items-center justify-center">
-                    <Clock className="h-5 w-5 text-indigo-500" />
+                  <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center">
+                    <Clock className="h-5 w-5 text-slate-400" />
                   </div>
                   <div>
                     <h4 className="font-display font-bold text-xs text-slate-800 uppercase tracking-wider font-sans">Geen reserveringen gevonden</h4>
@@ -860,16 +860,16 @@ export default function MyOrdersSection({
                   return (
                     <div
                       key={o.id}
-                      className="bg-white border border-slate-200 shadow-sm p-5 rounded-2xl space-y-4 transition-all duration-300 hover:border-indigo-300 hover:shadow-md relative overflow-hidden"
+                      className="bg-white border border-slate-200 shadow-sm p-5 rounded-2xl space-y-4 transition-all duration-300 hover:border-slate-300 hover:shadow-md relative overflow-hidden"
                     >
                       {o.status === "Onderweg" && (
-                        <div className="absolute top-0 right-0 h-1 border-b border-t-0 border-indigo-500 w-full animate-pulse bg-indigo-100" />
+                        <div className="absolute top-0 right-0 h-1 border-b border-t-0 border-orange-400 w-full animate-pulse bg-orange-100" />
                       )}
 
                       <div className="flex flex-col sm:flex-row justify-between gap-3.5 border-b border-slate-100 pb-3">
                         <div>
                           <div className="flex items-center space-x-2">
-                            <span className="font-mono text-[10px] font-extrabold text-indigo-700 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded-md">
+                            <span className="font-mono text-[10px] font-extrabold text-slate-700 bg-slate-50 border border-slate-200 px-2 py-0.5 rounded-md">
                               {o.id}
                             </span>
                             <span className="text-[10px] text-slate-500 font-bold">Besteld op {new Date(o.createdAt).toLocaleDateString("nl-NL")}</span>
@@ -899,7 +899,7 @@ export default function MyOrdersSection({
                         <div className="space-y-1">
                           <span className="text-[9.5px] text-slate-450 text-slate-500 font-mono font-bold block uppercase tracking-wider">Huurperiode</span>
                           <div className="flex items-center space-x-1.5 text-slate-800 font-bold">
-                            <Calendar className="h-3.5 w-3.5 text-indigo-600 shrink-0" />
+                            <Calendar className="h-3.5 w-3.5 text-slate-500 shrink-0" />
                             <span>{o.startDate} t/m {o.endDate}</span>
                           </div>
                           <span className="text-[10px] text-slate-500 mt-1 block font-semibold">Totaal: {o.rentalDays} {o.rentalDays === 1 ? 'dag' : 'dagen'}</span>
@@ -962,7 +962,7 @@ export default function MyOrdersSection({
                             onClick={() => handleDownloadInvoice(o)}
                             className="flex items-center space-x-1 font-black text-[10px] bg-white hover:bg-slate-50 transition-colors text-slate-700 px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm cursor-pointer"
                           >
-                            <Download className="h-3 w-3 text-indigo-600" />
+                            <Download className="h-3 w-3 text-slate-600" />
                             <span>Factuur PDF</span>
                           </button>
 
@@ -1039,7 +1039,7 @@ export default function MyOrdersSection({
             {/* Customer Profile Customizer Settings */}
             <div className="bg-white border border-slate-200 shadow-sm p-5 rounded-3xl space-y-4">
               <h4 className="font-display font-black text-xs text-slate-850 uppercase tracking-wider flex items-center space-x-2">
-                <User className="h-4 w-4 text-indigo-600" />
+                <User className="h-4 w-4 text-slate-600" />
                 <span>Profiel & Standaardgegevens</span>
               </h4>
               <p className="text-[11px] text-slate-500 leading-relaxed font-semibold">
@@ -1054,7 +1054,7 @@ export default function MyOrdersSection({
                     value={profileName}
                     onChange={(e) => setProfileName(e.target.value)}
                     required
-                    className="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white text-slate-805 text-slate-800 outline-none focus:ring-1 focus:ring-indigo-500"
+                    className="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white text-slate-805 text-slate-800 outline-none focus:ring-1 focus:ring-slate-300"
                     placeholder="bijv. Jan de Vries"
                   />
                 </div>
@@ -1065,7 +1065,7 @@ export default function MyOrdersSection({
                     type="text"
                     value={profilePhone}
                     onChange={(e) => setProfilePhone(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white text-slate-805 text-slate-800 outline-none focus:ring-1 focus:ring-indigo-500"
+                    className="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white text-slate-805 text-slate-800 outline-none focus:ring-1 focus:ring-slate-300"
                     placeholder="bijv. +31 6 12345678"
                   />
                 </div>
@@ -1076,7 +1076,7 @@ export default function MyOrdersSection({
                     type="text"
                     value={profileCompany}
                     onChange={(e) => setProfileCompany(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white text-slate-805 text-slate-800 outline-none focus:ring-1 focus:ring-indigo-500"
+                    className="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white text-slate-805 text-slate-800 outline-none focus:ring-1 focus:ring-slate-300"
                     placeholder="bijv. De Vries Schilderwerken B.V."
                   />
                 </div>
@@ -1086,7 +1086,7 @@ export default function MyOrdersSection({
                   <select
                     value={profileSector}
                     onChange={(e) => setProfileSector(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-slate-805 text-slate-800 outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer"
+                    className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-slate-805 text-slate-800 outline-none focus:ring-1 focus:ring-slate-300 cursor-pointer"
                   >
                     <option value="Schilder">🎨 Schilder</option>
                     <option value="Hovenier / Groenverzorging">🌳 Hovenier / Groenverzorging</option>
@@ -1106,7 +1106,7 @@ export default function MyOrdersSection({
                     value={profileAddress}
                     onChange={(e) => setProfileAddress(e.target.value)}
                     rows={2}
-                    className="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white text-slate-805 text-slate-800 outline-none focus:ring-1 focus:ring-indigo-500 resize-none font-sans"
+                    className="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white text-slate-805 text-slate-800 outline-none focus:ring-1 focus:ring-slate-300 resize-none font-sans"
                     placeholder="bijv. Keizersgracht 420, Amsterdam"
                   />
                 </div>
@@ -1117,14 +1117,14 @@ export default function MyOrdersSection({
                     type="text"
                     value={profileAvatarUrl}
                     onChange={(e) => setProfileAvatarUrl(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white text-slate-805 text-slate-800 outline-none focus:ring-1 focus:ring-indigo-500"
+                    className="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white text-slate-805 text-slate-800 outline-none focus:ring-1 focus:ring-slate-300"
                     placeholder="Laat leeg voor initialen badge"
                   />
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold cursor-pointer border-none shadow-sm transition-colors text-center"
+                  className="w-full py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-bold cursor-pointer border-none shadow-sm transition-colors text-center"
                 >
                   Profiel Opslaan
                 </button>
@@ -1146,7 +1146,7 @@ export default function MyOrdersSection({
                 {/* Email toggle */}
                 <label className="flex items-center justify-between cursor-pointer group">
                   <div>
-                    <span className="text-xs font-black block text-slate-700 group-hover:text-indigo-600 transition-colors animate-fade-in">E-mail Notificaties</span>
+                    <span className="text-xs font-black block text-slate-700 group-hover:text-slate-900 transition-colors animate-fade-in">E-mail Notificaties</span>
                     <span className="text-[9.5px] text-slate-500">Live contracten, orders & facturen in inbox</span>
                   </div>
                   <input
@@ -1156,14 +1156,14 @@ export default function MyOrdersSection({
                       setEmailSubscription(e.target.checked);
                       onTriggerNotification("Voorkeuren Gewijzigd", `E-mailmeldingen zijn ${e.target.checked ? 'geactiveerd' : 'gedeactiveerd'}.`, "info");
                     }}
-                    className="h-4 w-4 accent-indigo-600 rounded border-slate-300 text-indigo-600 bg-white"
+                    className="h-4 w-4 accent-orange-500 rounded border-slate-300 text-orange-500 bg-white"
                   />
                 </label>
 
                 {/* SMS toggle */}
                 <label className="flex items-center justify-between cursor-pointer group pt-1">
                   <div>
-                    <span className="text-xs font-black block text-slate-700 group-hover:text-indigo-600 transition-colors">SMS Bezorgupdates</span>
+                    <span className="text-xs font-black block text-slate-700 group-hover:text-slate-900 transition-colors">SMS Bezorgupdates</span>
                     <span className="text-[9.5px] text-slate-500">Sms wanneer de chauffeur onze Hub verlaat</span>
                   </div>
                   <input
@@ -1173,7 +1173,7 @@ export default function MyOrdersSection({
                       setSmsSubscription(e.target.checked);
                       onTriggerNotification("SMS Activatie", `SMS notificaties zijn ${e.target.checked ? 'ingeschakeld' : 'uitgeschakeld'}.`, "info");
                     }}
-                    className="h-4 w-4 accent-indigo-600 rounded border-slate-300 text-indigo-600 bg-white"
+                    className="h-4 w-4 accent-orange-500 rounded border-slate-300 text-orange-500 bg-white"
                   />
                 </label>
 

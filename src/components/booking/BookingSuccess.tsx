@@ -41,7 +41,7 @@ export default function BookingSuccess({
 
   if (!successOrder) return (
     <div className="flex flex-col items-center justify-center py-24 gap-4 text-slate-500">
-      <div className="h-8 w-8 rounded-full border-2 border-indigo-400 border-t-transparent animate-spin" />
+      <div className="h-8 w-8 rounded-full border-2 border-slate-300 border-t-transparent animate-spin" />
       <p className="text-sm font-medium">Bestelling verwerken...</p>
     </div>
   );
@@ -127,7 +127,7 @@ export default function BookingSuccess({
         <h1 className="font-display text-xl font-black text-slate-900">{t("successTitle")}</h1>
         <p className="text-xs text-slate-500 mt-1.5 max-w-sm mx-auto leading-relaxed">
           Referentie:{" "}
-          <span className="font-mono font-bold text-indigo-600">{successOrder.id}</span>
+          <span className="font-mono font-bold text-slate-700">{successOrder.id}</span>
           {" — "}
           {t("successConfirmRef")}
         </p>
@@ -146,7 +146,7 @@ export default function BookingSuccess({
                 (s as any).price
                   ? "text-lg font-mono text-slate-900"
                   : (s as any).highlight
-                  ? "text-indigo-700"
+                  ? "text-slate-700"
                   : "text-slate-800"
               }`}
             >
@@ -198,7 +198,7 @@ export default function BookingSuccess({
 
         <button
           onClick={() => { setStep(1); setSuccessOrder(null); setActiveTab("orders"); }}
-          className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-all duration-200 cursor-pointer shadow-sm"
+          className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold transition-all duration-200 cursor-pointer shadow-sm"
         >
           <ClipboardList className="h-4 w-4 shrink-0" />
           {t("successOrdersBtn")}

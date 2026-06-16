@@ -115,20 +115,20 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
   const totalSavings = (sums.campaignSavings ?? 0)
     + (!sums.weeklyBreakdown && !sums.isFlatRate ? sums.discountAmount : 0);
 
-  const rateLabel = sums.weeklyBreakdown
-    ? `${sums.days} dgn (${sums.weeklyBreakdown.weeks}× weektarief${sums.weeklyBreakdown.remainder > 0 ? ` + ${sums.weeklyBreakdown.remainder} dag` : ""})`
-    : sums.isFlatRate && sums.tierLabel
-    ? `${sums.days} dgn (${sums.tierLabel})`
-    : `${sums.days} ${sums.days === 1 ? "dag" : "dagen"} × ${euroCompact(selectedMachine.pricePerDay)}`;
+  const rateLabel = sums.isFlatRate && sums.tierLabel
+    ? `${sums.days} ${sums.days === 1 ? "dag" : "dagen"} — ${sums.tierLabel}`
+    : `${sums.days} ${sums.days === 1 ? "dag" : "dagen"} × ${euroCompact(
+        sums.weeklyBreakdown ? sums.weeklyBreakdown.dailyRate
+        : sums.effectiveDailyRate != null && sums.days >= 6 ? sums.effectiveDailyRate
+        : selectedMachine.pricePerDay
+      )}`;
 
   const transportFree = sums.transport === 0 && sums.driver === 0;
-  const transportLabel = sums.deliveryType === "trailer_drop_return"
-    ? `Aanhanger Drop & Return (${euro(sums.transport)})`
-    : sums.deliveryType === "trailer_rental"
-    ? `Aanhanger op locatie (${euro(sums.transport)})`
-    : sums.deliveryType === "delivery_by_us"
-    ? `Bezorging door ons (${euro(sums.transport + sums.driver)})`
-    : t("priceSummaryPickupFree");
+  const transportName = sums.deliveryType === "trailer_drop_return" ? "Aanhanger Drop & Return"
+    : sums.deliveryType === "trailer_rental" ? "Aanhanger op locatie"
+    : sums.deliveryType === "delivery_by_us" ? "Bezorging door ons"
+    : t("priceSummaryPickup");
+  const transportValue = transportFree ? t("priceSummaryPickupFree") : euro(sums.transport + sums.driver);
 
   return (
     <div className="bg-white border border-slate-200 shadow-sm rounded-3xl overflow-hidden">
@@ -157,7 +157,7 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
             {machineCount > 1 ? `${machineCount} machines gereserveerd` : selectedMachine.name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "")}
           </h4>
           {machineCount === 1 && (
-            <span className="text-xs text-slate-600 font-bold font-mono">{euroCompact(selectedMachine.pricePerDay)}/dag</span>
+            <span className="text-sm font-black text-slate-800 font-mono">{euroCompact(selectedMachine.pricePerDay)}/dag</span>
           )}
         </div>
       </div>
@@ -182,8 +182,8 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
           />
           <SummaryRow
             icon={<Truck className="h-3.5 w-3.5" />}
-            label="Transport"
-            value={transportLabel}
+            label={transportName}
+            value={transportValue}
             accent={transportFree ? "emerald" : undefined}
           />
           {totalSavings > 0 && (

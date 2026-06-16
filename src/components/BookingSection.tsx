@@ -347,7 +347,7 @@ export default function BookingSection({
 
       const transport = deliveryType === "delivery_by_us" ? 150 : 0;
       // Trailer only charged for item[0]'s rental period — use leadCartDays, not totalDays
-      const trailerCost = deliveryType === "trailer_rental" ? 25 * leadCartDays : 0;
+      const trailerCost = deliveryType === "trailer_rental" ? 25 * leadCartDays : deliveryType === "trailer_drop_return" ? 35 : 0;
       const driver = 0;
 
       // spansWeekend: true if ANY cart item's rental period includes weekend days
@@ -502,7 +502,7 @@ export default function BookingSection({
 
     const subtotal = itemSub;
     const transport = deliveryType === "delivery_by_us" ? 150 : 0;
-    const trailerCost = deliveryType === "trailer_rental" ? 25 * days : 0;
+    const trailerCost = deliveryType === "trailer_rental" ? 25 * days : deliveryType === "trailer_drop_return" ? 35 : 0;
     const driver = 0;
 
     let addonCost = 0;
@@ -731,7 +731,7 @@ export default function BookingSection({
 
             const itemSubtotal = calculateItemSubtotal(item.machine, days, customerProfile, campaignRules, item.startDate);
             const transport = (deliveryType === "delivery_by_us" && i === 0) ? 150 : 0;
-            const trailerCost = (deliveryType === "trailer_rental" && i === 0) ? 25 * days : 0;
+            const trailerCost = (deliveryType === "trailer_rental" && i === 0) ? 25 * days : (deliveryType === "trailer_drop_return" && i === 0) ? 35 : 0;
             const driver = 0;
 
             let addonCost = 0;

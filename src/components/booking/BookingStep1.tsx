@@ -248,45 +248,79 @@ export default function BookingStep1({
           </div>
 
           {/* Opt 2 — Aanhanger huren */}
-          <div
-            onClick={() => {
-              setDeliveryType("trailer_rental");
-              setDeliveryAddress("");
-              setDeliveryTimeSlot("");
-            }}
-            className={`p-4 rounded-xl border transition-all cursor-pointer ${
-              deliveryType === "trailer_rental"
-                ? "bg-slate-50 border-slate-400 ring-1 ring-slate-200"
-                : "bg-white border-slate-200 hover:border-slate-300"
-            }`}
-          >
-            <div className="flex items-center space-x-2.5 mb-2">
-              <span className={`h-7 w-7 rounded-lg flex items-center justify-center ${deliveryType === "trailer_rental" ? "bg-slate-200" : "bg-slate-100"}`}>
-                <Truck className={`h-4 w-4 ${deliveryType === "trailer_rental" ? "text-slate-800" : "text-slate-500"}`} />
-              </span>
-              <div>
-                <h4 className="text-xs font-bold text-slate-900">Aanhanger huren</h4>
-                <span className="text-[10px] text-slate-400 block">Eigen auto, onze aanhanger</span>
-              </div>
-            </div>
-            <p className="text-xs text-slate-500 leading-normal">
-              U rijdt zelf met uw eigen voertuig en onze aanhanger.
-            </p>
-            {deliveryType === "trailer_rental" && sums && sums.days > 0 ? (
-              <div className="mt-2 space-y-0.5">
-                <span className="text-[10px] text-slate-500 font-mono">{sums.days} {sums.days === 1 ? "dag" : "dagen"} × €25,-</span>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-sm font-black text-slate-900 font-mono">{euroCompact(sums.transport)}</span>
-                  <span className="text-[10px] text-slate-500 font-semibold">totaal</span>
+          {(() => {
+            const trailerSelected = deliveryType === "trailer_rental" || deliveryType === "trailer_drop_return";
+            return (
+              <div
+                onClick={() => {
+                  if (!trailerSelected) {
+                    setDeliveryType("trailer_rental");
+                    setDeliveryAddress("");
+                    setDeliveryTimeSlot("");
+                  }
+                }}
+                className={`p-4 rounded-xl border transition-all ${trailerSelected ? "bg-slate-50 border-slate-400 ring-1 ring-slate-200" : "bg-white border-slate-200 hover:border-slate-300 cursor-pointer"}`}
+              >
+                <div className="flex items-center space-x-2.5 mb-2">
+                  <span className={`h-7 w-7 rounded-lg flex items-center justify-center ${trailerSelected ? "bg-slate-200" : "bg-slate-100"}`}>
+                    <Truck className={`h-4 w-4 ${trailerSelected ? "text-slate-800" : "text-slate-500"}`} />
+                  </span>
+                  <div>
+                    <h4 className="text-xs font-bold text-slate-900">Aanhanger huren</h4>
+                    <span className="text-[10px] text-slate-400 block">Eigen auto, onze aanhanger</span>
+                  </div>
                 </div>
+                <p className="text-xs text-slate-500 leading-normal">
+                  U rijdt zelf met uw eigen voertuig en onze aanhanger.
+                </p>
+
+                {trailerSelected ? (
+                  /* Sub-options */
+                  <div className="mt-3 pt-3 border-t border-slate-200 space-y-2" onClick={e => e.stopPropagation()}>
+                    {/* Op locatie houden */}
+                    <button
+                      type="button"
+                      onClick={() => setDeliveryType("trailer_rental")}
+                      className={`w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg border text-left transition-all cursor-pointer ${deliveryType === "trailer_rental" ? "bg-white border-slate-400 shadow-sm" : "bg-white border-slate-200 hover:border-slate-300"}`}
+                    >
+                      <div className="min-w-0">
+                        <span className="text-[11px] font-bold text-slate-900 block">Op locatie houden</span>
+                        <span className="text-[10px] text-slate-500">Aanhanger blijft op uw locatie</span>
+                      </div>
+                      <div className="text-right shrink-0">
+                        {sums && sums.days > 0 ? (
+                          <>
+                            <span className="text-[10px] text-slate-400 block font-mono">{sums.days} dgn × €25,-</span>
+                            <span className="text-xs font-black text-slate-900 font-mono">{euroCompact(sums.days * 25)}</span>
+                          </>
+                        ) : (
+                          <span className="text-xs font-bold text-slate-900">€25,-/dag</span>
+                        )}
+                      </div>
+                    </button>
+
+                    {/* Drop & Return */}
+                    <button
+                      type="button"
+                      onClick={() => setDeliveryType("trailer_drop_return")}
+                      className={`w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg border text-left transition-all cursor-pointer ${deliveryType === "trailer_drop_return" ? "bg-white border-slate-400 shadow-sm" : "bg-white border-slate-200 hover:border-slate-300"}`}
+                    >
+                      <div className="min-w-0">
+                        <span className="text-[11px] font-bold text-slate-900 block">Drop &amp; Return</span>
+                        <span className="text-[10px] text-slate-500">U brengt heen, wij halen terug</span>
+                      </div>
+                      <span className="text-xs font-black text-slate-900 shrink-0 font-mono">€35,-</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="mt-2 flex items-baseline gap-1">
+                    <span className="text-sm font-black text-slate-900">€25,-/dag</span>
+                    <span className="text-[11px] text-slate-400 font-semibold">of €35,- vast</span>
+                  </div>
+                )}
               </div>
-            ) : (
-              <div className="mt-2 flex items-baseline gap-1">
-                <span className="text-sm font-black text-slate-900">€25,-</span>
-                <span className="text-[11px] text-slate-500 font-semibold">per dag</span>
-              </div>
-            )}
-          </div>
+            );
+          })()}
 
           {/* Opt 3 — Zelf ophalen */}
           <div

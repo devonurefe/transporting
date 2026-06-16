@@ -34,7 +34,7 @@ export interface Machine {
   bufferDays?: number; // 0=no buffer, 1=1-day maintenance buffer after each rental
 }
 
-export type DeliveryType = "self_pickup" | "delivery_by_us" | "trailer_rental";
+export type DeliveryType = "self_pickup" | "delivery_by_us" | "trailer_rental" | "trailer_drop_return";
 
 export interface Order {
   id: string;

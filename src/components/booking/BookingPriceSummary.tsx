@@ -220,7 +220,7 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
         <div className="space-y-2">
           {sums.transport > 0 || sums.driver > 0 ? (
             <Row
-              label={sums.deliveryType === "trailer_rental" ? t("priceSummaryTrailer") : t("priceSummaryDelivery")}
+              label={sums.deliveryType === "trailer_drop_return" ? "Aanhanger Drop & Return" : sums.deliveryType === "trailer_rental" ? t("priceSummaryTrailer") : t("priceSummaryDelivery")}
               value={euro(sums.transport + sums.driver)}
             />
           ) : (

@@ -13,6 +13,7 @@ import DateRangeCalendar from "./DateRangeCalendar";
 import { useLanguageStore } from "../../store/languageStore";
 import { useAppStore } from "../../store/appStore";
 import MachineDetailModal from "../MachineDetailModal";
+import { euroCompact } from "../../utils/format";
 
 interface BookingStep1Props {
   cartItems: CartItem[];
@@ -271,10 +272,20 @@ export default function BookingStep1({
             <p className="text-xs text-slate-500 leading-normal">
               U rijdt zelf met uw eigen voertuig en onze aanhanger.
             </p>
-            <div className="mt-2 flex items-baseline gap-1">
-              <span className="text-sm font-black text-slate-900">€25,-</span>
-              <span className="text-[11px] text-slate-500 font-semibold">per dag</span>
-            </div>
+            {deliveryType === "trailer_rental" && sums && sums.days > 0 ? (
+              <div className="mt-2 space-y-0.5">
+                <span className="text-[10px] text-slate-500 font-mono">{sums.days} {sums.days === 1 ? "dag" : "dagen"} × €25,-</span>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-sm font-black text-slate-900 font-mono">{euroCompact(sums.transport)}</span>
+                  <span className="text-[10px] text-slate-500 font-semibold">totaal</span>
+                </div>
+              </div>
+            ) : (
+              <div className="mt-2 flex items-baseline gap-1">
+                <span className="text-sm font-black text-slate-900">€25,-</span>
+                <span className="text-[11px] text-slate-500 font-semibold">per dag</span>
+              </div>
+            )}
           </div>
 
           {/* Opt 3 — Zelf ophalen */}

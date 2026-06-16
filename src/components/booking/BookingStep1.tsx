@@ -242,7 +242,7 @@ export default function BookingStep1({
               Wij leveren de machine af en halen hem terug op.
             </p>
             <div className="mt-2 flex items-baseline gap-1">
-              <span className="text-sm font-black text-slate-900">€150,-</span>
+              <span className="text-sm font-black text-emerald-600">€150,-</span>
               <span className="text-[11px] text-slate-500 font-semibold">heen + terug</span>
             </div>
           </div>
@@ -291,10 +291,10 @@ export default function BookingStep1({
                         {sums && sums.days > 0 ? (
                           <>
                             <span className="text-[10px] text-slate-400 block font-mono">{sums.days} dgn × €25,-</span>
-                            <span className="text-xs font-black text-slate-900 font-mono">{euroCompact(sums.days * 25)}</span>
+                            <span className="text-xs font-black text-emerald-600 font-mono">{euroCompact(sums.days * 25)}</span>
                           </>
                         ) : (
-                          <span className="text-xs font-bold text-slate-900">€25,-/dag</span>
+                          <span className="text-xs font-bold text-emerald-600">€25,-/dag</span>
                         )}
                       </div>
                     </button>
@@ -309,12 +309,12 @@ export default function BookingStep1({
                         <span className="text-[11px] font-bold text-slate-900 block">Drop &amp; Return</span>
                         <span className="text-[10px] text-slate-500">U brengt heen, wij halen terug</span>
                       </div>
-                      <span className="text-xs font-black text-slate-900 shrink-0 font-mono">€35,-</span>
+                      <span className="text-xs font-black text-emerald-600 shrink-0 font-mono">€35,-</span>
                     </button>
                   </div>
                 ) : (
                   <div className="mt-2 flex items-baseline gap-1">
-                    <span className="text-sm font-black text-slate-900">€25,-/dag</span>
+                    <span className="text-sm font-black text-emerald-600">€25,-/dag</span>
                     <span className="text-[11px] text-slate-400 font-semibold">of €35,- vast</span>
                   </div>
                 )}

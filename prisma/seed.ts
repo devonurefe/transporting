@@ -417,20 +417,20 @@ const defaultMachines = [
     monthlyPrice: 340
   },
 
-  // CATEGORIE 4c: Kamersteigers — Altrex RS-44 Power
+  // CATEGORIE 4c: Kamersteigers — Altrex RS TOWER 44-Power (weekly-only loss leader)
   {
     id: "altrex-rs44",
-    name: "Altrex RS-44 Power Kamersteiger",
+    name: "Altrex RS TOWER 44-Power Kamersteiger",
     category: "kamersteiger",
     categoryLabel: "Kamersteiger",
     height: 4.0,
     reach: 0,
     weight: 105,
-    pricePerDay: 35,
+    pricePerDay: 19,
     powerType: "Handmatig",
     imageUrl: "/images/machines/altrex-rs44.webp",
-    imageAlt: "Altrex RS-44 Power kamersteiger binnenwerk",
-    description: "Professionele aluminium kamersteiger met geveerde wielen en veiligheidsborging. In minuten opgebouwd en verplaatst. Ideaal voor schilder- en stucwerkzaamheden in woon- en kantoorruimtes.",
+    imageAlt: "Altrex RS TOWER 44-Power kamersteiger binnenwerk",
+    description: "Veilig, licht en originele Altrex-kwaliteit. Inklapbaar en eenvoudig op te bouwen voor uw renovatieklussen binnen en buiten.",
     suitableFor: ["Schilder", "Stukadoor", "Particulier"],
     weeklyDiscountPercent: null,
     monthlyDiscountPercent: null,
@@ -438,8 +438,16 @@ const defaultMachines = [
     campaignDiscountPercent: null,
     campaignDiscountAmount: null,
     weekendPrice: null,
-    weeklyPrice: null,
-    monthlyPrice: null
+    weeklyPrice: 19,
+    monthlyPrice: null,
+    minRentalDays: 7,
+    weeklyOnly: true,
+    pickupOnly: true,
+    packageContents: "Inklapbaar hoofdframe (Module A); Werkplatform; Zwenkwielenset met rem; **Wettelijk verplichte driehoekstabilisatoren (inbegrepen)**",
+    crossSellAddons: [
+      { id: "altrex-rs44-uitbreiding", name: "Uitbreidingsset (Module B)", description: "Extra originele Altrex bovenbuizenset om uw werkhoogte van 4 m naar 5,5 m te verhogen.", pricePerWeek: 15 },
+      { id: "altrex-rs44-toolbuddy", name: "Altrex Toolbuddy", description: "Praktische ophanghaak zodat uw gereedschap en verfemmer binnen handbereik blijven tijdens het werken.", pricePerWeek: 5 }
+    ]
   },
 
   // CATEGORIE 5: Verticale Mastliften
@@ -742,6 +750,28 @@ async function main() {
   ] as [string, number, number][]) {
     await prisma.machine.updateMany({ where: { id, pricePerDay: wrongPrice }, data: { pricePerDay: correctPrice } });
   }
+
+  // Configure the Altrex Kamersteiger as a weekly-only, pickup-only loss leader.
+  // Guarded on the original scaffold day-rate (35) so a later admin edit is never clobbered;
+  // brand-new databases get the full config via `create` above and skip this no-op.
+  console.log("Configuring Altrex Kamersteiger (weekly-only, pickup-only)...");
+  await prisma.machine.updateMany({
+    where: { id: "altrex-rs44", pricePerDay: 35 },
+    data: {
+      name: "Altrex RS TOWER 44-Power Kamersteiger",
+      pricePerDay: 19,
+      weeklyPrice: 19,
+      minRentalDays: 7,
+      weeklyOnly: true,
+      pickupOnly: true,
+      description: "Veilig, licht en originele Altrex-kwaliteit. Inklapbaar en eenvoudig op te bouwen voor uw renovatieklussen binnen en buiten.",
+      packageContents: "Inklapbaar hoofdframe (Module A); Werkplatform; Zwenkwielenset met rem; **Wettelijk verplichte driehoekstabilisatoren (inbegrepen)**",
+      crossSellAddons: [
+        { id: "altrex-rs44-uitbreiding", name: "Uitbreidingsset (Module B)", description: "Extra originele Altrex bovenbuizenset om uw werkhoogte van 4 m naar 5,5 m te verhogen.", pricePerWeek: 15 },
+        { id: "altrex-rs44-toolbuddy", name: "Altrex Toolbuddy", description: "Praktische ophanghaak zodat uw gereedschap en verfemmer binnen handbereik blijven tijdens het werken.", pricePerWeek: 5 }
+      ]
+    }
+  });
 
   console.log("Seeding blocked dates (upsert)...");
   for (const bd of defaultBlockedDates) {

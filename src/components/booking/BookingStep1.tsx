@@ -219,6 +219,25 @@ export default function BookingStep1({
       <div className="space-y-3 pt-4 border-t border-slate-200">
         <h3 className="text-sm font-bold text-slate-800 tracking-wide">{t("step1TransportOpts")}</h3>
 
+        {selectedMachine?.pickupOnly ? (
+          /* Pickup-only product — no delivery or trailer options */
+          <div className="p-4 rounded-xl border bg-slate-50 border-slate-400 ring-1 ring-slate-200 space-y-2">
+            <div className="flex items-center space-x-2.5">
+              <span className="h-7 w-7 rounded-lg flex items-center justify-center bg-slate-200">
+                <Building2 className="h-4 w-4 text-slate-800" />
+              </span>
+              <div>
+                <h4 className="text-xs font-bold text-slate-900">Afhalen in Zoeterwoude</h4>
+                <span className="text-[10px] text-slate-400 block">Depot — gratis</span>
+              </div>
+            </div>
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Dankzij de compacte afmetingen past dit product eenvoudig in een personenauto of kleine
+              bestelwagen — u kunt het zelf gemakkelijk vervoeren.
+            </p>
+            <span className="text-sm font-black text-emerald-600 block">Kosteloos</span>
+          </div>
+        ) : (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {/* Opt 1 — Wij bezorgen */}
           <div
@@ -350,6 +369,7 @@ export default function BookingStep1({
             <span className="text-sm font-black text-emerald-600 mt-2 block">Kosteloos</span>
           </div>
         </div>
+        )}
       </div>
 
       {/* Distance >20 km — prijs op aanvraag, checkout blocked */}
@@ -407,14 +427,29 @@ export default function BookingStep1({
         </div>
       )}
 
+      {/* Minimum-rental notice for weekly-only products (e.g. Kamersteiger) */}
+      {selectedMachine?.weeklyOnly && (
+        <div className="p-3 rounded-xl bg-sky-50 border border-sky-200 text-sky-800 text-[11px] leading-relaxed flex items-start gap-2">
+          <Calendar className="h-4 w-4 text-sky-600 shrink-0 mt-0.5" />
+          <span>
+            Dit product wordt <span className="font-bold">per week</span> verhuurd met een minimum van
+            1 week. Kortere periodes worden afgerekend als een volledige week.
+          </span>
+        </div>
+      )}
+
       {/* Extra opties */}
       <div className="space-y-3 pt-4 border-t border-slate-200">
         <div className="flex justify-between items-center">
-          <span className="text-xs text-slate-500 font-semibold">{t("step1AddonsTitle")}</span>
+          <span className="text-xs text-slate-500 font-semibold">
+            {selectedMachine?.crossSellAddons?.length ? "Handige accessoires voor uw klus" : t("step1AddonsTitle")}
+          </span>
           <span className="text-xs text-slate-400">Optioneel</span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {/* Global safety set — not relevant for weekly-only low-level products */}
+          {!selectedMachine?.weeklyOnly && (
           <div
             onClick={() => {
               if (selectedAddons.includes("safety")) {
@@ -424,7 +459,7 @@ export default function BookingStep1({
               }
             }}
             className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between ${
-              selectedAddons.includes("safety") 
+              selectedAddons.includes("safety")
                 ? "bg-slate-50 border-slate-400 shadow-sm"
                 : "bg-white border-slate-200 hover:border-slate-300 shadow-sm"
             }`}
@@ -432,7 +467,7 @@ export default function BookingStep1({
             <div>
               <div className="flex items-center justify-between mb-2">
                 <h4 className="text-xs font-bold text-slate-900">Veiligheidsset Pro</h4>
-                <input 
+                <input
                   type="checkbox"
                   checked={selectedAddons.includes("safety")}
                   onChange={()=>{}}
@@ -445,6 +480,42 @@ export default function BookingStep1({
             </div>
             <span className="text-xs font-mono font-bold text-slate-700 mt-3 block">€15,- / per dag</span>
           </div>
+          )}
+
+          {/* Product-specific cross-sell extras (per week) */}
+          {selectedMachine?.crossSellAddons?.map((addon) => (
+            <div
+              key={addon.id}
+              onClick={() => {
+                if (selectedAddons.includes(addon.id)) {
+                  setSelectedAddons(selectedAddons.filter(x => x !== addon.id));
+                } else {
+                  setSelectedAddons([...selectedAddons, addon.id]);
+                }
+              }}
+              className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between ${
+                selectedAddons.includes(addon.id)
+                  ? "bg-slate-50 border-slate-400 shadow-sm"
+                  : "bg-white border-slate-200 hover:border-slate-300 shadow-sm"
+              }`}
+            >
+              <div>
+                <div className="flex items-center justify-between mb-2 gap-2">
+                  <h4 className="text-xs font-bold text-slate-900">{addon.name}</h4>
+                  <input
+                    type="checkbox"
+                    checked={selectedAddons.includes(addon.id)}
+                    onChange={()=>{}}
+                    className="h-4 w-4 accent-orange-500 rounded cursor-pointer shrink-0"
+                  />
+                </div>
+                {addon.description && (
+                  <p className="text-[10.5px] text-slate-600 leading-normal">{addon.description}</p>
+                )}
+              </div>
+              <span className="text-xs font-mono font-bold text-slate-700 mt-3 block">+€{addon.pricePerWeek},- / per week</span>
+            </div>
+          ))}
 
         </div>
       </div>

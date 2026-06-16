@@ -32,6 +32,18 @@ export interface Machine {
   specs?: { label: string; value: string }[];
   isActive?: boolean;
   bufferDays?: number; // 0=no buffer, 1=1-day maintenance buffer after each rental
+  minRentalDays?: number; // minimum billable rental length in days (e.g. 7 = 1 week)
+  weeklyOnly?: boolean; // bill per started week (weeklyPrice = price/week), ignore daily/2-day/monthly tiers
+  pickupOnly?: boolean; // only "Afhalen" logistics offered — no delivery / trailer
+  crossSellAddons?: CrossSellAddon[]; // product-specific optional extras shown in the cart
+}
+
+// Optional per-week extra shown only for the machine it belongs to (e.g. Altrex Uitbreidingsset).
+export interface CrossSellAddon {
+  id: string;
+  name: string;
+  description?: string;
+  pricePerWeek: number; // excl. BTW, charged per started week (same week count as the machine)
 }
 
 export type DeliveryType = "self_pickup" | "delivery_by_us" | "trailer_rental" | "trailer_drop_return";
@@ -58,7 +70,7 @@ export interface Order {
   totalAmount: number;
   status: "In behandeling" | "Goedgekeurd" | "Onderweg" | "Voltooid" | "Geannuleerd";
   createdAt: string;
-  addons?: { id: string; name: string; price: number; billing: "daily" | "flat" }[];
+  addons?: { id: string; name: string; price: number; billing: "daily" | "flat" | "weekly" }[];
   invoiceNumber?: string;
   paymentStatus?: string;
 }

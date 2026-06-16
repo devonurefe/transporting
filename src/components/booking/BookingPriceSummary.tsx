@@ -157,7 +157,11 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
             {machineCount > 1 ? `${machineCount} machines gereserveerd` : selectedMachine.name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "")}
           </h4>
           {machineCount === 1 && (
-            <span className="text-sm font-black text-slate-800 font-mono">{euroCompact(selectedMachine.pricePerDay)}/dag</span>
+            <span className="text-sm font-black text-slate-800 font-mono">
+              {selectedMachine.weeklyOnly && selectedMachine.weeklyPrice
+                ? `${euroCompact(selectedMachine.weeklyPrice)}/week`
+                : `${euroCompact(selectedMachine.pricePerDay)}/dag`}
+            </span>
           )}
         </div>
       </div>

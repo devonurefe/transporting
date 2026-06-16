@@ -35,6 +35,10 @@ model Machine {
   additionalImages        Json?
   specs                   Json?
   bufferDays              Int           @default(0)
+  minRentalDays           Int?
+  weeklyOnly              Boolean       @default(false)
+  pickupOnly              Boolean       @default(false)
+  crossSellAddons         Json?
   isActive                Boolean       @default(true)
   blockedDates            BlockedDate[]
   updatedAt               DateTime      @updatedAt @default(now())

@@ -144,6 +144,11 @@ export default function MachineDetailModal({
   const packageItems = machine.packageContents?.trim()
     ? machine.packageContents.split(";").map(s => s.trim()).filter(Boolean)
     : null;
+  // Render **bold** segments (e.g. legally required stabilizers) within a package line.
+  const renderPkg = (item: string) =>
+    item.split(/\*\*(.+?)\*\*/g).map((part, j) =>
+      j % 2 === 1 ? <strong key={j} className="font-bold text-slate-900">{part}</strong> : part
+    );
 
   return (
     <div
@@ -372,7 +377,7 @@ export default function MachineDetailModal({
                   <p className="text-xs text-slate-400 uppercase tracking-wider font-bold">Inbegrepen</p>
                   {items.map((item, i) => (
                     <div key={i} className="flex items-start gap-2 text-xs text-slate-600">
-                      <span className="text-emerald-500 font-black shrink-0 mt-0.5 select-none">✓</span>{item}
+                      <span className="text-emerald-500 font-black shrink-0 mt-0.5 select-none">✓</span><span>{renderPkg(item)}</span>
                     </div>
                   ))}
                 </div>
@@ -451,7 +456,7 @@ export default function MachineDetailModal({
               {(packageItems ?? getDefaultPackageItems(machine.id)).map((item, idx) => (
                 <div key={idx} className="flex items-start gap-2 text-xs text-slate-700">
                   <span className="text-teal-600 font-bold shrink-0 mt-0.5 select-none">✓</span>
-                  <span>{item}</span>
+                  <span>{renderPkg(item)}</span>
                 </div>
               ))}
             </div>

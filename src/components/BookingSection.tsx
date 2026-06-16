@@ -332,8 +332,10 @@ export default function BookingSection({
         const days = Math.max(1, Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1);
         totalDays += days;
 
-        const itemRaw = item.machine.pricePerDay * days;
         const itemSub = calculateItemSubtotal(item.machine, days, customerProfile, campaignRules, itemStart);
+        // Weekly-only products bill per week, not per day — the day-rate "raw" total is
+        // meaningless and would surface as a phantom discount, so anchor raw to the subtotal.
+        const itemRaw = item.machine.weeklyOnly ? itemSub : item.machine.pricePerDay * days;
         const itemSubNoCampaign = calculateItemSubtotal(
           { ...item.machine, campaignDiscountPercent: undefined, campaignDiscountAmount: undefined } as any,
           days, customerProfile, [], itemStart

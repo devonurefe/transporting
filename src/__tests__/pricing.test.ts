@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { calculateItemSubtotal, calculateRentalDays, evaluateDiscountPercent, isStrictWeekend } from "../utils/pricing";
+import { calculateItemSubtotal, calculateRentalDays, evaluateDiscountPercent, isStrictWeekend, billableWeeks } from "../utils/pricing";
 import { Machine, CampaignRule } from "../types";
 
 // Reference weekdays (UTC): 2026-06-08 = Monday, 2026-06-12 = Friday, 2026-06-13 = Saturday
@@ -176,5 +176,48 @@ describe("evaluateDiscountPercent — campaign rules", () => {
   it("highest discount wins between volume tier and rule", () => {
     expect(evaluateDiscountPercent(basicMachine, 10, "Schilder", rules)).toBe(15);
     expect(evaluateDiscountPercent(basicMachine, 30, "Schilder", rules)).toBe(20);
+  });
+});
+
+// Altrex Kamersteiger — weekly-only loss leader (€19/week, min 1 week, per-started-week)
+const kamersteiger = {
+  id: "altrex-rs44",
+  category: "kamersteiger",
+  pricePerDay: 19,
+  weeklyPrice: 19,
+  weeklyOnly: true,
+  minRentalDays: 7,
+} as Machine;
+
+describe("billableWeeks", () => {
+  it("1–7 days = 1 week (minimum)", () => {
+    expect(billableWeeks(1, 7)).toBe(1);
+    expect(billableWeeks(7, 7)).toBe(1);
+  });
+  it("8–14 days = 2 weeks", () => {
+    expect(billableWeeks(8, 7)).toBe(2);
+    expect(billableWeeks(14, 7)).toBe(2);
+  });
+  it("15 days = 3 weeks", () => {
+    expect(billableWeeks(15, 7)).toBe(3);
+  });
+  it("defaults to a 1-week minimum when minRentalDays omitted", () => {
+    expect(billableWeeks(3)).toBe(1);
+  });
+});
+
+describe("calculateItemSubtotal — weekly-only product", () => {
+  it("1 day still bills a full week (€19)", () => {
+    expect(calculateItemSubtotal(kamersteiger, 1, "Particulier", noRules, MON)).toBe(19);
+  });
+  it("7 days = 1 week (€19)", () => {
+    expect(calculateItemSubtotal(kamersteiger, 7, "Particulier", noRules, MON)).toBe(19);
+  });
+  it("10 days = 2 started weeks (€38)", () => {
+    expect(calculateItemSubtotal(kamersteiger, 10, "Particulier", noRules, MON)).toBe(38);
+  });
+  it("weekly-only takes priority over weekend/2-day tiers", () => {
+    const m = { ...kamersteiger, weekendPrice: 999, twoDayPrice: 999 } as Machine;
+    expect(calculateItemSubtotal(m, 2, "Particulier", noRules, SAT)).toBe(19);
   });
 });

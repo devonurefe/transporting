@@ -54,6 +54,10 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
   const [isUploadingAdditional, setIsUploadingAdditional] = useState(false);
   const [packageContents, setPackageContents] = useState("");
   const [newSpecs, setNewSpecs] = useState<{ label: string; value: string }[]>([]);
+  const [minRentalDays, setMinRentalDays] = useState("");
+  const [weeklyOnly, setWeeklyOnly] = useState(false);
+  const [pickupOnly, setPickupOnly] = useState(false);
+  const [crossSell, setCrossSell] = useState<{ id: string; name: string; description: string; pricePerWeek: string }[]>([]);
 
   const handleAdditionalImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -216,6 +220,12 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
         ? newSpecs.filter(s => s.label.trim() && s.value.trim())
         : undefined,
       bufferDays: newBufferDays,
+      minRentalDays: minRentalDays ? Number(minRentalDays) : undefined,
+      weeklyOnly,
+      pickupOnly,
+      crossSellAddons: crossSell
+        .filter(a => a.name.trim())
+        .map(a => ({ id: a.id, name: a.name.trim(), description: a.description.trim(), pricePerWeek: Number(a.pricePerWeek) || 0 })),
     });
 
     setIsAdding(false);
@@ -243,6 +253,10 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
       setPackageContents("");
       setNewSpecs([]);
       setNewBufferDays(0);
+      setMinRentalDays("");
+      setWeeklyOnly(false);
+      setPickupOnly(false);
+      setCrossSell([]);
       setSubTab("machines");
     } else {
       alert(t("Fout bij opslaan.", "Error saving.", "Kaydetme hatası."));
@@ -671,6 +685,108 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
             </div>
           </div>
 
+        </div>
+
+        {/* Verhuurmodel: per week + alleen afhalen + accessoires */}
+        <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50 space-y-4">
+          <p className="text-sm font-bold text-slate-800">{t("Verhuurmodel & accessoires", "Rental model & accessories", "Kiralama modeli ve aksesuarlar")}</p>
+
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-xs font-bold text-slate-700">{t("Alleen per week verhuren", "Weekly-only rental", "Sadece haftalık kiralama")}</p>
+              <p className="text-[11px] text-slate-500 mt-0.5">{t("Vaste weekprijs (€/week veld), minimum 1 week. Dag-/maandtarieven vervallen.", "Fixed weekly price (€/week field), minimum 1 week. Daily/monthly tiers are ignored.", "Sabit haftalık fiyat, minimum 1 hafta. Günlük/aylık kademeler devre dışı.")}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setWeeklyOnly(v => !v)}
+              className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus:outline-none ${weeklyOnly ? 'bg-orange-500' : 'bg-slate-300'}`}
+              role="switch"
+              aria-checked={weeklyOnly}
+            >
+              <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${weeklyOnly ? 'translate-x-6' : 'translate-x-1'}`} />
+            </button>
+          </div>
+
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-xs font-bold text-slate-700">{t("Alleen afhalen", "Pickup only", "Sadece depodan teslim")}</p>
+              <p className="text-[11px] text-slate-500 mt-0.5">{t("Verberg bezorging en aanhanger — klant kan alleen zelf ophalen in Zoeterwoude.", "Hide delivery and trailer — customer can only pick up in Zoeterwoude.", "Teslimat ve römork gizlenir — sadece depodan teslim alınır.")}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setPickupOnly(v => !v)}
+              className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus:outline-none ${pickupOnly ? 'bg-orange-500' : 'bg-slate-300'}`}
+              role="switch"
+              aria-checked={pickupOnly}
+            >
+              <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${pickupOnly ? 'translate-x-6' : 'translate-x-1'}`} />
+            </button>
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-xs text-slate-700 block font-bold">{t("Minimale huurperiode (dagen)", "Minimum rental (days)", "Minimum kiralama (gün)")}</label>
+            <input
+              type="number"
+              min="1"
+              max="365"
+              value={minRentalDays}
+              onChange={(e) => setMinRentalDays(e.target.value)}
+              placeholder={t("Bijv. 7 (1 week)", "e.g. 7 (1 week)", "örn: 7 (1 hafta)")}
+              className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-xs text-slate-700 block font-bold">{t("Optionele accessoires (per week)", "Optional accessories (per week)", "Opsiyonel aksesuarlar (haftalık)")}</label>
+              <button
+                type="button"
+                onClick={() => setCrossSell(prev => [...prev, { id: "", name: "", description: "", pricePerWeek: "" }])}
+                className="text-xs font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded-lg transition-colors cursor-pointer border-none flex items-center gap-1"
+              >
+                <Plus className="h-3 w-3" />
+                {t("Accessoire toevoegen", "Add accessory", "Aksesuar ekle")}
+              </button>
+            </div>
+            {crossSell.length === 0 && (
+              <p className="text-[10px] text-slate-400 italic">{t("Geen accessoires. Bijv. Uitbreidingsset of Toolbuddy.", "No accessories yet. E.g. extension set or toolbuddy.", "Henüz aksesuar yok. Örn. genişletme seti.")}</p>
+            )}
+            <div className="space-y-2">
+              {crossSell.map((a, idx) => (
+                <div key={idx} className="grid grid-cols-1 md:grid-cols-[1fr_1.4fr_90px_auto] gap-2 items-start bg-white border border-slate-200 rounded-xl p-2">
+                  <input
+                    type="text"
+                    placeholder={t("Naam", "Name", "Ad")}
+                    value={a.name}
+                    onChange={e => setCrossSell(prev => prev.map((x, i) => i === idx ? { ...x, name: e.target.value } : x))}
+                    className="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 text-xs text-slate-800 outline-none focus:border-amber-500"
+                  />
+                  <input
+                    type="text"
+                    placeholder={t("Omschrijving", "Description", "Açıklama")}
+                    value={a.description}
+                    onChange={e => setCrossSell(prev => prev.map((x, i) => i === idx ? { ...x, description: e.target.value } : x))}
+                    className="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 text-xs text-slate-800 outline-none focus:border-amber-500"
+                  />
+                  <input
+                    type="number"
+                    min="0"
+                    placeholder="€/wk"
+                    value={a.pricePerWeek}
+                    onChange={e => setCrossSell(prev => prev.map((x, i) => i === idx ? { ...x, pricePerWeek: e.target.value } : x))}
+                    className="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 text-xs text-slate-800 outline-none focus:border-amber-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setCrossSell(prev => prev.filter((_, i) => i !== idx))}
+                    className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-500 hover:text-rose-700 transition-colors cursor-pointer border-none shrink-0 self-center"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* Onderhoudsbuffer toggle */}

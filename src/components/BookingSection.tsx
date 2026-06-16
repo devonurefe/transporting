@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { Machine, Order, DeliveryType, UserProfile, CartItem } from "../types";
 import { useAppStore } from "../store/appStore";
 import { checkAvailability } from "../utils/availability";
-import { calculateItemSubtotal, isStrictWeekend, countWeekendDays, calculateRentalDays } from "../utils/pricing";
+import { calculateItemSubtotal, isStrictWeekend, countWeekendDays, calculateRentalDays, billableWeeks } from "../utils/pricing";
 
 // Import modular Step components
 import { buildWhatsAppUrl } from "../utils/whatsapp";
@@ -111,7 +111,7 @@ export default function BookingSection({
 
     if (machineIdsKey !== lastMachineIdsRef.current) {
       lastMachineIdsRef.current = machineIdsKey;
-      if (leadMachine.category === "aanhanger" || leadMachine.category === "ecolift") {
+      if (leadMachine.pickupOnly || leadMachine.category === "aanhanger" || leadMachine.category === "ecolift") {
         setDeliveryType("self_pickup");
       } else {
         setDeliveryType("delivery_by_us");
@@ -373,6 +373,20 @@ export default function BookingSection({
         addonCost += 75;
         addonDetails.push({ id: "weekend_surcharge", name: "Weekendtoeslag", price: 75 });
       }
+      // Product-specific cross-sell extras (billed per started week, same week count as the machine)
+      for (const item of cartItems) {
+        const cs = item.machine.crossSellAddons;
+        if (!cs?.length) continue;
+        const itemDays = (item.startDate && item.endDate) ? calculateRentalDays(item.startDate, item.endDate) : 1;
+        const weeks = billableWeeks(itemDays, item.machine.minRentalDays);
+        for (const a of cs) {
+          if (selectedAddons.includes(a.id)) {
+            const price = a.pricePerWeek * weeks;
+            addonCost += price;
+            addonDetails.push({ id: a.id, name: a.name, price });
+          }
+        }
+      }
 
       const totalExcl = subtotal + transport + trailerCost + driver + addonCost;
       const vat = totalExcl * 0.21;
@@ -404,7 +418,7 @@ export default function BookingSection({
         }
       }
 
-      const effectiveDailyRate = (totalDays >= 6 && totalDays < 28 && leadItem?.weeklyPrice)
+      const effectiveDailyRate = (!leadItem?.weeklyOnly && totalDays >= 6 && totalDays < 28 && leadItem?.weeklyPrice)
         ? leadItem.weeklyPrice / 5
         : null;
 
@@ -413,7 +427,11 @@ export default function BookingSection({
       let isFlatRate = false;
       let weeklyBreakdown: { weeks: number; pricePerWeek: number; remainder: number; dailyRate: number } | null = null;
       if (cartItems.length === 1 && leadItem) {
-        if (totalDays === 1 && leadItem.oneDayPrice) {
+        if (leadItem.weeklyOnly && leadItem.weeklyPrice) {
+          const weeks = billableWeeks(totalDays, leadItem.minRentalDays);
+          tierLabel = weeks === 1 ? "Weektarief (min. 1 week)" : `Weektarief × ${weeks} weken`;
+          isFlatRate = true;
+        } else if (totalDays === 1 && leadItem.oneDayPrice) {
           tierLabel = "1-Dag Actie"; isFlatRate = true;
         } else if (totalDays === 2 && isStrictWeekend(leadStart, 2) && leadItem.weekendPrice) {
           tierLabel = "Weekendtarief (za+zo)"; isFlatRate = true;
@@ -735,7 +753,7 @@ export default function BookingSection({
             const driver = 0;
 
             let addonCost = 0;
-            const addonsList: { id: string; name: string; price: number; billing: "daily" | "flat" }[] = [];
+            const addonsList: { id: string; name: string; price: number; billing: "daily" | "flat" | "weekly" }[] = [];
             if (selectedAddons.includes("safety")) {
               addonCost += 15 * days;
               addonsList.push({ id: "safety", name: "Gecertificeerd Harnas & Veiligheidskit", price: 15 * days, billing: "flat" });
@@ -744,6 +762,15 @@ export default function BookingSection({
             if (i === 0 && weekendWorkAnswer === 'ja' && sums.spansWeekend) {
               addonCost += 75;
               addonsList.push({ id: "weekend_surcharge", name: "Weekendtoeslag", price: 75, billing: "flat" });
+            }
+            // Product-specific cross-sell extras (per started week, server recomputes authoritatively)
+            const csWeeks = billableWeeks(days, item.machine.minRentalDays);
+            for (const a of (item.machine.crossSellAddons ?? [])) {
+              if (selectedAddons.includes(a.id)) {
+                const price = a.pricePerWeek * csWeeks;
+                addonCost += price;
+                addonsList.push({ id: a.id, name: a.name, price, billing: "weekly" });
+              }
             }
 
             const itemVat = (itemSubtotal + transport + trailerCost + driver + addonCost) * 0.21;

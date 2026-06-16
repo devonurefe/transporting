@@ -251,6 +251,11 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
     }
     // Compute authoritative transport cost server-side — never trust the client value
     const dt = orderData.deliveryType as string;
+    // Pickup-only products (e.g. Kamersteiger) may never be delivered. The frontend
+    // forces self_pickup, but a crafted request could bypass that.
+    if ((machine as any).pickupOnly && dt !== "self_pickup") {
+      return res.status(400).json({ error: "Voor dit product is alleen afhalen mogelijk" });
+    }
     const authTransport =
       dt === "self_pickup"           ? 0
       : dt === "delivery_by_us"      ? 150
@@ -265,18 +270,32 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
     if (driverCostClient !== 0) {
       return res.status(400).json({ error: "Ongeldig chauffeurskostenbedrag" });
     }
-    const VALID_ADDON_IDS = new Set(["safety", "weekend_surcharge"]);
+    // Addon prices are recomputed authoritatively from the DB — never trusted from
+    // the client. Global addons (safety, weekend_surcharge) plus this machine's own
+    // product-specific cross-sell extras are the only accepted ids.
+    const crossSell: Array<{ id: string; pricePerWeek: number }> =
+      Array.isArray((machine as any).crossSellAddons) ? (machine as any).crossSellAddons : [];
+    const crossSellMap = new Map(crossSell.map(a => [String(a.id), a]));
+    const addonWeeks = Math.max(1, Math.ceil(
+      Math.max(rentalDays, ((machine as any).minRentalDays > 0 ? (machine as any).minRentalDays : 7)) / 7
+    ));
     const rawAddons = Array.isArray(orderData.addons) ? orderData.addons : [];
+    let addonsTotal = 0;
     for (const a of rawAddons) {
-      if (typeof a !== "object" || a === null || !VALID_ADDON_IDS.has(String(a.id ?? ""))) {
+      if (typeof a !== "object" || a === null) {
+        return res.status(400).json({ error: "Ongeldige toevoeging in bestelling" });
+      }
+      const id = String(a.id ?? "");
+      if (id === "safety") {
+        addonsTotal += 15 * rentalDays;
+      } else if (id === "weekend_surcharge") {
+        addonsTotal += 75;
+      } else if (crossSellMap.has(id)) {
+        addonsTotal += Number(crossSellMap.get(id)!.pricePerWeek || 0) * addonWeeks;
+      } else {
         return res.status(400).json({ error: "Ongeldige toevoeging in bestelling" });
       }
     }
-    const addonsTotal = rawAddons.reduce((sum: number, a: any) => {
-      const price = Number(a.price || 0);
-      const billing = a.billing ?? "flat";
-      return sum + (billing === "daily" ? price * rentalDays : price);
-    }, 0);
     // Flat-rate pricing mirrors src/utils/pricing.ts calculateItemSubtotal.
     // Strict weekend: 2 days starting Saturday (Sat+Sun).
     // startDate is a UTC-parsed Date, so getUTCDay() is timezone-safe.
@@ -303,7 +322,13 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
     const m = machine as any;
     const dow = startDate.getUTCDay();
     const strictWeekend = rentalDays === 2 && dow === 6;
-    if (rentalDays === 1 && m.oneDayPrice) {
+    if (m.weeklyOnly && m.weeklyPrice) {
+      // Weekly-only billing — minimum 1 week, charged per started week.
+      // Mirrors src/utils/pricing.ts billableWeeks().
+      const min = m.minRentalDays > 0 ? m.minRentalDays : 7;
+      const weeks = Math.max(1, Math.ceil(Math.max(rentalDays, min) / 7));
+      serverSubtotal = withCampaign(weeks * m.weeklyPrice);
+    } else if (rentalDays === 1 && m.oneDayPrice) {
       serverSubtotal = withCampaign(m.oneDayPrice);
     } else if (rentalDays === 2 && strictWeekend && m.weekendPrice) {
       serverSubtotal = withCampaign(m.weekendPrice);

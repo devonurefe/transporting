@@ -97,7 +97,30 @@ function validateMachineInput(body: any): { valid: boolean; error?: string } {
     }
   }
 
+  if (body.minRentalDays !== undefined && body.minRentalDays !== null && body.minRentalDays !== "") {
+    const v = Number(body.minRentalDays);
+    if (isNaN(v) || v < 1 || v > 365) return { valid: false, error: "Minimale huurperiode moet tussen 1 en 365 dagen liggen." };
+  }
+  if (body.weeklyOnly && (body.weeklyPrice === undefined || body.weeklyPrice === null || body.weeklyPrice === "")) {
+    return { valid: false, error: "Weekprijs (€/week) is verplicht wanneer 'alleen per week' is ingeschakeld." };
+  }
+
   return { valid: true };
+}
+
+// Cross-sell addons are stored as JSON — sanitise to a fixed shape and cap counts/lengths.
+function sanitizeCrossSell(raw: unknown): { id: string; name: string; description: string; pricePerWeek: number }[] | null {
+  if (!Array.isArray(raw) || raw.length === 0) return null;
+  const cleaned = raw
+    .map((a: any, i: number) => ({
+      id: String(a?.id ?? "").slice(0, 60).trim() || `addon-${i + 1}`,
+      name: String(a?.name ?? "").slice(0, 120).trim(),
+      description: String(a?.description ?? "").slice(0, 300).trim(),
+      pricePerWeek: Number(a?.pricePerWeek ?? 0)
+    }))
+    .filter(a => a.name && !isNaN(a.pricePerWeek) && a.pricePerWeek >= 0 && a.pricePerWeek <= 100000)
+    .slice(0, 10);
+  return cleaned.length > 0 ? cleaned : null;
 }
 
 // POST new machine
@@ -172,7 +195,11 @@ machinesRouter.post("/", requireAdmin as any, async (req: AuthenticatedRequest, 
         monthlyPrice: monthlyPrice ? Number(monthlyPrice) : null,
         packageContents: packageContents || null,
         additionalImages: Array.isArray(additionalImages) ? additionalImages : [],
-        specs: Array.isArray(specs) && specs.length > 0 ? specs : null
+        specs: Array.isArray(specs) && specs.length > 0 ? specs : null,
+        minRentalDays: req.body.minRentalDays !== undefined && req.body.minRentalDays !== null && req.body.minRentalDays !== "" ? Math.round(Number(req.body.minRentalDays)) : null,
+        weeklyOnly: Boolean(req.body.weeklyOnly),
+        pickupOnly: Boolean(req.body.pickupOnly),
+        crossSellAddons: sanitizeCrossSell(req.body.crossSellAddons)
       }
     });
 
@@ -262,7 +289,11 @@ machinesRouter.put("/:id", requireAdmin as any, async (req: AuthenticatedRequest
         additionalImages: Array.isArray(additionalImages) ? additionalImages : [],
         specs: specsUpdate,
         isActive: req.body.isActive !== undefined ? Boolean(req.body.isActive) : undefined,
-        bufferDays: req.body.bufferDays !== undefined ? Math.min(2, Math.max(0, Math.round(Number(req.body.bufferDays)))) : undefined
+        bufferDays: req.body.bufferDays !== undefined ? Math.min(2, Math.max(0, Math.round(Number(req.body.bufferDays)))) : undefined,
+        minRentalDays: req.body.minRentalDays !== undefined && req.body.minRentalDays !== null && req.body.minRentalDays !== "" ? Math.round(Number(req.body.minRentalDays)) : null,
+        weeklyOnly: Boolean(req.body.weeklyOnly),
+        pickupOnly: Boolean(req.body.pickupOnly),
+        crossSellAddons: req.body.crossSellAddons !== undefined ? sanitizeCrossSell(req.body.crossSellAddons) : undefined
       }
     });
 

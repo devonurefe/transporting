@@ -14,6 +14,15 @@ export function calculateRentalDays(startDate: string | Date, endDate: string | 
   return Math.max(1, Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1);
 }
 
+// Number of started weeks billed for a weekly-only product, honouring its
+// minimum rental length (default 1 week). 1–7 days = 1 week, 8–14 = 2 weeks, …
+// Mirrored by the server validation in server/routes/orders.ts — keep identical.
+export function billableWeeks(days: number, minRentalDays?: number): number {
+  const min = minRentalDays && minRentalDays > 0 ? minRentalDays : 7;
+  const billDays = Math.max(days, min);
+  return Math.max(1, Math.ceil(billDays / 7));
+}
+
 // Strict weekend: a 2-day rental on Sat+Sun (start = Saturday).
 // getUTCDay(): 0=Sun, 6=Sat. Dates are "YYYY-MM-DD" → parsed as UTC midnight,
 // so getUTCDay() is timezone-safe.
@@ -87,6 +96,12 @@ export function calculateItemSubtotal(machine: Machine, days: number, profile: s
     return Math.max(0, base - disc);
   };
 
+  // Weekly-only billing (e.g. Altrex Kamersteiger): minimum 1 week, charged per
+  // started week. Takes priority over every daily/2-day/monthly tier below.
+  if (machine.weeklyOnly && machine.weeklyPrice) {
+    return withCampaign(billableWeeks(days, machine.minRentalDays) * machine.weeklyPrice);
+  }
+
   // 1-day actie flat rate
   if (days === 1 && machine.oneDayPrice) return withCampaign(machine.oneDayPrice);
 
@@ -146,6 +161,9 @@ export function countWeekendDays(startDate: string | Date, endDate: string | Dat
 // Derives discount percentages for badge display from flat-rate fields.
 // Used by CatalogSection cards and MachineDetailModal.
 export function computeDiscounts(m: Machine): { weekly: number; monthly: number } {
+  // Weekly-only products price per week, not per day — derived day-discount
+  // badges would be meaningless, so suppress them.
+  if (m.weeklyOnly) return { weekly: 0, monthly: 0 };
   const weekly = m.weeklyPrice && m.pricePerDay > 0
     ? Math.round((1 - m.weeklyPrice / (5 * m.pricePerDay)) * 100)
     : (m.weeklyDiscountPercent ?? 0);

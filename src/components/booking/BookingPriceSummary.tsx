@@ -131,11 +131,11 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
 
   // Day-count is already shown under the total ("· N dagen huur"); the Huurperiode
   // row only names the applied tariff so it stays one clean line. The 6-27 day
-  // pro-rata band is also a weekly tariff, so it reads "Werkweek-tarief".
+  // pro-rata band is also a weekly tariff, so it reads "Werkweektarief".
   const rateLabel = sums.isFlatRate && sums.tierLabel
     ? sums.tierLabel
     : sums.weeklyBreakdown
-    ? "Werkweek-tarief"
+    ? "Werkweektarief"
     : "Dagtarief";
 
   const transportFree = sums.transport === 0 && sums.driver === 0;
@@ -277,7 +277,7 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
               {sums.weeklyBreakdown ? (
                 <>
                   <Row
-                    label={`${sums.weeklyBreakdown.weeks}× Wekelijks Tarief (5 dgn)`}
+                    label={`${sums.weeklyBreakdown.weeks}× Werkweektarief (5 dgn)`}
                     value={euro(sums.weeklyBreakdown.weeks * sums.weeklyBreakdown.pricePerWeek)}
                   />
                   {sums.weeklyBreakdown.remainder > 0 && (

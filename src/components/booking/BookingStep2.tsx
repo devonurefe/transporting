@@ -199,7 +199,7 @@ export default function BookingStep2({
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-xs text-slate-700 block font-bold">E-mail (Facturatie & SMS updates)</label>
+          <label className="text-xs text-slate-700 block font-bold">E-mail (Facturatie & updates)</label>
           <div className="flex items-center bg-white rounded-xl px-3 py-2.5 border border-slate-200 focus-within:border-slate-400 transition-colors shadow-inner">
             <Mail className="h-4 w-4 text-slate-400 mr-2" />
             <input

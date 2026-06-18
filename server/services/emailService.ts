@@ -211,7 +211,7 @@ export const emailService = {
               </div>
               <div class="details-item">
                 <div class="label">Klant Details</div>
-                <div class="value">${esc(order.customerName)} (${esc(order.customerProfile)})<br><span style="font-weight: normal; font-size: 11px; font-family: monospace;">${esc(order.customerEmail)} | ${esc(order.customerPhone || '')}</span></div>
+                <div class="value">${esc(order.customerName)}${order.customerProfile ? ` (${esc(order.customerProfile)})` : ''}<br><span style="font-weight: normal; font-size: 11px; font-family: monospace;">${esc(order.customerEmail)} | ${esc(order.customerPhone || '')}</span></div>
               </div>
               <div class="details-item">
                 <div class="label">Gevraagd Materieel</div>

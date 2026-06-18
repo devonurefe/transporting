@@ -527,7 +527,7 @@ export default function CatalogSection({
             rows.push({ period: "Weekend", when: "Za – Zo", price: m.weekendPrice, highlight: "violet" });
           }
           if (m.weeklyPrice) {
-            rows.push({ period: "3 – 5 dagen (werkweek)", when: "Ma – Vr", price: m.weeklyPrice, badge: d.weekly > 0 ? `−${d.weekly}%` : undefined, highlight: "green" });
+            rows.push({ period: "3–5 dagen (werkweek)", when: "Ma – Vr", price: m.weeklyPrice, badge: d.weekly > 0 ? `−${d.weekly}%` : undefined, highlight: "green" });
           }
           if (m.monthlyPrice) {
             rows.push({ period: "4 weken (28 dagen)", when: "Langlopend", price: m.monthlyPrice, badge: d.monthly > 0 ? `−${d.monthly}%` : undefined, highlight: "teal" });

@@ -415,7 +415,7 @@ export function printInvoice(orderOrOrders: Order | Order[], clientCompanyName?:
           text-transform: uppercase;
           letter-spacing: 0.5px;
           font-family: 'Outfit', sans-serif;
-          shrink-0: 0;
+          flex-shrink: 0;
         }
         .compliance-text {
           font-size: 11px;
@@ -505,7 +505,7 @@ export function printInvoice(orderOrOrders: Order | Order[], clientCompanyName?:
             <div class="party-detail">
               <strong>${primaryOrder.deliveryType === 'self_pickup' ? 'Afhalen' : 'Adreslevering'}</strong><br/>
               <span>${logisticsText}</span><br/>
-              ${primaryOrder.deliveryAddress ? `<span style="font-family: monospace; font-size:11px; display:inline-block; margin-top:5px; color:#475569;">${escDeliveryAddress}</span>` : '<span>Afhaallocatie: Distributieweg 12, Amsterdam</span>'}
+              ${primaryOrder.deliveryAddress ? `<span style="font-family: monospace; font-size:11px; display:inline-block; margin-top:5px; color:#475569;">${escDeliveryAddress}</span>` : '<span>Afhaallocatie: Produktieweg 20, 2382 PB Zoeterwoude</span>'}
             </div>
           </div>
         </div>

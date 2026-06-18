@@ -39,6 +39,7 @@ interface AppState {
   orders: Order[];
   customCategories: Category[];
   siteConfig: SiteConfig;
+  siteConfigLoaded: boolean;
   blockedDates: BlockedDate[];
   cartItems: CartItem[];
   isLoading: boolean;
@@ -100,6 +101,16 @@ export const useAppStore = create<AppState>((set, get) => ({
   machines: [],
   orders: [],
   customCategories: defaultCategories,
+  // True once we have a real config — either a sessionStorage cache (returning
+  // visitor) or a fresh API response. Gates the hero image so the old default
+  // photo never flashes before the admin-configured one loads.
+  siteConfigLoaded: (() => {
+    try {
+      return !!sessionStorage.getItem("hwh_site_config");
+    } catch {
+      return false;
+    }
+  })(),
   siteConfig: (() => {
     try {
       const cached = sessionStorage.getItem("hwh_site_config");
@@ -214,7 +225,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       const res = await fetch("/api/site-config");
       if (res.ok) {
         const data = await res.json();
-        set({ siteConfig: data, error: null });
+        set({ siteConfig: data, siteConfigLoaded: true, error: null });
         try { sessionStorage.setItem("hwh_site_config", JSON.stringify(data)); } catch { /* quota exceeded — ignore */ }
       } else {
         const data = await res.json().catch(() => ({}));

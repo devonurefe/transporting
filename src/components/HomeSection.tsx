@@ -83,6 +83,7 @@ export default function HomeSection({
   ]
 }: HomeSectionProps) {
   const siteConfig = useAppStore((state) => state.siteConfig);
+  const siteConfigLoaded = useAppStore((state) => state.siteConfigLoaded);
   const machines = useAppStore((state) => state.machines);
   const vatDisplay = useAppStore((state) => state.vatDisplay);
   const language = useLanguageStore((state) => state.language);
@@ -218,58 +219,78 @@ export default function HomeSection({
     <div>
 
       {/* ── HERO IMAGE — sade, metin yok ── */}
-      <div className="relative bg-slate-900 overflow-hidden">
-        <img
-          src={siteConfig.heroImageUrl || '/hero-huurgo-v2.jpg'}
-          alt=""
-          className="w-full block object-cover h-[260px] sm:h-[420px] lg:h-auto [object-position:20%_center] sm:[object-position:center]"
-        />
+      {/* Gate the image on siteConfigLoaded so the old default photo never
+          flashes before the admin-configured hero loads on first visit. */}
+      <div className="relative bg-slate-900 overflow-hidden h-[260px] sm:h-[380px] lg:h-[320px]">
+        {siteConfigLoaded ? (
+          <motion.img
+            key={siteConfig.heroImageUrl || 'default'}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4 }}
+            src={siteConfig.heroImageUrl || '/hero-huurgo-v2.jpg'}
+            alt=""
+            className="w-full h-full block object-cover [object-position:20%_center] sm:[object-position:center]"
+          />
+        ) : (
+          // Skeleton placeholder while the config is still loading
+          <div className="w-full h-full bg-gradient-to-br from-slate-800 to-slate-900 animate-pulse" />
+        )}
         <div className="absolute inset-0 bg-black/15 pointer-events-none" />
       </div>
 
-      {/* ── HERO TEXT + CTA — resmin altında beyaz alanda ── */}
-      <div className="bg-white px-5 sm:px-6 pt-8 pb-6 text-center border-b border-slate-100">
-        <div className="mx-auto max-w-lg space-y-3">
-          <motion.p
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            className="text-xs font-bold uppercase tracking-[0.12em] text-emerald-600"
-          >
-            {t("heroTagline")}
-          </motion.p>
-          <motion.h1
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.07 }}
-            className="font-display text-3xl sm:text-4xl font-black tracking-tight text-slate-900 leading-tight"
-          >
-            {language === "nl" && siteConfig.heroTitle ? siteConfig.heroTitle : t("heroTitle")}
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.12 }}
-            className="text-sm text-slate-500 leading-relaxed"
-          >
-            {language === "nl" && siteConfig.heroSubtitle ? siteConfig.heroSubtitle : t("heroSubtitle")}
-          </motion.p>
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.18 }}
-            className="pt-2"
-          >
-            <a
-              href={buildWhatsAppGeneralUrl()}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center space-x-3 w-full max-w-sm py-3.5 px-6 rounded-2xl bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-sm transition-all shadow-md hover:shadow-lg active:scale-[0.98] no-underline"
-            >
-              <MessageCircle className="h-5 w-5 shrink-0" />
-              <span>Direct advies? WhatsApp ons!</span>
-            </a>
-          </motion.div>
+      {/* ── HERO TEXT + CTA — two-column split on desktop ── */}
+      <div className="bg-white px-5 sm:px-6 pt-8 pb-6 border-b border-slate-100">
+        <div className="mx-auto max-w-5xl">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+            {/* Left: Tagline + Title */}
+            <div className="flex flex-col justify-center space-y-3">
+              <motion.p
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4 }}
+                className="text-xs font-bold uppercase tracking-[0.12em] text-emerald-600"
+              >
+                {t("heroTagline")}
+              </motion.p>
+              <motion.h1
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.07 }}
+                className="font-display text-3xl sm:text-4xl font-black tracking-tight text-slate-900 leading-tight"
+              >
+                {language === "nl" && siteConfig.heroTitle ? siteConfig.heroTitle : t("heroTitle")}
+              </motion.h1>
+            </div>
+
+            {/* Right: Subtitle + CTA */}
+            <div className="flex flex-col justify-center space-y-3">
+              <motion.p
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.12 }}
+                className="text-sm text-slate-500 leading-relaxed"
+              >
+                {language === "nl" && siteConfig.heroSubtitle ? siteConfig.heroSubtitle : t("heroSubtitle")}
+              </motion.p>
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.18 }}
+                className="pt-1"
+              >
+                <a
+                  href={buildWhatsAppGeneralUrl()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center space-x-3 w-full max-w-sm py-3.5 px-6 rounded-2xl bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-sm transition-all shadow-md hover:shadow-lg active:scale-[0.98] no-underline"
+                >
+                  <MessageCircle className="h-5 w-5 shrink-0" />
+                  <span>Direct advies? WhatsApp ons!</span>
+                </a>
+              </motion.div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -396,10 +417,10 @@ export default function HomeSection({
 
       {/* ── CATEGORY CARDS ── */}
       <div className="bg-white px-4 sm:px-6 pt-6 pb-10">
-        <div className="max-w-3xl mx-auto flex justify-end mb-3">
+        <div className="max-w-5xl mx-auto flex justify-end mb-3">
           <VatToggle />
         </div>
-        <div className="max-w-3xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
           {displayCategories.map((cat, i) => {
             const Icon = CATEGORY_ICONS[cat.id] ?? Truck;
             const catImage = imageByCategory[cat.id];
@@ -437,7 +458,7 @@ export default function HomeSection({
                 </div>
 
                 {/* Right — machine photo on white background */}
-                <div className="w-28 sm:w-36 shrink-0 relative overflow-hidden bg-white">
+                <div className="w-28 sm:w-44 shrink-0 relative overflow-hidden bg-white">
                   {catImage ? (
                     <img
                       src={catImage}

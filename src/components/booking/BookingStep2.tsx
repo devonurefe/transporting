@@ -19,7 +19,7 @@ interface BookingStep2Props {
   setCustomerPhone: (phone: string) => void;
   customerProfile: string;
   setCustomerProfile: (profile: string) => void;
-  deliveryType: "self_pickup" | "delivery_by_us" | "trailer_rental";
+  deliveryType: "self_pickup" | "delivery_by_us" | "trailer_rental" | "trailer_drop_return";
   postcode: string;
   setPostcode: (pc: string) => void;
   houseNumber: string;

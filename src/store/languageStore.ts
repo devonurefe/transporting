@@ -159,7 +159,7 @@ interface LanguageState {
   toggleLanguage: () => void;
   setLanguage: (lang: Language) => void;
   setAdminLanguage: (lang: AdminLanguage) => void;
-  t: (key: string) => string;
+  t: (key: string, enText?: string, _trText?: string) => string;
   tAdmin: (key: string) => string;
 }
 
@@ -186,8 +186,9 @@ export const useLanguageStore = create<LanguageState>((set, get) => ({
     set({ adminLanguage: lang });
   },
 
-  t: (key: string) => {
+  t: (key: string, enText?: string, _trText?: string) => {
     const currentLang = get().language;
+    if (currentLang === "en" && enText) return enText;
     if (currentLang === "nl") {
       const siteConfig = useAppStore.getState().siteConfig;
       if (key === "heroTitle" && siteConfig.heroTitle) return siteConfig.heroTitle;

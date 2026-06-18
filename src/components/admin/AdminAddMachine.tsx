@@ -793,8 +793,8 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
         <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <p className="text-sm font-bold text-slate-800">Onderhoudsbuffer na verhuur</p>
-              <p className="text-xs text-slate-500 mt-0.5">Dag na huurperiode automatisch geblokkeerd voor opladen & reiniging.</p>
+              <p className="text-sm font-bold text-slate-800">{t("Onderhoudsbuffer na verhuur", "Maintenance buffer after rental", "Kiralama sonrası bakım tamponu")}</p>
+              <p className="text-xs text-slate-500 mt-0.5">{t("Dag na huurperiode automatisch geblokkeerd voor opladen & reiniging.", "Day after the rental period is automatically blocked for charging & cleaning.", "Kiralama döneminden sonraki gün şarj ve temizlik için otomatik olarak bloke edilir.")}</p>
             </div>
             <button
               type="button"

@@ -220,7 +220,7 @@ export default function Header({
               <button
                 onClick={toggleLanguage}
                 aria-label="Taal wisselen"
-                className="flex items-center justify-center space-x-1 min-h-[40px] px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-bold text-slate-700 transition-all cursor-pointer select-none shrink-0 shadow-xs"
+                className="inline-flex items-center justify-center space-x-1 min-h-[40px] px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-bold text-slate-700 hover:text-slate-900 transition-all cursor-pointer select-none active:scale-95 shrink-0 shadow-xs"
               >
                 <span className="font-bold uppercase">{language}</span>
               </button>
@@ -343,7 +343,7 @@ export default function Header({
               ) : (
                 <button
                   onClick={() => setActiveTab("orders")}
-                  className="inline-flex items-center justify-center border border-slate-200 hover:border-slate-300 bg-white p-2 sm:px-4 sm:py-2 rounded-xl text-xs font-bold text-slate-700 hover:text-slate-900 transition-all active:scale-95 shrink-0"
+                  className="inline-flex items-center justify-center min-h-[40px] px-3 sm:px-4 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-bold text-slate-700 hover:text-slate-900 transition-all cursor-pointer select-none active:scale-95 shrink-0 shadow-xs"
                   title="Login"
                 >
                   <User className="h-4 w-4 text-slate-500" />

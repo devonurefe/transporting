@@ -172,11 +172,22 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
             {machineCount > 1 ? `${machineCount} machines gereserveerd` : selectedMachine.name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "")}
           </h4>
           {machineCount === 1 && (
-            <span className="text-sm font-black text-slate-800 font-mono">
-              {selectedMachine.weeklyOnly && selectedMachine.weeklyPrice
-                ? `${euroCompact(selectedMachine.weeklyPrice)}/week`
-                : `${euroCompact(selectedMachine.pricePerDay)}/dag`}
-            </span>
+            selectedMachine.weeklyOnly && selectedMachine.weeklyPrice ? (
+              <span className="text-sm font-black text-slate-800 font-mono">
+                {euroCompact(selectedMachine.weeklyPrice)}/week
+              </span>
+            ) : hasTierDeal ? (
+              // A week/month tier lowers the effective day rate — strike the list
+              // rate and show the actually-applied lower €/dag next to it.
+              <span className="inline-flex items-baseline gap-1.5 font-mono">
+                <span className="text-[11px] font-semibold text-slate-400 line-through">{euroCompact(selectedMachine.pricePerDay)}</span>
+                <span className="text-sm font-black text-orange-500">{euroCompact(effectivePerDay)}/dag</span>
+              </span>
+            ) : (
+              <span className="text-sm font-black text-slate-800 font-mono">
+                {euroCompact(selectedMachine.pricePerDay)}/dag
+              </span>
+            )
           )}
         </div>
       </div>

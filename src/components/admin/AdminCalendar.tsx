@@ -30,13 +30,15 @@ export default function AdminCalendar({ onAddSystemLog, adminLanguage }: AdminCa
     return nl;
   };
 
+  // The Dutch `value` is what gets stored as the block reason (existing data +
+  // emails rely on it); only the visible `label` is translated for the admin UI.
   const BLOCK_REASON_OPTIONS = [
-    "Planmatig Onderhoud / Keuring",
-    "Noodonderhoud / Reparatie",
-    "Demo / Showroom gebruik",
-    "Interne reservering",
-    "Seizoensluiting",
-    "Anders...",
+    { value: "Planmatig Onderhoud / Keuring", label: t("Planmatig Onderhoud / Keuring", "Scheduled maintenance / Inspection", "Planlı bakım / Muayene") },
+    { value: "Noodonderhoud / Reparatie", label: t("Noodonderhoud / Reparatie", "Emergency maintenance / Repair", "Acil bakım / Onarım") },
+    { value: "Demo / Showroom gebruik", label: t("Demo / Showroom gebruik", "Demo / Showroom use", "Demo / Showroom kullanımı") },
+    { value: "Interne reservering", label: t("Interne reservering", "Internal reservation", "Dahili rezervasyon") },
+    { value: "Seizoensluiting", label: t("Seizoensluiting", "Seasonal closure", "Sezon kapanışı") },
+    { value: "Anders...", label: t("Anders...", "Other...", "Diğer...") },
   ];
 
   const [selectedBlockMachineId, setSelectedBlockMachineId] = useState<string>("");
@@ -192,7 +194,7 @@ export default function AdminCalendar({ onAddSystemLog, adminLanguage }: AdminCa
                 className="bg-white border border-slate-200 text-slate-800 w-full rounded-xl px-3 py-3 text-sm outline-none focus:border-amber-500 cursor-pointer"
               >
                 {BLOCK_REASON_OPTIONS.map(opt => (
-                  <option key={opt} value={opt}>{opt}</option>
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
                 ))}
               </select>
               {blockReasonPreset === "Anders..." && (

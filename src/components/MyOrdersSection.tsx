@@ -789,7 +789,7 @@ export default function MyOrdersSection({
 
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center space-x-2.5 text-xs bg-slate-50 px-3.5 py-2 rounded-xl border border-slate-200 font-mono">
-              <span className="text-slate-500 font-bold">Past Rentals:</span>
+              <span className="text-slate-500 font-bold">Eerdere verhuringen:</span>
               <span className="text-slate-800 font-extrabold">{currentUser.pastRentalsCount} afgerond</span>
             </div>
 

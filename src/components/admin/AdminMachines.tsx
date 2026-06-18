@@ -998,10 +998,13 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                 <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50">
                   <div className="flex items-center justify-between gap-4">
                     <div>
-                      <p className="text-sm font-bold text-slate-800">Onderhoudsbuffer na verhuur</p>
+                      <p className="text-sm font-bold text-slate-800">{t("Onderhoudsbuffer na verhuur", "Maintenance buffer after rental", "Kiralama sonrası bakım tamponu")}</p>
                       <p className="text-xs text-slate-500 mt-0.5">
-                        Dag na huurperiode automatisch geblokkeerd voor opladen &amp; reiniging.
-                        Standaard uitgeschakeld.
+                        {t(
+                          "Dag na huurperiode automatisch geblokkeerd voor opladen & reiniging. Standaard uitgeschakeld.",
+                          "Day after the rental period is automatically blocked for charging & cleaning. Disabled by default.",
+                          "Kiralama döneminden sonraki gün şarj ve temizlik için otomatik olarak bloke edilir. Varsayılan olarak kapalı."
+                        )}
                       </p>
                     </div>
                     <button
@@ -1020,7 +1023,11 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                   </div>
                   {editBufferDays > 0 && (
                     <p className="mt-2 text-xs text-orange-700 bg-orange-50 border border-orange-200 rounded-lg px-3 py-2">
-                      ✓ Actief — de dag na elke huurperiode wordt automatisch geblokkeerd in het beschikbaarheidssysteem.
+                      {t(
+                        "✓ Actief — de dag na elke huurperiode wordt automatisch geblokkeerd in het beschikbaarheidssysteem.",
+                        "✓ Active — the day after each rental period is automatically blocked in the availability system.",
+                        "✓ Aktif — her kiralama döneminden sonraki gün uygunluk sisteminde otomatik olarak bloke edilir."
+                      )}
                     </p>
                   )}
                 </div>

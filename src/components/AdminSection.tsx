@@ -150,7 +150,7 @@ export default function AdminSection({
 
           <form onSubmit={handleAdminVerifyLogin} className="space-y-4">
             <div className="space-y-1.5">
-              <label className="text-[11px] font-bold text-slate-350 tracking-wider uppercase font-mono">Beheerder E-mail</label>
+              <label className="text-[11px] font-bold text-slate-400 tracking-wider uppercase font-mono">Beheerder E-mail</label>
               <input
                 type="email"
                 required
@@ -161,7 +161,7 @@ export default function AdminSection({
             </div>
 
             <div className="space-y-1.5 font-sans">
-              <label className="text-[11px] font-bold text-slate-350 tracking-wider uppercase">Beveiligd Wachtwoord</label>
+              <label className="text-[11px] font-bold text-slate-400 tracking-wider uppercase">Beveiligd Wachtwoord</label>
               <input
                 type="password"
                 required
@@ -280,7 +280,7 @@ export default function AdminSection({
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -8 }}
                     transition={{ duration: 0.15 }}
-                    className="absolute left-0 right-0 mt-1.5 bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden divide-y divide-slate-155 z-30"
+                    className="absolute left-0 right-0 mt-1.5 bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden divide-y divide-slate-200 z-30"
                   >
                     <div className="p-2 space-y-0.5">
                       {[
@@ -427,7 +427,7 @@ export default function AdminSection({
                   <Settings className="h-4.5 w-4.5 text-amber-500/80" />
                   <span>Geavanceerd</span>
                 </div>
-                <span className="text-[10px] text-slate-450 ml-1">{showAdvancedSubmenu ? "▼" : "▶"}</span>
+                <span className="text-[10px] text-slate-400 ml-1">{showAdvancedSubmenu ? "▼" : "▶"}</span>
               </button>
 
               {/* Advanced sub tabs */}

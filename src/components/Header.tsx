@@ -169,7 +169,7 @@ export default function Header({
                       : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
                   }`}
                 >
-                  <Icon className={`h-4 w-4 ${isActive ? "text-slate-900" : "text-slate-450"}`} />
+                  <Icon className={`h-4 w-4 ${isActive ? "text-slate-900" : "text-slate-400"}`} />
                   <span>{tab.label}</span>
                   
                   {tab.badge && (

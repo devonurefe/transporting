@@ -496,11 +496,11 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                         title={t("Klik om klantgegevens in te zien", "Click to view customer details", "Müşteri bilgilerini görmek için tıklayın")}
                       >
                         <div className="font-bold text-slate-950 group-hover:text-indigo-600 transition-colors mb-1 text-xs">{o.customerName}</div>
-                        <span className="block text-[10px] text-slate-450 text-slate-500 font-mono mt-0.5 leading-none">{o.customerPhone}</span>
+                        <span className="block text-[10px] text-slate-500 font-mono mt-0.5 leading-none">{o.customerPhone}</span>
                         <span className="block text-[10px] text-slate-400 font-sans mt-1.5 truncate max-w-[180px] leading-none" title={o.customerEmail}>{o.customerEmail}</span>
                       </td>
                       <td className="py-3 px-3">
-                        <div className="font-bold text-slate-850 text-slate-800 text-xs mb-1">{getBaseName(o.machineName)}</div>
+                        <div className="font-bold text-slate-800 text-xs mb-1">{getBaseName(o.machineName)}</div>
                         <span className="inline-block bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-[9.5px] font-bold">{o.customerProfile}</span>
                       </td>
                       <td className="py-3 px-3">
@@ -523,8 +523,8 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                         )}
                       </td>
                       <td className="py-3 px-3 whitespace-nowrap">
-                        <div className="text-slate-850 text-slate-800 font-semibold text-xs">{o.startDate}</div>
-                        <span className="text-[10px] text-slate-450 text-slate-500 block font-mono mt-1.5">({o.rentalDays}d)</span>
+                        <div className="text-slate-800 font-semibold text-xs">{o.startDate}</div>
+                        <span className="text-[10px] text-slate-500 block font-mono mt-1.5">({o.rentalDays}d)</span>
                       </td>
                       <td className="py-3 px-3 font-mono font-bold text-teal-600 text-xs">€ {o.totalAmount.toFixed(2)}</td>
                       <td className="py-3 px-3 text-center">

@@ -288,7 +288,7 @@ export default function MachineDetailModal({
                     </div>
                   );
                 })()}
-                {machine.weekendPrice && (
+                {!!machine.weekendPrice && (
                   <div className="flex items-center px-4 py-2.5 bg-amber-50">
                     <div className="flex-1">
                       <p className="text-xs font-bold text-amber-700">Weekend</p>
@@ -297,7 +297,7 @@ export default function MachineDetailModal({
                     <span className="font-mono font-extrabold text-sm text-amber-700">€{formatPrice(vp(machine.weekendPrice))}</span>
                   </div>
                 )}
-                {machine.weeklyPrice && (
+                {!!machine.weeklyPrice && (
                   <div className="flex items-center px-4 py-2.5 bg-emerald-50">
                     <div className="flex-1">
                       <p className="text-xs font-bold text-emerald-700">3–5 dagen (werkweek)</p>
@@ -307,7 +307,7 @@ export default function MachineDetailModal({
                     <span className="font-mono font-extrabold text-sm text-emerald-700">€{formatPrice(vp(machine.weeklyPrice))}</span>
                   </div>
                 )}
-                {machine.monthlyPrice && (
+                {!!machine.monthlyPrice && (
                   <div className="flex items-center px-4 py-2.5 bg-teal-50">
                     <div className="flex-1">
                       <p className="text-xs font-bold text-teal-700">4 weken (28 dagen)</p>

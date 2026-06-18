@@ -344,7 +344,7 @@ export default function AdminDashboard({ setSubTab, setOrdersFilter, adminLangua
               {t("Huur-omzet Trend (Laatste 6 Maanden)", "Rental Revenue Trend (Last 6 Months)", "Kiralama Ciro Trendi (Son 6 Ay)")}
             </h4>
             <p className="text-[10px] text-slate-500 font-mono mt-0.5">
-              {t("Dinamische omzetontwikkeling gebaseerd op alle contracten", "Dynamic revenue development based on all contracts", "Tüm sözleşmelere dayalı dinamik ciro gelişimi")}
+              {t("Dynamische omzetontwikkeling gebaseerd op alle contracten", "Dynamic revenue development based on all contracts", "Tüm sözleşmelere dayalı dinamik ciro gelişimi")}
             </p>
           </div>
           <div className="text-[10px] font-mono font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-xl border border-indigo-200/30 shadow-inner">

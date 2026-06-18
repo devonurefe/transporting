@@ -285,7 +285,7 @@ export default function BookingStep2({
                   placeholder="bijv. 2404 CB"
                   value={postcode}
                   onChange={(e) => setPostcode(e.target.value)}
-                  className="w-full bg-white border border-slate-200 focus:border-slate-400 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 font-bold outline-none font-mono tracking-wider uppercase focus:ring-0 placeholder:text-slate-350 shadow-sm"
+                  className="w-full bg-white border border-slate-200 focus:border-slate-400 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 font-bold outline-none font-mono tracking-wider uppercase focus:ring-0 placeholder:text-slate-400 shadow-sm"
                 />
               </div>
 
@@ -296,7 +296,7 @@ export default function BookingStep2({
                   placeholder="bijv. 14"
                   value={houseNumber}
                   onChange={(e) => setHouseNumber(e.target.value)}
-                  className="w-full bg-white border border-slate-200 focus:border-slate-400 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 font-bold outline-none font-mono focus:ring-0 placeholder:text-slate-350 shadow-sm"
+                  className="w-full bg-white border border-slate-200 focus:border-slate-400 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 font-bold outline-none font-mono focus:ring-0 placeholder:text-slate-400 shadow-sm"
                 />
               </div>
 

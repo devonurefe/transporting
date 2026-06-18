@@ -534,7 +534,7 @@ export default function BookingStep1({
           <div>
             <p className="text-sm font-bold text-amber-900">🗓 Gaat u in het weekend werken?</p>
             <p className="text-xs text-amber-700 mt-1">
-              Uw huurperiode omvat weekend dagen. Machines mogen gratis staan, maar gebruik wordt geregistreerd.
+              Uw huurperiode omvat weekenddagen. Machines mogen gratis staan, maar gebruik wordt geregistreerd.
             </p>
           </div>
           <div className="flex gap-2">

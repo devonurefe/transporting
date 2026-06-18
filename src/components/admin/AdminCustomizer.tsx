@@ -767,7 +767,7 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
                       required
                       value={editName}
                       onChange={(e) => setEditName(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-850 outline-none focus:border-amber-500 focus:bg-white"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
                     />
                   </div>
 

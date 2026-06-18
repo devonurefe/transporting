@@ -47,7 +47,7 @@ export default function AdminDiagnostics({ systemLogs, userProfiles, onAddSystem
     `[INFO] [2026-05-31 13:29:02] ` + t("PostgreSQL verbindingspool tot stand gebracht.", "PostgreSQL connection pool established.", "PostgreSQL bağlantı havuzu kuruldu."),
     `[SEC]  [2026-05-31 13:29:05] ` + t("CSRF en XSS beveiligingsheaders geïnjecteerd.", "CSRF and XSS protection headers injected.", "CSRF ve XSS koruma başlıkları enjekte edildi."),
     `[INFO] [2026-05-31 13:29:10] ` + t("WhatsApp gateway en e-mail dispatcher gevalideerd.", "WhatsApp gateway and email dispatcher validated.", "WhatsApp geçidi ve e-posta dağıtıcısı doğrulandı."),
-    `[WARN] [2026-05-31 13:30:15] ` + t("SMTP: E-mailkanaal meldde el-systeemsluiting waarschuwing (opnieuw proberen in de achtergrond).", "SMTP: Email carrier channel reported handshake warning (retrying in background).", "SMTP: E-posta kanalı el sıkışma uyarısı bildirdi (arka planda yeniden deneniyor)."),
+    `[WARN] [2026-05-31 13:30:15] ` + t("SMTP: E-mailkanaal meldde een handshake-waarschuwing (opnieuw proberen in de achtergrond).", "SMTP: Email carrier channel reported handshake warning (retrying in background).", "SMTP: E-posta kanalı el sıkışma uyarısı bildirdi (arka planda yeniden deneniyor)."),
     `[OK]   [2026-05-31 13:31:00] ` + t("Alle systemen nominaal. Gereed voor beheerderscommando's.", "All systems nominal. Ready for admin commands.", "[OK] Tüm sistemler nominal. Yönetici komutları için hazır.")
   ]);
 
@@ -141,7 +141,7 @@ export default function AdminDiagnostics({ systemLogs, userProfiles, onAddSystem
         {/* Memory Panel */}
         <div className="glass-panel p-5 rounded-3xl space-y-4 relative overflow-hidden shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-slate-500 text-[10px] font-extrabold uppercase tracking-wider font-mono">{t("Memory Allocation", "Memory Allocation", "Ayrılan Bellek")}</span>
+            <span className="text-slate-500 text-[10px] font-extrabold uppercase tracking-wider font-mono">{t("Geheugentoewijzing", "Memory Allocation", "Ayrılan Bellek")}</span>
             <HardDrive className="h-4.5 w-4.5 text-blue-500" />
           </div>
           <div className="space-y-1">
@@ -164,7 +164,7 @@ export default function AdminDiagnostics({ systemLogs, userProfiles, onAddSystem
         {/* Database Query Latency */}
         <div className="glass-panel p-5 rounded-3xl space-y-4 relative overflow-hidden shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-slate-500 text-[10px] font-extrabold uppercase tracking-wider font-mono">{t("SQLite Query Latency", "SQLite Query Latency", "SQLite Sorgu Gecikmesi")}</span>
+            <span className="text-slate-500 text-[10px] font-extrabold uppercase tracking-wider font-mono">{t("PostgreSQL Query-latentie", "PostgreSQL Query Latency", "PostgreSQL Sorgu Gecikmesi")}</span>
             <Database className="h-4.5 w-4.5 text-teal-500" />
           </div>
           <div className="space-y-1">
@@ -174,7 +174,7 @@ export default function AdminDiagnostics({ systemLogs, userProfiles, onAddSystem
             </div>
             <span className="text-[10px] text-teal-600 font-bold block flex items-center space-x-1">
               <ShieldCheck className="h-3 w-3 text-teal-500" />
-              <span>{t("Optimized indexes", "Optimized indexes", "Optimize indeksler")}</span>
+              <span>{t("Geoptimaliseerde indexen", "Optimized indexes", "Optimize indeksler")}</span>
             </span>
           </div>
           <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">

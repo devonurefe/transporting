@@ -455,7 +455,7 @@ export default function CatalogSection({
                           <div className="flex items-center gap-1.5 text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-lg w-fit">
                             <Zap className="h-3 w-3 text-amber-500" />
                             {machine.campaignText || "Promo"}
-                            {machine.campaignDiscountPercent && ` −${machine.campaignDiscountPercent}%`}
+                            {!!machine.campaignDiscountPercent && ` −${machine.campaignDiscountPercent}%`}
                           </div>
                         )}
 

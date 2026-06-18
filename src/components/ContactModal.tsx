@@ -82,7 +82,7 @@ export default function ContactModal({ isOpen, onClose, onShowToast, onAddSystem
 
                   {/* Phone button */}
                   <a
-                    href="tel:+31172456789"
+                    href="tel:+31611848899"
                     className="w-full flex items-center p-3 rounded-xl bg-white hover:bg-slate-100/50 border border-slate-200 transition-all text-xs cursor-pointer gap-3 text-slate-700 group shadow-sm text-decoration-none"
                   >
                     <div className="h-7 w-7 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
@@ -141,7 +141,7 @@ export default function ContactModal({ isOpen, onClose, onShowToast, onAddSystem
                     name="ticketName"
                     required
                     placeholder="Uw Volledige Naam (of Bedrijfsnaam)"
-                    className="w-full bg-slate-50 border border-slate-200 focus:border-slate-400 rounded-xl px-3 py-2 text-xs text-slate-800 placeholder-slate-440 outline-none focus:ring-1 focus:ring-slate-300 font-medium"
+                    className="w-full bg-slate-50 border border-slate-200 focus:border-slate-400 rounded-xl px-3 py-2 text-xs text-slate-800 placeholder-slate-400 outline-none focus:ring-1 focus:ring-slate-300 font-medium"
                   />
 
                   <input
@@ -149,7 +149,7 @@ export default function ContactModal({ isOpen, onClose, onShowToast, onAddSystem
                     name="ticketContact"
                     required
                     placeholder="E-mail of telefoonnummer"
-                    className="w-full bg-slate-50 border border-slate-200 focus:border-slate-400 rounded-xl px-3 py-2 text-xs text-slate-800 placeholder-slate-440 outline-none focus:ring-1 focus:ring-slate-300 font-medium"
+                    className="w-full bg-slate-50 border border-slate-200 focus:border-slate-400 rounded-xl px-3 py-2 text-xs text-slate-800 placeholder-slate-400 outline-none focus:ring-1 focus:ring-slate-300 font-medium"
                   />
 
                   <select
@@ -167,7 +167,7 @@ export default function ContactModal({ isOpen, onClose, onShowToast, onAddSystem
                     required
                     rows={3}
                     placeholder="Wat is uw specifieke vraag over de inzetbaarheid van ons materieel?"
-                    className="w-full bg-slate-50 border border-slate-200 focus:border-slate-400 rounded-xl px-3 py-2 text-xs text-slate-800 placeholder-slate-440 outline-none focus:ring-1 focus:ring-slate-300 resize-none font-sans font-medium"
+                    className="w-full bg-slate-50 border border-slate-200 focus:border-slate-400 rounded-xl px-3 py-2 text-xs text-slate-800 placeholder-slate-400 outline-none focus:ring-1 focus:ring-slate-300 resize-none font-sans font-medium"
                   />
                 </div>
 
@@ -207,7 +207,7 @@ export default function ContactModal({ isOpen, onClose, onShowToast, onAddSystem
                   name="callbackPhone"
                   required
                   placeholder="Uw telefoonnummer (bijv. +31 6 ...)"
-                  className="flex-1 bg-slate-50 border border-slate-200 focus:border-slate-400 rounded-xl px-4 py-2.5 text-xs text-slate-800 placeholder-slate-440 outline-none focus:ring-1 focus:ring-slate-300 font-medium"
+                  className="flex-1 bg-slate-50 border border-slate-200 focus:border-slate-400 rounded-xl px-4 py-2.5 text-xs text-slate-800 placeholder-slate-400 outline-none focus:ring-1 focus:ring-slate-300 font-medium"
                 />
                 <button
                   type="submit"

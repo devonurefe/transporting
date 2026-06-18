@@ -249,7 +249,7 @@ export default function AdminAccounting({ adminLanguage }: AdminAccountingProps)
               return (
                 <div 
                   key={log.id} 
-                  className="p-3 bg-slate-50 border border-slate-200 rounded-2xl flex items-start space-x-3 hover:border-slate-350 transition-colors shadow-sm"
+                  className="p-3 bg-slate-50 border border-slate-200 rounded-2xl flex items-start space-x-3 hover:border-slate-300 transition-colors shadow-sm"
                 >
                   <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 shrink-0 mt-0.5">
                     <FileText className="h-4 w-4" />

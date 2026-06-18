@@ -117,6 +117,20 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
     return () => window.removeEventListener("keydown", onKey);
   }, [isOpen]);
 
+  // Pre-build a Set of days blocked by active orders for O(1) lookup in the maxEnd walk.
+  const ordersBlockedSet = useMemo(() => {
+    const s = new Set<string>();
+    for (const o of orders) {
+      let d = new Date(o.startDate);
+      const end = new Date(o.endDate);
+      while (d <= end) {
+        s.add(d.toISOString().split("T")[0]);
+        d.setUTCDate(d.getUTCDate() + 1);
+      }
+    }
+    return s;
+  }, [orders]);
+
   // Max selectable end: walk forward from start until the first unavailable day,
   // so a range can never span a blocked/booked day. Only constrains while no end yet.
   const maxEnd = useMemo(() => {
@@ -125,11 +139,11 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
     let cursor = draftStart;
     for (let i = 0; i < 366; i++) {
       const next = addDaysKey(cursor, 1);
-      if (!checkAvailability(machine.id, next, next, orders, blockedDates, today).available) break;
+      if (next < today || blockedDates.has(next) || ordersBlockedSet.has(next)) break;
       cap = next; cursor = next;
     }
     return cap;
-  }, [draftStart, draftEnd, orders, blockedDates, machine.id, today]);
+  }, [draftStart, draftEnd, ordersBlockedSet, blockedDates, today]);
 
   const grid = useMemo(() => {
     const firstDow = new Date(Date.UTC(viewYear, viewMonth, 1)).getUTCDay();
@@ -161,8 +175,14 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
 
   const onDayClick = (key: string, selectable: boolean) => {
     if (!selectable) return;
-    if (!draftStart || (draftStart && draftEnd)) { setDraftStart(key); setDraftEnd(""); return; }
-    if (key < draftStart) { setDraftStart(key); setDraftEnd(""); return; }
+    // Both dates set: clicking after start adjusts end only; at/before start resets selection
+    if (draftStart && draftEnd) {
+      if (key <= draftStart) { setDraftStart(key); setDraftEnd(""); return; }
+      if (checkAvailability(machine.id, draftStart, key, orders, blockedDates, today).available) setDraftEnd(key);
+      return;
+    }
+    if (!draftStart) { setDraftStart(key); return; }
+    if (key < draftStart) { setDraftStart(key); return; }
     if (key === draftStart) { setDraftEnd(key); return; }
     // key > draftStart and already ≤ maxEnd (capped days aren't selectable); validate defensively
     if (checkAvailability(machine.id, draftStart, key, orders, blockedDates, today).available) setDraftEnd(key);

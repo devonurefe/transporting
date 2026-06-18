@@ -205,7 +205,7 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
         <div className="space-y-2.5 pt-1 border-t border-slate-100">
           <SummaryRow
             icon={<Calendar className="h-3.5 w-3.5" />}
-            label="Huurperiode"
+            label="Tarief"
             value={rateLabel}
           />
           <SummaryRow

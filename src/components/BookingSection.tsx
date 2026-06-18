@@ -403,21 +403,6 @@ export default function BookingSection({
         else if (isStrictWeekend(leadStart, leadCartDays) && leadItem.weekendPrice) discountLabel = "Weekendprijs";
         else if (totalDays === 2 && leadItem.twoDayPrice) discountLabel = "2-Dag Prijs";
         else if (totalDays === 1 && leadItem.oneDayPrice && leadItem.oneDayPrice < leadItem.pricePerDay) discountLabel = "1-Dag Actie";
-
-        const activeRules = campaignRules.filter(r => r.isActive);
-        const matchingRuleName = activeRules.find(rule => {
-          if (rule.scope === "global") return true;
-          if (rule.scope === "category" && leadItem.category.toLowerCase() === rule.scopeValue.toLowerCase()) return true;
-          if (rule.scope === "product" && leadItem.id === rule.scopeValue) return true;
-          if (rule.scope === "role" && customerProfile.toLowerCase() === rule.scopeValue.toLowerCase()) return true;
-          return false;
-        })?.name;
-
-        if (matchingRuleName) {
-          discountLabel = `${discountLabel} + ${matchingRuleName}`;
-        } else if (leadItem.campaignText) {
-          discountLabel = `${discountLabel} + ${leadItem.campaignText}`;
-        }
       }
 
       const effectiveDailyRate = (!leadItem?.weeklyOnly && totalDays >= 6 && totalDays < 28 && leadItem?.weeklyPrice)
@@ -505,21 +490,6 @@ export default function BookingSection({
       discountLabel = "2-Dag Prijs";
     } else if (days === 1 && selectedMachine.oneDayPrice && selectedMachine.oneDayPrice < selectedMachine.pricePerDay) {
       discountLabel = "1-Dag Actie";
-    }
-
-    const activeRules = campaignRules.filter(r => r.isActive);
-    const matchingRuleName = activeRules.find(rule => {
-      if (rule.scope === "global") return true;
-      if (rule.scope === "category" && selectedMachine.category.toLowerCase() === rule.scopeValue.toLowerCase()) return true;
-      if (rule.scope === "product" && selectedMachine.id === rule.scopeValue) return true;
-      if (rule.scope === "role" && customerProfile.toLowerCase() === rule.scopeValue.toLowerCase()) return true;
-      return false;
-    })?.name;
-
-    if (matchingRuleName) {
-      discountLabel = `${discountLabel} + ${matchingRuleName}`;
-    } else if (selectedMachine.campaignText) {
-      discountLabel = `${discountLabel} + ${selectedMachine.campaignText}`;
     }
 
     const subtotal = itemSub;

@@ -127,7 +127,7 @@ export default function BookingStep1({
             return (
               <div key={item.id} className="p-4 rounded-2xl bg-slate-50/50 border border-slate-200 space-y-4 shadow-sm">
                 <div className="flex justify-between items-start gap-4">
-                  <div className="flex items-center space-x-3">
+                  <div className="flex items-start space-x-3 min-w-0 flex-1">
                     <div
                       className="h-12 w-12 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center font-mono text-[10px] text-slate-400 overflow-hidden shadow-sm cursor-pointer hover:ring-2 hover:ring-slate-400 transition-all relative group/thumb"
                       onClick={() => setPreviewMachine(item.machine)}
@@ -144,12 +144,12 @@ export default function BookingStep1({
                       />
                       <div className="absolute inset-0 bg-black/0 group-hover/thumb:bg-black/20 transition-colors duration-200 rounded-xl" />
                     </div>
-                    <div className="min-w-0">
-                      <h4 className="text-sm font-extrabold text-slate-900 truncate max-w-[160px] sm:max-w-[220px]">{item.machine.name}</h4>
+                    <div className="min-w-0 flex-1">
+                      <h4 className="text-sm font-extrabold text-slate-900 leading-snug line-clamp-2">{item.machine.name}</h4>
                       <button
                         type="button"
                         onClick={() => setPreviewMachine(item.machine)}
-                        className="text-xs text-slate-800 hover:text-slate-950 font-bold bg-transparent border-none cursor-pointer p-0 transition-colors mt-2 block"
+                        className="text-xs text-orange-600 hover:text-orange-800 font-bold bg-transparent border-none cursor-pointer p-0 transition-colors mt-1.5 block"
                       >
                         Tarieven &amp; specificaties →
                       </button>

@@ -157,7 +157,6 @@ export default function ContactModal({ isOpen, onClose, onShowToast, onAddSystem
                     className="w-full bg-slate-50 border border-slate-200 focus:border-slate-400 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:ring-1 focus:ring-slate-300 font-semibold cursor-pointer"
                   >
                     <option value="Klantenservice">Klantenservice & Hulp</option>
-                    <option value="AI Advies">Hulp bij AI Adviseur</option>
                     <option value="Transport & Logistiek">Transport & Logistieke Vraag</option>
                     <option value="Vloot & Tarieven">Zakelijke Vloot Aanvraag</option>
                     <option value="Overig">Overig / Technisch probleem</option>

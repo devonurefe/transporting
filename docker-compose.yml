@@ -34,7 +34,6 @@ services:
       - NODE_ENV=production
       - PORT=3000
       - JWT_SECRET=${JWT_SECRET:?Set a strong JWT_SECRET before starting production}
-      - GEMINI_API_KEY=${GEMINI_API_KEY}
       - RESEND_API_KEY=${RESEND_API_KEY}
       - EMAIL_FROM=${EMAIL_FROM:-onboarding@resend.dev}
       - ADMIN_EMAIL=${ADMIN_EMAIL:-info@huurgo.nl}

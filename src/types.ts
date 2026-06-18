@@ -75,14 +75,6 @@ export interface Order {
   paymentStatus?: string;
 }
 
-export interface ChatMessage {
-  id: string;
-  sender: "user" | "advisor";
-  text: string;
-  timestamp: string;
-  recommendedMachineIds?: string[];
-}
-
 export interface AppNotification {
   id: string;
   title: string;

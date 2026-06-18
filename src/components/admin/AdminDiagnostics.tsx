@@ -289,11 +289,11 @@ export default function AdminDiagnostics({ systemLogs, userProfiles, onAddSystem
 
             <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200/80 shadow-sm space-y-1.5">
               <div className="flex items-center justify-between text-slate-500">
-                <span className="text-[9px] font-bold uppercase tracking-wider font-mono">{t("AI Prompts / Gast", "AI Prompts / Guest", "Giriş Başına YZ Sorusu")}</span>
+                <span className="text-[9px] font-bold uppercase tracking-wider font-mono">{t("WhatsApp Aanvragen / Gast", "WhatsApp Requests / Guest", "Ziyaretçi Başına WhatsApp")}</span>
                 <Activity className="h-3.5 w-3.5 text-indigo-500" />
               </div>
               <div className="text-2xl font-mono font-black text-slate-950">4.8</div>
-              <p className="text-[9px] text-slate-500 leading-normal">{t("Interacties met AI adviseur alvorens vloot-optimalisatie.", "Interactions with AI advisor prior to fleet optimization.", "Filo optimizasyonu öncesinde yapay zeka danışmanı ile etkileşimler.")}</p>
+              <p className="text-[9px] text-slate-500 leading-normal">{t("WhatsApp-aanvragen per bezoeker vóór de definitieve boeking.", "WhatsApp requests per visitor before the final booking.", "Kesin rezervasyon öncesi ziyaretçi başına WhatsApp talepleri.")}</p>
             </div>
 
             <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200/80 shadow-sm space-y-1.5">

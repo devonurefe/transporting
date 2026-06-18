@@ -655,7 +655,7 @@ const defaultSiteConfig = {
   heroSubtitle: "HuurGo verhuurt gecertificeerde hoogwerkers, schaarliften, mastliften en ladderliften aan ZZP'ers, aannemers en particulieren in heel Nederland. Meer dan 50 BMWT-gecertificeerde machines, direct beschikbaar.",
   menuHomeLabel: "Home",
   menuCatalogLabel: "Catalogus",
-  menuAdvisorLabel: "Snel Advies",
+  menuAdvisorLabel: "Snel Advies", // legacy/unused; retained so the schema column stays populated
   menuOrdersLabel: "Mijn Account",
   menuAdminLabel: "Portaal"
 };

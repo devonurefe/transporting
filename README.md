@@ -1,6 +1,6 @@
 # HuurGo — Aerial Lift & Platform Rental Platform
 
-HuurGo is a premium, high-performance web application designed for ZZP contractors and private individuals in the Netherlands to rent compact aerial lifts, scissor lifts, and spider platforms. The application is built using a modern full-stack architecture, featuring a hybrid AI Advisor, real-time availability checks, and a direct checkout pipeline.
+HuurGo is a premium, high-performance web application designed for ZZP contractors and private individuals in the Netherlands to rent compact aerial lifts, scissor lifts, and spider platforms. The application is built using a modern full-stack architecture, featuring real-time availability checks and a direct checkout pipeline.
 
 ---
 
@@ -36,7 +36,6 @@ cp .env.example .env
 Open the `.env` file and configure the values:
 * `DATABASE_URL`: Set to `file:./dev.db` for local SQLite development (do not wrap in double quotes in environments where quotes are parsed literally).
 * `JWT_SECRET`: Secret key used for signing administrator session tokens.
-* `GEMINI_API_KEY`: Optional Google Gemini AI API key.
 * `VITE_WHATSAPP_NUMBER`: The planner's telephone number where bookings are directed (format without `+` or country prefix, e.g., `31612345678`).
 
 ### 3. Initialize the Database
@@ -104,7 +103,7 @@ A comprehensive refactoring audit was executed based on technical and visual fee
 | **UX / UI** | 400 lines of hardcoded postcode lists | Deleted the local postcode lookup array. The address search now queries the PDOK API, with a fallback prompting manual address entry on network failure. | Resolved ✅ |
 | **UX / UI** | Small font sizes below accessibility standards | Adjusted typography values in checkout forms and steps to improve readability on mobile viewports. | Resolved ✅ |
 | **UX / UI** | "Inloggen" on step 2 resets checkout | Replaced the page redirect with a clean, **inline login card** within Step 2 so checkout progress is preserved. | Resolved ✅ |
-| **UX / UI** | AI Advisor in header was unfunctional without Gemini API Key | Removed the AI Advisor from the header. Implemented a floating help button on the bottom-right that launches the Advisor if `GEMINI_API_KEY` is present, or falls back to a WhatsApp planner redirection otherwise. | Resolved ✅ |
+| **UX / UI** | AI Advisor in header was unfunctional | Fully removed the AI Advisor (and its Gemini dependency). Replaced with a floating help button on the bottom-right that redirects to the WhatsApp planner. | Resolved ✅ |
 | **Security** | Brute force risk on authentication | Mounted `express-rate-limit` on the `/api/auth` endpoint, restricting users to 10 inlog attempts per 15 minutes. | Resolved ✅ |
 | **Security** | Pre-filled admin email on login form | Cleared the initial state of `adminEmail` inside the login card to prevent credential leak risks. | Resolved ✅ |
 | **Security** | Public test-profiles endpoint active in production | Secured `/api/auth/mock-profiles` to only evaluate outside production environments. | Resolved ✅ |

@@ -155,7 +155,7 @@ model SiteConfig {
   heroImageUrl     String?
   menuHomeLabel    String
   menuCatalogLabel  String
-  menuAdvisorLabel  String?
+  menuAdvisorLabel  String? // legacy/unused column — kept to avoid a destructive db push on deploy
   menuOrdersLabel   String
   menuAdminLabel   String
   campaignRules    Json?

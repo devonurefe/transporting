@@ -403,21 +403,6 @@ export default function BookingSection({
         else if (isStrictWeekend(leadStart, leadCartDays) && leadItem.weekendPrice) discountLabel = "Weekendprijs";
         else if (totalDays === 2 && leadItem.twoDayPrice) discountLabel = "2-Dag Prijs";
         else if (totalDays === 1 && leadItem.oneDayPrice && leadItem.oneDayPrice < leadItem.pricePerDay) discountLabel = "1-Dag Actie";
-
-        const activeRules = campaignRules.filter(r => r.isActive);
-        const matchingRuleName = activeRules.find(rule => {
-          if (rule.scope === "global") return true;
-          if (rule.scope === "category" && leadItem.category.toLowerCase() === rule.scopeValue.toLowerCase()) return true;
-          if (rule.scope === "product" && leadItem.id === rule.scopeValue) return true;
-          if (rule.scope === "role" && customerProfile.toLowerCase() === rule.scopeValue.toLowerCase()) return true;
-          return false;
-        })?.name;
-
-        if (matchingRuleName) {
-          discountLabel = `${discountLabel} + ${matchingRuleName}`;
-        } else if (leadItem.campaignText) {
-          discountLabel = `${discountLabel} + ${leadItem.campaignText}`;
-        }
       }
 
       const effectiveDailyRate = (!leadItem?.weeklyOnly && totalDays >= 6 && totalDays < 28 && leadItem?.weeklyPrice)
@@ -427,7 +412,7 @@ export default function BookingSection({
       // Tier label for flat-rate price display (single-item cart only)
       let tierLabel: string | null = null;
       let isFlatRate = false;
-      let weeklyBreakdown: { weeks: number; pricePerWeek: number; remainder: number; dailyRate: number } | null = null;
+      let weeklyBreakdown: { weeks: number; pricePerWeek: number; remainder: number; dailyRate: number; remainderCost?: number } | null = null;
       if (cartItems.length === 1 && leadItem) {
         if (leadItem.weeklyOnly && leadItem.weeklyPrice) {
           const weeks = billableWeeks(totalDays, leadItem.minRentalDays);
@@ -444,7 +429,8 @@ export default function BookingSection({
         } else if (totalDays >= 6 && totalDays <= 27 && leadItem.weeklyPrice) {
           const wks = Math.floor(totalDays / 5);
           const rem = totalDays % 5;
-          weeklyBreakdown = { weeks: wks, pricePerWeek: leadItem.weeklyPrice, remainder: rem, dailyRate: Math.round(leadItem.weeklyPrice / 5) };
+          const wkBase = Math.round(totalDays * (leadItem.weeklyPrice / 5));
+          weeklyBreakdown = { weeks: wks, pricePerWeek: leadItem.weeklyPrice, remainder: rem, dailyRate: Math.round(leadItem.weeklyPrice / 5), remainderCost: wkBase - wks * leadItem.weeklyPrice };
         } else if (totalDays >= 28 && leadItem.monthlyPrice) {
           tierLabel = "Maandtarief"; isFlatRate = true;
         }
@@ -506,21 +492,6 @@ export default function BookingSection({
       discountLabel = "1-Dag Actie";
     }
 
-    const activeRules = campaignRules.filter(r => r.isActive);
-    const matchingRuleName = activeRules.find(rule => {
-      if (rule.scope === "global") return true;
-      if (rule.scope === "category" && selectedMachine.category.toLowerCase() === rule.scopeValue.toLowerCase()) return true;
-      if (rule.scope === "product" && selectedMachine.id === rule.scopeValue) return true;
-      if (rule.scope === "role" && customerProfile.toLowerCase() === rule.scopeValue.toLowerCase()) return true;
-      return false;
-    })?.name;
-
-    if (matchingRuleName) {
-      discountLabel = `${discountLabel} + ${matchingRuleName}`;
-    } else if (selectedMachine.campaignText) {
-      discountLabel = `${discountLabel} + ${selectedMachine.campaignText}`;
-    }
-
     const subtotal = itemSub;
     const transport = deliveryType === "delivery_by_us" ? 150 : 0;
     const trailerCost = deliveryType === "trailer_rental" ? 25 * days : deliveryType === "trailer_drop_return" ? 35 : 0;
@@ -546,7 +517,7 @@ export default function BookingSection({
 
     let tierLabel: string | null = null;
     let isFlatRate = false;
-    let weeklyBreakdown: { weeks: number; pricePerWeek: number; remainder: number; dailyRate: number } | null = null;
+    let weeklyBreakdown: { weeks: number; pricePerWeek: number; remainder: number; dailyRate: number; remainderCost?: number } | null = null;
     if (days === 1 && selectedMachine.oneDayPrice) {
       tierLabel = "1-Dag Actie"; isFlatRate = true;
     } else if (days === 2 && isStrictWeekend(startDate, 2) && selectedMachine.weekendPrice) {
@@ -558,7 +529,8 @@ export default function BookingSection({
     } else if (days >= 6 && days <= 27 && selectedMachine.weeklyPrice) {
       const wks = Math.floor(days / 5);
       const rem = days % 5;
-      weeklyBreakdown = { weeks: wks, pricePerWeek: selectedMachine.weeklyPrice, remainder: rem, dailyRate: Math.round(selectedMachine.weeklyPrice / 5) };
+      const wkBase = Math.round(days * (selectedMachine.weeklyPrice / 5));
+      weeklyBreakdown = { weeks: wks, pricePerWeek: selectedMachine.weeklyPrice, remainder: rem, dailyRate: Math.round(selectedMachine.weeklyPrice / 5), remainderCost: wkBase - wks * selectedMachine.weeklyPrice };
     } else if (days >= 28 && selectedMachine.monthlyPrice) {
       tierLabel = "Maandtarief"; isFlatRate = true;
     }

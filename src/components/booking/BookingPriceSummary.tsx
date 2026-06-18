@@ -30,7 +30,7 @@ interface BookingPriceSummaryProps {
     effectiveDailyRate?: number | null;
     tierLabel?: string | null;
     isFlatRate?: boolean;
-    weeklyBreakdown?: { weeks: number; pricePerWeek: number; remainder: number; dailyRate: number } | null;
+    weeklyBreakdown?: { weeks: number; pricePerWeek: number; remainder: number; dailyRate: number; remainderCost?: number } | null;
     campaignSavings?: number;
     weekendWorkAnswer?: "ja" | "nee" | null;
   };
@@ -205,15 +205,9 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
         <div className="space-y-2.5 pt-1 border-t border-slate-100">
           <SummaryRow
             icon={<Calendar className="h-3.5 w-3.5" />}
-            label="Huurperiode"
+            label="Tarief"
             value={rateLabel}
           />
-          {hasTierDeal && (
-            <div className="flex items-center gap-1.5 text-[11px] text-emerald-700 font-semibold">
-              <TrendingDown className="h-3.5 w-3.5 shrink-0" />
-              Voordeeltarief toegepast
-            </div>
-          )}
           <SummaryRow
             icon={<Truck className="h-3.5 w-3.5" />}
             label={transportName}
@@ -222,10 +216,12 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
           />
           {totalSavings > 0 && (
             <SummaryRow
-              icon={<TrendingDown className="h-3.5 w-3.5" />}
-              label="Je bespaart"
-              value={`${euro(totalSavings)} korting`}
-              accent="emerald"
+              icon={(sums.isFlatRate || !!sums.weeklyBreakdown)
+                ? <Tag className="h-3.5 w-3.5" />
+                : <TrendingDown className="h-3.5 w-3.5" />}
+              label={(sums.isFlatRate || !!sums.weeklyBreakdown) ? "Campagnekorting" : "Je bespaart"}
+              value={`− ${euro(totalSavings)}`}
+              accent={(sums.isFlatRate || !!sums.weeklyBreakdown) ? "amber" : "emerald"}
             />
           )}
           {showWeekendFree && (
@@ -282,8 +278,8 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
                   />
                   {sums.weeklyBreakdown.remainder > 0 && (
                     <Row
-                      label={`${sums.weeklyBreakdown.remainder} ${sums.weeklyBreakdown.remainder === 1 ? "dag" : "dagen"} × ${euroCompact(sums.weeklyBreakdown.dailyRate)}`}
-                      value={euro(sums.weeklyBreakdown.remainder * sums.weeklyBreakdown.dailyRate)}
+                      label={`${sums.weeklyBreakdown.remainder} extra ${sums.weeklyBreakdown.remainder === 1 ? "dag" : "dagen"}`}
+                      value={euro(sums.weeklyBreakdown.remainderCost ?? sums.weeklyBreakdown.remainder * sums.weeklyBreakdown.dailyRate)}
                     />
                   )}
                 </>

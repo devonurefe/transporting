@@ -43,7 +43,7 @@ interface BookingStep2Props {
     vat: number; total: number; deliveryType?: string;
     weekendDays?: number; spansWeekend?: boolean; effectiveDailyRate?: number | null;
     tierLabel?: string | null; isFlatRate?: boolean;
-    weeklyBreakdown?: { weeks: number; pricePerWeek: number; remainder: number; dailyRate: number } | null;
+    weeklyBreakdown?: { weeks: number; pricePerWeek: number; remainder: number; dailyRate: number; remainderCost?: number } | null;
     campaignSavings?: number;
   };
   selectedMachine?: Machine | null;

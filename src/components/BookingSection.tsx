@@ -469,7 +469,8 @@ export default function BookingSection({
         tierLabel,
         isFlatRate,
         weeklyBreakdown,
-        campaignSavings
+        campaignSavings,
+        weekendWorkAnswer
       };
     }
 
@@ -581,7 +582,8 @@ export default function BookingSection({
       tierLabel,
       isFlatRate,
       weeklyBreakdown,
-      campaignSavings
+      campaignSavings,
+      weekendWorkAnswer
     };
   };
 

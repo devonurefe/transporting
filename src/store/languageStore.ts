@@ -40,7 +40,7 @@ const dictionary: TranslationDictionary = {
 
   // Catalog Section
   catalogTitle: { nl: "Professionele Verhuurvloot", en: "Professional Rental Fleet", tr: "Profesyonel Kiralama Filosu" },
-  catalogSubtitle: { nl: "Direct beschikbaar voor zzp, bouw, groenvoorziening en industrie.", en: "Directly available for freelancers, construction, landscaping, and industry.", tr: "ZZP, inşaat, peyzaj ve sanayi için anında rezerve edilebilir." },
+  catalogSubtitle: { nl: "Direct beschikbaar voor ZZP'ers, bouw, groenvoorziening en industrie.", en: "Directly available for freelancers, construction, landscaping, and industry.", tr: "ZZP'ciler, inşaat, peyzaj ve sanayi için anında rezerve edilebilir." },
   filterAll: { nl: "Alle Machines", en: "All Machines", tr: "Tüm Platformlar" },
   btnSelect: { nl: "Dit Model Kiezen", en: "Choose This Model", tr: "Bu Modeli Seç" },
   btnSpecifications: { nl: "Geschikt voor mij?", en: "Is this right for me?", tr: "Bana uygun mu?" },
@@ -53,7 +53,7 @@ const dictionary: TranslationDictionary = {
   // Price Summary
   priceSummaryReservation: { nl: "Jouw reservering", en: "Your reservation", tr: "Rezervasyonunuz" },
   priceSummaryTrailer: { nl: "Aanhangerverhuur", en: "Trailer rental", tr: "Römork kiralama" },
-  priceSummaryDelivery: { nl: "Bezorging door ons", en: "Delivery by us", tr: "Bizim teslimatımız" },
+  priceSummaryDelivery: { nl: "Transportkosten", en: "Transport costs", tr: "Taşıma maliyeti" },
   priceSummaryPickup: { nl: "Bezorging", en: "Delivery", tr: "Teslimat" },
   priceSummaryPickupFree: { nl: "Zelf ophalen (gratis)", en: "Self-pickup (free)", tr: "Kendi alım (ücretsiz)" },
   priceSummaryTotal: { nl: "Totaal te betalen", en: "Total to pay", tr: "Ödenecek Toplam" },

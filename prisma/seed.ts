@@ -46,8 +46,8 @@ const defaultCategories = [
     }
   },
   {
-    id: "schaarlift-6m", label: "Kompakte Schaarlift (6m)", listLabel: "Schaarliften (6m)",
-    desc: "Kompakte elektrische schaarlift voor snel en veilig werken op 6 meter. Past door standaard binnendeuren.",
+    id: "schaarlift-6m", label: "Compacte Schaarlift (6m)", listLabel: "Schaarliften (6m)",
+    desc: "Compacte elektrische schaarlift voor snel en veilig werken op 6 meter. Past door standaard binnendeuren.",
     heights: "6m", price: "v.a. €65/dag",
     infoContent: {
       useCases: ["Plafondreparaties en schilderwerk binnenshuis", "Montage van verlichting en HVAC", "Magazijn- en kantooronderhoud"],
@@ -397,7 +397,7 @@ const defaultMachines = [
     id: "dingli-6m",
     name: "Dingli JCPT 0607 DC Compact Schaarlift",
     category: "schaarlift-6m",
-    categoryLabel: "Kompakte Schaarlift (6m)",
+    categoryLabel: "Compacte Schaarlift (6m)",
     height: 6.0,
     reach: 0,
     weight: 695,
@@ -652,7 +652,7 @@ const defaultSiteConfig = {
   siteName: "HuurGo",
   heroTagline: "Professionele Hoogwerker Verhuur",
   heroTitle: "De juiste machine, snel en veilig geregeld.",
-  heroSubtitle: "HuurGo verhuurt gecertificeerde hoogwerkers, schaarliften, mastliften en ladderliften aan ZZP'ers, aannemers en particulieren door heel Nederland. Meer dan 50 BMWT-gecertificeerde machines, direct beschikbaar.",
+  heroSubtitle: "HuurGo verhuurt gecertificeerde hoogwerkers, schaarliften, mastliften en ladderliften aan ZZP'ers, aannemers en particulieren in heel Nederland. Meer dan 50 BMWT-gecertificeerde machines, direct beschikbaar.",
   menuHomeLabel: "Home",
   menuCatalogLabel: "Catalogus",
   menuAdvisorLabel: "Snel Advies",

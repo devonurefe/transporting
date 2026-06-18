@@ -32,6 +32,7 @@ interface BookingPriceSummaryProps {
     isFlatRate?: boolean;
     weeklyBreakdown?: { weeks: number; pricePerWeek: number; remainder: number; dailyRate: number } | null;
     campaignSavings?: number;
+    weekendWorkAnswer?: "ja" | "nee" | null;
   };
 }
 
@@ -49,12 +50,12 @@ function Row({
 }) {
   const lCls = accent === "emerald" ? "text-emerald-700 font-semibold"
     : accent === "amber" ? "text-amber-700 font-semibold"
-    : dim ? "text-slate-400"
+    : dim ? "text-slate-500"
     : "text-slate-600";
   const vCls = accent === "emerald" ? "text-emerald-700 font-semibold"
     : accent === "amber" ? "text-amber-700 font-semibold"
-    : dim ? "text-slate-400"
-    : "text-slate-800 font-bold";
+    : dim ? "text-slate-500"
+    : "text-slate-700 font-semibold";
   return (
     <div className="flex justify-between items-center gap-3">
       <span className={`text-xs leading-snug ${lCls}`}>{label}</span>
@@ -80,12 +81,12 @@ function SummaryRow({
     : accent === "amber" ? "text-amber-700"
     : "text-slate-800";
   return (
-    <div className="flex items-center justify-between gap-3">
-      <div className="flex items-center gap-2 min-w-0">
+    <div className="flex items-start justify-between gap-3">
+      <div className="flex items-center gap-2 shrink-0">
         <span className="text-slate-400 shrink-0">{icon}</span>
-        <span className="text-xs text-slate-500 shrink-0">{label}</span>
+        <span className="text-xs text-slate-500">{label}</span>
       </div>
-      <span className={`text-xs font-semibold text-right ${vCls}`}>{value}</span>
+      <span className={`text-xs font-semibold text-right min-w-0 break-words leading-snug ${vCls}`}>{value}</span>
     </div>
   );
 }
@@ -111,9 +112,22 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
   }
 
   const priceExVat = sums.subtotal + sums.transport + sums.driver + sums.addonCost;
-  const showWeekendFree = sums.spansWeekend && !sums.addonDetails.some(a => a.id === "weekend_surcharge");
+  // Only surface the "free weekend days" line once the customer has explicitly
+  // declared they will NOT work the weekend. When they pick "Ja, ik werk" a
+  // €75 weekend surcharge add-on is shown instead, and while unanswered we keep
+  // the summary neutral to avoid confusion.
+  const showWeekendFree = sums.spansWeekend && sums.weekendWorkAnswer === "nee";
   const totalSavings = (sums.campaignSavings ?? 0)
     + (!sums.weeklyBreakdown && !sums.isFlatRate ? sums.discountAmount : 0);
+
+  // Flat-rate / weekly tiers bake the discount into the price, so "Je bespaart"
+  // never fires for them. Surface a small badge when the effective day rate is
+  // genuinely below the list day rate so the customer understands the saving.
+  const effectivePerDay = sums.weeklyBreakdown ? sums.weeklyBreakdown.dailyRate
+    : sums.days > 0 ? sums.subtotal / sums.days
+    : selectedMachine.pricePerDay;
+  const hasTierDeal = (sums.isFlatRate || !!sums.weeklyBreakdown)
+    && effectivePerDay < selectedMachine.pricePerDay - 0.01;
 
   const rateLabel = sums.isFlatRate && sums.tierLabel
     ? `${sums.days} ${sums.days === 1 ? "dag" : "dagen"} — ${sums.tierLabel}`
@@ -126,7 +140,7 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
   const transportFree = sums.transport === 0 && sums.driver === 0;
   const transportName = sums.deliveryType === "trailer_drop_return" ? "Aanhanger Drop & Return"
     : sums.deliveryType === "trailer_rental" ? "Aanhanger op locatie"
-    : sums.deliveryType === "delivery_by_us" ? "Bezorging door ons"
+    : sums.deliveryType === "delivery_by_us" ? "Transportkosten"
     : t("priceSummaryPickup");
   const transportValue = transportFree ? t("priceSummaryPickupFree") : euro(sums.transport + sums.driver);
 
@@ -184,6 +198,12 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
             label="Huurperiode"
             value={rateLabel}
           />
+          {hasTierDeal && (
+            <div className="flex items-center gap-1.5 text-[11px] text-emerald-700 font-semibold">
+              <TrendingDown className="h-3.5 w-3.5 shrink-0" />
+              Voordeeltarief toegepast
+            </div>
+          )}
           <SummaryRow
             icon={<Truck className="h-3.5 w-3.5" />}
             label={transportName}
@@ -201,9 +221,9 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
           {showWeekendFree && (
             <SummaryRow
               icon={<Calendar className="h-3.5 w-3.5" />}
-              label="Weekenddagen"
-              value={`${sums.weekendDays ?? 0} gratis inbegrepen`}
-              accent="blue"
+              label={(sums.weekendDays ?? 0) === 1 ? "Weekenddag" : "Weekenddagen"}
+              value="Gratis (geen gebruik)"
+              accent="emerald"
             />
           )}
           {sums.addonCost > 0 && sums.addonDetails.map(addon => (

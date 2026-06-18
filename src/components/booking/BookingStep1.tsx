@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from "react";
-import { Calendar, Building2, X, Truck, ShieldAlert, ArrowRight, MessageCircle, ChevronLeft } from "lucide-react";
+import { Calendar, Building2, X, Truck, ShieldAlert, ArrowRight, MessageCircle, ChevronLeft, Info } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { CartItem, DeliveryType, Machine } from "../../types";
 import { buildWhatsAppUrl, buildWhatsAppTransportInquiryUrl } from "../../utils/whatsapp";
@@ -264,6 +264,14 @@ export default function BookingStep1({
               <span className="text-sm font-black text-emerald-600">€150,-</span>
               <span className="text-[11px] text-slate-500 font-semibold">heen + terug</span>
             </div>
+            {deliveryType === "delivery_by_us" && (
+              <div className="mt-2.5 flex items-start gap-1.5 rounded-lg bg-amber-50 border border-amber-200 px-2.5 py-1.5">
+                <Info className="h-3.5 w-3.5 text-amber-600 shrink-0 mt-px" />
+                <p className="text-[10px] text-amber-800 font-semibold leading-snug">
+                  Tip: huur zelf een aanhanger en bespaar €150 transportkosten.
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Opt 2 — Aanhanger huren */}

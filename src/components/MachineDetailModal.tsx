@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect } from "react";
 import {
-  X, ShoppingBag, ChevronLeft, ChevronRight, Package, Zap,
+  X, ShoppingCart, ChevronLeft, ChevronRight, Package, Zap,
   Paintbrush, Home, Wrench, Leaf, HardHat, Droplets, Layers, Building2,
   type LucideIcon
 } from "lucide-react";
@@ -192,7 +192,7 @@ export default function MachineDetailModal({
         </div>
 
         {/* Scrollable content */}
-        <div className="flex-1 overflow-y-auto space-y-5 pr-1 scrollbar-thin scrollbar-thumb-slate-200">
+        <div className="flex-1 overflow-y-auto space-y-5 pr-1 pb-4 scrollbar-thin scrollbar-thumb-slate-200">
 
           {/* A — Images */}
           <div className="space-y-2">
@@ -268,7 +268,7 @@ export default function MachineDetailModal({
                   return (
                     <div className={`flex items-center px-4 py-2.5 ${hasActie ? "bg-amber-50" : "bg-white"}`}>
                       <div className="flex-1">
-                        <p className={`text-xs font-bold ${hasActie ? "text-amber-700" : "text-slate-800"}`}>{hasActie ? "1 dag actie" : "1 dag"}</p>
+                        <p className={`text-xs font-bold ${hasActie ? "text-amber-700" : "text-slate-800"}`}>{hasActie ? "Dagactie" : "1 dag"}</p>
                         <p className={`text-[10px] ${hasActie ? "text-amber-500" : "text-slate-400"}`}>Ma – Vr</p>
                       </div>
                       {hasActie && <span className="text-[10px] font-black px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 mr-2">Actie</span>}
@@ -332,7 +332,7 @@ export default function MachineDetailModal({
           {/* C — Description */}
           <div className="space-y-1.5">
             <p className="text-xs text-slate-400 uppercase tracking-wider font-bold">Omschrijving</p>
-            <p className="text-slate-700 text-sm leading-relaxed">{machine.description}</p>
+            <p className="text-slate-700 text-sm leading-relaxed">{machine.description?.replace(/\s*\(Unit\s+\d+\)/gi, "").replace(/\s{2,}/g, " ").trim()}</p>
           </div>
 
           {/* D — Technical specs */}
@@ -345,21 +345,21 @@ export default function MachineDetailModal({
               </div>
               <div className="flex items-center justify-between px-3 py-2.5 bg-white">
                 <span className="text-xs text-slate-400 font-medium">Werkhoogte</span>
-                <span className="text-sm font-bold text-slate-900 font-mono">{machine.height} m</span>
+                <span className="text-sm font-bold text-slate-900 font-mono text-right">{machine.height} m</span>
               </div>
               {machine.reach > 0 && (
                 <div className="flex items-center justify-between px-3 py-2.5 bg-white">
                   <span className="text-xs text-slate-400 font-medium">Uitreik</span>
-                  <span className="text-sm font-bold text-slate-900 font-mono">{machine.reach} m</span>
+                  <span className="text-sm font-bold text-slate-900 font-mono text-right">{machine.reach} m</span>
                 </div>
               )}
               <div className="flex items-center justify-between px-3 py-2.5 bg-white">
                 <span className="text-xs text-slate-400 font-medium">Gewicht</span>
-                <span className="text-sm font-bold text-slate-900 font-mono">{machine.weight.toLocaleString("nl-NL")} kg</span>
+                <span className="text-sm font-bold text-slate-900 font-mono text-right">{machine.weight.toLocaleString("nl-NL")} kg</span>
               </div>
               <div className="flex items-center justify-between px-3 py-2.5 bg-white">
                 <span className="text-xs text-slate-400 font-medium">Aandrijving</span>
-                <span className={`text-sm font-bold font-mono ${machine.powerType === "Diesel" ? "text-orange-600" : machine.powerType === "Hybride" ? "text-blue-700" : "text-emerald-700"}`}>
+                <span className="text-sm font-bold font-mono text-slate-900 text-right">
                   {machine.powerType}
                 </span>
               </div>
@@ -491,7 +491,7 @@ export default function MachineDetailModal({
             onClick={() => onBook(machine)}
             className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white text-sm font-bold transition-all shadow-md cursor-pointer active:scale-[0.98]"
           >
-            <ShoppingBag className="h-4 w-4" />
+            <ShoppingCart className="h-4 w-4" />
             Huur Nu
           </button>
         </div>

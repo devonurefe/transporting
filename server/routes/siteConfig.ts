@@ -5,7 +5,7 @@ import { AuthenticatedRequest } from "../middleware/auth.js";
 
 export const siteConfigRouter = Router();
 
-const CORRECT_SUBTITLE = "HuurGo verhuurt gecertificeerde hoogwerkers, schaarliften, mastliften en ladderliften aan ZZP'ers, aannemers en particulieren door heel Nederland. Meer dan 50 BMWT-gecertificeerde machines, direct beschikbaar.";
+const CORRECT_SUBTITLE = "HuurGo verhuurt gecertificeerde hoogwerkers, schaarliften, mastliften en ladderliften aan ZZP'ers, aannemers en particulieren in heel Nederland. Meer dan 50 BMWT-gecertificeerde machines, direct beschikbaar.";
 
 const defaultSiteConfig = {
   id: "default",
@@ -24,7 +24,7 @@ siteConfigRouter.get("/site-config", async (req: AuthenticatedRequest, res: Resp
   try {
     let config = await prisma.siteConfig.findUnique({ where: { id: "default" } });
     // Auto-fix stale subtitle text that may be stored in DB
-    if (config?.heroSubtitle?.includes("AI-assistent") || config?.heroSubtitle?.includes("AI assistant") || config?.heroSubtitle?.includes("MB Hoogwerkers")) {
+    if (config?.heroSubtitle?.includes("AI-assistent") || config?.heroSubtitle?.includes("AI assistant") || config?.heroSubtitle?.includes("MB Hoogwerkers") || config?.heroSubtitle?.includes("door heel Nederland")) {
       config = await prisma.siteConfig.update({
         where: { id: "default" },
         data: { heroSubtitle: CORRECT_SUBTITLE }

@@ -4,7 +4,7 @@ import {
   ArrowRightLeft,
   Zap,
   Search,
-  ShoppingBag,
+  ShoppingCart,
   Info,
   X,
   Tag,
@@ -90,10 +90,12 @@ export default function CatalogSection({
     return null;
   };
 
+  // Always renders with a non-breaking-style "€ " prefix so every price on the
+  // catalog (day rate, actie, tariff table) is spaced consistently — "€ 60,50".
   const formatPrice = (p: number): string =>
-    p % 1 === 0
+    "€ " + (p % 1 === 0
       ? Math.round(p).toLocaleString("nl-NL")
-      : p.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      : p.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
 
   const formatShortDate = (iso: string): string => {
     const d = new Date(iso);
@@ -221,7 +223,8 @@ export default function CatalogSection({
         {/* Clean Unified Control Bar */}
         <div className="flex flex-col gap-3 bg-white border border-slate-200 p-3 rounded-2xl shadow-sm mb-6">
           {/* Row 1: Category tabs */}
-          <nav aria-label="Categorie filter" className="flex items-center space-x-1.5 overflow-x-auto scrollbar-none">
+          <div className="relative">
+          <nav aria-label="Categorie filter" className="flex items-center space-x-1.5 overflow-x-auto scrollbar-none pr-7 sm:pr-0">
             {categoryTabs.map((tab) => {
               const isActive = selectedCategory === tab.id;
               return (
@@ -250,6 +253,12 @@ export default function CatalogSection({
               );
             })}
           </nav>
+          {/* Scroll affordance: fade + chevron hint on mobile (hidden once the
+              row fits, i.e. on sm+ where all tabs are visible) */}
+          <div className="pointer-events-none absolute right-0 top-0 bottom-0 flex items-center pl-6 pr-1 bg-gradient-to-l from-white via-white to-transparent sm:hidden">
+            <ChevronRight className="h-4 w-4 text-slate-400" />
+          </div>
+          </div>
 
           {/* Row 2: Search + VAT display toggle */}
           <div className="flex items-center gap-2">
@@ -382,11 +391,11 @@ export default function CatalogSection({
                           </div>
                           <div className="text-right shrink-0">
                             <div className="text-xl font-display font-black leading-none text-slate-900">
-                              €{formatPrice(vp(machine.pricePerDay))}
+                              {formatPrice(vp(machine.pricePerDay))}
                             </div>
                             <div className="text-[10px] text-slate-400 mt-0.5">per dag {vatLabel}</div>
                             {machine.oneDayPrice && machine.oneDayPrice < machine.pricePerDay && (
-                              <div className="text-[10px] text-amber-600 font-bold mt-0.5">1 dag actie €{formatPrice(vp(machine.oneDayPrice))}</div>
+                              <div className="text-[10px] text-amber-600 font-bold mt-0.5">Dagactie {formatPrice(vp(machine.oneDayPrice))}</div>
                             )}
                           </div>
                         </div>
@@ -428,9 +437,6 @@ export default function CatalogSection({
                               {prof}
                             </span>
                           ))}
-                          {(machine.suitableFor ?? []).length > 2 && (
-                            <span className="text-[10px] text-slate-400 font-semibold px-1 select-none">+{machine.suitableFor.length - 2} meer</span>
-                          )}
                         </div>
 
                         {/* Campaign badge */}
@@ -458,7 +464,7 @@ export default function CatalogSection({
                             onClick={() => onSelectMachineForBooking(machine)}
                             className="flex-1 py-3 rounded-xl bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white text-xs font-bold transition-all duration-200 active:scale-[0.97] cursor-pointer flex items-center justify-center gap-1.5 shadow-sm hover:shadow-md"
                           >
-                            <ShoppingBag className="h-3.5 w-3.5" />
+                            <ShoppingCart className="h-3.5 w-3.5" />
                             {t("btnRentNow")}
                           </button>
                         </div>
@@ -499,7 +505,7 @@ export default function CatalogSection({
           // 1 dag: always first row; actie highlight only when cheaper than day rate
           const oneDayHasActie = !!(m.oneDayPrice && m.oneDayPrice < m.pricePerDay);
           rows.push({
-            period: oneDayHasActie ? "1 dag actie" : "1 dag",
+            period: oneDayHasActie ? "Dagactie" : "1 dag",
             when: "Ma – Vr",
             price: oneDayHasActie ? m.oneDayPrice! : m.pricePerDay,
             highlight: oneDayHasActie ? "fire" : undefined,
@@ -541,7 +547,7 @@ export default function CatalogSection({
                     <p className="text-[10px] font-bold uppercase tracking-widest text-orange-500 mb-0.5">{m.categoryLabel}</p>
                     <h3 className="font-display font-black text-slate-900 text-base leading-snug">{m.name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "")}</h3>
                     <p className="text-xs text-slate-500 mt-0.5">
-                      Dagtarief <span className="font-bold text-slate-800">€{formatPrice(vp(m.pricePerDay))}</span> <span className="text-slate-400">{vatLabel}</span>
+                      Dagtarief <span className="font-bold text-slate-800">{formatPrice(vp(m.pricePerDay))}</span> <span className="text-slate-400">{vatLabel}</span>
                     </p>
                   </div>
                   <button
@@ -588,7 +594,7 @@ export default function CatalogSection({
                           row.highlight === "green" ? "text-emerald-700" :
                           row.highlight === "teal" ? "text-teal-700" :
                           row.highlight === "violet" ? "text-amber-700" : "text-slate-900"
-                        }`}>€{formatPrice(vp(row.price))}</span>
+                        }`}>{formatPrice(vp(row.price))}</span>
                       </div>
                     </div>
                   ))}
@@ -608,7 +614,7 @@ export default function CatalogSection({
                     onClick={() => { setPricingPreviewMachine(null); onSelectMachineForBooking(m); }}
                     className="w-full py-3 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-sm transition-all cursor-pointer flex items-center justify-center gap-2 shadow-md"
                   >
-                    <ShoppingBag className="h-4 w-4" />
+                    <ShoppingCart className="h-4 w-4" />
                     Huur Nu
                   </button>
                 </div>

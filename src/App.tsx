@@ -119,6 +119,7 @@ export default function App() {
 
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [selectedMachine, setSelectedMachine] = useState<Machine | null>(null);
+  const [replaceCartMachine, setReplaceCartMachine] = useState<Machine | null>(null);
   const [isAdminMode, setIsAdminModeState] = useState<boolean>(() => {
     return localStorage.getItem("hwh_admin_mode") === "true";
   });
@@ -421,25 +422,33 @@ export default function App() {
     navigate("/catalog");
   };
 
-  // Action: Select machine for booking & support cart
-  const handleSelectMachineForBooking = (machine: Machine) => {
+  // Replaces the cart with the chosen machine and moves to the booking flow.
+  const proceedWithBooking = (machine: Machine) => {
     setSelectedMachine(machine);
     const todayStr = new Date().toISOString().split("T")[0];
     const endStr = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
-    if (cartItems.length > 0 && !confirm(`Uw winkelwagen bevat al ${cartItems.length} machine(s). Wilt u doorgaan en de huidige winkelwagen wissen?`)) {
-      return;
-    }
     clearCart();
     addToCart(machine, todayStr, endStr);
     fetchBlockedDates();
     setActiveTab("booking");
-    
+
     // Live visitor logging
     handleAddSystemLog(
-      "booking", 
-      currentUser ? currentUser.name : "Gast", 
+      "booking",
+      currentUser ? currentUser.name : "Gast",
       `Voegt machine toe aan winkelwagen: "${machine.name}" (Tarief: €${machine.pricePerDay}/dag)`
     );
+  };
+
+  // Action: Select machine for booking & support cart. When the cart already
+  // holds a machine we ask for confirmation via a Dutch in-app modal (native
+  // confirm() shows OS-localized buttons, which broke the Dutch-only UI).
+  const handleSelectMachineForBooking = (machine: Machine) => {
+    if (cartItems.length > 0) {
+      setReplaceCartMachine(machine);
+      return;
+    }
+    proceedWithBooking(machine);
   };
 
   const handleRemoveCartItem = (id: string) => {
@@ -775,8 +784,51 @@ export default function App() {
         setShowContactModal={setShowContactModal} 
       />
 
+      {/* CART REPLACE CONFIRMATION (Dutch in-app modal, not native confirm) */}
+      <AnimatePresence>
+        {replaceCartMachine && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4"
+            onClick={() => setReplaceCartMachine(null)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              transition={{ duration: 0.18 }}
+              className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="text-lg font-black text-slate-900 mb-2">Winkelwagen vervangen?</h3>
+              <p className="text-sm text-slate-600 mb-6 leading-relaxed">
+                Er staat al een machine in uw winkelwagen. Wilt u deze vervangen door de nieuwe selectie?
+              </p>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setReplaceCartMachine(null)}
+                  className="flex-1 px-4 py-2.5 rounded-xl border border-slate-300 text-slate-700 font-semibold hover:bg-slate-50 transition-colors cursor-pointer"
+                >
+                  Annuleren
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { const m = replaceCartMachine; setReplaceCartMachine(null); proceedWithBooking(m); }}
+                  className="flex-1 px-4 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold transition-colors cursor-pointer"
+                >
+                  Vervangen
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* INTERACTIVE CONTACT DETAILS MODAL */}
-      <ContactModal 
+      <ContactModal
         isOpen={showContactModal} 
         onClose={() => setShowContactModal(false)} 
         onShowToast={(toast) => setActiveToast(toast)} 

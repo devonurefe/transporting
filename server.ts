@@ -304,6 +304,24 @@ async function applyDataMigrations() {
       console.log("[Migration] Updated ecolift category label → Pecolift.");
     }
 
+    // Fix German spelling "Kompakte" → Dutch "Compacte" on the 6m scissor lift.
+    // Idempotent: each updateMany only matches the old (stale) values.
+    const catLabelFix = await prisma.category.updateMany({
+      where: { id: "schaarlift-6m", label: "Kompakte Schaarlift (6m)" },
+      data: { label: "Compacte Schaarlift (6m)" }
+    });
+    await prisma.category.updateMany({
+      where: { id: "schaarlift-6m", desc: { startsWith: "Kompakte" } },
+      data: { desc: "Compacte elektrische schaarlift voor snel en veilig werken op 6 meter. Past door standaard binnendeuren." }
+    });
+    const machLabelFix = await prisma.machine.updateMany({
+      where: { categoryLabel: "Kompakte Schaarlift (6m)" },
+      data: { categoryLabel: "Compacte Schaarlift (6m)" }
+    });
+    if (catLabelFix.count > 0 || machLabelFix.count > 0) {
+      console.log("[Migration] Corrected 'Kompakte' → 'Compacte' on 6m scissor lift.");
+    }
+
     // One-time: assign official fleet photos to all machines (marker row in
     // InvoiceCounter so admin image changes are never overwritten afterwards)
     const FLEET_PHOTOS_MIGRATION = "migration-fleet-photos-2026-06";

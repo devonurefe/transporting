@@ -64,12 +64,12 @@ const REVIEWS = [
 
 function ReviewCard({ r }: { r: typeof REVIEWS[0] }) {
   return (
-    <div className="bg-slate-900 border border-slate-700/60 rounded-2xl p-4 space-y-2.5">
+    <div className="bg-slate-900 border border-slate-700/60 rounded-2xl p-4 sm:p-5 space-y-2.5">
       <div className="text-amber-400 text-sm leading-none tracking-wide">★★★★★</div>
       <p className="text-[13px] text-slate-300 leading-relaxed line-clamp-3">{r.text}</p>
-      <div className="flex items-center justify-between pt-0.5">
+      <div className="flex items-center justify-between gap-3 pt-1.5">
         <span className="text-[11px] font-bold text-white">{r.name}</span>
-        <span className="text-[10px] text-slate-500">{r.date}</span>
+        <span className="text-[10px] text-slate-500 shrink-0">{r.date}</span>
       </div>
     </div>
   );
@@ -143,7 +143,7 @@ export default function Footer({ siteName, setActiveTab: _setActiveTab, setShowC
           </div>
 
           {/* Hint */}
-          <p className="text-center text-[10px] text-slate-600 mt-4">Beweeg om te pauzeren</p>
+          <p className="text-center text-[10px] text-slate-600 mt-4">Tik om te pauzeren</p>
 
         </div>
       </div>
@@ -158,7 +158,7 @@ export default function Footer({ siteName, setActiveTab: _setActiveTab, setShowC
             <HuurGoLogo className="h-9" dark />
             <p className="text-[10px] text-slate-500 -mt-1">HuurGo is een initiatief van MB Hoogwerkers</p>
             <p className="text-xs text-slate-400 leading-loose max-w-xs">
-              Professionele verhuur van gecertificeerde hoogwerkers, schaarliften en mastliften voor zzp'ers, aannemers en particulieren door heel Nederland.
+              Professionele verhuur van gecertificeerde hoogwerkers, schaarliften en mastliften voor ZZP'ers, aannemers en particulieren in heel Nederland.
             </p>
             <a href="mailto:info@mbhoogwerkers.com" className="flex items-center gap-2 text-xs text-slate-400 hover:text-white transition-colors no-underline">
               <Mail className="h-3.5 w-3.5 shrink-0" />

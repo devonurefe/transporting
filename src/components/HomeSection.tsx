@@ -89,10 +89,39 @@ export default function HomeSection({
   const t = useLanguageStore((state) => state.t);
 
   const [openFaq, setOpenFaq] = React.useState<number | null>(null);
+  const campaignScrollRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+
+  // Auto-advance the weekly-deals row so it doesn't look "half finished".
+  // Only acts when the row actually overflows (mobile horizontal scroll); on
+  // sm+ it's a static grid with nothing to scroll. Pauses while interacted with.
+  React.useEffect(() => {
+    const el = campaignScrollRef.current;
+    if (!el) return;
+    let paused = false;
+    const pause = () => { paused = true; };
+    const resume = () => { paused = false; };
+    el.addEventListener("pointerenter", pause);
+    el.addEventListener("pointerleave", resume);
+    const id = window.setInterval(() => {
+      if (paused || el.scrollWidth - el.clientWidth <= 4) return;
+      const first = el.firstElementChild;
+      const step = first instanceof HTMLElement ? first.offsetWidth + 16 : 216;
+      if (el.scrollLeft + el.clientWidth >= el.scrollWidth - 4) {
+        el.scrollTo({ left: 0, behavior: "smooth" });
+      } else {
+        el.scrollBy({ left: step, behavior: "smooth" });
+      }
+    }, 3500);
+    return () => {
+      window.clearInterval(id);
+      el.removeEventListener("pointerenter", pause);
+      el.removeEventListener("pointerleave", resume);
+    };
+  }, [machines]);
 
   const FAQ_ITEMS = [
     {
@@ -264,7 +293,7 @@ export default function HomeSection({
 
             {/* Cards — horizontal scroll on mobile, grid on sm+ */}
             <div className="max-w-5xl mx-auto">
-              <div className="flex gap-4 overflow-x-auto pb-3 sm:pb-0 sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden snap-x snap-mandatory">
+              <div ref={campaignScrollRef} className="flex gap-4 overflow-x-auto pb-3 sm:pb-0 sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden snap-x snap-mandatory">
                 {campaignMachines.map((m, i) => {
                   const baseName = m.name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "").trim();
                   const machineImage = m.imageUrl || m.additionalImages?.[0];
@@ -275,8 +304,8 @@ export default function HomeSection({
                   const displayPrice = withVat(effectivePrice, vatDisplay);
                   const originalPrice = withVat(m.pricePerDay, vatDisplay);
                   const fmtPrice = (p: number) => p % 1 === 0
-                    ? `€${Math.round(p)}`
-                    : `€${p.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                    ? `€ ${Math.round(p)}`
+                    : `€ ${p.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
                   const CatIcon = CATEGORY_ICONS[m.category] ?? Truck;
 
                   return (
@@ -306,7 +335,7 @@ export default function HomeSection({
                         {/* Discount ribbon */}
                         {(campaignPct || hasDayDiscount) && (
                           <div className="absolute top-0 left-0 bg-amber-500 text-white text-[10px] font-black px-2.5 py-1 rounded-br-xl shadow-sm">
-                            {campaignPct ? `−${campaignPct}%` : "1 dag actie"}
+                            {campaignPct ? `−${campaignPct}%` : "Dagactie"}
                           </div>
                         )}
                         {m.campaignText && (
@@ -318,7 +347,7 @@ export default function HomeSection({
 
                       {/* Content */}
                       <div className="p-3.5 flex flex-col gap-2.5 flex-1">
-                        <p className="font-display font-black text-[13px] text-slate-900 leading-snug line-clamp-2">{baseName}</p>
+                        <p className="font-display font-black text-[13px] text-slate-900 leading-snug line-clamp-2 break-words">{baseName}</p>
 
                         {/* Price block */}
                         <div className="flex items-baseline gap-1.5 flex-wrap">

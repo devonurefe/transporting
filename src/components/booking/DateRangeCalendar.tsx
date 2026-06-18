@@ -117,20 +117,6 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
     return () => window.removeEventListener("keydown", onKey);
   }, [isOpen]);
 
-  // Pre-build a Set of days blocked by active orders for O(1) lookup in the maxEnd walk.
-  const ordersBlockedSet = useMemo(() => {
-    const s = new Set<string>();
-    for (const o of orders) {
-      let d = new Date(o.startDate);
-      const end = new Date(o.endDate);
-      while (d <= end) {
-        s.add(d.toISOString().split("T")[0]);
-        d.setUTCDate(d.getUTCDate() + 1);
-      }
-    }
-    return s;
-  }, [orders]);
-
   // Max selectable end: walk forward from start until the first unavailable day,
   // so a range can never span a blocked/booked day. Only constrains while no end yet.
   const maxEnd = useMemo(() => {
@@ -139,11 +125,11 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
     let cursor = draftStart;
     for (let i = 0; i < 366; i++) {
       const next = addDaysKey(cursor, 1);
-      if (next < today || blockedDates.has(next) || ordersBlockedSet.has(next)) break;
+      if (!checkAvailability(machine.id, next, next, orders, blockedDates, today).available) break;
       cap = next; cursor = next;
     }
     return cap;
-  }, [draftStart, draftEnd, ordersBlockedSet, blockedDates, today]);
+  }, [draftStart, draftEnd, orders, blockedDates, machine.id, today]);
 
   const grid = useMemo(() => {
     const firstDow = new Date(Date.UTC(viewYear, viewMonth, 1)).getUTCDay();

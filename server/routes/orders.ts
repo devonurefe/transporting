@@ -80,7 +80,7 @@ ordersRouter.get("/availability", availabilityLimiter, async (req: Authenticated
     res.json(formatted);
   } catch (error) {
     console.error("Error fetching order availability:", error);
-    res.status(500).json({ error: "Failed to fetch availability" });
+    res.status(500).json({ error: "Kon beschikbaarheid niet ophalen" });
   }
 });
 
@@ -132,7 +132,7 @@ ordersRouter.get("/", requireAuth as any, async (req: AuthenticatedRequest, res:
     }
   } catch (error) {
     console.error("Error fetching orders:", error);
-    res.status(500).json({ error: "Failed to fetch orders" });
+    res.status(500).json({ error: "Kon bestellingen niet ophalen" });
   }
 });
 
@@ -508,7 +508,7 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
       return res.status(409).json({ error: "Er is veel vraag naar deze machine. Probeer het over enkele seconden opnieuw." });
     }
     console.error("Error creating order:", error);
-    res.status(500).json({ error: "Failed to create order" });
+    res.status(500).json({ error: "Kon bestelling niet aanmaken" });
   }
 });
 
@@ -535,7 +535,7 @@ ordersRouter.put("/:id/payment", requireAdmin as any, async (req: AuthenticatedR
     });
   } catch (error) {
     console.error("Error updating payment status:", error);
-    res.status(500).json({ error: "Failed to update payment status" });
+    res.status(500).json({ error: "Kon betalingsstatus niet bijwerken" });
   }
 });
 
@@ -576,7 +576,7 @@ ordersRouter.put("/:id/cancel", requireAuth as any, async (req: AuthenticatedReq
     });
   } catch (error) {
     console.error("Error cancelling order:", error);
-    res.status(500).json({ error: "Failed to cancel order" });
+    res.status(500).json({ error: "Kon bestelling niet annuleren" });
   }
 });
 
@@ -605,7 +605,7 @@ ordersRouter.post("/:id/rating", requireAuth as any, async (req: AuthenticatedRe
     res.json(orderRating);
   } catch (error) {
     console.error("Error saving rating:", error);
-    res.status(500).json({ error: "Failed to save rating" });
+    res.status(500).json({ error: "Kon beoordeling niet opslaan" });
   }
 });
 
@@ -623,7 +623,7 @@ ordersRouter.get("/:id/rating", requireAuth as any, async (req: AuthenticatedReq
     res.json(rating || null);
   } catch (error) {
     console.error("Error fetching rating:", error);
-    res.status(500).json({ error: "Failed to fetch rating" });
+    res.status(500).json({ error: "Kon beoordeling niet ophalen" });
   }
 });
 
@@ -685,7 +685,7 @@ ordersRouter.put("/:id/status", requireAdmin as any, async (req: AuthenticatedRe
     });
   } catch (error) {
     console.error("Error updating order status:", error);
-    res.status(500).json({ error: "Failed to update order status" });
+    res.status(500).json({ error: "Kon bestelstatus niet bijwerken" });
   }
 });
 
@@ -736,6 +736,6 @@ ordersRouter.post("/send-reminders", async (req: AuthenticatedRequest, res: Resp
     res.json({ sent, total: orders.length, date: tomorrowStr });
   } catch (error) {
     console.error("Error sending reminders:", error);
-    res.status(500).json({ error: "Failed to send reminders" });
+    res.status(500).json({ error: "Kon herinneringen niet verzenden" });
   }
 });

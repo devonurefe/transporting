@@ -197,7 +197,7 @@ export default function ContactModal({ isOpen, onClose, onShowToast, onAddSystem
                       message: `Onze logistieke adviseur belt u binnen 10 minuten terug op ${phone}. Hartelijk dank!`,
                       type: "success"
                     });
-                    onAddSystemLog("system", "Bezoeker", `Belaanvraag geregistreerd voor nummer: ${phone} (Alphen aan den Rijn hub).`);
+                    onAddSystemLog("system", "Bezoeker", `Belaanvraag geregistreerd voor nummer: ${phone} (Zoeterwoude hub).`);
                   }
                 }}
                 className="flex gap-2"

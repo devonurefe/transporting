@@ -26,7 +26,7 @@ export function authenticateToken(req: AuthenticatedRequest, res: Response, next
 
 export function requireAuth(req: AuthenticatedRequest, res: Response, next: NextFunction) {
   if (!req.user) {
-    return res.status(401).json({ error: "Aanmelden vereist" });
+    return res.status(401).json({ error: "Inloggen vereist" });
   }
   next();
 }

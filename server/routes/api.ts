@@ -25,7 +25,7 @@ apiRouter.get("/health", async (req, res) => {
     res.status(500).json({
       status: "unhealthy",
       timestamp: new Date().toISOString(),
-      error: "Database connection failed"
+      error: "Databaseverbinding mislukt"
     });
   }
 });
@@ -60,7 +60,7 @@ const MAGIC_BYTES: Record<string, (buf: Buffer) => boolean> = {
 apiRouter.post("/upload", requireAdmin as any, async (req, res) => {
   const { fileName, base64Data } = req.body;
   if (!fileName || !base64Data) {
-    return res.status(400).json({ error: "fileName and base64Data parameters are required" });
+    return res.status(400).json({ error: "fileName en base64Data zijn verplicht" });
   }
 
   const ext = path.extname(fileName).toLowerCase();

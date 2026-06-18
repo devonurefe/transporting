@@ -50,7 +50,7 @@ machinesRouter.get("/", async (req: AuthenticatedRequest, res: Response) => {
     }
   } catch (error) {
     console.error("Error fetching machines:", error);
-    res.status(500).json({ error: "Failed to fetch machines" });
+    res.status(500).json({ error: "Kon machines niet ophalen" });
   }
 });
 
@@ -59,7 +59,7 @@ function validateMachineInput(body: any): { valid: boolean; error?: string } {
   const { name, category, height, pricePerDay, reach, weight, weeklyDiscountPercent, monthlyDiscountPercent, campaignDiscountPercent, campaignDiscountAmount } = body;
 
   if (!name?.trim() || !category?.trim() || !height || !pricePerDay) {
-    return { valid: false, error: "Missing required machine fields" };
+    return { valid: false, error: "Verplichte machinevelden ontbreken" };
   }
 
   const numHeight = Number(height);
@@ -344,7 +344,7 @@ machinesRouter.delete("/:id", requireAdmin as any, async (req: AuthenticatedRequ
     await prisma.machine.delete({
       where: { id }
     });
-    res.json({ success: true, message: "Machine deleted successfully" });
+    res.json({ success: true, message: "Machine succesvol verwijderd" });
   } catch (error: any) {
     console.error("Error deleting machine:", error);
     res.status(500).json({ error: "Machine kon niet worden verwijderd" });

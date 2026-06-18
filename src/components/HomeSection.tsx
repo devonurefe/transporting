@@ -120,9 +120,11 @@ export default function HomeSection({
       if (paused || el.scrollWidth - el.clientWidth <= 4) {
         pos = el.scrollLeft;
       } else {
-        const half = el.scrollWidth / 2;
+        // One repeating set = (total + bridging gap-4) / 2, so the wrap lands on
+        // identical pixels with no visible seam.
+        const setWidth = (el.scrollWidth + 16) / 2;
         pos += SPEED;
-        if (pos >= half) pos -= half;
+        if (pos >= setWidth) pos -= setWidth;
         el.scrollLeft = pos;
       }
       raf = requestAnimationFrame(tick);

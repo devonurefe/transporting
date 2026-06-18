@@ -133,10 +133,10 @@ export const emailService = {
             </div>
 
             <div class="price-block">
-              <div style="font-size:12px; color:#64748b;">Subtotaal (excl. 21% BTW): &nbsp; € ${(order.totalAmount / 1.21).toFixed(2)}</div>
-              <div style="font-size:12px; color:#64748b; margin-top:4px;">BTW 21%: &nbsp; € ${(order.totalAmount - order.totalAmount / 1.21).toFixed(2)}</div>
+              <div style="font-size:12px; color:#64748b;">Subtotaal (excl. 21% BTW): &nbsp; €${(order.totalAmount / 1.21).toFixed(2)}</div>
+              <div style="font-size:12px; color:#64748b; margin-top:4px;">BTW 21%: &nbsp; €${(order.totalAmount - order.totalAmount / 1.21).toFixed(2)}</div>
               <div class="label" style="margin-top:12px;">Totaal Overeenkomst (incl. BTW)</div>
-              <div class="price-amount">€ ${order.totalAmount.toFixed(2)}</div>
+              <div class="price-amount">€${order.totalAmount.toFixed(2)}</div>
             </div>
 
             <p style="font-size: 13px; line-height: 1.6; color: #475569;">
@@ -223,7 +223,7 @@ export const emailService = {
               </div>
               <div class="details-item">
                 <div class="label">Huurcontract Waarde</div>
-                <div class="value" style="color: #10b981; font-size: 15px;">€ ${order.totalAmount.toFixed(2)}</div>
+                <div class="value" style="color: #10b981; font-size: 15px;">€${order.totalAmount.toFixed(2)}</div>
               </div>
             </div>
 
@@ -326,7 +326,7 @@ export const emailService = {
               ` : ''}
               <div class="details-item">
                 <div class="label">Totaalsom</div>
-                <div class="value" style="color: #10b981;">€ ${order.totalAmount.toFixed(2)}</div>
+                <div class="value" style="color: #10b981;">€${order.totalAmount.toFixed(2)}</div>
               </div>
             </div>
 
@@ -592,7 +592,7 @@ export const emailService = {
               <div class="details-item"><div class="label">Klant</div><div class="value">${esc(order.customerName)} — ${esc(order.customerEmail)}</div></div>
               <div class="details-item"><div class="label">Machine</div><div class="value">${esc(order.machineName)}</div></div>
               <div class="details-item"><div class="label">Periode</div><div class="value">${order.startDate} t/m ${order.endDate} (${order.rentalDays}d)</div></div>
-              <div class="details-item"><div class="label">Waarde (vervallen)</div><div class="value" style="color:#dc2626;">€ ${order.totalAmount.toFixed(2)}</div></div>
+              <div class="details-item"><div class="label">Waarde (vervallen)</div><div class="value" style="color:#dc2626;">€${order.totalAmount.toFixed(2)}</div></div>
             </div>
             <div style="text-align:center;"><a href="${APP_URL}/admin" class="btn">Bekijk in Admin Dashboard</a></div>
           </div>

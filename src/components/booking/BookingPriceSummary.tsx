@@ -30,7 +30,7 @@ interface BookingPriceSummaryProps {
     effectiveDailyRate?: number | null;
     tierLabel?: string | null;
     isFlatRate?: boolean;
-    weeklyBreakdown?: { weeks: number; pricePerWeek: number; remainder: number; dailyRate: number } | null;
+    weeklyBreakdown?: { weeks: number; pricePerWeek: number; remainder: number; dailyRate: number; remainderCost?: number } | null;
     campaignSavings?: number;
     weekendWorkAnswer?: "ja" | "nee" | null;
   };
@@ -278,8 +278,8 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
                   />
                   {sums.weeklyBreakdown.remainder > 0 && (
                     <Row
-                      label={`${sums.weeklyBreakdown.remainder} ${sums.weeklyBreakdown.remainder === 1 ? "dag" : "dagen"} × ${euroCompact(sums.weeklyBreakdown.dailyRate)}`}
-                      value={euro(sums.weeklyBreakdown.remainder * sums.weeklyBreakdown.dailyRate)}
+                      label={`${sums.weeklyBreakdown.remainder} extra ${sums.weeklyBreakdown.remainder === 1 ? "dag" : "dagen"}`}
+                      value={euro(sums.weeklyBreakdown.remainderCost ?? sums.weeklyBreakdown.remainder * sums.weeklyBreakdown.dailyRate)}
                     />
                   )}
                 </>

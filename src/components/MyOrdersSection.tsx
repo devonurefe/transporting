@@ -923,7 +923,7 @@ export default function MyOrdersSection({
                         <div className="space-y-1 sm:text-right">
                           <span className="text-[9.5px] text-slate-500 font-mono font-bold block uppercase tracking-wider">Kostenoverzicht</span>
                           <div className="text-sm font-mono font-black text-teal-700">
-                            € {o.totalAmount.toFixed(2)}
+                            €{o.totalAmount.toFixed(2)}
                           </div>
                           <span className="text-[9px] text-slate-400 font-semibold block">Inclusief 21% BTW & logistiek</span>
                         </div>

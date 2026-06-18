@@ -5,18 +5,19 @@
 
 /**
  * Formats an amount as Dutch euro notation with comma decimal separator,
- * e.g. 150 → "€ 150,00" and 12.5 → "€ 12,50".
+ * e.g. 150 → "€150,00" and 12.5 → "€12,50". The € sign is joined to the
+ * number (no space) for a consistent look across the whole app.
  */
 export const euro = (amount: number): string =>
-  "€ " + amount.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  "€" + amount.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 /**
- * Compact variant for whole amounts: 150 → "€ 150,-", 12.5 → "€ 12,50".
+ * Compact variant for whole amounts: 150 → "€150,-", 12.5 → "€12,50".
  * Common Dutch retail style for round prices.
  */
 export const euroCompact = (amount: number): string =>
   amount % 1 === 0
-    ? `€ ${Math.round(amount).toLocaleString("nl-NL")},-`
+    ? `€${Math.round(amount).toLocaleString("nl-NL")},-`
     : euro(amount);
 
 export const VAT_RATE = 0.21;

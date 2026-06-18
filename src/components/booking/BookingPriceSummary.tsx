@@ -82,11 +82,11 @@ function SummaryRow({
     : "text-slate-800";
   return (
     <div className="flex items-start justify-between gap-3">
-      <div className="flex items-center gap-2 shrink-0">
+      <div className="flex items-center gap-2 min-w-0">
         <span className="text-slate-400 shrink-0">{icon}</span>
-        <span className="text-xs text-slate-500">{label}</span>
+        <span className="text-xs text-slate-500 leading-snug">{label}</span>
       </div>
-      <span className={`text-xs font-semibold text-right min-w-0 break-words leading-snug ${vCls}`}>{value}</span>
+      <span className={`text-xs font-semibold text-right shrink-0 whitespace-nowrap leading-snug ${vCls}`}>{value}</span>
     </div>
   );
 }
@@ -129,13 +129,14 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
   const hasTierDeal = (sums.isFlatRate || !!sums.weeklyBreakdown)
     && effectivePerDay < selectedMachine.pricePerDay - 0.01;
 
+  // Day-count is already shown under the total ("· N dagen huur"); the Huurperiode
+  // row only names the applied tariff so it stays one clean line. The 6-27 day
+  // pro-rata band is also a weekly tariff, so it reads "Werkweek-tarief".
   const rateLabel = sums.isFlatRate && sums.tierLabel
-    ? `${sums.days} ${sums.days === 1 ? "dag" : "dagen"} — ${sums.tierLabel}`
-    : `${sums.days} ${sums.days === 1 ? "dag" : "dagen"} × ${euroCompact(
-        sums.weeklyBreakdown ? sums.weeklyBreakdown.dailyRate
-        : sums.effectiveDailyRate != null && sums.days >= 6 ? sums.effectiveDailyRate
-        : selectedMachine.pricePerDay
-      )}`;
+    ? sums.tierLabel
+    : sums.weeklyBreakdown
+    ? "Werkweek-tarief"
+    : "Dagtarief";
 
   const transportFree = sums.transport === 0 && sums.driver === 0;
   const transportName = sums.deliveryType === "trailer_drop_return" ? "Aanhanger Drop & Return"

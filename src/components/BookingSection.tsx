@@ -369,7 +369,7 @@ export default function BookingSection({
 
       if (selectedAddons.includes("safety")) {
         addonCost += 15 * totalDays;
-        addonDetails.push({ id: "safety", name: "Gecertificeerd Harnas & Veiligheidskit", price: 15 * totalDays });
+        addonDetails.push({ id: "safety", name: "Veiligheidskit", price: 15 * totalDays });
       }
       if (weekendWorkAnswer === 'ja' && spansWeekend) {
         addonCost += 75;
@@ -431,7 +431,7 @@ export default function BookingSection({
       if (cartItems.length === 1 && leadItem) {
         if (leadItem.weeklyOnly && leadItem.weeklyPrice) {
           const weeks = billableWeeks(totalDays, leadItem.minRentalDays);
-          tierLabel = weeks === 1 ? "Weektarief (min. 1 week)" : `Weektarief × ${weeks} weken`;
+          tierLabel = weeks === 1 ? "Weektarief" : `Weektarief × ${weeks} weken`;
           isFlatRate = true;
         } else if (totalDays === 1 && leadItem.oneDayPrice) {
           tierLabel = "1-Dag Actie"; isFlatRate = true;
@@ -440,7 +440,7 @@ export default function BookingSection({
         } else if (totalDays === 2 && leadItem.twoDayPrice) {
           tierLabel = "2-Daags Tarief (ma-vr)"; isFlatRate = true;
         } else if ((totalDays === 3 || totalDays === 4 || totalDays === 5) && leadItem.weeklyPrice) {
-          tierLabel = "Werkweek-tarief (3-5 dgn)"; isFlatRate = true;
+          tierLabel = "Werkweek-tarief"; isFlatRate = true;
         } else if (totalDays >= 6 && totalDays <= 27 && leadItem.weeklyPrice) {
           const wks = Math.floor(totalDays / 5);
           const rem = totalDays % 5;
@@ -531,7 +531,7 @@ export default function BookingSection({
 
     if (selectedAddons.includes("safety")) {
       addonCost += 15 * days;
-      addonDetails.push({ id: "safety", name: "Gecertificeerd Harnas & Veiligheidskit", price: 15 * days });
+      addonDetails.push({ id: "safety", name: "Veiligheidskit", price: 15 * days });
     }
 
     const totalExcl = subtotal + transport + trailerCost + driver + addonCost;
@@ -554,7 +554,7 @@ export default function BookingSection({
     } else if (days === 2 && selectedMachine.twoDayPrice) {
       tierLabel = "2-Daags Tarief (ma-vr)"; isFlatRate = true;
     } else if ((days === 3 || days === 4 || days === 5) && selectedMachine.weeklyPrice) {
-      tierLabel = "Werkweek-tarief (3-5 dgn)"; isFlatRate = true;
+      tierLabel = "Werkweek-tarief"; isFlatRate = true;
     } else if (days >= 6 && days <= 27 && selectedMachine.weeklyPrice) {
       const wks = Math.floor(days / 5);
       const rem = days % 5;
@@ -760,7 +760,7 @@ export default function BookingSection({
             const addonsList: { id: string; name: string; price: number; billing: "daily" | "flat" | "weekly" }[] = [];
             if (selectedAddons.includes("safety")) {
               addonCost += 15 * days;
-              addonsList.push({ id: "safety", name: "Gecertificeerd Harnas & Veiligheidskit", price: 15 * days, billing: "flat" });
+              addonsList.push({ id: "safety", name: "Veiligheidskit", price: 15 * days, billing: "flat" });
             }
             // Weekend surcharge: added once (on first item only) when customer declared weekend use
             if (i === 0 && weekendWorkAnswer === 'ja' && sums.spansWeekend) {

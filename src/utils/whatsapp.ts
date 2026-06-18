@@ -69,8 +69,8 @@ export function buildWhatsAppUrl(
     const label = deliveryType === "self_pickup"
       ? "✅  Zelf ophalen  –  Produktieweg 20, Zoeterwoude  (Gratis)\n   🕐 Openingstijden: ma–vr 08:00–17:00"
       : deliveryType === "trailer_rental"
-      ? `🔗  Aanhanger huren  (€ 25,-/dag${totals ? `  ×  ${totals.days} d  =  ${euroCompact(totals.transport)}` : ""})`
-      : `🚐  Bezorging door ons  (heen + terug = € 150,-)`;
+      ? `🔗  Aanhanger huren  (€25,-/dag${totals ? `  ×  ${totals.days} d  =  ${euroCompact(totals.transport)}` : ""})`
+      : `🚐  Bezorging door ons  (heen + terug = €150,-)`;
     lines.push(label);
     lines.push("");
   }

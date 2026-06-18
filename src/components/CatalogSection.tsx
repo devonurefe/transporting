@@ -90,10 +90,10 @@ export default function CatalogSection({
     return null;
   };
 
-  // Always renders with a non-breaking-style "€ " prefix so every price on the
-  // catalog (day rate, actie, tariff table) is spaced consistently — "€ 60,50".
+  // Renders the € sign joined to the number so every price on the catalog
+  // (day rate, actie, tariff table) reads consistently — "€60,50".
   const formatPrice = (p: number): string =>
-    "€ " + (p % 1 === 0
+    "€" + (p % 1 === 0
       ? Math.round(p).toLocaleString("nl-NL")
       : p.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
 
@@ -390,12 +390,23 @@ export default function CatalogSection({
                             </h3>
                           </div>
                           <div className="text-right shrink-0">
-                            <div className="text-xl font-display font-black leading-none text-slate-900">
-                              {formatPrice(vp(machine.pricePerDay))}
-                            </div>
-                            <div className="text-[10px] text-slate-400 mt-0.5">per dag {vatLabel}</div>
-                            {machine.oneDayPrice && machine.oneDayPrice < machine.pricePerDay && (
-                              <div className="text-[10px] text-amber-600 font-bold mt-0.5">Dagactie {formatPrice(vp(machine.oneDayPrice))}</div>
+                            {machine.oneDayPrice && machine.oneDayPrice < machine.pricePerDay ? (
+                              <>
+                                <span className="inline-flex items-center rounded-full bg-amber-100 text-amber-700 text-[8.5px] font-black uppercase tracking-wide px-1.5 py-0.5">Dagactie</span>
+                                <div className="text-xl font-display font-black leading-none text-amber-600 mt-1">
+                                  {formatPrice(vp(machine.oneDayPrice))}
+                                </div>
+                                <div className="text-[10px] text-slate-400 mt-0.5">
+                                  <span className="line-through">{formatPrice(vp(machine.pricePerDay))}</span> per dag {vatLabel}
+                                </div>
+                              </>
+                            ) : (
+                              <>
+                                <div className="text-xl font-display font-black leading-none text-slate-900">
+                                  {formatPrice(vp(machine.pricePerDay))}
+                                </div>
+                                <div className="text-[10px] text-slate-400 mt-0.5">per dag {vatLabel}</div>
+                              </>
                             )}
                           </div>
                         </div>

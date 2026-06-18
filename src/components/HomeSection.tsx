@@ -95,31 +95,47 @@ export default function HomeSection({
     window.scrollTo(0, 0);
   }, []);
 
-  // Auto-advance the weekly-deals row so it doesn't look "half finished".
-  // Only acts when the row actually overflows (mobile horizontal scroll); on
-  // sm+ it's a static grid with nothing to scroll. Pauses while interacted with.
+  // Continuous gentle left-drift marquee for the weekly-deals row. The cards are
+  // rendered twice (a hidden-on-desktop clone set), so when the scroll passes the
+  // first set's width we subtract it for a seamless loop. Only acts when the row
+  // overflows (mobile horizontal scroll); on sm+ it's a static grid. Pauses on
+  // touch/drag and is disabled under prefers-reduced-motion.
   React.useEffect(() => {
     const el = campaignScrollRef.current;
     if (!el) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     let paused = false;
+    let raf = 0;
+    let pos = el.scrollLeft;
+    const SPEED = 0.4; // px/frame ≈ 24px/s
     const pause = () => { paused = true; };
     const resume = () => { paused = false; };
-    el.addEventListener("pointerenter", pause);
+    el.addEventListener("pointerdown", pause);
+    el.addEventListener("touchstart", pause, { passive: true });
+    el.addEventListener("pointerup", resume);
+    el.addEventListener("pointercancel", resume);
     el.addEventListener("pointerleave", resume);
-    const id = window.setInterval(() => {
-      if (paused || el.scrollWidth - el.clientWidth <= 4) return;
-      const first = el.firstElementChild;
-      const step = first instanceof HTMLElement ? first.offsetWidth + 16 : 216;
-      if (el.scrollLeft + el.clientWidth >= el.scrollWidth - 4) {
-        el.scrollTo({ left: 0, behavior: "smooth" });
+    el.addEventListener("touchend", resume);
+    const tick = () => {
+      if (paused || el.scrollWidth - el.clientWidth <= 4) {
+        pos = el.scrollLeft;
       } else {
-        el.scrollBy({ left: step, behavior: "smooth" });
+        const half = el.scrollWidth / 2;
+        pos += SPEED;
+        if (pos >= half) pos -= half;
+        el.scrollLeft = pos;
       }
-    }, 3500);
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
     return () => {
-      window.clearInterval(id);
-      el.removeEventListener("pointerenter", pause);
+      cancelAnimationFrame(raf);
+      el.removeEventListener("pointerdown", pause);
+      el.removeEventListener("touchstart", pause);
+      el.removeEventListener("pointerup", resume);
+      el.removeEventListener("pointercancel", resume);
       el.removeEventListener("pointerleave", resume);
+      el.removeEventListener("touchend", resume);
     };
   }, [machines]);
 
@@ -293,8 +309,8 @@ export default function HomeSection({
 
             {/* Cards — horizontal scroll on mobile, grid on sm+ */}
             <div className="max-w-5xl mx-auto">
-              <div ref={campaignScrollRef} className="flex gap-4 overflow-x-auto pb-3 sm:pb-0 sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden snap-x snap-mandatory">
-                {campaignMachines.map((m, i) => {
+              <div ref={campaignScrollRef} className="flex gap-4 overflow-x-auto pb-3 sm:pb-0 sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                {[...campaignMachines.map(m => ({ m, clone: false })), ...campaignMachines.map(m => ({ m, clone: true }))].map(({ m, clone }, i) => {
                   const baseName = m.name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "").trim();
                   const machineImage = m.imageUrl || m.additionalImages?.[0];
                   const campaignPct = m.campaignDiscountPercent ?? 0;
@@ -304,19 +320,21 @@ export default function HomeSection({
                   const displayPrice = withVat(effectivePrice, vatDisplay);
                   const originalPrice = withVat(m.pricePerDay, vatDisplay);
                   const fmtPrice = (p: number) => p % 1 === 0
-                    ? `€ ${Math.round(p)}`
-                    : `€ ${p.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                    ? `€${Math.round(p)}`
+                    : `€${p.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
                   const CatIcon = CATEGORY_ICONS[m.category] ?? Truck;
 
                   return (
                     <motion.button
-                      key={m.id}
+                      key={clone ? `${m.id}-clone` : m.id}
+                      aria-hidden={clone || undefined}
+                      tabIndex={clone ? -1 : undefined}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.25, delay: i * 0.07 }}
+                      transition={{ duration: 0.25, delay: clone ? 0 : i * 0.07 }}
                       type="button"
                       onClick={() => onSearch(baseName, m.category)}
-                      className="snap-start shrink-0 w-[200px] sm:w-auto bg-white rounded-2xl border border-amber-100 shadow-sm hover:shadow-lg hover:-translate-y-1 active:scale-[0.98] transition-all text-left overflow-hidden flex flex-col group"
+                      className={`shrink-0 w-[200px] sm:w-auto bg-white rounded-2xl border border-amber-100 shadow-sm hover:shadow-lg hover:-translate-y-1 active:scale-[0.98] transition-all text-left overflow-hidden flex flex-col group ${clone ? "sm:hidden" : ""}`}
                     >
                       {/* Image */}
                       <div className="relative aspect-[3/2] w-full overflow-hidden bg-amber-50 shrink-0">
@@ -351,7 +369,7 @@ export default function HomeSection({
 
                         {/* Price block */}
                         <div className="flex items-baseline gap-1.5 flex-wrap">
-                          <span className="text-base font-black text-amber-600">{fmtPrice(displayPrice)}</span>
+                          <span className="text-lg font-black text-amber-600">{fmtPrice(displayPrice)}</span>
                           {(hasDayDiscount || campaignPct > 0) && (
                             <span className="text-[11px] text-slate-400 line-through">{fmtPrice(originalPrice)}</span>
                           )}

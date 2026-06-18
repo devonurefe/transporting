@@ -115,9 +115,9 @@ export function printInvoice(orderOrOrders: Order | Order[], clientCompanyName?:
           <div class="item-spec">Huurperiode: ${o.startDate} t/m ${o.endDate}</div>
           <div style="font-size: 10px; color: #64748b; margin-top: 2px;">Inclusief BMWT machine-verzekering & klusgids checklist pakket.</div>
         </td>
-        <td style="text-align: right; font-family: monospace;">€ ${o.machinePrice.toFixed(2)}</td>
+        <td style="text-align: right; font-family: monospace;">€${o.machinePrice.toFixed(2)}</td>
         <td style="text-align: center;">${o.rentalDays}</td>
-        <td style="text-align: right; font-family: monospace;">€ ${o.subtotal.toFixed(2)}</td>
+        <td style="text-align: right; font-family: monospace;">€${o.subtotal.toFixed(2)}</td>
       </tr>
       
       <!-- Addons for this machine -->
@@ -127,9 +127,9 @@ export function printInvoice(orderOrOrders: Order | Order[], clientCompanyName?:
           <strong>${escapeHtml(addon.name)}</strong>
           <div class="item-spec">Type: Extra optie / accessoire (${escMachineName})</div>
         </td>
-        <td style="text-align: right; font-family: monospace;">€ ${(addon.price / (addon.billing === "daily" ? o.rentalDays : 1)).toFixed(2)}</td>
+        <td style="text-align: right; font-family: monospace;">€${(addon.price / (addon.billing === "daily" ? o.rentalDays : 1)).toFixed(2)}</td>
         <td style="text-align: center;">${addon.billing === "daily" ? o.rentalDays : 1}</td>
-        <td style="text-align: right; font-family: monospace;">€ ${addon.price.toFixed(2)}</td>
+        <td style="text-align: right; font-family: monospace;">€${addon.price.toFixed(2)}</td>
       </tr>
       `).join('')}
     `;
@@ -143,9 +143,9 @@ export function printInvoice(orderOrOrders: Order | Order[], clientCompanyName?:
           <strong>Logistieke Transportservice</strong>
           <div class="item-spec">Heen- en teruglevering op locatie</div>
         </td>
-        <td style="text-align: right; font-family: monospace;">€ ${totalTransport.toFixed(2)}</td>
+        <td style="text-align: right; font-family: monospace;">€${totalTransport.toFixed(2)}</td>
         <td style="text-align: center;">1</td>
-        <td style="text-align: right; font-family: monospace;">€ ${totalTransport.toFixed(2)}</td>
+        <td style="text-align: right; font-family: monospace;">€${totalTransport.toFixed(2)}</td>
       </tr>
     `;
   }
@@ -157,9 +157,9 @@ export function printInvoice(orderOrOrders: Order | Order[], clientCompanyName?:
           <strong>Gecertificeerde BMWT Chauffeursassistentie</strong>
           <div class="item-spec">Inclusief instructiebegeleiding op locatie</div>
         </td>
-        <td style="text-align: right; font-family: monospace;">€ ${totalDriver.toFixed(2)}</td>
+        <td style="text-align: right; font-family: monospace;">€${totalDriver.toFixed(2)}</td>
         <td style="text-align: center;">1</td>
-        <td style="text-align: right; font-family: monospace;">€ ${totalDriver.toFixed(2)}</td>
+        <td style="text-align: right; font-family: monospace;">€${totalDriver.toFixed(2)}</td>
       </tr>
     `;
   }
@@ -550,15 +550,15 @@ export function printInvoice(orderOrOrders: Order | Order[], clientCompanyName?:
           <div class="totals-box">
             <div class="totals-row">
               <span>Subtotaal (Excl. BTW)</span>
-              <span style="font-family: monospace;">€ ${subtotalExclVat.toFixed(2)}</span>
+              <span style="font-family: monospace;">€${subtotalExclVat.toFixed(2)}</span>
             </div>
             <div class="totals-row">
               <span>BTW Belasting (21%)</span>
-              <span style="font-family: monospace;">€ ${totalVat.toFixed(2)}</span>
+              <span style="font-family: monospace;">€${totalVat.toFixed(2)}</span>
             </div>
             <div class="totals-row grand-total">
               <span>Eindtotaal (Incl. BTW)</span>
-              <span class="total-amount">€ ${totalAmount.toFixed(2)}</span>
+              <span class="total-amount">€${totalAmount.toFixed(2)}</span>
             </div>
           </div>
         </div>

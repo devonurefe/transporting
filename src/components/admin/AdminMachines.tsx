@@ -890,7 +890,6 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                     </div>
 
                   </div>
-                </div>
 
                 {/* Verhuurmodel: per week + alleen afhalen + accessoires */}
                 <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50 space-y-4 mb-3">
@@ -1030,6 +1029,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                       )}
                     </p>
                   )}
+                </div>
                 </div>
 
                 {/* Persistent Sticky Action Buttons Footer */}

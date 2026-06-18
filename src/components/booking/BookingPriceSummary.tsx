@@ -177,11 +177,9 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
                 {euroCompact(selectedMachine.weeklyPrice)}/week
               </span>
             ) : hasTierDeal ? (
-              // A week/month tier lowers the effective day rate — strike the list
-              // rate and show the actually-applied lower €/dag next to it.
-              <span className="inline-flex items-baseline gap-1.5 font-mono">
-                <span className="text-[11px] font-semibold text-slate-400 line-through">{euroCompact(selectedMachine.pricePerDay)}</span>
-                <span className="text-sm font-black text-orange-500">{euroCompact(effectivePerDay)}/dag</span>
+              <span className="font-mono flex items-baseline gap-1.5 flex-wrap">
+                <span className="text-sm font-black text-emerald-600">{euroCompact(effectivePerDay)}/dag</span>
+                <span className="text-xs line-through text-slate-400 font-semibold">{euroCompact(selectedMachine.pricePerDay)}/dag</span>
               </span>
             ) : (
               <span className="text-sm font-black text-slate-800 font-mono">

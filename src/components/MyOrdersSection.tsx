@@ -771,10 +771,10 @@ export default function MyOrdersSection({
               )}
               <span className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full bg-emerald-500 ring-4 ring-white flex items-center justify-center text-[8px] font-bold text-white">✓</span>
             </div>
-            <div>
-              <div className="flex items-center space-x-2">
-                <h2 className="font-display text-xl font-black text-slate-900">{currentUser.name}</h2>
-                <span className="text-[9px] font-mono bg-slate-100 text-slate-600 font-bold px-2 py-0.5 rounded-full border border-slate-200">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="font-display text-xl font-black text-slate-900 break-words">{currentUser.name}</h2>
+                <span className="text-[9px] font-mono bg-slate-100 text-slate-600 font-bold px-2 py-0.5 rounded-full border border-slate-200 whitespace-nowrap">
                   Actieve Klant (Sessie)
                 </span>
               </div>

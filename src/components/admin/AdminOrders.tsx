@@ -537,7 +537,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                                 : o.status === "Onderweg"
                                   ? "bg-blue-500/20 text-blue-500 border border-blue-400/30"
                                   : o.status === "Geannuleerd"
-                                    ? "bg-rose-500/20 text-rose-500 border border-rose-450/30"
+                                    ? "bg-rose-500/20 text-rose-500 border border-rose-400/30"
                                     : "bg-slate-700/30 text-slate-400 border border-slate-500/30"
                           }`}>
                             {o.status === "In behandeling" 

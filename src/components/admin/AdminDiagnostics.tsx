@@ -48,7 +48,7 @@ export default function AdminDiagnostics({ systemLogs, userProfiles, onAddSystem
     `[SEC]  [2026-05-31 13:29:05] ` + t("CSRF en XSS beveiligingsheaders geïnjecteerd.", "CSRF and XSS protection headers injected.", "CSRF ve XSS koruma başlıkları enjekte edildi."),
     `[INFO] [2026-05-31 13:29:10] ` + t("WhatsApp gateway en e-mail dispatcher gevalideerd.", "WhatsApp gateway and email dispatcher validated.", "WhatsApp geçidi ve e-posta dağıtıcısı doğrulandı."),
     `[WARN] [2026-05-31 13:30:15] ` + t("SMTP: E-mailkanaal meldde een handshake-waarschuwing (opnieuw proberen in de achtergrond).", "SMTP: Email carrier channel reported handshake warning (retrying in background).", "SMTP: E-posta kanalı el sıkışma uyarısı bildirdi (arka planda yeniden deneniyor)."),
-    `[OK]   [2026-05-31 13:31:00] ` + t("Alle systemen nominaal. Gereed voor beheerderscommando's.", "All systems nominal. Ready for admin commands.", "[OK] Tüm sistemler nominal. Yönetici komutları için hazır.")
+    `[OK]   [2026-05-31 13:31:00] ` + t("Alle systemen nominaal. Gereed voor beheerderscommando's.", "All systems nominal. Ready for admin commands.", "Tüm sistemler nominal. Yönetici komutları için hazır.")
   ]);
 
   // Fluctuating metric updates in background

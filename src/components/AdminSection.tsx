@@ -420,7 +420,7 @@ export default function AdminSection({
                 className={`flex items-center justify-between px-4 py-2.5 rounded-xl text-left text-xs font-bold transition-all cursor-pointer border-none ${
                   ["add", "customizer", "accounting", "diagnostics", "logs"].includes(subTab)
                     ? "bg-slate-100 text-slate-900 border border-slate-200" 
-                    : "text-slate-655 hover:text-slate-900 hover:bg-slate-100 border border-transparent bg-transparent"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent bg-transparent"
                 }`}
               >
                 <div className="flex items-center space-x-2.5">

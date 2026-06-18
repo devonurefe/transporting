@@ -267,7 +267,7 @@ export default function AdminAccounting({ adminLanguage }: AdminAccountingProps)
                       {log.message}
                     </p>
                     <div className="flex justify-between items-center pt-1 text-[9.5px]">
-                      <span className="text-emerald-700 font-bold bg-emerald-50 border border-emerald-100/55 px-1.5 py-0.2 rounded-md">
+                      <span className="text-emerald-700 font-bold bg-emerald-50 border border-emerald-100/55 px-1.5 py-0.5 rounded-md">
                         {log.status.toUpperCase()}
                       </span>
                       <span className="text-slate-800 font-extrabold">

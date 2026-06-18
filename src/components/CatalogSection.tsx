@@ -304,8 +304,8 @@ export default function CatalogSection({
               </div>
             )}
 
-            {/* Grid layout — wider cards: 2-col from sm, 3-col only at xl */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5 sm:gap-6">
+            {/* Grid layout — wider cards: 1-col mobile, 2-col tablet+ */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
               <AnimatePresence mode="popLayout">
                 {filteredMachines.map((machine) => {
                   return (

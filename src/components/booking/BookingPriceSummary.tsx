@@ -181,7 +181,7 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
               // rate and show the actually-applied lower €/dag next to it.
               <span className="inline-flex items-baseline gap-1.5 font-mono">
                 <span className="text-[11px] font-semibold text-slate-400 line-through">{euroCompact(selectedMachine.pricePerDay)}</span>
-                <span className="text-sm font-black text-emerald-600">{euroCompact(effectivePerDay)}/dag</span>
+                <span className="text-sm font-black text-orange-500">{euroCompact(effectivePerDay)}/dag</span>
               </span>
             ) : (
               <span className="text-sm font-black text-slate-800 font-mono">

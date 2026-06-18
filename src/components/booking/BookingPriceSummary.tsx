@@ -208,12 +208,6 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
             label="Huurperiode"
             value={rateLabel}
           />
-          {hasTierDeal && (
-            <div className="flex items-center gap-1.5 text-[11px] text-emerald-700 font-semibold">
-              <TrendingDown className="h-3.5 w-3.5 shrink-0" />
-              Voordeeltarief toegepast
-            </div>
-          )}
           <SummaryRow
             icon={<Truck className="h-3.5 w-3.5" />}
             label={transportName}
@@ -222,10 +216,12 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
           />
           {totalSavings > 0 && (
             <SummaryRow
-              icon={<TrendingDown className="h-3.5 w-3.5" />}
-              label="Je bespaart"
-              value={`${euro(totalSavings)} korting`}
-              accent="emerald"
+              icon={(sums.isFlatRate || !!sums.weeklyBreakdown)
+                ? <Tag className="h-3.5 w-3.5" />
+                : <TrendingDown className="h-3.5 w-3.5" />}
+              label={(sums.isFlatRate || !!sums.weeklyBreakdown) ? "Campagnekorting" : "Je bespaart"}
+              value={`− ${euro(totalSavings)}`}
+              accent={(sums.isFlatRate || !!sums.weeklyBreakdown) ? "amber" : "emerald"}
             />
           )}
           {showWeekendFree && (

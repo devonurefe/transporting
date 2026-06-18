@@ -304,8 +304,8 @@ export default function CatalogSection({
               </div>
             )}
 
-            {/* Grid layout — wider cards: 2-col from sm, 3-col only at xl */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5 sm:gap-6">
+            {/* Grid layout — wider cards: 1-col mobile, 2-col tablet+ */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
               <AnimatePresence mode="popLayout">
                 {filteredMachines.map((machine) => {
                   return (
@@ -455,7 +455,7 @@ export default function CatalogSection({
                           <div className="flex items-center gap-1.5 text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-lg w-fit">
                             <Zap className="h-3 w-3 text-amber-500" />
                             {machine.campaignText || "Promo"}
-                            {machine.campaignDiscountPercent && ` −${machine.campaignDiscountPercent}%`}
+                            {!!machine.campaignDiscountPercent && ` −${machine.campaignDiscountPercent}%`}
                           </div>
                         )}
 
@@ -527,7 +527,7 @@ export default function CatalogSection({
             rows.push({ period: "Weekend", when: "Za – Zo", price: m.weekendPrice, highlight: "violet" });
           }
           if (m.weeklyPrice) {
-            rows.push({ period: "3 – 5 dagen (werkweek)", when: "Ma – Vr", price: m.weeklyPrice, badge: d.weekly > 0 ? `−${d.weekly}%` : undefined, highlight: "green" });
+            rows.push({ period: "3–5 dagen (werkweek)", when: "Ma – Vr", price: m.weeklyPrice, badge: d.weekly > 0 ? `−${d.weekly}%` : undefined, highlight: "green" });
           }
           if (m.monthlyPrice) {
             rows.push({ period: "4 weken (28 dagen)", when: "Langlopend", price: m.monthlyPrice, badge: d.monthly > 0 ? `−${d.monthly}%` : undefined, highlight: "teal" });

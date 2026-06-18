@@ -415,7 +415,7 @@ export function printInvoice(orderOrOrders: Order | Order[], clientCompanyName?:
           text-transform: uppercase;
           letter-spacing: 0.5px;
           font-family: 'Outfit', sans-serif;
-          shrink-0: 0;
+          flex-shrink: 0;
         }
         .compliance-text {
           font-size: 11px;
@@ -505,7 +505,7 @@ export function printInvoice(orderOrOrders: Order | Order[], clientCompanyName?:
             <div class="party-detail">
               <strong>${primaryOrder.deliveryType === 'self_pickup' ? 'Afhalen' : 'Adreslevering'}</strong><br/>
               <span>${logisticsText}</span><br/>
-              ${primaryOrder.deliveryAddress ? `<span style="font-family: monospace; font-size:11px; display:inline-block; margin-top:5px; color:#475569;">${escDeliveryAddress}</span>` : '<span>Afhaallocatie: Distributieweg 12, Amsterdam</span>'}
+              ${primaryOrder.deliveryAddress ? `<span style="font-family: monospace; font-size:11px; display:inline-block; margin-top:5px; color:#475569;">${escDeliveryAddress}</span>` : '<span>Afhaallocatie: Produktieweg 20, 2382 PB Zoeterwoude</span>'}
             </div>
           </div>
         </div>
@@ -596,10 +596,16 @@ export function printInvoice(orderOrOrders: Order | Order[], clientCompanyName?:
     </html>
   `;
 
+  // Convert English decimal amounts to Dutch locale format (e.g. €1234.56 → € 1.234,56)
+  const htmlContentNL = htmlContent.replace(
+    /€(\d+\.\d{2})/g,
+    (_, n) => `€ ${parseFloat(n).toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  );
+
   const printWindow = window.open("", "_blank");
   if (printWindow) {
     printWindow.document.open();
-    printWindow.document.write(htmlContent);
+    printWindow.document.write(htmlContentNL);
     printWindow.document.close();
     printWindow.focus();
     // Trigger print after fonts & layout settle; 900ms covers Google Fonts load

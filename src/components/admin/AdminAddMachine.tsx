@@ -646,7 +646,7 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
               {/* Additional Images Section */}
               <div className="col-span-1 md:col-span-2 border-t border-slate-200/80 pt-4 mt-2 space-y-3">
                 <span className="text-xs text-slate-700 block font-bold">
-                  {t("Ek Resim Galerisi (Çoklu Slayt Gösterisi)", "Additional Image Gallery (Slideshow)", "Ek Resim Galerisi (Çoklu Slayt)")}
+                  {t("Extra Afbeeldingengalerij (Diavoorstelling)", "Additional Image Gallery (Slideshow)", "Ek Resim Galerisi (Çoklu Slayt)")}
                 </span>
                 
                 <div className="relative">
@@ -656,7 +656,7 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
                     multiple
                     disabled={isUploadingAdditional}
                     onChange={handleAdditionalImageFileChange}
-                    className="w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-[10.5px] file:font-black file:bg-indigo-50 file:text-indigo-700 file:cursor-pointer hover:file:bg-indigo-100 transition-all border border-dashed border-slate-350 rounded-xl p-3 bg-white"
+                    className="w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-[10.5px] file:font-black file:bg-indigo-50 file:text-indigo-700 file:cursor-pointer hover:file:bg-indigo-100 transition-all border border-dashed border-slate-300 rounded-xl p-3 bg-white"
                   />
                   {isUploadingAdditional && (
                     <div className="absolute right-6 top-5 h-5 w-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
@@ -666,7 +666,7 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
                 {additionalImages.length > 0 && (
                   <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3 mt-3 animate-fade-in">
                     {additionalImages.map((url, idx) => (
-                      <div key={idx} className="relative aspect-video rounded-xl overflow-hidden border border-slate-200 bg-slate-105 group shadow-sm">
+                      <div key={idx} className="relative aspect-video rounded-xl overflow-hidden border border-slate-200 bg-slate-100 group shadow-sm">
                         <img src={url} alt={`Extra ${idx}`} className="w-full h-full object-cover" />
                         <button
                           type="button"

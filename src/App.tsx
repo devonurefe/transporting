@@ -533,7 +533,7 @@ export default function App() {
   };
 
   return (
-    <div className="relative min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans antialiased pb-16 sm:pb-0">
+    <div className="relative min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans antialiased pb-16 md:pb-0">
 
       {/* JSON-LD Structured Data for Google */}
       <script
@@ -847,7 +847,7 @@ export default function App() {
           {fabOpen && (
             <div className="fixed inset-0 z-[50]" onClick={() => setFabOpen(false)} />
           )}
-          <div className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-[51] flex flex-col items-end gap-2">
+          <div className="fixed bottom-20 md:bottom-6 right-4 md:right-6 z-[51] flex flex-col items-end gap-2">
           <AnimatePresence>
             {fabOpen && (
               <motion.div

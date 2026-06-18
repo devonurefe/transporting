@@ -427,7 +427,7 @@ export default function MyOrdersSection({
                         minLength={8}
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
-                        placeholder="Minimaal 6 tekens"
+                        placeholder="Minimaal 8 tekens"
                         className="w-full text-xs bg-transparent border-none outline-none text-slate-800 placeholder-slate-400 font-medium"
                       />
                     </div>
@@ -483,14 +483,14 @@ export default function MyOrdersSection({
                   <div className="space-y-1.5">
                     <label className="text-xs text-slate-600 block font-semibold">Geregistreerd E-mailadres</label>
                     <div className="relative flex items-center bg-white rounded-xl border border-slate-200 px-3 py-2.5 focus-within:border-slate-400 transition-colors shadow-sm">
-                      <Mail className="h-4 w-4 text-slate-450 shrink-0 mr-2.5" />
+                      <Mail className="h-4 w-4 text-slate-400 shrink-0 mr-2.5" />
                       <input
                         type="email"
                         required
                         value={loginEmail}
                         onChange={(e) => setLoginEmail(e.target.value)}
                         placeholder="bijv. jan@devriesschilderwerken.nl"
-                        className="w-full text-xs bg-transparent border-none outline-none text-slate-800 placeholder-slate-450 font-medium"
+                        className="w-full text-xs bg-transparent border-none outline-none text-slate-800 placeholder-slate-400 font-medium"
                       />
                     </div>
                   </div>
@@ -498,14 +498,14 @@ export default function MyOrdersSection({
                   <div className="space-y-1.5">
                     <label className="text-xs text-slate-600 block font-semibold">Beveiligd Wachtwoord</label>
                     <div className="relative flex items-center bg-white rounded-xl border border-slate-200 px-3 py-2.5 focus-within:border-slate-400 transition-colors shadow-sm">
-                      <Lock className="h-4 w-4 text-slate-450 shrink-0 mr-2.5" />
+                      <Lock className="h-4 w-4 text-slate-400 shrink-0 mr-2.5" />
                       <input
                         type="password"
                         required
                         value={loginPassword}
                         onChange={(e) => setLoginPassword(e.target.value)}
                         placeholder="••••••••"
-                        className="w-full text-xs bg-transparent border-none outline-none text-slate-800 placeholder-slate-450 font-medium"
+                        className="w-full text-xs bg-transparent border-none outline-none text-slate-800 placeholder-slate-400 font-medium"
                       />
                     </div>
                   </div>
@@ -652,14 +652,14 @@ export default function MyOrdersSection({
                   <div className="space-y-1.5">
                     <label className="text-xs text-slate-600 block font-semibold">Beveiligd Wachtwoord</label>
                     <div className="relative flex items-center bg-white rounded-xl border border-slate-200 px-3 py-2.5 focus-within:border-slate-400 transition-colors shadow-sm">
-                      <Lock className="h-4 w-4 text-slate-450 shrink-0 mr-2.5" />
+                      <Lock className="h-4 w-4 text-slate-400 shrink-0 mr-2.5" />
                       <input
                         type="password"
                         required
                         value={regPassword}
                         onChange={(e) => setRegPassword(e.target.value)}
-                        placeholder="Minimaal 6 tekens"
-                        className="w-full text-xs bg-transparent border-none outline-none text-slate-800 placeholder-slate-450 font-medium"
+                        placeholder="Minimaal 8 tekens"
+                        className="w-full text-xs bg-transparent border-none outline-none text-slate-800 placeholder-slate-400 font-medium"
                       />
                     </div>
                   </div>
@@ -771,10 +771,10 @@ export default function MyOrdersSection({
               )}
               <span className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full bg-emerald-500 ring-4 ring-white flex items-center justify-center text-[8px] font-bold text-white">✓</span>
             </div>
-            <div>
-              <div className="flex items-center space-x-2">
-                <h2 className="font-display text-xl font-black text-slate-900">{currentUser.name}</h2>
-                <span className="text-[9px] font-mono bg-slate-100 text-slate-600 font-bold px-2 py-0.5 rounded-full border border-slate-200">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="font-display text-xl font-black text-slate-900 break-words">{currentUser.name}</h2>
+                <span className="text-[9px] font-mono bg-slate-100 text-slate-600 font-bold px-2 py-0.5 rounded-full border border-slate-200 whitespace-nowrap">
                   Actieve Klant (Sessie)
                 </span>
               </div>
@@ -789,7 +789,7 @@ export default function MyOrdersSection({
 
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center space-x-2.5 text-xs bg-slate-50 px-3.5 py-2 rounded-xl border border-slate-200 font-mono">
-              <span className="text-slate-500 font-bold">Eerdere verhuringen:</span>
+              <span className="text-slate-500 font-bold">Eerdere huren:</span>
               <span className="text-slate-800 font-extrabold">{currentUser.pastRentalsCount} afgerond</span>
             </div>
 
@@ -833,7 +833,7 @@ export default function MyOrdersSection({
                     key={f.id}
                     onClick={() => setActiveFilter(f.id)}
                     className={`px-3 py-1.5 text-[10px] font-bold rounded-md transition-all border-none cursor-pointer leading-none ${
-                      activeFilter === f.id ? "bg-slate-800 text-white" : "text-slate-500 hover:text-slate-850"
+                      activeFilter === f.id ? "bg-slate-800 text-white" : "text-slate-500 hover:text-slate-800"
                     }`}
                   >
                     {f.label}
@@ -884,12 +884,12 @@ export default function MyOrdersSection({
                         <div className="flex items-center space-x-2 shrink-0">
                           <span className={`inline-block text-[9px] font-mono px-2.5 py-0.5 rounded-full font-bold uppercase border ${
                             o.status === "In behandeling" 
-                              ? "bg-amber-50 text-amber-850 text-amber-700 border-amber-200" 
+                              ? "bg-amber-50 text-amber-700 border-amber-200" 
                               : o.status === "Goedgekeurd"
                                 ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                                 : o.status === "Onderweg"
                                   ? "bg-blue-50 text-blue-700 border-blue-200"
-                                  : "bg-slate-105 bg-slate-100 text-slate-600 border border-slate-200"
+                                  : "bg-slate-100 text-slate-600 border border-slate-200"
                           }`}>
                             {o.status}
                           </span>
@@ -899,7 +899,7 @@ export default function MyOrdersSection({
                       {/* Info details */}
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
                         <div className="space-y-1">
-                          <span className="text-[9.5px] text-slate-450 text-slate-500 font-mono font-bold block uppercase tracking-wider">Huurperiode</span>
+                          <span className="text-[9.5px] text-slate-500 font-mono font-bold block uppercase tracking-wider">Huurperiode</span>
                           <div className="flex items-center space-x-1.5 text-slate-800 font-bold">
                             <Calendar className="h-3.5 w-3.5 text-slate-500 shrink-0" />
                             <span>{o.startDate} t/m {o.endDate}</span>
@@ -908,7 +908,7 @@ export default function MyOrdersSection({
                         </div>
 
                         <div className="space-y-1">
-                          <span className="text-[9.5px] text-slate-450 text-slate-500 font-mono font-bold block uppercase tracking-wider">Hub Logistiek</span>
+                          <span className="text-[9.5px] text-slate-500 font-mono font-bold block uppercase tracking-wider">Hub Logistiek</span>
                           <div className="flex items-center space-x-1.5 text-slate-800 font-bold">
                             <Truck className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
                             <span className="truncate">{o.deliveryType === "self_pickup" ? "Zelf ophalen bij Hub" : "Hub-Bezorging met Chauffeur"}</span>
@@ -1040,7 +1040,7 @@ export default function MyOrdersSection({
             
             {/* Customer Profile Customizer Settings */}
             <div className="bg-white border border-slate-200 shadow-sm p-5 rounded-3xl space-y-4">
-              <h4 className="font-display font-black text-xs text-slate-850 uppercase tracking-wider flex items-center space-x-2">
+              <h4 className="font-display font-black text-xs text-slate-800 uppercase tracking-wider flex items-center space-x-2">
                 <User className="h-4 w-4 text-slate-600" />
                 <span>Profiel & Standaardgegevens</span>
               </h4>
@@ -1056,7 +1056,7 @@ export default function MyOrdersSection({
                     value={profileName}
                     onChange={(e) => setProfileName(e.target.value)}
                     required
-                    className="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white text-slate-805 text-slate-800 outline-none focus:ring-1 focus:ring-slate-300"
+                    className="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white text-slate-800 outline-none focus:ring-1 focus:ring-slate-300"
                     placeholder="bijv. Jan de Vries"
                   />
                 </div>
@@ -1067,7 +1067,7 @@ export default function MyOrdersSection({
                     type="text"
                     value={profilePhone}
                     onChange={(e) => setProfilePhone(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white text-slate-805 text-slate-800 outline-none focus:ring-1 focus:ring-slate-300"
+                    className="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white text-slate-800 outline-none focus:ring-1 focus:ring-slate-300"
                     placeholder="bijv. +31 6 12345678"
                   />
                 </div>
@@ -1078,7 +1078,7 @@ export default function MyOrdersSection({
                     type="text"
                     value={profileCompany}
                     onChange={(e) => setProfileCompany(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white text-slate-805 text-slate-800 outline-none focus:ring-1 focus:ring-slate-300"
+                    className="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white text-slate-800 outline-none focus:ring-1 focus:ring-slate-300"
                     placeholder="bijv. De Vries Schilderwerken B.V."
                   />
                 </div>
@@ -1088,7 +1088,7 @@ export default function MyOrdersSection({
                   <select
                     value={profileSector}
                     onChange={(e) => setProfileSector(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-slate-805 text-slate-800 outline-none focus:ring-1 focus:ring-slate-300 cursor-pointer"
+                    className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 outline-none focus:ring-1 focus:ring-slate-300 cursor-pointer"
                   >
                     <option value="Schilder">🎨 Schilder</option>
                     <option value="Hovenier / Groenverzorging">🌳 Hovenier / Groenverzorging</option>
@@ -1108,7 +1108,7 @@ export default function MyOrdersSection({
                     value={profileAddress}
                     onChange={(e) => setProfileAddress(e.target.value)}
                     rows={2}
-                    className="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white text-slate-805 text-slate-800 outline-none focus:ring-1 focus:ring-slate-300 resize-none font-sans"
+                    className="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white text-slate-800 outline-none focus:ring-1 focus:ring-slate-300 resize-none font-sans"
                     placeholder="bijv. Keizersgracht 420, Amsterdam"
                   />
                 </div>
@@ -1119,7 +1119,7 @@ export default function MyOrdersSection({
                     type="text"
                     value={profileAvatarUrl}
                     onChange={(e) => setProfileAvatarUrl(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white text-slate-805 text-slate-800 outline-none focus:ring-1 focus:ring-slate-300"
+                    className="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white text-slate-800 outline-none focus:ring-1 focus:ring-slate-300"
                     placeholder="Laat leeg voor initialen badge"
                   />
                 </div>
@@ -1135,7 +1135,7 @@ export default function MyOrdersSection({
 
             {/* Live Updates Preferences */}
             <div className="bg-white border border-slate-200 shadow-sm p-5 rounded-3xl space-y-4">
-              <h4 className="font-display font-black text-xs text-slate-850 uppercase tracking-wider flex items-center space-x-2">
+              <h4 className="font-display font-black text-xs text-slate-800 uppercase tracking-wider flex items-center space-x-2">
                 <BellRing className="h-4 w-4 text-emerald-600" />
                 <span>Mijn Notificaties</span>
               </h4>

@@ -559,7 +559,7 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
                       <div className="text-[10.5px] text-slate-500 space-y-0.5">
                         <div>
                           <span className="font-semibold text-slate-700">{t("Bereik: ", "Scope: ", "Kapsam: ")}</span>
-                          <span className="font-mono bg-slate-100 px-1 py-0.2 rounded text-[10px] text-slate-700">
+                          <span className="font-mono bg-slate-100 px-1 py-0.5 rounded text-[10px] text-slate-700">
                             {rule.scope === "global" && t("Globaal", "Global", "Genel")}
                             {rule.scope === "category" && `${t("Categorie", "Category", "Kategori")} (${rule.scopeValue})`}
                             {rule.scope === "product" && `${t("Product ID", "Product ID", "Ürün ID")} (${rule.scopeValue})`}
@@ -767,7 +767,7 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
                       required
                       value={editName}
                       onChange={(e) => setEditName(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-850 outline-none focus:border-amber-500 focus:bg-white"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
                     />
                   </div>
 

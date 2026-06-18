@@ -16,7 +16,7 @@ blockedDatesRouter.get("/", async (req: AuthenticatedRequest, res: Response) => 
     res.json(formatted);
   } catch (error) {
     console.error("Error fetching blocked dates:", error);
-    res.status(500).json({ error: "Failed to fetch blocked dates" });
+    res.status(500).json({ error: "Kon geblokkeerde datums niet ophalen" });
   }
 });
 
@@ -55,6 +55,6 @@ blockedDatesRouter.post("/", requireAdmin as any, async (req: AuthenticatedReque
     }
   } catch (error) {
     console.error("Error modifying blocked dates:", error);
-    res.status(500).json({ error: "Failed to modify blocked dates" });
+    res.status(500).json({ error: "Kon geblokkeerde datums niet wijzigen" });
   }
 });

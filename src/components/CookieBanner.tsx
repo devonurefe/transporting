@@ -40,13 +40,14 @@ export default function CookieBanner() {
   const handleReject = () => persist("rejected");
 
   return (
-    // z-[60] sits above the WhatsApp FAB (z-[51]) and the mobile bottom nav
-    // (z-50) so the consent prompt is always visible and answered first.
+    // z-[55] sits above the WhatsApp FAB (z-[51]) and the mobile bottom nav
+    // (z-50) so the consent prompt is visible, but below modals (z-[60]) so an
+    // open dialog is never overlapped by the bottom-pinned banner.
     <div
       role="dialog"
       aria-live="polite"
       aria-label="Cookie consent"
-      className="fixed inset-x-0 bottom-0 z-[60] bg-white/95 backdrop-blur-sm border-t border-slate-200 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]"
+      className="fixed inset-x-0 bottom-0 z-[55] bg-white/95 backdrop-blur-sm border-t border-slate-200 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]"
       style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
     >
       <div className="max-w-5xl mx-auto px-4 py-3 sm:px-6 flex flex-col sm:flex-row sm:items-center gap-3">

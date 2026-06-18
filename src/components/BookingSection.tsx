@@ -440,7 +440,7 @@ export default function BookingSection({
         } else if (totalDays === 2 && leadItem.twoDayPrice) {
           tierLabel = "2-Daags Tarief (ma-vr)"; isFlatRate = true;
         } else if ((totalDays === 3 || totalDays === 4 || totalDays === 5) && leadItem.weeklyPrice) {
-          tierLabel = "Werkweek-tarief"; isFlatRate = true;
+          tierLabel = "Werkweektarief"; isFlatRate = true;
         } else if (totalDays >= 6 && totalDays <= 27 && leadItem.weeklyPrice) {
           const wks = Math.floor(totalDays / 5);
           const rem = totalDays % 5;
@@ -554,7 +554,7 @@ export default function BookingSection({
     } else if (days === 2 && selectedMachine.twoDayPrice) {
       tierLabel = "2-Daags Tarief (ma-vr)"; isFlatRate = true;
     } else if ((days === 3 || days === 4 || days === 5) && selectedMachine.weeklyPrice) {
-      tierLabel = "Werkweek-tarief"; isFlatRate = true;
+      tierLabel = "Werkweektarief"; isFlatRate = true;
     } else if (days >= 6 && days <= 27 && selectedMachine.weeklyPrice) {
       const wks = Math.floor(days / 5);
       const rem = days % 5;

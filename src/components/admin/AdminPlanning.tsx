@@ -93,7 +93,7 @@ const DayPanel = React.memo(function DayPanel({
                     <p className="text-xs font-bold text-slate-800 truncate">{o.machineName}</p>
                     <p className="text-[10px] text-slate-500">{o.customerName}</p>
                     <p className="text-[10px] text-indigo-600 font-semibold">
-                      {deliveryLabel(o.deliveryType)} · {o.rentalDays} {al("dag", "day", "gün")}{o.rentalDays !== 1 ? (adminLanguage === "nl" ? "en" : "s") : ""}
+                      {deliveryLabel(o.deliveryType)} · {o.rentalDays} {al("dag", "day", "gün")}{o.rentalDays !== 1 ? (adminLanguage === "nl" ? "en" : adminLanguage === "en" ? "s" : "") : ""}
                     </p>
                   </div>
                   <span className={`shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded-md ${statusBadge(o.status)}`}>
@@ -600,7 +600,7 @@ export default function AdminPlanning({ adminLanguage }: AdminPlanningProps) {
                   </div>
                   <div className="flex items-center justify-between px-3 py-2">
                     <span className="text-slate-400 font-mono text-[10px]">{al("Dagen", "Days", "Günler")}</span>
-                    <span className="font-bold text-slate-800">{selectedOrder.rentalDays} {al("dag", "day", "gün")}{selectedOrder.rentalDays !== 1 ? (adminLanguage === "nl" ? "en" : "s") : ""}</span>
+                    <span className="font-bold text-slate-800">{selectedOrder.rentalDays} {al("dag", "day", "gün")}{selectedOrder.rentalDays !== 1 ? (adminLanguage === "nl" ? "en" : adminLanguage === "en" ? "s" : "") : ""}</span>
                   </div>
                   <div className="flex items-center justify-between px-3 py-2">
                     <span className="text-slate-400 font-mono text-[10px]">{al("Logistiek", "Logistics", "Lojistik")}</span>

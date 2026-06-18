@@ -375,7 +375,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                       <div className="h-11 w-16 rounded-lg overflow-hidden shrink-0 border border-slate-200 bg-slate-100">
                         <img
                           src={m.imageUrl || (m.additionalImages as string[])?.[0] || "/placeholder-machine.webp"}
-                          alt=""
+                          alt={m.name}
                           className="h-full w-full object-cover"
                           referrerPolicy="no-referrer"
                           onError={(e) => {
@@ -650,7 +650,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                       <div className="border-t border-slate-200/80 pt-4 space-y-3 mt-3">
                         <div className="flex items-baseline justify-between">
                           <span className="text-xs text-slate-700 block font-bold">
-                            {t("Ek Resim Galerisi (Çoklu Slayt Gösterisi)", "Additional Image Gallery (Slideshow)", "Ek Resim Galerisi (Çoklu Slayt)")}
+                            {t("Extra Afbeeldingengalerij (Diavoorstelling)", "Additional Image Gallery (Slideshow)", "Ek Resim Galerisi (Çoklu Slayt)")}
                           </span>
                           <span className="text-[10px] text-slate-400 italic">
                             {t("Zichtbaar in detailpopup (niet op kaart)", "Visible in detail popup (not on card)", "Detay popup'ta görünür (kartta değil)")}
@@ -664,7 +664,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                             multiple
                             disabled={isUploadingEditAdditional}
                             onChange={handleEditAdditionalImageFileChange}
-                            className="w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-[10.5px] file:font-black file:bg-indigo-50 file:text-indigo-700 file:cursor-pointer hover:file:bg-indigo-100 transition-all border border-dashed border-slate-350 rounded-xl p-3 bg-white"
+                            className="w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-[10.5px] file:font-black file:bg-indigo-50 file:text-indigo-700 file:cursor-pointer hover:file:bg-indigo-100 transition-all border border-dashed border-slate-300 rounded-xl p-3 bg-white"
                           />
                           {isUploadingEditAdditional && (
                             <div className="absolute right-6 top-5 h-5 w-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
@@ -674,7 +674,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                         {editAdditionalImages.length > 0 && (
                           <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mt-3 animate-fade-in">
                             {editAdditionalImages.map((url, idx) => (
-                              <div key={idx} className="relative aspect-video rounded-xl overflow-hidden border border-slate-200 bg-slate-105 group shadow-sm">
+                              <div key={idx} className="relative aspect-video rounded-xl overflow-hidden border border-slate-200 bg-slate-100 group shadow-sm">
                                 <img src={url} alt={`Extra ${idx}`} className="w-full h-full object-cover" />
                                 <button
                                   type="button"
@@ -890,7 +890,6 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                     </div>
 
                   </div>
-                </div>
 
                 {/* Verhuurmodel: per week + alleen afhalen + accessoires */}
                 <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50 space-y-4 mb-3">
@@ -1031,13 +1030,14 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                     </p>
                   )}
                 </div>
+                </div>
 
                 {/* Persistent Sticky Action Buttons Footer */}
                 <div className="flex justify-end space-x-2 pt-4 border-t border-slate-100 shrink-0">
                   <button
                     type="button"
                     onClick={() => setEditingMachine(null)}
-                    className="px-4 py-2.5 hover:bg-slate-100 bg-slate-100 border border-slate-200 text-slate-600 rounded-xl text-xs font-bold transition-all cursor-pointer border-none"
+                    className="px-4 py-2.5 hover:bg-slate-200 bg-slate-100 border border-slate-200 text-slate-600 rounded-xl text-xs font-bold transition-all cursor-pointer"
                   >
                     {t("Sluiten", "Close", "Kapat")}
                   </button>

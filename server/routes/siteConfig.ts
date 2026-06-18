@@ -33,7 +33,7 @@ siteConfigRouter.get("/site-config", async (req: AuthenticatedRequest, res: Resp
     res.json(config || defaultSiteConfig);
   } catch (error) {
     console.error("Error fetching site config:", error);
-    res.status(500).json({ error: "Failed to fetch site config" });
+    res.status(500).json({ error: "Kon siteconfiguratie niet ophalen" });
   }
 });
 
@@ -67,7 +67,7 @@ siteConfigRouter.post("/site-config", requireAdmin as any, async (req: Authentic
     res.json({ success: true, siteConfig: updated });
   } catch (error) {
     console.error("Error updating site config:", error);
-    res.status(500).json({ error: "Failed to update site config" });
+    res.status(500).json({ error: "Kon siteconfiguratie niet bijwerken" });
   }
 });
 
@@ -78,7 +78,7 @@ siteConfigRouter.get("/categories", async (req: AuthenticatedRequest, res: Respo
     res.json(categories);
   } catch (error) {
     console.error("Error fetching categories:", error);
-    res.status(500).json({ error: "Failed to fetch categories" });
+    res.status(500).json({ error: "Kon categorieën niet ophalen" });
   }
 });
 
@@ -90,7 +90,7 @@ siteConfigRouter.get("/campaign-rules", async (req: AuthenticatedRequest, res: R
     res.json(Array.isArray(rules) ? rules : []);
   } catch (error) {
     console.error("Error fetching campaign rules:", error);
-    res.status(500).json({ error: "Failed to fetch campaign rules" });
+    res.status(500).json({ error: "Kon campagneregels niet ophalen" });
   }
 });
 
@@ -119,7 +119,7 @@ function sanitizeCampaignRule(rule: any): { id: string; name: string; scope: str
 siteConfigRouter.post("/campaign-rules", requireAdmin as any, async (req: AuthenticatedRequest, res: Response) => {
   try {
     if (!Array.isArray(req.body)) {
-      return res.status(400).json({ error: "Expected an array of campaign rules" });
+      return res.status(400).json({ error: "Een lijst met campagneregels wordt verwacht" });
     }
     if (req.body.length > 50) {
       return res.status(400).json({ error: "Maximaal 50 campagneregels toegestaan" });
@@ -148,7 +148,7 @@ siteConfigRouter.post("/campaign-rules", requireAdmin as any, async (req: Authen
     res.json({ success: true });
   } catch (error) {
     console.error("Error saving campaign rules:", error);
-    res.status(500).json({ error: "Failed to save campaign rules" });
+    res.status(500).json({ error: "Kon campagneregels niet opslaan" });
   }
 });
 
@@ -197,6 +197,6 @@ siteConfigRouter.post("/categories", requireAdmin as any, async (req: Authentica
     res.json({ success: true, customCategories: categories });
   } catch (error) {
     console.error("Error updating categories:", error);
-    res.status(500).json({ error: "Failed to update categories" });
+    res.status(500).json({ error: "Kon categorieën niet bijwerken" });
   }
 });

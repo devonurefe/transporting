@@ -25,7 +25,7 @@ const dictionary: TranslationDictionary = {
   menuAdmin: { nl: "Portaal", en: "Portal", tr: "Yönetim" },
   menuBooking: { nl: "Boeken", en: "Book Now", tr: "Rezervasyon" },
   menuLogin: { nl: "Inloggen", en: "Login", tr: "Giriş Yap" },
-  menuMyArea: { nl: "Mijn Area", en: "My Account", tr: "Hesabım" },
+  menuMyArea: { nl: "Mijn Account", en: "My Account", tr: "Hesabım" },
 
   // Landing page / Hero
   heroTagline: { nl: "Professionele Hoogwerker Verhuur", en: "Professional Aerial Work Platform Rental", tr: "Profesyonel Yüksek Erişim Platformu Kiralama" },
@@ -124,8 +124,8 @@ const dictionary: TranslationDictionary = {
   // Price summary
   priceSpecTitle: { nl: "Huur Specificatie", en: "Rental Specification", tr: "Kiralama Detayları" },
   priceDays: { nl: "Aantal dagen gevraagd:", en: "Rental days requested:", tr: "Talep edilen gün sayısı:" },
-  priceGross: { nl: "Bruto lokatieduur tarief:", en: "Gross rental rate:", tr: "Brüt kiralama tutarı:" },
-  priceNet: { nl: "Netto lokatieduur tarief:", en: "Net rental rate:", tr: "Net kiralama tutarı:" },
+  priceGross: { nl: "Bruto huurtarief:", en: "Gross rental rate:", tr: "Brüt kiralama tutarı:" },
+  priceNet: { nl: "Netto huurtarief:", en: "Net rental rate:", tr: "Net kiralama tutarı:" },
   priceTransport: { nl: "Transportkosten (Heen/Weer):", en: "Transport costs (Round-trip):", tr: "Nakliye Ücreti (Gidiş-Dönüş):" },
   priceChauffeur: { nl: "Chauffeur & Demonstratie:", en: "Driver & Demonstration:", tr: "Operatör & Gösterim:" },
   priceVat: { nl: "Omzetbelasting BTW (21%):", en: "VAT (21%):", tr: "KDV (%21):" },
@@ -134,7 +134,7 @@ const dictionary: TranslationDictionary = {
 
   // Admin portal
   adminPortalTitle: { nl: "HubAdmin Command Center", en: "HubAdmin Command Center", tr: "HubAdmin Yönetim Merkezi" },
-  adminPortalSubtitle: { nl: "Volledig overzicht over vlootbeschikbaarheid, reserveringsaccordering, facturering en live logging.", en: "Complete overview of fleet availability, reservation approvals, invoicing, and live logging.", tr: "Filo uygunluğu, rezervasyon onayları, faturalandırma ve canlı loğ kayıtlarına tam kontrol ve genel bakış." },
+  adminPortalSubtitle: { nl: "Volledig overzicht over vlootbeschikbaarheid, reserveringsaccordering, facturering en live logging.", en: "Complete overview of fleet availability, reservation approvals, invoicing, and live logging.", tr: "Filo uygunluğu, rezervasyon onayları, faturalandırma ve canlı log kayıtlarına tam kontrol ve genel bakış." },
   adminSecure: { nl: "Secure Admin Control • Active Connection", en: "Secure Admin Control • Active Connection", tr: "Güvenli Yönetici Erişimi • Aktif Güvenli Bağlantı" },
   adminTabDashboard: { nl: "Dashboard", en: "Dashboard", tr: "Panel" },
   adminTabOrders: { nl: "Huurcontracten", en: "Rental Contracts", tr: "Sözleşmeler" },

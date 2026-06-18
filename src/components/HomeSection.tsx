@@ -83,6 +83,7 @@ export default function HomeSection({
   ]
 }: HomeSectionProps) {
   const siteConfig = useAppStore((state) => state.siteConfig);
+  const siteConfigLoaded = useAppStore((state) => state.siteConfigLoaded);
   const machines = useAppStore((state) => state.machines);
   const vatDisplay = useAppStore((state) => state.vatDisplay);
   const language = useLanguageStore((state) => state.language);
@@ -218,12 +219,23 @@ export default function HomeSection({
     <div>
 
       {/* ── HERO IMAGE — sade, metin yok ── */}
-      <div className="relative bg-slate-900 overflow-hidden">
-        <img
-          src={siteConfig.heroImageUrl || '/hero-huurgo-v2.jpg'}
-          alt=""
-          className="w-full block object-cover h-[260px] sm:h-[380px] lg:h-[320px] [object-position:20%_center] sm:[object-position:center]"
-        />
+      {/* Gate the image on siteConfigLoaded so the old default photo never
+          flashes before the admin-configured hero loads on first visit. */}
+      <div className="relative bg-slate-900 overflow-hidden h-[260px] sm:h-[380px] lg:h-[320px]">
+        {siteConfigLoaded ? (
+          <motion.img
+            key={siteConfig.heroImageUrl || 'default'}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4 }}
+            src={siteConfig.heroImageUrl || '/hero-huurgo-v2.jpg'}
+            alt=""
+            className="w-full h-full block object-cover [object-position:20%_center] sm:[object-position:center]"
+          />
+        ) : (
+          // Skeleton placeholder while the config is still loading
+          <div className="w-full h-full bg-gradient-to-br from-slate-800 to-slate-900 animate-pulse" />
+        )}
         <div className="absolute inset-0 bg-black/15 pointer-events-none" />
       </div>
 

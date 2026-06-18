@@ -18,13 +18,13 @@ export interface Machine {
   imageAlt: string;
   description: string;
   suitableFor: string[];
-  weeklyDiscountPercent?: number; // 7+ days discount %
-  monthlyDiscountPercent?: number; // 30+ days discount %
+  weeklyDiscountPercent?: number; // 5+ days discount % (fallback if no weeklyPrice)
+  monthlyDiscountPercent?: number; // 28+ days discount % (fallback if no monthlyPrice)
   campaignText?: string; // campaign tag, e.g., "LenteKorting"
   campaignDiscountPercent?: number; // campaign discount %
   campaignDiscountAmount?: number; // campaign discount EUR amount
-  weekendPrice?: number; // flat rate for 3-day (weekend) booking
-  twoDayPrice?: number; // flat rate for exactly 2 days (weekday rate, distinct from weekend)
+  weekendPrice?: number; // flat rate for sat+sun 2-day booking
+  twoDayPrice?: number; // flat rate for exactly 2 weekday days (distinct from sat+sun weekendPrice)
   weeklyPrice?: number; // flat rate for 5-day werkweek booking
   monthlyPrice?: number; // flat rate for 28-day booking
   packageContents?: string; // Semicolon separated included items checklist

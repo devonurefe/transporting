@@ -596,10 +596,16 @@ export function printInvoice(orderOrOrders: Order | Order[], clientCompanyName?:
     </html>
   `;
 
+  // Convert English decimal amounts to Dutch locale format (e.g. €1234.56 → € 1.234,56)
+  const htmlContentNL = htmlContent.replace(
+    /€(\d+\.\d{2})/g,
+    (_, n) => `€ ${parseFloat(n).toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  );
+
   const printWindow = window.open("", "_blank");
   if (printWindow) {
     printWindow.document.open();
-    printWindow.document.write(htmlContent);
+    printWindow.document.write(htmlContentNL);
     printWindow.document.close();
     printWindow.focus();
     // Trigger print after fonts & layout settle; 900ms covers Google Fonts load

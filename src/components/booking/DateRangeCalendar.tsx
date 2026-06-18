@@ -161,10 +161,10 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
 
   const onDayClick = (key: string, selectable: boolean) => {
     if (!selectable) return;
-    // Both dates set: clicking after start adjusts end only; at/before start resets selection
+    // Both dates set: any click starts a fresh selection so the user can freely pick a new start
     if (draftStart && draftEnd) {
-      if (key <= draftStart) { setDraftStart(key); setDraftEnd(""); return; }
-      if (checkAvailability(machine.id, draftStart, key, orders, blockedDates, today).available) setDraftEnd(key);
+      setDraftStart(key);
+      setDraftEnd("");
       return;
     }
     if (!draftStart) { setDraftStart(key); return; }

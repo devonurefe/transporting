@@ -12,7 +12,7 @@
  * @param maxHeight Max height bound.
  * @returns A promise resolving to the compressed base64 string.
  */
-export function resizeImage(file: File, maxWidth = 1200, maxHeight = 1200): Promise<string> {
+export function resizeImage(file: File, maxWidth = 1400, maxHeight = 1400): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -44,14 +44,20 @@ export function resizeImage(file: File, maxWidth = 1200, maxHeight = 1200): Prom
           return;
         }
 
+        // White fill so transparent PNGs render on a clean background instead of black.
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, width, height);
+        // Subtle enhancement: slightly more vibrant/sharp without looking processed.
+        ctx.filter = "brightness(1.04) contrast(1.08) saturate(1.06)";
         ctx.drawImage(img, 0, 0, width, height);
-        // Prefer WebP at 80% quality (smaller payloads); the server upload
+        ctx.filter = "none";
+        // Prefer WebP at 85% quality (smaller payloads, fewer artefacts); the server upload
         // allowlist + magic-byte check already accept .webp. Browsers that
         // ignore the WebP MIME return PNG/JPEG, so fall back to JPEG.
-        const webp = canvas.toDataURL("image/webp", 0.8);
+        const webp = canvas.toDataURL("image/webp", 0.85);
         const dataUrl = webp.startsWith("data:image/webp")
           ? webp
-          : canvas.toDataURL("image/jpeg", 0.8);
+          : canvas.toDataURL("image/jpeg", 0.85);
         resolve(dataUrl);
       };
       img.onerror = () => reject(new Error("Görsel yüklenemedi."));

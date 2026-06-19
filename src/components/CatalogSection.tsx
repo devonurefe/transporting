@@ -341,18 +341,20 @@ export default function CatalogSection({
 
                       {/* IMAGE with category + powerType overlay — clickable to open detail modal */}
                       <div
-                        className="relative aspect-[3/2] w-full overflow-hidden bg-white cursor-pointer"
+                        className="relative aspect-[3/2] w-full overflow-hidden bg-gradient-to-br from-slate-50 to-white cursor-pointer"
                         onClick={() => {
                           setSelectedDetailMachine(machine);
                           setDetailSource("pricing");
                           onAddSystemLog?.("system", currentUser?.name ?? "Gast", `Bekijkt specificaties: "${machine.name}"`);
                         }}
                       >
+                        {/* Soft ground shadow — makes the machine appear to sit on a surface */}
+                        <div className="pointer-events-none absolute bottom-8 left-1/2 -translate-x-1/2 w-3/5 h-3 rounded-[100%] bg-slate-900/10 blur-md" />
                         <img
                           src={machine.imageUrl || (machine.additionalImages?.[0] ?? "/placeholder-machine.webp")}
                           alt={machine.imageAlt}
                           loading="lazy"
-                          className="h-full w-full object-contain group-hover:scale-105 transition-transform duration-500 ease-out"
+                          className="relative h-full w-full object-contain group-hover:scale-105 transition-transform duration-500 ease-out"
                           referrerPolicy="no-referrer"
                           onError={(e) => {
                             const fallback = machine.additionalImages?.[0];

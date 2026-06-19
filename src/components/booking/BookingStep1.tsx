@@ -134,7 +134,7 @@ export default function BookingStep1({
                       title="Bekijk details"
                     >
                       <img
-                        src={item.machine.imageUrl || `/api/placeholder/100/100`}
+                        src={item.machine.imageUrl || item.machine.additionalImages?.[0] || "/placeholder-machine.webp"}
                         alt={item.machine.name}
                         className="object-cover h-full w-full group-hover/thumb:scale-110 transition-transform duration-300"
                         referrerPolicy="no-referrer"

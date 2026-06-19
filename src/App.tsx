@@ -87,7 +87,7 @@ export default function App() {
     document.title = entry.title;
     document.querySelector('meta[name="description"]')?.setAttribute("content", entry.desc);
     const canonical = document.querySelector('link[rel="canonical"]');
-    if (canonical) canonical.setAttribute("href", `https://huurgo.nl${location.pathname === "/" ? "/" : location.pathname}`);
+    if (canonical) canonical.setAttribute("href", `${window.location.origin}${location.pathname === "/" ? "/" : location.pathname}`);
     let robotsMeta = document.querySelector('meta[name="robots"]');
     if (entry.noindex) {
       if (!robotsMeta) {
@@ -542,14 +542,14 @@ export default function App() {
           __html: JSON.stringify({
             "@context": "https://schema.org",
             "@type": ["LocalBusiness", "RentalService"],
-            "name": "HuurGo — Hoogwerkers Verhuur",
+            "name": `${siteConfig.siteName || "HuurGo"} — Hoogwerkers Verhuur`,
             "description": "Snel en eenvoudig hoogwerkers huren bij HuurGo. Schaarlift, spinhoogwerker en aanhangerhoogwerker voor ZZP'ers en particulieren.",
-            "url": "https://huurgo.nl",
-            "telephone": "+31715428114",
-            "email": "info@mbhoogwerkers.com",
+            "url": window.location.origin,
+            "telephone": siteConfig.contactPhone || "+31715428114",
+            "email": siteConfig.contactEmail || "info@mbhoogwerkers.com",
             "address": {
               "@type": "PostalAddress",
-              "streetAddress": "Produktieweg 20",
+              "streetAddress": siteConfig.companyAddress || "Produktieweg 20",
               "postalCode": "2382 PB",
               "addressLocality": "Zoeterwoude",
               "addressCountry": "NL"
@@ -581,7 +581,6 @@ export default function App() {
                 { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Aanhangerhoogwerker huren" } }
               ]
             },
-            "sameAs": ["https://www.mbhoogwerkers.com"],
             "aggregateRating": {
               "@type": "AggregateRating",
               "ratingValue": "4.9",

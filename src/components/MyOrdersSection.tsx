@@ -27,6 +27,7 @@ import {
 import { motion, AnimatePresence } from "motion/react";
 import { Order, UserProfile } from "../types";
 import { useAuthStore } from "../store/authStore";
+import { useAppStore } from "../store/appStore";
 import { printInvoice } from "../utils/invoice";
 import { buildWhatsAppOrderStatusUrl, buildWhatsAppPaymentLinkUrl } from "../utils/whatsapp";
 
@@ -40,8 +41,8 @@ interface MyOrdersSectionProps {
   onAddSystemLog?: (type: "login" | "logout" | "signup" | "booking" | "fleet" | "status" | "system", user: string, description: string) => void;
 }
 
-export default function MyOrdersSection({ 
-  orders, 
+export default function MyOrdersSection({
+  orders,
   onTriggerNotification,
   currentUser,
   setCurrentUser,
@@ -49,7 +50,7 @@ export default function MyOrdersSection({
   onUpdateOrderStatus,
   onAddSystemLog
 }: MyOrdersSectionProps) {
-
+  const siteConfig = useAppStore((state) => state.siteConfig);
 
   React.useEffect(() => {
     window.scrollTo(0, 0);
@@ -228,7 +229,7 @@ export default function MyOrdersSection({
       "success",
       false
     );
-    printInvoice(order, currentUser?.companyName, true);
+    printInvoice(order, currentUser?.companyName, true, siteConfig);
   };
 
   const handleResendVerification = async () => {

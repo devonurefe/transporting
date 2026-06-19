@@ -158,6 +158,12 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
   const [menuHome, setMenuHome] = useState(siteConfig.menuHomeLabel || "");
   const [menuCatalog, setMenuCatalog] = useState(siteConfig.menuCatalogLabel || "");
   const [menuOrders, setMenuOrders] = useState(siteConfig.menuOrdersLabel || "");
+  const [contactEmail, setContactEmail] = useState(siteConfig.contactEmail || "");
+  const [contactPhone, setContactPhone] = useState(siteConfig.contactPhone || "");
+  const [companyAddress, setCompanyAddress] = useState(siteConfig.companyAddress || "");
+  const [kvkNumber, setKvkNumber] = useState(siteConfig.kvkNumber || "");
+  const [btwNumber, setBtwNumber] = useState(siteConfig.btwNumber || "");
+  const [companyLegalName, setCompanyLegalName] = useState(siteConfig.companyLegalName || "");
 
   // Sync state if backend updates siteConfig
   React.useEffect(() => {
@@ -170,6 +176,12 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
       setMenuHome(siteConfig.menuHomeLabel || "");
       setMenuCatalog(siteConfig.menuCatalogLabel || "");
       setMenuOrders(siteConfig.menuOrdersLabel || "");
+      setContactEmail(siteConfig.contactEmail || "");
+      setContactPhone(siteConfig.contactPhone || "");
+      setCompanyAddress(siteConfig.companyAddress || "");
+      setKvkNumber(siteConfig.kvkNumber || "");
+      setBtwNumber(siteConfig.btwNumber || "");
+      setCompanyLegalName(siteConfig.companyLegalName || "");
     }
   }, [siteConfig]);
 
@@ -213,7 +225,13 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
       menuHomeLabel: menuHome,
       menuCatalogLabel: menuCatalog,
       menuOrdersLabel: menuOrders,
-      menuAdminLabel: siteConfig.menuAdminLabel || "Portaal"
+      menuAdminLabel: siteConfig.menuAdminLabel || "Portaal",
+      contactEmail,
+      contactPhone,
+      companyAddress,
+      kvkNumber,
+      btwNumber,
+      companyLegalName
     });
     setIsSavingConfig(false);
     if (success) {
@@ -401,6 +419,38 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
               />
             </div>
 
+          </div>
+
+          {/* Contact & Company Info Form */}
+          <div className="space-y-4 p-5 rounded-2xl bg-slate-50 border border-slate-200/80 shadow-sm col-span-1 md:col-span-2">
+            <h4 className="text-xs font-bold text-amber-600 uppercase tracking-wider">{t("Bedrijfsgegevens & Contact", "Company & Contact Info", "Şirket ve İletişim Bilgileri")}</h4>
+            <p className="text-[10px] text-slate-500">{t("Deze gegevens verschijnen in de footer, het contactvenster en op facturen.", "These details appear in the footer, contact modal, and on invoices.", "Bu bilgiler altbilgide, iletişim penceresinde ve faturalarda görünür.")}</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-xs text-slate-700 block font-bold">{t("Juridische Naam (Factuur)", "Legal Name (Invoice)", "Yasal Ad (Fatura)")}</label>
+                <input type="text" value={companyLegalName} onChange={(e) => setCompanyLegalName(e.target.value)} placeholder="HuurGo B.V." className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs text-slate-700 block font-bold">{t("Contact E-mail", "Contact Email", "İletişim E-postası")}</label>
+                <input type="email" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} placeholder="info@bedrijf.nl" className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs text-slate-700 block font-bold">{t("Telefoonnummer", "Phone Number", "Telefon Numarası")}</label>
+                <input type="text" value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} placeholder="+31 71 542 8114" className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs text-slate-700 block font-bold">{t("Adres", "Address", "Adres")}</label>
+                <input type="text" value={companyAddress} onChange={(e) => setCompanyAddress(e.target.value)} placeholder="Straat 1, 1234 AB Stad" className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs text-slate-700 block font-bold">KvK-nummer</label>
+                <input type="text" value={kvkNumber} onChange={(e) => setKvkNumber(e.target.value)} placeholder="12345678" className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs text-slate-700 block font-bold">BTW-nummer</label>
+                <input type="text" value={btwNumber} onChange={(e) => setBtwNumber(e.target.value)} placeholder="NL000000000B01" className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500" />
+              </div>
+            </div>
           </div>
 
           {/* Save Button for Site Config */}

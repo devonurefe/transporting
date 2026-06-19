@@ -25,6 +25,12 @@ interface SiteConfig {
   menuCatalogLabel: string;
   menuOrdersLabel: string;
   menuAdminLabel: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  companyAddress?: string;
+  kvkNumber?: string;
+  btwNumber?: string;
+  companyLegalName?: string;
 }
 
 interface BlockedDate {

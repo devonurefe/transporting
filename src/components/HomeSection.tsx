@@ -448,15 +448,13 @@ export default function HomeSection({
                   </div>
                 </div>
 
-                {/* Right — machine photo on subtle studio backdrop */}
-                <div className="w-28 sm:w-44 shrink-0 relative overflow-hidden bg-gradient-to-br from-slate-50 to-white">
-                  {/* Soft ground shadow so the machine appears to float / sit on a surface */}
-                  <div className="pointer-events-none absolute bottom-2.5 left-1/2 -translate-x-1/2 w-3/4 h-3 rounded-[100%] bg-slate-900/10 blur-md" />
+                {/* Right — machine photo on white background */}
+                <div className="w-28 sm:w-44 shrink-0 relative overflow-hidden bg-white">
                   {catImage ? (
                     <img
                       src={catImage}
                       alt={cat.label}
-                      className="relative w-full h-full object-contain p-2 transition-transform duration-500 ease-out group-hover:scale-105"
+                      className="w-full h-full object-contain p-2 transition-transform duration-500 ease-out group-hover:scale-105"
                       referrerPolicy="no-referrer"
                       onError={(e) => {
                         e.currentTarget.style.display = "none";

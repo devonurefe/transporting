@@ -16,7 +16,13 @@ const defaultSiteConfig = {
   menuHomeLabel: "Home",
   menuCatalogLabel: "Catalogus",
   menuOrdersLabel: "Mijn Account",
-  menuAdminLabel: "Portaal"
+  menuAdminLabel: "Portaal",
+  contactEmail: "info@mbhoogwerkers.com",
+  contactPhone: "+31 71 542 8114",
+  companyAddress: "Produktieweg 20, 2382 PB Zoeterwoude",
+  kvkNumber: "67438237",
+  btwNumber: "NL856990656B01",
+  companyLegalName: "HuurGo B.V."
 };
 
 // GET site config
@@ -40,7 +46,8 @@ siteConfigRouter.get("/site-config", async (req: AuthenticatedRequest, res: Resp
 // Whitelist of editable SiteConfig fields — never pass req.body straight to Prisma
 const SITE_CONFIG_FIELDS = [
   "siteName", "heroTagline", "heroTitle", "heroSubtitle", "heroImageUrl",
-  "menuHomeLabel", "menuCatalogLabel", "menuAdvisorLabel", "menuOrdersLabel", "menuAdminLabel"
+  "menuHomeLabel", "menuCatalogLabel", "menuAdvisorLabel", "menuOrdersLabel", "menuAdminLabel",
+  "contactEmail", "contactPhone", "companyAddress", "kvkNumber", "btwNumber", "companyLegalName"
 ] as const;
 
 function pickSiteConfigFields(body: any): Record<string, string> {

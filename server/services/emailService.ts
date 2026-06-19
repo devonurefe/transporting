@@ -12,8 +12,8 @@ const resend = resendApiKey && resendApiKey !== "MY_RESEND_API_KEY" ? new Resend
 
 // Standard sender email (if domain is verified, use verified domain. Otherwise Resend sandbox uses onboarding@resend.dev)
 const SENDER_EMAIL = process.env.EMAIL_FROM || "onboarding@resend.dev";
-const APP_URL = process.env.APP_URL || "https://mbhoogwerkers.com";
-const ADMIN_ALERT_EMAIL = process.env.ADMIN_EMAIL || "mustafa@mbhoogwerkers.com";
+const APP_URL = process.env.APP_URL || "https://localhost:3000";
+const ADMIN_ALERT_EMAIL = process.env.ADMIN_EMAIL || "";
 
 // Escape user-supplied values before interpolating into HTML email bodies
 const esc = (s: unknown): string =>

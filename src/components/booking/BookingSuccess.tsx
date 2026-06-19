@@ -9,6 +9,7 @@ import { motion } from "motion/react";
 import { Order, UserProfile } from "../../types";
 import { printInvoice } from "../../utils/invoice";
 import { useAuthStore } from "../../store/authStore";
+import { useAppStore } from "../../store/appStore";
 import { useLanguageStore } from "../../store/languageStore";
 import { euro } from "../../utils/format";
 
@@ -34,6 +35,7 @@ export default function BookingSuccess({
   whatsappUrl
 }: BookingSuccessProps) {
   const t = useLanguageStore((state) => state.t);
+  const siteConfig = useAppStore((state) => state.siteConfig);
   const [copied, setCopied] = useState(false);
   const [password, setPassword] = useState("");
   const [isRegistering, setIsRegistering] = useState(false);
@@ -201,7 +203,7 @@ export default function BookingSuccess({
       {/* Bottom actions */}
       <div className="px-6 py-4 border-t border-slate-100 flex flex-col sm:flex-row gap-2">
         <button
-          onClick={() => printInvoice(successOrders.length > 0 ? successOrders : successOrder, undefined, true)}
+          onClick={() => printInvoice(successOrders.length > 0 ? successOrders : successOrder, undefined, true, siteConfig)}
           className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-bold transition-all duration-200 cursor-pointer"
         >
           <Download className="h-4 w-4 shrink-0" />

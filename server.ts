@@ -46,8 +46,14 @@ app.use(helmet({
   referrerPolicy: { policy: "strict-origin-when-cross-origin" },
 }));
 // Environment-aware CORS: restrict origins in production
+// APP_URL env var drives the allowed origin (e.g. "https://mybooking.nl")
+const prodOrigins = (() => {
+  const raw = (process.env.APP_URL || "https://huurgo.nl").replace(/\/$/, "");
+  const domain = raw.replace(/^https?:\/\/(www\.)?/, "");
+  return [`https://${domain}`, `https://www.${domain}`];
+})();
 const corsOptions = process.env.NODE_ENV === "production"
-  ? { origin: ["https://huurgo.nl", "https://www.huurgo.nl"], credentials: true }
+  ? { origin: prodOrigins, credentials: true }
   : { origin: true, credentials: true };
 app.use(cors(corsOptions));
 
@@ -83,24 +89,26 @@ app.use(errorHandler);
 
 // SEO: robots.txt
 app.get("/robots.txt", (_req, res) => {
+  const base = (process.env.APP_URL || "https://huurgo.nl").replace(/\/$/, "");
   res.type("text/plain").send(
-    "User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /api/\nSitemap: https://huurgo.nl/sitemap.xml\n"
+    `User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /api/\nSitemap: ${base}/sitemap.xml\n`
   );
 });
 
 // SEO: sitemap.xml
 app.get("/sitemap.xml", (_req, res) => {
+  const base = (process.env.APP_URL || "https://huurgo.nl").replace(/\/$/, "");
   const urls = [
-    { loc: "https://huurgo.nl/", priority: "1.0", changefreq: "weekly" },
-    { loc: "https://huurgo.nl/catalog", priority: "0.9", changefreq: "daily" },
-    { loc: "https://huurgo.nl/booking", priority: "0.8", changefreq: "weekly" },
-    { loc: "https://huurgo.nl/catalog?category=schaarlift", priority: "0.85", changefreq: "daily" },
-    { loc: "https://huurgo.nl/catalog?category=spin", priority: "0.85", changefreq: "daily" },
-    { loc: "https://huurgo.nl/catalog?category=aanhanger", priority: "0.80", changefreq: "daily" },
-    { loc: "https://huurgo.nl/catalog?category=mastlift", priority: "0.80", changefreq: "daily" },
-    { loc: "https://huurgo.nl/catalog?category=ladderlift", priority: "0.80", changefreq: "daily" },
-    { loc: "https://huurgo.nl/catalog?category=ecolift", priority: "0.75", changefreq: "weekly" },
-    { loc: "https://huurgo.nl/catalog?category=kamersteiger", priority: "0.75", changefreq: "weekly" },
+    { loc: `${base}/`, priority: "1.0", changefreq: "weekly" },
+    { loc: `${base}/catalog`, priority: "0.9", changefreq: "daily" },
+    { loc: `${base}/booking`, priority: "0.8", changefreq: "weekly" },
+    { loc: `${base}/catalog?category=schaarlift`, priority: "0.85", changefreq: "daily" },
+    { loc: `${base}/catalog?category=spin`, priority: "0.85", changefreq: "daily" },
+    { loc: `${base}/catalog?category=aanhanger`, priority: "0.80", changefreq: "daily" },
+    { loc: `${base}/catalog?category=mastlift`, priority: "0.80", changefreq: "daily" },
+    { loc: `${base}/catalog?category=ladderlift`, priority: "0.80", changefreq: "daily" },
+    { loc: `${base}/catalog?category=ecolift`, priority: "0.75", changefreq: "weekly" },
+    { loc: `${base}/catalog?category=kamersteiger`, priority: "0.75", changefreq: "weekly" },
   ];
   const urlset = urls
     .map(

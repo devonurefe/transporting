@@ -6,6 +6,7 @@
 import React from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { X, MessageSquare, Phone, Mail, CheckCircle } from "lucide-react";
+import { useAppStore } from "../store/appStore";
 
 interface ContactModalProps {
   isOpen: boolean;
@@ -15,6 +16,9 @@ interface ContactModalProps {
 }
 
 export default function ContactModal({ isOpen, onClose, onShowToast, onAddSystemLog }: ContactModalProps) {
+  const siteConfig = useAppStore((state) => state.siteConfig);
+  const contactEmail = siteConfig.contactEmail || "info@mbhoogwerkers.com";
+  const contactPhone = siteConfig.contactPhone || "+31 (0)6 11 84 88 99";
   return (
     <AnimatePresence>
       {isOpen && (
@@ -82,7 +86,7 @@ export default function ContactModal({ isOpen, onClose, onShowToast, onAddSystem
 
                   {/* Phone button */}
                   <a
-                    href="tel:+31611848899"
+                    href={`tel:${contactPhone.replace(/[\s()\-]/g, "")}`}
                     className="w-full flex items-center p-3 rounded-xl bg-white hover:bg-slate-100/50 border border-slate-200 transition-all text-xs cursor-pointer gap-3 text-slate-700 group shadow-sm text-decoration-none"
                   >
                     <div className="h-7 w-7 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
@@ -90,13 +94,13 @@ export default function ContactModal({ isOpen, onClose, onShowToast, onAddSystem
                     </div>
                     <div className="flex-1 min-w-0">
                       <span className="text-[8.5px] text-slate-400 block font-bold leading-none mb-0.5 uppercase tracking-wide">Bellen Regionaal</span>
-                      <span className="font-sans font-semibold text-slate-800 text-[11.5px]">+31 (0)6 11 84 88 99</span>
+                      <span className="font-sans font-semibold text-slate-800 text-[11.5px]">{contactPhone}</span>
                     </div>
                   </a>
 
                   {/* Email Link */}
                   <a
-                    href="mailto:mustafa@mbhoogwerkers.com"
+                    href={`mailto:${contactEmail}`}
                     className="w-full flex items-center p-3 rounded-xl bg-white hover:bg-slate-100/50 border border-slate-200 transition-all text-xs cursor-pointer gap-3 text-slate-700 group shadow-sm text-decoration-none"
                   >
                     <div className="h-7 w-7 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
@@ -104,7 +108,7 @@ export default function ContactModal({ isOpen, onClose, onShowToast, onAddSystem
                     </div>
                     <div className="flex-1 min-w-0">
                       <span className="text-[8.5px] text-slate-400 block font-bold leading-none mb-0.5 uppercase tracking-wide">E-mail Servicedesk</span>
-                      <span className="text-slate-800 text-[11px] block break-all font-semibold truncate">mustafa@mbhoogwerkers.com</span>
+                      <span className="text-slate-800 text-[11px] block break-all font-semibold truncate">{contactEmail}</span>
                     </div>
                   </a>
                 </div>

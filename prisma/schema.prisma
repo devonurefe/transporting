@@ -159,6 +159,12 @@ model SiteConfig {
   menuOrdersLabel   String
   menuAdminLabel   String
   campaignRules    Json?
+  contactEmail     String?
+  contactPhone     String?
+  companyAddress   String?
+  kvkNumber        String?
+  btwNumber        String?
+  companyLegalName String?
 }
 
 model Notification {

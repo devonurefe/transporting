@@ -6,6 +6,7 @@
 import React from "react";
 import { Mail, MapPin, Clock } from "lucide-react";
 import { useLanguageStore } from "../store/languageStore";
+import { useAppStore } from "../store/appStore";
 import { HuurGoLogo } from "./Header";
 
 interface FooterProps {
@@ -77,6 +78,8 @@ function ReviewCard({ r }: { r: typeof REVIEWS[0] }) {
 
 export default function Footer({ siteName, setActiveTab: _setActiveTab, setShowContactModal }: FooterProps) {
   const t = useLanguageStore((state) => state.t);
+  const siteConfig = useAppStore((state) => state.siteConfig);
+  const contactEmail = siteConfig.contactEmail || "info@mbhoogwerkers.com";
 
   const leftCol = REVIEWS.filter((_, i) => i % 2 === 0);
   const rightCol = REVIEWS.filter((_, i) => i % 2 !== 0);
@@ -160,9 +163,9 @@ export default function Footer({ siteName, setActiveTab: _setActiveTab, setShowC
             <p className="text-xs text-slate-400 leading-loose max-w-xs">
               Professionele verhuur van gecertificeerde hoogwerkers, schaarliften en mastliften voor ZZP'ers, aannemers en particulieren in heel Nederland.
             </p>
-            <a href="mailto:info@mbhoogwerkers.com" className="flex items-center gap-2 text-xs text-slate-400 hover:text-white transition-colors no-underline">
+            <a href={`mailto:${contactEmail}`} className="flex items-center gap-2 text-xs text-slate-400 hover:text-white transition-colors no-underline">
               <Mail className="h-3.5 w-3.5 shrink-0" />
-              info@mbhoogwerkers.com
+              {contactEmail}
             </a>
           </div>
 

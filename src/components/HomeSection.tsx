@@ -424,7 +424,7 @@ export default function HomeSection({
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: i * 0.05 }}
                 onClick={() => onSearch("", cat.id)}
-                className="bg-white border border-slate-200 rounded-2xl overflow-hidden text-left cursor-pointer hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] transition-all flex flex-row items-stretch"
+                className="group bg-white border border-slate-200 rounded-2xl overflow-hidden text-left cursor-pointer hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] transition-all flex flex-row items-stretch"
               >
                 {/* Left — text info */}
                 <div className="flex-1 p-4 flex flex-col justify-center gap-2 min-w-0">
@@ -448,13 +448,15 @@ export default function HomeSection({
                   </div>
                 </div>
 
-                {/* Right — machine photo on white background */}
-                <div className="w-28 sm:w-44 shrink-0 relative overflow-hidden bg-white">
+                {/* Right — machine photo on subtle studio backdrop */}
+                <div className="w-28 sm:w-44 shrink-0 relative overflow-hidden bg-gradient-to-br from-slate-50 to-white">
+                  {/* Soft ground shadow so the machine appears to float / sit on a surface */}
+                  <div className="pointer-events-none absolute bottom-2.5 left-1/2 -translate-x-1/2 w-3/4 h-3 rounded-[100%] bg-slate-900/10 blur-md" />
                   {catImage ? (
                     <img
                       src={catImage}
                       alt={cat.label}
-                      className="w-full h-full object-contain p-2"
+                      className="relative w-full h-full object-contain p-2 transition-transform duration-500 ease-out group-hover:scale-105"
                       referrerPolicy="no-referrer"
                       onError={(e) => {
                         e.currentTarget.style.display = "none";

@@ -424,37 +424,31 @@ export default function HomeSection({
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: i * 0.05 }}
                 onClick={() => onSearch("", cat.id)}
-                className="group bg-white border border-slate-200 rounded-2xl overflow-hidden text-left cursor-pointer hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] transition-all flex flex-row items-stretch"
+                className="group bg-white border border-slate-200 rounded-2xl overflow-hidden text-left cursor-pointer hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] transition-all flex flex-col"
               >
-                {/* Left — text info */}
-                <div className="flex-1 p-4 flex flex-col justify-center gap-2 min-w-0">
-                  <p className="font-display font-black text-sm text-slate-900 leading-snug line-clamp-2">
+                {/* Top — text info: name + height • price on one line */}
+                <div className="p-4 flex flex-col gap-1.5 min-w-0">
+                  <p className="font-display font-black text-sm sm:text-base text-slate-900 leading-snug line-clamp-2">
                     {cat.listLabel || cat.label}
                   </p>
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <div>
-                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 leading-none mb-0.5">Hoogte</p>
-                      <p className="text-xs font-bold text-slate-700">{cat.heights}</p>
-                    </div>
-                    <div className="w-px h-6 bg-slate-200 shrink-0" />
-                    <div>
-                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 leading-none mb-0.5">All-in</p>
-                      <p className="text-sm font-extrabold text-emerald-600 leading-tight">
-                        {livePriceByCategory[cat.id] !== undefined
-                          ? `v.a. €${(() => { const v = withVat(livePriceByCategory[cat.id], vatDisplay); return v % 1 === 0 ? Math.round(v).toLocaleString("nl-NL") : v.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); })()}/dag`
-                          : "Prijs op aanvraag"}
-                      </p>
-                    </div>
+                  <div className="flex items-center gap-2 flex-wrap text-xs">
+                    <span className="font-bold text-slate-700">{cat.heights}</span>
+                    <span className="text-slate-300 select-none">•</span>
+                    <span className="font-extrabold text-emerald-600 leading-tight">
+                      {livePriceByCategory[cat.id] !== undefined
+                        ? `v.a. €${(() => { const v = withVat(livePriceByCategory[cat.id], vatDisplay); return v % 1 === 0 ? Math.round(v).toLocaleString("nl-NL") : v.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); })()}/dag`
+                        : "Prijs op aanvraag"}
+                    </span>
                   </div>
                 </div>
 
-                {/* Right — machine photo on white background */}
-                <div className="w-28 sm:w-44 shrink-0 relative overflow-hidden bg-white">
+                {/* Bottom — wide machine photo on white background */}
+                <div className="relative w-full aspect-[4/3] overflow-hidden bg-white border-t border-slate-100">
                   {catImage ? (
                     <img
                       src={catImage}
                       alt={cat.label}
-                      className="w-full h-full object-contain p-2 transition-transform duration-500 ease-out group-hover:scale-105"
+                      className="w-full h-full object-contain p-3 transition-transform duration-500 ease-out group-hover:scale-105"
                       referrerPolicy="no-referrer"
                       onError={(e) => {
                         e.currentTarget.style.display = "none";
@@ -466,7 +460,7 @@ export default function HomeSection({
                   <div
                     className={`absolute inset-0 bg-white flex items-center justify-center ${catImage ? "hidden" : "flex"}`}
                   >
-                    <Icon className="h-8 w-8 text-slate-300" />
+                    <Icon className="h-10 w-10 text-slate-300" />
                   </div>
                 </div>
               </motion.button>

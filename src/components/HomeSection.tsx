@@ -448,7 +448,7 @@ export default function HomeSection({
                     <img
                       src={catImage}
                       alt={cat.label}
-                      className="w-full h-full object-contain p-3 transition-transform duration-500 ease-out group-hover:scale-105"
+                      className="w-full h-full object-contain p-1.5 sm:p-3 transition-transform duration-500 ease-out group-hover:scale-105"
                       referrerPolicy="no-referrer"
                       onError={(e) => {
                         e.currentTarget.style.display = "none";

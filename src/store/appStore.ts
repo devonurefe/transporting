@@ -156,13 +156,9 @@ export const useAppStore = create<AppState>((set, get) => ({
   })(),
   isLoading: false,
   error: null,
-  vatDisplay: (() => {
-    try {
-      const stored = localStorage.getItem("hwh_vat_display");
-      if (stored === "incl" || stored === "excl") return stored;
-    } catch { /* ignore */ }
-    return "excl" as const;
-  })(),
+  // Always start excl. BTW on load (lower, more attractive price). App.tsx may
+  // switch to incl. for logged-in consumers; VAT is always added at checkout.
+  vatDisplay: "excl" as const,
 
   setVatDisplay: (mode) => {
     try { localStorage.setItem("hwh_vat_display", mode); } catch { /* ignore */ }

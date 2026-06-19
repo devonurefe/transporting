@@ -188,8 +188,9 @@ export default function App() {
       // Auth check is complete and confirmed no user — safe to clear admin mode
       setCurrentUser(null);
       setIsAdminMode(false);
-      setVatDisplay("incl");
-      localStorage.setItem("hwh_vat_display", "incl");
+      // Guests default to excl. BTW (lower, more attractive price); VAT is added at checkout.
+      setVatDisplay("excl");
+      localStorage.setItem("hwh_vat_display", "excl");
     }
     // When authChecked=false (still loading), don't touch isAdminMode
     // so the admin panel stays visible while the token is being verified

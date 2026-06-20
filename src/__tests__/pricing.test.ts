@@ -110,8 +110,13 @@ describe("calculateItemSubtotal — flat rates", () => {
     expect(calculateItemSubtotal(nifty120, 7, "Particulier", noRules)).toBe(Math.round(7 * 335 / 5));
   });
 
-  it("27 days linear rate (round(27 * weeklyPrice/5))", () => {
-    expect(calculateItemSubtotal(nifty120, 27, "Particulier", noRules)).toBe(Math.round(27 * 335 / 5));
+  it("8 days pro-rata is capped at the monthly price (Fix B)", () => {
+    // round(8 * 335/5) = 536 > monthlyPrice 490 → capped at 490
+    expect(calculateItemSubtotal(nifty120, 8, "Particulier", noRules)).toBe(490);
+  });
+
+  it("27 days pro-rata capped at the monthly price (Fix B)", () => {
+    expect(calculateItemSubtotal(nifty120, 27, "Particulier", noRules)).toBe(490);
   });
 
   it("28 days uses monthlyPrice", () => {
@@ -171,6 +176,17 @@ describe("calculateItemSubtotal — weekend 'niet werken' discount", () => {
 
   it("strict Sat+Sun 2-day, 'nee' → weekendPrice unchanged (not weekly basis)", () => {
     expect(calculateItemSubtotal(nifty120, 2, "Particulier", noRules, SAT, "nee")).toBe(150);
+  });
+
+  // Floor (Fix A): a 1-working-day result must not drop below the 1-day tier, so a
+  // longer booking never undercuts a shorter one. optimum8 has no oneDayPrice → floor
+  // is pricePerDay (65), which beats the werkweek day rate round(159/5)=32.
+  const optimum8 = { id: "optimum-8", category: "schaarlift", pricePerDay: 65, weekendPrice: 99, weeklyPrice: 159, monthlyPrice: 420 } as Machine;
+  it("3 days Fri→Sun, 'nee', 1 working day floored at the 1-day tier (pricePerDay)", () => {
+    expect(calculateItemSubtotal(optimum8, 3, "Particulier", noRules, FRI, "nee")).toBe(65);
+  });
+  it("5 days Fri→Tue, 'nee', 3 working days keep the werkweek day rate (no floor)", () => {
+    expect(calculateItemSubtotal(optimum8, 5, "Particulier", noRules, FRI, "nee")).toBe(Math.round(3 * 159 / 5));
   });
 });
 

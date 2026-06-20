@@ -340,7 +340,14 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
       && rentalDays >= 3 && rentalDays < 28 && !strictWeekend && weekendDaysCount > 0;
 
     if (weekendNoWork) {
-      serverSubtotal = withCampaign(Math.round((rentalDays - weekendDaysCount) * (m.weeklyPrice / 5)));
+      // Working (non-weekend) days at the weekly day rate. 1-2 working days floored at
+      // the normal short-stay tier; total capped at the monthly price. Mirrors pricing.ts.
+      const workingDays = rentalDays - weekendDaysCount;
+      let base = Math.round(workingDays * (m.weeklyPrice / 5));
+      if (workingDays === 1) base = Math.max(base, m.oneDayPrice ?? machine.pricePerDay);
+      else if (workingDays === 2) base = Math.max(base, m.twoDayPrice ?? machine.pricePerDay * 2);
+      if (m.monthlyPrice) base = Math.min(base, m.monthlyPrice);
+      serverSubtotal = withCampaign(base);
     } else if (m.weeklyOnly && m.weeklyPrice) {
       // Weekly-only billing — minimum 1 week, charged per started week.
       // Mirrors src/utils/pricing.ts billableWeeks().
@@ -356,7 +363,10 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
     } else if ((rentalDays === 3 || rentalDays === 4 || rentalDays === 5) && m.weeklyPrice) {
       serverSubtotal = withCampaign(m.weeklyPrice);
     } else if (rentalDays >= 6 && rentalDays < 28 && m.weeklyPrice) {
-      serverSubtotal = withCampaign(Math.round(rentalDays * (m.weeklyPrice / 5)));
+      // Pro-rata capped at the monthly price (sub-month never costs more than a month).
+      let base = Math.round(rentalDays * (m.weeklyPrice / 5));
+      if (m.monthlyPrice) base = Math.min(base, m.monthlyPrice);
+      serverSubtotal = withCampaign(base);
     } else if (rentalDays >= 28 && m.monthlyPrice) {
       const fullMonths = Math.floor(rentalDays / 28);
       const remainder = rentalDays % 28;
@@ -366,6 +376,7 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
       } else {
         remainderCost = remainder * machine.pricePerDay;
       }
+      remainderCost = Math.min(remainderCost, m.monthlyPrice);
       serverSubtotal = withCampaign(fullMonths * m.monthlyPrice + remainderCost);
     } else {
       // Mirrors src/utils/pricing.ts evaluateDiscountPercent: take the HIGHEST discount,

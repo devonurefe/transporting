@@ -120,10 +120,17 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
   const totalSavings = (sums.campaignSavings ?? 0)
     + (!sums.weeklyBreakdown && !sums.isFlatRate ? sums.discountAmount : 0);
 
+  // Weekend "niet werken": only the working (non-weekend) days are charged, so the
+  // per-day rate and breakdown are expressed per WORKING day (not blended over all
+  // calendar days, which would show a misleadingly low €/dag).
+  const isWeekendNoWork = !!showWeekendFree;
+  const workingDays = Math.max(0, sums.days - (sums.weekendDays ?? 0));
+
   // Flat-rate / weekly tiers bake the discount into the price, so "Je bespaart"
   // never fires for them. Surface a small badge when the effective day rate is
   // genuinely below the list day rate so the customer understands the saving.
-  const effectivePerDay = sums.weeklyBreakdown ? sums.weeklyBreakdown.dailyRate
+  const effectivePerDay = isWeekendNoWork && workingDays > 0 ? sums.subtotal / workingDays
+    : sums.weeklyBreakdown ? sums.weeklyBreakdown.dailyRate
     : sums.days > 0 ? sums.subtotal / sums.days
     : selectedMachine.pricePerDay;
   const hasTierDeal = (sums.isFlatRate || !!sums.weeklyBreakdown)
@@ -270,7 +277,19 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
                 </div>
               )}
 
-              {sums.weeklyBreakdown ? (
+              {isWeekendNoWork ? (
+                <>
+                  <Row
+                    label={`${workingDays} ${workingDays === 1 ? "werkdag" : "werkdagen"} berekend`}
+                    value={euro(sums.subtotal)}
+                  />
+                  <Row
+                    label={`${sums.weekendDays ?? 0} ${(sums.weekendDays ?? 0) === 1 ? "weekenddag" : "weekenddagen"}`}
+                    value="Gratis"
+                    accent="emerald"
+                  />
+                </>
+              ) : sums.weeklyBreakdown ? (
                 <>
                   <Row
                     label={`${sums.weeklyBreakdown.weeks}× Werkweektarief (5 dgn)`}

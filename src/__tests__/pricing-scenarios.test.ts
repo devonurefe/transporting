@@ -127,8 +127,10 @@ describe("Lineair wekelijks tarief (nifty-120)", () => {
     expect(calculateItemSubtotal(nifty, 6, "Particulier", noRules)).toBe(Math.round(6 * 335 / 5)));
   it("7 dagen lineair tarief (round(7 * weeklyPrice/5))", () =>
     expect(calculateItemSubtotal(nifty, 7, "Particulier", noRules)).toBe(Math.round(7 * 335 / 5)));
-  it("27 dagen lineair tarief (round(27 * weeklyPrice/5))", () =>
-    expect(calculateItemSubtotal(nifty, 27, "Particulier", noRules)).toBe(Math.round(27 * 335 / 5)));
+  it("8 dagen pro-rata afgetopt op maandprijs (round(8 * 335/5)=536 > 490)", () =>
+    expect(calculateItemSubtotal(nifty, 8, "Particulier", noRules)).toBe(490));
+  it("27 dagen pro-rata afgetopt op maandprijs (490)", () =>
+    expect(calculateItemSubtotal(nifty, 27, "Particulier", noRules)).toBe(490));
   it("31 dagen = 1 maand + 3-dag lineair resto", () =>
     expect(calculateItemSubtotal(nifty, 31, "Particulier", noRules)).toBe(490 + Math.round(3 * 335 / 5)));
   it("33 dagen = 1 maand + 5-dag lineair resto (= weeklyPrice)", () =>

@@ -107,6 +107,8 @@ export function calculateItemSubtotal(machine: Machine, days: number, profile: s
   // declares they will NOT work the weekend only pays for the working (non-weekend)
   // days at the weekly day rate (weeklyPrice / 5). The flat weekly price already
   // includes the weekend, so "ja" (or no answer) keeps the normal price below.
+  // A 1-2 working-day result is floored at the normal short-stay tier so a longer
+  // booking never undercuts a shorter one; the total is capped at the monthly price.
   // Mirrored by server/routes/orders.ts — keep identical.
   if (weekendWork === "nee" && startDate && machine.weeklyPrice && !machine.weeklyOnly
       && days >= 3 && days < 28 && !isStrictWeekend(startDate, days)) {
@@ -116,7 +118,11 @@ export function calculateItemSubtotal(machine: Machine, days: number, profile: s
     const weekendDays = countWeekendDays(start, end);
     if (weekendDays > 0) {
       const workingDays = days - weekendDays;
-      return withCampaign(Math.round(workingDays * (machine.weeklyPrice / 5)));
+      let base = Math.round(workingDays * (machine.weeklyPrice / 5));
+      if (workingDays === 1) base = Math.max(base, machine.oneDayPrice ?? machine.pricePerDay);
+      else if (workingDays === 2) base = Math.max(base, machine.twoDayPrice ?? machine.pricePerDay * 2);
+      if (machine.monthlyPrice) base = Math.min(base, machine.monthlyPrice);
+      return withCampaign(base);
     }
   }
 
@@ -132,12 +138,16 @@ export function calculateItemSubtotal(machine: Machine, days: number, profile: s
   // 3–5 days: flat weekly rate
   if ((days === 3 || days === 4 || days === 5) && machine.weeklyPrice) return withCampaign(machine.weeklyPrice);
 
-  // 6–27 days: linear rate derived from weeklyPrice
+  // 6–27 days: linear rate derived from weeklyPrice, capped at the monthly price
+  // (a sub-month rental must never cost more than a full month).
   if (days >= 6 && days < 28 && machine.weeklyPrice) {
-    return withCampaign(Math.round(days * (machine.weeklyPrice / 5)));
+    let base = Math.round(days * (machine.weeklyPrice / 5));
+    if (machine.monthlyPrice) base = Math.min(base, machine.monthlyPrice);
+    return withCampaign(base);
   }
 
-  // Monthly flat rate: 28+ days
+  // Monthly flat rate: 28+ days. The pro-rata remainder is likewise capped at the
+  // monthly price so e.g. "1 maand + 25 dagen" never exceeds two months.
   if (days >= 28 && machine.monthlyPrice) {
     const fullMonths = Math.floor(days / 28);
     const remainder = days % 28;
@@ -147,6 +157,7 @@ export function calculateItemSubtotal(machine: Machine, days: number, profile: s
     } else {
       remainderCost = remainder * machine.pricePerDay;
     }
+    remainderCost = Math.min(remainderCost, machine.monthlyPrice);
     return withCampaign(fullMonths * machine.monthlyPrice + remainderCost);
   }
 

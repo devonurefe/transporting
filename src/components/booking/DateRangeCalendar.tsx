@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { Machine } from "../../types";
 import { useAppStore } from "../../store/appStore";
 import { useLanguageStore } from "../../store/languageStore";
-import { checkAvailability, SimpleOrder } from "../../utils/availability";
+import { someUnitAvailable, SimpleOrder } from "../../utils/availability";
 import { calculateRentalDays, calculateItemSubtotal } from "../../utils/pricing";
 import { euro, withVat } from "../../utils/format";
 
@@ -49,6 +49,19 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
   const fetchBlockedDates = useAppStore((s) => s.fetchBlockedDates);
   const campaignRules = useAppStore((s) => s.campaignRules);
   const vatDisplay = useAppStore((s) => s.vatDisplay);
+  const allMachines = useAppStore((s) => s.machines);
+
+  // All physical units of this model (same base name, "(Unit N)" stripped). A day
+  // is only locked when EVERY unit is busy; one free unit keeps the day open.
+  const unitIds = useMemo(() => {
+    const baseName = (n: string) => n.replace(/\s*\(Unit\s+\d+\)\s*$/i, "").trim();
+    const base = baseName(machine.name);
+    const ids = allMachines
+      .filter((m) => m.isActive !== false && baseName(m.name) === base)
+      .map((m) => m.id);
+    return ids.length ? ids : [machine.id];
+  }, [allMachines, machine.id, machine.name]);
+  const unitKey = unitIds.join(",");
 
   const today = todayStr || new Date().toISOString().split("T")[0];
   const todayYear = Number(today.split("-")[0]);
@@ -88,14 +101,21 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
     fetchBlockedDates(); // ensure blockedDates in store are current
     let cancelled = false;
     setLoading(true);
-    fetch(`/api/orders/availability?machineId=${encodeURIComponent(machine.id)}`)
-      .then((res) => (res.ok ? res.json() : []))
-      .then((data) => { if (!cancelled) setOrders(Array.isArray(data) ? data : []); })
+    // Fetch occupancy for every unit of this model so we know the true free count
+    Promise.all(
+      unitIds.map((id) =>
+        fetch(`/api/orders/availability?machineId=${encodeURIComponent(id)}`)
+          .then((res) => (res.ok ? res.json() : []))
+          .then((data) => (Array.isArray(data) ? data : []))
+          .catch(() => [])
+      )
+    )
+      .then((results) => { if (!cancelled) setOrders(results.flat()); })
       .catch(() => { if (!cancelled) setOrders([]); })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, machine.id]); // fetchBlockedDates is a stable Zustand action — omitting is safe
+  }, [isOpen, unitKey]); // fetchBlockedDates is a stable Zustand action — omitting is safe
 
   // Escape closes; basic focus management + Tab trap within the dialog
   useEffect(() => {
@@ -125,11 +145,12 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
     let cursor = draftStart;
     for (let i = 0; i < 366; i++) {
       const next = addDaysKey(cursor, 1);
-      if (!checkAvailability(machine.id, next, next, orders, blockedDates, today).available) break;
+      // Require a single unit free for the whole [start..next] span, not just that day
+      if (!someUnitAvailable(unitIds, draftStart, next, orders, blockedDates, today)) break;
       cap = next; cursor = next;
     }
     return cap;
-  }, [draftStart, draftEnd, orders, blockedDates, machine.id, today]);
+  }, [draftStart, draftEnd, orders, blockedDates, unitKey, today]);
 
   const grid = useMemo(() => {
     const firstDow = new Date(Date.UTC(viewYear, viewMonth, 1)).getUTCDay();
@@ -142,7 +163,7 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
       const key = toKey(viewYear, viewMonth, d);
       let status: "past" | "unavailable" | "available" | "capped";
       if (key < today) status = "past";
-      else if (!checkAvailability(machine.id, key, key, orders, blockedDates, today).available) status = "unavailable";
+      else if (!someUnitAvailable(unitIds, key, key, orders, blockedDates, today)) status = "unavailable";
       else status = "available";
       const isCapped = status === "available" && !!draftStart && !draftEnd && maxEnd !== "" && key > maxEnd;
       cells.push({
@@ -157,7 +178,7 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
     }
     while (cells.length % 7 !== 0) cells.push(null);
     return cells;
-  }, [viewYear, viewMonth, orders, blockedDates, draftStart, draftEnd, maxEnd, machine.id, today]);
+  }, [viewYear, viewMonth, orders, blockedDates, draftStart, draftEnd, maxEnd, unitKey, today]);
 
   const onDayClick = (key: string, selectable: boolean) => {
     if (!selectable) return;
@@ -171,7 +192,7 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
     if (key < draftStart) { setDraftStart(key); return; }
     if (key === draftStart) { setDraftEnd(key); return; }
     // key > draftStart and already ≤ maxEnd (capped days aren't selectable); validate defensively
-    if (checkAvailability(machine.id, draftStart, key, orders, blockedDates, today).available) setDraftEnd(key);
+    if (someUnitAvailable(unitIds, draftStart, key, orders, blockedDates, today)) setDraftEnd(key);
   };
 
   const canPrev = !(viewYear === todayYear && viewMonth === todayMonth);
@@ -183,7 +204,7 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
     if (viewMonth === 11) { setViewMonth(0); setViewYear(viewYear + 1); } else setViewMonth(viewMonth + 1);
   };
 
-  const validRange = !!draftStart && !!draftEnd && checkAvailability(machine.id, draftStart, draftEnd, orders, blockedDates, today).available;
+  const validRange = !!draftStart && !!draftEnd && someUnitAvailable(unitIds, draftStart, draftEnd, orders, blockedDates, today);
   const days = validRange ? calculateRentalDays(draftStart, draftEnd) : 0;
   const subtotal = validRange ? calculateItemSubtotal(machine, days, profile, campaignRules, draftStart) : 0;
 

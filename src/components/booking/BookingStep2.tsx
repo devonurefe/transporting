@@ -8,6 +8,7 @@ import { User, Mail, Phone, MapPin, Search, Check, ShieldAlert, ArrowLeft, Arrow
 import { motion } from "motion/react";
 import { UserProfile, Machine } from "../../types";
 import BookingPriceSummary from "./BookingPriceSummary";
+import { HuurGoText } from "../Header";
 
 interface BookingStep2Props {
   currentUser: UserProfile | null;
@@ -104,7 +105,7 @@ export default function BookingStep2({
           <span>Hoe wilt u doorgaan?</span>
         </h3>
         <p className="text-xs text-slate-500 max-w-md mx-auto">
-          Kies of u wilt inloggen met uw HuurGo account of snel wilt bestellen als gast.
+          Kies of u wilt inloggen met uw <HuurGoText /> account of snel wilt bestellen als gast.
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-xl mx-auto pt-4">

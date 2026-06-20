@@ -7,7 +7,7 @@ import React from "react";
 import { Mail, MapPin, Clock } from "lucide-react";
 import { useLanguageStore } from "../store/languageStore";
 import { useAppStore } from "../store/appStore";
-import { HuurGoLogo } from "./Header";
+import { HuurGoLogo, BrandedText } from "./Header";
 
 interface FooterProps {
   siteName: string;
@@ -159,7 +159,7 @@ export default function Footer({ siteName, setActiveTab: _setActiveTab, setShowC
           {/* Brand + email */}
           <div className="space-y-4 flex flex-col items-start">
             <HuurGoLogo className="h-9" dark />
-            <p className="text-[10px] text-slate-500 -mt-1">HuurGo is een initiatief van MB Hoogwerkers</p>
+            <p className="text-[10px] text-slate-500 -mt-1"><BrandedText text="HuurGo is een initiatief van MB Hoogwerkers" dark /></p>
             <p className="text-xs text-slate-400 leading-loose max-w-xs">
               Professionele verhuur van gecertificeerde hoogwerkers, schaarliften en mastliften voor ZZP'ers, aannemers en particulieren in heel Nederland.
             </p>
@@ -198,7 +198,7 @@ export default function Footer({ siteName, setActiveTab: _setActiveTab, setShowC
 
         {/* Bottom row */}
         <div className="pt-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs text-slate-600">
-          <span>© 2026 HuurGo / MB Hoogwerkers B.V. · KvK 67438237 · BTW NL856990656B01</span>
+          <span><BrandedText text="© 2026 HuurGo / MB Hoogwerkers B.V. · KvK 67438237 · BTW NL856990656B01" dark /></span>
           <div className="flex gap-3">
             <span className="text-xs font-bold bg-slate-800/60 border border-slate-700 text-slate-500 px-2.5 py-1 rounded-md">TÜV Gecertificeerd</span>
             <span className="text-xs font-bold bg-slate-800/60 border border-slate-700 text-slate-500 px-2.5 py-1 rounded-md">Cat. 1-3B</span>

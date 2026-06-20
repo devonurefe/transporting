@@ -339,7 +339,7 @@ export default function CatalogSection({
                         );
                       })()}
 
-                      {/* IMAGE with category + powerType overlay — clickable to open detail modal */}
+                      {/* IMAGE with powerType overlay — clickable to open detail modal */}
                       <div
                         className="relative aspect-[3/2] w-full overflow-hidden bg-white cursor-pointer"
                         onClick={() => {
@@ -363,11 +363,9 @@ export default function CatalogSection({
                             }
                           }}
                         />
-                        <div className="absolute inset-x-0 bottom-0 px-3 py-2 bg-gradient-to-t from-black/45 to-transparent flex items-end justify-between">
-                          <span className="text-[10px] font-bold text-white/95 uppercase tracking-wider leading-none">
-                            {machine.categoryLabel}
-                          </span>
-                          <span className="text-[10px] font-semibold text-white/90 bg-black/30 backdrop-blur-sm px-2 py-0.5 rounded-md">
+                        {/* Power type only — machine name/category already shown below the image, no overlay duplicate */}
+                        <div className="absolute bottom-0 right-0 px-3 py-2">
+                          <span className="text-[10px] font-semibold text-white/90 bg-black/40 backdrop-blur-sm px-2 py-0.5 rounded-md">
                             {machine.powerType}
                           </span>
                         </div>

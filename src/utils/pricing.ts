@@ -76,7 +76,7 @@ export function evaluateDiscountPercent(machine: Machine, days: number, profile:
 // `startDate` ("YYYY-MM-DD") enables real-weekend detection for the 2/3-day tiers.
 // Mirrored by the server validation in server/routes/orders.ts — any change
 // here must be applied there too, or orders fail with "Totaalbedrag klopt niet".
-export function calculateItemSubtotal(machine: Machine, days: number, profile: string, rules: CampaignRule[], startDate?: string | Date): number {
+export function calculateItemSubtotal(machine: Machine, days: number, profile: string, rules: CampaignRule[], startDate?: string | Date, weekendWork?: "ja" | "nee" | null): number {
   // Apply campaign discounts on top of a flat-rate base price.
   // Volume discounts are already embedded in flat rates — only campaign rules
   // and campaignDiscountPercent are applied here to avoid double-counting.
@@ -100,6 +100,24 @@ export function calculateItemSubtotal(machine: Machine, days: number, profile: s
   // started week. Takes priority over every daily/2-day/monthly tier below.
   if (machine.weeklyOnly && machine.weeklyPrice) {
     return withCampaign(billableWeeks(days, machine.minRentalDays) * machine.weeklyPrice);
+  }
+
+  // Weekend "niet werken" discount: when the rental is on the weekly basis
+  // (werkweektarief / pro-rata, 3–27 days) and spans a weekend, a customer who
+  // declares they will NOT work the weekend only pays for the working (non-weekend)
+  // days at the weekly day rate (weeklyPrice / 5). The flat weekly price already
+  // includes the weekend, so "ja" (or no answer) keeps the normal price below.
+  // Mirrored by server/routes/orders.ts — keep identical.
+  if (weekendWork === "nee" && startDate && machine.weeklyPrice && !machine.weeklyOnly
+      && days >= 3 && days < 28 && !isStrictWeekend(startDate, days)) {
+    const start = new Date(startDate);
+    const end = new Date(start);
+    end.setUTCDate(end.getUTCDate() + (days - 1));
+    const weekendDays = countWeekendDays(start, end);
+    if (weekendDays > 0) {
+      const workingDays = days - weekendDays;
+      return withCampaign(Math.round(workingDays * (machine.weeklyPrice / 5)));
+    }
   }
 
   // 1-day actie flat rate

@@ -71,6 +71,7 @@ export interface Order {
   status: "In behandeling" | "Goedgekeurd" | "Onderweg" | "Voltooid" | "Geannuleerd";
   createdAt: string;
   addons?: { id: string; name: string; price: number; billing: "daily" | "flat" | "weekly" }[];
+  weekendWork?: "ja" | "nee" | null;
   invoiceNumber?: string;
   paymentStatus?: string;
 }

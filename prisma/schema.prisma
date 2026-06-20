@@ -126,6 +126,7 @@ model Order {
   createdAt       DateTime  @default(now())
   customerId      String?
   addons          String
+  weekendWork     String?
   invoiceNumber   String?   @unique
   paymentStatus   String    @default("awaiting")
 

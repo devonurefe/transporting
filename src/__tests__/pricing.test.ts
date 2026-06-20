@@ -139,6 +139,41 @@ describe("calculateItemSubtotal — flat rates", () => {
   });
 });
 
+describe("calculateItemSubtotal — weekend 'niet werken' discount", () => {
+  // FRI = Friday; a 5-day rental Fri→Tue spans Sat+Sun (2 weekend days, 3 working days).
+  it("5 days Fri→Tue, 'ja' (works weekend) → full werkweektarief", () => {
+    expect(calculateItemSubtotal(nifty120, 5, "Particulier", noRules, FRI, "ja")).toBe(335);
+  });
+
+  it("5 days Fri→Tue, no answer → full werkweektarief (unchanged behaviour)", () => {
+    expect(calculateItemSubtotal(nifty120, 5, "Particulier", noRules, FRI)).toBe(335);
+  });
+
+  it("5 days Fri→Tue, 'nee' → only working days at weeklyPrice/5 (3 × 67)", () => {
+    expect(calculateItemSubtotal(nifty120, 5, "Particulier", noRules, FRI, "nee")).toBe(Math.round(3 * 335 / 5));
+  });
+
+  it("3 days Fri→Sun, 'nee' → 1 working day at weeklyPrice/5", () => {
+    expect(calculateItemSubtotal(nifty120, 3, "Particulier", noRules, FRI, "nee")).toBe(Math.round(1 * 335 / 5));
+  });
+
+  it("7 days Fri→Thu (pro-rata), 'nee' → 5 working days at weeklyPrice/5", () => {
+    expect(calculateItemSubtotal(nifty120, 7, "Particulier", noRules, FRI, "nee")).toBe(Math.round(5 * 335 / 5));
+  });
+
+  it("3 weekday days Mon→Wed, 'nee' → no weekend days, full werkweektarief", () => {
+    expect(calculateItemSubtotal(nifty120, 3, "Particulier", noRules, MON, "nee")).toBe(335);
+  });
+
+  it("monthly 28+ days, 'nee' → discount does NOT apply (monthlyPrice unchanged)", () => {
+    expect(calculateItemSubtotal(nifty120, 28, "Particulier", noRules, FRI, "nee")).toBe(490);
+  });
+
+  it("strict Sat+Sun 2-day, 'nee' → weekendPrice unchanged (not weekly basis)", () => {
+    expect(calculateItemSubtotal(nifty120, 2, "Particulier", noRules, SAT, "nee")).toBe(150);
+  });
+});
+
 describe("calculateItemSubtotal — percentage fallback", () => {
   it("3 days, no flat rates, no discount tier → plain day rate", () => {
     expect(calculateItemSubtotal(basicMachine, 3, "Particulier", noRules)).toBe(300);

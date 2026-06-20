@@ -534,7 +534,8 @@ export default function BookingStep1({
           <div>
             <p className="text-sm font-bold text-amber-900">🗓 Gaat u in het weekend werken?</p>
             <p className="text-xs text-amber-700 mt-1">
-              Uw huurperiode omvat weekenddagen. Machines mogen gratis staan, maar gebruik wordt geregistreerd.
+              Uw huurperiode omvat weekenddagen. Werkt u in het weekend, dan geldt het volledige
+              werkweektarief (weekend inbegrepen). Werkt u niet, dan betaalt u alleen de werkdagen.
             </p>
           </div>
           <div className="flex gap-2">
@@ -558,13 +559,14 @@ export default function BookingStep1({
                   : 'bg-white border-slate-300 text-slate-700 hover:border-slate-500'
               }`}
             >
-              Ja, ik werk (+€75)
+              Ja, ik werk in het weekend
             </button>
           </div>
           {weekendWorkAnswer === 'nee' && (
             <p className="text-xs text-amber-700 leading-relaxed bg-amber-100 rounded-lg p-2.5">
-              ⚠️ Als gebruik van de machine op weekenddagen wordt geconstateerd via de urenteller,
-              wordt het standaard weekendtarief (€75) alsnog in rekening gebracht.
+              ⚠️ U betaalt nu alleen de werkdagen. Wordt gebruik van de machine op weekenddagen
+              geconstateerd via de urenteller, dan wordt het volledige werkweektarief alsnog in
+              rekening gebracht.
             </p>
           )}
         </div>

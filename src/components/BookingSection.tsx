@@ -332,13 +332,13 @@ export default function BookingSection({
         const days = Math.max(1, Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1);
         totalDays += days;
 
-        const itemSub = calculateItemSubtotal(item.machine, days, customerProfile, campaignRules, itemStart);
+        const itemSub = calculateItemSubtotal(item.machine, days, customerProfile, campaignRules, itemStart, weekendWorkAnswer);
         // Weekly-only products bill per week, not per day — the day-rate "raw" total is
         // meaningless and would surface as a phantom discount, so anchor raw to the subtotal.
         const itemRaw = item.machine.weeklyOnly ? itemSub : item.machine.pricePerDay * days;
         const itemSubNoCampaign = calculateItemSubtotal(
           { ...item.machine, campaignDiscountPercent: undefined, campaignDiscountAmount: undefined } as any,
-          days, customerProfile, [], itemStart
+          days, customerProfile, [], itemStart, weekendWorkAnswer
         );
         const itemDisc = Math.max(0, itemRaw - itemSub);
         rawSubtotal += itemRaw;
@@ -352,14 +352,17 @@ export default function BookingSection({
       const trailerCost = deliveryType === "trailer_rental" ? 25 * leadCartDays : deliveryType === "trailer_drop_return" ? 35 : 0;
       const driver = 0;
 
-      // spansWeekend: true if ANY cart item's rental period includes weekend days
-      // but is NOT a strict Sat+Sun 2-day rental (those already have weekendPrice priced in)
+      // spansWeekend: true if ANY cart item triggers the weekend-work question, i.e.
+      // it is priced on the weekly basis (werkweektarief / pro-rata, 3–27 days) and its
+      // rental period includes weekend days but is NOT a strict Sat+Sun 2-day rental
+      // (those already have weekendPrice priced in). Monthly / day-rate tiers do not ask.
       const spansWeekend = cartItems.some(item => {
         const s = item.startDate || "";
         const e = item.endDate || "";
         if (!s || !e) return false;
         const d = calculateRentalDays(s, e);
-        return countWeekendDays(s, e) > 0 && !isStrictWeekend(s, d);
+        return !!item.machine.weeklyPrice && !item.machine.weeklyOnly && d >= 3 && d < 28
+          && countWeekendDays(s, e) > 0 && !isStrictWeekend(s, d);
       });
       const weekendDays = (leadCartStart && leadCartEnd) ? countWeekendDays(leadCartStart, leadCartEnd) : 0;
 
@@ -370,10 +373,6 @@ export default function BookingSection({
       if (selectedAddons.includes("safety")) {
         addonCost += 15 * totalDays;
         addonDetails.push({ id: "safety", name: "Veiligheidskit", price: 15 * totalDays });
-      }
-      if (weekendWorkAnswer === 'ja' && spansWeekend) {
-        addonCost += 75;
-        addonDetails.push({ id: "weekend_surcharge", name: "Weekendtoeslag", price: 75 });
       }
       // Product-specific cross-sell extras (billed per started week, same week count as the machine)
       for (const item of cartItems) {
@@ -434,6 +433,11 @@ export default function BookingSection({
         } else if (totalDays >= 28 && leadItem.monthlyPrice) {
           tierLabel = "Maandtarief"; isFlatRate = true;
         }
+        // Weekend "niet werken": the subtotal is already reduced to working days, so
+        // show one clean flat line instead of a full pro-rata breakdown that wouldn't add up.
+        if (weekendWorkAnswer === 'nee' && spansWeekend) {
+          tierLabel = "Werkweektarief (werkdagen)"; isFlatRate = true; weeklyBreakdown = null;
+        }
       }
 
       return {
@@ -471,10 +475,10 @@ export default function BookingSection({
     const days = Math.max(1, Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1);
 
     const rawSubtotal = selectedMachine.pricePerDay * days;
-    const itemSub = calculateItemSubtotal(selectedMachine, days, customerProfile, campaignRules, startDate);
+    const itemSub = calculateItemSubtotal(selectedMachine, days, customerProfile, campaignRules, startDate, weekendWorkAnswer);
     const itemSubNoCampaign = calculateItemSubtotal(
       { ...selectedMachine, campaignDiscountPercent: undefined, campaignDiscountAmount: undefined } as any,
-      days, customerProfile, [], startDate
+      days, customerProfile, [], startDate, weekendWorkAnswer
     );
     const discountAmount = Math.max(0, rawSubtotal - itemSub);
     const campaignSavings = Math.max(0, itemSubNoCampaign - itemSub);
@@ -510,7 +514,8 @@ export default function BookingSection({
     const total = totalExcl + vat;
 
     const weekendDays = countWeekendDays(startDate, endDate);
-    const spansWeekend = weekendDays > 0 && !isStrictWeekend(startDate, days);
+    const spansWeekend = !!selectedMachine.weeklyPrice && !selectedMachine.weeklyOnly
+      && days >= 3 && days < 28 && weekendDays > 0 && !isStrictWeekend(startDate, days);
     const effectiveDailyRate = (days >= 6 && days < 28 && selectedMachine.weeklyPrice)
       ? selectedMachine.weeklyPrice / 5
       : null;
@@ -533,6 +538,10 @@ export default function BookingSection({
       weeklyBreakdown = { weeks: wks, pricePerWeek: selectedMachine.weeklyPrice, remainder: rem, dailyRate: Math.round(selectedMachine.weeklyPrice / 5), remainderCost: wkBase - wks * selectedMachine.weeklyPrice };
     } else if (days >= 28 && selectedMachine.monthlyPrice) {
       tierLabel = "Maandtarief"; isFlatRate = true;
+    }
+    // Weekend "niet werken": subtotal already reduced to working days — show a single flat line.
+    if (weekendWorkAnswer === 'nee' && spansWeekend) {
+      tierLabel = "Werkweektarief (werkdagen)"; isFlatRate = true; weeklyBreakdown = null;
     }
 
     return {
@@ -723,7 +732,7 @@ export default function BookingSection({
             const timeDiff = end.getTime() - start.getTime();
             const days = Math.max(1, Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1);
 
-            const itemSubtotal = calculateItemSubtotal(item.machine, days, customerProfile, campaignRules, item.startDate);
+            const itemSubtotal = calculateItemSubtotal(item.machine, days, customerProfile, campaignRules, item.startDate, weekendWorkAnswer);
             const transport = (deliveryType === "delivery_by_us" && i === 0) ? 150 : 0;
             const trailerCost = (deliveryType === "trailer_rental" && i === 0) ? 25 * days : (deliveryType === "trailer_drop_return" && i === 0) ? 35 : 0;
             const driver = 0;
@@ -733,11 +742,6 @@ export default function BookingSection({
             if (selectedAddons.includes("safety")) {
               addonCost += 15 * days;
               addonsList.push({ id: "safety", name: "Veiligheidskit", price: 15 * days, billing: "flat" });
-            }
-            // Weekend surcharge: added once (on first item only) when customer declared weekend use
-            if (i === 0 && weekendWorkAnswer === 'ja' && sums.spansWeekend) {
-              addonCost += 75;
-              addonsList.push({ id: "weekend_surcharge", name: "Weekendtoeslag", price: 75, billing: "flat" });
             }
             // Product-specific cross-sell extras (per started week, server recomputes authoritatively)
             const csWeeks = billableWeeks(days, item.machine.minRentalDays);
@@ -771,7 +775,8 @@ export default function BookingSection({
               driverCost: parseFloat(driver.toFixed(2)),
               vatAmount: parseFloat(itemVat.toFixed(2)),
               totalAmount: parseFloat(itemTotal.toFixed(2)),
-              addons: addonsList
+              addons: addonsList,
+              weekendWork: weekendWorkAnswer ?? null
             };
 
             const result = await onCreateReservation(orderObj);

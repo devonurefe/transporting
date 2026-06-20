@@ -101,10 +101,10 @@ export function buildWhatsAppUrl(
     lines.push("🗓 *WEEKEND VERKLARING*");
     lines.push("─────────────────────────────");
     if (weekendWorkAnswer === 'ja') {
-      lines.push("✅ Klant gaat in het weekend werken (+€75 weekendtoeslag)");
+      lines.push("✅ Klant gaat in het weekend werken (volledig werkweektarief, weekend inbegrepen)");
     } else {
-      lines.push("❌ Klant gaat NIET in het weekend werken");
-      lines.push("   ⚠️ Urenteller wordt gecontroleerd — bij gebruik alsnog standaard weekendtarief");
+      lines.push("❌ Klant gaat NIET in het weekend werken (alleen werkdagen berekend)");
+      lines.push("   ⚠️ Urenteller wordt gecontroleerd — bij gebruik alsnog volledig werkweektarief");
     }
     lines.push("");
   }

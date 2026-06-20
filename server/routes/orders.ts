@@ -271,8 +271,9 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
       return res.status(400).json({ error: "Ongeldig chauffeurskostenbedrag" });
     }
     // Addon prices are recomputed authoritatively from the DB — never trusted from
-    // the client. Global addons (safety, weekend_surcharge) plus this machine's own
-    // product-specific cross-sell extras are the only accepted ids.
+    // the client. The global "safety" addon plus this machine's own product-specific
+    // cross-sell extras are the only accepted ids. (Weekend handling is no longer an
+    // addon — it adjusts the subtotal via orderData.weekendWork below.)
     const crossSell: Array<{ id: string; pricePerWeek: number }> =
       Array.isArray((machine as any).crossSellAddons) ? (machine as any).crossSellAddons : [];
     const crossSellMap = new Map(crossSell.map(a => [String(a.id), a]));
@@ -288,8 +289,6 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
       const id = String(a.id ?? "");
       if (id === "safety") {
         addonsTotal += 15 * rentalDays;
-      } else if (id === "weekend_surcharge") {
-        addonsTotal += 75;
       } else if (crossSellMap.has(id)) {
         addonsTotal += Number(crossSellMap.get(id)!.pricePerWeek || 0) * addonWeeks;
       } else {
@@ -322,7 +321,27 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
     const m = machine as any;
     const dow = startDate.getUTCDay();
     const strictWeekend = rentalDays === 2 && dow === 6;
-    if (m.weeklyOnly && m.weeklyPrice) {
+
+    // Weekend "niet werken" discount — mirrors src/utils/pricing.ts calculateItemSubtotal.
+    // On the weekly basis (3–27 days) a customer who declares they will NOT work the
+    // weekend only pays for the working (non-weekend) days at the weekly day rate.
+    const weekendWork = String(orderData.weekendWork ?? "");
+    let weekendDaysCount = 0;
+    {
+      const cur = new Date(startDate);
+      cur.setUTCHours(0, 0, 0, 0);
+      for (let i = 0; i < rentalDays; i++) {
+        const d = cur.getUTCDay();
+        if (d === 0 || d === 6) weekendDaysCount++;
+        cur.setUTCDate(cur.getUTCDate() + 1);
+      }
+    }
+    const weekendNoWork = weekendWork === "nee" && m.weeklyPrice && !m.weeklyOnly
+      && rentalDays >= 3 && rentalDays < 28 && !strictWeekend && weekendDaysCount > 0;
+
+    if (weekendNoWork) {
+      serverSubtotal = withCampaign(Math.round((rentalDays - weekendDaysCount) * (m.weeklyPrice / 5)));
+    } else if (m.weeklyOnly && m.weeklyPrice) {
       // Weekly-only billing — minimum 1 week, charged per started week.
       // Mirrors src/utils/pricing.ts billableWeeks().
       const min = m.minRentalDays > 0 ? m.minRentalDays : 7;
@@ -469,6 +488,7 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
           status: "In behandeling",
           customerId: resolvedCustomerId,
           addons: JSON.stringify(orderData.addons || []),
+          weekendWork: weekendWork === "ja" || weekendWork === "nee" ? weekendWork : null,
           invoiceNumber,
           paymentStatus: "awaiting"
         }

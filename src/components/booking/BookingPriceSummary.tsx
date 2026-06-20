@@ -113,9 +113,9 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
 
   const priceExVat = sums.subtotal + sums.transport + sums.driver + sums.addonCost;
   // Only surface the "free weekend days" line once the customer has explicitly
-  // declared they will NOT work the weekend. When they pick "Ja, ik werk" a
-  // €75 weekend surcharge add-on is shown instead, and while unanswered we keep
-  // the summary neutral to avoid confusion.
+  // declared they will NOT work the weekend — in that case the subtotal is already
+  // reduced to the working days. When they pick "Ja, ik werk" the full werkweektarief
+  // applies (weekend included) and while unanswered we keep the summary neutral.
   const showWeekendFree = sums.spansWeekend && sums.weekendWorkAnswer === "nee";
   const totalSavings = (sums.campaignSavings ?? 0)
     + (!sums.weeklyBreakdown && !sums.isFlatRate ? sums.discountAmount : 0);

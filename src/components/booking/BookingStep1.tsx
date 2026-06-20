@@ -542,24 +542,30 @@ export default function BookingStep1({
             <button
               type="button"
               onClick={() => onWeekendWorkAnswer?.('nee')}
-              className={`flex-1 py-2.5 rounded-xl border text-sm font-semibold transition-all cursor-pointer ${
+              className={`flex-1 py-2.5 px-2 rounded-xl border transition-all cursor-pointer flex flex-col items-center gap-0.5 ${
                 weekendWorkAnswer === 'nee'
-                  ? 'bg-slate-800 text-white border-slate-800'
+                  ? 'bg-emerald-600 text-white border-emerald-600'
                   : 'bg-white border-slate-300 text-slate-700 hover:border-slate-500'
               }`}
             >
-              Nee, niet werken
+              <span className="text-sm font-semibold">Nee, niet werken</span>
+              <span className={`text-[11px] font-medium ${weekendWorkAnswer === 'nee' ? 'text-emerald-50' : 'text-emerald-600'}`}>
+                Alleen werkdagen · voordeliger
+              </span>
             </button>
             <button
               type="button"
               onClick={() => onWeekendWorkAnswer?.('ja')}
-              className={`flex-1 py-2.5 rounded-xl border text-sm font-semibold transition-all cursor-pointer ${
+              className={`flex-1 py-2.5 px-2 rounded-xl border transition-all cursor-pointer flex flex-col items-center gap-0.5 ${
                 weekendWorkAnswer === 'ja'
-                  ? 'bg-orange-500 text-white border-orange-500'
+                  ? 'bg-slate-800 text-white border-slate-800'
                   : 'bg-white border-slate-300 text-slate-700 hover:border-slate-500'
               }`}
             >
-              Ja, ik werk in het weekend
+              <span className="text-sm font-semibold">Ja, ik werk in het weekend</span>
+              <span className={`text-[11px] font-medium ${weekendWorkAnswer === 'ja' ? 'text-slate-300' : 'text-slate-500'}`}>
+                Volledig werkweektarief
+              </span>
             </button>
           </div>
           {weekendWorkAnswer === 'nee' && (

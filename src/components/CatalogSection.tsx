@@ -15,7 +15,7 @@ import { Machine } from "../types";
 import { categoryIconMap } from "./icons/CategoryIcons";
 import { useLanguageStore } from "../store/languageStore";
 import { useAppStore } from "../store/appStore";
-import { checkAvailability } from "../utils/availability";
+import { someUnitAvailable } from "../utils/availability";
 import { withVat } from "../utils/format";
 import { computeDiscounts } from "../utils/pricing";
 import VatToggle from "./VatToggle";
@@ -77,15 +77,15 @@ export default function CatalogSection({
   const today = new Date().toISOString().split("T")[0];
   const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
 
-  const isMachineAvailableThisWeek = (machineId: string): boolean => {
-    const result = checkAvailability(machineId, today, nextWeek, orders, blockedDates);
-    return result.available;
-  };
+  // Model-aware: a model is "Beschikbaar" if ANY of its physical units is free.
+  // Stock counts stay server-side — the customer only sees available / vol.
+  const isModelAvailableThisWeek = (unitIds: string[]): boolean =>
+    someUnitAvailable(unitIds, today, nextWeek, orders, blockedDates);
 
-  const getNextAvailableDate = (machineId: string): string | null => {
+  const getNextAvailableDate = (unitIds: string[]): string | null => {
     for (let i = 1; i <= 90; i++) {
       const d = new Date(Date.now() + i * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
-      if (checkAvailability(machineId, d, d, orders, blockedDates).available) return d;
+      if (someUnitAvailable(unitIds, d, d, orders, blockedDates)) return d;
     }
     return null;
   };
@@ -145,17 +145,7 @@ export default function CatalogSection({
   // Only show active machines everywhere in the catalog
   const activeMachines = useMemo(() => machines.filter(m => m.isActive !== false), [machines]);
 
-  // Count total physical units per base model name (active only)
-  const stockCountByBase = useMemo(() => {
-    const counts: Record<string, number> = {};
-    activeMachines.forEach(m => {
-      const base = getBaseName(m.name);
-      counts[base] = (counts[base] || 0) + 1;
-    });
-    return counts;
-  }, [activeMachines]);
-
-  // Map base name → all unit IDs (used by BookingSection for auto-assignment)
+  // Map base name → all unit IDs (used for model-level availability + auto-assignment)
   const unitIdsByBase = useMemo(() => {
     const map: Record<string, string[]> = {};
     activeMachines.forEach(m => {
@@ -318,11 +308,11 @@ export default function CatalogSection({
                       key={machine.id}
                       className="group relative overflow-hidden rounded-2xl border bg-white flex flex-col border-slate-200 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
                     >
-                      {/* Top-left badge: Availability + optional stock count */}
+                      {/* Top-left badge: availability only — no stock count shown to customers */}
                       {(() => {
-                        const stock = stockCountByBase[getBaseName(machine.name)] ?? 1;
-                        const available = isMachineAvailableThisWeek(machine.id);
-                        const nextDate = !available ? getNextAvailableDate(machine.id) : null;
+                        const unitIds = unitIdsByBase[getBaseName(machine.name)] ?? [machine.id];
+                        const available = isModelAvailableThisWeek(unitIds);
+                        const nextDate = !available ? getNextAvailableDate(unitIds) : null;
                         const availText = available ? "Beschikbaar" : nextDate ? `Vrij ${formatShortDate(nextDate)}` : "Vol geboekt";
                         return (
                           <div className={`absolute top-3 left-3 z-20 flex items-center gap-1.5 py-1 px-2.5 rounded-md text-[10px] font-bold shadow-sm backdrop-blur-sm ${
@@ -332,14 +322,11 @@ export default function CatalogSection({
                           }`}>
                             <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${available ? "bg-emerald-400" : "bg-amber-400"}`} />
                             {availText}
-                            {stock > 1 && (
-                              <span className={`font-black pl-0.5 ${available ? "text-emerald-300" : "text-amber-600"}`}>· {stock}×</span>
-                            )}
                           </div>
                         );
                       })()}
 
-                      {/* IMAGE with category + powerType overlay — clickable to open detail modal */}
+                      {/* IMAGE with powerType overlay — clickable to open detail modal */}
                       <div
                         className="relative aspect-[3/2] w-full overflow-hidden bg-white cursor-pointer"
                         onClick={() => {
@@ -363,11 +350,9 @@ export default function CatalogSection({
                             }
                           }}
                         />
-                        <div className="absolute inset-x-0 bottom-0 px-3 py-2 bg-gradient-to-t from-black/45 to-transparent flex items-end justify-between">
-                          <span className="text-[10px] font-bold text-white/95 uppercase tracking-wider leading-none">
-                            {machine.categoryLabel}
-                          </span>
-                          <span className="text-[10px] font-semibold text-white/90 bg-black/30 backdrop-blur-sm px-2 py-0.5 rounded-md">
+                        {/* Power type only — machine name/category already shown below the image, no overlay duplicate */}
+                        <div className="absolute bottom-0 right-0 px-3 py-2">
+                          <span className="text-[10px] font-semibold text-white/90 bg-black/40 backdrop-blur-sm px-2 py-0.5 rounded-md">
                             {machine.powerType}
                           </span>
                         </div>
@@ -403,7 +388,7 @@ export default function CatalogSection({
                             ) : (
                               <>
                                 <div className="text-xl font-display font-black leading-none text-slate-900">
-                                  {formatPrice(vp(machine.pricePerDay))}
+                                  <span className="text-[11px] font-bold text-slate-400 align-middle mr-0.5">v.a.</span>{formatPrice(vp(machine.pricePerDay))}
                                 </div>
                                 <div className="text-[10px] text-slate-400 mt-0.5">per dag {vatLabel}</div>
                               </>

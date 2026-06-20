@@ -54,6 +54,42 @@ export function HuurGoLogo({ className = "h-8", dark = false }: { className?: st
   );
 }
 
+/**
+ * Inline brand wordmark for use inside running text. Mirrors the logo's colour
+ * identity: "Huur" follows the background (white on dark, near-black on light),
+ * "go" is the brand orange and the trailing dot is emerald green.
+ * Pass `dark` when rendered on a dark background.
+ */
+export function HuurGoText({ dark = false }: { dark?: boolean }) {
+  return (
+    <span className="font-bold whitespace-nowrap">
+      <span style={{ color: dark ? "#ffffff" : "#0f172a" }}>Huur</span>
+      <span className="text-orange-500">go</span>
+      <span className="text-emerald-500">.</span>
+    </span>
+  );
+}
+
+/**
+ * Renders an arbitrary string and replaces every literal "HuurGo" occurrence
+ * with the branded <HuurGoText /> wordmark. Use this for prose that may come
+ * from translations or admin-editable site config.
+ */
+export function BrandedText({ text, dark = false }: { text: string; dark?: boolean }) {
+  const parts = text.split("HuurGo");
+  if (parts.length === 1) return <>{text}</>;
+  return (
+    <>
+      {parts.map((part, i) => (
+        <React.Fragment key={i}>
+          {part}
+          {i < parts.length - 1 && <HuurGoText dark={dark} />}
+        </React.Fragment>
+      ))}
+    </>
+  );
+}
+
 interface HeaderProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;

@@ -77,6 +77,7 @@ export default function BookingSection({
   const [endDate, setEndDate] = useState<string>(() => new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]);
   const [deliveryType, setDeliveryType] = useState<DeliveryType>("delivery_by_us");
   const [deliveryAddress, setDeliveryAddress] = useState<string>("");
+  const [streetName, setStreetName] = useState<string>("");
   const [customerName, setCustomerName] = useState<string>(currentUser ? currentUser.name : "");
   const [customerEmail, setCustomerEmail] = useState<string>(currentUser ? currentUser.email : "");
   const [customerPhone, setCustomerPhone] = useState<string>(currentUser ? currentUser.phone : "");
@@ -146,6 +147,7 @@ export default function BookingSection({
   const handleManualAddressChange = useCallback((address: string) => {
     setDeliveryAddress(address);
     setDeliveryDistanceKm(null);
+    setStreetName(""); // manual edit overrides the auto-filled street
   }, []);
 
   const paymentGateway = "whatsapp";
@@ -572,6 +574,7 @@ export default function BookingSection({
     e.preventDefault();
     setValidationError(null);
     setAddressSuccessMsg("");
+    setStreetName("");
 
     const cleanPostcode = postcode.trim().replace(/\s+/g, "").toUpperCase();
     const cleanHouse = houseNumber.trim();
@@ -632,6 +635,7 @@ export default function BookingSection({
           ? `${street} ${cleanHouse}, ${cleanPostcode} ${city}`
           : bestDoc.weergavenaam;
         setDeliveryAddress(resolvedAddress);
+        setStreetName(street || "");
         setAddressSuccessMsg(`✓ Gevalideerd adres gevonden: ${resolvedAddress}`);
 
         // Distance check — parse PDOK centroide_ll "POINT(lon lat)"
@@ -954,6 +958,7 @@ export default function BookingSection({
                     setHouseNumber={setHouseNumber}
                     isSearchingAddress={isSearchingAddress}
                     addressSuccessMsg={addressSuccessMsg}
+                    streetName={streetName}
                     deliveryAddress={deliveryAddress}
                     setDeliveryAddress={handleManualAddressChange}
                     handleAddressLookup={handleAddressLookup}

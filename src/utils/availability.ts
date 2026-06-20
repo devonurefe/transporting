@@ -85,3 +85,23 @@ export function checkAvailability(
 
   return { available: true, blocked: false, overlap: false, reason: "" };
 }
+
+/**
+ * Model-level availability across multiple physical units of the same model.
+ * Returns true when AT LEAST ONE unit is free for the entire requested range —
+ * a day/period is only "vol" when every unit is booked or blocked. The customer
+ * never sees stock counts; the system simply checks if any unit can take the job.
+ */
+export function someUnitAvailable(
+  unitIds: string[],
+  start: string,
+  end: string,
+  orders: SimpleOrder[],
+  blockedDates: SimpleBlockedDate[],
+  todayStr?: string,
+  bufferDays: number = 0
+): boolean {
+  return unitIds.some(
+    (id) => checkAvailability(id, start, end, orders, blockedDates, todayStr, bufferDays).available
+  );
+}

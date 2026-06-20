@@ -23,6 +23,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { buildWhatsAppGeneralUrl } from "../utils/whatsapp";
 import { withVat } from "../utils/format";
 import VatToggle from "./VatToggle";
+import { BrandedText } from "./Header";
 
 type IconComponent = React.FC<LucideProps>;
 
@@ -264,7 +265,7 @@ export default function HomeSection({
             transition={{ duration: 0.4, delay: 0.12 }}
             className="text-sm text-slate-500 leading-relaxed"
           >
-            {language === "nl" && siteConfig.heroSubtitle ? siteConfig.heroSubtitle : t("heroSubtitle")}
+            <BrandedText text={language === "nl" && siteConfig.heroSubtitle ? siteConfig.heroSubtitle : t("heroSubtitle")} />
           </motion.p>
           <motion.div
             initial={{ opacity: 0, y: 10 }}

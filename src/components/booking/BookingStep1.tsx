@@ -216,8 +216,8 @@ export default function BookingStep1({
       )}
 
       {/* Logistical preference setup */}
-      <div className="space-y-3 pt-4 border-t border-slate-200">
-        <h3 className="text-sm font-bold text-slate-800 tracking-wide">{t("step1TransportOpts")}</h3>
+      <div className="space-y-3 pt-4 border-t-2 border-slate-200">
+        <h3 className="text-sm font-extrabold text-slate-900 tracking-tight">{t("step1TransportOpts")}</h3>
 
         {selectedMachine?.pickupOnly ? (
           /* Pickup-only product — no delivery or trailer options */
@@ -407,9 +407,9 @@ export default function BookingStep1({
 
       {/* Delivery time slot — only for "Wij bezorgen" */}
       {deliveryType === "delivery_by_us" && (
-        <div className="space-y-3 pt-4 border-t border-slate-200">
+        <div className="space-y-3 pt-4 border-t-2 border-slate-200">
           <div className="flex justify-between items-center">
-            <span className="text-xs text-slate-500 font-semibold">Gewenst bezorgmoment</span>
+            <span className="text-sm text-slate-800 font-bold">Gewenst bezorgmoment</span>
             <span className="text-[10px] text-rose-500 font-semibold uppercase tracking-wide">Verplicht</span>
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -447,9 +447,9 @@ export default function BookingStep1({
       )}
 
       {/* Extra opties */}
-      <div className="space-y-3 pt-4 border-t border-slate-200">
+      <div className="space-y-3 pt-4 border-t-2 border-slate-200">
         <div className="flex justify-between items-center">
-          <span className="text-xs text-slate-500 font-semibold">
+          <span className="text-sm text-slate-800 font-bold">
             {selectedMachine?.crossSellAddons?.length ? "Handige accessoires voor uw klus" : t("step1AddonsTitle")}
           </span>
           <span className="text-xs text-slate-400">Optioneel</span>

@@ -264,7 +264,7 @@ export default function BookingStep2({
 
       {/* Address entry with interactive Postcode Lookup */}
       {deliveryType === "delivery_by_us" && (
-        <div className="pt-4 border-t border-slate-200 space-y-4">
+        <div className="pt-4 border-t-2 border-slate-200 space-y-4">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
             <label className="text-xs text-slate-600 block font-black uppercase tracking-wider flex items-center space-x-1.5">
               <MapPin className="h-4 w-4 text-slate-600 shrink-0" />

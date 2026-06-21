@@ -6,8 +6,6 @@
 import React, { useState, useEffect } from "react";
 import {
   X, ShoppingCart, ChevronLeft, ChevronRight, Package, Zap,
-  Paintbrush, Home, Wrench, Leaf, HardHat, Droplets, Layers, Building2,
-  type LucideIcon
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Machine } from "../types";
@@ -30,18 +28,6 @@ export interface MachineDetailModalProps {
   customCategories?: CategoryInfoEntry[];
   showPricing?: boolean;
 }
-
-const professionIconMap: Record<string, LucideIcon> = {
-  Schilder: Paintbrush,
-  Particulier: Home,
-  Installateur: Wrench,
-  Hovenier: Leaf,
-  Aannemer: HardHat,
-  Glazenwasser: Droplets,
-  Stukadoor: Layers,
-  Magazijn: Package,
-  Gevelreiniger: Building2,
-};
 
 function formatPrice(p: number): string {
   return p % 1 === 0
@@ -384,24 +370,6 @@ export default function MachineDetailModal({
               ) : null;
             })()}
           </div>
-
-          {/* E — Geschikt voor */}
-          {(machine.suitableFor ?? []).length > 0 && (
-            <div className="space-y-2">
-              <p className="text-xs text-slate-400 uppercase tracking-wider font-bold">Geschikt Voor</p>
-              <div className="flex flex-wrap gap-1.5">
-                {machine.suitableFor.map((tag) => {
-                  const TagIcon = professionIconMap[tag];
-                  return (
-                    <span key={tag} className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 text-slate-700 px-2.5 py-1 rounded-full text-xs font-semibold">
-                      {TagIcon && <TagIcon className="h-3 w-3 shrink-0" />}
-                      {tag}
-                    </span>
-                  );
-                })}
-              </div>
-            </div>
-          )}
 
           {/* F — Toepassing & Geschiktheid */}
           {catInfo && (catInfo.useCases?.length || catInfo.advantages?.length || catInfo.notFor?.length) ? (

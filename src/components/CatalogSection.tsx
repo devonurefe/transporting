@@ -421,18 +421,6 @@ export default function CatalogSection({
                               {machine.reach}m
                             </span>
                           )}
-                          <span className="text-slate-300 select-none shrink-0">·</span>
-                          {(machine.suitableFor ?? []).length === 0 && (
-                            <span className="text-[10px] text-slate-400 italic">Algemeen gebruik</span>
-                          )}
-                          {(machine.suitableFor ?? []).slice(0, 2).map((prof) => (
-                            <span
-                              key={prof}
-                              className="text-[10px] font-semibold text-slate-600 bg-slate-100 hover:bg-orange-50 hover:text-orange-700 px-2 py-0.5 rounded-full transition-colors duration-150 cursor-default select-none"
-                            >
-                              {prof}
-                            </span>
-                          ))}
                         </div>
 
                         {/* Campaign badge */}

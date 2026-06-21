@@ -11,7 +11,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { Machine } from "../types";
 import { computeDiscounts } from "../utils/pricing";
 import { getSpecsForMachine } from "../utils/machineSpecs";
-import { withVat } from "../utils/format";
+import { withVat, priceNum } from "../utils/format";
 import { useLanguageStore } from "../store/languageStore";
 import { useModalA11y } from "../hooks/useModalA11y";
 import VatToggle from "./VatToggle";
@@ -28,12 +28,6 @@ export interface MachineDetailModalProps {
   vatDisplay: "incl" | "excl";
   customCategories?: CategoryInfoEntry[];
   showPricing?: boolean;
-}
-
-function formatPrice(p: number): string {
-  return p % 1 === 0
-    ? Math.round(p).toLocaleString("nl-NL")
-    : p.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function getDefaultPackageItems(id: string): string[] {
@@ -249,7 +243,7 @@ export default function MachineDetailModal({
                 <div>
                   <span className="text-xs text-slate-400 uppercase tracking-wider">Dagtarief</span>
                   <div className="flex items-baseline gap-1.5 mt-0.5">
-                    <span className="text-xl font-display font-black text-slate-900">€{formatPrice(vp(machine.pricePerDay))}</span>
+                    <span className="text-xl font-display font-black text-slate-900">€{priceNum(vp(machine.pricePerDay))}</span>
                     <span className="text-[10px] text-slate-400">{vatLabel} p/dag</span>
                   </div>
                 </div>
@@ -266,7 +260,7 @@ export default function MachineDetailModal({
                         <p className={`text-[10px] ${hasActie ? "text-amber-500" : "text-slate-400"}`}>Ma – Vr</p>
                       </div>
                       {hasActie && <span className="text-[10px] font-black px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 mr-2">Actie</span>}
-                      <span className={`font-mono font-extrabold text-sm ${hasActie ? "text-amber-700" : "text-slate-900"}`}>€{formatPrice(vp(oneP))}</span>
+                      <span className={`font-mono font-extrabold text-sm ${hasActie ? "text-amber-700" : "text-slate-900"}`}>€{priceNum(vp(oneP))}</span>
                     </div>
                   );
                 })()}
@@ -278,7 +272,7 @@ export default function MachineDetailModal({
                         <p className="text-xs font-bold text-slate-800">2 dagen (doordeweeks)</p>
                         <p className="text-[10px] text-slate-400">Ma – Do</p>
                       </div>
-                      <span className="font-mono font-extrabold text-sm text-slate-900">€{formatPrice(vp(twoDay))}</span>
+                      <span className="font-mono font-extrabold text-sm text-slate-900">€{priceNum(vp(twoDay))}</span>
                     </div>
                   );
                 })()}
@@ -288,7 +282,7 @@ export default function MachineDetailModal({
                       <p className="text-xs font-bold text-amber-700">Weekend</p>
                       <p className="text-[10px] text-amber-600">Za – Zo</p>
                     </div>
-                    <span className="font-mono font-extrabold text-sm text-amber-700">€{formatPrice(vp(machine.weekendPrice))}</span>
+                    <span className="font-mono font-extrabold text-sm text-amber-700">€{priceNum(vp(machine.weekendPrice))}</span>
                   </div>
                 )}
                 {!!machine.weeklyPrice && (
@@ -298,7 +292,7 @@ export default function MachineDetailModal({
                       <p className="text-[10px] text-emerald-600">Ma – Vr</p>
                     </div>
                     {d.weekly > 0 && <span className="text-[10px] font-black px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 mr-2">−{d.weekly}%</span>}
-                    <span className="font-mono font-extrabold text-sm text-emerald-700">€{formatPrice(vp(machine.weeklyPrice))}</span>
+                    <span className="font-mono font-extrabold text-sm text-emerald-700">€{priceNum(vp(machine.weeklyPrice))}</span>
                   </div>
                 )}
                 {!!machine.monthlyPrice && (
@@ -308,7 +302,7 @@ export default function MachineDetailModal({
                       <p className="text-[10px] text-teal-600">Langlopend</p>
                     </div>
                     {d.monthly > 0 && <span className="text-[10px] font-black px-1.5 py-0.5 rounded-full bg-teal-100 text-teal-700 mr-2">−{d.monthly}%</span>}
-                    <span className="font-mono font-extrabold text-sm text-teal-700">€{formatPrice(vp(machine.monthlyPrice))}</span>
+                    <span className="font-mono font-extrabold text-sm text-teal-700">€{priceNum(vp(machine.monthlyPrice))}</span>
                   </div>
                 )}
                 {machine.campaignText && (
@@ -460,7 +454,7 @@ export default function MachineDetailModal({
           <div className="shrink-0 px-2 hidden sm:block">
             <p className="text-[9px] text-slate-400 leading-none">vanaf</p>
             <p className="text-sm font-black text-slate-900 font-mono leading-tight">
-              €{formatPrice(vp(machine.pricePerDay))}<span className="text-[10px] font-normal text-slate-400">/dag</span>
+              €{priceNum(vp(machine.pricePerDay))}<span className="text-[10px] font-normal text-slate-400">/dag</span>
             </p>
           </div>
           <button

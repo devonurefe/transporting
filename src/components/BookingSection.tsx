@@ -768,7 +768,7 @@ export default function BookingSection({
               endDate: item.endDate,
               rentalDays: days,
               deliveryType,
-              deliveryAddress: deliveryType === "self_pickup" ? null : deliveryAddress,
+              deliveryAddress: deliveryType === "self_pickup" ? undefined : deliveryAddress,
               deliveryTimeSlot: deliveryType === "delivery_by_us" ? deliveryTimeSlot || undefined : undefined,
               customerName,
               customerEmail,

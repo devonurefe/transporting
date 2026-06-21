@@ -1,4 +1,5 @@
 import { Router, Response } from "express";
+import { Prisma } from "@prisma/client";
 import { prisma } from "../../prisma/client.js";
 import { requireAdmin } from "../middleware/auth.js";
 import { AuthenticatedRequest } from "../middleware/auth.js";
@@ -197,11 +198,11 @@ machinesRouter.post("/", requireAdmin as any, async (req: AuthenticatedRequest, 
         monthlyPrice: monthlyPrice ? Number(monthlyPrice) : null,
         packageContents: packageContents || null,
         additionalImages: Array.isArray(additionalImages) ? additionalImages : [],
-        specs: Array.isArray(specs) && specs.length > 0 ? specs : null,
+        specs: Array.isArray(specs) && specs.length > 0 ? specs : Prisma.JsonNull,
         minRentalDays: req.body.minRentalDays !== undefined && req.body.minRentalDays !== null && req.body.minRentalDays !== "" ? Math.round(Number(req.body.minRentalDays)) : null,
         weeklyOnly: Boolean(req.body.weeklyOnly),
         pickupOnly: Boolean(req.body.pickupOnly),
-        crossSellAddons: sanitizeCrossSell(req.body.crossSellAddons)
+        crossSellAddons: sanitizeCrossSell(req.body.crossSellAddons) ?? Prisma.JsonNull
       }
     });
 
@@ -289,13 +290,13 @@ machinesRouter.put("/:id", requireAdmin as any, async (req: AuthenticatedRequest
         monthlyPrice: monthlyPrice !== undefined && monthlyPrice !== null && monthlyPrice !== "" ? Number(monthlyPrice) : null,
         packageContents: packageContents !== undefined ? packageContents : null,
         additionalImages: Array.isArray(additionalImages) ? additionalImages : [],
-        specs: specsUpdate,
+        specs: specsUpdate === undefined ? undefined : (specsUpdate ?? Prisma.JsonNull),
         isActive: req.body.isActive !== undefined ? Boolean(req.body.isActive) : undefined,
         bufferDays: req.body.bufferDays !== undefined ? Math.min(2, Math.max(0, Math.round(Number(req.body.bufferDays)))) : undefined,
         minRentalDays: req.body.minRentalDays !== undefined && req.body.minRentalDays !== null && req.body.minRentalDays !== "" ? Math.round(Number(req.body.minRentalDays)) : null,
         weeklyOnly: Boolean(req.body.weeklyOnly),
         pickupOnly: Boolean(req.body.pickupOnly),
-        crossSellAddons: req.body.crossSellAddons !== undefined ? sanitizeCrossSell(req.body.crossSellAddons) : undefined
+        crossSellAddons: req.body.crossSellAddons !== undefined ? (sanitizeCrossSell(req.body.crossSellAddons) ?? Prisma.JsonNull) : undefined
       }
     });
 

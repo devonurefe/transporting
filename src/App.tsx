@@ -404,7 +404,7 @@ export default function App() {
   const updateOrderStatus = useAppStore((state) => state.updateOrderStatus);
   const fetchBlockedDates = useAppStore((state) => state.fetchBlockedDates);
 
-  const getAuthHeaders = () => {
+  const getAuthHeaders = (): Record<string, string> => {
     const isAdminPath = location.pathname.startsWith("/admin");
     const token = localStorage.getItem(isAdminPath ? "hwh_admin_token" : "hwh_token");
     return token ? { "Authorization": `Bearer ${token}` } : {};

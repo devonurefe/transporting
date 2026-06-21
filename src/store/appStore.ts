@@ -95,7 +95,7 @@ const defaultCategories: Category[] = [
   { id: "klussensets", label: "Kluspakket", listLabel: "Kluspakketten", desc: "Complete kluspakketten speciaal samengesteld voor specifieke ZZP- en particuliere klussen.", heights: "4m - 21m", price: "v.a. €80/dag" }
 ];
 
-const getAuthHeaders = () => {
+const getAuthHeaders = (): Record<string, string> => {
   const isAdminMode = localStorage.getItem("hwh_admin_mode") === "true";
   const token = isAdminMode
     ? localStorage.getItem("hwh_admin_token")

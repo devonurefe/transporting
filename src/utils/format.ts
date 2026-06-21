@@ -20,6 +20,16 @@ export const euroCompact = (amount: number): string =>
     ? `€${Math.round(amount).toLocaleString("nl-NL")},-`
     : euro(amount);
 
+/**
+ * Price number without currency symbol: whole amounts show no decimals
+ * (60 → "60"), fractional amounts show two (60.5 → "60,50"). Shared by the
+ * catalog and detail views so the formatting logic lives in one place.
+ */
+export const priceNum = (p: number): string =>
+  p % 1 === 0
+    ? Math.round(p).toLocaleString("nl-NL")
+    : p.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
 export const VAT_RATE = 0.21;
 
 /**

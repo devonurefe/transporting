@@ -188,7 +188,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
     }
   };
 
-  const getAuthHeaders = () => {
+  const getAuthHeaders = (): Record<string, string> => {
     const token = localStorage.getItem("hwh_admin_token");
     return token ? { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" } : { "Content-Type": "application/json" };
   };

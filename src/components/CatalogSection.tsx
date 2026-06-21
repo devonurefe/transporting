@@ -17,7 +17,7 @@ import { categoryIconMap } from "./icons/CategoryIcons";
 import { useLanguageStore } from "../store/languageStore";
 import { useAppStore } from "../store/appStore";
 import { someUnitAvailable } from "../utils/availability";
-import { withVat } from "../utils/format";
+import { withVat, priceNum } from "../utils/format";
 import { computeDiscounts } from "../utils/pricing";
 import VatToggle from "./VatToggle";
 import MachineDetailModal from "./MachineDetailModal";
@@ -93,10 +93,7 @@ export default function CatalogSection({
 
   // Renders the € sign joined to the number so every price on the catalog
   // (day rate, actie, tariff table) reads consistently — "€60,50".
-  const formatPrice = (p: number): string =>
-    "€" + (p % 1 === 0
-      ? Math.round(p).toLocaleString("nl-NL")
-      : p.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+  const formatPrice = (p: number): string => "€" + priceNum(p);
 
   const formatShortDate = (iso: string): string => {
     const d = new Date(iso);

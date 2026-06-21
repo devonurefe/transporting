@@ -110,10 +110,11 @@ app.get("/sitemap.xml", (_req, res) => {
     { loc: `${base}/catalog?category=ecolift`, priority: "0.75", changefreq: "weekly" },
     { loc: `${base}/catalog?category=kamersteiger`, priority: "0.75", changefreq: "weekly" },
   ];
+  const lastmod = new Date().toISOString().split("T")[0];
   const urlset = urls
     .map(
       (u) =>
-        `  <url><loc>${u.loc}</loc><changefreq>${u.changefreq}</changefreq><priority>${u.priority}</priority></url>`
+        `  <url><loc>${u.loc}</loc><lastmod>${lastmod}</lastmod><changefreq>${u.changefreq}</changefreq><priority>${u.priority}</priority></url>`
     )
     .join("\n");
   res

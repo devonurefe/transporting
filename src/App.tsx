@@ -369,7 +369,17 @@ export default function App() {
   const customCategories = useAppStore((state) => state.customCategories);
   const siteConfig = useAppStore((state) => state.siteConfig);
   const cartItems = useAppStore((state) => state.cartItems);
-  
+
+  // Real review aggregate for SEO structured data — never hard-code ratings (Google
+  // treats unverifiable aggregateRating as spam). Only emitted when count > 0.
+  const [ratingSummary, setRatingSummary] = useState<{ average: number; count: number }>({ average: 0, count: 0 });
+  useEffect(() => {
+    fetch("/api/orders/ratings/summary")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (d && typeof d.count === "number") setRatingSummary(d); })
+      .catch(() => {});
+  }, []);
+
   const addToCart = useAppStore((state) => state.addToCart);
   const removeFromCart = useAppStore((state) => state.removeFromCart);
   const updateCartItemDates = useAppStore((state) => state.updateCartItemDates);
@@ -582,13 +592,17 @@ export default function App() {
                 { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Aanhangerhoogwerker huren" } }
               ]
             },
-            "aggregateRating": {
-              "@type": "AggregateRating",
-              "ratingValue": "4.9",
-              "reviewCount": "47",
-              "bestRating": "5",
-              "worstRating": "1"
-            }
+            // Only include a rating when real customer reviews exist (avoids
+            // Google structured-data spam penalties for invented ratings).
+            ...(ratingSummary.count > 0 ? {
+              "aggregateRating": {
+                "@type": "AggregateRating",
+                "ratingValue": ratingSummary.average.toFixed(1),
+                "reviewCount": String(ratingSummary.count),
+                "bestRating": "5",
+                "worstRating": "1"
+              }
+            } : {})
           })
         }}
       />

@@ -640,6 +640,19 @@ ordersRouter.post("/:id/rating", requireAuth as any, async (req: AuthenticatedRe
   }
 });
 
+// GET /api/orders/ratings/summary — public aggregate of real customer ratings,
+// used to drive the aggregateRating JSON-LD on the homepage. Returns zeros when
+// there are no ratings yet so the structured data omits the rating entirely.
+ordersRouter.get("/ratings/summary", async (_req: AuthenticatedRequest, res: Response) => {
+  try {
+    const agg = await prisma.orderRating.aggregate({ _avg: { rating: true }, _count: { rating: true } });
+    res.json({ average: agg._avg.rating ?? 0, count: agg._count.rating ?? 0 });
+  } catch (error) {
+    console.error("Error aggregating ratings:", error);
+    res.json({ average: 0, count: 0 });
+  }
+});
+
 // GET /api/orders/:id/rating — fetch an order's rating
 ordersRouter.get("/:id/rating", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
   const { id } = req.params;

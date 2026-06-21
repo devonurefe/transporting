@@ -17,6 +17,7 @@ import { Machine, Order, AppNotification, UserProfile, CartItem } from "./types"
 import { useAuthStore } from "./store/authStore";
 import { useAppStore } from "./store/appStore";
 import { buildWhatsAppGeneralUrl, buildWhatsAppOrderStatusUrl, buildWhatsAppPaymentLinkUrl, buildWhatsAppAdviceUrl } from "./utils/whatsapp";
+import { FAQ_ITEMS } from "./data/faq";
 
 
 // Dynamic Code Splitting (React.lazy)
@@ -24,6 +25,8 @@ const HomeSection = lazy(() => import("./components/HomeSection"));
 const CatalogSection = lazy(() => import("./components/CatalogSection"));
 const BookingSection = lazy(() => import("./components/BookingSection"));
 const MachineDetailPage = lazy(() => import("./components/MachineDetailPage"));
+const CityLandingPage = lazy(() => import("./components/CityLandingPage"));
+const FaqSection = lazy(() => import("./components/FaqSection"));
 const AdminSection = lazy(() => import("./components/AdminSection"));
 const MyOrdersSection = lazy(() => import("./components/MyOrdersSection"));
 
@@ -64,9 +67,10 @@ export default function App() {
 
   // SEO: per-route title, meta description and canonical (SPA fallback)
   useEffect(() => {
-    // Machine pages (/hoogwerker/:id) set their own title from the machine; let that
-    // component own the head so this generic map doesn't overwrite it.
-    if (location.pathname.startsWith("/hoogwerker/")) return;
+    // Machine pages (/hoogwerker/:id) and city pages (/hoogwerker-huren/:stad) set
+    // their own title from data; let those components own the head so this generic
+    // map doesn't overwrite it.
+    if (location.pathname.startsWith("/hoogwerker/") || location.pathname.startsWith("/hoogwerker-huren/")) return;
     const seo: Record<string, { title: string; desc: string; noindex?: boolean }> = {
       "/": {
         title: "HuurGo — Hoogwerkers Huren | Leiden, Den Haag, Alphen a/d Rijn",
@@ -79,6 +83,10 @@ export default function App() {
       "/booking": {
         title: "Online Reserveren — Snel & Eenvoudig | HuurGo",
         desc: "Reserveer uw hoogwerker in 3 stappen. Kies uw data, ontvang direct de prijs en bevestig via WhatsApp met iDEAL betaallink. Geen borg vereist.",
+      },
+      "/veelgestelde-vragen": {
+        title: "Veelgestelde vragen — Hoogwerker huren | HuurGo",
+        desc: "Antwoorden op veelgestelde vragen over hoogwerker huren: kosten, bezorging, borg, certificaten en betaling. Persoonlijk advies via WhatsApp.",
       },
       "/orders": {
         title: "Mijn Reserveringen | HuurGo",
@@ -618,48 +626,11 @@ export default function App() {
           __html: JSON.stringify({
             "@context": "https://schema.org",
             "@type": "FAQPage",
-            "mainEntity": [
-              {
-                "@type": "Question",
-                "name": "Kan ik als particulier een hoogwerker huren?",
-                "acceptedAnswer": {
-                  "@type": "Answer",
-                  "text": "Ja, MB Hoogwerkers verhuurt aan particulieren, ZZP'ers en aannemers. Er is geen borg vereist en u kunt direct online reserveren."
-                }
-              },
-              {
-                "@type": "Question",
-                "name": "Wat kost een schaarlift huren per dag?",
-                "acceptedAnswer": {
-                  "@type": "Answer",
-                  "text": "Een schaarlift huren kost v.a. €49 per dag exclusief btw. Het werkweektarief (5 dagen) bedraagt v.a. €185. Prijzen zijn all-in inclusief brandstof of opgeladen accu."
-                }
-              },
-              {
-                "@type": "Question",
-                "name": "Hoe snel wordt de hoogwerker geleverd?",
-                "acceptedAnswer": {
-                  "@type": "Answer",
-                  "text": "Wij bezorgen dezelfde of volgende werkdag binnen 20 km van ons depot in Zoeterwoude. Dit omvat Leiden, Den Haag, Alphen aan den Rijn en omgeving."
-                }
-              },
-              {
-                "@type": "Question",
-                "name": "Is er een borg of aanbetaling vereist?",
-                "acceptedAnswer": {
-                  "@type": "Answer",
-                  "text": "Nee, MB Hoogwerkers werkt volledig zonder borg. U betaalt via iDEAL of Tikkie na bevestiging van uw reservering via WhatsApp."
-                }
-              },
-              {
-                "@type": "Question",
-                "name": "Welke hoogwerkers zijn beschikbaar voor huur?",
-                "acceptedAnswer": {
-                  "@type": "Answer",
-                  "text": "Wij verhuren schaarliften (6–10 m), rupshoogwerkers / spinhoogwerkers (15–17 m), aanhangerhoogwerkers (12–17 m), mastliften, ladderliften / verhuisliften, pecoliften en kamersteigers."
-                }
-              }
-            ]
+            "mainEntity": FAQ_ITEMS.map((item) => ({
+              "@type": "Question",
+              "name": item.q,
+              "acceptedAnswer": { "@type": "Answer", "text": item.a }
+            }))
           })
         }}
       />
@@ -742,6 +713,28 @@ export default function App() {
                   transition={{ duration: 0.3 }}
                 >
                   <MachineDetailPage onSelectMachineForBooking={handleSelectMachineForBooking} />
+                </motion.div>
+              } />
+
+              <Route path="/hoogwerker-huren/:stad" element={
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <CityLandingPage onSelectMachineForBooking={handleSelectMachineForBooking} />
+                </motion.div>
+              } />
+
+              <Route path="/veelgestelde-vragen" element={
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <FaqSection />
                 </motion.div>
               } />
 

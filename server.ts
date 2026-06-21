@@ -15,6 +15,8 @@ import { authenticateToken } from "./server/middleware/auth.js";
 import { requestLogger } from "./server/middleware/logger.js";
 import { errorHandler } from "./server/middleware/errorHandler.js";
 import { validateEnvironment } from "./server/utils/env.js";
+import { SERVICE_CITIES, getCityBySlug } from "./src/data/serviceCities.js";
+import { FAQ_ITEMS } from "./src/data/faq.js";
 
 dotenv.config();
 validateEnvironment();
@@ -104,6 +106,7 @@ app.get("/sitemap.xml", async (_req, res) => {
     { loc: `${base}/`, priority: "1.0", changefreq: "weekly" },
     { loc: `${base}/catalog`, priority: "0.9", changefreq: "daily" },
     { loc: `${base}/booking`, priority: "0.8", changefreq: "weekly" },
+    { loc: `${base}/veelgestelde-vragen`, priority: "0.7", changefreq: "monthly" },
     { loc: `${base}/catalog?category=schaarlift`, priority: "0.85", changefreq: "daily" },
     { loc: `${base}/catalog?category=spin`, priority: "0.85", changefreq: "daily" },
     { loc: `${base}/catalog?category=aanhanger`, priority: "0.80", changefreq: "daily" },
@@ -112,6 +115,10 @@ app.get("/sitemap.xml", async (_req, res) => {
     { loc: `${base}/catalog?category=ecolift`, priority: "0.75", changefreq: "weekly" },
     { loc: `${base}/catalog?category=kamersteiger`, priority: "0.75", changefreq: "weekly" },
   ];
+  // Local-SEO city landing pages
+  for (const c of SERVICE_CITIES) {
+    urls.push({ loc: `${base}/hoogwerker-huren/${c.slug}`, priority: "0.8", changefreq: "monthly" });
+  }
   try {
     const machines = await prisma.machine.findMany({ where: { isActive: true }, select: { id: true } });
     for (const m of machines) {
@@ -158,11 +165,55 @@ function staticMeta(pathname: string): RouteMeta {
     "/": { title: "HuurGo — Hoogwerkers Huren | Snel & Eenvoudig", description: "Snel en eenvoudig hoogwerkers huren bij HuurGo. Speciaal voor ZZP'ers en particulieren. Zonder borg, direct online geregeld." },
     "/catalog": { title: "Catalogus — Hoogwerkers & Schaarliften Huren | HuurGo", description: "Bekijk ons aanbod hoogwerkers, schaarliften, spinhoogwerkers, mastliften en ladderliften. Direct online reserveren, zonder borg." },
     "/booking": { title: "Online Reserveren — Snel & Eenvoudig | HuurGo", description: "Reserveer uw hoogwerker in 3 stappen. Kies uw data, ontvang direct de prijs en bevestig via WhatsApp met iDEAL betaallink." },
+    "/veelgestelde-vragen": { title: "Veelgestelde vragen — Hoogwerker huren | HuurGo", description: "Antwoorden op veelgestelde vragen over hoogwerker huren: kosten, bezorging, borg, certificaten en betaling. Persoonlijk advies via WhatsApp." },
     "/orders": { title: "Mijn Reserveringen | HuurGo", description: "Beheer uw huurcontracten, volg de status en download facturen.", noindex: true },
     "/admin": { title: "Beheer | HuurGo", description: "Beheeromgeving.", noindex: true },
   };
   const e = map[pathname] ?? map["/"];
-  return { title: e.title, description: e.description, canonical: url, ogImage: DEFAULT_OG_IMAGE, noindex: e.noindex };
+  const meta: RouteMeta = { title: e.title, description: e.description, canonical: url, ogImage: DEFAULT_OG_IMAGE, noindex: e.noindex };
+  if (pathname === "/veelgestelde-vragen") {
+    meta.jsonLd = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": FAQ_ITEMS.map((item) => ({
+        "@type": "Question",
+        "name": item.q,
+        "acceptedAnswer": { "@type": "Answer", "text": item.a },
+      })),
+    });
+  }
+  return meta;
+}
+
+function cityMeta(slug: string): RouteMeta | null {
+  const city = getCityBySlug(slug);
+  if (!city) return null;
+  const url = `${SEO_BASE}/hoogwerker-huren/${city.slug}`;
+  const title = `Hoogwerker huren in ${city.name} | HuurGo`;
+  const description = city.intro.replace(/\s+/g, " ").trim().slice(0, 160);
+  const jsonLd = JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "serviceType": "Hoogwerker verhuur",
+    "name": `Hoogwerker huren in ${city.name}`,
+    "description": description,
+    "areaServed": { "@type": "City", "name": city.name },
+    "provider": {
+      "@type": "LocalBusiness",
+      "name": "HuurGo — MB Hoogwerkers B.V.",
+      "telephone": "+31715428114",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "Produktieweg 20",
+        "postalCode": "2382 PB",
+        "addressLocality": "Zoeterwoude",
+        "addressCountry": "NL",
+      },
+      "url": SEO_BASE,
+    },
+    "url": url,
+  });
+  return { title, description, canonical: url, ogImage: DEFAULT_OG_IMAGE, jsonLd };
 }
 
 async function machineMeta(id: string): Promise<RouteMeta | null> {
@@ -231,6 +282,12 @@ async function metaForRequest(pathname: string): Promise<RouteMeta> {
     const meta = await machineMeta(decodeURIComponent(machineMatch[1]));
     if (meta) return meta;
     return { title: "Niet gevonden | HuurGo", description: "Deze machine is niet gevonden.", canonical: `${SEO_BASE}${pathname}`, ogImage: DEFAULT_OG_IMAGE, noindex: true };
+  }
+  const cityMatch = pathname.match(/^\/hoogwerker-huren\/([^/]+)\/?$/);
+  if (cityMatch) {
+    const meta = cityMeta(decodeURIComponent(cityMatch[1]));
+    if (meta) return meta;
+    return { title: "Plaats niet gevonden | HuurGo", description: "Wij bezorgen in heel Zuid-Holland.", canonical: `${SEO_BASE}${pathname}`, ogImage: DEFAULT_OG_IMAGE, noindex: true };
   }
   return staticMeta(pathname);
 }

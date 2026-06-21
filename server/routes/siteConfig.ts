@@ -2,6 +2,7 @@ import { Router, Response } from "express";
 import { prisma } from "../../prisma/client.js";
 import { requireAdmin } from "../middleware/auth.js";
 import { AuthenticatedRequest } from "../middleware/auth.js";
+import { publicReadLimiter } from "../middleware/publicGuard.js";
 
 export const siteConfigRouter = Router();
 
@@ -26,7 +27,7 @@ const defaultSiteConfig = {
 };
 
 // GET site config
-siteConfigRouter.get("/site-config", async (req: AuthenticatedRequest, res: Response) => {
+siteConfigRouter.get("/site-config", publicReadLimiter, async (req: AuthenticatedRequest, res: Response) => {
   try {
     let config = await prisma.siteConfig.findUnique({ where: { id: "default" } });
     // Auto-fix stale subtitle text that may be stored in DB
@@ -79,7 +80,7 @@ siteConfigRouter.post("/site-config", requireAdmin as any, async (req: Authentic
 });
 
 // GET categories
-siteConfigRouter.get("/categories", async (req: AuthenticatedRequest, res: Response) => {
+siteConfigRouter.get("/categories", publicReadLimiter, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const categories = await prisma.category.findMany();
     res.json(categories);
@@ -90,7 +91,7 @@ siteConfigRouter.get("/categories", async (req: AuthenticatedRequest, res: Respo
 });
 
 // GET campaign rules
-siteConfigRouter.get("/campaign-rules", async (req: AuthenticatedRequest, res: Response) => {
+siteConfigRouter.get("/campaign-rules", publicReadLimiter, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const config = await prisma.siteConfig.findUnique({ where: { id: "default" } });
     const rules = (config as any)?.campaignRules;

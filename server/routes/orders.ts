@@ -4,6 +4,7 @@ import crypto from "crypto";
 import { Prisma } from "@prisma/client";
 import { prisma } from "../../prisma/client.js";
 import { AuthenticatedRequest, requireAdmin, requireAuth } from "../middleware/auth.js";
+import { publicReadLimiter } from "../middleware/publicGuard.js";
 import { emailService } from "../services/emailService.js";
 
 export const ordersRouter = Router();
@@ -643,7 +644,7 @@ ordersRouter.post("/:id/rating", requireAuth as any, async (req: AuthenticatedRe
 // GET /api/orders/ratings/summary — public aggregate of real customer ratings,
 // used to drive the aggregateRating JSON-LD on the homepage. Returns zeros when
 // there are no ratings yet so the structured data omits the rating entirely.
-ordersRouter.get("/ratings/summary", async (_req: AuthenticatedRequest, res: Response) => {
+ordersRouter.get("/ratings/summary", publicReadLimiter, async (_req: AuthenticatedRequest, res: Response) => {
   try {
     const agg = await prisma.orderRating.aggregate({ _avg: { rating: true }, _count: { rating: true } });
     res.json({ average: agg._avg.rating ?? 0, count: agg._count.rating ?? 0 });

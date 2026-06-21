@@ -2,6 +2,7 @@ import { Router, Response } from "express";
 import { prisma } from "../../prisma/client.js";
 import { requireAdmin } from "../middleware/auth.js";
 import { AuthenticatedRequest } from "../middleware/auth.js";
+import { publicReadLimiter, softOriginGuard } from "../middleware/publicGuard.js";
 
 export const machinesRouter = Router();
 
@@ -12,8 +13,9 @@ async function getCategoryLabel(categoryId: string) {
   return category?.label || categoryId.charAt(0).toUpperCase() + categoryId.slice(1);
 }
 
-// GET machines
-machinesRouter.get("/", async (req: AuthenticatedRequest, res: Response) => {
+// GET machines — public catalog feed (rate-limited + soft same-origin guard
+// to deter bulk scraping; SEO crawlers use the HTML routes, not this endpoint)
+machinesRouter.get("/", publicReadLimiter, softOriginGuard, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const pageQuery = req.query.page;
     const limitQuery = req.query.limit;

@@ -7,6 +7,7 @@ import React from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { X, MessageSquare, Phone, Mail, CheckCircle } from "lucide-react";
 import { useAppStore } from "../store/appStore";
+import { useModalA11y } from "../hooks/useModalA11y";
 
 interface ContactModalProps {
   isOpen: boolean;
@@ -19,6 +20,7 @@ export default function ContactModal({ isOpen, onClose, onShowToast, onAddSystem
   const siteConfig = useAppStore((state) => state.siteConfig);
   const contactEmail = siteConfig.contactEmail || "info@mbhoogwerkers.com";
   const contactPhone = siteConfig.contactPhone || "+31 (0)6 11 84 88 99";
+  const dialogRef = useModalA11y<HTMLDivElement>(isOpen, onClose);
   return (
     <AnimatePresence>
       {isOpen && (
@@ -35,11 +37,16 @@ export default function ContactModal({ isOpen, onClose, onShowToast, onAddSystem
           />
 
           <motion.div
+            ref={dialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Support & contact"
+            tabIndex={-1}
             initial={{ opacity: 0, scale: 0.95, y: 15 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 15 }}
             transition={{ type: "spring", stiffness: 350, damping: 26 }}
-            className="w-full max-w-2xl bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden z-10 space-y-6 text-slate-800 animate-fade-in my-8"
+            className="w-full max-w-2xl bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden z-10 space-y-6 text-slate-800 animate-fade-in my-8 outline-none"
           >
             {/* Top ambient header bar */}
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-400 via-orange-400 to-amber-400" />
@@ -51,6 +58,7 @@ export default function ContactModal({ isOpen, onClose, onShowToast, onAddSystem
               </div>
               <button
                 onClick={onClose}
+                aria-label="Sluiten"
                 className="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 transition-colors cursor-pointer border-none"
               >
                 <X className="h-5 w-5" />

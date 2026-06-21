@@ -13,6 +13,7 @@ import { computeDiscounts } from "../utils/pricing";
 import { getSpecsForMachine } from "../utils/machineSpecs";
 import { withVat } from "../utils/format";
 import { useLanguageStore } from "../store/languageStore";
+import { useModalA11y } from "../hooks/useModalA11y";
 import VatToggle from "./VatToggle";
 
 type CategoryInfoEntry = {
@@ -117,6 +118,7 @@ export default function MachineDetailModal({
 }: MachineDetailModalProps) {
   const t = useLanguageStore((state) => state.t);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const dialogRef = useModalA11y(true, onClose);
 
   useEffect(() => {
     setActiveImageIndex(0);
@@ -150,11 +152,16 @@ export default function MachineDetailModal({
       />
 
       <motion.div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={`${machine.name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "")} — details`}
+        tabIndex={-1}
         initial={{ opacity: 0, scale: 0.95, y: 15 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 15 }}
         transition={{ type: "spring", stiffness: 350, damping: 26 }}
-        className="w-full max-w-4xl bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden z-[60] flex flex-col max-h-[90vh] my-8"
+        className="w-full max-w-4xl bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden z-[60] flex flex-col max-h-[90vh] my-8 outline-none"
       >
         {/* Top gradient stripe */}
         <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-emerald-400 via-orange-400 to-amber-400" />
@@ -171,6 +178,7 @@ export default function MachineDetailModal({
           </div>
           <button
             onClick={onClose}
+            aria-label="Sluiten"
             className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 transition-colors cursor-pointer shrink-0 ml-4"
           >
             <X className="h-5 w-5" />

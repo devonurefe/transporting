@@ -13,11 +13,13 @@ import ContactModal from "./components/ContactModal";
 import PWAInstallBanner from "./components/PWAInstallBanner";
 import ToastNotification from "./components/ToastNotification";
 import CookieBanner from "./components/CookieBanner";
+import ErrorBoundary from "./components/ErrorBoundary";
 import { Machine, Order, AppNotification, UserProfile, CartItem } from "./types";
 import { useAuthStore } from "./store/authStore";
 import { useAppStore } from "./store/appStore";
 import { buildWhatsAppGeneralUrl, buildWhatsAppOrderStatusUrl, buildWhatsAppPaymentLinkUrl, buildWhatsAppAdviceUrl } from "./utils/whatsapp";
 import { FAQ_ITEMS } from "./data/faq";
+import { useModalA11y } from "./hooks/useModalA11y";
 
 
 // Dynamic Code Splitting (React.lazy)
@@ -132,6 +134,7 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [selectedMachine, setSelectedMachine] = useState<Machine | null>(null);
   const [replaceCartMachine, setReplaceCartMachine] = useState<Machine | null>(null);
+  const replaceDialogRef = useModalA11y<HTMLDivElement>(!!replaceCartMachine, () => setReplaceCartMachine(null));
   const [isAdminMode, setIsAdminModeState] = useState<boolean>(() => {
     return localStorage.getItem("hwh_admin_mode") === "true";
   });
@@ -785,13 +788,15 @@ export default function App() {
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <AdminSection 
-                    isAdminMode={isAdminMode}
-                    setIsAdminMode={setIsAdminMode}
-                    systemLogs={systemLogs}
-                    onAddSystemLog={handleAddSystemLog}
-                    onClearSystemLogs={handleClearSystemLogs}
-                  />
+                  <ErrorBoundary>
+                    <AdminSection
+                      isAdminMode={isAdminMode}
+                      setIsAdminMode={setIsAdminMode}
+                      systemLogs={systemLogs}
+                      onAddSystemLog={handleAddSystemLog}
+                      onClearSystemLogs={handleClearSystemLogs}
+                    />
+                  </ErrorBoundary>
                 </motion.div>
               } />
             </Routes>
@@ -817,11 +822,16 @@ export default function App() {
             onClick={() => setReplaceCartMachine(null)}
           >
             <motion.div
+              ref={replaceDialogRef}
+              role="dialog"
+              aria-modal="true"
+              aria-label="Winkelwagen vervangen"
+              tabIndex={-1}
               initial={{ opacity: 0, scale: 0.95, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
               transition={{ duration: 0.18 }}
-              className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm"
+              className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm outline-none"
               onClick={(e) => e.stopPropagation()}
             >
               <h3 className="text-lg font-black text-slate-900 mb-2">Winkelwagen vervangen?</h3>

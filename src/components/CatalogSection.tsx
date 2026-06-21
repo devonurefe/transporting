@@ -11,6 +11,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import { Link } from "react-router-dom";
 import { Machine } from "../types";
 import { categoryIconMap } from "./icons/CategoryIcons";
 import { useLanguageStore } from "../store/languageStore";
@@ -371,7 +372,9 @@ export default function CatalogSection({
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex-1 min-w-0">
                             <h3 className="font-display font-bold text-[15px] text-slate-900 leading-snug line-clamp-2 group-hover:text-orange-600 transition-colors duration-200">
-                              {getBaseName(machine.name)}
+                              <Link to={`/hoogwerker/${machine.id}`} className="hover:underline">
+                                {getBaseName(machine.name)}
+                              </Link>
                             </h3>
                           </div>
                           <div className="text-right shrink-0">

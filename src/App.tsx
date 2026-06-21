@@ -23,6 +23,7 @@ import { buildWhatsAppGeneralUrl, buildWhatsAppOrderStatusUrl, buildWhatsAppPaym
 const HomeSection = lazy(() => import("./components/HomeSection"));
 const CatalogSection = lazy(() => import("./components/CatalogSection"));
 const BookingSection = lazy(() => import("./components/BookingSection"));
+const MachineDetailPage = lazy(() => import("./components/MachineDetailPage"));
 const AdminSection = lazy(() => import("./components/AdminSection"));
 const MyOrdersSection = lazy(() => import("./components/MyOrdersSection"));
 
@@ -63,6 +64,9 @@ export default function App() {
 
   // SEO: per-route title, meta description and canonical (SPA fallback)
   useEffect(() => {
+    // Machine pages (/hoogwerker/:id) set their own title from the machine; let that
+    // component own the head so this generic map doesn't overwrite it.
+    if (location.pathname.startsWith("/hoogwerker/")) return;
     const seo: Record<string, { title: string; desc: string; noindex?: boolean }> = {
       "/": {
         title: "HuurGo — Hoogwerkers Huren | Leiden, Den Haag, Alphen a/d Rijn",
@@ -730,6 +734,17 @@ export default function App() {
                 </motion.div>
               } />
 
+              <Route path="/hoogwerker/:id" element={
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <MachineDetailPage onSelectMachineForBooking={handleSelectMachineForBooking} />
+                </motion.div>
+              } />
+
               <Route path="/booking" element={
                 <motion.div
                   initial={{ opacity: 0 }}
@@ -737,7 +752,7 @@ export default function App() {
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <BookingSection 
+                  <BookingSection
                     selectedMachine={selectedMachine}
                     onCreateReservation={handleCreateReservation}
                     setActiveTab={setActiveTab}

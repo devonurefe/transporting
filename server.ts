@@ -1,5 +1,6 @@
 import express from "express";
 import path from "path";
+import fs from "fs";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
 import { createServer as createViteServer } from "vite";
@@ -95,10 +96,11 @@ app.get("/robots.txt", (_req, res) => {
   );
 });
 
-// SEO: sitemap.xml
-app.get("/sitemap.xml", (_req, res) => {
+// SEO: sitemap.xml — static routes + one indexable URL per active machine
+app.get("/sitemap.xml", async (_req, res) => {
   const base = (process.env.APP_URL || "https://huurgo.nl").replace(/\/$/, "");
-  const urls = [
+  const lastmod = new Date().toISOString().split("T")[0];
+  const urls: { loc: string; priority: string; changefreq: string }[] = [
     { loc: `${base}/`, priority: "1.0", changefreq: "weekly" },
     { loc: `${base}/catalog`, priority: "0.9", changefreq: "daily" },
     { loc: `${base}/booking`, priority: "0.8", changefreq: "weekly" },
@@ -110,7 +112,14 @@ app.get("/sitemap.xml", (_req, res) => {
     { loc: `${base}/catalog?category=ecolift`, priority: "0.75", changefreq: "weekly" },
     { loc: `${base}/catalog?category=kamersteiger`, priority: "0.75", changefreq: "weekly" },
   ];
-  const lastmod = new Date().toISOString().split("T")[0];
+  try {
+    const machines = await prisma.machine.findMany({ where: { isActive: true }, select: { id: true } });
+    for (const m of machines) {
+      urls.push({ loc: `${base}/hoogwerker/${encodeURIComponent(m.id)}`, priority: "0.7", changefreq: "weekly" });
+    }
+  } catch (e) {
+    console.error("Sitemap machine fetch failed:", e);
+  }
   const urlset = urls
     .map(
       (u) =>
@@ -121,6 +130,110 @@ app.get("/sitemap.xml", (_req, res) => {
     .type("application/xml")
     .send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urlset}\n</urlset>`);
 });
+
+// ── SEO meta injection (prod) ───────────────────────────────────────────────
+// The app is a client-rendered SPA, so the static index.html ships generic
+// homepage meta. Social scrapers (WhatsApp/Facebook/LinkedIn) don't run JS and
+// Google indexes faster with correct server HTML, so we inject per-route meta
+// (and a Product JSON-LD for machine pages) into the served HTML.
+const SEO_BASE = (process.env.APP_URL || "https://huurgo.nl").replace(/\/$/, "");
+const DEFAULT_OG_IMAGE = `${SEO_BASE}/og-image.jpg`;
+
+function escapeHtml(s: string): string {
+  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+type RouteMeta = { title: string; description: string; canonical: string; ogImage: string; noindex?: boolean; jsonLd?: string };
+
+function absoluteImage(url: string | null | undefined): string {
+  if (!url) return DEFAULT_OG_IMAGE;
+  if (/^https?:\/\//.test(url)) return url;
+  if (url.startsWith("/")) return `${SEO_BASE}${url}`;
+  return DEFAULT_OG_IMAGE;
+}
+
+function staticMeta(pathname: string): RouteMeta {
+  const url = `${SEO_BASE}${pathname === "/" ? "/" : pathname}`;
+  const map: Record<string, { title: string; description: string; noindex?: boolean }> = {
+    "/": { title: "HuurGo — Hoogwerkers Huren | Snel & Eenvoudig", description: "Snel en eenvoudig hoogwerkers huren bij HuurGo. Speciaal voor ZZP'ers en particulieren. Zonder borg, direct online geregeld." },
+    "/catalog": { title: "Catalogus — Hoogwerkers & Schaarliften Huren | HuurGo", description: "Bekijk ons aanbod hoogwerkers, schaarliften, spinhoogwerkers, mastliften en ladderliften. Direct online reserveren, zonder borg." },
+    "/booking": { title: "Online Reserveren — Snel & Eenvoudig | HuurGo", description: "Reserveer uw hoogwerker in 3 stappen. Kies uw data, ontvang direct de prijs en bevestig via WhatsApp met iDEAL betaallink." },
+    "/orders": { title: "Mijn Reserveringen | HuurGo", description: "Beheer uw huurcontracten, volg de status en download facturen.", noindex: true },
+    "/admin": { title: "Beheer | HuurGo", description: "Beheeromgeving.", noindex: true },
+  };
+  const e = map[pathname] ?? map["/"];
+  return { title: e.title, description: e.description, canonical: url, ogImage: DEFAULT_OG_IMAGE, noindex: e.noindex };
+}
+
+async function machineMeta(id: string): Promise<RouteMeta | null> {
+  try {
+    const m: any = await prisma.machine.findUnique({ where: { id } });
+    if (!m || m.isActive === false) return null;
+    const url = `${SEO_BASE}/hoogwerker/${encodeURIComponent(id)}`;
+    const priceTxt = m.pricePerDay ? ` — v.a. €${Math.round(m.pricePerDay)} p/dag` : "";
+    const title = `${m.name} huren${priceTxt} | HuurGo`;
+    const description = (m.description ? String(m.description).replace(/\s+/g, " ").trim().slice(0, 155)
+      : `${m.name} huren bij HuurGo. Werkhoogte ${m.height}m. Direct online reserveren, zonder borg, snel geleverd in Zuid-Holland.`);
+    const ogImage = absoluteImage(m.imageUrl);
+    const jsonLd = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "Product",
+      "name": m.name,
+      "description": description,
+      "image": ogImage,
+      "category": m.categoryLabel || m.category,
+      "brand": { "@type": "Brand", "name": "HuurGo" },
+      "offers": {
+        "@type": "Offer",
+        "priceCurrency": "EUR",
+        "price": String(Math.round(m.pricePerDay || 0)),
+        "availability": "https://schema.org/InStock",
+        "url": url,
+        "priceValidUntil": new Date(Date.now() + 1000 * 60 * 60 * 24 * 180).toISOString().split("T")[0],
+      },
+    });
+    return { title, description, canonical: url, ogImage, jsonLd };
+  } catch (e) {
+    console.error("machineMeta failed:", e);
+    return null;
+  }
+}
+
+function injectMeta(html: string, meta: RouteMeta): string {
+  let out = html;
+  const t = escapeHtml(meta.title);
+  const d = escapeHtml(meta.description);
+  const c = escapeHtml(meta.canonical);
+  const img = escapeHtml(meta.ogImage);
+  out = out.replace(/<title>[\s\S]*?<\/title>/, `<title>${t}</title>`);
+  out = out.replace(/(<meta name="description" content=")[^"]*(")/, `$1${d}$2`);
+  out = out.replace(/(<meta property="og:title" content=")[^"]*(")/, `$1${t}$2`);
+  out = out.replace(/(<meta property="og:description" content=")[^"]*(")/, `$1${d}$2`);
+  out = out.replace(/(<meta property="og:url" content=")[^"]*(")/, `$1${c}$2`);
+  out = out.replace(/(<meta property="og:image" content=")[^"]*(")/, `$1${img}$2`);
+  out = out.replace(/(<meta property="twitter:title" content=")[^"]*(")/, `$1${t}$2`);
+  out = out.replace(/(<meta property="twitter:description" content=")[^"]*(")/, `$1${d}$2`);
+  out = out.replace(/(<meta property="twitter:image" content=")[^"]*(")/, `$1${img}$2`);
+  out = out.replace(/(<meta property="twitter:url" content=")[^"]*(")/, `$1${c}$2`);
+  out = out.replace(/(<link rel="canonical" href=")[^"]*(")/, `$1${c}$2`);
+  if (meta.noindex) {
+    out = out.replace(/(<meta name="robots" content=")[^"]*(")/, `$1noindex, nofollow$2`);
+  }
+  if (meta.jsonLd) {
+    out = out.replace("</head>", `    <script type="application/ld+json">${meta.jsonLd}</script>\n  </head>`);
+  }
+  return out;
+}
+
+async function metaForRequest(pathname: string): Promise<RouteMeta> {
+  const machineMatch = pathname.match(/^\/hoogwerker\/([^/]+)\/?$/);
+  if (machineMatch) {
+    const meta = await machineMeta(decodeURIComponent(machineMatch[1]));
+    if (meta) return meta;
+    return { title: "Niet gevonden | HuurGo", description: "Deze machine is niet gevonden.", canonical: `${SEO_BASE}${pathname}`, ogImage: DEFAULT_OG_IMAGE, noindex: true };
+  }
+  return staticMeta(pathname);
+}
 
 // Configure Vite integration for SPA fallback
 async function startServer() {
@@ -139,9 +252,19 @@ async function startServer() {
     app.use("/assets", express.static(path.join(distPath, "assets"), { maxAge: "1y", immutable: true }));
     app.use("/images", express.static(path.join(distPath, "images"), { maxAge: "7d" }));
     app.use(express.static(distPath, { maxAge: "1h", index: false }));
-    app.get("*", (req, res) => {
+    const indexPath = path.join(distPath, "index.html");
+    let INDEX_HTML = "";
+    try { INDEX_HTML = fs.readFileSync(indexPath, "utf-8"); } catch { /* fall back to sendFile */ }
+    app.get("*", async (req, res) => {
       res.setHeader("Cache-Control", "no-cache");
-      res.sendFile(path.join(distPath, "index.html"));
+      if (!INDEX_HTML) return res.sendFile(indexPath);
+      try {
+        const meta = await metaForRequest(req.path);
+        res.type("html").send(injectMeta(INDEX_HTML, meta));
+      } catch (e) {
+        console.error("Meta injection failed:", e);
+        res.type("html").send(INDEX_HTML);
+      }
     });
   }
 

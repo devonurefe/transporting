@@ -13,7 +13,6 @@ import {
 import { motion, AnimatePresence } from "motion/react";
 import { Link } from "react-router-dom";
 import { Machine } from "../types";
-import { categoryIconMap } from "./icons/CategoryIcons";
 import { useLanguageStore } from "../store/languageStore";
 import { useAppStore } from "../store/appStore";
 import { someUnitAvailable } from "../utils/availability";
@@ -227,16 +226,12 @@ export default function CatalogSection({
                       `Filtert catalogus op categorie: "${tab.label}"`
                     );
                   }}
-                  className={`px-3.5 py-1.5 text-xs font-bold rounded-lg whitespace-nowrap transition-all border cursor-pointer flex items-center gap-1.5 ${
+                  className={`px-3.5 py-1.5 text-xs font-bold rounded-lg whitespace-nowrap transition-all border cursor-pointer ${
                     isActive
                       ? "bg-slate-800 text-white border-slate-900 shadow-sm"
                       : "bg-white text-slate-600 border-slate-200 hover:text-slate-900 hover:border-slate-300 hover:bg-slate-50"
                   }`}
                 >
-                  {(() => {
-                    const Icon = categoryIconMap[tab.id];
-                    return Icon ? <Icon className="h-3.5 w-3.5 shrink-0" /> : null;
-                  })()}
                   {tab.label}
                 </button>
               );

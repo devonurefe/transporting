@@ -71,12 +71,14 @@ export function HuurGoText({ dark = false }: { dark?: boolean }) {
 }
 
 /**
- * Renders an arbitrary string and replaces every literal "HuurGo" occurrence
- * with the branded <HuurGoText /> wordmark. Use this for prose that may come
- * from translations or admin-editable site config.
+ * Renders an arbitrary string and replaces every brand-name occurrence with the
+ * branded <HuurGoText /> wordmark. Matching is case-insensitive and tolerates an
+ * optional space ("HuurGo", "huurGo", "huurgo", "Huur Go"), so admin-editable
+ * site config / translations render the logo wordmark regardless of how the brand
+ * was typed. Note: only used on prose without domains/emails (huurgo.nl etc.).
  */
 export function BrandedText({ text, dark = false }: { text: string; dark?: boolean }) {
-  const parts = text.split("HuurGo");
+  const parts = text.split(/huur\s?go/gi);
   if (parts.length === 1) return <>{text}</>;
   return (
     <>

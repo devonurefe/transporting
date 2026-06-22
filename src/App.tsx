@@ -67,6 +67,19 @@ export default function App() {
     window.scrollTo(0, 0);
   }, [location.pathname]);
 
+  // Warm the most-linked lazy chunks (catalog + FAQ) while the browser is idle,
+  // so footer/nav clicks open instantly instead of waiting on a Suspense spinner.
+  useEffect(() => {
+    const warm = () => {
+      import("./components/CatalogSection");
+      import("./components/FaqSection");
+    };
+    const ric = (window as unknown as { requestIdleCallback?: (cb: () => void) => number }).requestIdleCallback;
+    const cic = (window as unknown as { cancelIdleCallback?: (id: number) => void }).cancelIdleCallback;
+    const id = ric ? ric(warm) : window.setTimeout(warm, 1500);
+    return () => { if (ric && cic) cic(id as number); else clearTimeout(id as number); };
+  }, []);
+
   // SEO: per-route title, meta description and canonical (SPA fallback)
   useEffect(() => {
     // Machine pages (/hoogwerker/:id) and city pages (/hoogwerker-huren/:stad) set

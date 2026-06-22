@@ -202,13 +202,13 @@ export default function Footer({ siteName, setActiveTab, setShowContactModal }: 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 sm:gap-10 py-10 border-b border-slate-800">
           <div className="sm:col-span-2 space-y-3">
             <h4 className="text-xs font-black uppercase tracking-widest text-slate-500">Werkgebied — hoogwerker huren</h4>
-            <div className="flex flex-wrap gap-x-4 gap-y-2">
+            <div className="flex flex-wrap gap-x-4 gap-y-1">
               {SERVICE_CITIES.map((c) => (
                 <Link
                   key={c.slug}
                   to={`/hoogwerker-huren/${c.slug}`}
                   onClick={(e) => { e.preventDefault(); setActiveTab(`hoogwerker-huren/${c.slug}`); }}
-                  className="text-xs text-slate-400 hover:text-white transition-colors no-underline"
+                  className="inline-block py-1.5 text-xs text-slate-400 hover:text-white transition-colors no-underline"
                 >
                   {c.name}
                 </Link>
@@ -217,10 +217,10 @@ export default function Footer({ siteName, setActiveTab, setShowContactModal }: 
           </div>
           <div className="space-y-3">
             <h4 className="text-xs font-black uppercase tracking-widest text-slate-500">Informatie</h4>
-            <div className="flex flex-col gap-2">
-              <Link to="/veelgestelde-vragen" onClick={(e) => { e.preventDefault(); setActiveTab("veelgestelde-vragen"); }} className="text-xs text-slate-400 hover:text-white transition-colors no-underline">Veelgestelde vragen</Link>
-              <Link to="/catalog" onClick={(e) => { e.preventDefault(); setActiveTab("catalog"); }} className="text-xs text-slate-400 hover:text-white transition-colors no-underline">Alle hoogwerkers</Link>
-              <button onClick={() => setShowContactModal(true)} className="text-xs text-slate-400 hover:text-white transition-colors text-left bg-transparent border-none p-0 cursor-pointer">Contact &amp; openingstijden</button>
+            <div className="flex flex-col gap-1">
+              <Link to="/veelgestelde-vragen" onClick={(e) => { e.preventDefault(); setActiveTab("veelgestelde-vragen"); }} className="block py-2 -my-1 text-xs text-slate-400 hover:text-white transition-colors no-underline">Veelgestelde vragen</Link>
+              <Link to="/catalog" onClick={(e) => { e.preventDefault(); setActiveTab("catalog"); }} className="block py-2 -my-1 text-xs text-slate-400 hover:text-white transition-colors no-underline">Alle hoogwerkers</Link>
+              <button onClick={() => setShowContactModal(true)} className="block py-2 -my-1 text-xs text-slate-400 hover:text-white transition-colors text-left bg-transparent border-none px-0 cursor-pointer">Contact &amp; openingstijden</button>
             </div>
           </div>
         </div>

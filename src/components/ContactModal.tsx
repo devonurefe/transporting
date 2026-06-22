@@ -81,7 +81,7 @@ export default function ContactModal({ isOpen, onClose, onShowToast, onAddSystem
                     href={`https://wa.me/${(import.meta as any).env?.VITE_WHATSAPP_NUMBER ?? "31611848899"}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-full flex items-center p-3 rounded-xl bg-emerald-500 text-white hover:bg-emerald-600 transition-all text-xs cursor-pointer gap-3 shadow-sm hover:shadow group text-decoration-none"
+                    className="w-full flex items-center p-3 rounded-xl bg-[#25D366] text-white hover:bg-[#1da851] transition-all text-xs cursor-pointer gap-3 shadow-sm hover:shadow group text-decoration-none"
                   >
                     <div className="h-7 w-7 rounded-lg bg-white/20 text-white flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                       <MessageSquare className="h-4 w-4" />

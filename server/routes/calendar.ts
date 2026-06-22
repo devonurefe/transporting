@@ -83,7 +83,7 @@ calendarRouter.get("/:token/huurgo.ics", async (req: Request, res: Response) => 
       "PRODID:-//HuurGo//Vlootagenda//NL",
       "CALSCALE:GREGORIAN",
       "METHOD:PUBLISH",
-      "X-WR-CALNAME:HuurGo Vlootagenda",
+      "X-WR-CALNAME:huurgo Vlootagenda",
       "X-WR-TIMEZONE:Europe/Amsterdam",
       "REFRESH-INTERVAL;VALUE=DURATION:PT1H",
       "X-PUBLISHED-TTL:PT1H",

@@ -212,7 +212,7 @@ export default function ContactModal({ isOpen, onClose, onShowToast, onAddSystem
                     onAddSystemLog("system", "Bezoeker", `Belaanvraag geregistreerd voor nummer: ${phone} (Zoeterwoude hub).`);
                   }
                 }}
-                className="flex gap-2"
+                className="flex flex-col sm:flex-row gap-2"
               >
                 <input
                   type="tel"
@@ -223,7 +223,7 @@ export default function ContactModal({ isOpen, onClose, onShowToast, onAddSystem
                 />
                 <button
                   type="submit"
-                  className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs rounded-xl shadow-sm hover:shadow transition-all cursor-pointer font-display shrink-0 border-none"
+                  className="w-full sm:w-auto px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs rounded-xl shadow-sm hover:shadow transition-all cursor-pointer font-display shrink-0 border-none"
                 >
                   Bel mij terug
                 </button>

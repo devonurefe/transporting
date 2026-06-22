@@ -70,7 +70,7 @@ export const emailService = {
       <html>
       <head>
         <meta charset="utf-8">
-        <title>Reserveringsbevestiging HuurGo</title>
+        <title>Reserveringsbevestiging huurgo</title>
         <style>
           body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f8fafc; color: #1e293b; margin: 0; padding: 20px; }
           .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 24px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
@@ -93,13 +93,13 @@ export const emailService = {
       <body>
         <div class="container">
           <div class="header">
-            <h1>HuurGo</h1>
+            <h1>huurgo</h1>
             <p>Uw reserveringsbevestiging is succesvol verwerkt</p>
           </div>
           <div class="content">
             <span class="order-id">Reservering ID: ${order.id}</span>
             <p>Beste <strong>${esc(order.customerName)}</strong>,</p>
-            <p>Hartelijk dank voor uw reservering bij HuurGo. Ons verhuurteam heeft uw reservering direct in behandeling genomen. Hieronder vindt u de specificaties:</p>
+            <p>Hartelijk dank voor uw reservering bij huurgo. Ons verhuurteam heeft uw reservering direct in behandeling genomen. Hieronder vindt u de specificaties:</p>
             
             <div class="details-grid">
               <div class="details-item">
@@ -148,7 +148,7 @@ export const emailService = {
             </div>
           </div>
           <div class="footer">
-            © ${new Date().getFullYear()} HuurGo / MB Hoogwerkers B.V. • BMWT-gecertificeerd verhuurnetwerk • Zoeterwoude, Nederland
+            © ${new Date().getFullYear()} huurgo / MB Hoogwerkers B.V. • BMWT-gecertificeerd verhuurnetwerk • Zoeterwoude, Nederland
           </div>
         </div>
       </body>
@@ -165,7 +165,7 @@ export const emailService = {
     return sendWithRetry({
       from: SENDER_EMAIL,
       to: order.customerEmail,
-      subject: `Bevestiging van uw reservering ${order.id} - HuurGo`,
+      subject: `Bevestiging van uw reservering ${order.id} - huurgo`,
       html: htmlContent,
     });
   },
@@ -198,7 +198,7 @@ export const emailService = {
         <div class="container">
           <div class="header">
             <h1>🚨 NIEUWE RESERVERING</h1>
-            <p>Admin alert voor HuurGo.nl</p>
+            <p>Admin alert voor huurgo.nl</p>
           </div>
           <div class="content">
             <h3 style="margin-top: 0; font-size: 16px; font-weight: 800; color: #0f172a;">Beste Admin,</h3>
@@ -269,7 +269,7 @@ export const emailService = {
       headerColor = "linear-gradient(135deg, #3b82f6, #1d4ed8)";
     } else if (order.status === "Voltooid") {
       statusTitle = "Huurcontract Voltooid";
-      statusDescription = "De huurperiode is beëindigd en het materieel is succesvol retour ontvangen. Bedankt voor uw vertrouwen in HuurGo!";
+      statusDescription = "De huurperiode is beëindigd en het materieel is succesvol retour ontvangen. Bedankt voor uw vertrouwen in huurgo!";
       headerColor = "linear-gradient(135deg, #64748b, #475569)";
     }
 
@@ -278,7 +278,7 @@ export const emailService = {
       <html>
       <head>
         <meta charset="utf-8">
-        <title>Statusupdate reservering HuurGo</title>
+        <title>Statusupdate reservering huurgo</title>
         <style>
           body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f8fafc; color: #1e293b; margin: 0; padding: 20px; }
           .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 24px; border: 1px solid #e2e8f0; overflow: hidden; }
@@ -298,7 +298,7 @@ export const emailService = {
       <body>
         <div class="container">
           <div class="header">
-            <h1>HuurGo</h1>
+            <h1>huurgo</h1>
             <p>Update over uw reservering ${order.id}</p>
           </div>
           <div class="content">
@@ -339,7 +339,7 @@ export const emailService = {
             </div>
           </div>
           <div class="footer">
-            © ${new Date().getFullYear()} HuurGo / MB Hoogwerkers B.V. • BMWT-gecertificeerd verhuurnetwerk • Zoeterwoude, Nederland
+            © ${new Date().getFullYear()} huurgo / MB Hoogwerkers B.V. • BMWT-gecertificeerd verhuurnetwerk • Zoeterwoude, Nederland
           </div>
         </div>
       </body>
@@ -356,7 +356,7 @@ export const emailService = {
     return sendWithRetry({
       from: SENDER_EMAIL,
       to: order.customerEmail,
-      subject: `Update van uw reservering ${order.id}: ${order.status} - HuurGo`,
+      subject: `Update van uw reservering ${order.id}: ${order.status} - huurgo`,
       html: htmlContent,
     });
   },
@@ -372,7 +372,7 @@ export const emailService = {
       <html>
       <head>
         <meta charset="utf-8">
-        <title>Activeer uw HuurGo Account</title>
+        <title>Activeer uw huurgo Account</title>
         <style>
           body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f8fafc; color: #1e293b; margin: 0; padding: 20px; }
           .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 24px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
@@ -391,13 +391,13 @@ export const emailService = {
       <body>
         <div class="container">
           <div class="header">
-            <h1>HuurGo</h1>
+            <h1>huurgo</h1>
             <p>Bevestig uw e-mailadres om uw account te activeren</p>
           </div>
           <div class="content">
             <p class="welcome-text">Beste <strong>${esc(customer.name)}</strong>,</p>
             <p class="info-text">
-              Welkom bij HuurGo! U heeft succesvol een account aangemaakt. Om te kunnen inloggen op het Klant Portaal en uw reserveringen te beheren, dient u eerst uw e-mailadres te verifiëren door op de onderstaande knop te klikken:
+              Welkom bij huurgo! U heeft succesvol een account aangemaakt. Om te kunnen inloggen op het Klant Portaal en uw reserveringen te beheren, dient u eerst uw e-mailadres te verifiëren door op de onderstaande knop te klikken:
             </p>
             
             <div class="btn-container">
@@ -415,7 +415,7 @@ export const emailService = {
             </div>
           </div>
           <div class="footer">
-            © ${new Date().getFullYear()} HuurGo / MB Hoogwerkers B.V. • BMWT-gecertificeerd verhuurnetwerk • Zoeterwoude, Nederland
+            © ${new Date().getFullYear()} huurgo / MB Hoogwerkers B.V. • BMWT-gecertificeerd verhuurnetwerk • Zoeterwoude, Nederland
           </div>
         </div>
       </body>
@@ -432,7 +432,7 @@ export const emailService = {
     return sendWithRetry({
       from: SENDER_EMAIL,
       to: customer.email,
-      subject: "Activeer uw HuurGo account",
+      subject: "Activeer uw huurgo account",
       html: htmlContent,
     });
   },
@@ -480,7 +480,7 @@ export const emailService = {
             </div>
             <p style="font-size: 13px; color: #475569;">Zorg dat de opstelplaats toegankelijk is. Bij vragen kunt u contact opnemen via WhatsApp.</p>
           </div>
-          <div class="footer">© ${new Date().getFullYear()} HuurGo / MB Hoogwerkers B.V. • BMWT-gecertificeerd verhuurnetwerk</div>
+          <div class="footer">© ${new Date().getFullYear()} huurgo / MB Hoogwerkers B.V. • BMWT-gecertificeerd verhuurnetwerk</div>
         </div>
       </body>
       </html>
@@ -511,7 +511,7 @@ export const emailService = {
       <html>
       <head>
         <meta charset="utf-8">
-        <title>Wachtwoord Resetten - HuurGo</title>
+        <title>Wachtwoord Resetten - huurgo</title>
         <style>
           body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f8fafc; color: #1e293b; margin: 0; padding: 20px; }
           .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 24px; border: 1px solid #e2e8f0; overflow: hidden; }
@@ -525,7 +525,7 @@ export const emailService = {
       </head>
       <body>
         <div class="container">
-          <div class="header"><h1>HuurGo</h1><p>Wachtwoord resetten</p></div>
+          <div class="header"><h1>huurgo</h1><p>Wachtwoord resetten</p></div>
           <div class="content">
             <p style="text-align:left;">Beste <strong>${esc(name)}</strong>,</p>
             <p style="text-align:left; font-size:13px; color:#475569; line-height:1.6;">
@@ -538,7 +538,7 @@ export const emailService = {
               <a href="${resetUrl}" style="color:#4f46e5;">${resetUrl}</a>
             </div>
           </div>
-          <div class="footer">© ${new Date().getFullYear()} HuurGo / MB Hoogwerkers B.V. • BMWT-gecertificeerd verhuurnetwerk</div>
+          <div class="footer">© ${new Date().getFullYear()} huurgo / MB Hoogwerkers B.V. • BMWT-gecertificeerd verhuurnetwerk</div>
         </div>
       </body>
       </html>
@@ -554,7 +554,7 @@ export const emailService = {
     return sendWithRetry({
       from: SENDER_EMAIL,
       to: email,
-      subject: "Wachtwoord resetten - HuurGo",
+      subject: "Wachtwoord resetten - huurgo",
       html: htmlContent
     });
   },
@@ -584,7 +584,7 @@ export const emailService = {
       </head>
       <body>
         <div class="container">
-          <div class="header"><h1>❌ RESERVERING GEANNULEERD</h1><p>Admin alert voor HuurGo.nl</p></div>
+          <div class="header"><h1>❌ RESERVERING GEANNULEERD</h1><p>Admin alert voor huurgo.nl</p></div>
           <div class="content">
             <p>Een klant heeft zojuist een reservering geannuleerd via het klantenportaal.</p>
             <div class="details-grid">

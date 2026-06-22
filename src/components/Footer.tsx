@@ -78,7 +78,7 @@ function ReviewCard({ r }: { r: typeof REVIEWS[0] }) {
   );
 }
 
-export default function Footer({ siteName, setActiveTab: _setActiveTab, setShowContactModal }: FooterProps) {
+export default function Footer({ siteName, setActiveTab, setShowContactModal }: FooterProps) {
   const t = useLanguageStore((state) => state.t);
   const siteConfig = useAppStore((state) => state.siteConfig);
   const contactEmail = siteConfig.contactEmail || "info@mbhoogwerkers.com";
@@ -207,6 +207,7 @@ export default function Footer({ siteName, setActiveTab: _setActiveTab, setShowC
                 <Link
                   key={c.slug}
                   to={`/hoogwerker-huren/${c.slug}`}
+                  onClick={(e) => { e.preventDefault(); setActiveTab(`hoogwerker-huren/${c.slug}`); }}
                   className="text-xs text-slate-400 hover:text-white transition-colors no-underline"
                 >
                   {c.name}
@@ -217,8 +218,8 @@ export default function Footer({ siteName, setActiveTab: _setActiveTab, setShowC
           <div className="space-y-3">
             <h4 className="text-xs font-black uppercase tracking-widest text-slate-500">Informatie</h4>
             <div className="flex flex-col gap-2">
-              <Link to="/veelgestelde-vragen" className="text-xs text-slate-400 hover:text-white transition-colors no-underline">Veelgestelde vragen</Link>
-              <Link to="/catalog" className="text-xs text-slate-400 hover:text-white transition-colors no-underline">Alle hoogwerkers</Link>
+              <Link to="/veelgestelde-vragen" onClick={(e) => { e.preventDefault(); setActiveTab("veelgestelde-vragen"); }} className="text-xs text-slate-400 hover:text-white transition-colors no-underline">Veelgestelde vragen</Link>
+              <Link to="/catalog" onClick={(e) => { e.preventDefault(); setActiveTab("catalog"); }} className="text-xs text-slate-400 hover:text-white transition-colors no-underline">Alle hoogwerkers</Link>
               <button onClick={() => setShowContactModal(true)} className="text-xs text-slate-400 hover:text-white transition-colors text-left bg-transparent border-none p-0 cursor-pointer">Contact &amp; openingstijden</button>
             </div>
           </div>

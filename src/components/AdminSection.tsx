@@ -112,7 +112,7 @@ export default function AdminSection({
         setIsAdminMode(true);
         onAddSystemLog(
           "login", 
-          "HuurGo Admin", 
+          "huurgo Admin",
           "Beheersessie verbonden met beveiligd beheerderstoken."
         );
         // Synchronously fetch all data with the newly set admin token

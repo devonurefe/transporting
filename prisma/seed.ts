@@ -649,7 +649,7 @@ const defaultBlockedDates: { id: string; machineId: string; date: Date; reason: 
 
 const defaultSiteConfig = {
   id: "default",
-  siteName: "HuurGo",
+  siteName: "huurgo",
   heroTagline: "Professionele Hoogwerker Verhuur",
   heroTitle: "De juiste machine, snel en veilig geregeld.",
   heroSubtitle: "HuurGo verhuurt gecertificeerde hoogwerkers, schaarliften, mastliften en ladderliften aan ZZP'ers, aannemers en particulieren in heel Nederland. Meer dan 50 BMWT-gecertificeerde machines, direct beschikbaar.",
@@ -805,7 +805,7 @@ async function main() {
     create: {
       email: adminEmail,
       passwordHash: adminPasswordHash,
-      name: "HuurGo Admin",
+      name: "huurgo Admin",
       role: "admin"
     }
   });

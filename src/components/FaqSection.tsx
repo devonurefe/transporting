@@ -7,6 +7,7 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ChevronDown, HelpCircle, MessageCircle, ArrowRight } from "lucide-react";
 import { FAQ_ITEMS } from "../data/faq";
+import { HuurGoText } from "./Header";
 import { buildWhatsAppGeneralUrl } from "../utils/whatsapp";
 
 /**
@@ -17,7 +18,7 @@ export default function FaqSection() {
   const [open, setOpen] = useState<number | null>(0);
 
   useEffect(() => {
-    document.title = "Veelgestelde vragen — Hoogwerker huren | HuurGo";
+    document.title = "Veelgestelde vragen — Hoogwerker huren | huurgo";
     window.scrollTo(0, 0);
   }, []);
 
@@ -29,7 +30,7 @@ export default function FaqSection() {
         </span>
         <h1 className="text-2xl sm:text-3xl font-black text-slate-900">Veelgestelde vragen</h1>
         <p className="text-sm text-slate-500 max-w-xl mx-auto leading-relaxed">
-          Antwoorden op de meestgestelde vragen over het huren van een hoogwerker bij HuurGo.
+          Antwoorden op de meestgestelde vragen over het huren van een hoogwerker bij <HuurGoText />.
           Staat uw vraag er niet bij? Wij helpen u graag via WhatsApp.
         </p>
       </header>

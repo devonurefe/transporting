@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { useAppStore } from "../../store/appStore";
 import { useAuthStore } from "../../store/authStore";
+import { HuurGoText } from "../Header";
 import { printInvoice } from "../../utils/invoice";
 
 interface AdminOrdersProps {
@@ -121,13 +122,13 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
     const machine = getBaseName(order.machineName);
     const lines: string[] = [];
     if (nextStatus === "Goedgekeurd") {
-      lines.push("Goed nieuws! ✅", "", `Uw boeking *${order.id}* voor de *${machine}* is goedgekeurd.`, "", "U ontvangt binnenkort de iDEAL betaallink om de huur te bevestigen.", "", "Met vriendelijke groet,", "*HuurGo*");
+      lines.push("Goed nieuws! ✅", "", `Uw boeking *${order.id}* voor de *${machine}* is goedgekeurd.`, "", "U ontvangt binnenkort de iDEAL betaallink om de huur te bevestigen.", "", "Met vriendelijke groet,", "*huurgo*");
     } else if (nextStatus === "Onderweg") {
-      lines.push("Uw machine is onderweg! 🚐", "", `De *${machine}* (ref: *${order.id}*) wordt vandaag bezorgd.`, "", "De chauffeur neemt contact op bij aankomst.", "", "Met vriendelijke groet,", "*HuurGo*");
+      lines.push("Uw machine is onderweg! 🚐", "", `De *${machine}* (ref: *${order.id}*) wordt vandaag bezorgd.`, "", "De chauffeur neemt contact op bij aankomst.", "", "Met vriendelijke groet,", "*huurgo*");
     } else if (nextStatus === "Voltooid") {
-      lines.push("Bedankt voor uw huur! 🦾", "", `Uw huurperiode voor de *${machine}* (ref: *${order.id}*) is afgerond.`, "", "We hopen u snel weer van dienst te zijn!", "", "*HuurGo*");
+      lines.push("Bedankt voor uw huur! 🦾", "", `Uw huurperiode voor de *${machine}* (ref: *${order.id}*) is afgerond.`, "", "We hopen u snel weer van dienst te zijn!", "", "*huurgo*");
     } else if (nextStatus === "Geannuleerd") {
-      lines.push("Annulering bevestigd ❌", "", `Uw boeking *${order.id}* is helaas geannuleerd.`, "", "Heeft u vragen? Neem gerust contact op.", "", "*HuurGo*");
+      lines.push("Annulering bevestigd ❌", "", `Uw boeking *${order.id}* is helaas geannuleerd.`, "", "Heeft u vragen? Neem gerust contact op.", "", "*huurgo*");
     } else {
       return;
     }
@@ -243,7 +244,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
       "Kunt u dit bevestigen of heeft u een andere voorkeur?",
       "",
       "Met vriendelijke groet,",
-      "*HuurGo*"
+      "*huurgo*"
     ];
     if (selectedDetailOrder.customerPhone) {
       const phone = formatPhoneForWA(selectedDetailOrder.customerPhone);
@@ -762,7 +763,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                           <MapPin className="h-4 w-4 text-indigo-500 shrink-0 mt-0.5" />
                           <div>
                             <span className="font-semibold block">
-                              {selectedDetailOrder.deliveryType === "self_pickup" ? "Zelf Afhalen in Vestiging" : "Bezorging door HuurGo"}
+                              {selectedDetailOrder.deliveryType === "self_pickup" ? "Zelf Afhalen in Vestiging" : <>Bezorging door <HuurGoText /></>}
                             </span>
                             {selectedDetailOrder.deliveryAddress && (
                               <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed font-mono">

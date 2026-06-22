@@ -162,12 +162,12 @@ function absoluteImage(url: string | null | undefined): string {
 function staticMeta(pathname: string): RouteMeta {
   const url = `${SEO_BASE}${pathname === "/" ? "/" : pathname}`;
   const map: Record<string, { title: string; description: string; noindex?: boolean }> = {
-    "/": { title: "HuurGo — Hoogwerkers Huren | Snel & Eenvoudig", description: "Snel en eenvoudig hoogwerkers huren bij HuurGo. Speciaal voor ZZP'ers en particulieren. Zonder borg, direct online geregeld." },
-    "/catalog": { title: "Catalogus — Hoogwerkers & Schaarliften Huren | HuurGo", description: "Bekijk ons aanbod hoogwerkers, schaarliften, spinhoogwerkers, mastliften en ladderliften. Direct online reserveren, zonder borg." },
-    "/booking": { title: "Online Reserveren — Snel & Eenvoudig | HuurGo", description: "Reserveer uw hoogwerker in 3 stappen. Kies uw data, ontvang direct de prijs en bevestig via WhatsApp met iDEAL betaallink." },
-    "/veelgestelde-vragen": { title: "Veelgestelde vragen — Hoogwerker huren | HuurGo", description: "Antwoorden op veelgestelde vragen over hoogwerker huren: kosten, bezorging, borg, certificaten en betaling. Persoonlijk advies via WhatsApp." },
-    "/orders": { title: "Mijn Reserveringen | HuurGo", description: "Beheer uw huurcontracten, volg de status en download facturen.", noindex: true },
-    "/admin": { title: "Beheer | HuurGo", description: "Beheeromgeving.", noindex: true },
+    "/": { title: "huurgo — Hoogwerkers Huren | Snel & Eenvoudig", description: "Snel en eenvoudig hoogwerkers huren bij huurgo. Speciaal voor ZZP'ers en particulieren. Zonder borg, direct online geregeld." },
+    "/catalog": { title: "Catalogus — Hoogwerkers & Schaarliften Huren | huurgo", description: "Bekijk ons aanbod hoogwerkers, schaarliften, spinhoogwerkers, mastliften en ladderliften. Direct online reserveren, zonder borg." },
+    "/booking": { title: "Online Reserveren — Snel & Eenvoudig | huurgo", description: "Reserveer uw hoogwerker in 3 stappen. Kies uw data, ontvang direct de prijs en bevestig via WhatsApp met iDEAL betaallink." },
+    "/veelgestelde-vragen": { title: "Veelgestelde vragen — Hoogwerker huren | huurgo", description: "Antwoorden op veelgestelde vragen over hoogwerker huren: kosten, bezorging, borg, certificaten en betaling. Persoonlijk advies via WhatsApp." },
+    "/orders": { title: "Mijn Reserveringen | huurgo", description: "Beheer uw huurcontracten, volg de status en download facturen.", noindex: true },
+    "/admin": { title: "Beheer | huurgo", description: "Beheeromgeving.", noindex: true },
   };
   const e = map[pathname] ?? map["/"];
   const meta: RouteMeta = { title: e.title, description: e.description, canonical: url, ogImage: DEFAULT_OG_IMAGE, noindex: e.noindex };
@@ -189,7 +189,7 @@ function cityMeta(slug: string): RouteMeta | null {
   const city = getCityBySlug(slug);
   if (!city) return null;
   const url = `${SEO_BASE}/hoogwerker-huren/${city.slug}`;
-  const title = `Hoogwerker huren in ${city.name} | HuurGo`;
+  const title = `Hoogwerker huren in ${city.name} | huurgo`;
   const description = city.intro.replace(/\s+/g, " ").trim().slice(0, 160);
   const jsonLd = JSON.stringify({
     "@context": "https://schema.org",
@@ -200,7 +200,7 @@ function cityMeta(slug: string): RouteMeta | null {
     "areaServed": { "@type": "City", "name": city.name },
     "provider": {
       "@type": "LocalBusiness",
-      "name": "HuurGo — MB Hoogwerkers B.V.",
+      "name": "huurgo — MB Hoogwerkers B.V.",
       "telephone": "+31715428114",
       "address": {
         "@type": "PostalAddress",
@@ -222,9 +222,9 @@ async function machineMeta(id: string): Promise<RouteMeta | null> {
     if (!m || m.isActive === false) return null;
     const url = `${SEO_BASE}/hoogwerker/${encodeURIComponent(id)}`;
     const priceTxt = m.pricePerDay ? ` — v.a. €${Math.round(m.pricePerDay)} p/dag` : "";
-    const title = `${m.name} huren${priceTxt} | HuurGo`;
+    const title = `${m.name} huren${priceTxt} | huurgo`;
     const description = (m.description ? String(m.description).replace(/\s+/g, " ").trim().slice(0, 155)
-      : `${m.name} huren bij HuurGo. Werkhoogte ${m.height}m. Direct online reserveren, zonder borg, snel geleverd in Zuid-Holland.`);
+      : `${m.name} huren bij huurgo. Werkhoogte ${m.height}m. Direct online reserveren, zonder borg, snel geleverd in Zuid-Holland.`);
     const ogImage = absoluteImage(m.imageUrl);
     const jsonLd = JSON.stringify({
       "@context": "https://schema.org",
@@ -233,7 +233,7 @@ async function machineMeta(id: string): Promise<RouteMeta | null> {
       "description": description,
       "image": ogImage,
       "category": m.categoryLabel || m.category,
-      "brand": { "@type": "Brand", "name": "HuurGo" },
+      "brand": { "@type": "Brand", "name": "huurgo" },
       "offers": {
         "@type": "Offer",
         "priceCurrency": "EUR",
@@ -281,13 +281,13 @@ async function metaForRequest(pathname: string): Promise<RouteMeta> {
   if (machineMatch) {
     const meta = await machineMeta(decodeURIComponent(machineMatch[1]));
     if (meta) return meta;
-    return { title: "Niet gevonden | HuurGo", description: "Deze machine is niet gevonden.", canonical: `${SEO_BASE}${pathname}`, ogImage: DEFAULT_OG_IMAGE, noindex: true };
+    return { title: "Niet gevonden | huurgo", description: "Deze machine is niet gevonden.", canonical: `${SEO_BASE}${pathname}`, ogImage: DEFAULT_OG_IMAGE, noindex: true };
   }
   const cityMatch = pathname.match(/^\/hoogwerker-huren\/([^/]+)\/?$/);
   if (cityMatch) {
     const meta = cityMeta(decodeURIComponent(cityMatch[1]));
     if (meta) return meta;
-    return { title: "Plaats niet gevonden | HuurGo", description: "Wij bezorgen in heel Zuid-Holland.", canonical: `${SEO_BASE}${pathname}`, ogImage: DEFAULT_OG_IMAGE, noindex: true };
+    return { title: "Plaats niet gevonden | huurgo", description: "Wij bezorgen in heel Zuid-Holland.", canonical: `${SEO_BASE}${pathname}`, ogImage: DEFAULT_OG_IMAGE, noindex: true };
   }
   return staticMeta(pathname);
 }
@@ -327,7 +327,7 @@ async function startServer() {
 
   const server = app.listen(PORT, "0.0.0.0", () => {
     console.log(`\n======================================================`);
-    console.log(`🚀 HuurGo Server Running on http://localhost:${PORT}`);
+    console.log(`🚀 huurgo Server Running on http://localhost:${PORT}`);
     console.log(`📦 Serving full-stack React SPA`);
     console.log(`======================================================`);
 

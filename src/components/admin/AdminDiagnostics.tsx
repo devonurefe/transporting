@@ -43,7 +43,7 @@ export default function AdminDiagnostics({ systemLogs, userProfiles, onAddSystem
   const [dbLatency, setDbLatency] = useState(1.8); // ms
   const [isAuditing, setIsAuditing] = useState(false);
   const [auditLogs, setAuditLogs] = useState<string[]>([
-    `[INFO] [2026-05-31 13:29:00] ` + t("HuurGo Daemon v2.1.4 succesvol gestart.", "HuurGo Daemon v2.1.4 started successfully.", "HuurGo Daemon v2.1.4 başarıyla başlatıldı."),
+    `[INFO] [2026-05-31 13:29:00] ` + t("huurgo Daemon v2.1.4 succesvol gestart.", "huurgo Daemon v2.1.4 started successfully.", "huurgo Daemon v2.1.4 başarıyla başlatıldı."),
     `[INFO] [2026-05-31 13:29:02] ` + t("PostgreSQL verbindingspool tot stand gebracht.", "PostgreSQL connection pool established.", "PostgreSQL bağlantı havuzu kuruldu."),
     `[SEC]  [2026-05-31 13:29:05] ` + t("CSRF en XSS beveiligingsheaders geïnjecteerd.", "CSRF and XSS protection headers injected.", "CSRF ve XSS koruma başlıkları enjekte edildi."),
     `[INFO] [2026-05-31 13:29:10] ` + t("WhatsApp gateway en e-mail dispatcher gevalideerd.", "WhatsApp gateway and email dispatcher validated.", "WhatsApp geçidi ve e-posta dağıtıcısı doğrulandı."),

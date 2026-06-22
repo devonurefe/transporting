@@ -10,7 +10,7 @@ const CORRECT_SUBTITLE = "HuurGo verhuurt gecertificeerde hoogwerkers, schaarlif
 
 const defaultSiteConfig = {
   id: "default",
-  siteName: "HuurGo",
+  siteName: "huurgo",
   heroTagline: "Professionele Hoogwerker Verhuur",
   heroTitle: "De juiste machine, snel en veilig geregeld.",
   heroSubtitle: CORRECT_SUBTITLE,
@@ -23,7 +23,7 @@ const defaultSiteConfig = {
   companyAddress: "Produktieweg 20, 2382 PB Zoeterwoude",
   kvkNumber: "67438237",
   btwNumber: "NL856990656B01",
-  companyLegalName: "HuurGo B.V."
+  companyLegalName: "huurgo B.V."
 };
 
 // GET site config
@@ -142,7 +142,7 @@ siteConfigRouter.post("/campaign-rules", requireAdmin as any, async (req: Authen
       update: { campaignRules: rules },
       create: {
         id: "default",
-        siteName: "HuurGo",
+        siteName: "huurgo",
         heroTagline: "Professionele Hoogwerker Verhuur",
         heroTitle: "De juiste machine, snel en veilig geregeld.",
         heroSubtitle: CORRECT_SUBTITLE,

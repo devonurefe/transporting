@@ -123,7 +123,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       if (cached) return JSON.parse(cached);
     } catch { /* ignore */ }
     return {
-      siteName: "HuurGo",
+      siteName: "huurgo",
       heroTagline: "Snel & Makkelijk Hoogwerkers Huren",
       heroTitle: "Wat heeft u nodig?",
       heroSubtitle: "MB Hoogwerkers verhuurt hoogwerkers, schaarliften en ladderliften aan ZZP'ers en particulieren. Geen gedoe, direct online geregeld.",

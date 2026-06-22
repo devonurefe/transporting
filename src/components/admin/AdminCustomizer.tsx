@@ -428,7 +428,7 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1">
                 <label className="text-xs text-slate-700 block font-bold">{t("Juridische Naam (Factuur)", "Legal Name (Invoice)", "Yasal Ad (Fatura)")}</label>
-                <input type="text" value={companyLegalName} onChange={(e) => setCompanyLegalName(e.target.value)} placeholder="HuurGo B.V." className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500" />
+                <input type="text" value={companyLegalName} onChange={(e) => setCompanyLegalName(e.target.value)} placeholder="huurgo B.V." className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500" />
               </div>
               <div className="space-y-1">
                 <label className="text-xs text-slate-700 block font-bold">{t("Contact E-mail", "Contact Email", "İletişim E-postası")}</label>

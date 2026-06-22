@@ -105,9 +105,6 @@ export default function CatalogSection({
   const [detailSource, setDetailSource] = useState<"pricing" | "info">("pricing");
   const [activeDetailImageIndex, setActiveDetailImageIndex] = useState<number>(0);
   const [pricingPreviewMachine, setPricingPreviewMachine] = useState<Machine | null>(null);
-  // Extra filters: aandrijving (powerType) + werkhoogte band
-  const [powerFilter, setPowerFilter] = useState<string>("all");
-  const [heightFilter, setHeightFilter] = useState<string>("all");
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
@@ -119,8 +116,6 @@ export default function CatalogSection({
   const resetFilters = () => {
     setSearchQuery("");
     setSelectedCategory("all");
-    setPowerFilter("all");
-    setHeightFilter("all");
   };
 
   const SCHAARLIFT_IDS = new Set(["schaarlift", "schaarlift-smal", "schaarlift-6m"]);
@@ -147,20 +142,6 @@ export default function CatalogSection({
 
   // Only show active machines everywhere in the catalog
   const activeMachines = useMemo(() => machines.filter(m => m.isActive !== false), [machines]);
-
-  // Distinct aandrijving (powerType) values for the filter dropdown
-  const powerOptions = useMemo(() => {
-    const set = new Set<string>();
-    activeMachines.forEach(m => { if (m.powerType) set.add(m.powerType.trim()); });
-    return Array.from(set).sort((a, b) => a.localeCompare(b, "nl"));
-  }, [activeMachines]);
-
-  const matchesHeightBand = (h: number): boolean => {
-    if (heightFilter === "lt8") return h < 8;
-    if (heightFilter === "8to12") return h >= 8 && h <= 12;
-    if (heightFilter === "gt12") return h > 12;
-    return true;
-  };
 
   // Map base name → all unit IDs (used for model-level availability + auto-assignment)
   const unitIdsByBase = useMemo(() => {
@@ -190,10 +171,7 @@ export default function CatalogSection({
         (machine.description?.toLowerCase() || "").includes(q) ||
         (machine.suitableFor ?? []).some(p => p.toLowerCase().includes(q));
 
-      const matchesPower = powerFilter === "all" || (machine.powerType?.trim() === powerFilter);
-      const matchesHeight = matchesHeightBand(machine.height);
-
-      return matchesCategory && matchesSearch && matchesPower && matchesHeight;
+      return matchesCategory && matchesSearch;
     });
 
     // Deduplicate: show only the first unit (representative) per model
@@ -211,7 +189,7 @@ export default function CatalogSection({
       return a.pricePerDay - b.pricePerDay;
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeMachines, selectedCategory, searchQuery, powerFilter, heightFilter]);
+  }, [activeMachines, selectedCategory, searchQuery]);
 
   return (
     <div className="relative min-h-[calc(100vh-3.5rem)] py-6 sm:py-10 px-5 sm:px-6 lg:px-8">
@@ -290,44 +268,6 @@ export default function CatalogSection({
               )}
             </div>
             <VatToggle />
-          </div>
-
-          {/* Row 3: Aandrijving + Werkhoogte filters */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <label className="flex items-center gap-1.5 bg-slate-50 rounded-xl border border-slate-200/80 px-3 py-1.5">
-              <span className="text-[11px] font-bold text-slate-500">Aandrijving</span>
-              <select
-                value={powerFilter}
-                onChange={(e) => setPowerFilter(e.target.value)}
-                className="text-xs bg-transparent border-none outline-none text-slate-800 font-semibold cursor-pointer"
-              >
-                <option value="all">Alle</option>
-                {powerOptions.map((p) => (
-                  <option key={p} value={p}>{p}</option>
-                ))}
-              </select>
-            </label>
-            <label className="flex items-center gap-1.5 bg-slate-50 rounded-xl border border-slate-200/80 px-3 py-1.5">
-              <span className="text-[11px] font-bold text-slate-500">Werkhoogte</span>
-              <select
-                value={heightFilter}
-                onChange={(e) => setHeightFilter(e.target.value)}
-                className="text-xs bg-transparent border-none outline-none text-slate-800 font-semibold cursor-pointer"
-              >
-                <option value="all">Alle</option>
-                <option value="lt8">tot 8 m</option>
-                <option value="8to12">8 – 12 m</option>
-                <option value="gt12">12 m en hoger</option>
-              </select>
-            </label>
-            {(powerFilter !== "all" || heightFilter !== "all") && (
-              <button
-                onClick={() => { setPowerFilter("all"); setHeightFilter("all"); }}
-                className="text-[11px] font-semibold text-slate-500 hover:text-slate-800 underline decoration-dotted cursor-pointer"
-              >
-                Filters wissen
-              </button>
-            )}
           </div>
         </div>
 

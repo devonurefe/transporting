@@ -135,7 +135,7 @@ export default function AdminDashboard({ setSubTab, setOrdersFilter, adminLangua
     if (notifPermission !== "granted") return;
     if (orders.length > prevOrderCount.current) {
       const diff = orders.length - prevOrderCount.current;
-      new Notification(`HuurGo — ${diff} nieuwe bestelling${diff > 1 ? "en" : ""}! 🦾`, {
+      new Notification(`huurgo — ${diff} nieuwe bestelling${diff > 1 ? "en" : ""}! 🦾`, {
         body: "Er zijn nieuwe reserveringen binnengekomen. Klik om te bekijken.",
         icon: "/icon-192.png",
       });
@@ -641,7 +641,7 @@ export default function AdminDashboard({ setSubTab, setOrdersFilter, adminLangua
             <div className="min-w-0">
               <p className="text-[11px] font-bold text-slate-800 leading-snug">{t("App installeren", "Install App", "Uygulamayı Kur")}</p>
               <p className="text-[10px] text-slate-500 mt-0.5 leading-snug">
-                {t('Browser menu → "Aan beginscherm toevoegen" om HuurGo als app te gebruiken.', 'Browser menu → "Add to Home Screen" to use HuurGo as an app.', 'Tarayıcı menüsü → "Ana ekrana ekle".')}
+                {t('Browser menu → "Aan beginscherm toevoegen" om huurgo als app te gebruiken.', 'Browser menu → "Add to Home Screen" to use huurgo as an app.', 'Tarayıcı menüsü → "Ana ekrana ekle".')}
               </p>
             </div>
           </div>

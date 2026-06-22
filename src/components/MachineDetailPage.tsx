@@ -33,7 +33,7 @@ export default function MachineDetailPage({ onSelectMachineForBooking }: Machine
   // Client-side title for SPA navigation (server already injects for crawlers)
   useEffect(() => {
     if (machine) {
-      document.title = `${machine.name} huren — v.a. ${euroCompact(machine.pricePerDay)}/dag | HuurGo`;
+      document.title = `${machine.name} huren — v.a. ${euroCompact(machine.pricePerDay)}/dag | huurgo`;
     }
     window.scrollTo(0, 0);
   }, [machine]);

@@ -36,7 +36,7 @@ export default function CityLandingPage({ onSelectMachineForBooking }: CityLandi
   const city = stad ? getCityBySlug(stad) : undefined;
 
   useEffect(() => {
-    if (city) document.title = `Hoogwerker huren in ${city.name} | HuurGo`;
+    if (city) document.title = `Hoogwerker huren in ${city.name} | huurgo`;
     window.scrollTo(0, 0);
   }, [city]);
 

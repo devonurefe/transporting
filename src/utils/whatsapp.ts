@@ -31,7 +31,7 @@ export function buildWhatsAppUrl(
 ): string {
   const lines: string[] = [];
 
-  lines.push("🏗️ *Verhuurverzoek via HuurGo*");
+  lines.push("🏗️ *Verhuurverzoek via huurgo*");
   lines.push("");
   lines.push("─────────────────────────────");
   lines.push("📦 *BESTELDE MACHINE(S)*");
@@ -123,10 +123,10 @@ export function buildWhatsAppUrl(
  * Builds a simple WhatsApp URL for general inquiries (no cart context).
  */
 export function buildWhatsAppGeneralUrl(categoryLabel?: string): string {
-  let message = "Hallo HuurGo! Ik heb een vraag over het huren van een hoogwerker. Alvast bedankt! 🦾";
+  let message = "Hallo huurgo! Ik heb een vraag over het huren van een hoogwerker. Alvast bedankt! 🦾";
 
   if (categoryLabel) {
-    message = `Hallo HuurGo! Ik ben geïnteresseerd in het huren van een ${categoryLabel}. Kunt u mij adviseren? 🦾`;
+    message = `Hallo huurgo! Ik ben geïnteresseerd in het huren van een ${categoryLabel}. Kunt u mij adviseren? 🦾`;
   }
 
   const encodedText = encodeURIComponent(message);
@@ -146,7 +146,7 @@ export function buildWhatsAppTransportInquiryUrl(
     .join("\n");
 
   const lines = [
-    `🚛 *Bezorgverzoek buiten 20 km — HuurGo*`,
+    `🚛 *Bezorgverzoek buiten 20 km — huurgo*`,
     `─────────────────────────────`,
     `📦 *Machine(s):*`,
     machineLines,
@@ -168,7 +168,7 @@ export function buildWhatsAppTransportInquiryUrl(
  */
 export function buildWhatsAppOrderStatusUrl(orderId?: string, machineName?: string): string {
   const lines = [
-    "Hallo HuurGo! 👋",
+    "Hallo huurgo! 👋",
     "",
     "Ik wil graag de status opvragen van mijn boeking.",
     orderId ? `📋 Referentienummer: ${orderId}` : "",
@@ -185,7 +185,7 @@ export function buildWhatsAppOrderStatusUrl(orderId?: string, machineName?: stri
  */
 export function buildWhatsAppPaymentLinkUrl(orderId?: string): string {
   const lines = [
-    "Hallo HuurGo! 👋",
+    "Hallo huurgo! 👋",
     "",
     "Ik heb zojuist een boeking geplaatst en wacht op mijn iDEAL betaallink.",
     orderId ? `📋 Referentienummer: ${orderId}` : "",
@@ -201,7 +201,7 @@ export function buildWhatsAppPaymentLinkUrl(orderId?: string): string {
  */
 export function buildWhatsAppAdviceUrl(jobDescription?: string): string {
   const lines = [
-    "Hallo HuurGo! 👋",
+    "Hallo huurgo! 👋",
     "",
     "Ik ben op zoek naar een geschikte hoogwerker voor mijn klus maar weet niet goed welke machine het beste past.",
     jobDescription ? `Klus: ${jobDescription}` : "",

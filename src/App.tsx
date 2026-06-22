@@ -75,27 +75,27 @@ export default function App() {
     if (location.pathname.startsWith("/hoogwerker/") || location.pathname.startsWith("/hoogwerker-huren/")) return;
     const seo: Record<string, { title: string; desc: string; noindex?: boolean }> = {
       "/": {
-        title: "HuurGo — Hoogwerkers Huren | Leiden, Den Haag, Alphen a/d Rijn",
+        title: "huurgo — Hoogwerkers Huren | Leiden, Den Haag, Alphen a/d Rijn",
         desc: "Hoogwerker huren v.a. €49/dag. Schaarlift, rupshoogwerker & ladderlift. Bezorging in Leiden, Den Haag & Alphen a/d Rijn. Geen borg — ook voor particulieren & ZZP.",
       },
       "/catalog": {
-        title: "Hoogwerker Huren — Schaarliften, Rupshoogwerkers & Meer | HuurGo",
+        title: "Hoogwerker Huren — Schaarliften, Rupshoogwerkers & Meer | huurgo",
         desc: "Bekijk alle hoogwerkers: schaarliften 6–10m, rupshoogwerkers, ladderliften & meer. Direct huren v.a. €49/dag. ZZP & particulier welkom. Heel Zuid-Holland.",
       },
       "/booking": {
-        title: "Online Reserveren — Snel & Eenvoudig | HuurGo",
+        title: "Online Reserveren — Snel & Eenvoudig | huurgo",
         desc: "Reserveer uw hoogwerker in 3 stappen. Kies uw data, ontvang direct de prijs en bevestig via WhatsApp met iDEAL betaallink. Geen borg vereist.",
       },
       "/veelgestelde-vragen": {
-        title: "Veelgestelde vragen — Hoogwerker huren | HuurGo",
+        title: "Veelgestelde vragen — Hoogwerker huren | huurgo",
         desc: "Antwoorden op veelgestelde vragen over hoogwerker huren: kosten, bezorging, borg, certificaten en betaling. Persoonlijk advies via WhatsApp.",
       },
       "/orders": {
-        title: "Mijn Reserveringen | HuurGo",
+        title: "Mijn Reserveringen | huurgo",
         desc: "Beheer uw huurcontracten, volg de status en download facturen.",
         noindex: true,
       },
-      "/admin": { title: "Beheer | HuurGo", desc: "", noindex: true },
+      "/admin": { title: "Beheer | huurgo", desc: "", noindex: true },
     };
     const entry = seo[location.pathname] ?? seo["/"];
     document.title = entry.title;
@@ -230,7 +230,7 @@ export default function App() {
       id: "log-1",
       type: "system",
       user: "Systeem",
-      description: "HuurGo B.V. vlootbeheersysteem geïnitialiseerd. BMWT verbinding stabiel.",
+      description: "huurgo B.V. vlootbeheersysteem geïnitialiseerd. BMWT verbinding stabiel.",
       timestamp: new Date(Date.now() - 3600 * 1000 * 4).toISOString()
     },
     {
@@ -568,8 +568,8 @@ export default function App() {
           __html: JSON.stringify({
             "@context": "https://schema.org",
             "@type": ["LocalBusiness", "RentalService"],
-            "name": `${siteConfig.siteName || "HuurGo"} — Hoogwerkers Verhuur`,
-            "description": "Snel en eenvoudig hoogwerkers huren bij HuurGo. Schaarlift, spinhoogwerker en aanhangerhoogwerker voor ZZP'ers en particulieren.",
+            "name": `${siteConfig.siteName || "huurgo"} — Hoogwerkers Verhuur`,
+            "description": "Snel en eenvoudig hoogwerkers huren bij huurgo. Schaarlift, spinhoogwerker en aanhangerhoogwerker voor ZZP'ers en particulieren.",
             "url": window.location.origin,
             "telephone": siteConfig.contactPhone || "+31715428114",
             "email": siteConfig.contactEmail || "info@mbhoogwerkers.com",

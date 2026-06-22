@@ -63,7 +63,7 @@ export function HuurGoLogo({ className = "h-8", dark = false }: { className?: st
 export function HuurGoText({ dark = false }: { dark?: boolean }) {
   return (
     <span className="font-display font-black tracking-tight whitespace-nowrap" style={{ letterSpacing: "-0.03em" }}>
-      <span style={{ color: dark ? "#ffffff" : "#0f172a" }}>Huur</span>
+      <span style={{ color: dark ? "#ffffff" : "#0f172a" }}>huur</span>
       <span className="text-orange-500">go</span>
       <span className="text-emerald-500">.</span>
     </span>

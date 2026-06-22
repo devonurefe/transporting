@@ -178,7 +178,7 @@ export function printInvoice(orderOrOrders: Order | Order[], clientCompanyName?:
     <html lang="nl">
     <head>
       <meta charset="UTF-8">
-      <title>${invoiceNumber} - HuurGo Nederland</title>
+      <title>${invoiceNumber} - huurgo Nederland</title>
       <!-- Premium Fonts -->
       <link rel="preconnect" href="https://fonts.googleapis.com">
       <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -481,7 +481,7 @@ export function printInvoice(orderOrOrders: Order | Order[], clientCompanyName?:
           </div>
           
           <div class="issuer-info">
-            <div class="issuer-name">${escapeHtml(businessInfo?.companyLegalName || "HuurGo B.V.")}</div>
+            <div class="issuer-name">${escapeHtml(businessInfo?.companyLegalName || "huurgo B.V.")}</div>
             <div>${escapeHtml(businessInfo?.companyAddress || "Produktieweg 20, 2382 PB Zoeterwoude")}</div>
             <div>E: ${escapeHtml(businessInfo?.contactEmail || "info@mbhoogwerkers.com")} | T: ${escapeHtml(businessInfo?.contactPhone || "071 542 8114")}</div>
             <div>KvK-nummer: ${escapeHtml(businessInfo?.kvkNumber || "67438237")} | BTW-nummer: ${escapeHtml(businessInfo?.btwNumber || "NL856990656B01")}</div>

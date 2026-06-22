@@ -124,9 +124,9 @@ export default function AdminAccounting({ adminLanguage }: AdminAccountingProps)
           <div className="text-[11.5px] text-slate-500 leading-normal space-y-2">
             <p>
               {t(
-                "Koppel uw HuurGo administratie in real-time met de Exact Online API om verkoopfacturen en debiteuren automatisch te boeken.",
-                "Connect your HuurGo administration in real-time with the Exact Online API to automatically post sales invoices and debtors.",
-                "HuurGo muhasebe kayıtlarınızı, satış faturalarını ve cari kartları otomatik işlemek için Exact Online API ile gerçek zamanlı bağlayın."
+                "Koppel uw huurgo administratie in real-time met de Exact Online API om verkoopfacturen en debiteuren automatisch te boeken.",
+                "Connect your huurgo administration in real-time with the Exact Online API to automatically post sales invoices and debtors.",
+                "huurgo muhasebe kayıtlarınızı, satış faturalarını ve cari kartları otomatik işlemek için Exact Online API ile gerçek zamanlı bağlayın."
               )}
             </p>
             {isConnected && (

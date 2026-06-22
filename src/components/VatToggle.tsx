@@ -17,13 +17,19 @@ export default function VatToggle({ size = "sm" }: VatToggleProps) {
   const vatDisplay = useAppStore((s) => s.vatDisplay);
   const setVatDisplay = useAppStore((s) => s.setVatDisplay);
 
-  const pad = size === "xs" ? "px-2 py-0.5 text-[10px]" : "px-2.5 py-1 text-[10px]";
+  // Default ("sm") matches the search bar next to it: rounded-xl, text-xs,
+  // py-1 so the overall height lines up. "xs" keeps the compact pill used
+  // inside the booking summary.
+  const pad = size === "xs" ? "px-2 py-0.5 text-[10px]" : "px-3 py-1 text-xs";
+  const outerRadius = size === "xs" ? "rounded-full" : "rounded-xl";
+  const innerRadius = size === "xs" ? "rounded-full" : "rounded-lg";
+  const outerPad = size === "xs" ? "p-0.5" : "p-1";
 
   return (
     <div
       role="group"
       aria-label="Prijsweergave incl. of excl. BTW"
-      className="inline-flex items-center rounded-full border border-slate-200 bg-white p-0.5 shrink-0"
+      className={`inline-flex items-center ${outerRadius} border border-slate-200/80 bg-white ${outerPad} shrink-0`}
     >
       {(["excl", "incl"] as const).map((mode) => (
         <button
@@ -31,7 +37,7 @@ export default function VatToggle({ size = "sm" }: VatToggleProps) {
           type="button"
           aria-pressed={vatDisplay === mode}
           onClick={() => setVatDisplay(mode)}
-          className={`${pad} font-bold rounded-full whitespace-nowrap transition-all cursor-pointer ${
+          className={`${pad} font-bold ${innerRadius} whitespace-nowrap transition-all cursor-pointer ${
             vatDisplay === mode
               ? "bg-slate-800 text-white shadow-sm"
               : "text-slate-500 hover:text-slate-800"

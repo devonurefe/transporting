@@ -2,7 +2,7 @@ services:
   - type: web
     name: huurgo
     runtime: node
-    buildCommand: npm install && npm run build && node scripts/preparePush.mjs && npx prisma db push
+    buildCommand: npm install && npm run build && node scripts/preparePush.mjs && ./node_modules/.bin/prisma db push
     startCommand: node dist/server.js
     envVars:
       - key: NODE_ENV

@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch server.ts",
+    "prebuild": "node scripts/genSitemap.mjs",
     "build": "prisma generate && vite build && esbuild server.ts --bundle --platform=node --format=esm --packages=external --sourcemap --outfile=dist/server.js",
     "start": "prisma db push && node dist/server.js",
     "clean": "rm -rf dist",

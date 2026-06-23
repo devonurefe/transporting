@@ -61,65 +61,59 @@ overlay; yüksek çözünürlük mobilde de net küçülür, 1920px masaüstünd
 
 ```
 # ✅ MUST SET
-DATABASE_URL=               # Auto-linked from PostgreSQL instance
+DATABASE_URL=               # Auto-linked from PostgreSQL instance.
+                            # Add pool bounds: ...?connection_limit=10&pool_timeout=20
 JWT_SECRET=                 # Generate random 32-char: openssl rand -hex 16
-RESEND_API_KEY=            # From resend.com (free tier ok)
+ADMIN_DEFAULT_PASSWORD=     # First-deploy admin password (admin@huurgo.nl).
+                            # Unset = random password printed to deploy logs.
+                            # Use a STRONG value — not "admin123".
+VITE_WHATSAPP_NUMBER=       # Customer's WhatsApp number, country code, NO "+"
+                            # e.g. 06 11 84 88 99 -> 31611848899
+                            # ⚠️ BUILD-TIME: set BEFORE build, else rebuild needed
+APP_URL=                    # https://[app].onrender.com (or final domain)
+NODE_ENV=                   # production
+
+# ✅ OPTIONAL (app runs fine without these)
+RESEND_API_KEY=            # From resend.com — unset = emails only logged (mock)
 EMAIL_FROM=                # noreply@[müşteri-domain.nl]
 ADMIN_EMAIL=               # [müşteri-admin@müşteri-domain.nl]
-VITE_WHATSAPP_NUMBER=      # From WhatsApp Business (customer's)
-APP_URL=                   # https://[müşteri-domain.nl]
-NODE_ENV=                  # production
-
-# ✅ OPTIONAL
 VITE_CLARITY_ID=           # Leave empty (no tracking)
 REMINDER_SECRET=           # Generate random: openssl rand -hex 16
 CALENDAR_FEED_TOKEN=       # Leave empty (unless needed)
 ```
 
+### 1.4 ⚠️ Goedkoopste plan (Free / Starter) — let op
+
+- **Free web service slaapt** na 15 min inactiviteit → eerste request ~50s
+  (cold start). Wil je het live tonen aan een klant: neem minimaal **Starter**
+  zodat de service niet in slaap valt.
+- **Free PostgreSQL wordt na ~30 dagen verwijderd** (data weg). Voor meer dan
+  een korte demo: een betaalde (persistente) database.
+- Geüploade afbeeldingen worden als base64 in de DB bewaard (niet op schijf),
+  dus die overleven re-deploys ✅.
+
 ---
 
 ## ✅ ADIM 2: CODE FIXES (10 dakika)
 
-### 2.1 CORS Fix (CRITICAL!)
+### 2.1 CORS Fix — ✅ AL KLAAR (in code)
 
-**File:** `server.ts` (line 49-51)
+CORS leest het toegestane domein nu automatisch uit `APP_URL` (`server.ts`,
+`prodOrigins`). Er is **geen hardcoded `huurgo.nl` meer** — je hoeft hier niets
+te wijzigen. Zorg alleen dat `APP_URL` in Render correct staat (zie 1.3):
 
-**CURRENT (WRONG):**
 ```typescript
-const corsOptions = process.env.NODE_ENV === "production"
-  ? { origin: ["https://huurgo.nl", "https://www.huurgo.nl"], credentials: true }
-  : { origin: true, credentials: true };
+// server.ts — huidige (correcte) implementatie
+const prodOrigins = (() => {
+  const raw = (process.env.APP_URL || "https://huurgo.nl").replace(/\/$/, "");
+  const domain = raw.replace(/^https?:\/\/(www\.)?/, "");
+  return [`https://${domain}`, `https://www.${domain}`];
+})();
 ```
 
-**MUST CHANGE TO:**
-```typescript
-const corsOptions = process.env.NODE_ENV === "production"
-  ? { 
-      origin: [
-        process.env.APP_URL || "https://localhost:3000",
-        `https://${process.env.APP_URL?.replace("https://", "")}`,
-        `https://www.${process.env.APP_URL?.replace("https://", "")}`
-      ], 
-      credentials: true 
-    }
-  : { origin: true, credentials: true };
-```
-
-**OR (SIMPLER):**
-```typescript
-const corsOptions = process.env.NODE_ENV === "production"
-  ? { 
-      origin: process.env.APP_URL || "https://localhost:3000",
-      credentials: true 
-    }
-  : { origin: true, credentials: true };
-```
-
-**Action:**
-- [ ] Update server.ts with new CORS config
-- [ ] Test locally: `npm run dev` on custom domain
-- [ ] git commit + push to main
-- [ ] Render auto-redeploys
+> ⚠️ De frontend wordt door dezelfde Express-server geserveerd (same-origin),
+> dus CORS speelt alleen voor externe clients. `APP_URL` blijft wél belangrijk
+> voor SEO (canonical/sitemap) en e-maillinks.
 
 ### 2.2 Email Configuration Check
 

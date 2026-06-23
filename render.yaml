@@ -23,3 +23,8 @@ services:
         sync: false
       - key: EMAIL_FROM
         sync: false
+      # Only used on the very first deploy (empty DB) to seed the admin account
+      # (admin@huurgo.nl). If left unset a random password is printed to the
+      # deploy logs. Change it via the admin panel after first login.
+      - key: ADMIN_DEFAULT_PASSWORD
+        sync: false

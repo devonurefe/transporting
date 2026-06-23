@@ -19,6 +19,7 @@ import { Machine } from "../types";
 import { useAppStore } from "../store/appStore";
 import { euroCompact } from "../utils/format";
 import { getCityBySlug, SERVICE_CITIES } from "../data/serviceCities";
+import { useSeo, SEO_BASE_URL } from "../utils/seo";
 
 interface CityLandingPageProps {
   onSelectMachineForBooking: (machine: Machine) => void;
@@ -35,8 +36,39 @@ export default function CityLandingPage({ onSelectMachineForBooking }: CityLandi
   const machines = useAppStore((s) => s.machines);
   const city = stad ? getCityBySlug(stad) : undefined;
 
+  useSeo(
+    city
+      ? {
+          title: `Hoogwerker huren in ${city.name} | huurgo`,
+          description: city.intro,
+          path: `/hoogwerker-huren/${city.slug}`,
+          jsonLd: {
+            "@context": "https://schema.org",
+            "@type": "Service",
+            serviceType: "Hoogwerker verhuur",
+            name: `Hoogwerker huren in ${city.name}`,
+            description: city.intro,
+            url: `${SEO_BASE_URL}/hoogwerker-huren/${city.slug}`,
+            areaServed: [city.name, ...city.nearby].map((n) => ({ "@type": "City", name: n })),
+            provider: {
+              "@type": "LocalBusiness",
+              name: "huurgo — MB Hoogwerkers B.V.",
+              url: SEO_BASE_URL,
+              image: `${SEO_BASE_URL}/og-image.jpg`,
+              address: {
+                "@type": "PostalAddress",
+                addressLocality: "Zoeterwoude",
+                addressRegion: "Zuid-Holland",
+                addressCountry: "NL",
+              },
+              areaServed: "Zuid-Holland",
+            },
+          },
+        }
+      : { title: "Plaats niet gevonden | huurgo", path: "/hoogwerker-huren" }
+  );
+
   useEffect(() => {
-    if (city) document.title = `Hoogwerker huren in ${city.name} | huurgo`;
     window.scrollTo(0, 0);
   }, [city]);
 

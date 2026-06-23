@@ -302,19 +302,16 @@ export default function CatalogSection({
                       key={machine.id}
                       className="group relative overflow-hidden rounded-2xl border bg-white flex flex-col border-slate-200 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
                     >
-                      {/* Top-left badge: availability only — no stock count shown to customers */}
+                      {/* Top-left badge: only shown when NOT available — no "Beschikbaar" label on available units */}
                       {(() => {
                         const unitIds = unitIdsByBase[getBaseName(machine.name)] ?? [machine.id];
                         const available = isModelAvailableThisWeek(unitIds);
-                        const nextDate = !available ? getNextAvailableDate(unitIds) : null;
-                        const availText = available ? "Beschikbaar" : nextDate ? `Vrij ${formatShortDate(nextDate)}` : "Vol geboekt";
+                        if (available) return null;
+                        const nextDate = getNextAvailableDate(unitIds);
+                        const availText = nextDate ? `Vrij ${formatShortDate(nextDate)}` : "Vol geboekt";
                         return (
-                          <div className={`absolute top-3 left-3 z-20 flex items-center gap-1.5 py-1 px-2.5 rounded-md text-[10px] font-bold shadow-sm backdrop-blur-sm ${
-                            available
-                              ? "bg-slate-900/80 text-white"
-                              : "bg-white/90 border border-amber-200 text-amber-700"
-                          }`}>
-                            <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${available ? "bg-emerald-400" : "bg-amber-400"}`} />
+                          <div className="absolute top-3 left-3 z-20 flex items-center gap-1.5 py-1 px-2.5 rounded-md text-[10px] font-bold shadow-sm backdrop-blur-sm bg-white/90 border border-amber-200 text-amber-700">
+                            <span className="h-1.5 w-1.5 rounded-full shrink-0 bg-amber-400" />
                             {availText}
                           </div>
                         );

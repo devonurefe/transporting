@@ -25,7 +25,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { buildWhatsAppGeneralUrl } from "../utils/whatsapp";
 import { withVat } from "../utils/format";
 import VatToggle from "./VatToggle";
-import { BrandedText } from "./Header";
+import { BrandedText, HuurGoText } from "./Header";
 
 type IconComponent = React.FC<LucideProps>;
 
@@ -241,20 +241,26 @@ export default function HomeSection({
           <div className="w-full h-full bg-gradient-to-br from-slate-800 to-slate-900 animate-pulse" />
         )}
 
-        {/* Readability scrim — darker on the left where the text sits */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/45 to-black/10 pointer-events-none" />
+        {/* Readability scrim — darker toward the bottom-left where the text sits */}
+        <div className="absolute inset-0 bg-gradient-to-tr from-black/85 via-black/45 to-black/10 pointer-events-none" />
 
-        {/* Overlay content */}
-        <div className="absolute inset-0 flex items-center pointer-events-none">
-          <div className="px-5 sm:px-8 lg:px-14 w-full max-w-2xl">
-            <motion.p
+        {/* Overlay content — anchored bottom-left */}
+        <div className="absolute inset-0 flex items-end pointer-events-none">
+          <div className="px-5 sm:px-8 lg:px-14 pb-5 sm:pb-7 lg:pb-9 w-full max-w-2xl">
+            {/* Brand wordmark in its original logo form, with tagline */}
+            <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4 }}
-              className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.22em] text-white/80 mb-2 sm:mb-3"
+              className="mb-2.5 sm:mb-3.5"
             >
-              {t("heroBannerEyebrow")}
-            </motion.p>
+              <span className="text-2xl sm:text-3xl lg:text-4xl drop-shadow-sm">
+                <HuurGoText dark />
+              </span>
+              <span className="block font-semibold text-[9px] sm:text-[11px] uppercase tracking-[0.18em] text-white/70 mt-0.5">
+                {t("heroBannerEyebrow")}
+              </span>
+            </motion.div>
             <motion.h2
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -271,7 +277,7 @@ export default function HomeSection({
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.14 }}
-              className="hidden sm:flex items-start gap-7 lg:gap-9 mt-7 lg:mt-9"
+              className="hidden sm:flex items-start gap-7 lg:gap-9 mt-6 lg:mt-8"
             >
               {[
                 { Icon: Clock, label: t("heroFeatureOnline") },

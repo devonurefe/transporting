@@ -8,7 +8,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with th
 
 **Live URL:** hoogwerkerhub.onrender.com  
 **Deploy:** push to `main` → Render auto-deploys (build: `npm run build && node scripts/preparePush.mjs && npx prisma db push`, start: `node dist/server.js`)
-**No PRs, no branches** — push directly to `main`.
+
+### Branching & PR workflow
+
+`main` is the deployed/production branch — Render auto-deploys every push to it,
+so **never push directly to `main`**. Instead:
+
+- **One PR per feature.** Create a dedicated branch per change (e.g.
+  `claude/<short-feature-name>`), branched off the latest `origin/main`.
+- Keep each PR scoped to a single feature/fix so changes can be reviewed,
+  reverted, or revisited feature by feature.
+- Run `npm run lint` and `npm run test` before opening the PR.
+- Open the PR against `main` and merge it once approved; Render deploys on merge.
+- Don't bundle unrelated changes into one PR.
 
 ---
 

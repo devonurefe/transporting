@@ -28,6 +28,12 @@ const dictionary: TranslationDictionary = {
   menuMyArea: { nl: "Mijn Account", en: "My Account", tr: "Hesabım" },
 
   // Landing page / Hero
+  heroBannerEyebrow: { nl: "Machine Verhuur", en: "Machine Rental", tr: "Makine Kiralama" },
+  heroBannerLine1: { nl: "Slimme machines,", en: "Smart machines,", tr: "Akıllı makineler," },
+  heroBannerLine2: { nl: "snel geregeld.", en: "sorted fast.", tr: "hızlıca ayarlandı." },
+  heroFeatureOnline: { nl: "Snel & eenvoudig online huren", en: "Quick & easy online rental", tr: "Hızlı & kolay online kiralama" },
+  heroFeatureDelivery: { nl: "Bezorging met of zonder chauffeur", en: "Delivery with or without driver", tr: "Şoförlü veya şoförsüz teslimat" },
+  heroFeatureAudience: { nl: "Voor ZZP en particulier", en: "For businesses and individuals", tr: "Şirketler ve bireyler için" },
   heroTagline: { nl: "Professionele Hoogwerker Verhuur", en: "Professional Aerial Work Platform Rental", tr: "Profesyonel Yüksek Erişim Platformu Kiralama" },
   heroTitle: { nl: "De juiste machine, snel en veilig geregeld.", en: "The right machine, arranged quickly and safely.", tr: "Doğru makine, hızlı ve güvenli şekilde ayarlandı." },
   heroSubtitle: {

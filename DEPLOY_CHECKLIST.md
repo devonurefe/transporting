@@ -7,6 +7,36 @@
 
 ---
 
+## ⚠️ PENDING — DEPLOY ÖNCESİ MUTLAKA HATIRLAT
+
+> Claude: bir deploy yaklaştığında bu bölümü kullanıcıya hatırlat.
+
+### 🔔 WhatsApp Business webhook (kaydedildi — yapılacak)
+Ödeme akışını otomatikleştir: müşteri ödeyince admin'e **otomatik bildirim**
+(şu anki manuel `wa.me` link akışının yerine/üstüne).
+
+**Owner'dan gerekli (yapmadan önce):**
+- Meta WhatsApp Business API erişimi (Business hesabı + doğrulanmış numara)
+- `WHATSAPP_PHONE_NUMBER_ID`
+- `WHATSAPP_ACCESS_TOKEN` (kalıcı token)
+- `WHATSAPP_WEBHOOK_VERIFY_TOKEN` (webhook doğrulaması için seçilen string)
+- Meta'da kayıtlı callback URL: `https://<domain>/api/whatsapp/webhook`
+
+Durum: **başlanmadı** — yukarıdaki bilgiler gelince yapılacak.
+
+### 🖼 Hero CDN (opsiyonel — yapılacak)
+Hero şu an DB'de base64 (Render diski kalıcı değil). Gerçek CDN için: Cloudinary
+(`CLOUD_NAME` + unsigned preset) / AWS S3 / Cloudflare R2 + ağ politikası izni.
+
+Durum: **başlanmadı** — hesap/erişim gelince yapılacak.
+
+### Hero görseli (her deploy)
+Admin → Customizer'dan **yazısız, ≥2560px** foto yükle (başlık zaten keskin HTML
+overlay; yüksek çözünürlük mobilde de net küçülür, 1920px masaüstünde yumuşar).
+
+---
+
+
 ## ✅ ADIM 1: RENDER SETUP (30 dakika)
 
 ### 1.1 App Instance

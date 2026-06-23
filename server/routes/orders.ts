@@ -654,6 +654,28 @@ ordersRouter.get("/ratings/summary", publicReadLimiter, async (_req: Authenticat
   }
 });
 
+// GET /api/orders/ratings/by-machine — public per-machine rating aggregate,
+// used to show star ratings on catalog cards. Joins OrderRating → Order to
+// group by machineId. Returns a { machineId: { average, count } } map.
+ordersRouter.get("/ratings/by-machine", publicReadLimiter, async (_req: AuthenticatedRequest, res: Response) => {
+  try {
+    const rows = await prisma.$queryRaw<Array<{ machineId: string; avg: number; cnt: bigint }>>`
+      SELECT o."machineId" AS "machineId", AVG(r.rating)::float AS avg, COUNT(r.rating) AS cnt
+      FROM "OrderRating" r
+      JOIN "Order" o ON o.id = r."orderId"
+      GROUP BY o."machineId"
+    `;
+    const map: Record<string, { average: number; count: number }> = {};
+    for (const row of rows) {
+      map[row.machineId] = { average: Number(row.avg), count: Number(row.cnt) };
+    }
+    res.json(map);
+  } catch (error) {
+    console.error("Error aggregating ratings by machine:", error);
+    res.json({});
+  }
+});
+
 // GET /api/orders/:id/rating — fetch an order's rating
 ordersRouter.get("/:id/rating", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
   const { id } = req.params;

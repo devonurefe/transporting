@@ -7,13 +7,15 @@ import { useAppStore } from "../store/appStore";
 
 interface VatToggleProps {
   size?: "xs" | "sm";
+  /** Full-width on mobile (equal halves), compact inline from sm+. */
+  block?: boolean;
 }
 
 /**
  * Segmented pill that switches the global price display between
  * excl. and incl. BTW. Display only — calculations are untouched.
  */
-export default function VatToggle({ size = "sm" }: VatToggleProps) {
+export default function VatToggle({ size = "sm", block = false }: VatToggleProps) {
   const vatDisplay = useAppStore((s) => s.vatDisplay);
   const setVatDisplay = useAppStore((s) => s.setVatDisplay);
 
@@ -29,7 +31,9 @@ export default function VatToggle({ size = "sm" }: VatToggleProps) {
     <div
       role="group"
       aria-label="Prijsweergave incl. of excl. BTW"
-      className={`inline-flex items-center ${outerRadius} border border-slate-200/80 bg-white ${outerPad} shrink-0`}
+      className={`items-center ${outerRadius} border border-slate-200/80 bg-white ${outerPad} ${
+        block ? "flex w-full sm:inline-flex sm:w-auto" : "inline-flex shrink-0"
+      }`}
     >
       {(["excl", "incl"] as const).map((mode) => (
         <button
@@ -38,6 +42,8 @@ export default function VatToggle({ size = "sm" }: VatToggleProps) {
           aria-pressed={vatDisplay === mode}
           onClick={() => setVatDisplay(mode)}
           className={`${pad} font-bold ${innerRadius} whitespace-nowrap transition-all cursor-pointer ${
+            block ? "flex-1 text-center sm:flex-none" : ""
+          } ${
             vatDisplay === mode
               ? "bg-slate-800 text-white shadow-sm"
               : "text-slate-500 hover:text-slate-800"

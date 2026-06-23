@@ -452,7 +452,7 @@ export default function MachineDetailModal({
             Sluiten
           </button>
           <div className="shrink-0 px-2 hidden sm:block">
-            <p className="text-[9px] text-slate-400 leading-none">vanaf</p>
+            <p className="text-[9px] text-slate-400 leading-none">per dag</p>
             <p className="text-sm font-black text-slate-900 font-mono leading-tight">
               €{priceNum(vp(machine.pricePerDay))}<span className="text-[10px] font-normal text-slate-400">/dag</span>
             </p>

@@ -182,7 +182,7 @@ export default function CityLandingPage({ onSelectMachineForBooking }: CityLandi
                   <Link to={`/hoogwerker/${m.id}`} className="text-xs font-bold text-slate-900 leading-tight line-clamp-2 hover:text-orange-600 transition-colors">
                     {m.name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "")}
                   </Link>
-                  <p className="text-[11px] text-slate-500 mt-auto">v.a. <span className="font-bold text-slate-800">{euroCompact(m.pricePerDay)}</span>/dag</p>
+                  <p className="text-[11px] text-slate-500 mt-auto"><span className="font-bold text-slate-800">{euroCompact(m.pricePerDay)}</span>/dag</p>
                   <button
                     onClick={() => onSelectMachineForBooking(m)}
                     className="w-full py-2 rounded-lg bg-slate-800 hover:bg-slate-900 text-white text-[11px] font-bold transition-colors"

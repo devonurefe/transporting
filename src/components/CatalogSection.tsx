@@ -449,7 +449,7 @@ export default function CatalogSection({
                             ) : (
                               <>
                                 <div className="text-xl font-display font-black leading-none text-slate-900">
-                                  <span className="text-[11px] font-bold text-slate-400 align-middle mr-0.5">v.a.</span>{formatPrice(vp(machine.pricePerDay))}
+                                  {formatPrice(vp(machine.pricePerDay))}
                                 </div>
                                 <div className="text-[10px] text-slate-400 mt-0.5">per dag {vatLabel}</div>
                               </>

@@ -102,7 +102,7 @@ export default function BookingStep1({
           <Calendar className="h-5 w-5 text-slate-700" />
           <span>{t("step1Title")}</span>
         </h3>
-        <p className="text-[11px] text-slate-400 mt-1">{t("step1Subtitle")}</p>
+        <p className="text-xs text-slate-400 mt-1">{t("step1Subtitle")}</p>
       </div>
 
       {cartItems.length === 0 ? (
@@ -136,7 +136,7 @@ export default function BookingStep1({
                 <div className="flex justify-between items-start gap-4">
                   <div className="flex items-start space-x-3 min-w-0 flex-1">
                     <div
-                      className="h-12 w-12 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center font-mono text-[10px] text-slate-400 overflow-hidden shadow-sm cursor-pointer hover:ring-2 hover:ring-slate-400 transition-all relative group/thumb"
+                      className="h-16 w-16 shrink-0 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden shadow-sm cursor-pointer hover:ring-2 hover:ring-slate-400 transition-all relative group/thumb"
                       onClick={() => setPreviewMachine(item.machine)}
                       title="Bekijk details"
                     >
@@ -152,11 +152,11 @@ export default function BookingStep1({
                       <div className="absolute inset-0 bg-black/0 group-hover/thumb:bg-black/20 transition-colors duration-200 rounded-xl" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <h4 className="text-[13px] font-extrabold text-slate-900 leading-snug line-clamp-2">{item.machine.name}</h4>
+                      <h4 className="text-sm font-extrabold text-slate-900 leading-snug">{item.machine.name}</h4>
                       <button
                         type="button"
                         onClick={() => setPreviewMachine(item.machine)}
-                        className="inline-flex items-center gap-1 text-[10px] bg-orange-50 border border-orange-200 text-orange-700 hover:bg-orange-100 hover:border-orange-300 font-bold px-2 py-0.5 rounded-full mt-1.5 cursor-pointer transition-colors whitespace-nowrap"
+                        className="inline-flex items-center gap-1 text-xs bg-orange-50 border border-orange-200 text-orange-700 hover:bg-orange-100 hover:border-orange-300 font-bold px-2.5 py-1 rounded-full mt-2 cursor-pointer transition-colors"
                       >
                         Tarieven &amp; specificaties →
                       </button>
@@ -235,7 +235,7 @@ export default function BookingStep1({
               </span>
               <div>
                 <h4 className="text-xs font-bold text-slate-900">Afhalen in Zoeterwoude</h4>
-                <span className="text-[10px] text-slate-400 block">Depot — gratis</span>
+                <span className="text-xs text-slate-400 block">Depot — gratis</span>
               </div>
             </div>
             <p className="text-xs text-slate-600 leading-relaxed">
@@ -261,7 +261,7 @@ export default function BookingStep1({
               </span>
               <div>
                 <h4 className="text-xs font-bold text-slate-900">Wij bezorgen</h4>
-                <span className="text-[10px] text-slate-400 block">Binnen 20 km straal</span>
+                <span className="text-xs text-slate-400 block">Binnen 20 km straal</span>
               </div>
             </div>
             <p className="text-xs text-slate-500 leading-normal">
@@ -269,12 +269,12 @@ export default function BookingStep1({
             </p>
             <div className="mt-2 flex items-baseline gap-1">
               <span className="text-sm font-black text-emerald-600">€150,-</span>
-              <span className="text-[11px] text-slate-500 font-semibold">heen + terug</span>
+              <span className="text-xs text-slate-500 font-semibold">heen + terug</span>
             </div>
             {deliveryType === "delivery_by_us" && (
               <div className="mt-2.5 flex items-start gap-1.5 rounded-lg bg-amber-50 border border-amber-200 px-2.5 py-1.5">
                 <Info className="h-3.5 w-3.5 text-amber-600 shrink-0 mt-px" />
-                <p className="text-[10px] text-amber-800 font-semibold leading-snug">
+                <p className="text-xs text-amber-800 font-semibold leading-snug">
                   Tip: huur zelf een aanhanger en bespaar €150 transportkosten.
                 </p>
               </div>
@@ -301,7 +301,7 @@ export default function BookingStep1({
                   </span>
                   <div>
                     <h4 className="text-xs font-bold text-slate-900">Aanhanger huren</h4>
-                    <span className="text-[10px] text-slate-400 block">Eigen auto, onze aanhanger</span>
+                    <span className="text-xs text-slate-400 block">Eigen auto, onze aanhanger</span>
                   </div>
                 </div>
                 <p className="text-xs text-slate-500 leading-normal">
@@ -318,13 +318,13 @@ export default function BookingStep1({
                       className={`w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg border text-left transition-all cursor-pointer ${deliveryType === "trailer_rental" ? "bg-white border-slate-400 shadow-sm" : "bg-white border-slate-200 hover:border-slate-300"}`}
                     >
                       <div className="min-w-0">
-                        <span className="text-[11px] font-bold text-slate-900 block">Op locatie houden</span>
-                        <span className="text-[10px] text-slate-500">Aanhanger blijft op uw locatie</span>
+                        <span className="text-xs font-bold text-slate-900 block">Op locatie houden</span>
+                        <span className="text-xs text-slate-500">Aanhanger blijft op uw locatie</span>
                       </div>
                       <div className="text-right shrink-0">
                         {sums && sums.days > 0 ? (
                           <>
-                            <span className="text-[10px] text-slate-400 block font-mono">{sums.days} dgn × €25,-</span>
+                            <span className="text-xs text-slate-400 block font-mono">{sums.days} dgn × €25,-</span>
                             <span className="text-xs font-black text-emerald-600 font-mono">{euroCompact(sums.days * 25)}</span>
                           </>
                         ) : (
@@ -340,8 +340,8 @@ export default function BookingStep1({
                       className={`w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg border text-left transition-all cursor-pointer ${deliveryType === "trailer_drop_return" ? "bg-white border-slate-400 shadow-sm" : "bg-white border-slate-200 hover:border-slate-300"}`}
                     >
                       <div className="min-w-0">
-                        <span className="text-[11px] font-bold text-slate-900 block">Drop &amp; Return</span>
-                        <span className="text-[10px] text-slate-500">U brengt heen, wij halen terug</span>
+                        <span className="text-xs font-bold text-slate-900 block">Drop &amp; Return</span>
+                        <span className="text-xs text-slate-500">U brengt heen, wij halen terug</span>
                       </div>
                       <span className="text-xs font-black text-emerald-600 shrink-0 font-mono">€35,-</span>
                     </button>
@@ -349,7 +349,7 @@ export default function BookingStep1({
                 ) : (
                   <div className="mt-2 flex items-baseline gap-1">
                     <span className="text-sm font-black text-emerald-600">€25,-/dag</span>
-                    <span className="text-[11px] text-slate-400 font-semibold">of €35,- vast</span>
+                    <span className="text-xs text-slate-400 font-semibold">of €35,- vast</span>
                   </div>
                 )}
               </div>
@@ -375,7 +375,7 @@ export default function BookingStep1({
               </span>
               <div>
                 <h4 className="text-xs font-bold text-slate-900">Zelf ophalen</h4>
-                <span className="text-[10px] text-slate-400 block">Zoeterwoude depot</span>
+                <span className="text-xs text-slate-400 block">Zoeterwoude depot</span>
               </div>
             </div>
             <p className="text-xs text-slate-500 leading-normal">
@@ -417,7 +417,7 @@ export default function BookingStep1({
         <div className="space-y-3 pt-4 border-t-2 border-slate-200">
           <div className="flex justify-between items-center">
             <span className="text-sm text-slate-800 font-bold">Gewenst bezorgmoment</span>
-            <span className="text-[10px] text-rose-500 font-semibold uppercase tracking-wide">Verplicht</span>
+            <span className="text-xs text-rose-500 font-semibold uppercase tracking-wide">Verplicht</span>
           </div>
           <div className="grid grid-cols-2 gap-3">
             {[
@@ -435,7 +435,7 @@ export default function BookingStep1({
                 }`}
               >
                 <span className="text-xs font-bold text-slate-900 block">{slot.label}</span>
-                <span className="text-[10px] text-slate-400 font-mono">{slot.time}</span>
+                <span className="text-xs text-slate-400 font-mono">{slot.time}</span>
               </button>
             ))}
           </div>
@@ -444,7 +444,7 @@ export default function BookingStep1({
 
       {/* Minimum-rental notice for weekly-only products (e.g. Kamersteiger) */}
       {selectedMachine?.weeklyOnly && (
-        <div className="p-3 rounded-xl bg-sky-50 border border-sky-200 text-sky-800 text-[11px] leading-relaxed flex items-start gap-2">
+        <div className="p-3 rounded-xl bg-sky-50 border border-sky-200 text-sky-800 text-xs leading-relaxed flex items-start gap-2">
           <Calendar className="h-4 w-4 text-sky-600 shrink-0 mt-0.5" />
           <span>
             Dit product wordt <span className="font-bold">per week</span> verhuurd met een minimum van
@@ -489,7 +489,7 @@ export default function BookingStep1({
                   className="h-4 w-4 accent-orange-500 rounded cursor-pointer"
                 />
               </div>
-              <p className="text-[10.5px] text-slate-600 leading-normal">
+              <p className="text-xs text-slate-600 leading-normal">
                 Luxe veiligheidsharnas combi, lijn met valdemper en TÜV goedgekeurde bouwhelm met gehoorbescherming.
               </p>
             </div>
@@ -525,7 +525,7 @@ export default function BookingStep1({
                   />
                 </div>
                 {addon.description && (
-                  <p className="text-[10.5px] text-slate-600 leading-normal">{addon.description}</p>
+                  <p className="text-xs text-slate-600 leading-normal">{addon.description}</p>
                 )}
               </div>
               <span className="text-xs font-mono font-bold text-slate-700 mt-3 block">+€{addon.pricePerWeek},- / per week</span>
@@ -556,7 +556,7 @@ export default function BookingStep1({
               }`}
             >
               <span className="text-sm font-semibold">Nee, niet werken</span>
-              <span className={`text-[11px] font-medium ${weekendWorkAnswer === 'nee' ? 'text-emerald-50' : 'text-emerald-600'}`}>
+              <span className={`text-xs font-medium ${weekendWorkAnswer === 'nee' ? 'text-emerald-50' : 'text-emerald-600'}`}>
                 Alleen werkdagen · voordeliger
               </span>
             </button>
@@ -570,7 +570,7 @@ export default function BookingStep1({
               }`}
             >
               <span className="text-sm font-semibold">Ja, ik werk in het weekend</span>
-              <span className={`text-[11px] font-medium ${weekendWorkAnswer === 'ja' ? 'text-slate-300' : 'text-slate-500'}`}>
+              <span className={`text-xs font-medium ${weekendWorkAnswer === 'ja' ? 'text-slate-300' : 'text-slate-500'}`}>
                 Volledig werkweektarief
               </span>
             </button>

@@ -182,16 +182,18 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
 
   const onDayClick = (key: string, selectable: boolean) => {
     if (!selectable) return;
-    // Both dates set: any click starts a fresh selection so the user can freely pick a new start
+    // Both dates set: any click starts a fresh single-day selection
     if (draftStart && draftEnd) {
       setDraftStart(key);
       setDraftEnd("");
       return;
     }
+    // No start yet: first click → set start (1-day immediately valid via effectiveEnd)
     if (!draftStart) { setDraftStart(key); return; }
+    // Start set, no end: re-clicking the start day deselects; clicking elsewhere sets end
+    if (key === draftStart) { setDraftStart(""); return; }
     if (key < draftStart) { setDraftStart(key); return; }
-    if (key === draftStart) { setDraftEnd(key); return; }
-    // key > draftStart and already ≤ maxEnd (capped days aren't selectable); validate defensively
+    // key > draftStart: set as end
     if (someUnitAvailable(unitIds, draftStart, key, orders, blockedDates, today)) setDraftEnd(key);
   };
 
@@ -204,11 +206,14 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
     if (viewMonth === 11) { setViewMonth(0); setViewYear(viewYear + 1); } else setViewMonth(viewMonth + 1);
   };
 
-  const validRange = !!draftStart && !!draftEnd && someUnitAvailable(unitIds, draftStart, draftEnd, orders, blockedDates, today);
-  const days = validRange ? calculateRentalDays(draftStart, draftEnd) : 0;
+  // When only start is picked (no end yet), treat it as a 1-day selection so
+  // the confirm button enables immediately after the first tap.
+  const effectiveEnd = draftEnd || draftStart;
+  const validRange = !!draftStart && someUnitAvailable(unitIds, draftStart, effectiveEnd, orders, blockedDates, today);
+  const days = validRange ? calculateRentalDays(draftStart, effectiveEnd) : 0;
   const subtotal = validRange ? calculateItemSubtotal(machine, days, profile, campaignRules, draftStart) : 0;
 
-  const confirm = () => { if (!validRange) return; onConfirm(draftStart, draftEnd); close(); };
+  const confirm = () => { if (!validRange) return; onConfirm(draftStart, effectiveEnd); close(); };
   const reset = () => { setDraftStart(""); setDraftEnd(""); };
 
   const buttonLabel = startDate && endDate

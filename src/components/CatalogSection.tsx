@@ -9,6 +9,7 @@ import {
   X,
   Tag,
   ChevronRight,
+  Star,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Link } from "react-router-dom";
@@ -116,6 +117,17 @@ export default function CatalogSection({
     window.scrollTo(0, 0);
   }, []);
 
+  // Per-machine customer ratings (real bookings only) for catalog social proof.
+  const [machineRatings, setMachineRatings] = useState<Record<string, { average: number; count: number }>>({});
+  useEffect(() => {
+    let active = true;
+    fetch("/api/orders/ratings/by-machine")
+      .then((r) => (r.ok ? r.json() : {}))
+      .then((data) => { if (active) setMachineRatings(data ?? {}); })
+      .catch(() => { /* ratings are non-critical — fail silently */ });
+    return () => { active = false; };
+  }, []);
+
   useEffect(() => {
     setActiveDetailImageIndex(0);
   }, [selectedDetailMachine]);
@@ -176,6 +188,18 @@ export default function CatalogSection({
     });
     return map;
   }, [activeMachines]);
+
+  // Combine customer ratings across all physical units of a model (the catalog
+  // shows one card per model), weighted by each unit's number of ratings.
+  const ratingForUnits = (unitIds: string[]): { average: number; count: number } | null => {
+    let total = 0;
+    let count = 0;
+    for (const id of unitIds) {
+      const r = machineRatings[id];
+      if (r?.count) { total += r.average * r.count; count += r.count; }
+    }
+    return count > 0 ? { average: total / count, count } : null;
+  };
 
   // Filtered Machines — category + search only, deduplicated to show ONE card per model
   const filteredMachines = useMemo(() => {
@@ -398,6 +422,18 @@ export default function CatalogSection({
                                 {getBaseName(machine.name)}
                               </Link>
                             </h3>
+                            {(() => {
+                              const unitIds = unitIdsByBase[getBaseName(machine.name)] ?? [machine.id];
+                              const r = ratingForUnits(unitIds);
+                              if (!r) return null;
+                              return (
+                                <div className="flex items-center gap-1 mt-1" aria-label={`${r.average.toFixed(1)} van 5 sterren, ${r.count} beoordelingen`}>
+                                  <Star className="h-3.5 w-3.5 text-amber-400 fill-amber-400 shrink-0" />
+                                  <span className="text-xs font-bold text-slate-700">{r.average.toFixed(1)}</span>
+                                  <span className="text-[11px] text-slate-400">({r.count})</span>
+                                </div>
+                              );
+                            })()}
                           </div>
                           <div className="text-right shrink-0">
                             {machine.oneDayPrice && machine.oneDayPrice < machine.pricePerDay ? (

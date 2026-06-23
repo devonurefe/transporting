@@ -838,6 +838,15 @@ export default function BookingSection({
 
   const sums = calculationSummary();
 
+  // Reservation period for the price summary box — neutral copy when the cart
+  // mixes machines booked for different periods.
+  const leadCartItem = cartItems[0];
+  const mixedCartPeriods = cartItems.length > 1 && cartItems.some(
+    (i) => i.startDate !== leadCartItem?.startDate || i.endDate !== leadCartItem?.endDate
+  );
+  const summaryStartDate = leadCartItem?.startDate ?? startDate;
+  const summaryEndDate = leadCartItem?.endDate ?? endDate;
+
   return (
     <div className="relative min-h-[calc(100vh-4.5rem)] py-10 px-5 sm:px-6 lg:px-8">
       
@@ -969,6 +978,9 @@ export default function BookingSection({
                     setActiveTab={setActiveTab}
                     sums={sums}
                     selectedMachine={cartItems.length > 0 ? cartItems[0].machine : null}
+                    startDate={summaryStartDate}
+                    endDate={summaryEndDate}
+                    multiplePeriods={mixedCartPeriods}
                     deliveryDistanceKm={deliveryDistanceKm}
                     isSubmitting={isSubmitting}
                     bookingError={bookingError}
@@ -979,7 +991,7 @@ export default function BookingSection({
 
               {/* Price summary — desktop only, sticky right column */}
               <div className="hidden lg:block lg:col-span-4 lg:sticky lg:top-24 space-y-4">
-                <BookingPriceSummary selectedMachine={cartItems && cartItems.length > 0 ? cartItems[0].machine : null} machineCount={cartItems.length || 1} sums={sums} />
+                <BookingPriceSummary selectedMachine={cartItems && cartItems.length > 0 ? cartItems[0].machine : null} machineCount={cartItems.length || 1} startDate={summaryStartDate} endDate={summaryEndDate} multiplePeriods={mixedCartPeriods} sums={sums} />
               </div>
 
             </motion.div>

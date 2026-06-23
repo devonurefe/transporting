@@ -78,6 +78,13 @@ export default function BookingStep1({
   const vatDisplay = useAppStore((state) => state.vatDisplay);
   const [previewMachine, setPreviewMachine] = useState<Machine | null>(null);
 
+  // Reservation period for the price summary — neutral copy when the cart
+  // mixes machines booked for different periods.
+  const leadItem = cartItems[0];
+  const mixedPeriods = cartItems.length > 1 && cartItems.some(
+    (i) => i.startDate !== leadItem?.startDate || i.endDate !== leadItem?.endDate
+  );
+
   return (
     <div className="bg-white border border-slate-200 shadow-sm p-6 rounded-3xl space-y-6">
       <div className="border-b border-slate-100 pb-4">
@@ -600,7 +607,7 @@ export default function BookingStep1({
       {/* Mobile price summary — shows after all selections, before Doorgaan */}
       {sums && (
         <div className="lg:hidden pt-2">
-          <BookingPriceSummary selectedMachine={selectedMachine ?? null} machineCount={cartItems.length || 1} sums={sums} />
+          <BookingPriceSummary selectedMachine={selectedMachine ?? null} machineCount={cartItems.length || 1} startDate={leadItem?.startDate} endDate={leadItem?.endDate} multiplePeriods={mixedPeriods} sums={sums} />
         </div>
       )}
 

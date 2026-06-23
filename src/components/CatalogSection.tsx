@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import {
   ArrowUpToLine,
   ArrowRightLeft,
@@ -104,6 +104,14 @@ export default function CatalogSection({
   const [detailSource, setDetailSource] = useState<"pricing" | "info">("pricing");
   const [activeDetailImageIndex, setActiveDetailImageIndex] = useState<number>(0);
   const [pricingPreviewMachine, setPricingPreviewMachine] = useState<Machine | null>(null);
+
+  // Category filter row: enable the right chevron to scroll the tab strip, and
+  // hide it once the user reaches the end (or when all tabs already fit).
+  const categoryNavRef = useRef<HTMLElement>(null);
+  const [canScrollCategories, setCanScrollCategories] = useState(false);
+  const scrollCategories = () => {
+    categoryNavRef.current?.scrollBy({ left: 200, behavior: "smooth" });
+  };
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
@@ -135,6 +143,22 @@ export default function CatalogSection({
     }
     return tabs;
   }, [customCategories]);
+
+  // Keep the category scroll chevron in sync with the strip's overflow state.
+  useEffect(() => {
+    const el = categoryNavRef.current;
+    if (!el) return;
+    const update = () => {
+      setCanScrollCategories(el.scrollWidth - el.clientWidth - el.scrollLeft > 4);
+    };
+    update();
+    el.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    return () => {
+      el.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+    };
+  }, [categoryTabs.length]);
 
   // Strip " (Unit N)" suffix to get base model name for grouping
   const getBaseName = (name: string) => name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "").trim();
@@ -212,7 +236,7 @@ export default function CatalogSection({
         <div className="flex flex-col gap-3 bg-white border border-slate-200 p-3 rounded-2xl shadow-sm mb-6">
           {/* Row 1: Category tabs */}
           <div className="relative">
-          <nav aria-label="Categorie filter" className="flex items-center space-x-1.5 overflow-x-auto scrollbar-none pr-7 sm:pr-0">
+          <nav ref={categoryNavRef} aria-label="Categorie filter" className="flex items-center space-x-1.5 overflow-x-auto scrollbar-none pr-7">
             {categoryTabs.map((tab) => {
               const isActive = selectedCategory === tab.id;
               return (
@@ -237,16 +261,24 @@ export default function CatalogSection({
               );
             })}
           </nav>
-          {/* Scroll affordance: fade + chevron hint on mobile (hidden once the
-              row fits, i.e. on sm+ where all tabs are visible) */}
-          <div className="pointer-events-none absolute right-0 top-0 bottom-0 flex items-center pl-6 pr-1 bg-gradient-to-l from-white via-white to-transparent sm:hidden">
-            <ChevronRight className="h-4 w-4 text-slate-400" />
-          </div>
+          {/* Scroll affordance: a clickable chevron that scrolls the tab strip,
+              shown only while there are more tabs hidden to the right. */}
+          {canScrollCategories && (
+            <button
+              type="button"
+              onClick={scrollCategories}
+              aria-label="Meer categorieën tonen"
+              className="absolute right-0 top-0 bottom-0 flex items-center pl-8 pr-1 bg-gradient-to-l from-white via-white to-transparent cursor-pointer border-none"
+            >
+              <ChevronRight className="h-4 w-4 text-slate-500" />
+            </button>
+          )}
           </div>
 
-          {/* Row 2: Search + VAT display toggle */}
-          <div className="flex items-center gap-2">
-            <div className="relative flex flex-1 items-center bg-slate-50 rounded-xl border border-slate-200/80 px-3 py-2 focus-within:border-orange-400 focus-within:ring-2 focus-within:ring-orange-400/20 transition-colors">
+          {/* Row 2: Search + VAT display toggle — stacked full-width on mobile,
+              side-by-side from sm+ so both controls stay balanced. */}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+            <div className="relative flex w-full sm:flex-1 items-center bg-slate-50 rounded-xl border border-slate-200/80 px-3 py-2 focus-within:border-orange-400 focus-within:ring-2 focus-within:ring-orange-400/20 transition-colors">
               <Search className="h-4 w-4 text-slate-400 shrink-0 mr-2" />
               <input
                 id="catalog-search"
@@ -262,7 +294,7 @@ export default function CatalogSection({
                 </button>
               )}
             </div>
-            <VatToggle />
+            <VatToggle block />
           </div>
         </div>
 
@@ -302,19 +334,16 @@ export default function CatalogSection({
                       key={machine.id}
                       className="group relative overflow-hidden rounded-2xl border bg-white flex flex-col border-slate-200 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
                     >
-                      {/* Top-left badge: availability only — no stock count shown to customers */}
+                      {/* Top-left badge: only shown when NOT available — no "Beschikbaar" label on available units */}
                       {(() => {
                         const unitIds = unitIdsByBase[getBaseName(machine.name)] ?? [machine.id];
                         const available = isModelAvailableThisWeek(unitIds);
-                        const nextDate = !available ? getNextAvailableDate(unitIds) : null;
-                        const availText = available ? "Beschikbaar" : nextDate ? `Vrij ${formatShortDate(nextDate)}` : "Vol geboekt";
+                        if (available) return null;
+                        const nextDate = getNextAvailableDate(unitIds);
+                        const availText = nextDate ? `Vrij ${formatShortDate(nextDate)}` : "Vol geboekt";
                         return (
-                          <div className={`absolute top-3 left-3 z-20 flex items-center gap-1.5 py-1 px-2.5 rounded-md text-[10px] font-bold shadow-sm backdrop-blur-sm ${
-                            available
-                              ? "bg-slate-900/80 text-white"
-                              : "bg-white/90 border border-amber-200 text-amber-700"
-                          }`}>
-                            <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${available ? "bg-emerald-400" : "bg-amber-400"}`} />
+                          <div className="absolute top-3 left-3 z-20 flex items-center gap-1.5 py-1 px-2.5 rounded-md text-[10px] font-bold shadow-sm backdrop-blur-sm bg-white/90 border border-amber-200 text-amber-700">
+                            <span className="h-1.5 w-1.5 rounded-full shrink-0 bg-amber-400" />
                             {availText}
                           </div>
                         );

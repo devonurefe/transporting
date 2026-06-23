@@ -50,9 +50,14 @@ export default function App() {
 
   const activeTab = location.pathname === "/" ? "home" : location.pathname.substring(1);
 
-  // Search parameters pre-filled from landing page search submit
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("all");
+  // Search parameters — persisted in the catalog URL (?cat=…&q=…) so filters
+  // survive refresh and can be shared. Initialised from the current URL.
+  const initialFilters = (() => {
+    const params = new URLSearchParams(window.location.search);
+    return { q: params.get("q") ?? "", cat: params.get("cat") ?? "all" };
+  })();
+  const [searchQuery, setSearchQuery] = useState(initialFilters.q);
+  const [selectedCategory, setSelectedCategory] = useState(initialFilters.cat);
 
   const setActiveTab = (tab: string) => {
     if (tab === "catalog") {
@@ -66,6 +71,20 @@ export default function App() {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [location.pathname]);
+
+  // Mirror the active catalog filters into the URL query string (replace, so we
+  // don't spam browser history) so a refresh or shared link restores them.
+  useEffect(() => {
+    if (activeTab !== "catalog") return;
+    const params = new URLSearchParams(location.search);
+    if (searchQuery) params.set("q", searchQuery); else params.delete("q");
+    if (selectedCategory && selectedCategory !== "all") params.set("cat", selectedCategory); else params.delete("cat");
+    const next = params.toString();
+    const current = location.search.replace(/^\?/, "");
+    if (next !== current) {
+      navigate({ pathname: "/catalog", search: next ? `?${next}` : "" }, { replace: true });
+    }
+  }, [searchQuery, selectedCategory, activeTab, location.search, navigate]);
 
   // Warm the most-linked lazy chunks (catalog + FAQ) while the browser is idle,
   // so footer/nav clicks open instantly instead of waiting on a Suspense spinner.

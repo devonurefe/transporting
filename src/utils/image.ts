@@ -5,15 +5,23 @@
 
 /**
  * Resizes an image file client-side using HTML5 Canvas.
- * Compresses the resulting image as WebP at 80% quality (JPEG fallback).
+ * Compresses the resulting image as WebP at the given quality (JPEG fallback).
  *
  * @param file The uploaded Image File.
  * @param maxWidth Max width bound.
  * @param maxHeight Max height bound.
  * @param quality WebP/JPEG quality (0–1). Defaults to 0.85.
+ * @param enhance Apply subtle brightness/contrast/saturation boost. Defaults to true.
+ *   Pass false for hero/landscape photos where original colours should be preserved.
  * @returns A promise resolving to the compressed base64 string.
  */
-export function resizeImage(file: File, maxWidth = 1400, maxHeight = 1400, quality = 0.85): Promise<string> {
+export function resizeImage(
+  file: File,
+  maxWidth = 1400,
+  maxHeight = 1400,
+  quality = 0.85,
+  enhance = true,
+): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -48,13 +56,13 @@ export function resizeImage(file: File, maxWidth = 1400, maxHeight = 1400, quali
         // White fill so transparent PNGs render on a clean background instead of black.
         ctx.fillStyle = "#ffffff";
         ctx.fillRect(0, 0, width, height);
-        // Subtle enhancement: slightly more vibrant/sharp without looking processed.
-        ctx.filter = "brightness(1.04) contrast(1.08) saturate(1.06)";
+        if (enhance) {
+          // Subtle boost for machine product photos — slightly more vibrant without looking processed.
+          ctx.filter = "brightness(1.04) contrast(1.08) saturate(1.06)";
+        }
         ctx.drawImage(img, 0, 0, width, height);
         ctx.filter = "none";
-        // Prefer WebP at 85% quality (smaller payloads, fewer artefacts); the server upload
-        // allowlist + magic-byte check already accept .webp. Browsers that
-        // ignore the WebP MIME return PNG/JPEG, so fall back to JPEG.
+        // Prefer WebP (smaller payloads, fewer artefacts); fall back to JPEG.
         const webp = canvas.toDataURL("image/webp", quality);
         const dataUrl = webp.startsWith("data:image/webp")
           ? webp

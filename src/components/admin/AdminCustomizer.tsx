@@ -191,9 +191,9 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
     setIsUploadingHero(true);
     try {
       // Hero spans the full viewport width on desktop/retina, so keep it large
-      // and high-quality (2560px, 92%) to avoid the upscaled/soft look. Mobile
-      // simply downscales this, so it stays crisp there too.
-      const base64 = await resizeImage(file, 2560, 1200, 0.92);
+      // and high-quality (2560px, 92%). enhance=false preserves the original
+      // photo colours — AI-generated images shouldn't get the product colour boost.
+      const base64 = await resizeImage(file, 2560, 1200, 0.92, false);
       // resizeImage may convert to WebP regardless of original format — derive extension from output
       const isWebp = base64.startsWith("data:image/webp");
       const uploadName = isWebp ? "hero.webp" : `hero${file.name.slice(file.name.lastIndexOf("."))}`;
@@ -383,7 +383,7 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
                   />
                 </div>
               )}
-              <p className="text-[10px] text-slate-400">{t("Aanbevolen: 2560×800px, scherpe foto zonder ingebakken tekst (titel staat al onder de foto). Leeg laten = standaard hero.", "Recommended: 2560×800px, sharp photo without baked-in text (the title already shows below the photo). Leave empty = default hero.", "Önerilen: 2560×800px, içine yazı gömülmemiş net bir foto (başlık zaten fotonun altında görünüyor). Boş bırak = varsayılan hero.")}</p>
+              <p className="text-[10px] text-slate-400">{t("PNG, JPG en WebP worden geaccepteerd. Aanbevolen: ≥2560×1200px, scherpe foto zonder ingebakken tekst. Leeg laten = standaard hero.", "PNG, JPG and WebP accepted. Recommended: ≥2560×1200px, sharp photo without baked-in text. Leave empty = default hero.", "PNG, JPG ve WebP kabul edilir. Önerilen: ≥2560×1200px, içine yazı gömülmemiş net bir fotoğraf. Boş bırak = varsayılan hero.")}</p>
             </div>
 
           </div>

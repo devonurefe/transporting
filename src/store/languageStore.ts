@@ -94,6 +94,11 @@ const dictionary: TranslationDictionary = {
   calLegendUnavailable: { nl: "Niet beschikbaar", en: "Unavailable", tr: "Müsait değil" },
   calReset: { nl: "Herstel", en: "Reset", tr: "Sıfırla" },
   calConfirm: { nl: "Bevestigen", en: "Confirm", tr: "Onayla" },
+  calCappedHint: {
+    nl: "Er zijn nog beschikbare data na de bezette periode — kies een nieuwe startdatum na die periode.",
+    en: "Dates are available after the booked period — pick a new start date after it.",
+    tr: "Dolu dönemden sonra müsait tarihler var — o dönemden sonra yeni bir başlangıç tarihi seçin.",
+  },
 
   // Booking Success
   successTitle: { nl: "Reservering Aangevraagd", en: "Reservation Requested", tr: "Rezervasyon Talep Edildi" },

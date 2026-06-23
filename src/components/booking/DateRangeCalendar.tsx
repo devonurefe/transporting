@@ -338,7 +338,7 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
                 {/* Hint when capping is active */}
                 {maxEnd !== "" && !!draftStart && !draftEnd && (
                   <p className="text-[10px] text-center text-slate-400 px-5 pb-1 leading-relaxed">
-                    Lichte data zijn beschikbaar — kies een <span className="font-semibold">nieuwe startdatum</span> ná de onderbrekingsperiode
+                    {t("calCappedHint")}
                   </p>
                 )}
 

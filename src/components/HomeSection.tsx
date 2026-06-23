@@ -234,7 +234,7 @@ export default function HomeSection({
             transition={{ duration: 0.4 }}
             src={siteConfig.heroImageUrl || '/hero-huurgo-v2.jpg'}
             alt=""
-            className="w-full h-full block object-cover [object-position:60%_center] sm:[object-position:center]"
+            className="w-full h-full block object-cover [object-position:60%_center] sm:[object-position:65%_center]"
           />
         ) : (
           // Skeleton placeholder while the config is still loading

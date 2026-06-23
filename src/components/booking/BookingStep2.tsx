@@ -401,7 +401,7 @@ export default function BookingStep2({
 
       {sums && (
         <div className="lg:hidden">
-          <BookingPriceSummary selectedMachine={selectedMachine ?? null} sums={sums} />
+          <BookingPriceSummary selectedMachine={selectedMachine ?? null} startDate={startDate} endDate={endDate} multiplePeriods={multiplePeriods} sums={sums} />
         </div>
       )}
 

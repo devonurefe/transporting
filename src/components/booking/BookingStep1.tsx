@@ -156,7 +156,7 @@ export default function BookingStep1({
                       <button
                         type="button"
                         onClick={() => setPreviewMachine(item.machine)}
-                        className="inline-flex items-center gap-1 text-xs bg-orange-50 border border-orange-200 text-orange-700 hover:bg-orange-100 hover:border-orange-300 font-bold px-2.5 py-1 rounded-full mt-2 cursor-pointer transition-colors"
+                        className="flex w-full justify-center items-center gap-1 text-xs bg-orange-50 border border-orange-200 text-orange-700 hover:bg-orange-100 hover:border-orange-300 font-bold px-3 py-1.5 rounded-full mt-3 cursor-pointer transition-colors"
                       >
                         Tarieven &amp; specificaties →
                       </button>

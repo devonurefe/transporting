@@ -47,6 +47,10 @@ describe("resizeImage", () => {
     // Mock document.createElement("canvas")
     const mockContext = {
       drawImage: vi.fn(),
+      fillRect: vi.fn(),
+      // fillStyle/filter are plain assignable props; declared for clarity.
+      fillStyle: "",
+      filter: "",
     };
     const mockCanvas = {
       width: 0,

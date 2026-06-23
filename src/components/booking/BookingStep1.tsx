@@ -153,13 +153,6 @@ export default function BookingStep1({
                     </div>
                     <div className="min-w-0 flex-1">
                       <h4 className="text-sm font-extrabold text-slate-900 leading-snug">{item.machine.name}</h4>
-                      <button
-                        type="button"
-                        onClick={() => setPreviewMachine(item.machine)}
-                        className="flex w-full justify-center items-center gap-1 text-xs bg-orange-50 border border-orange-200 text-orange-700 hover:bg-orange-100 hover:border-orange-300 font-bold px-3 py-1.5 rounded-full mt-3 cursor-pointer transition-colors"
-                      >
-                        Tarieven &amp; specificaties →
-                      </button>
                     </div>
                   </div>
                   <button
@@ -172,6 +165,15 @@ export default function BookingStep1({
                     <X className="h-4 w-4" />
                   </button>
                 </div>
+
+                {/* Pill — full card width, same as calendar below */}
+                <button
+                  type="button"
+                  onClick={() => setPreviewMachine(item.machine)}
+                  className="w-full flex justify-center items-center gap-1.5 text-xs bg-orange-50 border border-orange-200 text-orange-700 hover:bg-orange-100 hover:border-orange-300 font-bold px-3 py-2 rounded-full cursor-pointer transition-colors"
+                >
+                  Tarieven &amp; specificaties →
+                </button>
 
                 <div className="pt-2 border-t border-slate-200">
                   <DateRangeCalendar

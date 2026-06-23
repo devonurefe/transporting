@@ -1039,7 +1039,7 @@ function AddCategoryForm({ onAddSystemLog, adminLanguage }: AddCategoryFormProps
       listLabel: listLabel.trim() || label.trim() + "en",
       desc: desc.trim() || t("Moderne hoogwerkers voor diverse klussen.", "Modern aerial platforms for various jobs.", "Çeşitli işler için modern sepetli platformlar."),
       heights: heights.trim() || "10m - 20m",
-      price: price.trim() || "v.a. €150/dag"
+      price: price.trim() || "€150/dag"
     };
 
     const updated = [...customCategories, newCat];
@@ -1096,7 +1096,7 @@ function AddCategoryForm({ onAddSystemLog, adminLanguage }: AddCategoryFormProps
           type="text" 
           value={price} 
           onChange={(e) => setPrice(e.target.value)} 
-          placeholder={t("Startprijs (bijv: v.a. €190/dag)", "Starting price (e.g., from €190/day)", "Başlangıç ücreti (örn: en az €190/gün)")} 
+          placeholder={t("Startprijs (bijv: €190/dag)", "Starting price (e.g. €190/day)", "Başlangıç ücreti (örn: €190/gün)")} 
           className="bg-white border border-slate-200 rounded-lg p-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white" 
         />
         <input 

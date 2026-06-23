@@ -8,10 +8,8 @@ import {
   Terminal as TerminalIcon, 
   Activity, 
   ShieldCheck, 
-  ShieldAlert, 
-  Cpu, 
-  HardDrive, 
-  Database, 
+  ShieldAlert,
+  Database,
   RefreshCw, 
   Zap, 
   Users, 
@@ -22,6 +20,7 @@ import {
   Network 
 } from "lucide-react";
 import { motion } from "motion/react";
+import { useAppStore } from "../../store/appStore";
 
 interface AdminDiagnosticsProps {
   systemLogs: any[];
@@ -37,10 +36,15 @@ export default function AdminDiagnostics({ systemLogs, userProfiles, onAddSystem
     return nl;
   };
 
-  // Live fluctuating stats
-  const [cpuLoad, setCpuLoad] = useState(12);
-  const [memoryUsage, setMemoryUsage] = useState(64.2); // MB
-  const [dbLatency, setDbLatency] = useState(1.8); // ms
+  // Real operational metrics from live order data
+  const orders = useAppStore((state) => state.orders);
+  const activeRentals = orders.filter((o) => o.status === "Goedgekeurd" || o.status === "Onderweg").length;
+  const pendingApproval = orders.filter((o) => o.status === "In behandeling").length;
+  const totalActive = orders.filter((o) => o.status !== "Geannuleerd").length;
+
+  // Real database health — measured round-trip to /api/health (which pings the DB)
+  const [dbLatency, setDbLatency] = useState<number | null>(null);
+  const [dbStatus, setDbStatus] = useState<"checking" | "connected" | "unhealthy">("checking");
   const [isAuditing, setIsAuditing] = useState(false);
   const [auditLogs, setAuditLogs] = useState<string[]>([
     `[INFO] [2026-05-31 13:29:00] ` + t("huurgo Daemon v2.1.4 succesvol gestart.", "huurgo Daemon v2.1.4 started successfully.", "huurgo Daemon v2.1.4 başarıyla başlatıldı."),
@@ -51,24 +55,28 @@ export default function AdminDiagnostics({ systemLogs, userProfiles, onAddSystem
     `[OK]   [2026-05-31 13:31:00] ` + t("Alle systemen nominaal. Gereed voor beheerderscommando's.", "All systems nominal. Ready for admin commands.", "Tüm sistemler nominal. Yönetici komutları için hazır.")
   ]);
 
-  // Fluctuating metric updates in background
+  // Probe real database health every 15s (round-trip to /api/health, which runs
+  // a SELECT 1 against PostgreSQL). No fake metrics — this is the live status.
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCpuLoad(prev => {
-        const change = (Math.random() - 0.5) * 4;
-        return Math.max(5, Math.min(35, parseFloat((prev + change).toFixed(1))));
-      });
-      setMemoryUsage(prev => {
-        const change = (Math.random() - 0.5) * 0.8;
-        return Math.max(60, Math.min(75, parseFloat((prev + change).toFixed(1))));
-      });
-      setDbLatency(prev => {
-        const change = (Math.random() - 0.5) * 0.4;
-        return Math.max(0.8, Math.min(4.5, parseFloat((prev + change).toFixed(2))));
-      });
-    }, 4000);
-
-    return () => clearInterval(timer);
+    let active = true;
+    const probe = async () => {
+      const start = performance.now();
+      try {
+        const res = await fetch("/api/health", { cache: "no-store" });
+        const elapsed = Math.round(performance.now() - start);
+        if (!active) return;
+        const body = await res.json().catch(() => ({}));
+        setDbLatency(elapsed);
+        setDbStatus(res.ok && body?.services?.database === "connected" ? "connected" : "unhealthy");
+      } catch {
+        if (!active) return;
+        setDbLatency(null);
+        setDbStatus("unhealthy");
+      }
+    };
+    probe();
+    const timer = setInterval(probe, 15000);
+    return () => { active = false; clearInterval(timer); };
   }, []);
 
   const triggerSelfAudit = () => {
@@ -114,73 +122,73 @@ export default function AdminDiagnostics({ systemLogs, userProfiles, onAddSystem
       {/* Upper Grid - Performance Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         
-        {/* CPU Panel */}
+        {/* Active rentals — real */}
         <div className="glass-panel p-5 rounded-3xl space-y-4 relative overflow-hidden shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-slate-500 text-[10px] font-extrabold uppercase tracking-wider font-mono">{t("Server CPU Belasting", "Server CPU Load", "Sunucu İşlemci Yükü")}</span>
-            <Cpu className="h-4.5 w-4.5 text-amber-500" />
+            <span className="text-slate-500 text-[10px] font-extrabold uppercase tracking-wider font-mono">{t("Actieve verhuur", "Active rentals", "Aktif kiralamalar")}</span>
+            <Activity className="h-4.5 w-4.5 text-amber-500" />
           </div>
           <div className="space-y-1">
             <div className="flex items-baseline space-x-1">
-              <span className="text-3xl font-mono font-black text-slate-900">{cpuLoad}%</span>
-              <span className="text-slate-500 text-xs font-semibold">{t("van 8 cores", "of 8 cores", "/ 8 Çekirdek")}</span>
+              <span className="text-3xl font-mono font-black text-slate-900">{activeRentals}</span>
+              <span className="text-slate-500 text-xs font-semibold">{t("goedgekeurd / onderweg", "approved / en route", "onaylı / yolda")}</span>
             </div>
             <span className="text-[10px] text-teal-600 font-bold block flex items-center space-x-1">
               <span className="h-1.5 w-1.5 rounded-full bg-teal-500 animate-ping shrink-0" />
-              <span>{t("Optimaal gecentreerd", "Optimally balanced", "Kusursuz Dengelendi")}</span>
+              <span>{t("Live uit reserveringen", "Live from bookings", "Rezervasyonlardan canlı")}</span>
             </span>
           </div>
           <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full transition-all duration-700" 
-              style={{ width: `${cpuLoad}%` }}
+            <div
+              className="h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full transition-all duration-700"
+              style={{ width: `${totalActive > 0 ? Math.round((activeRentals / totalActive) * 100) : 0}%` }}
             />
           </div>
         </div>
 
-        {/* Memory Panel */}
+        {/* Pending approval — real */}
         <div className="glass-panel p-5 rounded-3xl space-y-4 relative overflow-hidden shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-slate-500 text-[10px] font-extrabold uppercase tracking-wider font-mono">{t("Geheugentoewijzing", "Memory Allocation", "Ayrılan Bellek")}</span>
-            <HardDrive className="h-4.5 w-4.5 text-blue-500" />
+            <span className="text-slate-500 text-[10px] font-extrabold uppercase tracking-wider font-mono">{t("Wacht op accordering", "Awaiting approval", "Onay bekliyor")}</span>
+            <Clock className="h-4.5 w-4.5 text-blue-500" />
           </div>
           <div className="space-y-1">
             <div className="flex items-baseline space-x-1">
-              <span className="text-3xl font-mono font-black text-slate-900">{memoryUsage} MB</span>
-              <span className="text-slate-500 text-xs font-semibold">{t("heap", "heap", "yığın")}</span>
+              <span className="text-3xl font-mono font-black text-slate-900">{pendingApproval}</span>
+              <span className="text-slate-500 text-xs font-semibold">{t("in behandeling", "in progress", "işlemde")}</span>
             </div>
             <span className="text-[10px] text-slate-500 block">
-              {t("Garbage Collector: ", "Garbage Collector: ", "Çöp Toplayıcı: ")}<strong>{t("Actief (vrijgave el. 10m)", "Active (released 10m ago)", "Aktif (10dk önce boşaltıldı)")}</strong>
+              {t("Reserveringen die op betaling/accordering wachten.", "Bookings awaiting payment/approval.", "Ödeme/onay bekleyen rezervasyonlar.")}
             </span>
           </div>
           <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full transition-all duration-700" 
-              style={{ width: `${(memoryUsage / 256) * 100}%` }}
+            <div
+              className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full transition-all duration-700"
+              style={{ width: `${totalActive > 0 ? Math.round((pendingApproval / totalActive) * 100) : 0}%` }}
             />
           </div>
         </div>
 
-        {/* Database Query Latency */}
+        {/* Database health — real measured round-trip */}
         <div className="glass-panel p-5 rounded-3xl space-y-4 relative overflow-hidden shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-slate-500 text-[10px] font-extrabold uppercase tracking-wider font-mono">{t("PostgreSQL Query-latentie", "PostgreSQL Query Latency", "PostgreSQL Sorgu Gecikmesi")}</span>
+            <span className="text-slate-500 text-[10px] font-extrabold uppercase tracking-wider font-mono">{t("Database latentie", "Database latency", "Veritabanı gecikmesi")}</span>
             <Database className="h-4.5 w-4.5 text-teal-500" />
           </div>
           <div className="space-y-1">
             <div className="flex items-baseline space-x-1">
-              <span className="text-3xl font-mono font-black text-slate-900">{dbLatency} ms</span>
-              <span className="text-slate-500 text-xs font-semibold">{t("avg read/write", "avg read/write", "ort. okuma/yazma")}</span>
+              <span className="text-3xl font-mono font-black text-slate-900">{dbLatency === null ? "—" : `${dbLatency} ms`}</span>
+              <span className="text-slate-500 text-xs font-semibold">{t("round-trip /api/health", "round-trip /api/health", "gidiş-dönüş /api/health")}</span>
             </div>
-            <span className="text-[10px] text-teal-600 font-bold block flex items-center space-x-1">
-              <ShieldCheck className="h-3 w-3 text-teal-500" />
-              <span>{t("Geoptimaliseerde indexen", "Optimized indexes", "Optimize indeksler")}</span>
+            <span className={`text-[10px] font-bold block flex items-center space-x-1 ${dbStatus === "connected" ? "text-teal-600" : dbStatus === "unhealthy" ? "text-red-600" : "text-slate-400"}`}>
+              {dbStatus === "unhealthy" ? <ShieldAlert className="h-3 w-3" /> : <ShieldCheck className="h-3 w-3" />}
+              <span>{dbStatus === "connected" ? t("Verbonden", "Connected", "Bağlı") : dbStatus === "unhealthy" ? t("Niet bereikbaar", "Unreachable", "Erişilemiyor") : t("Controleren…", "Checking…", "Kontrol ediliyor…")}</span>
             </span>
           </div>
           <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-gradient-to-r from-teal-500 to-indigo-500 rounded-full transition-all duration-700" 
-              style={{ width: `${(dbLatency / 10) * 100}%` }}
+            <div
+              className={`h-full rounded-full transition-all duration-700 ${dbStatus === "unhealthy" ? "bg-red-500" : "bg-gradient-to-r from-teal-500 to-indigo-500"}`}
+              style={{ width: `${dbLatency === null ? 100 : Math.min(100, Math.max(8, (dbLatency / 500) * 100))}%` }}
             />
           </div>
         </div>

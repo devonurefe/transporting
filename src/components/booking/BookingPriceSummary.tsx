@@ -12,6 +12,9 @@ import { euro, euroCompact } from "../../utils/format";
 interface BookingPriceSummaryProps {
   selectedMachine: Machine | null;
   machineCount?: number;
+  startDate?: string;
+  endDate?: string;
+  multiplePeriods?: boolean;
   sums: {
     days: number;
     rawSubtotal: number;
@@ -91,9 +94,26 @@ function SummaryRow({
   );
 }
 
-export default function BookingPriceSummary({ selectedMachine, machineCount = 1, sums }: BookingPriceSummaryProps) {
+/** Dutch short date, e.g. "19 jun" — matches the catalog card format. */
+function formatShortDate(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const months = ["jan", "feb", "mrt", "apr", "mei", "jun", "jul", "aug", "sep", "okt", "nov", "dec"];
+  return `${d.getDate()} ${months[d.getMonth()]}`;
+}
+
+export default function BookingPriceSummary({ selectedMachine, machineCount = 1, startDate, endDate, multiplePeriods, sums }: BookingPriceSummaryProps) {
   const t = useLanguageStore((state) => state.t);
   const [breakdownOpen, setBreakdownOpen] = React.useState(false);
+
+  // Reservation period label: confirm WHICH dates the customer booked (the
+  // calendar is no longer visible in steps 2-3). Falls back to neutral copy
+  // when the cart mixes machines with different periods.
+  const periodLabel = multiplePeriods
+    ? "Meerdere periodes"
+    : startDate && endDate
+    ? `${formatShortDate(startDate)} – ${formatShortDate(endDate)}`
+    : null;
 
   if (!selectedMachine) {
     return (
@@ -206,6 +226,12 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
           <p className="text-[11px] text-slate-400 mt-1.5 leading-snug">
             {t("priceSummaryInclVAT")} · {sums.days} {sums.days === 1 ? "dag" : "dagen"} huur
           </p>
+          {periodLabel && (
+            <p className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-600 mt-1.5 leading-snug">
+              <Calendar className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+              <span>Huurperiode: {periodLabel}</span>
+            </p>
+          )}
         </div>
 
         {/* ── SAMENVATTING ───────────────────────── */}

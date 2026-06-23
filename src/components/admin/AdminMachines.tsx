@@ -124,6 +124,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
       const file = files[i];
       try {
         const base64 = await resizeImage(file);
+        const ext = base64.startsWith("data:image/webp") ? ".webp" : ".jpg";
         const token = localStorage.getItem("hwh_admin_token") || localStorage.getItem("hwh_token");
         const res = await fetch("/api/upload", {
           method: "POST",
@@ -131,7 +132,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
             "Content-Type": "application/json",
             ...(token ? { Authorization: `Bearer ${token}` } : {})
           },
-          body: JSON.stringify({ fileName: file.name, base64Data: base64 })
+          body: JSON.stringify({ fileName: `machine-extra${ext}`, base64Data: base64 })
         });
         if (res.ok) {
           const data = await res.json();
@@ -194,6 +195,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
     setIsUploadingEditImage(true);
     try {
       const base64 = await resizeImage(file);
+      const ext = base64.startsWith("data:image/webp") ? ".webp" : ".jpg";
       const token = localStorage.getItem("hwh_admin_token") || localStorage.getItem("hwh_token");
       const res = await fetch("/api/upload", {
         method: "POST",
@@ -201,7 +203,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
           "Content-Type": "application/json",
           ...(token ? { Authorization: `Bearer ${token}` } : {})
         },
-        body: JSON.stringify({ fileName: file.name, base64Data: base64 })
+        body: JSON.stringify({ fileName: `machine${ext}`, base64Data: base64 })
       });
       if (res.ok) {
         const data = await res.json();

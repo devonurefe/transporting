@@ -194,9 +194,8 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
       // and high-quality (2560px, 92%). enhance=false preserves the original
       // photo colours — AI-generated images shouldn't get the product colour boost.
       const base64 = await resizeImage(file, 2560, 1200, 0.92, false);
-      // resizeImage may convert to WebP regardless of original format — derive extension from output
-      const isWebp = base64.startsWith("data:image/webp");
-      const uploadName = isWebp ? "hero.webp" : `hero${file.name.slice(file.name.lastIndexOf("."))}`;
+      // resizeImage always outputs WebP or JPEG — derive extension from actual output, never from original filename
+      const uploadName = base64.startsWith("data:image/webp") ? "hero.webp" : "hero.jpg";
       const token = localStorage.getItem("hwh_admin_token") || localStorage.getItem("hwh_token");
       const res = await fetch("/api/upload", {
         method: "POST",

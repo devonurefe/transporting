@@ -68,6 +68,7 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
       const file = files[i];
       try {
         const base64 = await resizeImage(file);
+        const ext = base64.startsWith("data:image/webp") ? ".webp" : ".jpg";
         const token = localStorage.getItem("hwh_admin_token") || localStorage.getItem("hwh_token");
         const res = await fetch("/api/upload", {
           method: "POST",
@@ -76,7 +77,7 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
             ...(token ? { Authorization: `Bearer ${token}` } : {})
           },
           body: JSON.stringify({
-            fileName: file.name,
+            fileName: `machine-extra${ext}`,
             base64Data: base64
           })
         });
@@ -103,6 +104,7 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
     setIsUploading(true);
     try {
       const base64 = await resizeImage(file);
+      const ext = base64.startsWith("data:image/webp") ? ".webp" : ".jpg";
       const token = localStorage.getItem("hwh_admin_token") || localStorage.getItem("hwh_token");
       const res = await fetch("/api/upload", {
         method: "POST",
@@ -111,7 +113,7 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
           ...(token ? { Authorization: `Bearer ${token}` } : {})
         },
         body: JSON.stringify({
-          fileName: file.name,
+          fileName: `machine${ext}`,
           base64Data: base64
         })
       });

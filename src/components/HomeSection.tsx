@@ -9,6 +9,8 @@ import { useAppStore } from "../store/appStore";
 import {
   MessageCircle,
   Truck,
+  Clock,
+  UserRound,
   Tractor,
   Scissors,
   MoveVertical,
@@ -219,9 +221,10 @@ export default function HomeSection({
   return (
     <div>
 
-      {/* ── HERO IMAGE — sade, metin yok ── */}
-      {/* Gate the image on siteConfigLoaded so the old default photo never
-          flashes before the admin-configured hero loads on first visit. */}
+      {/* ── HERO BANNER — clean background photo + crisp HTML text overlay ──
+          Text/icons are rendered as HTML (not baked into the image) so they
+          stay razor-sharp at any resolution/zoom and are translatable. Upload
+          a TEXT-FREE photo in Admin → Customizer for the best result. */}
       <div className="relative bg-slate-900 overflow-hidden h-[260px] sm:h-[380px] lg:h-[420px]">
         {siteConfigLoaded ? (
           <motion.img
@@ -231,13 +234,62 @@ export default function HomeSection({
             transition={{ duration: 0.4 }}
             src={siteConfig.heroImageUrl || '/hero-huurgo-v2.jpg'}
             alt=""
-            className="w-full h-full block object-cover [object-position:20%_center] sm:[object-position:center]"
+            className="w-full h-full block object-cover [object-position:60%_center] sm:[object-position:center]"
           />
         ) : (
           // Skeleton placeholder while the config is still loading
           <div className="w-full h-full bg-gradient-to-br from-slate-800 to-slate-900 animate-pulse" />
         )}
-        <div className="absolute inset-0 bg-black/15 pointer-events-none" />
+
+        {/* Readability scrim — darker on the left where the text sits */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/45 to-black/10 pointer-events-none" />
+
+        {/* Overlay content */}
+        <div className="absolute inset-0 flex items-center pointer-events-none">
+          <div className="px-5 sm:px-8 lg:px-14 w-full max-w-2xl">
+            <motion.p
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.22em] text-white/80 mb-2 sm:mb-3"
+            >
+              {t("heroBannerEyebrow")}
+            </motion.p>
+            <motion.h2
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.07 }}
+              className="font-display font-black italic tracking-tight text-white leading-[0.95] text-3xl sm:text-5xl lg:text-6xl drop-shadow-sm"
+            >
+              {t("heroBannerLine1")}
+              <br />
+              <span className="text-orange-500">{t("heroBannerLine2")}</span>
+            </motion.h2>
+
+            {/* Trust features — hidden on the shortest screens to keep mobile clean */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.14 }}
+              className="hidden sm:flex items-start gap-7 lg:gap-9 mt-7 lg:mt-9"
+            >
+              {[
+                { Icon: Clock, label: t("heroFeatureOnline") },
+                { Icon: Truck, label: t("heroFeatureDelivery") },
+                { Icon: UserRound, label: t("heroFeatureAudience") },
+              ].map(({ Icon, label }) => (
+                <div key={label} className="flex items-center gap-2.5 max-w-[180px]">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-orange-500/90 text-white shadow-sm">
+                    <Icon className="h-[18px] w-[18px]" strokeWidth={2.2} />
+                  </span>
+                  <span className="text-[11px] font-semibold uppercase tracking-wide text-white leading-tight">
+                    {label}
+                  </span>
+                </div>
+              ))}
+            </motion.div>
+          </div>
+        </div>
       </div>
 
       {/* ── HERO TEXT + CTA — centered single column ── */}

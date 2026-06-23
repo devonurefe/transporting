@@ -14,6 +14,13 @@ const resend = resendApiKey && resendApiKey !== "MY_RESEND_API_KEY" ? new Resend
 const SENDER_EMAIL = process.env.EMAIL_FROM || "onboarding@resend.dev";
 const APP_URL = process.env.APP_URL || "https://localhost:3000";
 const ADMIN_ALERT_EMAIL = process.env.ADMIN_EMAIL || "";
+// Payment runs over WhatsApp (customer requests the iDEAL/Tikkie link). The
+// number is the same one the client uses; only render WA buttons when set.
+const WHATSAPP_NUMBER = (process.env.VITE_WHATSAPP_NUMBER || process.env.WHATSAPP_NUMBER || "").replace(/[^0-9]/g, "");
+
+/** Build a wa.me link with a pre-filled, URL-encoded message. */
+const waLink = (message: string): string =>
+  `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
 
 // Escape user-supplied values before interpolating into HTML email bodies
 const esc = (s: unknown): string =>
@@ -139,9 +146,31 @@ export const emailService = {
               <div class="price-amount">€${order.totalAmount.toFixed(2)}</div>
             </div>
 
+            ${WHATSAPP_NUMBER ? `
+            <div style="margin: 28px 0; padding: 20px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 16px; text-align: center;">
+              <div style="font-size: 14px; font-weight: 700; color: #166534;">Laatste stap: bevestig via WhatsApp</div>
+              <p style="font-size: 13px; line-height: 1.6; color: #15803d; margin: 8px 0 16px;">
+                Vraag eenvoudig uw iDEAL/Tikkie-betaallink aan. Zodra de betaling binnen is, bevestigen wij uw reservering.
+              </p>
+              <a href="${waLink(`Hallo huurgo! 🦾 Graag ontvang ik de betaallink (iDEAL/Tikkie) voor mijn reservering ${order.id}.`)}"
+                 style="display: inline-block; background: #25D366; color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 12px; font-weight: bold; font-size: 14px;">
+                Betaallink aanvragen via WhatsApp
+              </a>
+            </div>
+            ` : `
             <p style="font-size: 13px; line-height: 1.6; color: #475569;">
               Wij nemen zo snel mogelijk contact met u op zodra de definitieve logistieke accordering is bevestigd. Meestal gebeurt dit binnen 1 uur.
             </p>
+            `}
+
+            <div style="margin: 24px 0; padding: 0 4px;">
+              <div class="label" style="margin-bottom: 10px;">Wat gebeurt er nu?</div>
+              <table role="presentation" cellpadding="0" cellspacing="0" style="width: 100%; font-size: 13px; color: #475569; line-height: 1.5;">
+                <tr><td style="padding: 4px 0; vertical-align: top; width: 24px;"><strong style="color:#4f46e5;">1.</strong></td><td style="padding: 4px 0;">U vraagt de betaallink aan${WHATSAPP_NUMBER ? " via WhatsApp" : ""}.</td></tr>
+                <tr><td style="padding: 4px 0; vertical-align: top;"><strong style="color:#4f46e5;">2.</strong></td><td style="padding: 4px 0;">Na betaling zetten wij uw reservering op <strong>Goedgekeurd</strong>.</td></tr>
+                <tr><td style="padding: 4px 0; vertical-align: top;"><strong style="color:#4f46e5;">3.</strong></td><td style="padding: 4px 0;">${isPickup ? "U haalt de machine op op de afgesproken datum." : "Wij bezorgen de machine op het afgesproken moment."}</td></tr>
+              </table>
+            </div>
 
             <div style="text-align: center;">
               <a href="${APP_URL}/orders" class="btn" style="color: #ffffff;">Mijn Reserveringen Bekijken</a>

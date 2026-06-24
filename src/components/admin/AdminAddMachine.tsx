@@ -636,7 +636,7 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
               {imageUrl && (
                 <div className="col-span-1 md:col-span-2 flex items-center space-x-3 bg-white p-2 rounded-xl border border-slate-100 shadow-sm animate-fade-in">
                   <div className="h-10 w-16 bg-slate-100 rounded-lg overflow-hidden border border-slate-200 shrink-0">
-                    <img src={imageUrl} alt={t("Voorbeeld", "Preview", "Önizleme")} className="h-full w-full object-cover" />
+                    <img src={imageUrl} alt={t("Voorbeeld", "Preview", "Önizleme")} className="h-full w-full object-cover" loading="lazy" />
                   </div>
                   <div>
                     <span className="text-[9px] text-slate-400 font-mono block">{t("Actieve URL:", "Active URL:", "Aktif URL:")}</span>
@@ -669,7 +669,7 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
                   <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3 mt-3 animate-fade-in">
                     {additionalImages.map((url, idx) => (
                       <div key={idx} className="relative aspect-video rounded-xl overflow-hidden border border-slate-200 bg-slate-100 group shadow-sm">
-                        <img src={url} alt={`Extra ${idx}`} className="w-full h-full object-cover" />
+                        <img src={url} alt={`Extra ${idx}`} className="w-full h-full object-cover" loading="lazy" />
                         <button
                           type="button"
                           onClick={() => setAdditionalImages(prev => prev.filter((_, i) => i !== idx))}

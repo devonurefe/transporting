@@ -677,7 +677,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                           <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mt-3 animate-fade-in">
                             {editAdditionalImages.map((url, idx) => (
                               <div key={idx} className="relative aspect-video rounded-xl overflow-hidden border border-slate-200 bg-slate-100 group shadow-sm">
-                                <img src={url} alt={`Extra ${idx}`} className="w-full h-full object-cover" />
+                                <img src={url} alt={`Extra ${idx}`} className="w-full h-full object-cover" loading="lazy" />
                                 <button
                                   type="button"
                                   onClick={() => setEditAdditionalImages(prev => prev.filter((_, i) => i !== idx))}

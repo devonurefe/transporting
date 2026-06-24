@@ -23,7 +23,7 @@ machinesRouter.get("/", publicReadLimiter, softOriginGuard, async (req: Authenti
 
     if (pageQuery || limitQuery) {
       const page = Number(pageQuery) || 1;
-      const limit = Number(limitQuery) || 20;
+      const limit = Math.min(Number(limitQuery) || 20, 100);
       const skip = (page - 1) * limit;
 
       const totalCount = await prisma.machine.count({ where: { deletedAt: null } });

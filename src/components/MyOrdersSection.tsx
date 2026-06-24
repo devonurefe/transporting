@@ -355,6 +355,10 @@ export default function MyOrdersSection({
       onTriggerNotification("Registratie Mislukt", "Wachtwoord moet minimaal 8 tekens bevatten.", "warning");
       return;
     }
+    if (!/[a-zA-Z]/.test(regPassword) || !/[0-9]/.test(regPassword)) {
+      onTriggerNotification("Registratie Mislukt", "Wachtwoord moet minimaal één letter en één cijfer bevatten.", "warning");
+      return;
+    }
 
     const success = await register({
       email: regEmail.trim(),
@@ -659,7 +663,7 @@ export default function MyOrdersSection({
                         required
                         value={regPassword}
                         onChange={(e) => setRegPassword(e.target.value)}
-                        placeholder="Minimaal 8 tekens"
+                        placeholder="Min. 8 tekens, 1 letter, 1 cijfer"
                         className="w-full text-xs bg-transparent border-none outline-none text-slate-800 placeholder-slate-400 font-medium"
                       />
                     </div>

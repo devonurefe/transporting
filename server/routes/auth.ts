@@ -327,8 +327,13 @@ authRouter.post("/forgot-password", async (req: Request, res: Response) => {
     const resetToken = crypto.randomBytes(32).toString("hex");
     const resetExpiry = new Date(Date.now() + 60 * 60 * 1000);
 
-    // Check admin table first
-    const admin = await prisma.admin.findUnique({ where: { email: normalizedEmail } });
+    // Always query both tables before responding to prevent timing-based email enumeration.
+    // An attacker observing response latency cannot distinguish admin from customer accounts.
+    const [admin, customer] = await Promise.all([
+      prisma.admin.findUnique({ where: { email: normalizedEmail } }),
+      prisma.customer.findUnique({ where: { email: normalizedEmail } })
+    ]);
+
     if (admin) {
       await prisma.admin.update({
         where: { id: admin.id },
@@ -338,15 +343,13 @@ authRouter.post("/forgot-password", async (req: Request, res: Response) => {
       return res.json(SUCCESS_MSG);
     }
 
-    // Check customer table
-    const customer = await prisma.customer.findUnique({ where: { email: normalizedEmail } });
-    if (!customer) return res.json(SUCCESS_MSG); // Always succeed — prevent email enumeration
-
-    await prisma.customer.update({
-      where: { id: customer.id },
-      data: { passwordResetToken: resetToken, passwordResetExpiry: resetExpiry }
-    });
-    await emailService.sendPasswordResetEmail(customer.email, customer.name, resetToken, appUrl);
+    if (customer) {
+      await prisma.customer.update({
+        where: { id: customer.id },
+        data: { passwordResetToken: resetToken, passwordResetExpiry: resetExpiry }
+      });
+      await emailService.sendPasswordResetEmail(customer.email, customer.name, resetToken, appUrl);
+    }
 
     return res.json(SUCCESS_MSG);
   } catch (error) {

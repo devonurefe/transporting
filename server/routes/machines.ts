@@ -306,6 +306,9 @@ machinesRouter.put("/:id", requireAdmin as any, async (req: AuthenticatedRequest
       additionalImages: Array.isArray(updatedMachine.additionalImages) ? updatedMachine.additionalImages : []
     });
   } catch (error: any) {
+    if (error?.code === "P2025") {
+      return res.status(404).json({ error: "Machine niet gevonden" });
+    }
     console.error("Error updating machine:", error);
     res.status(500).json({ error: "Machine bijwerken mislukt" });
   }
@@ -349,6 +352,9 @@ machinesRouter.delete("/:id", requireAdmin as any, async (req: AuthenticatedRequ
     });
     res.json({ success: true, message: "Machine succesvol verwijderd" });
   } catch (error: any) {
+    if (error?.code === "P2025") {
+      return res.status(404).json({ error: "Machine niet gevonden" });
+    }
     console.error("Error deleting machine:", error);
     res.status(500).json({ error: "Machine kon niet worden verwijderd" });
   }

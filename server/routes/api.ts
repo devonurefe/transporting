@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, json as expressJson } from "express";
 import { machinesRouter } from "./machines.js";
 import { ordersRouter } from "./orders.js";
 import { blockedDatesRouter } from "./blockedDates.js";
@@ -6,6 +6,8 @@ import { siteConfigRouter } from "./siteConfig.js";
 import { calendarRouter } from "./calendar.js";
 import { prisma } from "../../prisma/client.js";
 import { requireAdmin } from "../middleware/auth.js";
+
+const uploadBodyParser = expressJson({ limit: "10mb" });
 
 export const apiRouter = Router();
 
@@ -57,7 +59,7 @@ const MAGIC_BYTES: Record<string, (buf: Buffer) => boolean> = {
   ".gif": buf => buf.toString("ascii", 0, 3) === "GIF",
 };
 
-apiRouter.post("/upload", requireAdmin as any, async (req, res) => {
+apiRouter.post("/upload", uploadBodyParser, requireAdmin as any, async (req, res) => {
   const { fileName, base64Data } = req.body;
   if (!fileName || !base64Data) {
     return res.status(400).json({ error: "fileName en base64Data zijn verplicht" });

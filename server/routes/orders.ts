@@ -409,7 +409,7 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
     serverSubtotal = Math.round(serverSubtotal * 100) / 100;
     const serverVat = Math.round((serverSubtotal + transportCostClient + driverCostClient + addonsTotal) * 21) / 100;
     const serverTotal = Math.round((serverSubtotal + transportCostClient + driverCostClient + addonsTotal + serverVat) * 100) / 100;
-    if (Math.abs(serverTotal - Number(orderData.totalAmount)) > 0.10) {
+    if (Math.abs(serverTotal - Number(orderData.totalAmount)) > 0.01) {
       return res.status(400).json({ error: "Totaalbedrag klopt niet. Ververs de pagina en probeer opnieuw." });
     }
 
@@ -514,8 +514,13 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
       endDate: newOrder.endDate.toISOString().split("T")[0],
       customerPhone: newOrder.customerPhone || ""
     };
-    emailService.sendOrderConfirmation(emailData).catch(err => console.error("Customer confirmation email error:", err));
-    emailService.sendAdminAlert(emailData).catch(err => console.error("Admin alert email error:", err));
+    emailService.sendOrderConfirmation(emailData).catch(err => {
+      console.error("[EMAIL] Customer confirmation permanently failed for order", newOrder.id, ":", err);
+      // Admin alert may still go through even when customer email fails
+    });
+    emailService.sendAdminAlert(emailData).catch(err => {
+      console.error("[EMAIL] Admin alert permanently failed for order", newOrder.id, ":", err);
+    });
 
     res.status(201).json({
       ...newOrder,

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Machine, Order, DeliveryType, UserProfile, CartItem } from "../types";
 import { useAppStore } from "../store/appStore";
@@ -59,6 +59,7 @@ export default function BookingSection({
   const campaignRules = useAppStore((state) => state.campaignRules);
   const [step, setStep] = useState<number>(1);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const isSubmittingRef = useRef(false);
   const [bookingError, setBookingError] = useState<string | null>(null);
 
   const [successOrder, setSuccessOrder] = useState<Order | null>(null);
@@ -721,6 +722,8 @@ export default function BookingSection({
   };
 
   const handleCreateBooking = async () => {
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
     setIsSubmitting(true);
     setBookingError(null);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -820,8 +823,10 @@ export default function BookingSection({
             setBookingError("Er is een fout opgetreden bij het verwerken van uw boeking. Controleer uw gegevens en probeer het opnieuw.");
           }
         }
+        isSubmittingRef.current = false;
         setIsSubmitting(false);
         } catch (err: any) {
+        isSubmittingRef.current = false;
         setIsSubmitting(false);
         const msg: string = err?.message || "";
         if (msg.includes("409") || msg.toLowerCase().includes("conflict") || msg.toLowerCase().includes("gereserveerd")) {

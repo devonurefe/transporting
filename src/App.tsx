@@ -151,16 +151,20 @@ export default function App() {
   const [fabPulse, setFabPulse] = useState(false);
 
   useEffect(() => {
+    let pulseTimeout: ReturnType<typeof setTimeout> | null = null;
     const interval = setInterval(() => {
       setFabPulse(prev => {
         if (!prev) {
-          setTimeout(() => setFabPulse(false), 900);
+          pulseTimeout = setTimeout(() => setFabPulse(false), 900);
           return true;
         }
         return prev;
       });
     }, 15000);
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      if (pulseTimeout) clearTimeout(pulseTimeout);
+    };
   }, []);
 
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
@@ -302,19 +306,6 @@ export default function App() {
     }
   }, [location.pathname, currentUser, handleAddSystemLog]);
 
-  // Bridge setters to Zustand useAppStore
-  const setSiteConfig = (updateFn: any) => {
-    const current = useAppStore.getState().siteConfig;
-    const next = typeof updateFn === "function" ? updateFn(current) : updateFn;
-    useAppStore.getState().updateSiteConfig(next);
-  };
-
-  const setCustomCategories = (updateFn: any) => {
-    const current = useAppStore.getState().customCategories;
-    const next = typeof updateFn === "function" ? updateFn(current) : updateFn;
-    useAppStore.getState().updateCategories(next);
-  };
-  
   const [showContactModal, setShowContactModal] = useState<boolean>(false);
 
   const [notifications, setNotifications] = useState<AppNotification[]>([]);

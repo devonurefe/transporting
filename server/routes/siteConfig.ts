@@ -29,14 +29,7 @@ const defaultSiteConfig = {
 // GET site config
 siteConfigRouter.get("/site-config", publicReadLimiter, async (req: AuthenticatedRequest, res: Response) => {
   try {
-    let config = await prisma.siteConfig.findUnique({ where: { id: "default" } });
-    // Auto-fix stale subtitle text that may be stored in DB
-    if (config?.heroSubtitle?.includes("AI-assistent") || config?.heroSubtitle?.includes("AI assistant") || config?.heroSubtitle?.includes("MB Hoogwerkers") || config?.heroSubtitle?.includes("door heel Nederland")) {
-      config = await prisma.siteConfig.update({
-        where: { id: "default" },
-        data: { heroSubtitle: CORRECT_SUBTITLE }
-      });
-    }
+    const config = await prisma.siteConfig.findUnique({ where: { id: "default" } });
     res.json(config || defaultSiteConfig);
   } catch (error) {
     console.error("Error fetching site config:", error);

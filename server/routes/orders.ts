@@ -262,7 +262,7 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
     // the client. The global "safety" addon plus this machine's own product-specific
     // cross-sell extras are the only accepted ids. (Weekend handling is no longer an
     // addon — it adjusts the subtotal via orderData.weekendWork below.)
-    const crossSell: Array<{ id: string; pricePerWeek: number }> =
+    const crossSell: Array<{ id: string; name?: string; pricePerWeek: number }> =
       Array.isArray((machine as any).crossSellAddons) ? (machine as any).crossSellAddons : [];
     const crossSellMap = new Map(crossSell.map(a => [String(a.id), a]));
     const addonWeeks = Math.max(1, Math.ceil(
@@ -486,7 +486,13 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
           totalAmount: serverTotal,
           status: "In behandeling",
           customerId: resolvedCustomerId,
-          addons: JSON.stringify(orderData.addons || []),
+          // Reconstruct from server-side data — never persist client-sent names or prices
+          addons: JSON.stringify(rawAddons.map((a: any) => {
+            const id = String(a.id ?? "");
+            if (id === "safety") return { id: "safety", name: "Veiligheidskit", price: 15 * rentalDays };
+            const sa = crossSellMap.get(id);
+            return { id, name: sa?.name ?? id, price: Number(sa?.pricePerWeek ?? 0) * addonWeeks };
+          })),
           weekendWork: weekendWork === "ja" || weekendWork === "nee" ? weekendWork : null,
           invoiceNumber,
           paymentStatus: "awaiting"

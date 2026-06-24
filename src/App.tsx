@@ -45,6 +45,10 @@ function NotFoundPage({ setActiveTab }: { setActiveTab: (tab: string) => void })
   );
 }
 
+// Stable session ID — used to scope idempotency keys to one page session.
+// A network-timeout retry within the same session reuses this ID; a fresh page load generates a new one.
+const SESSION_ID = crypto.randomUUID();
+
 // Dynamic Code Splitting (React.lazy)
 const HomeSection = lazy(() => import("./components/HomeSection"));
 const CatalogSection = lazy(() => import("./components/CatalogSection"));
@@ -559,10 +563,14 @@ export default function App() {
 
   // Action: Submit reservation checkout
   const handleCreateReservation = async (orderData: Partial<Order>): Promise<Order | null> => {
+    // Idempotency key: scoped to this session + machine + dates so a network-timeout retry
+    // returns the same order instead of creating a duplicate.
+    const idempotencyKey = `${SESSION_ID}-${orderData.machineId}-${orderData.startDate}-${orderData.endDate}`;
     const response = await fetch("/api/orders", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "Idempotency-Key": idempotencyKey,
         ...getAuthHeaders()
       },
       body: JSON.stringify(orderData)

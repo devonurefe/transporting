@@ -642,4 +642,18 @@ export const emailService = {
       html: htmlContent,
     });
   },
+
+  sendEmailFailureAlert: async (orderId: string, customerEmail: string, errorMsg: string): Promise<boolean> => {
+    if (!ADMIN_ALERT_EMAIL) return false;
+    if (!resend) {
+      console.log(`[EmailService] [MOCK] Email failure alert for order ${orderId}`);
+      return true;
+    }
+    return sendWithRetry({
+      from: SENDER_EMAIL,
+      to: ADMIN_ALERT_EMAIL,
+      subject: `⚠️ [HuurGo] Email bevestiging mislukt: ${orderId}`,
+      html: `<p>De klantbevestiging voor bestelling <strong>${orderId}</strong> kon niet worden bezorgd aan <strong>${customerEmail}</strong>.<br><br>Neem handmatig contact op met de klant.<br><br><small>Fout: ${errorMsg}</small></p>`,
+    });
+  },
 };

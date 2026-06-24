@@ -42,6 +42,10 @@ const orderCreationLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+// In-memory idempotency cache (Render is single-process; 1-hour TTL prevents duplicate orders on retry)
+const processedIdempotencyKeys = new Map<string, { orderId: string; createdAt: number }>();
+const IDEMPOTENCY_TTL_MS = 60 * 60 * 1000;
+
 const availabilityLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 20,
@@ -126,6 +130,27 @@ ordersRouter.get("/", requireAuth as any, async (req: AuthenticatedRequest, res:
 
 // POST orders — with input validation and date collision detection
 ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, res: Response) => {
+  // Idempotency: return the existing order if the client retries with the same key (network timeout scenario)
+  const idempotencyKey = req.headers["idempotency-key"];
+  if (idempotencyKey && typeof idempotencyKey === "string") {
+    const existing = processedIdempotencyKeys.get(idempotencyKey);
+    if (existing) {
+      if (Date.now() - existing.createdAt < IDEMPOTENCY_TTL_MS) {
+        const existingOrder = await prisma.order.findUnique({ where: { id: existing.orderId } });
+        if (existingOrder) {
+          return res.status(200).json({
+            ...existingOrder,
+            startDate: existingOrder.startDate.toISOString().split("T")[0],
+            endDate: existingOrder.endDate.toISOString().split("T")[0],
+            addons: safeParseAddons(existingOrder.addons)
+          });
+        }
+      } else {
+        processedIdempotencyKeys.delete(idempotencyKey);
+      }
+    }
+  }
+
   const orderData = req.body;
 
   // Basic input validation
@@ -500,6 +525,11 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
       });
     }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }));
 
+    // Store idempotency key so retries return the same order instead of creating a duplicate
+    if (idempotencyKey && typeof idempotencyKey === "string") {
+      processedIdempotencyKeys.set(idempotencyKey, { orderId: newOrder.id, createdAt: Date.now() });
+    }
+
     // Trigger transactional emails asynchronously
     const emailData = {
       ...newOrder,
@@ -509,7 +539,7 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
     };
     emailService.sendOrderConfirmation(emailData).catch(err => {
       console.error("[EMAIL] Customer confirmation permanently failed for order", newOrder.id, ":", err);
-      // Admin alert may still go through even when customer email fails
+      emailService.sendEmailFailureAlert(newOrder.id, newOrder.customerEmail, String(err)).catch(() => {});
     });
     emailService.sendAdminAlert(emailData).catch(err => {
       console.error("[EMAIL] Admin alert permanently failed for order", newOrder.id, ":", err);

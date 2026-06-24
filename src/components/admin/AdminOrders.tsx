@@ -35,6 +35,10 @@ interface AdminOrdersProps {
 
 export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilter, onClearStatusFilter }: AdminOrdersProps) {
   const orders = useAppStore((state) => state.orders);
+  const ordersPage = useAppStore((state) => state.ordersPage);
+  const ordersTotalPages = useAppStore((state) => state.ordersTotalPages);
+  const ordersTotalCount = useAppStore((state) => state.ordersTotalCount);
+  const loadMoreOrders = useAppStore((state) => state.loadMoreOrders);
   const updateOrderStatus = useAppStore((state) => state.updateOrderStatus);
   const siteConfig = useAppStore((state) => state.siteConfig);
   const adminUser = useAuthStore((state) => state.user);
@@ -619,6 +623,19 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
             </tbody>
           </table>
         </div>
+
+        {/* Pagination — only shown when all filters are off and more pages exist */}
+        {ordersPage < ordersTotalPages && !searchText && dateFilter === "all" && (!statusFilter || statusFilter.length === 0) && (
+          <div className="flex flex-col items-center gap-1.5 pt-1">
+            <button
+              type="button"
+              onClick={() => loadMoreOrders()}
+              className="px-5 py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition-colors cursor-pointer"
+            >
+              {t("Meer laden", "Load more", "Daha fazla yükle")} ({orders.length} / {ordersTotalCount})
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Floating bulk action bar */}

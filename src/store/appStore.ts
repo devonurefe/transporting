@@ -43,6 +43,9 @@ interface BlockedDate {
 interface AppState {
   machines: Machine[];
   orders: Order[];
+  ordersPage: number;
+  ordersTotalPages: number;
+  ordersTotalCount: number;
   customCategories: Category[];
   siteConfig: SiteConfig;
   siteConfigLoaded: boolean;
@@ -54,6 +57,7 @@ interface AppState {
   // Fetch actions
   fetchMachines: () => Promise<void>;
   fetchOrders: () => Promise<void>;
+  loadMoreOrders: () => Promise<void>;
   fetchCategories: () => Promise<void>;
   fetchSiteConfig: () => Promise<void>;
   fetchBlockedDates: () => Promise<void>;
@@ -106,6 +110,9 @@ const getAuthHeaders = (): Record<string, string> => {
 export const useAppStore = create<AppState>((set, get) => ({
   machines: [],
   orders: [],
+  ordersPage: 1,
+  ordersTotalPages: 1,
+  ordersTotalCount: 0,
   customCategories: defaultCategories,
   // True once we have a real config — either a sessionStorage cache (returning
   // visitor) or a fresh API response. Gates the hero image so the old default
@@ -186,19 +193,19 @@ export const useAppStore = create<AppState>((set, get) => ({
       ? localStorage.getItem("hwh_admin_token")
       : localStorage.getItem("hwh_token");
     if (!token) {
-      set({ orders: [], error: null });
+      set({ orders: [], ordersPage: 1, ordersTotalPages: 1, ordersTotalCount: 0, error: null });
       return;
     }
     try {
       const isAdmin = localStorage.getItem("hwh_admin_mode") === "true";
       const url = isAdmin ? "/api/orders?limit=100&page=1" : "/api/orders?limit=500";
-      const res = await fetch(url, {
-        headers: getAuthHeaders()
-      });
+      const res = await fetch(url, { headers: getAuthHeaders() });
       if (res.ok) {
-        set({ orders: await res.json(), error: null });
+        const totalPages = Number(res.headers.get("X-Total-Pages") || "1");
+        const totalCount = Number(res.headers.get("X-Total-Count") || "0");
+        set({ orders: await res.json(), ordersPage: 1, ordersTotalPages: totalPages, ordersTotalCount: totalCount, error: null });
       } else if (res.status === 401 || res.status === 403) {
-        set({ orders: [], error: null });
+        set({ orders: [], ordersPage: 1, ordersTotalPages: 1, ordersTotalCount: 0, error: null });
       } else {
         const data = await res.json().catch(() => ({}));
         set({ error: data.error || "Fout bij ophalen bestellingen." });
@@ -206,6 +213,21 @@ export const useAppStore = create<AppState>((set, get) => ({
     } catch (e: any) {
       console.warn("Orders fetch failed.");
       set({ error: e.message || "Netwerkfout bij ophalen bestellingen." });
+    }
+  },
+
+  loadMoreOrders: async () => {
+    const { ordersPage, ordersTotalPages } = get();
+    if (ordersPage >= ordersTotalPages) return;
+    const nextPage = ordersPage + 1;
+    try {
+      const res = await fetch(`/api/orders?limit=100&page=${nextPage}`, { headers: getAuthHeaders() });
+      if (res.ok) {
+        const newOrders = await res.json();
+        set(state => ({ orders: [...state.orders, ...newOrders], ordersPage: nextPage }));
+      }
+    } catch (e: any) {
+      console.warn("Load more orders failed.");
     }
   },
 

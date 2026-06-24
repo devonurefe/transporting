@@ -1207,7 +1207,7 @@ export default function MyOrdersSection({
             </div>
           </div>
           <a
-            href={`https://wa.me/${(import.meta as any).env?.VITE_WHATSAPP_NUMBER ?? "31611848899"}`}
+            href={`https://wa.me/${import.meta.env.VITE_WHATSAPP_NUMBER ?? "31611848899"}`}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center space-x-1.5 bg-[#25D366] hover:bg-[#1da851] text-white font-bold text-xs px-4 py-2.5 rounded-xl transition-all hover:scale-[1.02] active:scale-98 shadow-sm cursor-pointer whitespace-nowrap border-none"

@@ -12,7 +12,7 @@ let loaded = false;
 
 export function loadClarity(): void {
   if (loaded || typeof window === "undefined") return;
-  const id = (import.meta as any).env?.VITE_CLARITY_ID;
+  const id = import.meta.env.VITE_CLARITY_ID;
   if (!id) return;
   loaded = true;
   (function (c: any, l: Document, a: string, r: string, i: string) {

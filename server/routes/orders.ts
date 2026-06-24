@@ -85,52 +85,39 @@ ordersRouter.get("/availability", availabilityLimiter, async (req: Authenticated
   }
 });
 
-// GET orders: admins see all orders, customers see only their own orders.
+// GET orders: admins see all orders (paginated, max 100/page), customers see only their own.
 ordersRouter.get("/", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const pageQuery = req.query.page;
-    const limitQuery = req.query.limit;
-    const whereClause = req.user?.role === "admin" ? undefined : { customerId: req.user!.id };
+    const isAdmin = req.user?.role === "admin";
+    const whereClause = isAdmin ? undefined : { customerId: req.user!.id };
 
-    if (pageQuery || limitQuery) {
-      const page = Number(pageQuery) || 1;
-      const limit = Number(limitQuery) || 20;
-      const skip = (page - 1) * limit;
+    const page = Math.max(1, Number(req.query.page) || 1);
+    // Admin requests are always paginated (max 100); customer requests are small by nature.
+    const defaultLimit = isAdmin ? 50 : 500;
+    const maxLimit = isAdmin ? 100 : 500;
+    const limit = Math.min(maxLimit, Math.max(1, Number(req.query.limit) || defaultLimit));
+    const skip = (page - 1) * limit;
 
-      const totalCount = await prisma.order.count({
-        where: whereClause
-      });
-      const totalPages = Math.ceil(totalCount / limit);
-
-      res.setHeader("X-Total-Pages", String(totalPages));
-      res.setHeader("X-Total-Count", String(totalCount));
-
-      const dbOrders = await prisma.order.findMany({
+    const [dbOrders, totalCount] = await Promise.all([
+      prisma.order.findMany({
         where: whereClause,
         orderBy: { createdAt: "desc" },
         skip,
         take: limit
-      });
-      const formatted = dbOrders.map(o => ({
-        ...o,
-        startDate: o.startDate.toISOString().split("T")[0],
-        endDate: o.endDate.toISOString().split("T")[0],
-        addons: safeParseAddons(o.addons)
-      }));
-      return res.json(formatted);
-    } else {
-      const dbOrders = await prisma.order.findMany({
-        where: whereClause,
-        orderBy: { createdAt: "desc" }
-      });
-      const formatted = dbOrders.map(o => ({
-        ...o,
-        startDate: o.startDate.toISOString().split("T")[0],
-        endDate: o.endDate.toISOString().split("T")[0],
-        addons: safeParseAddons(o.addons)
-      }));
-      return res.json(formatted);
-    }
+      }),
+      prisma.order.count({ where: whereClause })
+    ]);
+
+    res.setHeader("X-Total-Pages", String(Math.ceil(totalCount / limit)));
+    res.setHeader("X-Total-Count", String(totalCount));
+
+    const formatted = dbOrders.map(o => ({
+      ...o,
+      startDate: o.startDate.toISOString().split("T")[0],
+      endDate: o.endDate.toISOString().split("T")[0],
+      addons: safeParseAddons(o.addons)
+    }));
+    return res.json(formatted);
   } catch (error) {
     console.error("Error fetching orders:", error);
     res.status(500).json({ error: "Kon bestellingen niet ophalen" });
@@ -409,7 +396,7 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
     serverSubtotal = Math.round(serverSubtotal * 100) / 100;
     const serverVat = Math.round((serverSubtotal + transportCostClient + driverCostClient + addonsTotal) * 21) / 100;
     const serverTotal = Math.round((serverSubtotal + transportCostClient + driverCostClient + addonsTotal + serverVat) * 100) / 100;
-    if (Math.abs(serverTotal - Number(orderData.totalAmount)) > 0.10) {
+    if (Math.abs(serverTotal - Number(orderData.totalAmount)) > 0.01) {
       return res.status(400).json({ error: "Totaalbedrag klopt niet. Ververs de pagina en probeer opnieuw." });
     }
 
@@ -514,8 +501,13 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
       endDate: newOrder.endDate.toISOString().split("T")[0],
       customerPhone: newOrder.customerPhone || ""
     };
-    emailService.sendOrderConfirmation(emailData).catch(err => console.error("Customer confirmation email error:", err));
-    emailService.sendAdminAlert(emailData).catch(err => console.error("Admin alert email error:", err));
+    emailService.sendOrderConfirmation(emailData).catch(err => {
+      console.error("[EMAIL] Customer confirmation permanently failed for order", newOrder.id, ":", err);
+      // Admin alert may still go through even when customer email fails
+    });
+    emailService.sendAdminAlert(emailData).catch(err => {
+      console.error("[EMAIL] Admin alert permanently failed for order", newOrder.id, ":", err);
+    });
 
     res.status(201).json({
       ...newOrder,

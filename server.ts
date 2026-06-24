@@ -79,7 +79,8 @@ const authLimiter = rateLimit({
 });
 app.use("/api/auth", authLimiter);
 
-app.use(express.json({ limit: "10mb" })); // Enable larger base64 payloads for image uploads
+app.use(express.json({ limit: "256kb" })); // Default for all API routes
+// Image upload endpoints override with a higher limit in their handler via a per-route middleware
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 app.use(authenticateToken);
 
@@ -578,6 +579,23 @@ async function applyDataMigrations() {
       }
       await prisma.invoiceCounter.create({ data: { id: FLEET_RESTORE, lastNumber: restored } });
       if (restored > 0) console.log(`[Migration] Restored ${restored} empty machine image URLs.`);
+    }
+
+    // One-time fix: stale heroSubtitle from old AI-advisor era — idempotent, runs once per deploy
+    const staleSubtitleConfig = await prisma.siteConfig.findFirst({
+      where: {
+        OR: [
+          { heroSubtitle: { contains: "AI-assistent" } },
+          { heroSubtitle: { contains: "AI assistant" } },
+          { heroSubtitle: { contains: "MB Hoogwerkers" } },
+          { heroSubtitle: { contains: "door heel Nederland" } },
+        ]
+      }
+    });
+    if (staleSubtitleConfig) {
+      const CORRECT_SUBTITLE = "HuurGo verhuurt gecertificeerde hoogwerkers, schaarliften, mastliften en ladderliften aan ZZP'ers, aannemers en particulieren in heel Nederland. Meer dan 50 BMWT-gecertificeerde machines, direct beschikbaar.";
+      await prisma.siteConfig.update({ where: { id: "default" }, data: { heroSubtitle: CORRECT_SUBTITLE } });
+      console.log("[Migration] Fixed stale heroSubtitle.");
     }
 
     // Loud warning if the admin account still uses the old seeded default password

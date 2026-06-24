@@ -26,13 +26,14 @@ machinesRouter.get("/", publicReadLimiter, softOriginGuard, async (req: Authenti
       const limit = Number(limitQuery) || 20;
       const skip = (page - 1) * limit;
 
-      const totalCount = await prisma.machine.count();
+      const totalCount = await prisma.machine.count({ where: { deletedAt: null } });
       const totalPages = Math.ceil(totalCount / limit);
 
       res.setHeader("X-Total-Pages", String(totalPages));
       res.setHeader("X-Total-Count", String(totalCount));
 
       const dbMachines = await prisma.machine.findMany({
+        where: { deletedAt: null },
         skip,
         take: limit
       });
@@ -43,7 +44,7 @@ machinesRouter.get("/", publicReadLimiter, softOriginGuard, async (req: Authenti
       }));
       return res.json(formatted);
     } else {
-      const dbMachines = await prisma.machine.findMany();
+      const dbMachines = await prisma.machine.findMany({ where: { deletedAt: null } });
       const formatted = dbMachines.map(m => ({
         ...m,
         suitableFor: Array.isArray(m.suitableFor) ? m.suitableFor : [],
@@ -306,6 +307,9 @@ machinesRouter.put("/:id", requireAdmin as any, async (req: AuthenticatedRequest
       additionalImages: Array.isArray(updatedMachine.additionalImages) ? updatedMachine.additionalImages : []
     });
   } catch (error: any) {
+    if (error?.code === "P2025") {
+      return res.status(404).json({ error: "Machine niet gevonden" });
+    }
     console.error("Error updating machine:", error);
     res.status(500).json({ error: "Machine bijwerken mislukt" });
   }
@@ -341,14 +345,16 @@ machinesRouter.delete("/:id", requireAdmin as any, async (req: AuthenticatedRequ
     if (activeOrder) {
       return res.status(409).json({ error: "Deze machine heeft actieve bestellingen en kan niet worden verwijderd. Annuleer eerst alle actieve bestellingen." });
     }
-    await prisma.blockedDate.deleteMany({
-      where: { machineId: id }
-    });
-    await prisma.machine.delete({
-      where: { id }
+    // Soft-delete: mark as deleted instead of physically removing so historical orders remain traceable
+    await prisma.machine.update({
+      where: { id },
+      data: { deletedAt: new Date(), isActive: false }
     });
     res.json({ success: true, message: "Machine succesvol verwijderd" });
   } catch (error: any) {
+    if (error?.code === "P2025") {
+      return res.status(404).json({ error: "Machine niet gevonden" });
+    }
     console.error("Error deleting machine:", error);
     res.status(500).json({ error: "Machine kon niet worden verwijderd" });
   }

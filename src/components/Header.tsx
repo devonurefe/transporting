@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { 
   Building2, 
   MessageSquareText, 
@@ -127,7 +127,7 @@ export default function Header({
   cartItems = []
 }: HeaderProps) {
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  const unreadCount = useMemo(() => notifications.filter((n) => !n.read).length, [notifications]);
   const siteConfig = useAppStore((state) => state.siteConfig);
   const language = useLanguageStore((state) => state.language);
   const toggleLanguage = useLanguageStore((state) => state.toggleLanguage);

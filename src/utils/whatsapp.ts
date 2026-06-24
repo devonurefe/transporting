@@ -7,7 +7,7 @@ import { CartItem } from "../types";
 import { euro, euroCompact } from "./format";
 
 // HuurGo WhatsApp business number
-const WHATSAPP_NUMBER = (import.meta as any).env?.VITE_WHATSAPP_NUMBER ?? "31611848899";
+const WHATSAPP_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER ?? "31611848899";
 
 interface OrderTotals {
   days: number;

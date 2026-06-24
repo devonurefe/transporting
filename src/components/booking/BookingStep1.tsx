@@ -208,7 +208,7 @@ export default function BookingStep1({
                   <a
                     href={(() => {
                       const msg = `Hallo huurgo! 👋\n\nIk zie dat ${item.machine.name} niet beschikbaar is voor mijn periode (${item.startDate} t/m ${item.endDate}).\n\nKunt u mij helpen met alternatieve datums of een vergelijkbare machine?\n\nAlvast bedankt!`;
-                      return `https://wa.me/${(import.meta as any).env?.VITE_WHATSAPP_NUMBER ?? "31611848899"}?text=${encodeURIComponent(msg)}`;
+                      return `https://wa.me/${import.meta.env.VITE_WHATSAPP_NUMBER ?? "31611848899"}?text=${encodeURIComponent(msg)}`;
                     })()}
                     target="_blank"
                     rel="noopener noreferrer"

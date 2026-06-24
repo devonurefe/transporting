@@ -78,7 +78,7 @@ export default function ContactModal({ isOpen, onClose, onShowToast, onAddSystem
                 <div className="space-y-2.5">
                   {/* WhatsApp link */}
                   <a
-                    href={`https://wa.me/${(import.meta as any).env?.VITE_WHATSAPP_NUMBER ?? "31611848899"}`}
+                    href={`https://wa.me/${import.meta.env.VITE_WHATSAPP_NUMBER ?? "31611848899"}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="w-full flex items-center p-3 rounded-xl bg-[#25D366] text-white hover:bg-[#1da851] transition-all text-xs cursor-pointer gap-3 shadow-sm hover:shadow group text-decoration-none"

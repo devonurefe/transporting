@@ -5,13 +5,15 @@ import { AuthenticatedRequest } from "../middleware/auth.js";
 
 export const blockedDatesRouter = Router();
 
-// GET blocked dates
+// GET blocked dates — public for the availability calendar, but reason is admin-only
 blockedDatesRouter.get("/", async (req: AuthenticatedRequest, res: Response) => {
   try {
+    const isAdmin = req.user?.role === "admin";
     const blocked = await prisma.blockedDate.findMany();
     const formatted = blocked.map(b => ({
-      ...b,
-      date: b.date.toISOString().split("T")[0]
+      machineId: b.machineId,
+      date: b.date.toISOString().split("T")[0],
+      ...(isAdmin ? { id: b.id, reason: b.reason } : {})
     }));
     res.json(formatted);
   } catch (error) {

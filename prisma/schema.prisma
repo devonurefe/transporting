@@ -40,11 +40,13 @@ model Machine {
   pickupOnly              Boolean       @default(false)
   crossSellAddons         Json?
   isActive                Boolean       @default(true)
+  deletedAt               DateTime?
   blockedDates            BlockedDate[]
   updatedAt               DateTime      @updatedAt @default(now())
 
   @@index([category])
   @@index([pricePerDay])
+  @@index([deletedAt])
 }
 
 model Category {

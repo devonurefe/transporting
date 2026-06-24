@@ -190,7 +190,9 @@ export const useAppStore = create<AppState>((set, get) => ({
       return;
     }
     try {
-      const res = await fetch("/api/orders?limit=500", {
+      const isAdmin = localStorage.getItem("hwh_admin_mode") === "true";
+      const url = isAdmin ? "/api/orders?limit=100&page=1" : "/api/orders?limit=500";
+      const res = await fetch(url, {
         headers: getAuthHeaders()
       });
       if (res.ok) {

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Machine, Order, DeliveryType, UserProfile, CartItem } from "../types";
 import { useAppStore } from "../store/appStore";
@@ -841,7 +841,12 @@ export default function BookingSection({
       }
   };
 
-  const sums = calculationSummary();
+  const sums = useMemo(
+    () => calculationSummary(),
+    // calculationSummary closes over these values — re-run only when they change
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [cartItems, selectedAddons, deliveryType, customerProfile, weekendWorkAnswer, campaignRules, startDate, endDate]
+  );
 
   // Reservation period for the price summary box — neutral copy when the cart
   // mixes machines booked for different periods.

@@ -8,6 +8,32 @@ import { emailService } from "../services/emailService.js";
 
 export const authRouter = Router();
 
+// In-memory per-email brute-force throttle (single-process deployment on Render)
+const loginAttempts = new Map<string, { count: number; lockedUntil: number }>();
+const MAX_LOGIN_ATTEMPTS = 5;
+const LOGIN_LOCK_MS = 15 * 60 * 1000; // 15 minutes
+
+function checkLoginThrottle(email: string): boolean {
+  const entry = loginAttempts.get(email);
+  if (!entry) return false;
+  if (entry.lockedUntil > Date.now()) return true;
+  if (entry.lockedUntil > 0 && entry.lockedUntil <= Date.now()) {
+    loginAttempts.delete(email); // lock expired — reset
+  }
+  return false;
+}
+
+function recordFailedLogin(email: string): void {
+  const entry = loginAttempts.get(email) ?? { count: 0, lockedUntil: 0 };
+  entry.count += 1;
+  if (entry.count >= MAX_LOGIN_ATTEMPTS) entry.lockedUntil = Date.now() + LOGIN_LOCK_MS;
+  loginAttempts.set(email, entry);
+}
+
+function clearLoginThrottle(email: string): void {
+  loginAttempts.delete(email);
+}
+
 const registerSchema = z.object({
   email: z.string().email("Ongeldig e-mailadres"),
   password: z.string().min(8, "Wachtwoord moet minimaal 8 tekens bevatten"),
@@ -103,18 +129,26 @@ authRouter.post("/register", async (req: AuthenticatedRequest, res: Response) =>
 authRouter.post("/login", async (req: AuthenticatedRequest, res: Response) => {
   try {
     const validated = loginSchema.parse(req.body);
+    const emailKey = validated.email.toLowerCase();
+
+    // Per-email brute-force gate
+    if (checkLoginThrottle(emailKey)) {
+      return res.status(429).json({ error: "Te veel mislukte pogingen. Probeer het na 15 minuten opnieuw." });
+    }
 
     // Try finding admin first
     const admin = await prisma.admin.findUnique({
-      where: { email: validated.email.toLowerCase() }
+      where: { email: emailKey }
     });
 
     if (admin) {
       const isMatch = await comparePassword(validated.password, admin.passwordHash);
       if (!isMatch) {
+        recordFailedLogin(emailKey);
         return res.status(400).json({ error: "Ongeldige inloggegevens" });
       }
 
+      clearLoginThrottle(emailKey);
       const token = generateToken({
         id: admin.id,
         email: admin.email,
@@ -134,12 +168,13 @@ authRouter.post("/login", async (req: AuthenticatedRequest, res: Response) => {
 
     // Try finding customer
     const customer = await prisma.customer.findUnique({
-      where: { email: validated.email.toLowerCase() }
+      where: { email: emailKey }
     });
 
     if (customer) {
       const isMatch = await comparePassword(validated.password, customer.passwordHash);
       if (!isMatch) {
+        recordFailedLogin(emailKey);
         return res.status(400).json({ error: "Ongeldige inloggegevens" });
       }
 
@@ -150,6 +185,7 @@ authRouter.post("/login", async (req: AuthenticatedRequest, res: Response) => {
         });
       }
 
+      clearLoginThrottle(emailKey);
       const token = generateToken({
         id: customer.id,
         email: customer.email,
@@ -172,6 +208,7 @@ authRouter.post("/login", async (req: AuthenticatedRequest, res: Response) => {
       });
     }
 
+    recordFailedLogin(emailKey);
     return res.status(400).json({ error: "Ongeldige inloggegevens" });
   } catch (error) {
     if (error instanceof z.ZodError) {

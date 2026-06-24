@@ -1,6 +1,7 @@
 import express from "express";
 import path from "path";
 import fs from "fs";
+import { randomBytes } from "crypto";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
 import { createServer as createViteServer } from "vite";
@@ -27,6 +28,12 @@ const __dirname = path.dirname(__filename);
 const app = express();
 app.set("trust proxy", 1);
 const PORT = Number(process.env.PORT || 3000);
+
+// Attach a unique request ID to every response for log correlation and support debugging
+app.use((_req, res, next) => {
+  res.setHeader("X-Request-ID", randomBytes(8).toString("hex"));
+  next();
+});
 
 const isProd = process.env.NODE_ENV === "production";
 app.use(helmet({

@@ -21,6 +21,10 @@ import { buildWhatsAppGeneralUrl, buildWhatsAppOrderStatusUrl, buildWhatsAppPaym
 import { FAQ_ITEMS } from "./data/faq";
 import { useModalA11y } from "./hooks/useModalA11y";
 
+// Escape </script> inside JSON-LD so an admin-supplied string cannot break out of the script tag.
+// JSON.stringify does not escape angle brackets by default; this plugs the gap.
+const safeJsonLd = (obj: unknown): string =>
+  JSON.stringify(obj).replace(/<\/script>/gi, "<\\/script>");
 
 // Dynamic Code Splitting (React.lazy)
 const HomeSection = lazy(() => import("./components/HomeSection"));
@@ -595,7 +599,7 @@ export default function App() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
+          __html: safeJsonLd({
             "@context": "https://schema.org",
             "@type": ["LocalBusiness", "RentalService"],
             "name": `${siteConfig.siteName || "huurgo"} — Hoogwerkers Verhuur`,
@@ -656,7 +660,7 @@ export default function App() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
+          __html: safeJsonLd({
             "@context": "https://schema.org",
             "@type": "FAQPage",
             "mainEntity": FAQ_ITEMS.map((item) => ({

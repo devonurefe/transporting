@@ -201,8 +201,26 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       });
     } catch {
       // Network error / timeout / Render cold-start — keep token in localStorage!
-      // The token may still be valid; the server was temporarily unreachable.
+      // Unblock the UI immediately but schedule a silent retry after 3 s so a
+      // cold-start delay doesn't leave a logged-in user appearing as a guest.
       set({ isLoading: false, authChecked: true });
+      const retryToken = token; // stable reference for the closure below
+      setTimeout(async () => {
+        if (get().isAuthenticated) return; // already resolved via another path
+        try {
+          const retryRes = await fetch("/api/auth/me", {
+            headers: { Authorization: `Bearer ${retryToken}` }
+          });
+          if (retryRes.ok) {
+            const retryData = await retryRes.json();
+            set({
+              user: retryData.user,
+              isAuthenticated: true,
+              isAdmin: retryData.user.role === "admin",
+            });
+          }
+        } catch { /* silent fail — server still unreachable, stay as guest */ }
+      }, 3000);
     }
   },
 

@@ -193,10 +193,11 @@ export default function BookingStep2({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
         
         <div className="space-y-1.5">
-          <label className="text-xs text-slate-700 block font-bold">Naam Contactpersoon</label>
+          <label htmlFor="bs2-name" className="text-xs text-slate-700 block font-bold">Naam Contactpersoon</label>
           <div className="flex items-center bg-white rounded-xl px-3 py-2.5 border border-slate-200 focus-within:border-slate-400 transition-colors shadow-inner">
             <User className="h-4 w-4 text-slate-400 mr-2" />
             <input
+              id="bs2-name"
               type="text"
               required
               value={customerName}
@@ -208,10 +209,11 @@ export default function BookingStep2({
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-xs text-slate-700 block font-bold">E-mail (Facturatie & updates)</label>
+          <label htmlFor="bs2-email" className="text-xs text-slate-700 block font-bold">E-mail (Facturatie & updates)</label>
           <div className="flex items-center bg-white rounded-xl px-3 py-2.5 border border-slate-200 focus-within:border-slate-400 transition-colors shadow-inner">
             <Mail className="h-4 w-4 text-slate-400 mr-2" />
             <input
+              id="bs2-email"
               type="email"
               required
               value={customerEmail}
@@ -223,10 +225,11 @@ export default function BookingStep2({
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-xs text-slate-700 block font-bold">Telefoonnummer</label>
+          <label htmlFor="bs2-phone" className="text-xs text-slate-700 block font-bold">Telefoonnummer</label>
           <div className="flex items-center bg-white rounded-xl px-3 py-2.5 border border-slate-200 focus-within:border-slate-400 transition-colors shadow-inner">
             <Phone className="h-4 w-4 text-slate-400 mr-2" />
             <input
+              id="bs2-phone"
               type="tel"
               required
               value={customerPhone}
@@ -288,8 +291,9 @@ export default function BookingStep2({
             
             <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
               <div className="sm:col-span-12 md:col-span-5 space-y-1">
-                <label className="text-xs text-slate-500 block font-bold">Postcode</label>
+                <label htmlFor="bs2-postcode" className="text-xs text-slate-500 block font-bold">Postcode</label>
                 <input
+                  id="bs2-postcode"
                   type="text"
                   placeholder="bijv. 2404 CB"
                   value={postcode}
@@ -299,8 +303,9 @@ export default function BookingStep2({
               </div>
 
               <div className="sm:col-span-12 md:col-span-4 space-y-1">
-                <label className="text-xs text-slate-500 block font-bold">Huisnummer</label>
+                <label htmlFor="bs2-housenumber" className="text-xs text-slate-500 block font-bold">Huisnummer</label>
                 <input
+                  id="bs2-housenumber"
                   type="text"
                   placeholder="bijv. 14"
                   value={houseNumber}

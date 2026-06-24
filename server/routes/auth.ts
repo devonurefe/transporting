@@ -34,9 +34,15 @@ function clearLoginThrottle(email: string): void {
   loginAttempts.delete(email);
 }
 
+const PASSWORD_POLICY = z
+  .string()
+  .min(8, "Wachtwoord moet minimaal 8 tekens bevatten")
+  .regex(/[a-zA-Z]/, "Wachtwoord moet minimaal één letter bevatten")
+  .regex(/[0-9]/, "Wachtwoord moet minimaal één cijfer bevatten");
+
 const registerSchema = z.object({
   email: z.string().email("Ongeldig e-mailadres"),
-  password: z.string().min(8, "Wachtwoord moet minimaal 8 tekens bevatten"),
+  password: PASSWORD_POLICY,
   name: z.string().min(2, "Naam is verplicht"),
   phone: z.string().optional(),
   profile: z.string().optional(),
@@ -401,8 +407,9 @@ authRouter.post("/reset-password", async (req: Request, res: Response) => {
   if (!token || !newPassword || typeof token !== "string" || typeof newPassword !== "string") {
     return res.status(400).json({ error: "Token en nieuw wachtwoord zijn verplicht." });
   }
-  if (newPassword.length < 8) {
-    return res.status(400).json({ error: "Wachtwoord moet minimaal 8 tekens bevatten." });
+  const pwResult = PASSWORD_POLICY.safeParse(newPassword);
+  if (!pwResult.success) {
+    return res.status(400).json({ error: pwResult.error.issues[0].message });
   }
 
   try {
@@ -446,8 +453,9 @@ authRouter.post("/change-password", authenticateToken, requireAuth, async (req: 
   if (!currentPassword || !newPassword || typeof currentPassword !== "string" || typeof newPassword !== "string") {
     return res.status(400).json({ error: "Huidig en nieuw wachtwoord zijn verplicht." });
   }
-  if (newPassword.length < 8) {
-    return res.status(400).json({ error: "Nieuw wachtwoord moet minimaal 8 tekens bevatten." });
+  const newPwResult = PASSWORD_POLICY.safeParse(newPassword);
+  if (!newPwResult.success) {
+    return res.status(400).json({ error: newPwResult.error.issues[0].message });
   }
 
   try {

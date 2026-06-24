@@ -26,6 +26,25 @@ import { useModalA11y } from "./hooks/useModalA11y";
 const safeJsonLd = (obj: unknown): string =>
   JSON.stringify(obj).replace(/<\/script>/gi, "<\\/script>");
 
+function NotFoundPage({ setActiveTab }: { setActiveTab: (tab: string) => void }) {
+  return (
+    <div className="min-h-[60vh] flex flex-col items-center justify-center text-center px-4 py-16">
+      <p className="text-7xl font-black text-slate-200 mb-4">404</p>
+      <h1 className="text-2xl font-bold text-slate-800 mb-2">Pagina niet gevonden</h1>
+      <p className="text-slate-500 mb-8 max-w-sm">
+        De pagina die u zoekt bestaat niet of is verplaatst.
+      </p>
+      <button
+        type="button"
+        onClick={() => setActiveTab("home")}
+        className="px-6 py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl transition-colors cursor-pointer"
+      >
+        Terug naar home
+      </button>
+    </div>
+  );
+}
+
 // Dynamic Code Splitting (React.lazy)
 const HomeSection = lazy(() => import("./components/HomeSection"));
 const CatalogSection = lazy(() => import("./components/CatalogSection"));
@@ -831,6 +850,17 @@ export default function App() {
                       onClearSystemLogs={handleClearSystemLogs}
                     />
                   </ErrorBoundary>
+                </motion.div>
+              } />
+
+              <Route path="*" element={
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <NotFoundPage setActiveTab={setActiveTab} />
                 </motion.div>
               } />
             </Routes>

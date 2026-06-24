@@ -382,7 +382,30 @@ function scheduleDailyReminders() {
   const REMINDER_MARKER = "daily-reminders-last";
   const todayStamp = () => Number(new Date().toISOString().split("T")[0].replace(/-/g, ""));
 
+  // Returns ms until the next 07:00 Amsterdam time (handles CET/CEST DST automatically)
+  const msUntilAmsterdam7am = (): number => {
+    const now = new Date();
+    const parts = new Intl.DateTimeFormat("en-US", {
+      timeZone: "Europe/Amsterdam",
+      hour: "2-digit", minute: "2-digit", second: "2-digit",
+      hour12: false
+    }).formatToParts(now);
+    const getNum = (type: string) => Number(parts.find(p => p.type === type)?.value ?? 0);
+    const secondsSinceTarget = (getNum("hour") - 7) * 3600 + getNum("minute") * 60 + getNum("second");
+    return (secondsSinceTarget <= 0 ? -secondsSinceTarget : 86400 - secondsSinceTarget) * 1000;
+  };
+
+  const amsterdamHour = (): number =>
+    Number(new Intl.DateTimeFormat("en-US", {
+      timeZone: "Europe/Amsterdam", hour: "2-digit", hour12: false
+    }).format(new Date()));
+
+  // In-memory mutex: prevents two concurrent sendBatch calls (e.g. scheduled + catch-up overlap)
+  let reminderRunning = false;
+
   const sendBatch = async () => {
+    if (reminderRunning) { console.log("[Reminders] Already running — skipping concurrent call."); return; }
+    reminderRunning = true;
     try {
       const stamp = todayStamp();
       const marker = await prisma.invoiceCounter.findUnique({ where: { id: REMINDER_MARKER } });
@@ -425,28 +448,23 @@ function scheduleDailyReminders() {
       }
     } catch (err) {
       console.error("[Reminders] Failed to send daily reminders:", err);
+    } finally {
+      reminderRunning = false;
     }
   };
 
   const fireReminders = async () => {
     await sendBatch();
-    // Schedule next run in 24 hours
-    setTimeout(fireReminders, 24 * 60 * 60 * 1000);
+    // Schedule next run at the next 07:00 Amsterdam time
+    setTimeout(fireReminders, msUntilAmsterdam7am() + 60_000); // +60s buffer past the hour
   };
 
-  // First fire: calculate ms until 07:00 today/tomorrow
-  const now = new Date();
-  const next7am = new Date(now);
-  next7am.setUTCHours(7, 0, 0, 0);  // 07:00 UTC = 08:00 Amsterdam (winter) / 09:00 (summer)
-  if (next7am <= now) next7am.setUTCDate(next7am.getUTCDate() + 1);
-  const msUntil7am = next7am.getTime() - now.getTime();
-
+  const msUntil7am = msUntilAmsterdam7am();
   setTimeout(fireReminders, msUntil7am);
-  console.log(`[Reminders] Scheduler armed — first run in ${Math.round(msUntil7am / 60000)} minutes`);
+  console.log(`[Reminders] Scheduler armed — first run in ${Math.round(msUntil7am / 60000)} minutes (07:00 Amsterdam)`);
 
-  // Catch-up: if the server (re)started after 07:00 and today's batch wasn't
-  // sent yet (deploy/restart during the window), send it now
-  if (now.getUTCHours() >= 7) {
+  // Catch-up: if the server (re)started after 07:00 Amsterdam and today's batch wasn't sent yet
+  if (amsterdamHour() >= 7) {
     prisma.invoiceCounter.findUnique({ where: { id: REMINDER_MARKER } }).then(marker => {
       if (marker?.lastNumber !== todayStamp()) {
         console.log("[Reminders] Missed 07:00 run detected — sending catch-up batch...");

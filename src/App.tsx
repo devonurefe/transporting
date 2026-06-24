@@ -95,8 +95,15 @@ export default function App() {
     };
     const ric = (window as unknown as { requestIdleCallback?: (cb: () => void) => number }).requestIdleCallback;
     const cic = (window as unknown as { cancelIdleCallback?: (id: number) => void }).cancelIdleCallback;
-    const id = ric ? ric(warm) : window.setTimeout(warm, 1500);
-    return () => { if (ric && cic) cic(id as number); else clearTimeout(id as number); };
+    let cancelFn: (() => void) | null = null;
+    if (ric && cic) {
+      const id = ric(warm);
+      cancelFn = () => cic(id);
+    } else {
+      const id = window.setTimeout(warm, 1500);
+      cancelFn = () => clearTimeout(id);
+    }
+    return () => { cancelFn?.(); };
   }, []);
 
   // SEO: per-route title, meta description and canonical (SPA fallback)

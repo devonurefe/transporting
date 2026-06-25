@@ -432,7 +432,7 @@ export default function BookingSection({
           const wks = Math.floor(totalDays / 5);
           const rem = totalDays % 5;
           const wkBase = Math.round(totalDays * (leadItem.weeklyPrice / 5));
-          weeklyBreakdown = { weeks: wks, pricePerWeek: leadItem.weeklyPrice, remainder: rem, dailyRate: Math.round(leadItem.weeklyPrice / 5), remainderCost: wkBase - wks * leadItem.weeklyPrice };
+          weeklyBreakdown = { weeks: wks, pricePerWeek: leadItem.weeklyPrice, remainder: rem, dailyRate: Math.round(leadItem.weeklyPrice / 5), remainderCost: rem * Math.round(leadItem.weeklyPrice / 5) };
         } else if (totalDays >= 28 && leadItem.monthlyPrice) {
           tierLabel = "Maandtarief"; isFlatRate = true;
         }
@@ -760,7 +760,7 @@ export default function BookingSection({
               }
             }
 
-            const itemVat = (itemSubtotal + transport + trailerCost + driver + addonCost) * 0.21;
+            const itemVat = Math.round((itemSubtotal + transport + trailerCost + driver + addonCost) * 21) / 100;
             const itemTotal = itemSubtotal + transport + trailerCost + driver + addonCost + itemVat;
 
             const orderObj: Partial<Order> = {

@@ -887,7 +887,7 @@ export default function MyOrdersSection({
                         </div>
 
                         <div className="flex items-center space-x-2 shrink-0">
-                          <span className={`inline-block text-[9px] font-mono px-2.5 py-0.5 rounded-full font-bold uppercase border ${
+                          <span className={`inline-block text-[10px] font-mono px-2.5 py-0.5 rounded-full font-bold uppercase border ${
                             o.status === "In behandeling" 
                               ? "bg-amber-50 text-amber-700 border-amber-200" 
                               : o.status === "Goedgekeurd"
@@ -904,7 +904,7 @@ export default function MyOrdersSection({
                       {/* Info details */}
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
                         <div className="space-y-1">
-                          <span className="text-[9.5px] text-slate-500 font-mono font-bold block uppercase tracking-wider">Huurperiode</span>
+                          <span className="text-[10px] text-slate-500 font-mono font-bold block uppercase tracking-wider">Huurperiode</span>
                           <div className="flex items-center space-x-1.5 text-slate-800 font-bold">
                             <Calendar className="h-3.5 w-3.5 text-slate-500 shrink-0" />
                             <span>{o.startDate} t/m {o.endDate}</span>
@@ -913,7 +913,7 @@ export default function MyOrdersSection({
                         </div>
 
                         <div className="space-y-1">
-                          <span className="text-[9.5px] text-slate-500 font-mono font-bold block uppercase tracking-wider">Hub Logistiek</span>
+                          <span className="text-[10px] text-slate-500 font-mono font-bold block uppercase tracking-wider">Hub Logistiek</span>
                           <div className="flex items-center space-x-1.5 text-slate-800 font-bold">
                             <Truck className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
                             <span className="truncate">{o.deliveryType === "self_pickup" ? "Zelf ophalen bij Hub" : "Hub-Bezorging met Chauffeur"}</span>
@@ -926,11 +926,11 @@ export default function MyOrdersSection({
                         </div>
 
                         <div className="space-y-1 sm:text-right">
-                          <span className="text-[9.5px] text-slate-500 font-mono font-bold block uppercase tracking-wider">Kostenoverzicht</span>
+                          <span className="text-[10px] text-slate-500 font-mono font-bold block uppercase tracking-wider">Kostenoverzicht</span>
                           <div className="text-sm font-mono font-black text-teal-700">
                             €{o.totalAmount.toFixed(2)}
                           </div>
-                          <span className="text-[9px] text-slate-400 font-semibold block">Inclusief 21% BTW & logistiek</span>
+                          <span className="text-[10px] text-slate-400 font-semibold block">Inclusief 21% BTW & logistiek</span>
                         </div>
                       </div>
 
@@ -950,12 +950,12 @@ export default function MyOrdersSection({
                                   <div className={`flex-grow h-0.5 ${step.active ? "bg-emerald-500" : "bg-slate-200"}`} />
                                 )}
                                 <div className="flex items-center space-x-1 shrink-0">
-                                  <div className={`h-4.5 w-4.5 rounded-full flex items-center justify-center border text-[9px] font-bold ${
+                                  <div className={`h-4.5 w-4.5 rounded-full flex items-center justify-center border text-[10px] font-bold ${
                                     step.active ? "bg-emerald-50 border-emerald-300 text-emerald-700" : "bg-white border-slate-200 text-slate-400"
                                   }`}>
                                     {step.active ? "✓" : idx + 1}
                                   </div>
-                                  <span className={`hidden sm:inline text-[8.5px] font-black uppercase ${step.active ? "text-emerald-700 font-extrabold" : "text-slate-400"}`}>
+                                  <span className={`hidden sm:inline text-[10px] font-black uppercase ${step.active ? "text-emerald-700 font-extrabold" : "text-slate-400"}`}>
                                     {step.label}
                                   </span>
                                 </div>
@@ -967,9 +967,9 @@ export default function MyOrdersSection({
                         <div className="flex gap-2 shrink-0 flex-wrap">
                           <button
                             onClick={() => handleDownloadInvoice(o)}
-                            className="flex items-center space-x-1 font-black text-[10px] bg-white hover:bg-slate-50 transition-colors text-slate-700 px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm cursor-pointer"
+                            className="flex items-center space-x-1 font-black text-[10px] bg-white hover:bg-slate-50 transition-colors text-slate-700 px-3 py-2 rounded-lg border border-slate-200 shadow-sm cursor-pointer"
                           >
-                            <Download className="h-3 w-3 text-slate-600" />
+                            <Download className="h-3.5 w-3.5 text-slate-600" />
                             <span>Factuur PDF</span>
                           </button>
 
@@ -979,10 +979,10 @@ export default function MyOrdersSection({
                               href={buildWhatsAppPaymentLinkUrl(o.id)}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="flex items-center space-x-1 font-black text-[10px] bg-[#25D366]/10 hover:bg-[#25D366]/20 text-[#1a9b4b] px-3 py-1.5 rounded-lg border border-[#25D366]/30 shadow-sm no-underline transition-colors"
+                              className="flex items-center space-x-1 font-black text-[10px] bg-[#25D366]/10 hover:bg-[#25D366]/20 text-[#1a9b4b] px-3 py-2 rounded-lg border border-[#25D366]/30 shadow-sm no-underline transition-colors"
                               title="Vraag uw betaallink op via WhatsApp"
                             >
-                              <MessageSquare className="h-3 w-3" />
+                              <MessageSquare className="h-3.5 w-3.5" />
                               <span>Betaallink</span>
                             </a>
                           )}
@@ -991,10 +991,10 @@ export default function MyOrdersSection({
                               href={buildWhatsAppOrderStatusUrl(o.id, o.machineName)}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="flex items-center space-x-1 font-black text-[10px] bg-[#25D366]/10 hover:bg-[#25D366]/20 text-[#1a9b4b] px-3 py-1.5 rounded-lg border border-[#25D366]/30 shadow-sm no-underline transition-colors"
+                              className="flex items-center space-x-1 font-black text-[10px] bg-[#25D366]/10 hover:bg-[#25D366]/20 text-[#1a9b4b] px-3 py-2 rounded-lg border border-[#25D366]/30 shadow-sm no-underline transition-colors"
                               title="Vraag de status op via WhatsApp"
                             >
-                              <MessageSquare className="h-3 w-3" />
+                              <MessageSquare className="h-3.5 w-3.5" />
                               <span>Status</span>
                             </a>
                           )}
@@ -1003,7 +1003,7 @@ export default function MyOrdersSection({
                             <button
                               disabled={cancellingOrderId === o.id}
                               onClick={() => setCancelModalOrderId(o.id)}
-                              className="flex items-center space-x-1 font-black text-[10px] bg-white hover:bg-rose-50 transition-colors text-rose-600 hover:text-rose-700 px-3 py-1.5 rounded-lg border border-rose-200 shadow-sm cursor-pointer disabled:opacity-50"
+                              className="flex items-center space-x-1 font-black text-[10px] bg-white hover:bg-rose-50 transition-colors text-rose-600 hover:text-rose-700 px-3 py-2 rounded-lg border border-rose-200 shadow-sm cursor-pointer disabled:opacity-50"
                             >
                               {cancellingOrderId === o.id ? (
                                 <div className="h-3 w-3 border border-current border-t-transparent rounded-full animate-spin" />
@@ -1019,9 +1019,9 @@ export default function MyOrdersSection({
                                 <button
                                   key={star}
                                   onClick={() => handleRateOrder(o.id, star)}
-                                  className="p-1 hover:scale-110 active:scale-90 transition-transform text-slate-300"
+                                  className="p-1.5 hover:scale-110 active:scale-90 transition-transform text-slate-300"
                                 >
-                                  <Star className={`h-3 w-3 ${
+                                  <Star className={`h-4 w-4 ${
                                     star <= stars ? "text-amber-500 fill-amber-500" : "text-slate-300"
                                   }`} />
                                 </button>

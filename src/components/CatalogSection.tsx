@@ -438,7 +438,7 @@ export default function CatalogSection({
                           <div className="text-right shrink-0">
                             {machine.oneDayPrice && machine.oneDayPrice < machine.pricePerDay ? (
                               <>
-                                <span className="inline-flex items-center rounded-full bg-amber-100 text-amber-700 text-[8.5px] font-black uppercase tracking-wide px-1.5 py-0.5">Dagactie</span>
+                                <span className="inline-flex items-center rounded-full bg-amber-100 text-amber-700 text-[10px] font-black uppercase tracking-wide px-1.5 py-0.5">Dagactie</span>
                                 <div className="text-xl font-display font-black leading-none text-amber-600 mt-1">
                                   {formatPrice(vp(machine.oneDayPrice))}
                                 </div>

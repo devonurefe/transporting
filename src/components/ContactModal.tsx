@@ -87,7 +87,7 @@ export default function ContactModal({ isOpen, onClose, onShowToast, onAddSystem
                       <MessageSquare className="h-4 w-4" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <span className="text-[8.5px] text-emerald-100 block font-bold leading-none mb-0.5 uppercase tracking-wide">WhatsApp Expert</span>
+                      <span className="text-[10px] text-emerald-100 block font-bold leading-none mb-0.5 uppercase tracking-wide">WhatsApp Expert</span>
                       <span className="font-bold text-white text-[11.5px] block truncate">Start Live Chat 💬</span>
                     </div>
                   </a>
@@ -101,7 +101,7 @@ export default function ContactModal({ isOpen, onClose, onShowToast, onAddSystem
                       <Phone className="h-4 w-4" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <span className="text-[8.5px] text-slate-400 block font-bold leading-none mb-0.5 uppercase tracking-wide">Bellen Regionaal</span>
+                      <span className="text-[10px] text-slate-400 block font-bold leading-none mb-0.5 uppercase tracking-wide">Bellen Regionaal</span>
                       <span className="font-sans font-semibold text-slate-800 text-[11.5px]">{contactPhone}</span>
                     </div>
                   </a>
@@ -115,7 +115,7 @@ export default function ContactModal({ isOpen, onClose, onShowToast, onAddSystem
                       <Mail className="h-4 w-4" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <span className="text-[8.5px] text-slate-400 block font-bold leading-none mb-0.5 uppercase tracking-wide">E-mail Servicedesk</span>
+                      <span className="text-[10px] text-slate-400 block font-bold leading-none mb-0.5 uppercase tracking-wide">E-mail Servicedesk</span>
                       <span className="text-slate-800 text-[11px] block break-all font-semibold truncate">{contactEmail}</span>
                     </div>
                   </a>

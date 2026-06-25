@@ -117,7 +117,7 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
 
   if (!selectedMachine) {
     return (
-      <div className="bg-white border border-slate-200 shadow-sm p-6 rounded-3xl text-center space-y-3">
+      <div className="bg-white border border-slate-200 shadow-sm p-6 rounded-2xl text-center space-y-3">
         <div className="mx-auto h-10 w-10 bg-slate-50 text-slate-400 flex items-center justify-center rounded-full border border-slate-100">
           <Package className="h-5 w-5" />
         </div>
@@ -173,7 +173,7 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
   const transportValue = transportFree ? t("priceSummaryPickupFree") : euro(sums.transport + sums.driver);
 
   return (
-    <div className="bg-white border border-slate-200 shadow-sm rounded-3xl overflow-hidden">
+    <div className="bg-white border border-slate-200 shadow-sm rounded-2xl overflow-hidden">
 
       {/* Machine preview */}
       <div className="flex items-center gap-3 p-4 bg-slate-50 border-b border-slate-100">
@@ -221,7 +221,7 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
 
         {/* ── TOTAAL (prominent) ──────────────────── */}
         <div>
-          <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1.5">{t("priceSummaryTotal")}</p>
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5">{t("priceSummaryTotal")}</p>
           <p className="text-3xl font-black text-slate-900 font-mono leading-none">{euro(sums.total)}</p>
           <p className="text-[11px] text-slate-400 mt-1.5 leading-snug">
             {t("priceSummaryInclVAT")} · {sums.days} {sums.days === 1 ? "dag" : "dagen"} huur
@@ -291,7 +291,7 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
 
             {/* BEREKENING */}
             <div className="space-y-2">
-              <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Berekening</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Berekening</p>
 
               {!sums.weeklyBreakdown && !sums.isFlatRate && sums.effectiveDailyRate != null && sums.days >= 6 && (
                 <div className="flex items-center gap-1.5">
@@ -343,7 +343,7 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
               <>
                 <div className="h-px bg-slate-100" />
                 <div className="space-y-2">
-                  <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Kortingen</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Kortingen</p>
                   {!sums.weeklyBreakdown && !sums.isFlatRate && sums.discountAmount > 0 && (
                     <Row
                       label={<span className="flex items-center gap-1"><TrendingDown className="h-3 w-3 shrink-0" />{sums.discountLabel}</span>}

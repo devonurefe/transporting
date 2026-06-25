@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect, useRef, useCallback, lazy, Suspense } from "react";
-import { Loader2, MessageCircle } from "lucide-react";
+import { Loader2, MessageCircle, Star } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import Header from "./components/Header";
@@ -496,6 +496,46 @@ export default function App() {
     }
   }, []);
 
+  // Guest order rating — detect ?rate=ORDER_ID&email=EMAIL from the "Voltooid" status email link
+  const [guestRatingData, setGuestRatingData] = useState<{ orderId: string; email: string } | null>(null);
+  const [guestRatingStars, setGuestRatingStars] = useState(0);
+  const [guestRatingDone, setGuestRatingDone] = useState(false);
+  const [guestRatingLoading, setGuestRatingLoading] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const rate = params.get("rate");
+    const email = params.get("email");
+    if (rate && email) {
+      setGuestRatingData({ orderId: rate, email });
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
+
+  const handleGuestRatingSubmit = useCallback(async () => {
+    if (!guestRatingData || guestRatingStars === 0) return;
+    setGuestRatingLoading(true);
+    try {
+      const res = await fetch(`/api/orders/${encodeURIComponent(guestRatingData.orderId)}/rating/guest`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: guestRatingData.email, rating: guestRatingStars })
+      });
+      if (res.ok) {
+        setGuestRatingDone(true);
+      } else {
+        const err = await res.json().catch(() => ({}));
+        triggerNotification("Fout", (err as { error?: string }).error || "Beoordeling kon niet worden opgeslagen.", "warning", false);
+        setGuestRatingData(null);
+      }
+    } catch {
+      triggerNotification("Fout", "Kon de beoordeling niet verzenden.", "warning", false);
+      setGuestRatingData(null);
+    } finally {
+      setGuestRatingLoading(false);
+    }
+  }, [guestRatingData, guestRatingStars, triggerNotification]);
+
   // Triggered when search is executed from landing hero
   const handleLandingPageSearch = (query: string, category: string) => {
     setSearchQuery(query);
@@ -931,12 +971,91 @@ export default function App() {
         )}
       </AnimatePresence>
 
+      {/* GUEST ORDER RATING MODAL — opened via ?rate=ORDER_ID&email=EMAIL from completion email */}
+      <AnimatePresence>
+        {guestRatingData && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4"
+            onClick={() => { setGuestRatingData(null); setGuestRatingDone(false); setGuestRatingStars(0); }}
+          >
+            <motion.div
+              role="dialog"
+              aria-modal="true"
+              aria-label="Beoordeel uw huurervaring"
+              tabIndex={-1}
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              transition={{ duration: 0.18 }}
+              className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm outline-none"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {guestRatingDone ? (
+                <>
+                  <div className="text-center text-4xl mb-3">⭐</div>
+                  <h3 className="text-lg font-black text-slate-900 mb-2 text-center">Bedankt voor uw beoordeling!</h3>
+                  <p className="text-sm text-slate-500 mb-6 text-center leading-relaxed">
+                    Uw feedback helpt ons de service te verbeteren.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => { setGuestRatingData(null); setGuestRatingDone(false); setGuestRatingStars(0); }}
+                    className="w-full px-4 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold transition-colors cursor-pointer"
+                  >
+                    Sluiten
+                  </button>
+                </>
+              ) : (
+                <>
+                  <h3 className="text-lg font-black text-slate-900 mb-1">Uw huurervaring</h3>
+                  <p className="text-xs text-slate-500 mb-5">
+                    Reservering <span className="font-mono font-bold">{guestRatingData.orderId}</span> — klik op een ster om te beoordelen
+                  </p>
+                  <div className="flex justify-center gap-1 mb-6">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        type="button"
+                        onClick={() => setGuestRatingStars(star)}
+                        className="p-1 hover:scale-110 active:scale-90 transition-transform cursor-pointer"
+                      >
+                        <Star className={`h-8 w-8 ${star <= guestRatingStars ? "text-amber-500 fill-amber-500" : "text-slate-200"}`} />
+                      </button>
+                    ))}
+                  </div>
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => { setGuestRatingData(null); setGuestRatingStars(0); }}
+                      className="flex-1 px-4 py-2.5 rounded-xl border border-slate-300 text-slate-700 font-semibold hover:bg-slate-50 transition-colors cursor-pointer"
+                    >
+                      Annuleren
+                    </button>
+                    <button
+                      type="button"
+                      disabled={guestRatingStars === 0 || guestRatingLoading}
+                      onClick={handleGuestRatingSubmit}
+                      className="flex-1 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 disabled:opacity-40 text-white font-bold transition-colors cursor-pointer"
+                    >
+                      {guestRatingLoading ? "Laden..." : "Versturen"}
+                    </button>
+                  </div>
+                </>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* INTERACTIVE CONTACT DETAILS MODAL */}
       <ContactModal
-        isOpen={showContactModal} 
-        onClose={() => setShowContactModal(false)} 
-        onShowToast={(toast) => setActiveToast(toast)} 
-        onAddSystemLog={handleAddSystemLog} 
+        isOpen={showContactModal}
+        onClose={() => setShowContactModal(false)}
+        onShowToast={(toast) => setActiveToast(toast)}
+        onAddSystemLog={handleAddSystemLog}
       />
 
       {/* FLOATING ACTION TOAST POPUPS (TOP RIGHT PANEL) */}

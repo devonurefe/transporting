@@ -45,6 +45,21 @@ const orderCreationLimiter = rateLimit({
 // In-memory idempotency cache (Render is single-process; 1-hour TTL prevents duplicate orders on retry)
 const processedIdempotencyKeys = new Map<string, { orderId: string; createdAt: number }>();
 const IDEMPOTENCY_TTL_MS = 60 * 60 * 1000;
+// Sweep expired entries every 10 minutes so the Map doesn't grow unbounded on a long-running process
+setInterval(() => {
+  const cutoff = Date.now() - IDEMPOTENCY_TTL_MS;
+  for (const [k, v] of processedIdempotencyKeys) {
+    if (v.createdAt < cutoff) processedIdempotencyKeys.delete(k);
+  }
+}, 10 * 60 * 1000);
+
+const guestRatingLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: { error: "Te veel beoordelingspogingen. Probeer het over 15 minuten opnieuw." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 const availabilityLimiter = rateLimit({
   windowMs: 60 * 1000,
@@ -665,6 +680,40 @@ ordersRouter.post("/:id/rating", requireAuth as any, async (req: AuthenticatedRe
     res.json(orderRating);
   } catch (error) {
     console.error("Error saving rating:", error);
+    res.status(500).json({ error: "Kon beoordeling niet opslaan" });
+  }
+});
+
+// POST /api/orders/:id/rating/guest — guests rate their order by providing the booking e-mail.
+// No auth token required; the customerEmail acts as a shared secret for this one order.
+ordersRouter.post("/:id/rating/guest", guestRatingLimiter, async (req: AuthenticatedRequest, res: Response) => {
+  const { id } = req.params;
+  const { email, rating, comment } = req.body;
+
+  if (!email || typeof email !== "string") {
+    return res.status(400).json({ error: "E-mailadres is verplicht" });
+  }
+  if (!rating || rating < 1 || rating > 5 || !Number.isInteger(Number(rating))) {
+    return res.status(400).json({ error: "Beoordeling moet een geheel getal tussen 1 en 5 zijn" });
+  }
+
+  try {
+    const order = await prisma.order.findUnique({ where: { id } });
+    // Only allow for guest orders (customerId null) and only when email matches
+    if (!order || order.customerId !== null || order.customerEmail.toLowerCase() !== email.trim().toLowerCase()) {
+      return res.status(404).json({ error: "Bestelling niet gevonden" });
+    }
+
+    const safeComment = comment ? String(comment).slice(0, 2000) : null;
+    const orderRating = await prisma.orderRating.upsert({
+      where: { orderId: id },
+      create: { orderId: id, rating: Number(rating), comment: safeComment },
+      update: { rating: Number(rating), comment: safeComment }
+    });
+
+    res.json(orderRating);
+  } catch (error) {
+    console.error("Error saving guest rating:", error);
     res.status(500).json({ error: "Kon beoordeling niet opslaan" });
   }
 });

@@ -302,6 +302,14 @@ export const emailService = {
       headerColor = "linear-gradient(135deg, #64748b, #475569)";
     }
 
+    const ratingUrl = `${APP_URL}/?rate=${encodeURIComponent(order.id)}&email=${encodeURIComponent(order.customerEmail)}`;
+    const ratingBlock = order.status === "Voltooid" ? `
+      <div style="text-align: center; background: #fffbeb; border: 1px solid #fde68a; border-radius: 16px; padding: 20px; margin-top: 24px;">
+        <p style="font-size: 20px; margin: 0 0 6px;">⭐</p>
+        <p style="font-size: 13px; font-weight: 700; color: #92400e; margin: 0 0 12px;">Wat vond u van de verhuurervaring?</p>
+        <a href="${ratingUrl}" style="display: inline-block; background: #f59e0b; color: #ffffff; text-decoration: none; padding: 10px 24px; border-radius: 10px; font-weight: bold; font-size: 13px;">Geef een beoordeling</a>
+      </div>` : "";
+
     const htmlContent = `
       <!DOCTYPE html>
       <html>
@@ -366,6 +374,7 @@ export const emailService = {
             <div style="text-align: center;">
               <a href="${APP_URL}/orders" class="btn" style="color: #ffffff;">Mijn Account Openen</a>
             </div>
+            ${ratingBlock}
           </div>
           <div class="footer">
             © ${new Date().getFullYear()} huurgo / MB Hoogwerkers B.V. • BMWT-gecertificeerd verhuurnetwerk • Zoeterwoude, Nederland

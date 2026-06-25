@@ -281,7 +281,7 @@ authRouter.put("/profile", requireAuth as any, async (req: AuthenticatedRequest,
   if (avatarUrl && avatarUrl.trim()) {
     try {
       const parsed = new URL(avatarUrl.trim());
-      if (!["http:", "https:"].includes(parsed.protocol)) {
+      if (parsed.protocol !== "https:") {
         return res.status(400).json({ error: "Avatar URL moet een geldige https:// link zijn." });
       }
     } catch {

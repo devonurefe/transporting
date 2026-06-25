@@ -7,6 +7,13 @@ import { publicReadLimiter, softOriginGuard } from "../middleware/publicGuard.js
 
 export const machinesRouter = Router();
 
+function sanitizeImageUrls(arr: unknown[]): string[] {
+  return arr.filter((u): u is string => {
+    if (typeof u !== "string") return false;
+    try { return new URL(u).protocol === "https:"; } catch { return false; }
+  });
+}
+
 async function getCategoryLabel(categoryId: string) {
   const category = await prisma.category.findUnique({
     where: { id: categoryId }
@@ -198,7 +205,7 @@ machinesRouter.post("/", requireAdmin as any, async (req: AuthenticatedRequest, 
         weeklyPrice: weeklyPrice ? Number(weeklyPrice) : null,
         monthlyPrice: monthlyPrice ? Number(monthlyPrice) : null,
         packageContents: packageContents || null,
-        additionalImages: Array.isArray(additionalImages) ? additionalImages : [],
+        additionalImages: Array.isArray(additionalImages) ? sanitizeImageUrls(additionalImages) : [],
         specs: Array.isArray(specs) && specs.length > 0 ? specs : Prisma.JsonNull,
         minRentalDays: req.body.minRentalDays !== undefined && req.body.minRentalDays !== null && req.body.minRentalDays !== "" ? Math.round(Number(req.body.minRentalDays)) : null,
         weeklyOnly: Boolean(req.body.weeklyOnly),
@@ -290,7 +297,7 @@ machinesRouter.put("/:id", requireAdmin as any, async (req: AuthenticatedRequest
         weeklyPrice: weeklyPrice !== undefined && weeklyPrice !== null && weeklyPrice !== "" ? Number(weeklyPrice) : null,
         monthlyPrice: monthlyPrice !== undefined && monthlyPrice !== null && monthlyPrice !== "" ? Number(monthlyPrice) : null,
         packageContents: packageContents !== undefined ? packageContents : null,
-        additionalImages: Array.isArray(additionalImages) ? additionalImages : [],
+        additionalImages: Array.isArray(additionalImages) ? sanitizeImageUrls(additionalImages) : [],
         specs: specsUpdate === undefined ? undefined : (specsUpdate ?? Prisma.JsonNull),
         isActive: req.body.isActive !== undefined ? Boolean(req.body.isActive) : undefined,
         bufferDays: req.body.bufferDays !== undefined ? Math.min(2, Math.max(0, Math.round(Number(req.body.bufferDays)))) : undefined,

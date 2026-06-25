@@ -666,8 +666,11 @@ ordersRouter.post("/:id/rating", requireAuth as any, async (req: AuthenticatedRe
 
   try {
     const order = await prisma.order.findUnique({ where: { id } });
-    if (!order || (req.user?.role !== "admin" && order.customerId !== req.user?.id)) {
+    if (!order || order.customerId !== req.user?.id) {
       return res.status(404).json({ error: "Bestelling niet gevonden" });
+    }
+    if (order.status !== "Voltooid") {
+      return res.status(400).json({ error: "Alleen voltooide bestellingen kunnen worden beoordeeld" });
     }
 
     const safeComment = comment ? String(comment).slice(0, 2000) : null;
@@ -837,7 +840,7 @@ ordersRouter.put("/:id/status", requireAdmin as any, async (req: AuthenticatedRe
 // Protected by REMINDER_SECRET env var so it can be called from a cron service
 ordersRouter.post("/send-reminders", async (req: AuthenticatedRequest, res: Response) => {
   const secret = process.env.REMINDER_SECRET;
-  const providedKey = req.headers["x-reminder-key"] || req.body?.key;
+  const providedKey = req.headers["x-reminder-key"];
 
   // Always require a secret — if not configured, endpoint is disabled
   if (!secret) {

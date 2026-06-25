@@ -156,10 +156,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     } catch (e) {
       console.warn("Failed to load campaign rules from localStorage");
     }
-    return [
-      { id: "rule-1", name: "Schilder Lente Korting", scope: "role", scopeValue: "Schilder", discountPercent: 12, isActive: true },
-      { id: "rule-2", name: "Magazijn Schaarlift Deal", scope: "category", scopeValue: "schaarlift", discountPercent: 10, isActive: true }
-    ];
+    return [];
   })(),
   isLoading: false,
   error: null,
@@ -283,11 +280,10 @@ export const useAppStore = create<AppState>((set, get) => ({
       const res = await fetch("/api/campaign-rules");
       if (res.ok) {
         const rules = await res.json();
-        if (Array.isArray(rules) && rules.length > 0) {
+        if (Array.isArray(rules)) {
           set({ campaignRules: rules });
           try { localStorage.setItem("hwh_campaign_rules", JSON.stringify(rules)); } catch { /* ignore */ }
         }
-        // If API returns empty, keep the localStorage/default value already loaded
       }
     } catch (e) {
       console.warn("Failed to fetch campaign rules from API, using local fallback.");

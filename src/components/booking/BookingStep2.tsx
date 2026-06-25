@@ -245,6 +245,9 @@ export default function BookingStep2({
           <button
             type="button"
             onClick={() => setSectorOpen(o => !o)}
+            aria-haspopup="listbox"
+            aria-expanded={sectorOpen}
+            aria-label="Selecteer uw vakgebied"
             className="flex items-center justify-between w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-800 font-bold outline-none focus:border-slate-400 cursor-pointer shadow-sm hover:border-slate-300 transition-colors"
           >
             <span className="flex items-center gap-2">

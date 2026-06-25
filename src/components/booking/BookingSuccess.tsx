@@ -22,6 +22,7 @@ interface BookingSuccessProps {
   setActiveTab: (tab: string) => void;
   currentUser: UserProfile | null;
   whatsappUrl?: string;
+  bookingError?: string | null;
 }
 
 export default function BookingSuccess({
@@ -32,7 +33,8 @@ export default function BookingSuccess({
   setSuccessOrder,
   setActiveTab,
   currentUser,
-  whatsappUrl
+  whatsappUrl,
+  bookingError
 }: BookingSuccessProps) {
   const t = useLanguageStore((state) => state.t);
   const siteConfig = useAppStore((state) => state.siteConfig);
@@ -122,6 +124,12 @@ export default function BookingSuccess({
       transition={{ duration: 0.28, ease: "easeOut" }}
       className="bg-white border border-slate-200 shadow-lg max-w-xl mx-auto rounded-2xl overflow-hidden"
     >
+      {bookingError && (
+        <div className="flex items-start gap-3 bg-amber-50 border-b border-amber-200 px-5 py-3 text-amber-800">
+          <span className="text-amber-500 shrink-0 mt-0.5">⚠</span>
+          <p className="text-xs font-semibold leading-snug">{bookingError}</p>
+        </div>
+      )}
       {/* Header */}
       <div className="bg-gradient-to-b from-emerald-50 to-white px-6 pt-8 pb-6 text-center border-b border-slate-100">
         <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100 border border-emerald-200 text-emerald-600 mb-4">

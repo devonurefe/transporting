@@ -295,22 +295,7 @@ export default function App() {
   }, [currentUser?.id, setVatDisplay]);
 
   // System and Activity Logs
-  const [systemLogs, setSystemLogs] = useState<any[]>([
-    {
-      id: "log-1",
-      type: "system",
-      user: "Systeem",
-      description: "huurgo B.V. vlootbeheersysteem geïnitialiseerd. BMWT verbinding stabiel.",
-      timestamp: new Date(Date.now() - 3600 * 1000 * 4).toISOString()
-    },
-    {
-      id: "log-2",
-      type: "booking",
-      user: "System Daemon",
-      description: "Dagelijkse synchronisatie met Mollie betalingsgateway afgerond.",
-      timestamp: new Date(Date.now() - 3600 * 1000 * 2).toISOString()
-    }
-  ]);
+  const [systemLogs, setSystemLogs] = useState<any[]>([]);
 
   const handleAddSystemLog = useCallback((type: "login" | "logout" | "signup" | "booking" | "fleet" | "status" | "system", user: string, description: string) => {
     const newLog = {

@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from "react";
-import { Calendar, Building2, X, Truck, ShieldAlert, ArrowRight, MessageCircle, ChevronLeft, Info } from "lucide-react";
+import { Calendar, Building2, X, Truck, ShieldAlert, ArrowRight, MessageCircle, ChevronLeft, Info, CheckCircle2 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { CartItem, DeliveryType, Machine } from "../../types";
 import { buildWhatsAppUrl, buildWhatsAppTransportInquiryUrl } from "../../utils/whatsapp";
@@ -193,7 +193,7 @@ export default function BookingStep1({
                 }`}>
                   {availability.available ? (
                     <>
-                      <CheckCircle2Icon className="h-4 w-4 text-teal-600 shrink-0" />
+                      <CheckCircle2 className="h-4 w-4 text-teal-600 shrink-0" />
                       <span>{t("step1Available")}</span>
                     </>
                   ) : (
@@ -654,10 +654,3 @@ export default function BookingStep1({
   );
 }
 
-function CheckCircle2Icon({ className }: { className?: string }) {
-  return (
-    <svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-    </svg>
-  );
-}

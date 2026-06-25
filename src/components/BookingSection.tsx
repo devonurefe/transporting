@@ -828,6 +828,23 @@ export default function BookingSection({
         } catch (err: any) {
         isSubmittingRef.current = false;
         setIsSubmitting(false);
+
+        if (placedOrders.length > 0) {
+          // Partial success: at least one item was placed before the failure.
+          // Surface the placed orders so the customer can see confirmation and
+          // reach WhatsApp, then explain the remaining item(s) failed.
+          setSuccessOrders(placedOrders);
+          setSuccessOrder(placedOrders[0]);
+          onClearCart();
+          setBookingError(
+            `Let op: ${placedOrders.length} machine(s) zijn geboekt (${placedOrders.map(o => o.id).join(", ")}), ` +
+            `maar ${cartItems.length - placedOrders.length} machine(s) konden niet worden verwerkt. ` +
+            `Neem contact op via WhatsApp zodat wij dit kunnen oplossen.`
+          );
+          setStep(4);
+          return;
+        }
+
         const msg: string = err?.message || "";
         if (msg.includes("409") || msg.toLowerCase().includes("conflict") || msg.toLowerCase().includes("gereserveerd")) {
           setBookingError("Deze machine is helaas niet meer beschikbaar op de geselecteerde datums. Kies andere datums.");
@@ -1006,7 +1023,7 @@ export default function BookingSection({
 
             </motion.div>
           ) : (
-            <BookingSuccess 
+            <BookingSuccess
               successOrder={successOrder}
               successOrders={successOrders}
               paymentGateway={paymentGateway}
@@ -1015,6 +1032,7 @@ export default function BookingSection({
               setActiveTab={setActiveTab}
               currentUser={currentUser}
               whatsappUrl={whatsappUrl}
+              bookingError={bookingError}
             />
           )}
         </AnimatePresence>

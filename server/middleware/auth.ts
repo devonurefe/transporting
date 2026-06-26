@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { verifyToken } from "../utils/auth.js";
+import { verifyToken, isTokenRevoked } from "../utils/auth.js";
 
 export interface AuthenticatedRequest extends Request {
   user?: {
@@ -7,6 +7,7 @@ export interface AuthenticatedRequest extends Request {
     email: string;
     role: string;
     name: string;
+    iat?: number;
   };
 }
 
@@ -27,6 +28,9 @@ export function authenticateToken(req: AuthenticatedRequest, res: Response, next
 export function requireAuth(req: AuthenticatedRequest, res: Response, next: NextFunction) {
   if (!req.user) {
     return res.status(401).json({ error: "Inloggen vereist" });
+  }
+  if (req.user.id && req.user.iat && isTokenRevoked(req.user.id, req.user.iat)) {
+    return res.status(401).json({ error: "Sessie verlopen na wachtwoordwijziging, log opnieuw in" });
   }
   next();
 }

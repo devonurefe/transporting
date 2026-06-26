@@ -80,7 +80,7 @@ export function checkAvailability(
     if (reason !== undefined) {
       return { available: false, blocked: true, overlap: false, reason };
     }
-    curr.setDate(curr.getDate() + 1);
+    curr.setUTCDate(curr.getUTCDate() + 1);
   }
 
   return { available: true, blocked: false, overlap: false, reason: "" };

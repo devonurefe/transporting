@@ -14,6 +14,18 @@ function sanitizeImageUrls(arr: unknown[]): string[] {
   });
 }
 
+function sanitizeImageUrl(url: unknown): string {
+  if (typeof url !== "string") return "";
+  if (!url) return "";
+  if (url.startsWith("/")) return url;            // local static paths
+  if (url.startsWith("data:image/")) return url;  // uploaded base64 images
+  try {
+    const u = new URL(url);
+    if (u.protocol === "https:" || u.protocol === "http:") return url;
+  } catch { /* invalid URL */ }
+  return ""; // reject javascript:, file:, and other executable schemes
+}
+
 async function getCategoryLabel(categoryId: string) {
   const category = await prisma.category.findUnique({
     where: { id: categoryId }
@@ -191,7 +203,7 @@ machinesRouter.post("/", requireAdmin as any, async (req: AuthenticatedRequest, 
         pricePerDay: Number(pricePerDay),
         oneDayPrice: oneDayPrice ? Number(oneDayPrice) : null,
         powerType: powerType || "Elektrisch",
-        imageUrl: imageUrl || "/placeholder-machine.webp",
+        imageUrl: sanitizeImageUrl(imageUrl) || "/placeholder-machine.webp",
         imageAlt: name,
         description: (description || "Gebruiksvriendelijke hoogwerker geschikt voor lichte installatie of inspectie.").slice(0, 2000),
         suitableFor: Array.isArray(suitableFor) ? suitableFor : ["Algemeen"],
@@ -207,6 +219,7 @@ machinesRouter.post("/", requireAdmin as any, async (req: AuthenticatedRequest, 
         packageContents: packageContents || null,
         additionalImages: Array.isArray(additionalImages) ? sanitizeImageUrls(additionalImages) : [],
         specs: Array.isArray(specs) && specs.length > 0 ? specs : Prisma.JsonNull,
+        bufferDays: req.body.bufferDays !== undefined ? Math.min(2, Math.max(0, Math.round(Number(req.body.bufferDays)))) : 0,
         minRentalDays: req.body.minRentalDays !== undefined && req.body.minRentalDays !== null && req.body.minRentalDays !== "" ? Math.round(Number(req.body.minRentalDays)) : null,
         weeklyOnly: Boolean(req.body.weeklyOnly),
         pickupOnly: Boolean(req.body.pickupOnly),
@@ -283,7 +296,7 @@ machinesRouter.put("/:id", requireAdmin as any, async (req: AuthenticatedRequest
         pricePerDay: Number(pricePerDay),
         oneDayPrice: oneDayPrice !== undefined && oneDayPrice !== null && oneDayPrice !== "" ? Number(oneDayPrice) : null,
         powerType: powerType || "Elektrisch",
-        imageUrl: imageUrl !== undefined && imageUrl !== null ? imageUrl : "",
+        imageUrl: imageUrl !== undefined && imageUrl !== null ? sanitizeImageUrl(imageUrl) : "",
         imageAlt: name,
         description: (description || "Gebruiksvriendelijke hoogwerker geschikt voor lichte installatie of inspectie.").slice(0, 2000),
         suitableFor: Array.isArray(suitableFor) ? suitableFor : suitableFor ? [suitableFor] : ["Algemeen"],

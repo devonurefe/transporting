@@ -70,6 +70,7 @@ function CardImage({ src, alt, additional }: { src: string; alt?: string; additi
         onError={(e) => {
           if (additional && e.currentTarget.src !== additional) {
             e.currentTarget.src = additional;
+            setLoaded(true);
           } else {
             e.currentTarget.src = "/placeholder-machine.webp";
             setLoaded(true);

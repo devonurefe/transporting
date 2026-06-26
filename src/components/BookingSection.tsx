@@ -233,7 +233,7 @@ export default function BookingSection({
         reasonTxt = reason;
         break;
       }
-      curr.setDate(curr.getDate() + 1);
+      curr.setUTCDate(curr.getUTCDate() + 1);
     }
 
     setIsDateBlocked(dateIsBlocked);

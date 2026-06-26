@@ -1,6 +1,21 @@
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 
+// In-memory token revocation table.
+// When a user changes their password, any token issued before that moment is rejected.
+// Ephemeral (cleared on restart), but protects active sessions on single-process deploys.
+const tokenRevokedAfter = new Map<string, number>(); // userId → epoch ms
+
+export function revokeUserTokens(userId: string): void {
+  tokenRevokedAfter.set(userId, Date.now());
+}
+
+export function isTokenRevoked(userId: string, iatSeconds: number): boolean {
+  const threshold = tokenRevokedAfter.get(userId);
+  if (!threshold) return false;
+  return iatSeconds * 1000 < threshold;
+}
+
 const JWT_SECRET = process.env.JWT_SECRET;
 
 if (!JWT_SECRET) {

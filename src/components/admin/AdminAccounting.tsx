@@ -3,46 +3,37 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from "react";
-import { Link2, Link2Off, RefreshCw, CheckCircle2, AlertCircle, FileText, Database, ShieldCheck } from "lucide-react";
+import React, { useState, useMemo } from "react";
+import { Download, FileSpreadsheet, Filter, CheckCircle2 } from "lucide-react";
 import { motion } from "motion/react";
-import { useLanguageStore } from "../../store/languageStore";
+import { useAppStore } from "../../store/appStore";
 
 interface AdminAccountingProps {
   key?: string;
   adminLanguage?: string;
 }
 
-export default function AdminAccounting({ adminLanguage }: AdminAccountingProps) {
-  const [isConnected, setIsConnected] = useState(true);
-  const [clientId, setClientId] = useState("");
-  const [clientSecret, setClientSecret] = useState("");
-  const [division, setDivision] = useState("124092"); // Default division code for HuurGo Nederland
-  const [autoSync, setAutoSync] = useState(true);
-  const [autoEmail, setAutoEmail] = useState(false);
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [syncFeedback, setSyncFeedback] = useState<string | null>(null);
+const STATUS_OPTIONS = [
+  "In behandeling",
+  "Goedgekeurd",
+  "Onderweg",
+  "Voltooid",
+  "Geannuleerd",
+];
 
-  const [syncLogs, setSyncLogs] = useState([
-    {
-      id: "sync-1",
-      orderId: "HWH-9921",
-      customer: "Jan de Vries",
-      amount: "€671,55",
-      status: "success",
-      message: "Verkoopboeking aangemaakt in Exact dagboek 70 (Verkoop). Account 'Jan de Vries' gematcht.",
-      timestamp: new Date(Date.now() - 3600 * 1000 * 2).toISOString()
-    },
-    {
-      id: "sync-2",
-      orderId: "HWH-9918",
-      customer: "Sven van der Meer",
-      amount: "€193,60",
-      status: "success",
-      message: "Relatie aangemaakt & Verkoopboeking verzonden naar Exact Online divisie 124092.",
-      timestamp: new Date(Date.now() - 3600 * 1000 * 5).toISOString()
-    }
+export default function AdminAccounting({ adminLanguage }: AdminAccountingProps) {
+  const orders = useAppStore((state) => state.orders);
+
+  const todayISO = new Date().toISOString().split("T")[0];
+  const firstOfMonthISO = todayISO.slice(0, 7) + "-01";
+
+  const [fromDate, setFromDate] = useState(firstOfMonthISO);
+  const [toDate, setToDate] = useState(todayISO);
+  const [selectedStatuses, setSelectedStatuses] = useState<string[]>([
+    "Goedgekeurd", "Onderweg", "Voltooid",
   ]);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [lastDownload, setLastDownload] = useState<string | null>(null);
 
   const t = (nl: string, en: string, tr: string) => {
     if (adminLanguage === "tr") return tr;
@@ -50,33 +41,60 @@ export default function AdminAccounting({ adminLanguage }: AdminAccountingProps)
     return nl;
   };
 
-  const handleManualSync = () => {
-    if (!isConnected) {
-      setSyncFeedback(t("Fout: Geen actieve verbinding met Exact Online.", "Error: No active connection to Exact Online.", "Hata: Exact Online ile aktif bağlantı bulunamadı."));
-      return;
-    }
-    setIsSyncing(true);
-    setSyncFeedback(null);
+  const toggleStatus = (s: string) =>
+    setSelectedStatuses((prev) =>
+      prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]
+    );
 
-    setTimeout(() => {
-      setIsSyncing(false);
-      const newLog = {
-        id: `sync-${Date.now()}`,
-        orderId: `HWH-${Math.floor(1000 + Math.random() * 9000)}`,
-        customer: "Mila Visser",
-        amount: "€90,00",
-        status: "success",
-        message: "Factuur handmatig gesynchroniseerd met verkoopboek. Relatienummer match: ACC-39402.",
-        timestamp: new Date().toISOString()
-      };
-      setSyncLogs(prev => [newLog, ...prev]);
-      setSyncFeedback(t("Synchronisatie succesvol afgerond!", "Synchronization completed successfully!", "Senkronizasyon başarıyla tamamlandı!"));
-    }, 1200);
+  const filteredOrders = useMemo(() => {
+    return orders.filter((o) => {
+      const inRange = (!fromDate || o.startDate >= fromDate) && (!toDate || o.startDate <= toDate);
+      const statusMatch = selectedStatuses.length === 0 || selectedStatuses.includes(o.status);
+      return inRange && statusMatch;
+    });
+  }, [orders, fromDate, toDate, selectedStatuses]);
+
+  const totalRevenue = filteredOrders
+    .filter((o) => o.status !== "Geannuleerd")
+    .reduce((sum, o) => sum + o.totalAmount, 0);
+
+  const paidRevenue = filteredOrders
+    .filter((o) => o.paymentStatus === "paid" && o.status !== "Geannuleerd")
+    .reduce((sum, o) => sum + o.totalAmount, 0);
+
+  const getAuthHeaders = (): Record<string, string> => {
+    const token = localStorage.getItem("hwh_admin_token");
+    return token ? { Authorization: `Bearer ${token}` } : {};
   };
 
-  const handleToggleConnection = () => {
-    setIsConnected(prev => !prev);
-    setSyncFeedback(null);
+  const handleDownload = async () => {
+    setIsDownloading(true);
+    try {
+      const params = new URLSearchParams();
+      if (fromDate) params.set("from", fromDate);
+      if (toDate) params.set("to", toDate);
+      if (selectedStatuses.length > 0) params.set("status", selectedStatuses.join(","));
+
+      const res = await fetch(`/api/orders/export?${params.toString()}`, {
+        headers: getAuthHeaders(),
+      });
+
+      if (!res.ok) throw new Error("Export mislukt");
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `huurgo-orders-${todayISO}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 200);
+
+      setLastDownload(new Date().toLocaleTimeString("nl-NL"));
+    } catch (e) {
+      console.error("Export error:", e);
+    }
+    setIsDownloading(false);
   };
 
   return (
@@ -85,201 +103,165 @@ export default function AdminAccounting({ adminLanguage }: AdminAccountingProps)
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
-      className="space-y-6 animate-fade-in"
+      className="space-y-6"
     >
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        
-        {/* Left Column: Connection & Setup Configuration */}
-        <div className="lg:col-span-5 glass-panel p-5.5 rounded-3xl space-y-5">
-          <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-            <div className="flex items-center space-x-2">
-              <Database className="h-4.5 w-4.5 text-amber-500" />
-              <h3 className="font-display font-bold text-sm text-slate-900">
-                {t("Exact Online Koppeling", "Exact Online Integration", "Exact Online Bağlantısı")}
-              </h3>
-            </div>
-            
-            <button
-              onClick={handleToggleConnection}
-              className={`text-[10px] font-extrabold px-3 py-1.5 rounded-xl border transition-all cursor-pointer flex items-center space-x-1 ${
-                isConnected 
-                  ? "bg-emerald-50 hover:bg-emerald-100 border-emerald-200 text-emerald-700" 
-                  : "bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-700"
-              }`}
-            >
-              {isConnected ? (
-                <>
-                  <Link2 className="h-3 w-3" />
-                  <span>{t("Gekoppeld", "Connected", "Bağlı")}</span>
-                </>
-              ) : (
-                <>
-                  <Link2Off className="h-3 w-3" />
-                  <span>{t("Ontkoppeld", "Disconnected", "Bağlantı Kesildi")}</span>
-                </>
-              )}
-            </button>
+
+        {/* Left: Filters */}
+        <div className="lg:col-span-5 glass-panel p-6 rounded-3xl space-y-5">
+          <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
+            <Filter className="h-4 w-4 text-amber-500" />
+            <h3 className="font-display font-bold text-sm text-slate-900">
+              {t("Exportfilters", "Export Filters", "Dışa Aktarma Filtreleri")}
+            </h3>
           </div>
 
-          <div className="text-[11.5px] text-slate-500 leading-normal space-y-2">
-            <p>
-              {t(
-                "Koppel uw huurgo administratie in real-time met de Exact Online API om verkoopfacturen en debiteuren automatisch te boeken.",
-                "Connect your huurgo administration in real-time with the Exact Online API to automatically post sales invoices and debtors.",
-                "huurgo muhasebe kayıtlarınızı, satış faturalarını ve cari kartları otomatik işlemek için Exact Online API ile gerçek zamanlı bağlayın."
-              )}
+          {/* Date range */}
+          <div className="space-y-3">
+            <p className="text-[10.5px] font-bold text-slate-500 uppercase tracking-wide">
+              {t("Startdatum periode", "Start date range", "Başlangıç tarihi aralığı")}
             </p>
-            {isConnected && (
-              <div className="flex items-center space-x-1.5 p-2 bg-emerald-50 border border-emerald-100 rounded-xl text-emerald-800 text-[10.5px]">
-                <ShieldCheck className="h-4 w-4 shrink-0 text-emerald-600" />
-                <span>OAuth 2.0 API Token is momenteel actief en stabiel.</span>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label className="text-[10px] text-slate-400 block">{t("Van", "From", "Başlangıç")}</label>
+                <input
+                  type="date"
+                  value={fromDate}
+                  onChange={(e) => setFromDate(e.target.value)}
+                  className="w-full bg-white border border-slate-200 focus:border-amber-400 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none cursor-pointer"
+                />
               </div>
+              <div className="space-y-1">
+                <label className="text-[10px] text-slate-400 block">{t("Tot", "To", "Bitiş")}</label>
+                <input
+                  type="date"
+                  value={toDate}
+                  onChange={(e) => setToDate(e.target.value)}
+                  className="w-full bg-white border border-slate-200 focus:border-amber-400 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none cursor-pointer"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Status filter */}
+          <div className="space-y-2">
+            <p className="text-[10.5px] font-bold text-slate-500 uppercase tracking-wide">
+              {t("Status", "Status", "Durum")}
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {STATUS_OPTIONS.map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => toggleStatus(s)}
+                  className={`px-2.5 py-1 rounded-full text-[10px] font-bold border transition-all cursor-pointer ${
+                    selectedStatuses.includes(s)
+                      ? "bg-amber-500 text-white border-amber-600"
+                      : "bg-white text-slate-500 border-slate-200 hover:border-slate-300"
+                  }`}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+            {selectedStatuses.length === 0 && (
+              <p className="text-[10px] text-slate-400 italic">
+                {t("Geen statusfilter — alle statussen worden geëxporteerd.", "No status filter — all statuses will be exported.", "Durum filtresi yok — tüm durumlar dışa aktarılır.")}
+              </p>
             )}
           </div>
 
-          <form onSubmit={(e) => e.preventDefault()} className="space-y-4 pt-1">
-            <div className="space-y-1.5">
-              <label className="text-[10.5px] font-bold text-slate-500 uppercase tracking-wide">
-                {t("Divisie Nummer (Exact Division ID)", "Division Number (Exact Division ID)", "Şube / Divizyon Kodu")}
-              </label>
-              <input
-                type="text"
-                value={division}
-                disabled={!isConnected}
-                onChange={(e) => setDivision(e.target.value)}
-                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 h-9 transition-all disabled:opacity-50"
-              />
+          {/* Quick presets */}
+          <div className="pt-2 border-t border-slate-100 space-y-1.5">
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">{t("Snelkeuze", "Quick select", "Hızlı seçim")}</p>
+            <div className="flex flex-wrap gap-1.5">
+              {[
+                { label: t("Deze maand", "This month", "Bu ay"), from: firstOfMonthISO, to: todayISO },
+                {
+                  label: t("Vorige maand", "Last month", "Geçen ay"),
+                  from: (() => { const d = new Date(); d.setMonth(d.getMonth() - 1); return d.toISOString().slice(0, 7) + "-01"; })(),
+                  to: (() => { const d = new Date(); d.setDate(0); return d.toISOString().split("T")[0]; })()
+                },
+                {
+                  label: t("Dit jaar", "This year", "Bu yıl"),
+                  from: new Date().getFullYear() + "-01-01",
+                  to: todayISO
+                },
+              ].map((p) => (
+                <button
+                  key={p.label}
+                  type="button"
+                  onClick={() => { setFromDate(p.from); setToDate(p.to); }}
+                  className="px-2.5 py-1 rounded-full text-[10px] font-bold border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 transition-colors cursor-pointer"
+                >
+                  {p.label}
+                </button>
+              ))}
             </div>
-
-            <div className="space-y-1.5">
-              <label className="text-[10.5px] font-bold text-slate-500 uppercase tracking-wide">
-                Client ID
-              </label>
-              <input
-                type="text"
-                value={clientId}
-                disabled={!isConnected}
-                onChange={(e) => setClientId(e.target.value)}
-                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 h-9 transition-all disabled:opacity-50 font-mono"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-[10.5px] font-bold text-slate-500 uppercase tracking-wide">
-                Client Secret
-              </label>
-              <input
-                type="password"
-                value={clientSecret}
-                disabled={!isConnected}
-                onChange={(e) => setClientSecret(e.target.value)}
-                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 h-9 transition-all disabled:opacity-50"
-              />
-            </div>
-
-            {/* Checkboxes parameters */}
-            <div className="space-y-2.5 pt-2 border-t border-slate-100">
-              <label className="flex items-center space-x-2.5 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={autoSync}
-                  disabled={!isConnected}
-                  onChange={(e) => setAutoSync(e.target.checked)}
-                  className="rounded border-slate-300 text-amber-500 focus:ring-amber-500 h-4 w-4 shrink-0"
-                />
-                <span className="text-xs text-slate-700 font-medium select-none">
-                  {t("Automatisch facturen doorsturen", "Automatically sync sales invoices", "Faturaları otomatik senkronize et")}
-                </span>
-              </label>
-
-              <label className="flex items-center space-x-2.5 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={autoEmail}
-                  disabled={!isConnected}
-                  onChange={(e) => setAutoEmail(e.target.checked)}
-                  className="rounded border-slate-300 text-amber-500 focus:ring-amber-500 h-4 w-4 shrink-0"
-                />
-                <span className="text-xs text-slate-700 font-medium select-none">
-                  {t("E-mail factuur direct vanuit Exact", "E-mail invoice directly from Exact", "Faturayı doğrudan Exact üzerinden e-postala")}
-                </span>
-              </label>
-            </div>
-          </form>
+          </div>
         </div>
 
-        {/* Right Column: Real-time logs and Sync commands */}
-        <div className="lg:col-span-7 glass-panel p-5.5 rounded-3xl space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-            <div className="flex items-center space-x-2">
-              <FileText className="h-4.5 w-4.5 text-amber-500" />
+        {/* Right: Summary + Download */}
+        <div className="lg:col-span-7 space-y-4">
+
+          {/* Stats */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {[
+              { label: t("Geselecteerde orders", "Selected orders", "Seçilen siparişler"), value: filteredOrders.length.toString(), color: "text-slate-800" },
+              { label: t("Totale omzet", "Total revenue", "Toplam ciro"), value: `€ ${totalRevenue.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, color: "text-teal-600" },
+              { label: t("Betaald ontvangen", "Paid received", "Ödenen tutar"), value: `€ ${paidRevenue.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, color: "text-emerald-600" },
+            ].map((stat) => (
+              <div key={stat.label} className="glass-panel p-4 rounded-2xl">
+                <p className="text-[10px] text-slate-400 font-medium mb-1">{stat.label}</p>
+                <p className={`text-sm font-black font-mono ${stat.color}`}>{stat.value}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Download card */}
+          <div className="glass-panel p-6 rounded-3xl space-y-4">
+            <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
+              <FileSpreadsheet className="h-4 w-4 text-amber-500" />
               <h3 className="font-display font-bold text-sm text-slate-900">
-                {t("Synchronisatie Logboek", "Synchronization Logs", "Senkronizasyon Günlüğü")}
+                {t("CSV Export", "CSV Export", "CSV Dışa Aktar")}
               </h3>
             </div>
 
-            <button
-              onClick={handleManualSync}
-              disabled={isSyncing}
-              className="bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-slate-950 font-extrabold text-[10.5px] px-3.5 py-2 rounded-xl transition-all cursor-pointer flex items-center space-x-1.5 border-none h-9 shadow-sm active:scale-95"
-            >
-              <RefreshCw className={`h-3.5 w-3.5 ${isSyncing ? "animate-spin" : ""}`} />
-              <span>{t("Handmatig Syncken", "Sync Now", "Şimdi Eşitle")}</span>
-            </button>
-          </div>
-
-          {syncFeedback && (
-            <div className={`p-3 rounded-xl border text-xs flex items-center space-x-2 animate-fade-in ${
-              syncFeedback.includes("Fout") || syncFeedback.includes("Error") || syncFeedback.includes("Hata")
-                ? "bg-rose-50 border-rose-100 text-rose-800"
-                : "bg-emerald-50 border-emerald-100 text-emerald-800"
-            }`}>
-              {syncFeedback.includes("Fout") || syncFeedback.includes("Error") || syncFeedback.includes("Hata") ? (
-                <AlertCircle className="h-4.5 w-4.5 text-rose-600 shrink-0" />
-              ) : (
-                <CheckCircle2 className="h-4.5 w-4.5 text-emerald-600 shrink-0" />
+            <p className="text-xs text-slate-500 leading-relaxed">
+              {t(
+                "Exporteer de gefilterde bestellingen als CSV-bestand. Het bestand bevat alle klant-, machine- en financiële gegevens en is direct te openen in Excel of Google Sheets.",
+                "Export the filtered orders as a CSV file. The file contains all customer, machine and financial data and can be opened directly in Excel or Google Sheets.",
+                "Filtrelenmiş siparişleri CSV dosyası olarak dışa aktarın. Dosya tüm müşteri, makine ve finansal verileri içerir; Excel veya Google Sheets'te doğrudan açılabilir."
               )}
-              <span>{syncFeedback}</span>
+            </p>
+
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3 text-[10.5px] text-slate-500 font-mono leading-relaxed">
+              {t("Kolommen:", "Columns:", "Sütunlar:")} Order ID · Naam · E-mail · Telefoon · Profiel · Machine · Dagtarief · Startdatum · Einddatum · Dagen · Levertype · Adres · Subtotaal · Transport · Chauffeur · BTW · Totaal · Status · Betaalstatus · Aangemaakt op
             </div>
-          )}
 
-          {/* Sync logs timeline list */}
-          <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
-            {syncLogs.map((log) => {
-              return (
-                <div 
-                  key={log.id} 
-                  className="p-3 bg-slate-50 border border-slate-200 rounded-2xl flex items-start space-x-3 hover:border-slate-300 transition-colors shadow-sm"
-                >
-                  <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 shrink-0 mt-0.5">
-                    <FileText className="h-4 w-4" />
-                  </div>
-                  <div className="flex-1 space-y-1">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[11.5px] font-extrabold text-slate-800 font-mono">
-                        {log.orderId} ({log.customer})
-                      </span>
-                      <span className="text-[10px] text-slate-500">
-                        {new Date(log.timestamp).toLocaleTimeString("nl-NL")}
-                      </span>
-                    </div>
-                    <p className="text-[10.5px] text-slate-600 leading-relaxed">
-                      {log.message}
-                    </p>
-                    <div className="flex justify-between items-center pt-1 text-[9.5px]">
-                      <span className="text-emerald-700 font-bold bg-emerald-50 border border-emerald-100/55 px-1.5 py-0.5 rounded-md">
-                        {log.status.toUpperCase()}
-                      </span>
-                      <span className="text-slate-800 font-extrabold">
-                        {log.amount}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+            <button
+              type="button"
+              onClick={handleDownload}
+              disabled={isDownloading || filteredOrders.length === 0}
+              className="w-full bg-amber-500 hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed text-slate-950 font-extrabold text-sm py-3 rounded-2xl transition-all cursor-pointer flex items-center justify-center gap-2.5 border-none shadow-sm active:scale-95"
+            >
+              <Download className={`h-4.5 w-4.5 ${isDownloading ? "animate-bounce" : ""}`} />
+              <span>
+                {isDownloading
+                  ? t("Bezig met exporteren…", "Exporting…", "Dışa aktarılıyor…")
+                  : filteredOrders.length === 0
+                  ? t("Geen orders in selectie", "No orders in selection", "Seçimde sipariş yok")
+                  : t(`${filteredOrders.length} orders downloaden (CSV)`, `Download ${filteredOrders.length} orders (CSV)`, `${filteredOrders.length} sipariş indir (CSV)`)}
+              </span>
+            </button>
+
+            {lastDownload && (
+              <div className="flex items-center gap-1.5 text-[10.5px] text-emerald-600 font-medium">
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                <span>{t(`Laatste download: ${lastDownload}`, `Last download: ${lastDownload}`, `Son indirme: ${lastDownload}`)}</span>
+              </div>
+            )}
           </div>
-
         </div>
       </div>
     </motion.div>

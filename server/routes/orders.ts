@@ -706,6 +706,9 @@ ordersRouter.post("/:id/rating/guest", guestRatingLimiter, async (req: Authentic
     if (!order || order.customerId !== null || order.customerEmail.toLowerCase() !== email.trim().toLowerCase()) {
       return res.status(404).json({ error: "Bestelling niet gevonden" });
     }
+    if (order.status !== "Voltooid") {
+      return res.status(400).json({ error: "Alleen voltooide bestellingen kunnen worden beoordeeld" });
+    }
 
     const safeComment = comment ? String(comment).slice(0, 2000) : null;
     const orderRating = await prisma.orderRating.upsert({
@@ -778,6 +781,14 @@ ordersRouter.get("/:id/rating", requireAuth as any, async (req: AuthenticatedReq
 // Query params: from (YYYY-MM-DD), to (YYYY-MM-DD), status (comma-separated)
 ordersRouter.get("/export", requireAdmin as any, async (req: AuthenticatedRequest, res: Response) => {
   const { from, to, status } = req.query as Record<string, string>;
+
+  const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+  if (from && !ISO_DATE_RE.test(from)) {
+    return res.status(400).json({ error: "Ongeldig 'van' datumformaat (verwacht: YYYY-MM-DD)" });
+  }
+  if (to && !ISO_DATE_RE.test(to)) {
+    return res.status(400).json({ error: "Ongeldig 'tot' datumformaat (verwacht: YYYY-MM-DD)" });
+  }
 
   const where: any = {};
   if (from) where.startDate = { ...(where.startDate ?? {}), gte: new Date(from + "T00:00:00.000Z") };

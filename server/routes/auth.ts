@@ -2,7 +2,7 @@ import { Router, Request, Response } from "express";
 import { z } from "zod";
 import crypto from "crypto";
 import { prisma } from "../../prisma/client.js";
-import { hashPassword, comparePassword, generateToken } from "../utils/auth.js";
+import { hashPassword, comparePassword, generateToken, revokeUserTokens } from "../utils/auth.js";
 import { AuthenticatedRequest, authenticateToken, requireAuth } from "../middleware/auth.js";
 import { emailService } from "../services/emailService.js";
 
@@ -478,6 +478,7 @@ authRouter.post("/change-password", authenticateToken, requireAuth, async (req: 
         data: { passwordHash: await hashPassword(newPassword) }
       });
     }
+    revokeUserTokens(req.user!.id);
     return res.json({ success: true, message: "Wachtwoord succesvol gewijzigd." });
   } catch (error) {
     console.error("Change password error:", error);

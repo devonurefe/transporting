@@ -166,9 +166,9 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
   };
 
   const handleUpdateStatus = async (orderId: string, nextStatus: string, logMsg: string, order?: any) => {
-    // Pre-validate: "Accorderen" requires payment marked first
+    // Pre-validate: "Goedkeuren" requires payment marked first
     if (nextStatus === "Goedgekeurd" && order?.paymentStatus !== "paid") {
-      setStatusError("Markeer eerst de betaling als ontvangen (knop 'Betaling Ontvangen ✓') voordat u kunt accorderen.");
+      setStatusError("Markeer eerst de betaling als ontvangen (knop 'Betaling Ontvangen ✓') voordat u de bestelling kunt goedkeuren.");
       setTimeout(() => setStatusError(null), 6000);
       return;
     }
@@ -413,7 +413,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                     onClick={() => { setSelectedDetailOrder(o); setIsProposingDate(false); }}
                     className="flex-1 text-[11px] font-bold py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors border border-slate-200 cursor-pointer"
                   >
-                    {t("Bekijken", "View", "Detaylar")}
+                    {t("Beheer", "Manage", "Yönet")}
                   </button>
                   <button onClick={() => printInvoice(o, undefined, false, siteConfig)} className="text-[11px] font-bold px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors border border-slate-200 cursor-pointer flex items-center justify-center">
                     <Printer className="h-3.5 w-3.5 text-indigo-600" />
@@ -421,19 +421,19 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                   {o.status === "In behandeling" && (
                     <button onClick={() => handleUpdateStatus(o.id, "Goedgekeurd", `Bestelling goedgekeurd: ${o.id} voor ${o.customerName}.`, o)}
                       className="flex-1 text-[11px] font-black py-2 rounded-xl bg-teal-500 hover:bg-teal-600 text-slate-950 transition-colors cursor-pointer border-none">
-                      {t("Accorderen", "Approve", "Onayla")}
+                      {t("Goedkeuren", "Approve", "Onayla")}
                     </button>
                   )}
                   {o.status === "Goedgekeurd" && (
                     <button onClick={() => handleUpdateStatus(o.id, "Onderweg", `Machine onderweg: ${o.id}.`, o)}
                       className="flex-1 text-[11px] font-black py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white transition-colors cursor-pointer border-none">
-                      {t("Versturen", "Dispatch", "Yola Çıkar")}
+                      {t("Bezorgen", "Dispatch", "Yola Çıkar")}
                     </button>
                   )}
                   {o.status === "Onderweg" && (
                     <button onClick={() => handleUpdateStatus(o.id, "Voltooid", `Contract afgerond: ${o.id}.`, o)}
                       className="flex-1 text-[11px] font-black py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white transition-colors cursor-pointer border-none">
-                      {t("Voltooien", "Complete", "Tamamla")}
+                      {t("Huur afronden", "Complete", "Tamamla")}
                     </button>
                   )}
                 </div>
@@ -562,7 +562,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                               onClick={() => { setSelectedDetailOrder(o); setIsProposingDate(false); }}
                               className="text-[10px] font-extrabold px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors border border-slate-200/60 shadow-sm cursor-pointer hover:scale-[1.02] active:scale-98"
                             >
-                              {t("Bekijken", "View", "Detaylar")}
+                              {t("Beheer", "Manage", "Yönet")}
                             </button>
  
                             <button
@@ -584,7 +584,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                                 )}
                                 className="bg-teal-500 hover:bg-teal-600 text-slate-950 text-[10px] font-black px-3.5 py-1.5 rounded-xl cursor-pointer leading-none transition-all hover:scale-[1.02] active:scale-95 border-none shadow-md"
                               >
-                                {t("Accorderen", "Approve", "Onayla")}
+                                {t("Goedkeuren", "Approve", "Onayla")}
                               </button>
                             )}
                             {o.status === "Goedgekeurd" && (
@@ -597,7 +597,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                                 )}
                                 className="bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-black px-3.5 py-1.5 rounded-xl cursor-pointer leading-none transition-all hover:scale-[1.02] active:scale-95 border-none shadow-md"
                               >
-                                {t("Versturen", "Dispatch", "Yola Çıkar")}
+                                {t("Bezorgen", "Dispatch", "Yola Çıkar")}
                               </button>
                             )}
                             {o.status === "Onderweg" && (
@@ -610,7 +610,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                                 )}
                                 className="bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-black px-3.5 py-1.5 rounded-xl cursor-pointer leading-none transition-all hover:scale-[1.02] active:scale-95 border-none shadow-md"
                               >
-                                {t("Voltooien", "Complete", "Tamamla")}
+                                {t("Huur afronden", "Complete", "Tamamla")}
                               </button>
                             )}
                           </div>
@@ -664,7 +664,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
               }}
               className="px-3 py-1.5 bg-teal-500 hover:bg-teal-400 text-slate-950 rounded-lg text-[11px] font-black transition-colors cursor-pointer border-none shrink-0"
             >
-              Accorderen ({displayOrders.filter(o => selectedIds.has(o.id) && o.status === "In behandeling" && o.paymentStatus === "paid").length})
+              Goedkeuren ({displayOrders.filter(o => selectedIds.has(o.id) && o.status === "In behandeling" && o.paymentStatus === "paid").length})
             </button>
             <button
               type="button"
@@ -717,10 +717,10 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
               <div className="flex justify-between items-start mb-5 shrink-0">
                 <div>
                   <span className="text-[10px] text-amber-600 font-mono uppercase tracking-widest block font-bold">
-                    Contract & Huurder Audit
+                    {t("Bestelling beheren", "Manage Order", "Sipariş Yönetimi")}
                   </span>
                   <h3 className="font-display text-sm font-black text-slate-900 tracking-tight flex items-center space-x-1.5">
-                    <span>Dossier:</span> 
+                    <span className="text-slate-500 font-medium">Order</span>
                     <span className="font-mono text-indigo-600 font-bold">{selectedDetailOrder.id}</span>
                   </h3>
                 </div>
@@ -875,14 +875,14 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                   <div className="flex items-center justify-between">
                     <h5 className="text-xs font-bold text-amber-700 uppercase tracking-wider flex items-center space-x-1.5">
                       <AlertTriangle className="h-4 w-4" />
-                      <span>Datumwijziging & Voorstellen</span>
+                      <span>{t("Alternatieve datum voorstellen", "Propose alternative date", "Alternatif Tarih Öner")}</span>
                     </h5>
-                    
+
                     <button
                       onClick={() => setIsProposingDate(!isProposingDate)}
                       className="text-[10px] font-bold text-amber-800 hover:text-amber-900 border border-amber-200 hover:bg-amber-100/50 bg-white py-1 px-2.5 rounded-lg transition-colors cursor-pointer"
                     >
-                      {isProposingDate ? "Sluiten" : "Nieuwe datum voorstellen"}
+                      {isProposingDate ? t("Sluiten", "Close", "Kapat") : t("Datum wijzigen", "Change date", "Tarihi Değiştir")}
                     </button>
                   </div>
 
@@ -984,7 +984,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                       onClick={() => closeModal()}
                       className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-[10px] font-bold transition-all cursor-pointer border-none"
                     >
-                      Sluiten
+                      {t("Sluiten", "Close", "Kapat")}
                     </button>
                   </div>
                 </div>
@@ -1008,7 +1008,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                       className="px-3 py-1.5 bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white border border-rose-200 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1 disabled:opacity-50 disabled:hover:bg-rose-50 disabled:hover:text-rose-700 disabled:cursor-not-allowed"
                     >
                       <X className="h-3.5 w-3.5 shrink-0" />
-                      <span>Annuleren</span>
+                      <span>{t("Bestelling annuleren", "Cancel order", "Siparişi İptal Et")}</span>
                     </button>
                     <div className="flex items-center gap-2">
                       {selectedDetailOrder.status === "In behandeling" && (
@@ -1024,7 +1024,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                           className="bg-teal-500 hover:bg-teal-600 text-slate-950 text-xs font-black px-4 py-2 rounded-lg cursor-pointer transition-transform active:scale-95 border-none flex items-center gap-1.5 disabled:opacity-60"
                         >
                           <Check className="h-4 w-4 shrink-0" />
-                          <span>Accorderen</span>
+                          <span>Goedkeuren</span>
                         </button>
                       )}
                       {selectedDetailOrder.status === "Goedgekeurd" && (
@@ -1039,7 +1039,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                           )}
                           className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-4 py-2 rounded-lg cursor-pointer transition-transform active:scale-95 border-none disabled:opacity-60"
                         >
-                          Versturen
+                          {t("Bezorging starten", "Start delivery", "Teslimatı Başlat")}
                         </button>
                       )}
                       {selectedDetailOrder.status === "Onderweg" && (
@@ -1054,7 +1054,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                           )}
                           className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-4 py-2 rounded-lg cursor-pointer transition-transform active:scale-95 border-none disabled:opacity-60"
                         >
-                          Voltooien
+                          {t("Huur afgerond", "Mark complete", "Tamamlandı")}
                         </button>
                       )}
                     </div>

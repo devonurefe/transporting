@@ -774,6 +774,73 @@ ordersRouter.get("/:id/rating", requireAuth as any, async (req: AuthenticatedReq
   }
 });
 
+// GET /api/orders/export — download all orders as CSV (admin only)
+// Query params: from (YYYY-MM-DD), to (YYYY-MM-DD), status (comma-separated)
+ordersRouter.get("/export", requireAdmin as any, async (req: AuthenticatedRequest, res: Response) => {
+  const { from, to, status } = req.query as Record<string, string>;
+
+  const where: any = {};
+  if (from) where.startDate = { ...(where.startDate ?? {}), gte: new Date(from + "T00:00:00.000Z") };
+  if (to)   where.startDate = { ...(where.startDate ?? {}), lte: new Date(to   + "T23:59:59.999Z") };
+  if (status) {
+    const statuses = status.split(",").map(s => s.trim()).filter(Boolean);
+    if (statuses.length > 0) where.status = { in: statuses };
+  }
+
+  try {
+    const orders = await prisma.order.findMany({
+      where,
+      orderBy: { createdAt: "desc" }
+    });
+
+    const escape = (v: any) => {
+      const s = String(v ?? "");
+      return s.includes(",") || s.includes('"') || s.includes("\n")
+        ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+
+    const headers = [
+      "Order ID","Naam","E-mail","Telefoon","Profiel",
+      "Machine","Dagtarief","Startdatum","Einddatum","Dagen",
+      "Levertype","Adres","Subtotaal","Transport","Chauffeur","BTW","Totaal",
+      "Status","Betaalstatus","Aangemaakt op"
+    ];
+
+    const rows = orders.map(o => [
+      o.id,
+      o.customerName,
+      o.customerEmail ?? "",
+      o.customerPhone ?? "",
+      o.customerProfile ?? "",
+      o.machineName,
+      o.machinePrice.toFixed(2),
+      o.startDate.toISOString().split("T")[0],
+      o.endDate.toISOString().split("T")[0],
+      o.rentalDays,
+      o.deliveryType ?? "",
+      o.deliveryAddress ?? "",
+      o.subtotal.toFixed(2),
+      o.transportCost.toFixed(2),
+      o.driverCost.toFixed(2),
+      o.vatAmount.toFixed(2),
+      o.totalAmount.toFixed(2),
+      o.status,
+      o.paymentStatus ?? "",
+      o.createdAt.toISOString().split("T")[0]
+    ].map(escape).join(","));
+
+    const csv = [headers.join(","), ...rows].join("\r\n");
+    const filename = `huurgo-orders-${new Date().toISOString().split("T")[0]}.csv`;
+
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+    res.send("﻿" + csv); // BOM for Excel UTF-8 detection
+  } catch (error) {
+    console.error("Error exporting orders:", error);
+    res.status(500).json({ error: "Export mislukt" });
+  }
+});
+
 const VALID_STATUS_TRANSITIONS: Record<string, string[]> = {
   "In behandeling": ["Goedgekeurd", "Geannuleerd"],
   "Goedgekeurd": ["Onderweg", "Geannuleerd"],

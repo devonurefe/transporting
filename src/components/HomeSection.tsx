@@ -93,57 +93,10 @@ export default function HomeSection({
   const t = useLanguageStore((state) => state.t);
 
   const [openFaq, setOpenFaq] = React.useState<number | null>(null);
-  const campaignScrollRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
-
-  // Continuous gentle left-drift marquee for the weekly-deals row. The cards are
-  // rendered twice (a hidden-on-desktop clone set), so when the scroll passes the
-  // first set's width we subtract it for a seamless loop. Only acts when the row
-  // overflows (mobile horizontal scroll); on sm+ it's a static grid. Pauses on
-  // touch/drag and is disabled under prefers-reduced-motion.
-  React.useEffect(() => {
-    const el = campaignScrollRef.current;
-    if (!el) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    let paused = false;
-    let raf = 0;
-    let pos = el.scrollLeft;
-    const SPEED = 0.4; // px/frame ≈ 24px/s
-    const pause = () => { paused = true; };
-    const resume = () => { paused = false; };
-    el.addEventListener("pointerdown", pause);
-    el.addEventListener("touchstart", pause, { passive: true });
-    el.addEventListener("pointerup", resume);
-    el.addEventListener("pointercancel", resume);
-    el.addEventListener("pointerleave", resume);
-    el.addEventListener("touchend", resume);
-    const tick = () => {
-      if (paused || el.scrollWidth - el.clientWidth <= 4) {
-        pos = el.scrollLeft;
-      } else {
-        // One repeating set = (total + bridging gap-4) / 2, so the wrap lands on
-        // identical pixels with no visible seam.
-        const setWidth = (el.scrollWidth + 16) / 2;
-        pos += SPEED;
-        if (pos >= setWidth) pos -= setWidth;
-        el.scrollLeft = pos;
-      }
-      raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => {
-      cancelAnimationFrame(raf);
-      el.removeEventListener("pointerdown", pause);
-      el.removeEventListener("touchstart", pause);
-      el.removeEventListener("pointerup", resume);
-      el.removeEventListener("pointercancel", resume);
-      el.removeEventListener("pointerleave", resume);
-      el.removeEventListener("touchend", resume);
-    };
-  }, [machines]);
 
   const FAQ_ITEMS = [
     {
@@ -344,24 +297,78 @@ export default function HomeSection({
         </div>
       </div>
 
-      {/* ── CAMPAIGN CARDS SECTION ── */}
-      {(() => {
+      {/* ── DEALS MARQUEE ── */}
+      {activeMachines.length > 0 && (() => {
         const seen = new Set<string>();
-        const campaignMachines = activeMachines.filter(m =>
-          (m.oneDayPrice && m.oneDayPrice < m.pricePerDay) || m.campaignText || m.campaignDiscountPercent
-        ).filter(m => {
-          const baseName = m.name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "").trim();
-          if (seen.has(baseName)) return false;
-          seen.add(baseName);
+        const dedupedMachines = activeMachines.filter(m => {
+          const bn = m.name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "").trim();
+          if (seen.has(bn)) return false;
+          seen.add(bn);
           return true;
         });
+        const row1 = dedupedMachines.filter((_, i) => i % 2 === 0);
+        const row2 = dedupedMachines.filter((_, i) => i % 2 !== 0);
 
-        if (campaignMachines.length === 0) return null;
+        const cardJsx = (m: typeof dedupedMachines[0], key: string | number, hidden?: boolean) => {
+          const baseName = m.name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "").trim();
+          const machineImage = m.imageUrl || m.additionalImages?.[0];
+          const campaignPct = m.campaignDiscountPercent ?? 0;
+          const basePrice = m.oneDayPrice && m.oneDayPrice < m.pricePerDay ? m.oneDayPrice : m.pricePerDay;
+          const effectivePrice = campaignPct > 0 ? basePrice * (1 - campaignPct / 100) : basePrice;
+          const hasDayDiscount = !!(m.oneDayPrice && m.oneDayPrice < m.pricePerDay);
+          const displayPrice = withVat(effectivePrice, vatDisplay);
+          const originalPrice = withVat(m.pricePerDay, vatDisplay);
+          const fmt = (p: number) => p % 1 === 0 ? `€${Math.round(p)}` : `€${p.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+          const CatIcon = CATEGORY_ICONS[m.category] ?? Truck;
+          const hasDiscount = hasDayDiscount || campaignPct > 0;
+          return (
+            <button
+              key={key}
+              type="button"
+              aria-hidden={hidden || undefined}
+              tabIndex={hidden ? -1 : undefined}
+              onClick={() => onSearch(baseName, m.category)}
+              className="shrink-0 w-[190px] bg-white rounded-2xl border border-amber-100 shadow-sm hover:shadow-lg hover:-translate-y-1 active:scale-[0.98] transition-all text-left overflow-hidden flex flex-col group"
+            >
+              <div className="relative aspect-[4/3] w-full overflow-hidden bg-amber-50 shrink-0">
+                {machineImage ? (
+                  <img src={machineImage} alt={baseName} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                ) : (
+                  <div className={`w-full h-full bg-gradient-to-br ${CAT_GRADIENT[m.category] ?? "from-amber-100 to-amber-200"} flex items-center justify-center`}>
+                    <CatIcon className="h-10 w-10 text-slate-400" />
+                  </div>
+                )}
+                {hasDiscount && (
+                  <div className="absolute top-0 left-0 bg-amber-500 text-white text-[10px] font-black px-2.5 py-1 rounded-br-xl shadow-sm">
+                    {campaignPct ? `−${campaignPct}%` : "Dagactie"}
+                  </div>
+                )}
+                {m.campaignText && (
+                  <div className="absolute top-0 right-0 bg-white/90 backdrop-blur-sm text-amber-700 text-[10px] font-bold rounded-bl-xl px-2.5 py-1 border-b border-l border-amber-100">
+                    {m.campaignText}
+                  </div>
+                )}
+              </div>
+              <div className="p-3 flex flex-col gap-1.5 flex-1">
+                <p className="font-display font-black text-[12px] text-slate-900 leading-snug line-clamp-2">{baseName}</p>
+                <div className="flex items-baseline gap-1 flex-wrap">
+                  <span className="text-base font-black text-amber-600">{fmt(displayPrice)}</span>
+                  {hasDiscount && <span className="text-[10px] text-slate-400 line-through">{fmt(originalPrice)}</span>}
+                  <span className="text-[10px] text-slate-400">/ dag</span>
+                </div>
+                <div className="mt-auto pt-1">
+                  <div className="w-full text-center bg-amber-500 group-hover:bg-amber-600 text-white text-[10px] font-black py-1.5 px-2 rounded-xl transition-colors">
+                    {t("Direct boeken →", "Book now →", "Hemen rezervasyon →")}
+                  </div>
+                </div>
+              </div>
+            </button>
+          );
+        };
 
         return (
-          <div className="bg-gradient-to-b from-amber-50 to-white border-b border-amber-100 px-4 sm:px-6 pt-6 pb-7">
-            {/* Header */}
-            <div className="flex items-end justify-between mb-4 max-w-5xl mx-auto">
+          <div className="bg-gradient-to-b from-amber-50 to-white border-b border-amber-100 pt-6 pb-7">
+            <div className="flex items-end justify-between mb-5 px-4 sm:px-6 max-w-5xl mx-auto">
               <div>
                 <div className="flex items-center gap-2">
                   <div className="bg-amber-500 rounded-lg p-1">
@@ -371,96 +378,21 @@ export default function HomeSection({
                 </div>
                 <p className="text-xs text-slate-500 mt-1 ml-8">{t("Profiteer nu van onze speciale actieprijzen", "Take advantage of our special offers", "Özel fiyatlardan şimdi yararlanın")}</p>
               </div>
-              <button
-                type="button"
-                onClick={() => onSearch("", "")}
-                className="flex items-center gap-1 text-xs font-bold text-amber-700 hover:text-amber-900 transition-colors shrink-0 pb-0.5"
-              >
+              <button type="button" onClick={() => onSearch("", "")} className="flex items-center gap-1 text-xs font-bold text-amber-700 hover:text-amber-900 transition-colors shrink-0 pb-0.5">
                 {t("Bekijk alles", "View all", "Tümünü gör")} <ChevronRight className="h-3.5 w-3.5" />
               </button>
             </div>
-
-            {/* Cards — horizontal scroll on mobile, grid on sm+ */}
-            <div className="max-w-5xl mx-auto">
-              <div ref={campaignScrollRef} className="flex gap-4 overflow-x-auto pb-3 sm:pb-0 sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                {[...campaignMachines.map(m => ({ m, clone: false })), ...campaignMachines.map(m => ({ m, clone: true }))].map(({ m, clone }, i) => {
-                  const baseName = m.name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "").trim();
-                  const machineImage = m.imageUrl || m.additionalImages?.[0];
-                  const campaignPct = m.campaignDiscountPercent ?? 0;
-                  const basePrice = m.oneDayPrice && m.oneDayPrice < m.pricePerDay ? m.oneDayPrice : m.pricePerDay;
-                  const effectivePrice = campaignPct > 0 ? basePrice * (1 - campaignPct / 100) : basePrice;
-                  const hasDayDiscount = !!(m.oneDayPrice && m.oneDayPrice < m.pricePerDay);
-                  const displayPrice = withVat(effectivePrice, vatDisplay);
-                  const originalPrice = withVat(m.pricePerDay, vatDisplay);
-                  const fmtPrice = (p: number) => p % 1 === 0
-                    ? `€${Math.round(p)}`
-                    : `€${p.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-                  const CatIcon = CATEGORY_ICONS[m.category] ?? Truck;
-
-                  return (
-                    <motion.button
-                      key={clone ? `${m.id}-clone` : m.id}
-                      aria-hidden={clone || undefined}
-                      tabIndex={clone ? -1 : undefined}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.25, delay: clone ? 0 : i * 0.07 }}
-                      type="button"
-                      onClick={() => onSearch(baseName, m.category)}
-                      className={`shrink-0 w-[200px] sm:w-auto bg-white rounded-2xl border border-amber-100 shadow-sm hover:shadow-lg hover:-translate-y-1 active:scale-[0.98] transition-all text-left overflow-hidden flex flex-col group ${clone ? "sm:hidden" : ""}`}
-                    >
-                      {/* Image */}
-                      <div className="relative aspect-[3/2] w-full overflow-hidden bg-amber-50 shrink-0">
-                        {machineImage ? (
-                          <img
-                            src={machineImage}
-                            alt={baseName}
-                            loading="lazy"
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                          />
-                        ) : (
-                          <div className={`w-full h-full bg-gradient-to-br ${CAT_GRADIENT[m.category] ?? "from-amber-100 to-amber-200"} flex items-center justify-center`}>
-                            <CatIcon className="h-10 w-10 text-slate-400" />
-                          </div>
-                        )}
-                        {/* Discount ribbon */}
-                        {(campaignPct || hasDayDiscount) && (
-                          <div className="absolute top-0 left-0 bg-amber-500 text-white text-[10px] font-black px-2.5 py-1 rounded-br-xl shadow-sm">
-                            {campaignPct ? `−${campaignPct}%` : "Dagactie"}
-                          </div>
-                        )}
-                        {m.campaignText && (
-                          <div className="absolute top-0 right-0 bg-white/90 backdrop-blur-sm text-amber-700 text-[10px] font-bold rounded-bl-xl px-2.5 py-1 border-b border-l border-amber-100">
-                            {m.campaignText}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Content */}
-                      <div className="p-3.5 flex flex-col gap-2.5 flex-1">
-                        <p className="font-display font-black text-[13px] text-slate-900 leading-snug line-clamp-2 break-words">{baseName}</p>
-
-                        {/* Price block */}
-                        <div className="flex items-baseline gap-1.5 flex-wrap">
-                          <span className="text-lg font-black text-amber-600">{fmtPrice(displayPrice)}</span>
-                          {(hasDayDiscount || campaignPct > 0) && (
-                            <span className="text-[11px] text-slate-400 line-through">{fmtPrice(originalPrice)}</span>
-                          )}
-                          <span className="text-[11px] text-slate-400">/ dag</span>
-                        </div>
-
-                        {/* CTA button */}
-                        <div className="mt-auto pt-0.5">
-                          <div className="w-full text-center bg-amber-500 group-hover:bg-amber-600 text-white text-[11px] font-black py-2 px-3 rounded-xl transition-colors">
-                            {t("Direct boeken →", "Book now →", "Hemen rezervasyon →")}
-                          </div>
-                        </div>
-                      </div>
-                    </motion.button>
-                  );
-                })}
+            <div className="deal-marquee-wrap overflow-hidden flex flex-col gap-3">
+              <div className="flex gap-3 deal-marquee-left pl-3">
+                {[...row1, ...row1].map((m, i) => cardJsx(m, i < row1.length ? m.id : `${m.id}-b`, i >= row1.length))}
               </div>
+              {row2.length > 0 && (
+                <div className="flex gap-3 deal-marquee-right pl-3">
+                  {[...row2, ...row2].map((m, i) => cardJsx(m, i < row2.length ? m.id : `${m.id}-b`, i >= row2.length))}
+                </div>
+              )}
             </div>
+            <p className="text-center text-[10px] text-slate-400 mt-4 px-4">{t("Zweef om te pauzeren · Tik een kaart om te boeken", "Hover to pause · Tap a card to book", "Duraklatmak için üzerine gelin")}</p>
           </div>
         );
       })()}

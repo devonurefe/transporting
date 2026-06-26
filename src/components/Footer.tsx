@@ -125,7 +125,7 @@ export default function Footer({ siteName, setActiveTab, setShowContactModal }: 
 
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
             <div>
-              <h3 className="font-display text-xl sm:text-2xl font-black text-white tracking-tight"><BrandedText text="Waarom HuurGo" dark /></h3>
+              <h3 className="font-display text-xl sm:text-2xl font-black text-white tracking-tight">Waarom HuurGo</h3>
               <p className="text-xs text-slate-400 mt-1.5">Betrouwbaar materieel, eerlijk advies en scherpe tarieven in heel Nederland.</p>
             </div>
             {rating && (

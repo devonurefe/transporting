@@ -727,9 +727,9 @@ export default function BookingSection({
     setIsSubmitting(true);
     setBookingError(null);
     window.scrollTo({ top: 0, behavior: "smooth" });
+    let firstSuccessfulOrder: Order | null = null;
+    const placedOrders: Order[] = [];
     try {
-      let firstSuccessfulOrder: Order | null = null;
-      const placedOrders: Order[] = [];
         
         if (cartItems && cartItems.length > 0) {
           for (let i = 0; i < cartItems.length; i++) {

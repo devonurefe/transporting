@@ -228,25 +228,8 @@
   animation: skeletonShimmer 1.4s ease-in-out infinite;
 }
 
-/* Deal marquee — horizontal infinite scroll (two rows, opposite directions) */
-@keyframes marqueeLeft {
-  from { transform: translateX(0); }
-  to   { transform: translateX(-50%); }
-}
-@keyframes marqueeRight {
-  from { transform: translateX(-50%); }
-  to   { transform: translateX(0); }
-}
-.deal-marquee-left {
-  animation: marqueeLeft 28s linear infinite;
-}
-.deal-marquee-right {
-  animation: marqueeRight 34s linear infinite;
-}
-.deal-marquee-wrap:hover .deal-marquee-left,
-.deal-marquee-wrap:hover .deal-marquee-right {
-  animation-play-state: paused;
-}
+/* Deals carousel — hide scrollbar cross-browser */
+.overflow-x-scroll::-webkit-scrollbar { display: none; }
 
 /* Review ticker — vertical infinite scroll */
 @keyframes reviewScrollUp {

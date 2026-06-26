@@ -941,7 +941,15 @@ export default function BookingSection({
               {/* Form column — left on desktop, full-width on mobile */}
               <div className="lg:col-span-8 space-y-6">
 
+                <AnimatePresence mode="wait">
                 {step === 1 && (
+                  <motion.div
+                    key="step1"
+                    initial={{ opacity: 0, x: -16 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 16 }}
+                    transition={{ duration: 0.18, ease: "easeOut" }}
+                  >
                   <BookingStep1
                     cartItems={cartItems}
                     getItemAvailability={getItemAvailability}
@@ -974,9 +982,17 @@ export default function BookingSection({
                     weekendWorkAnswer={weekendWorkAnswer}
                     onWeekendWorkAnswer={setWeekendWorkAnswer}
                   />
+                  </motion.div>
                 )}
 
                 {step === 2 && (
+                  <motion.div
+                    key="step2"
+                    initial={{ opacity: 0, x: 16 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -16 }}
+                    transition={{ duration: 0.18, ease: "easeOut" }}
+                  >
                   <BookingStep2
                     currentUser={currentUser}
                     customerName={customerName}
@@ -1012,7 +1028,9 @@ export default function BookingSection({
                     isSubmitting={isSubmitting}
                     bookingError={bookingError}
                   />
+                  </motion.div>
                 )}
+                </AnimatePresence>
 
               </div>
 

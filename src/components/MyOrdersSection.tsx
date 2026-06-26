@@ -39,6 +39,7 @@ interface MyOrdersSectionProps {
   userProfiles?: UserProfile[];
   onUpdateOrderStatus: (orderId: string, nextStatus: any) => void;
   onAddSystemLog?: (type: "login" | "logout" | "signup" | "booking" | "fleet" | "status" | "system", user: string, description: string) => void;
+  setActiveTab?: (tab: string) => void;
 }
 
 export default function MyOrdersSection({
@@ -48,7 +49,8 @@ export default function MyOrdersSection({
   setCurrentUser,
   userProfiles,
   onUpdateOrderStatus,
-  onAddSystemLog
+  onAddSystemLog,
+  setActiveTab,
 }: MyOrdersSectionProps) {
   const siteConfig = useAppStore((state) => state.siteConfig);
 
@@ -420,7 +422,7 @@ export default function MyOrdersSection({
             {/* Password reset form (when reset_token is in URL) */}
             {resetToken && !resetSuccess && (
               <div className="w-full max-w-lg bg-white border border-slate-200 shadow-sm p-6 sm:p-8 rounded-2xl space-y-5">
-                <h2 className="text-base font-extrabold text-slate-900">Nieuw Wachtwoord Instellen</h2>
+                <h2 className="font-display text-base font-extrabold text-slate-900">Nieuw Wachtwoord Instellen</h2>
                 <form onSubmit={handleResetPassword} className="space-y-4">
                   <div className="space-y-1.5">
                     <label className="text-xs text-slate-600 block font-semibold">Nieuw Wachtwoord</label>
@@ -452,7 +454,7 @@ export default function MyOrdersSection({
             {resetSuccess && (
               <div className="w-full max-w-lg bg-white border border-slate-200 shadow-sm p-8 rounded-2xl text-center space-y-4">
                 <CheckCircle className="h-10 w-10 text-emerald-500 mx-auto" />
-                <h2 className="text-base font-extrabold text-slate-900">Wachtwoord Gewijzigd!</h2>
+                <h2 className="font-display text-base font-extrabold text-slate-900">Wachtwoord Gewijzigd!</h2>
                 <p className="text-xs text-slate-500">U kunt nu inloggen met uw nieuwe wachtwoord.</p>
                 <button onClick={() => setResetSuccess(false)} className="text-xs text-slate-600 underline underline-offset-2 bg-transparent border-none cursor-pointer">
                   Naar inloggen
@@ -855,11 +857,21 @@ export default function MyOrdersSection({
                     <Clock className="h-5 w-5 text-slate-400" />
                   </div>
                   <div>
-                    <h4 className="font-display font-bold text-xs text-slate-800 uppercase tracking-wider font-sans">Geen reserveringen gevonden</h4>
+                    <h4 className="font-display font-bold text-xs text-slate-800 uppercase tracking-wider">Geen reserveringen gevonden</h4>
                     <p className="text-[11px] text-slate-500 mt-1 max-w-sm font-semibold">
-                      Dit account ({currentUser.email}) heeft momenteel geen actieve contracten binnen het gekozen filter. Boek een machine via de catalogus om uw eerste bestelling te plaatsen.
+                      {activeFilter === "all"
+                        ? "U heeft nog geen bestellingen geplaatst. Bekijk ons aanbod en plan uw eerste huur."
+                        : `Geen bestellingen in dit filter. Kies 'Alle' om alles te zien.`}
                     </p>
                   </div>
+                  {activeFilter === "all" && setActiveTab && (
+                    <button
+                      onClick={() => setActiveTab("catalog")}
+                      className="mt-1 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition-colors cursor-pointer border-none"
+                    >
+                      Bekijk ons aanbod →
+                    </button>
+                  )}
                 </div>
               ) : (
                 filteredOrders.map((o) => {

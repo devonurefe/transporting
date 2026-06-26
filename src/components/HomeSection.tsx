@@ -483,7 +483,7 @@ export default function HomeSection({
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: i * 0.05 }}
                 onClick={() => onSearch("", cat.id)}
-                className="group bg-white border border-slate-300 rounded-2xl overflow-hidden text-left cursor-pointer hover:border-slate-400 hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] transition-all flex flex-col"
+                className="group bg-white border border-slate-200 rounded-2xl overflow-hidden text-left cursor-pointer hover:border-orange-200 hover:shadow-lg hover:-translate-y-1.5 active:scale-[0.98] transition-all duration-200 flex flex-col"
               >
                 {/* Top — text info: name + height • price on one line */}
                 <div className="p-4 flex flex-col gap-1.5 min-w-0">

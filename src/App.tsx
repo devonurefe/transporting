@@ -856,13 +856,14 @@ export default function App() {
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <MyOrdersSection 
-                    orders={orders} 
-                    onTriggerNotification={triggerNotification} 
+                  <MyOrdersSection
+                    orders={orders}
+                    onTriggerNotification={triggerNotification}
                     currentUser={currentUser}
                     setCurrentUser={setCurrentUser}
                     onUpdateOrderStatus={handleUpdateOrderStatus}
                     onAddSystemLog={handleAddSystemLog}
+                    setActiveTab={setActiveTab}
                   />
                 </motion.div>
               } />

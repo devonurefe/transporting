@@ -674,7 +674,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                         </div>
 
                         {editAdditionalImages.length > 0 && (
-                          <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mt-3 animate-fade-in">
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3 animate-fade-in">
                             {editAdditionalImages.map((url, idx) => (
                               <div key={idx} className="relative aspect-video rounded-xl overflow-hidden border border-slate-200 bg-slate-100 group shadow-sm">
                                 <img src={url} alt={`Extra ${idx}`} className="w-full h-full object-cover" loading="lazy" />

@@ -52,7 +52,7 @@ export default function AdminLogs({ systemLogs, onClearSystemLogs, userProfiles,
             )}
           </div>
 
-          <div className="bg-slate-900 p-3 sm:p-4 rounded-2xl border border-slate-950 space-y-3 font-mono text-[10px] sm:text-[11px] max-h-120 overflow-y-auto scrollbar-thin">
+          <div className="bg-slate-900 p-3 sm:p-4 rounded-2xl border border-slate-950 space-y-3 font-mono text-xs max-h-[200px] sm:max-h-96 overflow-y-auto scrollbar-thin">
             {systemLogs.length === 0 ? (
               <div className="py-12 text-center text-slate-500">
                 {t("Geen logdata beschikbaar. Simuleer acties rechts!", "No log data available. Simulate actions on the right!", "Kayıtlı sistem günlüğü bulunamadı. Sağ taraftan simülasyon yapabilirsiniz!")}

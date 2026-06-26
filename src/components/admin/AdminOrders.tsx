@@ -651,7 +651,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
             transition={{ duration: 0.18, ease: "easeOut" }}
-            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 bg-slate-900 text-white rounded-2xl shadow-xl px-4 py-3 border border-slate-700"
+            className="fixed bottom-20 sm:bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 bg-slate-900 text-white rounded-2xl shadow-xl px-4 py-3 border border-slate-700"
           >
             <span className="text-[11px] font-bold text-slate-300 shrink-0">
               {selectedIds.size} geselecteerd

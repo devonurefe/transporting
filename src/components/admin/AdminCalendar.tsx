@@ -226,7 +226,7 @@ export default function AdminCalendar({ onAddSystemLog, adminLanguage }: AdminCa
               <span className="text-xs font-normal text-slate-400">{t("realtime", "real-time", "gerçek zamanlı veri tabanına göre")}</span>
             </h4>
 
-            <div className="space-y-3 max-h-[450px] overflow-y-auto pr-1">
+            <div className="space-y-3 max-h-[250px] sm:max-h-[450px] overflow-y-auto pr-1">
               {blockedDates.length === 0 ? (
                 <div className="p-10 rounded-2xl bg-slate-50 border border-slate-200 text-center text-slate-500 space-y-2">
                   <Calendar className="h-8 w-8 text-slate-400 mx-auto" />

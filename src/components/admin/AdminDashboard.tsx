@@ -10,7 +10,7 @@ import { useAppStore } from "../../store/appStore";
 
 interface AdminDashboardProps {
   key?: string;
-  setSubTab: (tab: "dashboard" | "orders" | "machines" | "calendar" | "add" | "logs" | "customizer") => void;
+  setSubTab: (tab: "dashboard" | "orders" | "machines" | "calendar" | "add" | "logs" | "customizer" | "accounting") => void;
   setOrdersFilter?: (filter: string[]) => void;
   adminLanguage?: string;
 }
@@ -161,7 +161,7 @@ export default function AdminDashboard({ setSubTab, setOrdersFilter, adminLangua
       {/* Glowing Premium KPI Card deck */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { title: t("Cumulatieve Omzet", "Cumulative Revenue", "Toplam Ciro"), value: `€ ${totalEarnings.toFixed(2)}`, trend: revenueTrend, color: "bg-amber-50 border border-amber-200 text-amber-900 shadow-sm", tab: "orders" as const, filter: [] as string[] },
+          { title: t("Cumulatieve Omzet", "Cumulative Revenue", "Toplam Ciro"), value: `€ ${totalEarnings.toFixed(2)}`, trend: revenueTrend, color: "bg-amber-50 border border-amber-200 text-amber-900 shadow-sm", tab: "accounting" as const, filter: [] as string[] },
           { title: t("Actieve Huren", "Active Rentals", "Aktif Kiralamalar"), value: `${activeRentals} ${t("machines", "machines", "makine")}`, trend: t("Klik voor details →", "Click for details →", "Detay için tıkla →"), color: "border border-slate-200 bg-slate-50 text-slate-800 shadow-sm", tab: "orders" as const, filter: ["Goedgekeurd", "Onderweg"] as string[] },
           { title: t("Vloot Bezetting", "Fleet Occupancy", "Filo Doluluk Oranı"), value: `${machines.length > 0 ? Math.round((activeRentals / machines.length) * 100) : 0}% ${t("bezet", "occupied", "dolu")}`, trend: `${machines.length} ${t("units totaal", "total units", "toplam adet")}`, color: "border border-slate-200 bg-slate-50 text-slate-800 shadow-sm", tab: "machines" as const, filter: [] as string[] },
           { title: t("Ter Beoordeling", "To Review", "Onay Bekleyenler"), value: `${pendingRegistrations} ${t("aanvragen", "requests", "başvuru")}`, trend: t("Klik voor details →", "Click for details →", "Detay için tıkla →"), color: pendingRegistrations > 0 ? "border border-amber-200 bg-amber-50 text-amber-950 shadow-sm" : "border border-slate-200 bg-slate-50 text-slate-500 shadow-sm", tab: "orders" as const, filter: ["In behandeling"] as string[] }

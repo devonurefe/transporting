@@ -271,7 +271,7 @@ export default function AdminDiagnostics({ systemLogs, userProfiles, onAddSystem
             <span className="ml-auto text-[9px] text-slate-400 font-mono">{t("Berekend uit echte orders", "Computed from real orders", "Gerçek siparişlerden hesaplandı")}</span>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 pt-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 pt-1">
 
             <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200/80 shadow-sm space-y-1.5">
               <div className="flex items-center justify-between text-slate-500">
@@ -330,7 +330,7 @@ export default function AdminDiagnostics({ systemLogs, userProfiles, onAddSystem
           <span className="text-[9px] text-slate-400 font-mono">{systemLogs.length} {t("events", "events", "olay")}</span>
         </div>
 
-        <div className="bg-slate-950 p-4 sm:p-5 rounded-2xl border border-slate-900 font-mono text-[10.5px] sm:text-[11px] text-slate-300 max-h-80 overflow-y-auto shadow-inner relative">
+        <div className="bg-slate-950 p-4 sm:p-5 rounded-2xl border border-slate-900 font-mono text-xs text-slate-300 max-h-80 overflow-y-auto shadow-inner relative">
           <div className="absolute top-3 left-4 flex space-x-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-rose-500/80" />
             <span className="w-2.5 h-2.5 rounded-full bg-amber-500/80" />

@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React from "react";
-import { Mail, MapPin, Clock } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Mail, MapPin, Clock, ShieldCheck, Truck, MessageCircle, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useLanguageStore } from "../store/languageStore";
 import { useAppStore } from "../store/appStore";
@@ -17,138 +17,75 @@ interface FooterProps {
   setShowContactModal: (show: boolean) => void;
 }
 
-const REVIEWS = [
+const TRUST_POINTS = [
   {
-    name: "Pieter van den Berg",
-    date: "2 maanden geleden",
-    text: "Super service! De Nifty 120 was binnen 5 minuten opgesteld, perfect voor mijn dakgoot klus. Fijne communicatie via WhatsApp en eerlijk advies. Aanrader!",
+    Icon: ShieldCheck,
+    title: "Gecertificeerd materieel",
+    body: "TÜV-gekeurde hoogwerkers (cat. 1-3B), goed onderhouden en bedrijfsklaar afgeleverd.",
   },
   {
-    name: "Erik Janssen",
-    date: "3 maanden geleden",
-    text: "Machine was goed onderhouden en op tijd geleverd. Prima prijs-kwaliteitverhouding. Inmiddels voor het tweede project bij MB Hoogwerkers gehuurd.",
+    Icon: Truck,
+    title: "Snelle levering in heel NL",
+    body: "Bezorging door eigen chauffeur of zelf ophalen in Zoeterwoude — u kiest wat past.",
   },
   {
-    name: "Sandra Bakker",
-    date: "1 maand geleden",
-    text: "De rupshoogwerker paste precies door ons 80 cm tuinpoortje. Uitstekend advies vooraf over welke machine het beste paste. Zeker een aanrader!",
-  },
-  {
-    name: "J. de Vries Schildersbedrijf",
-    date: "5 maanden geleden",
-    text: "Als aannemer huur ik regelmatig bij MB Hoogwerkers. Altijd betrouwbaar materiaal, eerlijk advies en scherpe tarieven. Echt een topper in de regio.",
-  },
-  {
-    name: "Thomas Willems",
-    date: "6 weken geleden",
-    text: "Ladderlift was perfect voor onze verhuizing naar de 4e verdieping. Vriendelijke en snelle service. Zeker voor herhaling vatbaar!",
-  },
-  {
-    name: "Karin Hoogenbosch",
-    date: "4 maanden geleden",
-    text: "Vlotte service van begin tot eind. Machine was schoon en goed onderhouden, de instructie helder. Comfortabel werken op hoogte. Zeker een aanrader!",
-  },
-  {
-    name: "Frank Verhoeven Schilderwerken",
-    date: "2 weken geleden",
-    text: "Schaarlift op tijd afgeleverd en de chauffeur legde alles goed uit. Ideaal voor ons schilderproject op de tweede verdieping. Prima tarief voor de kwaliteit.",
-  },
-  {
-    name: "Bouwbedrijf Smits B.V.",
-    date: "7 maanden geleden",
-    text: "Al meerdere jaren vaste klant bij MB Hoogwerkers. Betrouwbaar materiaal, scherpe tarieven en altijd goed bereikbaar via WhatsApp. Een echte topper.",
-  },
-  {
-    name: "Anita Timmers",
-    date: "3 weken geleden",
-    text: "Mastlift paste precies door ons smalle poortje van 80 cm. Goede uitleg vooraf en het apparaat werkte de hele week foutloos. Fijn dat ze meedachten!",
+    Icon: MessageCircle,
+    title: "Persoonlijk advies via WhatsApp",
+    body: "Twijfelt u over de juiste machine? Wij denken vrijblijvend met u mee, vóór u boekt.",
   },
 ];
-
-function ReviewCard({ r }: { r: typeof REVIEWS[0] }) {
-  return (
-    <div className="bg-slate-900 border border-slate-700/60 rounded-2xl p-4 sm:p-5 space-y-2.5">
-      <div className="text-amber-400 text-sm leading-none tracking-wide">★★★★★</div>
-      <p className="text-[13px] text-slate-300 leading-relaxed line-clamp-3">{r.text}</p>
-      <div className="flex items-center justify-between gap-3 pt-1.5">
-        <span className="text-[11px] font-bold text-white">{r.name}</span>
-        <span className="text-[10px] text-slate-500 shrink-0">{r.date}</span>
-      </div>
-    </div>
-  );
-}
 
 export default function Footer({ siteName, setActiveTab, setShowContactModal }: FooterProps) {
   const t = useLanguageStore((state) => state.t);
   const siteConfig = useAppStore((state) => state.siteConfig);
   const contactEmail = siteConfig.contactEmail || "info@mbhoogwerkers.com";
 
-  const leftCol = REVIEWS.filter((_, i) => i % 2 === 0);
-  const rightCol = REVIEWS.filter((_, i) => i % 2 !== 0);
+  // Real customer rating aggregate from our own platform (OrderRating). We only
+  // surface the figure when there are genuine ratings — no fabricated numbers.
+  const [rating, setRating] = useState<{ average: number; count: number } | null>(null);
+  useEffect(() => {
+    let active = true;
+    fetch("/api/orders/ratings/summary")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (active && d && d.count > 0) setRating({ average: d.average, count: d.count }); })
+      .catch(() => { /* silent — trust band renders without the figure */ });
+    return () => { active = false; };
+  }, []);
 
   return (
     <footer className="bg-slate-950 border-t border-slate-800 pb-20 md:pb-0">
 
-      {/* ── GOOGLE REVIEWS ── */}
+      {/* ── WHY HUURGO — factual trust band (replaces fabricated testimonials) ── */}
       <div className="bg-slate-950 border-b border-slate-800">
-        <div className="py-10 sm:py-12 px-5 sm:px-8 lg:px-10 mx-auto max-w-7xl">
+        <div className="py-10 sm:py-14 px-5 sm:px-8 lg:px-10 mx-auto max-w-7xl">
 
-          {/* Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-6">
-            <div className="flex items-center gap-3">
-              <span className="h-9 w-9 rounded-full bg-white flex items-center justify-center shrink-0">
-                <span className="text-base font-black" style={{ background: "linear-gradient(135deg, #4285F4 25%, #EA4335 50%, #FBBC05 75%, #34A853 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>G</span>
-              </span>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-white font-bold text-base leading-none">4.9</span>
-                  <span className="text-amber-400 text-sm leading-none">★★★★★</span>
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
+            <div>
+              <h3 className="font-display text-xl sm:text-2xl font-black text-white tracking-tight">Waarom HuurGo</h3>
+              <p className="text-xs text-slate-400 mt-1.5">Betrouwbaar materieel, eerlijk advies en scherpe tarieven in heel Zuid-Holland.</p>
+            </div>
+            {rating && (
+              <div className="flex items-center gap-2.5 bg-slate-900 border border-slate-700/60 rounded-2xl px-4 py-2.5 shrink-0">
+                <Star className="h-5 w-5 text-amber-400 fill-amber-400 shrink-0" />
+                <div className="leading-none">
+                  <span className="text-white font-black text-lg">{rating.average.toFixed(1)}</span>
+                  <span className="text-slate-400 text-xs ml-1.5">gemiddeld · {rating.count} {rating.count === 1 ? "beoordeling" : "beoordelingen"}</span>
                 </div>
-                <p className="text-xs text-slate-400 mt-0.5">Beoordeeld door klanten op Google</p>
               </div>
-            </div>
-            <a
-              href="https://www.google.com/maps/place/MB+Hoogwerkers+bv/@52.1398936,4.5166788,18z"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs text-slate-400 hover:text-white transition-colors no-underline sm:ml-auto"
-            >
-              Bekijk alle reviews op Google →
-            </a>
+            )}
           </div>
 
-          {/* Review ticker */}
-          <div className="relative overflow-hidden review-ticker-wrap h-[370px] sm:h-[430px] cursor-default select-none">
-
-            {/* Top + bottom fade masks */}
-            <div className="absolute top-0 inset-x-0 h-14 bg-gradient-to-b from-slate-950 to-transparent z-10 pointer-events-none" />
-            <div className="absolute bottom-0 inset-x-0 h-14 bg-gradient-to-t from-slate-950 to-transparent z-10 pointer-events-none" />
-
-            {/* Mobile: single column */}
-            <div className="sm:hidden review-ticker flex flex-col gap-3">
-              {[...REVIEWS, ...REVIEWS].map((r, i) => (
-                <ReviewCard key={i} r={r} />
-              ))}
-            </div>
-
-            {/* Desktop: two columns at different speeds */}
-            <div className="hidden sm:flex gap-4">
-              <div className="flex-1 review-ticker flex flex-col gap-3">
-                {[...leftCol, ...leftCol].map((r, i) => (
-                  <ReviewCard key={i} r={r} />
-                ))}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
+            {TRUST_POINTS.map(({ Icon, title, body }) => (
+              <div key={title} className="bg-slate-900 border border-slate-700/60 rounded-2xl p-5 space-y-2.5">
+                <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-orange-500/10 text-orange-400 border border-orange-500/20">
+                  <Icon className="h-5 w-5" strokeWidth={2.2} />
+                </span>
+                <h4 className="text-sm font-bold text-white">{title}</h4>
+                <p className="text-[13px] text-slate-400 leading-relaxed">{body}</p>
               </div>
-              <div className="flex-1 review-ticker-b flex flex-col gap-3">
-                {[...rightCol, ...rightCol].map((r, i) => (
-                  <ReviewCard key={i} r={r} />
-                ))}
-              </div>
-            </div>
-
+            ))}
           </div>
-
-          {/* Hint */}
-          <p className="text-center text-[10px] text-slate-600 mt-4">Tik om te pauzeren</p>
 
         </div>
       </div>

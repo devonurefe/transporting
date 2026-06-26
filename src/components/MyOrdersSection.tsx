@@ -419,7 +419,7 @@ export default function MyOrdersSection({
 
             {/* Password reset form (when reset_token is in URL) */}
             {resetToken && !resetSuccess && (
-              <div className="w-full max-w-lg bg-white border border-slate-200 shadow-sm p-6 sm:p-8 rounded-3xl space-y-5">
+              <div className="w-full max-w-lg bg-white border border-slate-200 shadow-sm p-6 sm:p-8 rounded-2xl space-y-5">
                 <h2 className="text-base font-extrabold text-slate-900">Nieuw Wachtwoord Instellen</h2>
                 <form onSubmit={handleResetPassword} className="space-y-4">
                   <div className="space-y-1.5">
@@ -450,7 +450,7 @@ export default function MyOrdersSection({
             )}
 
             {resetSuccess && (
-              <div className="w-full max-w-lg bg-white border border-slate-200 shadow-sm p-8 rounded-3xl text-center space-y-4">
+              <div className="w-full max-w-lg bg-white border border-slate-200 shadow-sm p-8 rounded-2xl text-center space-y-4">
                 <CheckCircle className="h-10 w-10 text-emerald-500 mx-auto" />
                 <h2 className="text-base font-extrabold text-slate-900">Wachtwoord Gewijzigd!</h2>
                 <p className="text-xs text-slate-500">U kunt nu inloggen met uw nieuwe wachtwoord.</p>
@@ -462,7 +462,7 @@ export default function MyOrdersSection({
 
             {/* Login form */}
             {!resetToken && !resetSuccess && (
-            <div className="w-full max-w-lg bg-white border border-slate-200 shadow-sm p-6 sm:p-8 rounded-3xl space-y-6">
+            <div className="w-full max-w-lg bg-white border border-slate-200 shadow-sm p-6 sm:p-8 rounded-2xl space-y-6">
               <div className="flex border-b border-slate-200 pb-1">
                 <button
                   onClick={() => { setIsRegistering(false); setLoginError(null); setRegError(null); }}
@@ -757,7 +757,7 @@ export default function MyOrdersSection({
       <div className="mx-auto max-w-6xl space-y-8">
         
         {/* Core Customer profile header and logout control (Isolates single user perfectly) */}
-        <section className="bg-white border border-slate-200 shadow-sm p-6 rounded-3xl relative overflow-hidden flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+        <section className="bg-white border border-slate-200 shadow-sm p-6 rounded-2xl relative overflow-hidden flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div className="absolute top-0 right-0 h-32 w-32 bg-slate-500/5 rounded-full blur-2xl pointer-events-none" />
           
           <div className="flex items-center space-x-4">
@@ -1044,7 +1044,7 @@ export default function MyOrdersSection({
           <div className="lg:col-span-4 space-y-6 animate-fade-in">
             
             {/* Customer Profile Customizer Settings */}
-            <div className="bg-white border border-slate-200 shadow-sm p-5 rounded-3xl space-y-4">
+            <div className="bg-white border border-slate-200 shadow-sm p-5 rounded-2xl space-y-4">
               <h4 className="font-display font-black text-xs text-slate-800 uppercase tracking-wider flex items-center space-x-2">
                 <User className="h-4 w-4 text-slate-600" />
                 <span>Profiel & Standaardgegevens</span>
@@ -1139,7 +1139,7 @@ export default function MyOrdersSection({
             </div>
 
             {/* Live Updates Preferences */}
-            <div className="bg-white border border-slate-200 shadow-sm p-5 rounded-3xl space-y-4">
+            <div className="bg-white border border-slate-200 shadow-sm p-5 rounded-2xl space-y-4">
               <h4 className="font-display font-black text-xs text-slate-800 uppercase tracking-wider flex items-center space-x-2">
                 <BellRing className="h-4 w-4 text-emerald-600" />
                 <span>Mijn Notificaties</span>

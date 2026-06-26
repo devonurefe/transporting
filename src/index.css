@@ -7,6 +7,26 @@
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 }
 
+/* ── Brand colour system — single source of truth ──────────────────────────
+   The customer-facing flow uses ORANGE as the primary CTA, EMERALD/TEAL for
+   success & price accents, and SLATE for neutral surfaces. The admin console
+   keeps its own INDIGO + AMBER theme. Use these tokens (or the matching
+   Tailwind shades they document) instead of inventing new accent colours so
+   the palette stays coherent.
+     primary  → orange-500 (#f97316)   hover orange-600
+     success  → emerald-600 (#059669) / teal-700 for prices
+     neutral  → slate-900 .. slate-50
+     warning  → amber-500 (#f59e0b)    (also the admin accent)
+   ─────────────────────────────────────────────────────────────────────────*/
+:root {
+  --brand-primary: #f97316;
+  --brand-primary-hover: #ea580c;
+  --brand-success: #059669;
+  --brand-price: #0f766e;
+  --brand-warning: #f59e0b;
+  --brand-ink: #0f172a;
+}
+
 @layer base {
   *, *::before, *::after {
     box-sizing: border-box;
@@ -186,19 +206,15 @@
   }
 }
 
-/* Review ticker — vertical infinite scroll */
-@keyframes reviewScrollUp {
-  from { transform: translateY(0); }
-  to   { transform: translateY(-50%); }
+/* Skeleton shimmer — used for catalog card images while they load so the
+   card never flashes an empty white box (cumulative layout shift = 0). */
+@keyframes skeletonShimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
-.review-ticker {
-  animation: reviewScrollUp 36s linear infinite;
-}
-.review-ticker-b {
-  animation: reviewScrollUp 46s linear infinite;
-}
-.review-ticker-wrap:hover .review-ticker,
-.review-ticker-wrap:hover .review-ticker-b {
-  animation-play-state: paused;
+.skeleton-shimmer {
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.4s ease-in-out infinite;
 }
 

@@ -168,7 +168,11 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
   const handleUpdateStatus = async (orderId: string, nextStatus: string, logMsg: string, order?: any) => {
     // Pre-validate: "Goedkeuren" requires payment marked first
     if (nextStatus === "Goedgekeurd" && order?.paymentStatus !== "paid") {
-      setStatusError("Markeer eerst de betaling als ontvangen (knop 'Betaling Ontvangen ✓') voordat u de bestelling kunt goedkeuren.");
+      setStatusError(t(
+        "Markeer eerst de betaling als ontvangen (knop 'Betaling Ontvangen ✓') voordat u de bestelling kunt goedkeuren.",
+        "Mark payment as received ('Payment Received ✓') before approving the order.",
+        "'Ödeme Alındı ✓' butonuna basarak ödemeyi onayladıktan sonra siparişi onaylayabilirsiniz."
+      ));
       setTimeout(() => setStatusError(null), 6000);
       return;
     }
@@ -899,25 +903,25 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                           Indien de gewenste machine niet leverbaar is of de planning vol zit, kunt u hieronder een alternatieve huurperiode voorstellen aan de klant. De klant ontvangt direct een notificatie in zijn dossier.
                         </p>
 
-                        <div className="grid grid-cols-2 gap-3">
-                          <div className="space-y-1">
-                            <label className="text-[10px] text-slate-500 block font-bold">Voorgestelde Startdatum</label>
-                            <input 
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div className="space-y-1 min-w-0">
+                            <label className="text-[10px] text-slate-500 block font-bold">{t("Startdatum", "Start date", "Başlangıç tarihi")}</label>
+                            <input
                               type="date"
                               required
                               value={newStartDate}
                               onChange={(e) => setNewStartDate(e.target.value)}
-                              className="w-full bg-white border border-slate-200 focus:border-amber-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 font-bold outline-none cursor-pointer shadow-sm"
+                              className="w-full min-w-0 bg-white border border-slate-200 focus:border-amber-500 rounded-lg px-2 py-2 text-sm text-slate-800 font-bold outline-none cursor-pointer shadow-sm"
                             />
                           </div>
-                          <div className="space-y-1">
-                            <label className="text-[10px] text-slate-500 block font-bold">Voorgestelde Einddatum</label>
-                            <input 
+                          <div className="space-y-1 min-w-0">
+                            <label className="text-[10px] text-slate-500 block font-bold">{t("Einddatum", "End date", "Bitiş tarihi")}</label>
+                            <input
                               type="date"
                               required
                               value={newEndDate}
                               onChange={(e) => setNewEndDate(e.target.value)}
-                              className="w-full bg-white border border-slate-200 focus:border-amber-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 font-bold outline-none cursor-pointer shadow-sm"
+                              className="w-full min-w-0 bg-white border border-slate-200 focus:border-amber-500 rounded-lg px-2 py-2 text-sm text-slate-800 font-bold outline-none cursor-pointer shadow-sm"
                             />
                           </div>
                         </div>
@@ -966,7 +970,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                         className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1 disabled:opacity-50"
                       >
                         <DollarSign className="h-3 w-3 shrink-0" />
-                        <span>Betaling Ontvangen ✓</span>
+                        <span>{t("Betaling Ontvangen ✓", "Payment Received ✓", "Ödeme Alındı ✓")}</span>
                       </button>
                     )}
                   </div>

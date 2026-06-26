@@ -820,11 +820,13 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                         <span className="font-mono">€ {selectedDetailOrder.machinePrice.toFixed(2)}</span>
                       </div>
 
-                      <div className="flex justify-between items-baseline border-b border-slate-200/60 pb-1.5">
-                        <span className="text-slate-600">Huurperiode:</span>
+                      <div className="flex justify-between items-start border-b border-slate-200/60 pb-1.5">
+                        <span className="text-slate-600 shrink-0">Huurperiode:</span>
                         <div className="text-right">
-                          <span className="font-semibold text-slate-800">{selectedDetailOrder.startDate}</span>
-                          <span className="text-[10px] text-slate-500 block font-mono">({selectedDetailOrder.rentalDays} dagen)</span>
+                          <span className="font-semibold text-slate-800 block">
+                            {selectedDetailOrder.startDate} <span className="text-slate-400 font-normal">t/m</span> {selectedDetailOrder.endDate}
+                          </span>
+                          <span className="text-[10px] text-slate-500 font-mono">({selectedDetailOrder.rentalDays} dagen)</span>
                         </div>
                       </div>
 

@@ -228,3 +228,19 @@
   animation: skeletonShimmer 1.4s ease-in-out infinite;
 }
 
+/* Review ticker — vertical infinite scroll */
+@keyframes reviewScrollUp {
+  from { transform: translateY(0); }
+  to   { transform: translateY(-50%); }
+}
+.review-ticker {
+  animation: reviewScrollUp 36s linear infinite;
+}
+.review-ticker-b {
+  animation: reviewScrollUp 46s linear infinite;
+}
+.review-ticker-wrap:hover .review-ticker,
+.review-ticker-wrap:hover .review-ticker-b {
+  animation-play-state: paused;
+}
+

@@ -86,7 +86,7 @@ export default function BookingStep1({
   );
 
   return (
-    <div className="bg-white border border-slate-200 shadow-sm p-6 rounded-3xl space-y-6">
+    <div className="bg-white border border-slate-200 shadow-sm p-6 rounded-2xl space-y-6">
       <div className="border-b border-slate-100 pb-4">
         <div className="flex items-center justify-between mb-3">
           <button

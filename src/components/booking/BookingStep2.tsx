@@ -107,7 +107,7 @@ export default function BookingStep2({
 
   if (!currentUser && !isGuestConfirmed) {
     return (
-      <div className="bg-white border border-slate-200 shadow-sm p-6 rounded-3xl space-y-6 animate-fade-in text-center py-10 text-slate-800">
+      <div className="bg-white border border-slate-200 shadow-sm p-6 rounded-2xl space-y-6 animate-fade-in text-center py-10 text-slate-800">
         <h3 className="font-display font-black text-lg text-slate-900 flex items-center justify-center space-x-2">
           <User className="h-5 w-5 text-slate-700" />
           <span>Hoe wilt u doorgaan?</span>
@@ -176,7 +176,7 @@ export default function BookingStep2({
   }
 
   return (
-    <div className="bg-white border border-slate-200 shadow-sm p-6 rounded-3xl space-y-6 animate-fade-in">
+    <div className="bg-white border border-slate-200 shadow-sm p-6 rounded-2xl space-y-6 animate-fade-in">
       <h3 className="font-display font-black text-base text-slate-900 flex items-center space-x-2">
         <User className="h-5 w-5 text-slate-700" />
         <span>Contactgegevens & Bedrijfsprofiel</span>

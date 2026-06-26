@@ -50,6 +50,36 @@ interface CatalogSectionProps {
 // Per-model extra specs live in src/utils/machineSpecs.ts (admin-editable via AdminMachines).
 import { getSpecsForMachine } from "../utils/machineSpecs";
 
+/**
+ * Catalog card image with a shimmer skeleton until the photo loads, so the
+ * fixed-ratio box never flashes empty white (zero layout shift). Falls back to
+ * the first additional image, then the local placeholder, on error.
+ */
+function CardImage({ src, alt, additional }: { src: string; alt?: string; additional?: string }) {
+  const [loaded, setLoaded] = useState(false);
+  return (
+    <>
+      {!loaded && <div className="absolute inset-0 skeleton-shimmer" aria-hidden="true" />}
+      <img
+        src={src}
+        alt={alt}
+        loading="lazy"
+        onLoad={() => setLoaded(true)}
+        className={`h-full w-full object-contain group-hover:scale-105 transition-all duration-500 ease-out ${loaded ? "opacity-100" : "opacity-0"}`}
+        referrerPolicy="no-referrer"
+        onError={(e) => {
+          if (additional && e.currentTarget.src !== additional) {
+            e.currentTarget.src = additional;
+          } else {
+            e.currentTarget.src = "/placeholder-machine.webp";
+            setLoaded(true);
+          }
+        }}
+      />
+    </>
+  );
+}
+
 // Look up extra specs: machine.specs (admin-edited DB value) takes priority, then hardcoded fallback.
 function getExtraSpecs(id: string, machineSpecs?: unknown): Array<{ label: string; value: string }> {
   return getSpecsForMachine(id, machineSpecs);
@@ -382,20 +412,10 @@ export default function CatalogSection({
                           onAddSystemLog?.("system", currentUser?.name ?? "Gast", `Bekijkt specificaties: "${machine.name}"`);
                         }}
                       >
-                        <img
+                        <CardImage
                           src={machine.imageUrl || (machine.additionalImages?.[0] ?? "/placeholder-machine.webp")}
                           alt={machine.imageAlt}
-                          loading="lazy"
-                          className="h-full w-full object-contain group-hover:scale-105 transition-transform duration-500 ease-out"
-                          referrerPolicy="no-referrer"
-                          onError={(e) => {
-                            const fallback = machine.additionalImages?.[0];
-                            if (fallback && e.currentTarget.src !== fallback) {
-                              e.currentTarget.src = fallback;
-                            } else {
-                              e.currentTarget.src = "/placeholder-machine.webp";
-                            }
-                          }}
+                          additional={machine.additionalImages?.[0]}
                         />
                         {/* Power type only — machine name/category already shown below the image, no overlay duplicate */}
                         <div className="absolute bottom-0 right-0 px-3 py-2">

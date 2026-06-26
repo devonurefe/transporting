@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { X, MessageSquare, Phone, Mail, CheckCircle } from "lucide-react";
 import { useAppStore } from "../store/appStore";
@@ -21,6 +21,7 @@ export default function ContactModal({ isOpen, onClose, onShowToast, onAddSystem
   const contactEmail = siteConfig.contactEmail || "info@mbhoogwerkers.com";
   const contactPhone = siteConfig.contactPhone || "+31 (0)6 11 84 88 99";
   const dialogRef = useModalA11y<HTMLDivElement>(isOpen, onClose);
+  const [activeTab, setActiveTab] = useState<"ticket" | "callback">("ticket");
   return (
     <AnimatePresence>
       {isOpen && (
@@ -122,112 +123,140 @@ export default function ContactModal({ isOpen, onClose, onShowToast, onAddSystem
                 </div>
               </div>
 
-              {/* Right Pane: Support Ticket Form */}
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  const formData = new FormData(e.currentTarget);
-                  const name = formData.get("ticketName") as string;
-                  const contact = formData.get("ticketContact") as string;
-                  const topic = formData.get("ticketTopic") as string;
-                  const message = formData.get("ticketMsg") as string;
-                  
-                  if (name && contact && message) {
-                    onClose();
-                    onShowToast({
-                      id: `support-${Date.now()}`,
-                      title: "Supportvraag Ontvangen",
-                      message: `Beste ${name}, uw vraag over '${topic}' is in behandeling. We nemen binnen 15 minuten contact op!`,
-                      type: "success"
-                    });
-                    onAddSystemLog("system", name, `Supportvraag [${topic}]: ${message} (Contact: ${contact})`);
-                  }
-                }}
-                className="md:col-span-7 flex flex-col justify-between space-y-3"
-              >
-                <span className="text-[10px] font-display font-semibold text-slate-500 uppercase tracking-wider block">Direct een support-vraag stellen</span>
-                
-                <div className="space-y-2">
-                  <input
-                    type="text"
-                    name="ticketName"
-                    required
-                    placeholder="Uw Volledige Naam (of Bedrijfsnaam)"
-                    className="w-full bg-slate-50 border border-slate-200 focus:border-slate-400 rounded-xl px-3 py-2 text-xs text-slate-800 placeholder-slate-400 outline-none focus:ring-1 focus:ring-slate-300 font-medium"
-                  />
-
-                  <input
-                    type="text"
-                    name="ticketContact"
-                    required
-                    placeholder="E-mail of telefoonnummer"
-                    className="w-full bg-slate-50 border border-slate-200 focus:border-slate-400 rounded-xl px-3 py-2 text-xs text-slate-800 placeholder-slate-400 outline-none focus:ring-1 focus:ring-slate-300 font-medium"
-                  />
-
-                  <select
-                    name="ticketTopic"
-                    className="w-full bg-slate-50 border border-slate-200 focus:border-slate-400 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:ring-1 focus:ring-slate-300 font-semibold cursor-pointer"
-                  >
-                    <option value="Klantenservice">Klantenservice & Hulp</option>
-                    <option value="Transport & Logistiek">Transport & Logistieke Vraag</option>
-                    <option value="Vloot & Tarieven">Zakelijke Vloot Aanvraag</option>
-                    <option value="Overig">Overig / Technisch probleem</option>
-                  </select>
-
-                  <textarea
-                    name="ticketMsg"
-                    required
-                    rows={3}
-                    placeholder="Wat is uw specifieke vraag over de inzetbaarheid van ons materieel?"
-                    className="w-full bg-slate-50 border border-slate-200 focus:border-slate-400 rounded-xl px-3 py-2 text-xs text-slate-800 placeholder-slate-400 outline-none focus:ring-1 focus:ring-slate-300 resize-none font-sans font-medium"
-                  />
+              {/* Right Pane: Tabbed forms */}
+              <div className="md:col-span-7 flex flex-col space-y-3">
+                {/* Tab strip */}
+                <div className="flex gap-1 bg-slate-100 p-1 rounded-xl shrink-0">
+                  {(["ticket", "callback"] as const).map((tab) => (
+                    <button
+                      key={tab}
+                      type="button"
+                      onClick={() => setActiveTab(tab)}
+                      className={`flex-1 py-1.5 text-[11px] font-bold rounded-lg transition-all cursor-pointer border-none ${
+                        activeTab === tab
+                          ? "bg-white text-slate-900 shadow-sm"
+                          : "text-slate-500 hover:text-slate-700"
+                      }`}
+                    >
+                      {tab === "ticket" ? "Supportvraag" : "Bel mij terug"}
+                    </button>
+                  ))}
                 </div>
 
-                <button
-                  type="submit"
-                  className="w-full py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-semibold text-xs rounded-xl shadow-sm hover:shadow transition-all cursor-pointer font-display shrink-0 border-none flex items-center justify-center space-x-1.5"
-                >
-                  <CheckCircle className="h-4 w-4 shrink-0 text-emerald-300" />
-                  <span>Verstuur Bericht</span>
-                </button>
-              </form>
-            </div>
-
-            {/* Dynamic Callback request section */}
-            <div className="pt-3.5 border-t border-slate-100 space-y-3.5">
-              <span className="text-[10px] font-display font-semibold text-slate-500 uppercase tracking-widest block">Liever direct telefonisch advies? Bel-mij-terug formulier:</span>
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  const formData = new FormData(e.currentTarget);
-                  const phone = formData.get("callbackPhone");
-                  if (phone) {
-                    onClose();
-                    onShowToast({
-                      id: `callback-${Date.now()}`,
-                      title: "Belaanvraag Ontvangen",
-                      message: `Onze logistieke adviseur belt u binnen 10 minuten terug op ${phone}. Hartelijk dank!`,
-                      type: "success"
-                    });
-                    onAddSystemLog("system", "Bezoeker", `Belaanvraag geregistreerd voor nummer: ${phone} (Zoeterwoude hub).`);
-                  }
-                }}
-                className="flex flex-col sm:flex-row gap-2"
-              >
-                <input
-                  type="tel"
-                  name="callbackPhone"
-                  required
-                  placeholder="Uw telefoonnummer (bijv. +31 6 ...)"
-                  className="flex-1 bg-slate-50 border border-slate-200 focus:border-slate-400 rounded-xl px-4 py-2.5 text-xs text-slate-800 placeholder-slate-400 outline-none focus:ring-1 focus:ring-slate-300 font-medium"
-                />
-                <button
-                  type="submit"
-                  className="w-full sm:w-auto px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs rounded-xl shadow-sm hover:shadow transition-all cursor-pointer font-display shrink-0 border-none"
-                >
-                  Bel mij terug
-                </button>
-              </form>
+                <AnimatePresence mode="wait">
+                  {activeTab === "ticket" ? (
+                    <motion.form
+                      key="ticket"
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 10 }}
+                      transition={{ duration: 0.15 }}
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        const formData = new FormData(e.currentTarget);
+                        const name = formData.get("ticketName") as string;
+                        const contact = formData.get("ticketContact") as string;
+                        const topic = formData.get("ticketTopic") as string;
+                        const message = formData.get("ticketMsg") as string;
+                        if (name && contact && message) {
+                          onClose();
+                          onShowToast({
+                            id: `support-${Date.now()}`,
+                            title: "Supportvraag Ontvangen",
+                            message: `Beste ${name}, uw vraag over '${topic}' is in behandeling. We nemen binnen 15 minuten contact op!`,
+                            type: "success"
+                          });
+                          onAddSystemLog("system", name, `Supportvraag [${topic}]: ${message} (Contact: ${contact})`);
+                        }
+                      }}
+                      className="flex flex-col justify-between space-y-2 flex-1"
+                    >
+                      <div className="space-y-2">
+                        <input
+                          type="text"
+                          name="ticketName"
+                          required
+                          placeholder="Uw Volledige Naam (of Bedrijfsnaam)"
+                          className="w-full bg-slate-50 border border-slate-200 focus:border-slate-400 rounded-xl px-3 py-2 text-xs text-slate-800 placeholder-slate-400 outline-none focus:ring-1 focus:ring-slate-300 font-medium"
+                        />
+                        <input
+                          type="text"
+                          name="ticketContact"
+                          required
+                          placeholder="E-mail of telefoonnummer"
+                          className="w-full bg-slate-50 border border-slate-200 focus:border-slate-400 rounded-xl px-3 py-2 text-xs text-slate-800 placeholder-slate-400 outline-none focus:ring-1 focus:ring-slate-300 font-medium"
+                        />
+                        <select
+                          name="ticketTopic"
+                          className="w-full bg-slate-50 border border-slate-200 focus:border-slate-400 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:ring-1 focus:ring-slate-300 font-semibold cursor-pointer"
+                        >
+                          <option value="Klantenservice">Klantenservice & Hulp</option>
+                          <option value="Transport & Logistiek">Transport & Logistieke Vraag</option>
+                          <option value="Vloot & Tarieven">Zakelijke Vloot Aanvraag</option>
+                          <option value="Overig">Overig / Technisch probleem</option>
+                        </select>
+                        <textarea
+                          name="ticketMsg"
+                          required
+                          rows={3}
+                          placeholder="Wat is uw specifieke vraag over de inzetbaarheid van ons materieel?"
+                          className="w-full bg-slate-50 border border-slate-200 focus:border-slate-400 rounded-xl px-3 py-2 text-xs text-slate-800 placeholder-slate-400 outline-none focus:ring-1 focus:ring-slate-300 resize-none font-sans font-medium"
+                        />
+                      </div>
+                      <button
+                        type="submit"
+                        className="w-full py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-semibold text-xs rounded-xl shadow-sm hover:shadow transition-all cursor-pointer font-display shrink-0 border-none flex items-center justify-center space-x-1.5"
+                      >
+                        <CheckCircle className="h-4 w-4 shrink-0 text-emerald-300" />
+                        <span>Verstuur Bericht</span>
+                      </button>
+                    </motion.form>
+                  ) : (
+                    <motion.form
+                      key="callback"
+                      initial={{ opacity: 0, x: 10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -10 }}
+                      transition={{ duration: 0.15 }}
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        const formData = new FormData(e.currentTarget);
+                        const phone = formData.get("callbackPhone");
+                        if (phone) {
+                          onClose();
+                          onShowToast({
+                            id: `callback-${Date.now()}`,
+                            title: "Belaanvraag Ontvangen",
+                            message: `Onze logistieke adviseur belt u binnen 10 minuten terug op ${phone}. Hartelijk dank!`,
+                            type: "success"
+                          });
+                          onAddSystemLog("system", "Bezoeker", `Belaanvraag geregistreerd voor nummer: ${phone} (Zoeterwoude hub).`);
+                        }
+                      }}
+                      className="flex flex-col justify-between space-y-3 flex-1"
+                    >
+                      <div className="space-y-3">
+                        <p className="text-xs text-slate-500 leading-relaxed">
+                          Liever direct spraak? Laat uw nummer achter en onze logistieke adviseur belt u terug binnen kantooruren.
+                        </p>
+                        <input
+                          type="tel"
+                          name="callbackPhone"
+                          required
+                          placeholder="Uw telefoonnummer (bijv. +31 6 ...)"
+                          className="w-full bg-slate-50 border border-slate-200 focus:border-slate-400 rounded-xl px-3 py-2.5 text-xs text-slate-800 placeholder-slate-400 outline-none focus:ring-1 focus:ring-slate-300 font-medium"
+                        />
+                      </div>
+                      <button
+                        type="submit"
+                        className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs rounded-xl shadow-sm hover:shadow transition-all cursor-pointer font-display shrink-0 border-none"
+                      >
+                        Bel mij terug
+                      </button>
+                    </motion.form>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
           </motion.div>
         </div>

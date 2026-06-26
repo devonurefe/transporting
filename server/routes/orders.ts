@@ -854,12 +854,38 @@ ordersRouter.post("/send-reminders", async (req: AuthenticatedRequest, res: Resp
   }
 
   try {
-    const tomorrow = new Date();
+    const today = new Date();
+    const todayStr = today.toISOString().split("T")[0];
+    const todayStart = new Date(todayStr + "T00:00:00.000Z");
+
+    const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
     const tomorrowStr = tomorrow.toISOString().split("T")[0];
     const tomorrowStart = new Date(tomorrowStr + "T00:00:00.000Z");
     const tomorrowEnd = new Date(tomorrowStr + "T23:59:59.999Z");
 
+    // Auto-cancel stale orders: "In behandeling" + unpaid + startDate already passed.
+    // These are bookings where the customer never paid and the rental window is gone —
+    // keeping them blocks the calendar for no reason.
+    const staleOrders = await prisma.order.findMany({
+      where: {
+        status: "In behandeling",
+        paymentStatus: "awaiting",
+        startDate: { lt: todayStart }
+      }
+    });
+
+    let autoCancelled = 0;
+    for (const order of staleOrders) {
+      await prisma.order.update({
+        where: { id: order.id },
+        data: { status: "Geannuleerd" }
+      });
+      autoCancelled++;
+      console.log(`[AutoCancel] ${order.id} — startDate ${order.startDate.toISOString().split("T")[0]} passed, never paid → Geannuleerd`);
+    }
+
+    // Send rental reminders for tomorrow's confirmed orders
     const orders = await prisma.order.findMany({
       where: {
         startDate: { gte: tomorrowStart, lte: tomorrowEnd },
@@ -880,7 +906,7 @@ ordersRouter.post("/send-reminders", async (req: AuthenticatedRequest, res: Resp
     }
 
     console.log(`[Reminders] Sent ${sent}/${orders.length} reminders for ${tomorrowStr}`);
-    res.json({ sent, total: orders.length, date: tomorrowStr });
+    res.json({ sent, total: orders.length, date: tomorrowStr, autoCancelled });
   } catch (error) {
     console.error("Error sending reminders:", error);
     res.status(500).json({ error: "Kon herinneringen niet verzenden" });

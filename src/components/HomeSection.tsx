@@ -182,9 +182,9 @@ function DealsCarousel({ machines, onSearch }: { machines: Machine[]; onSearch: 
                 aria-hidden={isClone || undefined}
                 tabIndex={isClone ? -1 : undefined}
                 onClick={() => !isDragging.current && onSearch(baseName, m.category)}
-                className="shrink-0 w-[180px] bg-white rounded-2xl border border-amber-100 shadow-sm hover:shadow-lg hover:-translate-y-1 active:scale-[0.98] transition-all text-left overflow-hidden flex flex-col group"
+                className="shrink-0 w-[148px] bg-white rounded-2xl border border-amber-100 shadow-sm hover:shadow-lg hover:-translate-y-1 active:scale-[0.98] transition-all text-left overflow-hidden flex flex-col group"
               >
-                <div className="relative aspect-[4/3] w-full overflow-hidden bg-amber-50 shrink-0">
+                <div className="relative aspect-[3/2] w-full overflow-hidden bg-amber-50 shrink-0">
                   {machineImage ? (
                     <img src={machineImage} alt={baseName} loading="lazy" draggable={false} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                   ) : (
@@ -203,15 +203,15 @@ function DealsCarousel({ machines, onSearch }: { machines: Machine[]; onSearch: 
                     </div>
                   )}
                 </div>
-                <div className="p-3 flex flex-col gap-1.5 flex-1">
-                  <p className="font-display font-black text-[12px] text-slate-900 leading-snug line-clamp-2">{baseName}</p>
+                <div className="p-2.5 flex flex-col gap-1 flex-1">
+                  <p className="font-display font-black text-[11px] text-slate-900 leading-snug line-clamp-2">{baseName}</p>
                   <div className="flex items-baseline gap-1 flex-wrap">
-                    <span className="text-base font-black text-amber-600">{fmt(displayPrice)}</span>
-                    {hasDiscount && <span className="text-[10px] text-slate-400 line-through">{fmt(originalPrice)}</span>}
-                    <span className="text-[10px] text-slate-400">/ dag</span>
+                    <span className="text-sm font-black text-amber-600">{fmt(displayPrice)}</span>
+                    {hasDiscount && <span className="text-[9px] text-slate-400 line-through">{fmt(originalPrice)}</span>}
+                    <span className="text-[9px] text-slate-400">/ dag</span>
                   </div>
                   <div className="mt-auto pt-1">
-                    <div className="w-full text-center bg-amber-500 group-hover:bg-amber-600 text-white text-[10px] font-black py-1.5 px-2 rounded-xl transition-colors">
+                    <div className="w-full text-center bg-amber-500 group-hover:bg-amber-600 text-white text-[9px] font-black py-1.5 px-2 rounded-lg transition-colors">
                       {t("Direct boeken →", "Book now →", "Hemen rezervasyon →")}
                     </div>
                   </div>

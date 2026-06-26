@@ -121,23 +121,23 @@ export default function AdminAccounting({ adminLanguage }: AdminAccountingProps)
             <p className="text-[10.5px] font-bold text-slate-500 uppercase tracking-wide">
               {t("Startdatum periode", "Start date range", "Başlangıç tarihi aralığı")}
             </p>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <label className="text-[10px] text-slate-400 block">{t("Van", "From", "Başlangıç")}</label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <label className="text-[10px] text-slate-400 block font-bold">{t("Van", "From", "Başlangıç")}</label>
                 <input
                   type="date"
                   value={fromDate}
                   onChange={(e) => setFromDate(e.target.value)}
-                  className="w-full bg-white border border-slate-200 focus:border-amber-400 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none cursor-pointer"
+                  className="w-full bg-white border border-slate-200 focus:border-amber-400 rounded-xl px-3 py-2.5 text-sm text-slate-800 outline-none cursor-pointer"
                 />
               </div>
-              <div className="space-y-1">
-                <label className="text-[10px] text-slate-400 block">{t("Tot", "To", "Bitiş")}</label>
+              <div className="space-y-1.5">
+                <label className="text-[10px] text-slate-400 block font-bold">{t("Tot", "To", "Bitiş")}</label>
                 <input
                   type="date"
                   value={toDate}
                   onChange={(e) => setToDate(e.target.value)}
-                  className="w-full bg-white border border-slate-200 focus:border-amber-400 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none cursor-pointer"
+                  className="w-full bg-white border border-slate-200 focus:border-amber-400 rounded-xl px-3 py-2.5 text-sm text-slate-800 outline-none cursor-pointer"
                 />
               </div>
             </div>

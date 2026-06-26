@@ -182,37 +182,39 @@ function DealsCarousel({ machines, onSearch }: { machines: Machine[]; onSearch: 
                 aria-hidden={isClone || undefined}
                 tabIndex={isClone ? -1 : undefined}
                 onClick={() => !isDragging.current && onSearch(baseName, m.category)}
-                className="shrink-0 w-[148px] bg-white rounded-2xl border border-amber-100 shadow-sm hover:shadow-lg hover:-translate-y-1 active:scale-[0.98] transition-all text-left overflow-hidden flex flex-col group"
+                className="shrink-0 w-[148px] rounded-2xl shadow-sm hover:shadow-lg hover:-translate-y-1 active:scale-[0.98] transition-all text-left group"
               >
-                <div className="relative aspect-[3/2] w-full overflow-hidden bg-amber-50 shrink-0">
-                  {machineImage ? (
-                    <img src={machineImage} alt={baseName} loading="lazy" draggable={false} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                  ) : (
-                    <div className={`w-full h-full bg-gradient-to-br ${CAT_GRADIENT[m.category] ?? "from-amber-100 to-amber-200"} flex items-center justify-center`}>
-                      <CatIcon className="h-10 w-10 text-slate-400" />
-                    </div>
-                  )}
-                  {hasDiscount && (
-                    <div className="absolute top-0 left-0 bg-amber-500 text-white text-[10px] font-black px-2.5 py-1 rounded-br-xl shadow-sm">
-                      {campaignPct ? `−${campaignPct}%` : "Dagactie"}
-                    </div>
-                  )}
-                  {m.campaignText && (
-                    <div className="absolute top-0 right-0 bg-white/90 backdrop-blur-sm text-amber-700 text-[10px] font-bold rounded-bl-xl px-2.5 py-1 border-b border-l border-amber-100">
-                      {m.campaignText}
-                    </div>
-                  )}
-                </div>
-                <div className="p-2.5 flex flex-col gap-1 flex-1">
-                  <p className="font-display font-black text-[11px] text-slate-900 leading-snug line-clamp-2">{baseName}</p>
-                  <div className="flex items-baseline gap-1 flex-wrap">
-                    <span className="text-sm font-black text-amber-600">{fmt(displayPrice)}</span>
-                    {hasDiscount && <span className="text-[9px] text-slate-400 line-through">{fmt(originalPrice)}</span>}
-                    <span className="text-[9px] text-slate-400">/ dag</span>
+                <div className="overflow-hidden rounded-2xl border border-amber-100 bg-white flex flex-col h-full">
+                  <div className="relative aspect-[3/2] w-full bg-amber-50 shrink-0 overflow-hidden">
+                    {machineImage ? (
+                      <img src={machineImage} alt={baseName} loading="lazy" draggable={false} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                    ) : (
+                      <div className={`w-full h-full bg-gradient-to-br ${CAT_GRADIENT[m.category] ?? "from-amber-100 to-amber-200"} flex items-center justify-center`}>
+                        <CatIcon className="h-10 w-10 text-slate-400" />
+                      </div>
+                    )}
+                    {hasDiscount && (
+                      <div className="absolute top-0 left-0 bg-amber-500 text-white text-[10px] font-black px-2.5 py-1 rounded-br-xl shadow-sm">
+                        {campaignPct ? `−${campaignPct}%` : "Dagactie"}
+                      </div>
+                    )}
+                    {m.campaignText && (
+                      <div className="absolute top-0 right-0 bg-white/90 backdrop-blur-sm text-amber-700 text-[10px] font-bold rounded-bl-xl px-2.5 py-1 border-b border-l border-amber-100">
+                        {m.campaignText}
+                      </div>
+                    )}
                   </div>
-                  <div className="mt-auto pt-1">
-                    <div className="w-full text-center bg-amber-500 group-hover:bg-amber-600 text-white text-[9px] font-black py-1.5 px-2 rounded-lg transition-colors">
-                      {t("Direct boeken →", "Book now →", "Hemen rezervasyon →")}
+                  <div className="p-2.5 flex flex-col gap-1 flex-1">
+                    <p className="font-display font-black text-[11px] text-slate-900 leading-snug line-clamp-2">{baseName}</p>
+                    <div className="flex items-baseline gap-1 flex-wrap">
+                      <span className="text-sm font-black text-amber-600">{fmt(displayPrice)}</span>
+                      {hasDiscount && <span className="text-[9px] text-slate-400 line-through">{fmt(originalPrice)}</span>}
+                      <span className="text-[9px] text-slate-400">/ dag</span>
+                    </div>
+                    <div className="mt-auto pt-1">
+                      <div className="w-full text-center bg-amber-500 group-hover:bg-amber-600 text-white text-[9px] font-black py-1.5 px-2 rounded-lg transition-colors">
+                        {t("Direct boeken →", "Book now →", "Hemen rezervasyon →")}
+                      </div>
                     </div>
                   </div>
                 </div>

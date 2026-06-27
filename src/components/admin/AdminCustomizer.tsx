@@ -94,13 +94,22 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
     }
   };
 
+  const [addRuleError, setAddRuleError] = useState<string>("");
+
   const handleAddRule = (e: React.FormEvent) => {
     e.preventDefault();
     if (!ruleName.trim()) return;
+    setAddRuleError("");
+
+    const trimmed = ruleName.trim();
+    if (campaignRules.some(r => r.name.toLowerCase() === trimmed.toLowerCase())) {
+      setAddRuleError(t(`Campagneregel met naam "${trimmed}" bestaat al.`, `Campaign rule "${trimmed}" already exists.`, `"${trimmed}" adlı kampanya kuralı zaten var.`));
+      return;
+    }
 
     const newRule = {
       id: `rule-${Date.now()}`,
-      name: ruleName.trim(),
+      name: trimmed,
       scope: ruleScope,
       scopeValue: ruleScopeValue,
       discountPercent: Number(ruleDiscount),
@@ -109,11 +118,12 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
 
     updateCampaignRules([...campaignRules, newRule]);
     onAddSystemLog("system", adminUser?.name ?? "Admin", t("Nieuwe campagneregel toegevoegd: ", "New campaign rule added: ", "Yeni kampanya kuralı eklendi: ") + newRule.name);
-    
+
     // reset form
     setRuleName("");
     setRuleScope("global");
     setRuleScopeValue("global");
+    setRuleDiscount(5);
   };
 
   // Campaign Rule Edit Modal state
@@ -131,22 +141,32 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
     setEditDiscount(rule.discountPercent);
   };
 
+  const [editRuleError, setEditRuleError] = useState<string>("");
+
   const handleSaveEditRule = (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingRule || !editName.trim()) return;
+    setEditRuleError("");
 
-    const updated = campaignRules.map(r => 
-      r.id === editingRule.id 
-        ? { ...r, name: editName.trim(), scope: editScope, scopeValue: editScopeValue, discountPercent: Number(editDiscount) } 
+    const trimmed = editName.trim();
+    if (campaignRules.some(r => r.id !== editingRule.id && r.name.toLowerCase() === trimmed.toLowerCase())) {
+      setEditRuleError(t(`Naam "${trimmed}" is al in gebruik.`, `Name "${trimmed}" is already in use.`, `"${trimmed}" adı zaten kullanılıyor.`));
+      return;
+    }
+
+    const updated = campaignRules.map(r =>
+      r.id === editingRule.id
+        ? { ...r, name: trimmed, scope: editScope, scopeValue: editScopeValue, discountPercent: Number(editDiscount) }
         : r
     );
 
     updateCampaignRules(updated);
-    onAddSystemLog("system", adminUser?.name ?? "Admin", t("Campagneregel gewijzigd: ", "Campaign rule edited: ", "Kampanya kuralı düzenlendi: ") + editName.trim());
+    onAddSystemLog("system", adminUser?.name ?? "Admin", t("Campagneregel gewijzigd: ", "Campaign rule edited: ", "Kampanya kuralı düzenlendi: ") + trimmed);
     setEditingRule(null);
   };
 
   const [isSavingConfig, setIsSavingConfig] = useState<boolean>(false);
+  const [saveConfigMsg, setSaveConfigMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
   // Local copywriting fields state to prevent massive lags and race conditions on keystrokes
   const [storeName, setStoreName] = useState(siteConfig.siteName || "");
@@ -238,9 +258,10 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
     setIsSavingConfig(false);
     if (success) {
       onAddSystemLog("system", adminUser?.name ?? "Admin", t("Storefront algemene en navigatie instellingen opgeslagen.", "Storefront general and navigation settings saved.", "Mağaza genel ve gezinme ayarları kaydedildi."));
-      alert(t("Instellingen succesvol permanent opgeslagen!", "Settings successfully permanently saved!", "Ayarlar kalıcı olarak başarıyla kaydedildi!"));
+      setSaveConfigMsg({ ok: true, text: t("Instellingen succesvol opgeslagen!", "Settings saved successfully!", "Ayarlar başarıyla kaydedildi!") });
+      setTimeout(() => setSaveConfigMsg(null), 4000);
     } else {
-      alert(t("Fout bij opslaan van instellingen.", "Error saving settings.", "Ayarlar kaydedilirken hata oluştu."));
+      setSaveConfigMsg({ ok: false, text: t("Fout bij opslaan van instellingen.", "Error saving settings.", "Ayarlar kaydedilirken hata oluştu.") });
     }
   };
 
@@ -456,7 +477,12 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
           </div>
 
           {/* Save Button for Site Config */}
-          <div className="flex justify-end pt-2 col-span-1 md:col-span-2">
+          <div className="flex items-center justify-end gap-3 pt-2 col-span-1 md:col-span-2">
+            {saveConfigMsg && (
+              <span className={`text-xs font-bold ${saveConfigMsg.ok ? "text-emerald-600" : "text-rose-600"}`}>
+                {saveConfigMsg.ok ? "✓ " : "✗ "}{saveConfigMsg.text}
+              </span>
+            )}
             <button
               type="button"
               onClick={handleSaveSiteConfig}
@@ -764,9 +790,12 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
                 </div>
               </div>
             </div>
-            <div className="flex justify-end pt-1">
-              <button 
-                type="submit" 
+            <div className="flex items-center justify-end gap-3 pt-1">
+              {addRuleError && (
+                <span className="text-[10px] font-bold text-rose-600">{addRuleError}</span>
+              )}
+              <button
+                type="submit"
                 className="px-4 py-1.5 bg-amber-500 hover:bg-amber-600 font-bold text-xs text-white rounded-lg transition-all cursor-pointer border-none shadow-sm flex items-center space-x-1"
               >
                 <Plus className="h-3.5 w-3.5 shrink-0 text-white" />
@@ -804,7 +833,7 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
                   </h3>
                   <button
                     type="button"
-                    onClick={() => setEditingRule(null)}
+                    onClick={() => { setEditingRule(null); setEditRuleError(""); }}
                     className="text-slate-400 hover:text-slate-600 text-xl font-bold border-none bg-transparent cursor-pointer"
                   >
                     ×
@@ -910,10 +939,13 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
                     </div>
                   </div>
 
+                  {editRuleError && (
+                    <p className="text-[10px] font-bold text-rose-600 text-right">{editRuleError}</p>
+                  )}
                   <div className="flex justify-end space-x-2 pt-3 border-t border-slate-100">
                     <button
                       type="button"
-                      onClick={() => setEditingRule(null)}
+                      onClick={() => { setEditingRule(null); setEditRuleError(""); }}
                       className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-all cursor-pointer border-none"
                     >
                       {t("Annuleren", "Cancel", "Vazgeç")}

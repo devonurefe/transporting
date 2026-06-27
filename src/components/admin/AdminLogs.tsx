@@ -106,7 +106,27 @@ export default function AdminLogs({ systemLogs, onClearSystemLogs, userProfiles,
                 <div key={p.id} className="p-3 bg-slate-50 rounded-xl space-y-2.5 border border-slate-200/80 shadow-sm">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
-                      <img src={p.avatarUrl} alt="" className="h-6 w-6 rounded-full object-cover" referrerPolicy="no-referrer" />
+                      {p.avatarUrl ? (
+                        <img
+                          src={p.avatarUrl}
+                          alt=""
+                          className="h-6 w-6 rounded-full object-cover shrink-0"
+                          referrerPolicy="no-referrer"
+                          onError={(e) => {
+                            const el = e.currentTarget;
+                            el.style.display = "none";
+                            const fallback = el.nextElementSibling as HTMLElement | null;
+                            if (fallback) fallback.style.display = "flex";
+                          }}
+                        />
+                      ) : null}
+                      <span
+                        className="h-6 w-6 rounded-full bg-amber-500 text-white text-[9px] font-black items-center justify-center shrink-0"
+                        style={{ display: p.avatarUrl ? "none" : "flex" }}
+                        aria-hidden="true"
+                      >
+                        {(p.name || "?").charAt(0).toUpperCase()}
+                      </span>
                       <div>
                         <h5 className="text-[11px] font-bold text-slate-800 leading-none">{p.name}</h5>
                         <span className="text-[9px] text-slate-500 mt-0.5 inline-block">{p.profileType}</span>

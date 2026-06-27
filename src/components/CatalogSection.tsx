@@ -387,7 +387,7 @@ export default function CatalogSection({
                       exit={{ opacity: 0, scale: 0.95 }}
                       transition={{ duration: 0.22, ease: "easeOut" }}
                       key={machine.id}
-                      className="group relative overflow-hidden rounded-2xl border bg-white flex flex-col border-slate-200 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
+                      className="group relative overflow-hidden rounded-2xl border bg-white flex flex-col border-slate-200 shadow-sm hover:shadow-xl hover:shadow-orange-500/5 hover:border-orange-200 hover:-translate-y-1.5 transition-all duration-300"
                     >
                       {/* Top-left badge: only shown when NOT available — no "Beschikbaar" label on available units */}
                       {(() => {
@@ -528,7 +528,7 @@ export default function CatalogSection({
                           </button>
                           <button
                             onClick={() => onSelectMachineForBooking(machine)}
-                            className="flex-1 py-3 rounded-xl bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white text-xs font-bold transition-all duration-200 active:scale-[0.97] cursor-pointer flex items-center justify-center gap-1.5 shadow-sm hover:shadow-md"
+                            className="cta-shine flex-1 py-3 rounded-xl bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white text-xs font-bold transition-all duration-200 active:scale-[0.97] cursor-pointer flex items-center justify-center gap-1.5 shadow-sm hover:shadow-md"
                           >
                             <ShoppingCart className="h-3.5 w-3.5" />
                             {t("btnRentNow")}

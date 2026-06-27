@@ -361,6 +361,14 @@ export default function HomeSection({
         {/* Readability scrim — darker toward the bottom-left where the text sits */}
         <div className="absolute inset-0 bg-gradient-to-tr from-black/85 via-black/45 to-black/10 pointer-events-none" />
 
+        {/* Ambient brand glows — drift slowly to give the dark hero subtle,
+            premium life without hurting text contrast (low opacity + blur). */}
+        <div className="float-slow pointer-events-none absolute -bottom-16 -left-16 h-72 w-72 rounded-full bg-orange-500/25 blur-[90px] mix-blend-screen" aria-hidden="true" />
+        <div className="float-slow pointer-events-none absolute -top-20 right-0 h-64 w-64 rounded-full bg-emerald-400/15 blur-[90px] mix-blend-screen" style={{ animationDelay: "-3.5s" }} aria-hidden="true" />
+
+        {/* Soft bottom feather — eases the hard cut into the white section below */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/30 to-transparent" />
+
         {/* Overlay content — anchored bottom-left */}
         <div className="absolute inset-0 flex items-end pointer-events-none">
           <div className="px-5 sm:px-8 lg:px-14 pb-5 sm:pb-7 lg:pb-9 w-full max-w-2xl">
@@ -467,7 +475,7 @@ export default function HomeSection({
       {activeMachines.length > 0 && <DealsCarousel machines={activeMachines} onSearch={onSearch} />}
 
       {/* ── CATEGORY CARDS ── */}
-      <div className="bg-white px-4 sm:px-6 pt-10 pb-14">
+      <div className="bg-gradient-to-b from-white to-slate-50 px-4 sm:px-6 pt-10 pb-14">
         <div className="max-w-5xl mx-auto flex justify-end mb-4">
           <VatToggle />
         </div>
@@ -503,8 +511,9 @@ export default function HomeSection({
                   </div>
                 </div>
 
-                {/* Bottom — wide machine photo on white background */}
-                <div className="relative w-full aspect-[4/3] overflow-hidden bg-white border-t border-slate-100">
+                {/* Bottom — wide machine photo grounded on a soft spotlight so
+                    it never feels like it floats in empty white */}
+                <div className="relative w-full aspect-[4/3] overflow-hidden border-t border-slate-100 bg-[radial-gradient(125%_100%_at_50%_0%,#ffffff_0%,#f1f5f9_100%)]">
                   {catImage ? (
                     <img
                       src={catImage}

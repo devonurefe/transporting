@@ -118,7 +118,11 @@ export default function Footer({ siteName, setActiveTab, setShowContactModal }: 
   }, []);
 
   return (
-    <footer className="bg-slate-950 border-t border-slate-800 pb-20 md:pb-0">
+    <footer className="bg-slate-950 pb-20 md:pb-0">
+
+      {/* Transition bridge — softens the hard light→dark cut from the page above
+          into the dark footer instead of an abrupt edge. */}
+      <div className="h-12 bg-gradient-to-b from-slate-100 to-slate-950" aria-hidden="true" />
 
       {/* ── WHY HUURGO — factual trust band (replaces fabricated testimonials) ── */}
       <div className="bg-slate-950 border-b border-slate-800">

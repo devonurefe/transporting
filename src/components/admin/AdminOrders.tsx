@@ -423,21 +423,31 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                     <Printer className="h-3.5 w-3.5 text-indigo-600" />
                   </button>
                   {o.status === "In behandeling" && (
-                    <button onClick={() => handleUpdateStatus(o.id, "Goedgekeurd", `Bestelling goedgekeurd: ${o.id} voor ${o.customerName}.`, o)}
-                      className="flex-1 text-[11px] font-black py-2 rounded-xl bg-teal-500 hover:bg-teal-600 text-slate-950 transition-colors cursor-pointer border-none">
-                      {t("Goedkeuren", "Approve", "Onayla")}
+                    <button
+                      onClick={() => handleUpdateStatus(o.id, "Goedgekeurd", `Bestelling goedgekeurd: ${o.id} voor ${o.customerName}.`, o)}
+                      disabled={isUpdatingStatus}
+                      title={o.paymentStatus !== "paid" ? t("Markeer eerst betaling als ontvangen", "Mark payment received first", "Önce ödemeyi alındı olarak işaretle") : undefined}
+                      className={`flex-1 text-[11px] font-black py-2 rounded-xl transition-colors border-none ${isUpdatingStatus ? "bg-slate-200 text-slate-400 cursor-not-allowed" : o.paymentStatus !== "paid" ? "bg-teal-200 text-teal-700 cursor-not-allowed opacity-60" : "bg-teal-500 hover:bg-teal-600 text-slate-950 cursor-pointer"}`}
+                    >
+                      {isUpdatingStatus ? "…" : t("Goedkeuren", "Approve", "Onayla")}
                     </button>
                   )}
                   {o.status === "Goedgekeurd" && (
-                    <button onClick={() => handleUpdateStatus(o.id, "Onderweg", `Machine onderweg: ${o.id}.`, o)}
-                      className="flex-1 text-[11px] font-black py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white transition-colors cursor-pointer border-none">
-                      {t("Bezorgen", "Dispatch", "Yola Çıkar")}
+                    <button
+                      onClick={() => handleUpdateStatus(o.id, "Onderweg", `Machine onderweg: ${o.id}.`, o)}
+                      disabled={isUpdatingStatus}
+                      className={`flex-1 text-[11px] font-black py-2 rounded-xl transition-colors border-none ${isUpdatingStatus ? "bg-slate-200 text-slate-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-500 text-white cursor-pointer"}`}
+                    >
+                      {isUpdatingStatus ? "…" : t("Bezorgen", "Dispatch", "Yola Çıkar")}
                     </button>
                   )}
                   {o.status === "Onderweg" && (
-                    <button onClick={() => handleUpdateStatus(o.id, "Voltooid", `Contract afgerond: ${o.id}.`, o)}
-                      className="flex-1 text-[11px] font-black py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white transition-colors cursor-pointer border-none">
-                      {t("Huur afronden", "Complete", "Tamamla")}
+                    <button
+                      onClick={() => handleUpdateStatus(o.id, "Voltooid", `Contract afgerond: ${o.id}.`, o)}
+                      disabled={isUpdatingStatus}
+                      className={`flex-1 text-[11px] font-black py-2 rounded-xl transition-colors border-none ${isUpdatingStatus ? "bg-slate-200 text-slate-400 cursor-not-allowed" : "bg-indigo-600 hover:bg-indigo-500 text-white cursor-pointer"}`}
+                    >
+                      {isUpdatingStatus ? "…" : t("Huur afronden", "Complete", "Tamamla")}
                     </button>
                   )}
                 </div>
@@ -586,9 +596,11 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                                   `Bestelling goedgekeurd: ${o.id} voor ${o.customerName}.`,
                                   o
                                 )}
-                                className="bg-teal-500 hover:bg-teal-600 text-slate-950 text-[10px] font-black px-3.5 py-1.5 rounded-xl cursor-pointer leading-none transition-all hover:scale-[1.02] active:scale-95 border-none shadow-md"
+                                disabled={isUpdatingStatus}
+                                title={o.paymentStatus !== "paid" ? t("Markeer eerst betaling als ontvangen", "Mark payment received first", "Önce ödemeyi alındı olarak işaretle") : undefined}
+                                className={`text-[10px] font-black px-3.5 py-1.5 rounded-xl leading-none transition-all border-none shadow-md ${isUpdatingStatus ? "bg-slate-200 text-slate-400 cursor-not-allowed" : o.paymentStatus !== "paid" ? "bg-teal-200 text-teal-700 cursor-not-allowed opacity-60" : "bg-teal-500 hover:bg-teal-600 text-slate-950 cursor-pointer hover:scale-[1.02] active:scale-95"}`}
                               >
-                                {t("Goedkeuren", "Approve", "Onayla")}
+                                {isUpdatingStatus ? "…" : t("Goedkeuren", "Approve", "Onayla")}
                               </button>
                             )}
                             {o.status === "Goedgekeurd" && (
@@ -599,9 +611,10 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                                   `Chauffeur ingepland & machine onderweg: ${o.id}.`,
                                   o
                                 )}
-                                className="bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-black px-3.5 py-1.5 rounded-xl cursor-pointer leading-none transition-all hover:scale-[1.02] active:scale-95 border-none shadow-md"
+                                disabled={isUpdatingStatus}
+                                className={`text-[10px] font-black px-3.5 py-1.5 rounded-xl leading-none transition-all border-none shadow-md ${isUpdatingStatus ? "bg-slate-200 text-slate-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-500 text-white cursor-pointer hover:scale-[1.02] active:scale-95"}`}
                               >
-                                {t("Bezorgen", "Dispatch", "Yola Çıkar")}
+                                {isUpdatingStatus ? "…" : t("Bezorgen", "Dispatch", "Yola Çıkar")}
                               </button>
                             )}
                             {o.status === "Onderweg" && (
@@ -612,9 +625,10 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                                   `Verhuurcontract succesvol afgerond: ${o.id}.`,
                                   o
                                 )}
-                                className="bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-black px-3.5 py-1.5 rounded-xl cursor-pointer leading-none transition-all hover:scale-[1.02] active:scale-95 border-none shadow-md"
+                                disabled={isUpdatingStatus}
+                                className={`text-[10px] font-black px-3.5 py-1.5 rounded-xl leading-none transition-all border-none shadow-md ${isUpdatingStatus ? "bg-slate-200 text-slate-400 cursor-not-allowed" : "bg-indigo-600 hover:bg-indigo-500 text-white cursor-pointer hover:scale-[1.02] active:scale-95"}`}
                               >
-                                {t("Huur afronden", "Complete", "Tamamla")}
+                                {isUpdatingStatus ? "…" : t("Huur afronden", "Complete", "Tamamla")}
                               </button>
                             )}
                           </div>

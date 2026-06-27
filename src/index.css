@@ -32,9 +32,12 @@
     box-sizing: border-box;
   }
   /* Tactile press feedback on all interactive elements — Tailwind active:scale-*
-     utilities (utilities layer) override this when explicitly set on an element. */
-  button:not([disabled]):active,
-  [role="button"]:active {
+     utilities (utilities layer) override this when explicitly set on an element.
+     Add the `.no-press` class to opt an element out entirely (e.g. large
+     full-width disclosure rows, where scaling big text re-rasterises it and
+     causes a visible shimmer on the first word). */
+  button:not([disabled]):not(.no-press):active,
+  [role="button"]:not(.no-press):active {
     transform: scale(0.97);
   }
   button:not([disabled]),

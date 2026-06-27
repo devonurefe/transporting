@@ -340,7 +340,7 @@ export const emailService = {
           </div>
           <div class="content">
             <div style="text-align: center;">
-              <span class="status-badge" style="color: #4f46e5;">Status: ${order.status}</span>
+              <span class="status-badge" style="color: #4f46e5;">Status: ${esc(order.status)}</span>
             </div>
             <p>Beste <strong>${esc(order.customerName)}</strong>,</p>
             <p>${statusDescription}</p>

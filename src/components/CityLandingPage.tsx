@@ -123,7 +123,7 @@ export default function CityLandingPage({ onSelectMachineForBooking }: CityLandi
         <div className="flex flex-wrap gap-2 pt-1">
           <button
             onClick={goCatalog}
-            className="inline-flex items-center gap-1.5 py-2.5 px-5 rounded-xl bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white text-sm font-bold transition-all shadow-sm"
+            className="cta-shine inline-flex items-center gap-1.5 py-2.5 px-5 rounded-xl bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white text-sm font-bold transition-all shadow-sm"
           >
             Bekijk beschikbaarheid <ArrowRight className="h-4 w-4" />
           </button>
@@ -167,12 +167,12 @@ export default function CityLandingPage({ onSelectMachineForBooking }: CityLandi
           <h2 className="text-base font-extrabold text-slate-900 mb-3">Populaire hoogwerkers voor {city.name}</h2>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             {popular.map((m) => (
-              <div key={m.id} className="rounded-2xl border border-slate-200 bg-white overflow-hidden flex flex-col">
-                <Link to={`/hoogwerker/${m.id}`} className="block aspect-[4/3] bg-slate-50">
+              <div key={m.id} className="group rounded-2xl border border-slate-200 bg-white overflow-hidden flex flex-col transition-all duration-300 hover:border-orange-200 hover:shadow-lg hover:-translate-y-1">
+                <Link to={`/hoogwerker/${m.id}`} className="block aspect-[4/3] bg-slate-50 overflow-hidden">
                   <img
                     src={m.imageUrl || m.additionalImages?.[0] || "/placeholder-machine.webp"}
                     alt={m.imageAlt || `${m.name} huren in ${city.name}`}
-                    className="h-full w-full object-contain"
+                    className="h-full w-full object-contain transition-transform duration-500 ease-out group-hover:scale-105"
                     loading="lazy"
                     referrerPolicy="no-referrer"
                     onError={(e) => { e.currentTarget.src = "/placeholder-machine.webp"; }}

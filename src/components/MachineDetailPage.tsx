@@ -131,7 +131,7 @@ export default function MachineDetailPage({ onSelectMachineForBooking }: Machine
           <div className="flex gap-2">
             <button
               onClick={book}
-              className="flex-1 py-3 rounded-xl bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white text-sm font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm"
+              className="cta-shine flex-1 py-3 rounded-xl bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white text-sm font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm"
             >
               <ShoppingCart className="h-4 w-4" /> Beschikbaarheid &amp; reserveren
             </button>

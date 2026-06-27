@@ -257,7 +257,7 @@ export default function BookingStep2({
             <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform shrink-0 ${sectorOpen ? "rotate-180" : ""}`} />
           </button>
           {sectorOpen && (
-            <div className="absolute z-[55] top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden">
+            <div className="absolute z-[55] top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg overflow-y-auto max-h-52">
               {PROFESSIONS.map(p => (
                 <button
                   key={p.value}

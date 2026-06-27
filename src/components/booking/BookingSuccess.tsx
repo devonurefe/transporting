@@ -164,7 +164,7 @@ export default function BookingSuccess({
           <div key={i} className="flex items-baseline justify-between py-2.5 gap-4">
             <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider shrink-0">{s.label}</span>
             <span
-              className={`text-xs font-bold text-right leading-snug ${
+              className={`text-xs font-bold text-right leading-snug min-w-0 break-words ${
                 (s as any).price
                   ? "text-lg font-mono text-slate-900"
                   : (s as any).highlight

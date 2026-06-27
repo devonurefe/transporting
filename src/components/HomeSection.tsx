@@ -419,6 +419,29 @@ export default function HomeSection({
                 </div>
               ))}
             </motion.div>
+
+            {/* Compact mobile trust row — fills the previously empty space under
+                the headline on phones; desktop keeps the fuller version above.
+                Fixed 3-col grid so the labels can never overflow narrow screens. */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.14 }}
+              className="grid grid-cols-3 gap-2 sm:hidden mt-4"
+            >
+              {[
+                { Icon: Clock, label: t("Online boeken", "Book online", "Online kirala") },
+                { Icon: Truck, label: t("Snelle levering", "Fast delivery", "Hızlı teslimat") },
+                { Icon: UserRound, label: t("Voor iedereen", "For everyone", "Herkes için") },
+              ].map(({ Icon, label }) => (
+                <div key={label} className="flex items-center gap-1.5 min-w-0">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-orange-500/90 text-white">
+                    <Icon className="h-3 w-3" strokeWidth={2.4} />
+                  </span>
+                  <span className="text-[10px] font-semibold text-white/90 leading-tight truncate">{label}</span>
+                </div>
+              ))}
+            </motion.div>
           </div>
         </div>
       </div>
@@ -440,7 +463,7 @@ export default function HomeSection({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.07 }}
-            className="font-display text-3xl sm:text-4xl font-black tracking-tight text-slate-900 leading-tight"
+            className="font-display text-2xl sm:text-4xl font-black tracking-tight text-slate-900 leading-tight"
           >
             {language === "nl" && siteConfig.heroTitle ? siteConfig.heroTitle : t("heroTitle")}
           </motion.h1>
@@ -476,7 +499,15 @@ export default function HomeSection({
 
       {/* ── CATEGORY CARDS ── */}
       <div className="bg-gradient-to-b from-white to-slate-50 px-4 sm:px-6 pt-10 pb-14">
-        <div className="max-w-5xl mx-auto flex justify-end mb-4">
+        <div className="max-w-5xl mx-auto flex items-end justify-between gap-3 mb-5">
+          <div className="min-w-0">
+            <h2 className="font-display font-black text-lg sm:text-xl text-slate-900 leading-tight">
+              {t("Kies uw machine", "Choose your machine", "Makinenizi seçin")}
+            </h2>
+            <p className="hidden sm:block text-xs text-slate-500 mt-0.5">
+              {t("Alle categorieën in één overzicht", "All categories at a glance", "Tüm kategoriler bir bakışta")}
+            </p>
+          </div>
           <VatToggle />
         </div>
         <div className="max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">

@@ -628,7 +628,7 @@ export default function BookingStep1({
           disabled={!canProceed}
           className={`font-semibold text-xs w-full sm:w-auto px-6 py-3.5 rounded-xl transition-all flex items-center justify-center space-x-1.5 border-none shadow-md order-1 sm:order-2 ${
             canProceed
-              ? "bg-orange-500 hover:bg-orange-600 text-white cursor-pointer active:scale-95 shadow-orange-200"
+              ? "cta-shine bg-orange-500 hover:bg-orange-600 text-white cursor-pointer active:scale-95 shadow-orange-200"
               : "bg-slate-100 text-slate-400 cursor-not-allowed"
           }`}
         >

@@ -4,6 +4,8 @@
  */
 
 import React, { useState } from "react";
+import { motion } from "motion/react";
+import { Cookie } from "lucide-react";
 import { useLanguageStore } from "../store/languageStore";
 import { loadClarity } from "../utils/analytics";
 
@@ -43,15 +45,22 @@ export default function CookieBanner() {
     // z-[55] sits above the WhatsApp FAB (z-[51]) and the mobile bottom nav
     // (z-50) so the consent prompt is visible, but below modals (z-[60]) so an
     // open dialog is never overlapped by the bottom-pinned banner.
-    <div
+    <motion.div
       role="dialog"
       aria-live="polite"
       aria-label="Cookie consent"
+      initial={{ y: "110%" }}
+      animate={{ y: 0 }}
+      transition={{ type: "spring", stiffness: 260, damping: 28, delay: 0.4 }}
       className="fixed inset-x-0 bottom-0 z-[55] bg-white/95 backdrop-blur-sm border-t border-slate-200 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]"
       style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
     >
       <div className="max-w-5xl mx-auto px-4 py-3 sm:px-6 flex flex-col sm:flex-row sm:items-center gap-3">
-        <p className="text-xs text-slate-600 leading-snug flex-1">
+        <p className="text-xs text-slate-600 leading-snug flex-1 flex items-start gap-2.5">
+          <span className="hidden sm:flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-orange-50 text-orange-500 border border-orange-100">
+            <Cookie className="h-4 w-4" />
+          </span>
+          <span>
           {t("cookieText")}{" "}
           <a
             href="#privacy"
@@ -64,6 +73,7 @@ export default function CookieBanner() {
           >
             {t("cookieMoreInfo")}
           </a>
+          </span>
         </p>
         <div className="flex items-center gap-2 shrink-0">
           <button
@@ -80,6 +90,6 @@ export default function CookieBanner() {
           </button>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

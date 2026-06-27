@@ -11,9 +11,8 @@ export function errorHandler(
   next: NextFunction
 ) {
   const statusCode = err.statusCode || 500;
-  const message = err.message || "Interne serverfout";
 
-  // Structured Error Logging
+  // Structured Error Logging (full detail server-side only)
   console.error(JSON.stringify({
     timestamp: new Date().toISOString(),
     level: "ERROR",
@@ -23,6 +22,10 @@ export function errorHandler(
     url: req.url,
     ip: req.ip
   }));
+
+  // In production, hide internal details for unexpected server errors
+  const isProd = process.env.NODE_ENV === "production";
+  const message = (!isProd || err.statusCode) ? (err.message || "Interne serverfout") : "Interne serverfout";
 
   res.status(statusCode).json({
     error: message,

@@ -14,6 +14,15 @@ function sanitizeImageUrls(arr: unknown[]): string[] {
   });
 }
 
+function sanitizeSuitableFor(raw: unknown): string[] {
+  const defaults = ["Algemeen"];
+  if (!Array.isArray(raw)) return defaults;
+  const items = raw
+    .filter((v) => typeof v === "string" && v.trim().length > 0)
+    .map((v) => String(v).replace(/[<>"]/g, "").trim().slice(0, 60));
+  return items.length > 0 ? items : defaults;
+}
+
 function sanitizeImageUrl(url: unknown): string {
   if (typeof url !== "string") return "";
   if (!url) return "";
@@ -206,7 +215,7 @@ machinesRouter.post("/", requireAdmin as any, async (req: AuthenticatedRequest, 
         imageUrl: sanitizeImageUrl(imageUrl) || "/placeholder-machine.webp",
         imageAlt: name,
         description: (description || "Gebruiksvriendelijke hoogwerker geschikt voor lichte installatie of inspectie.").slice(0, 2000),
-        suitableFor: Array.isArray(suitableFor) ? suitableFor : ["Algemeen"],
+        suitableFor: sanitizeSuitableFor(suitableFor),
         weeklyDiscountPercent: weeklyDiscountPercent ? Number(weeklyDiscountPercent) : null,
         monthlyDiscountPercent: monthlyDiscountPercent ? Number(monthlyDiscountPercent) : null,
         campaignText: campaignText || null,
@@ -299,7 +308,7 @@ machinesRouter.put("/:id", requireAdmin as any, async (req: AuthenticatedRequest
         imageUrl: imageUrl !== undefined && imageUrl !== null ? sanitizeImageUrl(imageUrl) : "",
         imageAlt: name,
         description: (description || "Gebruiksvriendelijke hoogwerker geschikt voor lichte installatie of inspectie.").slice(0, 2000),
-        suitableFor: Array.isArray(suitableFor) ? suitableFor : suitableFor ? [suitableFor] : ["Algemeen"],
+        suitableFor: sanitizeSuitableFor(suitableFor),
         weeklyDiscountPercent: weeklyDiscountPercent !== undefined && weeklyDiscountPercent !== null ? Number(weeklyDiscountPercent) : null,
         monthlyDiscountPercent: monthlyDiscountPercent !== undefined && monthlyDiscountPercent !== null ? Number(monthlyDiscountPercent) : null,
         campaignText: campaignText || null,

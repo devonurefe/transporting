@@ -410,7 +410,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                               : "bg-slate-100 text-slate-500 hover:bg-slate-200"
                           } disabled:opacity-50`}
                         >
-                          {togglingId === m.id ? "..." : inactive ? t("Activeer", "Activate", "Etkinleştir") : t("Actief", "Active", "Aktif")}
+                          {togglingId === m.id ? "..." : inactive ? t("Activeer", "Activate", "Etkinleştir") : t("Deactiveer", "Deactivate", "Devre Dışı")}
                         </button>
 
                         <button

@@ -233,7 +233,7 @@ export default function AdminCalendar({ onAddSystemLog, adminLanguage }: AdminCa
                   <p className="text-sm font-medium">{t("Alle datums zijn momenteel open voor boekingen.", "All dates are currently open for bookings.", "Şu anda tüm tarihler rezervasyona açıktır.")}</p>
                 </div>
               ) : (
-                blockedDates.map((block) => {
+                [...blockedDates].sort((a, b) => b.date.localeCompare(a.date)).map((block) => {
                   const relatedMachine = machines.find(m => m.id === block.machineId);
                   return (
                     <div key={block.id} className="p-4 rounded-xl bg-amber-500/5 hover:bg-amber-50 border border-amber-200/80 transition-all flex justify-between items-start gap-3">

@@ -35,6 +35,7 @@ export default function AdminAccounting({ adminLanguage }: AdminAccountingProps)
   const [isDownloading, setIsDownloading] = useState(false);
   const [lastDownload, setLastDownload] = useState<string | null>(null);
   const [exportError, setExportError] = useState<string | null>(null);
+  const dateRangeInvalid = !!fromDate && !!toDate && fromDate > toDate;
 
   const t = (nl: string, en: string, tr: string) => {
     if (adminLanguage === "tr") return tr;
@@ -135,7 +136,7 @@ export default function AdminAccounting({ adminLanguage }: AdminAccountingProps)
                   type="date"
                   value={fromDate}
                   onChange={(e) => setFromDate(e.target.value)}
-                  className="w-full bg-white border border-slate-200 focus:border-amber-400 rounded-xl px-3 py-2.5 text-sm text-slate-800 outline-none cursor-pointer"
+                  className={`w-full bg-white border rounded-xl px-3 py-2.5 text-sm text-slate-800 outline-none cursor-pointer ${dateRangeInvalid ? "border-rose-400 focus:border-rose-500" : "border-slate-200 focus:border-amber-400"}`}
                 />
               </div>
               <div className="space-y-1.5">
@@ -144,10 +145,15 @@ export default function AdminAccounting({ adminLanguage }: AdminAccountingProps)
                   type="date"
                   value={toDate}
                   onChange={(e) => setToDate(e.target.value)}
-                  className="w-full bg-white border border-slate-200 focus:border-amber-400 rounded-xl px-3 py-2.5 text-sm text-slate-800 outline-none cursor-pointer"
+                  className={`w-full bg-white border rounded-xl px-3 py-2.5 text-sm text-slate-800 outline-none cursor-pointer ${dateRangeInvalid ? "border-rose-400 focus:border-rose-500" : "border-slate-200 focus:border-amber-400"}`}
                 />
               </div>
             </div>
+            {dateRangeInvalid && (
+              <p className="text-[10px] text-rose-600 font-bold">
+                {t("Begindatum moet vóór of gelijk aan einddatum liggen.", "Start date must be before or equal to end date.", "Başlangıç tarihi bitiş tarihinden önce olmalı.")}
+              </p>
+            )}
           </div>
 
           {/* Status filter */}
@@ -194,16 +200,23 @@ export default function AdminAccounting({ adminLanguage }: AdminAccountingProps)
                   from: new Date().getFullYear() + "-01-01",
                   to: todayISO
                 },
-              ].map((p) => (
-                <button
-                  key={p.label}
-                  type="button"
-                  onClick={() => { setFromDate(p.from); setToDate(p.to); }}
-                  className="px-2.5 py-1 rounded-full text-[10px] font-bold border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 transition-colors cursor-pointer"
-                >
-                  {p.label}
-                </button>
-              ))}
+              ].map((p) => {
+                const isActive = fromDate === p.from && toDate === p.to;
+                return (
+                  <button
+                    key={p.label}
+                    type="button"
+                    onClick={() => { setFromDate(p.from); setToDate(p.to); }}
+                    className={`px-2.5 py-1 rounded-full text-[10px] font-bold border transition-colors cursor-pointer ${
+                      isActive
+                        ? "bg-amber-500 text-white border-amber-600"
+                        : "border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600"
+                    }`}
+                  >
+                    {p.label}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -249,7 +262,7 @@ export default function AdminAccounting({ adminLanguage }: AdminAccountingProps)
             <button
               type="button"
               onClick={handleDownload}
-              disabled={isDownloading || filteredOrders.length === 0}
+              disabled={isDownloading || filteredOrders.length === 0 || dateRangeInvalid}
               className="w-full bg-amber-500 hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed text-slate-950 font-extrabold text-sm py-3 rounded-2xl transition-all cursor-pointer flex items-center justify-center gap-2.5 border-none shadow-sm active:scale-95"
             >
               <Download className={`h-4.5 w-4.5 ${isDownloading ? "animate-bounce" : ""}`} />

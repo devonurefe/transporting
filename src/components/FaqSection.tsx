@@ -5,6 +5,7 @@
 
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { motion, AnimatePresence } from "motion/react";
 import { ChevronDown, HelpCircle, MessageCircle, ArrowRight } from "lucide-react";
 import { FAQ_ITEMS } from "../data/faq";
 import { HuurGoText } from "./Header";
@@ -48,11 +49,20 @@ export default function FaqSection() {
                 <span className="text-sm font-bold text-slate-900 leading-snug">{item.q}</span>
                 <ChevronDown className={`h-4 w-4 text-slate-400 shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`} />
               </button>
-              {isOpen && (
-                <div className="px-4 sm:px-5 pb-4 -mt-1">
-                  <p className="text-sm text-slate-600 leading-relaxed">{item.a}</p>
-                </div>
-              )}
+              <AnimatePresence initial={false}>
+                {isOpen && (
+                  <motion.div
+                    key="answer"
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.22, ease: "easeInOut" }}
+                    className="overflow-hidden"
+                  >
+                    <p className="px-4 sm:px-5 pb-4 -mt-1 text-sm text-slate-600 leading-relaxed">{item.a}</p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           );
         })}
@@ -67,7 +77,7 @@ export default function FaqSection() {
             href={buildWhatsAppGeneralUrl()}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 py-2.5 px-5 rounded-xl bg-[#25D366] hover:bg-[#1da851] text-white text-sm font-bold transition-colors no-underline"
+            className="cta-shine inline-flex items-center gap-1.5 py-2.5 px-5 rounded-xl bg-[#25D366] hover:bg-[#1da851] text-white text-sm font-bold transition-colors no-underline"
           >
             <MessageCircle className="h-4 w-4" /> Stel uw vraag via WhatsApp
           </a>

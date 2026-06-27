@@ -31,14 +31,16 @@
   *, *::before, *::after {
     box-sizing: border-box;
   }
-  /* Tactile press feedback on all interactive elements — Tailwind active:scale-*
-     utilities (utilities layer) override this when explicitly set on an element.
-     Add the `.no-press` class to opt an element out entirely (e.g. large
-     full-width disclosure rows, where scaling big text re-rasterises it and
-     causes a visible shimmer on the first word). */
+  /* Tactile press feedback on all interactive elements. Uses the `scale`
+     property (NOT `transform: scale()`) so Tailwind v4 `active:scale-*`
+     utilities — which also set the `scale` property — properly OVERRIDE this
+     default instead of compounding with it (a transform-based rule would stack
+     on top, e.g. 0.97 × 0.98 ≈ 0.95). Add `.no-press` to opt an element out
+     entirely (e.g. large full-width disclosure rows, where scaling big text
+     re-rasterises it and causes a visible shimmer on the first word). */
   button:not([disabled]):not(.no-press):active,
   [role="button"]:not(.no-press):active {
-    transform: scale(0.97);
+    scale: 0.97;
   }
   button:not([disabled]),
   [role="button"] {

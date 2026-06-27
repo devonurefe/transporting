@@ -460,7 +460,7 @@ export default function MachineDetailModal({
           </div>
           <button
             onClick={() => onBook(machine)}
-            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white text-sm font-bold transition-all shadow-md cursor-pointer active:scale-[0.98]"
+            className="cta-shine flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white text-sm font-bold transition-all shadow-md cursor-pointer active:scale-[0.98]"
           >
             <ShoppingCart className="h-4 w-4" />
             Huur Nu

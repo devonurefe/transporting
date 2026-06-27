@@ -66,6 +66,27 @@
   }
 }
 
+/* ── Keyboard accessibility — a clear, branded focus ring for keyboard users
+   only (mouse/touch clicks never show it via :focus-visible). Applies to all
+   interactive elements so tab-navigation is always visible. */
+@layer base {
+  a:focus-visible,
+  button:focus-visible,
+  [role="button"]:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  [tabindex]:focus-visible {
+    outline: 2px solid var(--brand-primary);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  /* Remove the legacy focus outline when the element isn't keyboard-focused. */
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
+}
+
 /* Custom Scrollbar for premium light theme */
 ::-webkit-scrollbar {
   width: 6px;

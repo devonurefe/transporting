@@ -434,7 +434,7 @@ export default function BookingStep2({
         <button
           onClick={handleNextStep}
           disabled={isSubmitting || !!(deliveryDistanceKm && deliveryDistanceKm > 20)}
-          className="font-extrabold text-xs px-4 sm:px-7 py-3.5 rounded-xl transition-all flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer border-none shadow-md flex-1 sm:flex-initial bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-emerald-100/50"
+          className="cta-shine font-extrabold text-xs px-4 sm:px-7 py-3.5 rounded-xl transition-all flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer border-none shadow-md flex-1 sm:flex-initial bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-emerald-100/50"
         >
           {isSubmitting ? (
             <>

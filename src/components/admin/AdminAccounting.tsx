@@ -34,6 +34,7 @@ export default function AdminAccounting({ adminLanguage }: AdminAccountingProps)
   ]);
   const [isDownloading, setIsDownloading] = useState(false);
   const [lastDownload, setLastDownload] = useState<string | null>(null);
+  const [exportError, setExportError] = useState<string | null>(null);
 
   const t = (nl: string, en: string, tr: string) => {
     if (adminLanguage === "tr") return tr;
@@ -69,6 +70,7 @@ export default function AdminAccounting({ adminLanguage }: AdminAccountingProps)
 
   const handleDownload = async () => {
     setIsDownloading(true);
+    setExportError(null);
     try {
       const params = new URLSearchParams();
       if (fromDate) params.set("from", fromDate);
@@ -79,7 +81,11 @@ export default function AdminAccounting({ adminLanguage }: AdminAccountingProps)
         headers: getAuthHeaders(),
       });
 
-      if (!res.ok) throw new Error("Export mislukt");
+      if (!res.ok) {
+        let msg = t("Export mislukt", "Export failed", "Dışa aktarım başarısız");
+        try { const body = await res.json(); if (body?.error) msg = body.error; } catch { /* ignore */ }
+        throw new Error(msg);
+      }
 
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
@@ -91,8 +97,9 @@ export default function AdminAccounting({ adminLanguage }: AdminAccountingProps)
       setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 200);
 
       setLastDownload(new Date().toLocaleTimeString("nl-NL"));
-    } catch (e) {
+    } catch (e: any) {
       console.error("Export error:", e);
+      setExportError(e?.message || t("Er is een fout opgetreden", "An error occurred", "Bir hata oluştu"));
     }
     setIsDownloading(false);
   };
@@ -255,10 +262,15 @@ export default function AdminAccounting({ adminLanguage }: AdminAccountingProps)
               </span>
             </button>
 
-            {lastDownload && (
+            {lastDownload && !exportError && (
               <div className="flex items-center gap-1.5 text-[10.5px] text-emerald-600 font-medium">
                 <CheckCircle2 className="h-3.5 w-3.5" />
                 <span>{t(`Laatste download: ${lastDownload}`, `Last download: ${lastDownload}`, `Son indirme: ${lastDownload}`)}</span>
+              </div>
+            )}
+            {exportError && (
+              <div className="flex items-center gap-1.5 text-[10.5px] text-red-600 font-medium bg-red-50 border border-red-200 rounded-xl px-3 py-2">
+                <span>⚠ {exportError}</span>
               </div>
             )}
           </div>

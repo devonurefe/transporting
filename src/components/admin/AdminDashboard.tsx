@@ -123,10 +123,10 @@ export default function AdminDashboard({ setSubTab, setOrdersFilter, adminLangua
       .slice(0, 10);
   }, [orders]);
 
-  // Auto-refresh orders every 60 s + notify on new order
+  // Auto-refresh orders every 60 s — skips when tab is hidden to avoid wasted fetches
   useEffect(() => {
     const interval = setInterval(async () => {
-      await fetchOrders();
+      if (document.visibilityState === "visible") await fetchOrders();
     }, 60_000);
     return () => clearInterval(interval);
   }, [fetchOrders]);

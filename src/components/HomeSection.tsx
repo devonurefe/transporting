@@ -74,6 +74,15 @@ interface HomeSectionProps {
 
 const SKIP_IDS = new Set(["klussensets", "schaarlift-smal", "schaarlift-6m"]);
 
+// Machines excluded from the deals carousel (image fit issues)
+const CAROUSEL_SKIP_NAMES = new Set([
+  "Haulotte Star 10 Mastlift",
+  "Skyjack SJ16 Verticale Mastlift",
+  "Altrex RS TOWER 44-Power Kamersteiger",
+  "Pecolift Low-Level",
+  "Dingli JCPT 0607 DC Compact Schaarlift",
+]);
+
 // ── Single-row draggable + auto-scrolling deals carousel ──
 function DealsCarousel({ machines, onSearch }: { machines: Machine[]; onSearch: (q: string, cat: string) => void }) {
   const t = useLanguageStore((state) => state.t);
@@ -88,6 +97,7 @@ function DealsCarousel({ machines, onSearch }: { machines: Machine[]; onSearch: 
   const seen = new Set<string>();
   const deduped = machines.filter(m => {
     const bn = m.name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "").trim();
+    if (CAROUSEL_SKIP_NAMES.has(bn)) return false;
     if (seen.has(bn)) return false;
     seen.add(bn);
     return true;
@@ -194,7 +204,7 @@ function DealsCarousel({ machines, onSearch }: { machines: Machine[]; onSearch: 
                       </div>
                     )}
                     {hasDiscount && (
-                      <div className="absolute top-0 left-0 bg-amber-500 text-white text-[10px] font-black px-2.5 py-1 rounded-br-xl shadow-sm">
+                      <div className="absolute top-0 right-0 bg-amber-500 text-white text-[10px] font-black px-2.5 py-1 rounded-bl-xl shadow-sm">
                         {campaignPct ? `−${campaignPct}%` : "Dagactie"}
                       </div>
                     )}

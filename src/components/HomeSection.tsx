@@ -351,7 +351,7 @@ export default function HomeSection({
             transition={{ duration: 0.4 }}
             src={siteConfig.heroImageUrl || '/hero-huurgo-v2.jpg'}
             alt=""
-            className="w-full h-full block object-cover [object-position:60%_center] sm:[object-position:65%_center]"
+            className="w-full h-full block object-cover animate-kenburns [object-position:60%_center] sm:[object-position:65%_center]"
           />
         ) : (
           // Skeleton placeholder while the config is still loading
@@ -360,6 +360,14 @@ export default function HomeSection({
 
         {/* Readability scrim — darker toward the bottom-left where the text sits */}
         <div className="absolute inset-0 bg-gradient-to-tr from-black/85 via-black/45 to-black/10 pointer-events-none" />
+
+        {/* Ambient brand glows — drift slowly to give the dark hero subtle,
+            premium life without hurting text contrast (low opacity + blur). */}
+        <div className="float-slow pointer-events-none absolute -bottom-16 -left-16 h-72 w-72 rounded-full bg-orange-500/25 blur-[90px] mix-blend-screen" aria-hidden="true" />
+        <div className="float-slow pointer-events-none absolute -top-20 right-0 h-64 w-64 rounded-full bg-emerald-400/15 blur-[90px] mix-blend-screen" style={{ animationDelay: "-3.5s" }} aria-hidden="true" />
+
+        {/* Soft bottom feather — eases the hard cut into the white section below */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/30 to-transparent" />
 
         {/* Overlay content — anchored bottom-left */}
         <div className="absolute inset-0 flex items-end pointer-events-none">
@@ -411,13 +419,38 @@ export default function HomeSection({
                 </div>
               ))}
             </motion.div>
+
+            {/* Compact mobile trust row — fills the previously empty space under
+                the headline on phones; desktop keeps the fuller version above.
+                Fixed 3-col grid so the labels can never overflow narrow screens. */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.14 }}
+              className="grid grid-cols-3 gap-2 sm:hidden mt-4"
+            >
+              {[
+                { Icon: Clock, label: t("Online boeken", "Book online", "Online kirala") },
+                { Icon: Truck, label: t("Snelle levering", "Fast delivery", "Hızlı teslimat") },
+                { Icon: UserRound, label: t("Voor iedereen", "For everyone", "Herkes için") },
+              ].map(({ Icon, label }) => (
+                <div key={label} className="flex items-center gap-1.5 min-w-0">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-orange-500/90 text-white">
+                    <Icon className="h-3 w-3" strokeWidth={2.4} />
+                  </span>
+                  <span className="text-[10px] font-semibold text-white/90 leading-tight truncate">{label}</span>
+                </div>
+              ))}
+            </motion.div>
           </div>
         </div>
       </div>
 
       {/* ── HERO TEXT + CTA — centered single column ── */}
-      <div className="bg-white px-5 sm:px-6 pt-8 pb-6 border-b border-slate-100">
-        <div className="mx-auto max-w-xl text-center space-y-3">
+      <div className="relative bg-white px-5 sm:px-6 pt-10 pb-8 border-b border-slate-100 overflow-hidden">
+        {/* Soft ambient glow — drifts gently behind the headline for depth */}
+        <div className="float-slow pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 h-72 w-72 rounded-full bg-orange-500/10 blur-[90px] -z-0" aria-hidden="true" />
+        <div className="relative mx-auto max-w-xl text-center space-y-3.5">
           <motion.p
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -430,7 +463,7 @@ export default function HomeSection({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.07 }}
-            className="font-display text-3xl sm:text-4xl font-black tracking-tight text-slate-900 leading-tight"
+            className="font-display text-2xl sm:text-4xl font-black tracking-tight text-slate-900 leading-tight"
           >
             {language === "nl" && siteConfig.heroTitle ? siteConfig.heroTitle : t("heroTitle")}
           </motion.h1>
@@ -452,7 +485,7 @@ export default function HomeSection({
               href={buildWhatsAppGeneralUrl()}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-center space-x-3 w-full max-w-sm mx-auto py-3.5 px-6 rounded-2xl bg-[#25D366] hover:bg-[#1da851] text-white font-bold text-sm transition-all shadow-md hover:shadow-lg active:scale-[0.98] no-underline"
+              className="cta-shine inline-flex items-center justify-center space-x-3 w-full max-w-sm mx-auto py-3.5 px-6 rounded-2xl bg-[#25D366] hover:bg-[#1da851] text-white font-bold text-sm transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] no-underline"
             >
               <MessageCircle className="h-5 w-5 shrink-0" />
               <span>Direct advies? WhatsApp ons!</span>
@@ -465,11 +498,19 @@ export default function HomeSection({
       {activeMachines.length > 0 && <DealsCarousel machines={activeMachines} onSearch={onSearch} />}
 
       {/* ── CATEGORY CARDS ── */}
-      <div className="bg-white px-4 sm:px-6 pt-6 pb-10">
-        <div className="max-w-5xl mx-auto flex justify-end mb-3">
+      <div className="bg-gradient-to-b from-white to-slate-50 px-4 sm:px-6 pt-10 pb-14">
+        <div className="max-w-5xl mx-auto flex items-end justify-between gap-3 mb-5">
+          <div className="min-w-0">
+            <h2 className="font-display font-black text-lg sm:text-xl text-slate-900 leading-tight">
+              {t("Kies uw machine", "Choose your machine", "Makinenizi seçin")}
+            </h2>
+            <p className="hidden sm:block text-xs text-slate-500 mt-0.5">
+              {t("Alle categorieën in één overzicht", "All categories at a glance", "Tüm kategoriler bir bakışta")}
+            </p>
+          </div>
           <VatToggle />
         </div>
-        <div className="max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+        <div className="max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
           {displayCategories.map((cat, i) => {
             const Icon = CATEGORY_ICONS[cat.id] ?? Truck;
             const catImage = imageByCategory[cat.id];
@@ -478,11 +519,12 @@ export default function HomeSection({
             return (
               <motion.button
                 key={cat.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: i * 0.05 }}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-40px" }}
+                transition={{ duration: 0.4, delay: (i % 2) * 0.06, ease: "easeOut" }}
                 onClick={() => onSearch("", cat.id)}
-                className="group bg-white border border-slate-200 rounded-2xl overflow-hidden text-left cursor-pointer hover:border-orange-200 hover:shadow-lg hover:-translate-y-1.5 active:scale-[0.98] transition-all duration-200 flex flex-col"
+                className="group bg-white border border-slate-200 rounded-2xl overflow-hidden text-left cursor-pointer hover:border-orange-300 hover:shadow-xl hover:shadow-orange-500/5 hover:-translate-y-1.5 active:scale-[0.98] transition-all duration-300 flex flex-col"
               >
                 {/* Top — text info: name + height • price on one line */}
                 <div className="p-4 flex flex-col gap-1.5 min-w-0">
@@ -500,8 +542,9 @@ export default function HomeSection({
                   </div>
                 </div>
 
-                {/* Bottom — wide machine photo on white background */}
-                <div className="relative w-full aspect-[4/3] overflow-hidden bg-white border-t border-slate-100">
+                {/* Bottom — wide machine photo grounded on a soft spotlight so
+                    it never feels like it floats in empty white */}
+                <div className="relative w-full aspect-[4/3] overflow-hidden border-t border-slate-100 bg-[radial-gradient(125%_100%_at_50%_0%,#ffffff_0%,#f1f5f9_100%)]">
                   {catImage ? (
                     <img
                       src={catImage}
@@ -528,15 +571,21 @@ export default function HomeSection({
       </div>
 
       {/* ── FAQ SECTION ── */}
-      <div className="bg-slate-50 border-t border-slate-100 px-4 sm:px-6 py-8">
+      <div className="bg-slate-50 border-t border-slate-100 px-4 sm:px-6 py-12">
         <div className="max-w-2xl mx-auto">
-          <div className="text-center mb-6">
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-40px" }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+            className="text-center mb-7"
+          >
             <h2 className="font-display font-black text-xl text-slate-900">{t("Veelgestelde vragen", "Frequently asked questions", "Sık sorulan sorular")}</h2>
             <p className="text-xs text-slate-500 mt-1">{t("Alles wat u wilt weten over hoogwerker huren", "Everything you need to know about renting aerial lifts", "Yüksek erişim kiralama hakkında bilmeniz gerekenler")}</p>
-          </div>
-          <div className="space-y-2">
+          </motion.div>
+          <div className="space-y-2.5">
             {FAQ_ITEMS.map((item, i) => (
-              <div key={i} className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+              <div key={i} className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200">
                 <button
                   type="button"
                   onClick={() => setOpenFaq(openFaq === i ? null : i)}

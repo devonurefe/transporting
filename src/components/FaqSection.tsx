@@ -44,7 +44,7 @@ export default function FaqSection() {
               <button
                 onClick={() => setOpen(isOpen ? null : i)}
                 aria-expanded={isOpen}
-                className="w-full flex items-center justify-between gap-3 px-4 sm:px-5 py-4 text-left cursor-pointer hover:bg-slate-50 transition-colors"
+                className="no-press w-full flex items-center justify-between gap-3 px-4 sm:px-5 py-4 text-left cursor-pointer hover:bg-slate-50 transition-colors"
               >
                 <span className="text-sm font-bold text-slate-900 leading-snug">{item.q}</span>
                 <ChevronDown className={`h-4 w-4 text-slate-400 shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`} />

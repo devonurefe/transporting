@@ -547,9 +547,9 @@ export default function HomeSection({
                   </div>
                 </div>
 
-                {/* Bottom — wide machine photo grounded on a soft spotlight so
-                    it never feels like it floats in empty white */}
-                <div className="relative w-full aspect-[4/3] overflow-hidden border-t border-slate-100 bg-[radial-gradient(125%_100%_at_50%_0%,#ffffff_0%,#f1f5f9_100%)]">
+                {/* Bottom — wide machine photo on a pure white background so the
+                    white-background product photos sit flush with no grey halo */}
+                <div className="relative w-full aspect-[4/3] overflow-hidden border-t border-slate-100 bg-white">
                   {catImage ? (
                     <img
                       src={catImage}
@@ -594,7 +594,7 @@ export default function HomeSection({
                 <button
                   type="button"
                   onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                  className="w-full flex items-center justify-between px-4 py-4 text-left cursor-pointer hover:bg-slate-50 transition-colors"
+                  className="no-press w-full flex items-center justify-between px-4 py-4 text-left cursor-pointer hover:bg-slate-50 transition-colors"
                 >
                   <span className="font-bold text-sm text-slate-900 pr-4">{item.q}</span>
                   <motion.span

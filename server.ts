@@ -86,8 +86,9 @@ const authLimiter = rateLimit({
 });
 app.use("/api/auth", authLimiter);
 
-app.use(express.json({ limit: "256kb" })); // Default for all API routes
-// Image upload endpoints override with a higher limit in their handler via a per-route middleware
+// Image upload receives base64 data URLs (up to ~4 MB encoded) — must come before the global parser
+app.use("/api/upload", express.json({ limit: "10mb" }));
+app.use(express.json({ limit: "256kb" })); // Default for all other API routes
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 app.use(authenticateToken);
 

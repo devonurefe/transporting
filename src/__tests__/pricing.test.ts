@@ -144,8 +144,9 @@ describe("calculateItemSubtotal — flat rates", () => {
   });
 });
 
-describe("calculateItemSubtotal — weekend 'niet werken' discount", () => {
-  // FRI = Friday; a 5-day rental Fri→Tue spans Sat+Sun (2 weekend days, 3 working days).
+describe("calculateItemSubtotal — weekend 'niet werken' (tier on working days)", () => {
+  // FRI = Friday. When the customer won't work the weekend, Sat+Sun drop out and the
+  // normal tier table is applied to the remaining working days (owner's price sketch).
   it("5 days Fri→Tue, 'ja' (works weekend) → full werkweektarief", () => {
     expect(calculateItemSubtotal(nifty120, 5, "Particulier", noRules, FRI, "ja")).toBe(335);
   });
@@ -154,16 +155,28 @@ describe("calculateItemSubtotal — weekend 'niet werken' discount", () => {
     expect(calculateItemSubtotal(nifty120, 5, "Particulier", noRules, FRI)).toBe(335);
   });
 
-  it("5 days Fri→Tue, 'nee' → only working days at weeklyPrice/5 (3 × 67)", () => {
-    expect(calculateItemSubtotal(nifty120, 5, "Particulier", noRules, FRI, "nee")).toBe(Math.round(3 * 335 / 5));
+  it("4 days Fri→Mon, 'nee' → 2 working days → twoDayPrice", () => {
+    expect(calculateItemSubtotal(nifty120, 4, "Particulier", noRules, FRI, "nee")).toBe(190);
   });
 
-  it("3 days Fri→Sun, 'nee' → 1 working day at weeklyPrice/5", () => {
-    expect(calculateItemSubtotal(nifty120, 3, "Particulier", noRules, FRI, "nee")).toBe(Math.round(1 * 335 / 5));
+  it("5 days Fri→Tue, 'nee' → 3 working days → weeklyPrice", () => {
+    expect(calculateItemSubtotal(nifty120, 5, "Particulier", noRules, FRI, "nee")).toBe(335);
   });
 
-  it("7 days Fri→Thu (pro-rata), 'nee' → 5 working days at weeklyPrice/5", () => {
-    expect(calculateItemSubtotal(nifty120, 7, "Particulier", noRules, FRI, "nee")).toBe(Math.round(5 * 335 / 5));
+  it("6 days Fri→Wed, 'nee' → 4 working days → weeklyPrice", () => {
+    expect(calculateItemSubtotal(nifty120, 6, "Particulier", noRules, FRI, "nee")).toBe(335);
+  });
+
+  it("7 days Fri→Thu, 'nee' → 5 working days → weeklyPrice", () => {
+    expect(calculateItemSubtotal(nifty120, 7, "Particulier", noRules, FRI, "nee")).toBe(335);
+  });
+
+  it("3 days Fri→Sun, 'nee' → 1 working day → oneDayPrice", () => {
+    expect(calculateItemSubtotal(nifty120, 3, "Particulier", noRules, FRI, "nee")).toBe(50);
+  });
+
+  it("8 days Fri→Fri, 'nee' → 6 working days → pro-rata ladder (round(6 × weeklyPrice/5))", () => {
+    expect(calculateItemSubtotal(nifty120, 8, "Particulier", noRules, FRI, "nee")).toBe(Math.round(6 * 335 / 5));
   });
 
   it("3 weekday days Mon→Wed, 'nee' → no weekend days, full werkweektarief", () => {
@@ -178,15 +191,17 @@ describe("calculateItemSubtotal — weekend 'niet werken' discount", () => {
     expect(calculateItemSubtotal(nifty120, 2, "Particulier", noRules, SAT, "nee")).toBe(150);
   });
 
-  // Floor (Fix A): a 1-working-day result must not drop below the 1-day tier, so a
-  // longer booking never undercuts a shorter one. optimum8 has no oneDayPrice → floor
-  // is pricePerDay (65), which beats the werkweek day rate round(159/5)=32.
+  // optimum8 has no oneDayPrice/twoDayPrice → the 1- and 2-working-day tiers fall back
+  // to pricePerDay × workingDays.
   const optimum8 = { id: "optimum-8", category: "schaarlift", pricePerDay: 65, weekendPrice: 99, weeklyPrice: 159, monthlyPrice: 420 } as Machine;
-  it("3 days Fri→Sun, 'nee', 1 working day floored at the 1-day tier (pricePerDay)", () => {
+  it("3 days Fri→Sun, 'nee', 1 working day → pricePerDay (no oneDayPrice)", () => {
     expect(calculateItemSubtotal(optimum8, 3, "Particulier", noRules, FRI, "nee")).toBe(65);
   });
-  it("5 days Fri→Tue, 'nee', 3 working days keep the werkweek day rate (no floor)", () => {
-    expect(calculateItemSubtotal(optimum8, 5, "Particulier", noRules, FRI, "nee")).toBe(Math.round(3 * 159 / 5));
+  it("4 days Fri→Mon, 'nee', 2 working days → pricePerDay × 2 (no twoDayPrice)", () => {
+    expect(calculateItemSubtotal(optimum8, 4, "Particulier", noRules, FRI, "nee")).toBe(130);
+  });
+  it("5 days Fri→Tue, 'nee', 3 working days → weeklyPrice", () => {
+    expect(calculateItemSubtotal(optimum8, 5, "Particulier", noRules, FRI, "nee")).toBe(159);
   });
 });
 

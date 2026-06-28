@@ -350,9 +350,37 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
     const dow = startDate.getUTCDay();
     const strictWeekend = rentalDays === 2 && dow === 6;
 
-    // Weekend "niet werken" discount — mirrors src/utils/pricing.ts calculateItemSubtotal.
+    // Flat-rate price for an effective day count `n`, or null when no flat tier
+    // applies (caller falls back to the percentage path). Mirrors the tierPrice
+    // helper in src/utils/pricing.ts. `allowStrictWeekend` is only true on the
+    // standard calendar-day path; the weekend "niet werken" path forces twoDayPrice.
+    const tierPrice = (n: number, allowStrictWeekend: boolean): number | null => {
+      if (n === 1 && m.oneDayPrice) return m.oneDayPrice;
+      if (n === 2) {
+        if (allowStrictWeekend && strictWeekend && m.weekendPrice) return m.weekendPrice;
+        if (m.twoDayPrice) return m.twoDayPrice;
+      }
+      if ((n === 3 || n === 4 || n === 5) && m.weeklyPrice) return m.weeklyPrice;
+      if (n >= 6 && n < 28 && m.weeklyPrice) {
+        let base = Math.round(n * (m.weeklyPrice / 5));
+        if (m.monthlyPrice) base = Math.min(base, m.monthlyPrice);
+        return base;
+      }
+      if (n >= 28 && m.monthlyPrice) {
+        const fullMonths = Math.floor(n / 28);
+        const remainder = n % 28;
+        let remainderCost: number;
+        if (remainder >= 3 && m.weeklyPrice) remainderCost = Math.round(remainder * (m.weeklyPrice / 5));
+        else remainderCost = remainder * machine.pricePerDay;
+        remainderCost = Math.min(remainderCost, m.monthlyPrice);
+        return fullMonths * m.monthlyPrice + remainderCost;
+      }
+      return null;
+    };
+
+    // Weekend "niet werken" — mirrors src/utils/pricing.ts calculateItemSubtotal.
     // On the weekly basis (3–27 days) a customer who declares they will NOT work the
-    // weekend only pays for the working (non-weekend) days at the weekly day rate.
+    // weekend drops the Sat/Sun days and pays the normal tier for the working days.
     const weekendWork = String(orderData.weekendWork ?? "");
     let weekendDaysCount = 0;
     {
@@ -367,45 +395,19 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
     const weekendNoWork = weekendWork === "nee" && m.weeklyPrice && !m.weeklyOnly
       && rentalDays >= 3 && rentalDays < 28 && !strictWeekend && weekendDaysCount > 0;
 
-    if (weekendNoWork) {
-      // Working (non-weekend) days at the weekly day rate. 1-2 working days floored at
-      // the normal short-stay tier; total capped at the monthly price. Mirrors pricing.ts.
-      const workingDays = rentalDays - weekendDaysCount;
-      let base = Math.round(workingDays * (m.weeklyPrice / 5));
-      if (workingDays === 1) base = Math.max(base, m.oneDayPrice ?? machine.pricePerDay);
-      else if (workingDays === 2) base = Math.max(base, m.twoDayPrice ?? machine.pricePerDay * 2);
-      if (m.monthlyPrice) base = Math.min(base, m.monthlyPrice);
-      serverSubtotal = withCampaign(base);
-    } else if (m.weeklyOnly && m.weeklyPrice) {
+    if (m.weeklyOnly && m.weeklyPrice) {
       // Weekly-only billing — minimum 1 week, charged per started week.
       // Mirrors src/utils/pricing.ts billableWeeks().
       const min = m.minRentalDays > 0 ? m.minRentalDays : 7;
       const weeks = Math.max(1, Math.ceil(Math.max(rentalDays, min) / 7));
       serverSubtotal = withCampaign(weeks * m.weeklyPrice);
-    } else if (rentalDays === 1 && m.oneDayPrice) {
-      serverSubtotal = withCampaign(m.oneDayPrice);
-    } else if (rentalDays === 2 && strictWeekend && m.weekendPrice) {
-      serverSubtotal = withCampaign(m.weekendPrice);
-    } else if (rentalDays === 2 && m.twoDayPrice) {
-      serverSubtotal = withCampaign(m.twoDayPrice);
-    } else if ((rentalDays === 3 || rentalDays === 4 || rentalDays === 5) && m.weeklyPrice) {
-      serverSubtotal = withCampaign(m.weeklyPrice);
-    } else if (rentalDays >= 6 && rentalDays < 28 && m.weeklyPrice) {
-      // Pro-rata capped at the monthly price (sub-month never costs more than a month).
-      let base = Math.round(rentalDays * (m.weeklyPrice / 5));
-      if (m.monthlyPrice) base = Math.min(base, m.monthlyPrice);
+    } else if (weekendNoWork) {
+      // Normal tier applied to the working (non-weekend) days only.
+      const workingDays = rentalDays - weekendDaysCount;
+      const base = tierPrice(workingDays, false) ?? machine.pricePerDay * workingDays;
       serverSubtotal = withCampaign(base);
-    } else if (rentalDays >= 28 && m.monthlyPrice) {
-      const fullMonths = Math.floor(rentalDays / 28);
-      const remainder = rentalDays % 28;
-      let remainderCost: number;
-      if (remainder >= 3 && m.weeklyPrice) {
-        remainderCost = Math.round(remainder * (m.weeklyPrice / 5));
-      } else {
-        remainderCost = remainder * machine.pricePerDay;
-      }
-      remainderCost = Math.min(remainderCost, m.monthlyPrice);
-      serverSubtotal = withCampaign(fullMonths * m.monthlyPrice + remainderCost);
+    } else if (tierPrice(rentalDays, true) !== null) {
+      serverSubtotal = withCampaign(tierPrice(rentalDays, true) as number);
     } else {
       // Mirrors src/utils/pricing.ts evaluateDiscountPercent: take the HIGHEST discount,
       // do not stack volume + campaign discounts. Campaign rules are also applied here.

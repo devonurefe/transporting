@@ -436,10 +436,11 @@ export default function BookingSection({
         } else if (totalDays >= 28 && leadItem.monthlyPrice) {
           tierLabel = "Maandtarief"; isFlatRate = true;
         }
-        // Weekend "niet werken": the subtotal is already reduced to working days, so
-        // show one clean flat line instead of a full pro-rata breakdown that wouldn't add up.
+        // Weekend "niet werken": the subtotal is already reduced to the working days
+        // (weekend dropped) and priced on the normal tier, so show one clean flat line
+        // instead of a pro-rata breakdown that wouldn't add up.
         if (weekendWorkAnswer === 'nee' && spansWeekend) {
-          tierLabel = "Werkweektarief (werkdagen)"; isFlatRate = true; weeklyBreakdown = null;
+          tierLabel = "Tarief (alleen werkdagen)"; isFlatRate = true; weeklyBreakdown = null;
         }
       }
 
@@ -544,7 +545,7 @@ export default function BookingSection({
     }
     // Weekend "niet werken": subtotal already reduced to working days — show a single flat line.
     if (weekendWorkAnswer === 'nee' && spansWeekend) {
-      tierLabel = "Werkweektarief (werkdagen)"; isFlatRate = true; weeklyBreakdown = null;
+      tierLabel = "Tarief (alleen werkdagen)"; isFlatRate = true; weeklyBreakdown = null;
     }
 
     return {

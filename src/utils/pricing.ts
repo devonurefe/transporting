@@ -102,13 +102,13 @@ export function calculateItemSubtotal(machine: Machine, days: number, profile: s
     return withCampaign(billableWeeks(days, machine.minRentalDays) * machine.weeklyPrice);
   }
 
-  // Weekend "niet werken" discount: when the rental is on the weekly basis
-  // (werkweektarief / pro-rata, 3–27 days) and spans a weekend, a customer who
-  // declares they will NOT work the weekend only pays for the working (non-weekend)
-  // days at the weekly day rate (weeklyPrice / 5). The flat weekly price already
-  // includes the weekend, so "ja" (or no answer) keeps the normal price below.
-  // A 1-2 working-day result is floored at the normal short-stay tier so a longer
-  // booking never undercuts a shorter one; the total is capped at the monthly price.
+  // Weekend "niet werken": when the rental spans a weekend on the weekly basis
+  // (3–27 days) and the customer declares they will NOT work the weekend, the
+  // Saturday/Sunday days are dropped and the normal price tier is applied to the
+  // remaining working days. The flat weekly price already includes the weekend, so
+  // "ja" (or no answer) keeps the normal calendar-day price below. The start day is
+  // omitted from tierPrice so a 2-working-day result uses twoDayPrice, never the
+  // strict-weekend price (a "nee" rental can never start on a weekend).
   // Mirrored by server/routes/orders.ts — keep identical.
   if (weekendWork === "nee" && startDate && machine.weeklyPrice && !machine.weeklyOnly
       && days >= 3 && days < 28 && !isStrictWeekend(startDate, days)) {
@@ -118,48 +118,14 @@ export function calculateItemSubtotal(machine: Machine, days: number, profile: s
     const weekendDays = countWeekendDays(start, end);
     if (weekendDays > 0) {
       const workingDays = days - weekendDays;
-      let base = Math.round(workingDays * (machine.weeklyPrice / 5));
-      if (workingDays === 1) base = Math.max(base, machine.oneDayPrice ?? machine.pricePerDay);
-      else if (workingDays === 2) base = Math.max(base, machine.twoDayPrice ?? machine.pricePerDay * 2);
-      if (machine.monthlyPrice) base = Math.min(base, machine.monthlyPrice);
+      const base = tierPrice(machine, workingDays) ?? machine.pricePerDay * workingDays;
       return withCampaign(base);
     }
   }
 
-  // 1-day actie flat rate
-  if (days === 1 && machine.oneDayPrice) return withCampaign(machine.oneDayPrice);
-
-  // 2-day: weekend (Sat+Sun) → weekendPrice; weekday → twoDayPrice
-  if (days === 2) {
-    if (isStrictWeekend(startDate, days) && machine.weekendPrice) return withCampaign(machine.weekendPrice);
-    if (machine.twoDayPrice) return withCampaign(machine.twoDayPrice);
-  }
-
-  // 3–5 days: flat weekly rate
-  if ((days === 3 || days === 4 || days === 5) && machine.weeklyPrice) return withCampaign(machine.weeklyPrice);
-
-  // 6–27 days: linear rate derived from weeklyPrice, capped at the monthly price
-  // (a sub-month rental must never cost more than a full month).
-  if (days >= 6 && days < 28 && machine.weeklyPrice) {
-    let base = Math.round(days * (machine.weeklyPrice / 5));
-    if (machine.monthlyPrice) base = Math.min(base, machine.monthlyPrice);
-    return withCampaign(base);
-  }
-
-  // Monthly flat rate: 28+ days. The pro-rata remainder is likewise capped at the
-  // monthly price so e.g. "1 maand + 25 dagen" never exceeds two months.
-  if (days >= 28 && machine.monthlyPrice) {
-    const fullMonths = Math.floor(days / 28);
-    const remainder = days % 28;
-    let remainderCost: number;
-    if (remainder >= 3 && machine.weeklyPrice) {
-      remainderCost = Math.round(remainder * (machine.weeklyPrice / 5));
-    } else {
-      remainderCost = remainder * machine.pricePerDay;
-    }
-    remainderCost = Math.min(remainderCost, machine.monthlyPrice);
-    return withCampaign(fullMonths * machine.monthlyPrice + remainderCost);
-  }
+  // Standard flat-rate tier table on the inclusive calendar-day count.
+  const tier = tierPrice(machine, days, startDate);
+  if (tier !== null) return withCampaign(tier);
 
   // Fallback: pricePerDay × days with full discount (volume + campaign)
   const rawSubtotal = machine.pricePerDay * days;
@@ -169,6 +135,50 @@ export function calculateItemSubtotal(machine: Machine, days: number, profile: s
     discountAmount += machine.campaignDiscountAmount;
   }
   return Math.max(0, rawSubtotal - discountAmount);
+}
+
+// Flat-rate price for an effective day count `n`, or null when no flat tier applies
+// (the caller then falls back to pricePerDay × days with percentage discounts).
+// `startDate` enables strict-weekend detection for the 2-day tier; omit it to force
+// the weekday 2-day price (used by the weekend "niet werken" path).
+// Mirrored by server/routes/orders.ts — any change here must be applied there too.
+function tierPrice(machine: Machine, n: number, startDate?: string | Date): number | null {
+  // 1-day actie flat rate
+  if (n === 1 && machine.oneDayPrice) return machine.oneDayPrice;
+
+  // 2-day: weekend (Sat+Sun) → weekendPrice; weekday → twoDayPrice
+  if (n === 2) {
+    if (isStrictWeekend(startDate, n) && machine.weekendPrice) return machine.weekendPrice;
+    if (machine.twoDayPrice) return machine.twoDayPrice;
+  }
+
+  // 3–5 days: flat weekly rate
+  if ((n === 3 || n === 4 || n === 5) && machine.weeklyPrice) return machine.weeklyPrice;
+
+  // 6–27 days: linear rate derived from weeklyPrice, capped at the monthly price
+  // (a sub-month rental must never cost more than a full month).
+  if (n >= 6 && n < 28 && machine.weeklyPrice) {
+    let base = Math.round(n * (machine.weeklyPrice / 5));
+    if (machine.monthlyPrice) base = Math.min(base, machine.monthlyPrice);
+    return base;
+  }
+
+  // Monthly flat rate: 28+ days. The pro-rata remainder is likewise capped at the
+  // monthly price so e.g. "1 maand + 25 dagen" never exceeds two months.
+  if (n >= 28 && machine.monthlyPrice) {
+    const fullMonths = Math.floor(n / 28);
+    const remainder = n % 28;
+    let remainderCost: number;
+    if (remainder >= 3 && machine.weeklyPrice) {
+      remainderCost = Math.round(remainder * (machine.weeklyPrice / 5));
+    } else {
+      remainderCost = remainder * machine.pricePerDay;
+    }
+    remainderCost = Math.min(remainderCost, machine.monthlyPrice);
+    return fullMonths * machine.monthlyPrice + remainderCost;
+  }
+
+  return null;
 }
 
 // Counts Saturday + Sunday days within a rental range (both ends inclusive).

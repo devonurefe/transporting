@@ -157,7 +157,7 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
     const firstDow = new Date(Date.UTC(viewYear, viewMonth, 1)).getUTCDay();
     const lead = mondayIndex(firstDow);
     const daysInMonth = new Date(Date.UTC(viewYear, viewMonth + 1, 0)).getUTCDate();
-    type Cell = { key: string; day: number; status: "past" | "unavailable" | "available" | "capped"; selectable: boolean; isStart: boolean; isEnd: boolean; inRange: boolean } | null;
+    type Cell = { key: string; day: number; status: "past" | "unavailable" | "available" | "capped" | "weekendoff"; selectable: boolean; isStart: boolean; isEnd: boolean; inRange: boolean } | null;
     const cells: Cell[] = [];
     for (let i = 0; i < lead; i++) cells.push(null);
     for (let d = 1; d <= daysInMonth; d++) {
@@ -167,18 +167,19 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
       else if (!someUnitAvailable(unitIds, key, key, orders, blockedDates, today)) status = "unavailable";
       else status = "available";
       const isCapped = status === "available" && !!draftStart && !draftEnd && maxEnd !== "" && key > maxEnd;
-      let cellStatus: "past" | "unavailable" | "available" | "capped" = isCapped ? "capped" : status;
+      let cellStatus: "past" | "unavailable" | "available" | "capped" | "weekendoff" = isCapped ? "capped" : status;
       let selectable = status === "available" && !isCapped;
       // "Niet werken in het weekend": a Saturday/Sunday can never be the START day.
       // It may still fall inside the range or be the end day (weekend days simply drop
       // from the price), so only block it while the next click would set a start.
+      // Show it in a clearly-disabled (grey) tone, distinct from "available".
       if (weekendWork === "nee" && selectable) {
         const dow = new Date(key).getUTCDay();
         const isWeekendDay = dow === 0 || dow === 6;
         const choosingStart = !draftStart || (!!draftStart && !!draftEnd);
         if (isWeekendDay && (choosingStart || key <= draftStart)) {
           selectable = false;
-          cellStatus = "capped";
+          cellStatus = "weekendoff";
         }
       }
       cells.push({
@@ -239,6 +240,7 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
     const [y, m, d] = key.split("-").map(Number);
     const label = `${d} ${MONTHS_NL[m - 1]} ${y}`;
     const stateNl = status === "unavailable" ? t("calLegendUnavailable")
+      : status === "weekendoff" ? "weekend — niet als startdag"
       : status === "available" ? t("calLegendAvailable") : "";
     return stateNl ? `${label}, ${stateNl}` : label;
   };
@@ -333,6 +335,7 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
                       else if (inRange) cls = "bg-amber-100 text-amber-900";
                       else if (status === "available") cls = "bg-emerald-50 text-emerald-800 hover:bg-emerald-100 cursor-pointer";
                       else if (status === "unavailable") cls = "bg-rose-50 text-rose-300 cursor-not-allowed";
+                      else if (status === "weekendoff") cls = "bg-slate-100 text-slate-300 cursor-not-allowed line-through decoration-slate-300"; // weekend, niet als startdag
                       else if (status === "capped") cls = "bg-emerald-50 text-emerald-300 cursor-not-allowed"; // available after block, need new start
                       else cls = "text-slate-300 cursor-not-allowed"; // past
                       return (
@@ -359,6 +362,13 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
                 {maxEnd !== "" && !!draftStart && !draftEnd && (
                   <p className="text-[10px] text-center text-slate-400 px-5 pb-1 leading-relaxed">
                     {t("calCappedHint")}
+                  </p>
+                )}
+
+                {/* Hint: weekend not selectable as start when the customer won't work the weekend */}
+                {weekendWork === "nee" && (
+                  <p className="text-[10px] text-center text-slate-400 px-5 pb-1 leading-relaxed">
+                    U werkt niet in het weekend — zaterdag en zondag zijn niet als startdag te kiezen.
                   </p>
                 )}
 

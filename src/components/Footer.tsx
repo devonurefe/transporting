@@ -4,7 +4,6 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { motion } from "motion/react";
 import { Mail, MapPin, Clock, ShieldCheck, Truck, MessageCircle, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useLanguageStore } from "../store/languageStore";
@@ -130,9 +129,8 @@ export default function Footer({ siteName, setActiveTab, setShowContactModal }: 
 
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
             <div>
-              <h3 className="font-display text-xl sm:text-2xl font-black text-white tracking-tight leading-tight">
-                Waarom<br />
-                <BrandedText text="HuurGo" dark />
+              <h3 className="font-display text-xl sm:text-2xl font-black text-white tracking-tight">
+                Waarom{"  "}<BrandedText text="HuurGo" dark />
               </h3>
               <p className="text-xs text-slate-400 mt-1.5">Betrouwbaar materieel, eerlijk advies en scherpe tarieven in heel Nederland.</p>
             </div>
@@ -149,12 +147,8 @@ export default function Footer({ siteName, setActiveTab, setShowContactModal }: 
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
             {TRUST_POINTS.map(({ Icon, title, body }, i) => (
-              <motion.div
+              <div
                 key={title}
-                initial={{ opacity: 0, y: 18 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-40px" }}
-                transition={{ duration: 0.45, delay: i * 0.1, ease: "easeOut" }}
                 className="group bg-slate-900 border border-slate-700/60 rounded-2xl p-5 space-y-2.5 hover:border-orange-500/40 hover:-translate-y-1 transition-all duration-300"
               >
                 <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-orange-500/10 text-orange-400 border border-orange-500/20 group-hover:bg-orange-500/20 group-hover:scale-105 transition-all duration-300">
@@ -162,7 +156,7 @@ export default function Footer({ siteName, setActiveTab, setShowContactModal }: 
                 </span>
                 <h4 className="text-sm font-bold text-white">{title}</h4>
                 <p className="text-[13px] text-slate-400 leading-relaxed">{body}</p>
-              </motion.div>
+              </div>
             ))}
           </div>
 

@@ -86,8 +86,10 @@ const authLimiter = rateLimit({
 });
 app.use("/api/auth", authLimiter);
 
-// Image upload receives base64 data URLs (up to ~4 MB encoded) — must come before the global parser
-app.use("/api/upload", express.json({ limit: "10mb" }));
+// These endpoints carry base64 image payloads — must be registered before the global 256kb parser
+app.use("/api/upload",      express.json({ limit: "10mb" }));
+app.use("/api/machines",    express.json({ limit: "10mb" })); // PUT with base64 imageUrl
+app.use("/api/site-config", express.json({ limit: "10mb" })); // may store base64 hero image
 app.use(express.json({ limit: "256kb" })); // Default for all other API routes
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 app.use(authenticateToken);

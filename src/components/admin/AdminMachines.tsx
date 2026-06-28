@@ -448,7 +448,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
       {/* Edit Machine Specs Modal */}
       <AnimatePresence>
         {editingMachine && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4 overflow-hidden">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -490,7 +490,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
               <form onSubmit={handleSaveEdit} className="flex-1 flex flex-col overflow-hidden min-h-0">
                 
                 {/* Scrollable Fields Wrapper */}
-                <div className="flex-grow overflow-y-auto pr-1.5 space-y-4 scrollbar-thin pb-4">
+                <div className="flex-grow overflow-y-auto overflow-x-hidden pr-1.5 space-y-4 scrollbar-thin pb-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     
                     <div className="space-y-1">

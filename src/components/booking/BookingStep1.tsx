@@ -85,6 +85,25 @@ export default function BookingStep1({
     (i) => i.startDate !== leadItem?.startDate || i.endDate !== leadItem?.endDate
   );
 
+  // Ask the weekend question up front (before the calendar) whenever the cart holds a
+  // machine billed on the weekly basis — that is the only case where working in the
+  // weekend changes the price or restricts the start day. The answer feeds the
+  // calendar (no Sat/Sun start when "nee") and the price calculation.
+  const asksWeekend = cartItems.some((i) => !!i.machine.weeklyPrice && !i.machine.weeklyOnly);
+
+  // Answering "nee" forbids a weekend start: clear any already-picked range that
+  // begins on a Saturday/Sunday so the customer re-picks a valid start day.
+  const handleWeekendAnswer = (answer: 'ja' | 'nee') => {
+    if (answer === 'nee') {
+      cartItems.forEach((i) => {
+        if (!i.startDate) return;
+        const dow = new Date(i.startDate).getUTCDay();
+        if (dow === 0 || dow === 6) onUpdateCartItemDates(i.id, "", "");
+      });
+    }
+    onWeekendWorkAnswer?.(answer);
+  };
+
   return (
     <div className="bg-white border border-slate-200 shadow-sm p-6 rounded-2xl space-y-6">
       <div className="border-b border-slate-100 pb-4">
@@ -104,6 +123,59 @@ export default function BookingStep1({
         </h3>
         <p className="text-xs text-slate-400 mt-1">{t("step1Subtitle")}</p>
       </div>
+
+      {/* Weekend-work question — asked BEFORE the calendar so it can steer both the
+          selectable start days and the price. Shown for weekly-basis machines. */}
+      {cartItems.length > 0 && asksWeekend && (
+        <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl space-y-3">
+          <div>
+            <p className="text-sm font-bold text-amber-900">🗓 Gaat u in het weekend (za/zo) met de machine werken?</p>
+            <p className="text-xs text-amber-700 mt-1">
+              Beantwoord dit eerst — het bepaalt uw prijs en welke startdatums u in de
+              kalender kunt kiezen. Werkt u in het weekend, dan geldt het volledige
+              werkweektarief (weekend inbegrepen). Werkt u niet, dan tellen alleen de
+              werkdagen en kunt u niet op zaterdag of zondag starten.
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => handleWeekendAnswer('nee')}
+              className={`flex-1 py-2.5 px-2 rounded-xl border transition-all cursor-pointer flex flex-col items-center gap-0.5 ${
+                weekendWorkAnswer === 'nee'
+                  ? 'bg-emerald-600 text-white border-emerald-600'
+                  : 'bg-white border-slate-300 text-slate-700 hover:border-slate-500'
+              }`}
+            >
+              <span className="text-sm font-semibold">Nee, niet werken</span>
+              <span className={`text-xs font-medium ${weekendWorkAnswer === 'nee' ? 'text-emerald-50' : 'text-emerald-600'}`}>
+                Alleen werkdagen · voordeliger
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleWeekendAnswer('ja')}
+              className={`flex-1 py-2.5 px-2 rounded-xl border transition-all cursor-pointer flex flex-col items-center gap-0.5 ${
+                weekendWorkAnswer === 'ja'
+                  ? 'bg-slate-800 text-white border-slate-800'
+                  : 'bg-white border-slate-300 text-slate-700 hover:border-slate-500'
+              }`}
+            >
+              <span className="text-sm font-semibold">Ja, ik werk in het weekend</span>
+              <span className={`text-xs font-medium ${weekendWorkAnswer === 'ja' ? 'text-slate-300' : 'text-slate-500'}`}>
+                Volledig werkweektarief
+              </span>
+            </button>
+          </div>
+          {weekendWorkAnswer === 'nee' && (
+            <p className="text-xs text-amber-700 leading-relaxed bg-amber-100 rounded-lg p-2.5">
+              ⚠️ U betaalt nu alleen de werkdagen. Wordt gebruik van de machine op weekenddagen
+              geconstateerd via de urenteller, dan wordt het volledige werkweektarief alsnog in
+              rekening gebracht.
+            </p>
+          )}
+        </div>
+      )}
 
       {cartItems.length === 0 ? (
         <div className="text-center py-10 space-y-4">
@@ -182,6 +254,7 @@ export default function BookingStep1({
                     endDate={item.endDate}
                     profile={customerProfile}
                     onConfirm={(s, e) => onUpdateCartItemDates(item.id, s, e)}
+                    weekendWork={weekendWorkAnswer}
                   />
                 </div>
 
@@ -536,56 +609,6 @@ export default function BookingStep1({
 
         </div>
       </div>
-
-      {/* Weekend work declaration — required when rental spans Sat/Sun (not strict Sat+Sun weekend) */}
-      {sums?.spansWeekend && (
-        <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl space-y-3 pt-4 border-t border-slate-200">
-          <div>
-            <p className="text-sm font-bold text-amber-900">🗓 Gaat u in het weekend werken?</p>
-            <p className="text-xs text-amber-700 mt-1">
-              Uw huurperiode omvat weekenddagen. Werkt u in het weekend, dan geldt het volledige
-              werkweektarief (weekend inbegrepen). Werkt u niet, dan betaalt u alleen de werkdagen.
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => onWeekendWorkAnswer?.('nee')}
-              className={`flex-1 py-2.5 px-2 rounded-xl border transition-all cursor-pointer flex flex-col items-center gap-0.5 ${
-                weekendWorkAnswer === 'nee'
-                  ? 'bg-emerald-600 text-white border-emerald-600'
-                  : 'bg-white border-slate-300 text-slate-700 hover:border-slate-500'
-              }`}
-            >
-              <span className="text-sm font-semibold">Nee, niet werken</span>
-              <span className={`text-xs font-medium ${weekendWorkAnswer === 'nee' ? 'text-emerald-50' : 'text-emerald-600'}`}>
-                Alleen werkdagen · voordeliger
-              </span>
-            </button>
-            <button
-              type="button"
-              onClick={() => onWeekendWorkAnswer?.('ja')}
-              className={`flex-1 py-2.5 px-2 rounded-xl border transition-all cursor-pointer flex flex-col items-center gap-0.5 ${
-                weekendWorkAnswer === 'ja'
-                  ? 'bg-slate-800 text-white border-slate-800'
-                  : 'bg-white border-slate-300 text-slate-700 hover:border-slate-500'
-              }`}
-            >
-              <span className="text-sm font-semibold">Ja, ik werk in het weekend</span>
-              <span className={`text-xs font-medium ${weekendWorkAnswer === 'ja' ? 'text-slate-300' : 'text-slate-500'}`}>
-                Volledig werkweektarief
-              </span>
-            </button>
-          </div>
-          {weekendWorkAnswer === 'nee' && (
-            <p className="text-xs text-amber-700 leading-relaxed bg-amber-100 rounded-lg p-2.5">
-              ⚠️ U betaalt nu alleen de werkdagen. Wordt gebruik van de machine op weekenddagen
-              geconstateerd via de urenteller, dan wordt het volledige werkweektarief alsnog in
-              rekening gebracht.
-            </p>
-          )}
-        </div>
-      )}
 
       {/* Dynamic inline warning banner replacement */}
       {validationError && (

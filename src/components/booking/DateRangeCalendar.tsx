@@ -20,6 +20,7 @@ interface DateRangeCalendarProps {
   profile: string;            // customerProfile, for the live price preview
   onConfirm: (start: string, end: string) => void;
   todayStr?: string;          // injectable for tests
+  weekendWork?: 'ja' | 'nee' | null; // "nee" → Sat/Sun cannot be a start day, weekend days drop from the price
 }
 
 const MONTHS_NL = ["januari", "februari", "maart", "april", "mei", "juni", "juli", "augustus", "september", "oktober", "november", "december"];
@@ -43,7 +44,7 @@ function formatShort(key: string): string {
   return `${d} ${MONTHS_NL[m - 1].slice(0, 3)}`;
 }
 
-export default function DateRangeCalendar({ machine, startDate, endDate, profile, onConfirm, todayStr }: DateRangeCalendarProps) {
+export default function DateRangeCalendar({ machine, startDate, endDate, profile, onConfirm, todayStr, weekendWork }: DateRangeCalendarProps) {
   const t = useLanguageStore((s) => s.t);
   const blockedDates = useAppStore((s) => s.blockedDates);
   const fetchBlockedDates = useAppStore((s) => s.fetchBlockedDates);
@@ -166,11 +167,25 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
       else if (!someUnitAvailable(unitIds, key, key, orders, blockedDates, today)) status = "unavailable";
       else status = "available";
       const isCapped = status === "available" && !!draftStart && !draftEnd && maxEnd !== "" && key > maxEnd;
+      let cellStatus: "past" | "unavailable" | "available" | "capped" = isCapped ? "capped" : status;
+      let selectable = status === "available" && !isCapped;
+      // "Niet werken in het weekend": a Saturday/Sunday can never be the START day.
+      // It may still fall inside the range or be the end day (weekend days simply drop
+      // from the price), so only block it while the next click would set a start.
+      if (weekendWork === "nee" && selectable) {
+        const dow = new Date(key).getUTCDay();
+        const isWeekendDay = dow === 0 || dow === 6;
+        const choosingStart = !draftStart || (!!draftStart && !!draftEnd);
+        if (isWeekendDay && (choosingStart || key <= draftStart)) {
+          selectable = false;
+          cellStatus = "capped";
+        }
+      }
       cells.push({
         key,
         day: d,
-        status: isCapped ? "capped" : status,
-        selectable: status === "available" && !isCapped,
+        status: cellStatus,
+        selectable,
         isStart: key === draftStart,
         isEnd: key === draftEnd,
         inRange: !!draftStart && !!draftEnd && key > draftStart && key < draftEnd,
@@ -178,7 +193,7 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
     }
     while (cells.length % 7 !== 0) cells.push(null);
     return cells;
-  }, [viewYear, viewMonth, orders, blockedDates, draftStart, draftEnd, maxEnd, unitKey, today]);
+  }, [viewYear, viewMonth, orders, blockedDates, draftStart, draftEnd, maxEnd, unitKey, today, weekendWork]);
 
   const onDayClick = (key: string, selectable: boolean) => {
     if (!selectable) return;
@@ -211,7 +226,7 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
   const effectiveEnd = draftEnd || draftStart;
   const validRange = !!draftStart && someUnitAvailable(unitIds, draftStart, effectiveEnd, orders, blockedDates, today);
   const days = validRange ? calculateRentalDays(draftStart, effectiveEnd) : 0;
-  const subtotal = validRange ? calculateItemSubtotal(machine, days, profile, campaignRules, draftStart) : 0;
+  const subtotal = validRange ? calculateItemSubtotal(machine, days, profile, campaignRules, draftStart, weekendWork) : 0;
 
   const confirm = () => { if (!validRange) return; onConfirm(draftStart, effectiveEnd); close(); };
   const reset = () => { setDraftStart(""); setDraftEnd(""); };

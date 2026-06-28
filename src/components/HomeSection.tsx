@@ -522,12 +522,8 @@ export default function HomeSection({
             const fallbackGradient = CAT_GRADIENT[cat.id] ?? "from-slate-100 to-slate-200";
 
             return (
-              <motion.button
+              <button
                 key={cat.id}
-                initial={{ opacity: 0, y: 16 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-40px" }}
-                transition={{ duration: 0.4, delay: (i % 2) * 0.06, ease: "easeOut" }}
                 onClick={() => onSearch("", cat.id)}
                 className="group bg-white border border-slate-200 rounded-2xl overflow-hidden text-left cursor-pointer hover:border-orange-300 hover:shadow-xl hover:shadow-orange-500/5 hover:-translate-y-1.5 active:scale-[0.98] transition-all duration-300 flex flex-col"
               >
@@ -569,7 +565,7 @@ export default function HomeSection({
                     <Icon className="h-10 w-10 text-slate-300" />
                   </div>
                 </div>
-              </motion.button>
+              </button>
             );
           })}
         </div>
@@ -578,16 +574,10 @@ export default function HomeSection({
       {/* ── FAQ SECTION ── */}
       <div className="bg-slate-50 border-t border-slate-100 px-4 sm:px-6 py-12">
         <div className="max-w-2xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-40px" }}
-            transition={{ duration: 0.4, ease: "easeOut" }}
-            className="text-center mb-7"
-          >
+          <div className="text-center mb-7">
             <h2 className="font-display font-black text-xl text-slate-900">{t("Veelgestelde vragen", "Frequently asked questions", "Sık sorulan sorular")}</h2>
             <p className="text-xs text-slate-500 mt-1">{t("Alles wat u wilt weten over hoogwerker huren", "Everything you need to know about renting aerial lifts", "Yüksek erişim kiralama hakkında bilmeniz gerekenler")}</p>
-          </motion.div>
+          </div>
           <div className="space-y-2.5">
             {FAQ_ITEMS.map((item, i) => (
               <div key={i} className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200">

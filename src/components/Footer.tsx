@@ -121,10 +121,10 @@ export default function Footer({ siteName, setActiveTab, setShowContactModal }: 
 
       {/* Transition bridge — eases the page above (slate-50) into the warm,
           light brand band below instead of an abrupt edge. */}
-      <div className="h-12 bg-gradient-to-b from-slate-100 to-amber-50/60" aria-hidden="true" />
+      <div className="h-12 bg-gradient-to-b from-slate-50 to-amber-50" aria-hidden="true" />
 
       {/* ── WHY HUURGO — factual trust band (replaces fabricated testimonials) ── */}
-      <div className="bg-gradient-to-b from-amber-50/60 to-white border-b border-amber-100/70">
+      <div className="bg-gradient-to-b from-amber-50 to-white border-b border-amber-100">
         <div className="py-10 sm:py-14 px-5 sm:px-8 lg:px-10 mx-auto max-w-7xl">
 
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
@@ -164,7 +164,7 @@ export default function Footer({ siteName, setActiveTab, setShowContactModal }: 
       </div>
 
       {/* ── GOOGLE REVIEWS ticker ── */}
-      <div className="bg-white border-b border-slate-100">
+      <div className="bg-gradient-to-b from-white to-amber-50 border-b border-amber-100">
         <div className="py-10 sm:py-12 px-5 sm:px-8 lg:px-10 mx-auto max-w-7xl">
 
           {/* Header */}
@@ -206,7 +206,7 @@ export default function Footer({ siteName, setActiveTab, setShowContactModal }: 
 
             {/* Top + bottom fade masks */}
             <div className="absolute top-0 inset-x-0 h-14 bg-gradient-to-b from-white to-transparent z-10 pointer-events-none" />
-            <div className="absolute bottom-0 inset-x-0 h-14 bg-gradient-to-t from-white to-transparent z-10 pointer-events-none" />
+            <div className="absolute bottom-0 inset-x-0 h-14 bg-gradient-to-t from-amber-50 to-transparent z-10 pointer-events-none" />
 
             {/* Mobile: single column */}
             <div className="sm:hidden review-ticker flex flex-col gap-3">
@@ -237,7 +237,7 @@ export default function Footer({ siteName, setActiveTab, setShowContactModal }: 
       </div>
 
       {/* Transition bridge — eases the light reviews band into the dark footer */}
-      <div className="h-12 bg-gradient-to-b from-white to-slate-950" aria-hidden="true" />
+      <div className="h-12 bg-gradient-to-b from-amber-50 to-slate-950" aria-hidden="true" />
 
       <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-10 py-14 sm:py-16">
 

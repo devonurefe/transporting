@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Calendar, ChevronLeft, ChevronRight, Check, RotateCcw, X } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Machine } from "../../types";
@@ -96,27 +96,47 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
     // Intentionally no focus() call here — it causes re-tap issues on iOS
   };
 
-  // Fetch fresh occupancy + blocked dates every time the calendar opens
-  useEffect(() => {
-    if (!isOpen) return;
-    fetchBlockedDates(); // ensure blockedDates in store are current
-    let cancelled = false;
-    setLoading(true);
-    // Fetch occupancy for every unit of this model so we know the true free count
-    Promise.all(
+  // Fetch occupancy for every unit of this model so we know the true free count.
+  const loadOccupancy = useCallback(async (): Promise<SimpleOrder[]> => {
+    const results = await Promise.all(
       unitIds.map((id) =>
         fetch(`/api/orders/availability?machineId=${encodeURIComponent(id)}`)
           .then((res) => (res.ok ? res.json() : []))
           .then((data) => (Array.isArray(data) ? data : []))
           .catch(() => [])
       )
-    )
-      .then((results) => { if (!cancelled) setOrders(results.flat()); })
-      .catch(() => { if (!cancelled) setOrders([]); })
+    );
+    return results.flat();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [unitKey]); // unitIds is derived from unitKey
+
+  // Prefetch occupancy on mount and whenever the unit set changes, so the grid is
+  // already populated BEFORE the user opens the calendar — no empty→populated flash
+  // and no network wait on open. blockedDates already comes from the global store
+  // (fetched app-wide at startup); refresh it once here in the background too.
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    loadOccupancy()
+      .then((o) => { if (!cancelled) setOrders(o); })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
+  }, [loadOccupancy]);
+
+  useEffect(() => {
+    fetchBlockedDates(); // one background refresh; does not block opening
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, unitKey]); // fetchBlockedDates is a stable Zustand action — omitting is safe
+  }, []);
+
+  // Silent refresh each time the calendar opens: update only on success and never
+  // reset to [] first, so opening never shows a blank/all-available grid.
+  useEffect(() => {
+    if (!isOpen) return;
+    let cancelled = false;
+    loadOccupancy().then((o) => { if (!cancelled) setOrders(o); });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   // Escape closes; basic focus management + Tab trap within the dialog
   useEffect(() => {

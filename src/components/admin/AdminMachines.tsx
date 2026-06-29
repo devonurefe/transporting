@@ -114,7 +114,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
   const [editMinRentalDays, setEditMinRentalDays] = useState("");
   const [editWeeklyOnly, setEditWeeklyOnly] = useState(false);
   const [editPickupOnly, setEditPickupOnly] = useState(false);
-  const [editCrossSell, setEditCrossSell] = useState<{ id: string; name: string; description: string; pricePerWeek: string }[]>([]);
+  const [editCrossSell, setEditCrossSell] = useState<{ id: string; name: string; description: string; pricePerWeek: string; pricePerDay: string; pricePerTwoDay: string }[]>([]);
 
   const handleEditAdditionalImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -184,7 +184,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
     setEditWeeklyOnly(!!m.weeklyOnly);
     setEditPickupOnly(!!m.pickupOnly);
     setEditCrossSell(Array.isArray(m.crossSellAddons)
-      ? m.crossSellAddons.map(a => ({ id: a.id, name: a.name, description: a.description ?? "", pricePerWeek: String(a.pricePerWeek) }))
+      ? m.crossSellAddons.map(a => ({ id: a.id, name: a.name, description: a.description ?? "", pricePerWeek: String(a.pricePerWeek), pricePerDay: a.pricePerDay != null ? String(a.pricePerDay) : "", pricePerTwoDay: a.pricePerTwoDay != null ? String(a.pricePerTwoDay) : "" }))
       : []);
     setPendingEditId(null);
     });
@@ -317,7 +317,14 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
       pickupOnly: editPickupOnly,
       crossSellAddons: editCrossSell
         .filter(a => a.name.trim())
-        .map(a => ({ id: a.id, name: a.name.trim(), description: a.description.trim(), pricePerWeek: Number(a.pricePerWeek) || 0 })),
+        .map(a => ({
+          id: a.id,
+          name: a.name.trim(),
+          description: a.description.trim(),
+          pricePerWeek: Number(a.pricePerWeek) || 0,
+          pricePerDay: a.pricePerDay !== "" && Number(a.pricePerDay) > 0 ? Number(a.pricePerDay) : undefined,
+          pricePerTwoDay: a.pricePerTwoDay !== "" && Number(a.pricePerTwoDay) > 0 ? Number(a.pricePerTwoDay) : undefined,
+        })),
     });
 
     setIsUpdating(false);
@@ -1001,7 +1008,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                       <label className="text-xs text-slate-700 block font-bold">{t("Optionele accessoires (per week)", "Optional accessories (per week)", "Opsiyonel aksesuarlar (haftalık)")}</label>
                       <button
                         type="button"
-                        onClick={() => setEditCrossSell(prev => [...prev, { id: "", name: "", description: "", pricePerWeek: "" }])}
+                        onClick={() => setEditCrossSell(prev => [...prev, { id: "", name: "", description: "", pricePerWeek: "", pricePerDay: "", pricePerTwoDay: "" }])}
                         className="text-xs font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded-lg transition-colors cursor-pointer border-none flex items-center gap-1"
                       >
                         <Plus className="h-3 w-3" />
@@ -1013,7 +1020,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                     )}
                     <div className="space-y-2">
                       {editCrossSell.map((a, idx) => (
-                        <div key={idx} className="grid grid-cols-1 md:grid-cols-[1fr_1.4fr_90px_auto] gap-2 items-start bg-white border border-slate-200 rounded-xl p-2">
+                        <div key={idx} className="grid grid-cols-1 md:grid-cols-[1fr_1.4fr_64px_64px_64px_auto] gap-2 items-start bg-white border border-slate-200 rounded-xl p-2">
                           <input
                             type="text"
                             placeholder={t("Naam", "Name", "Ad")}
@@ -1032,8 +1039,27 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                             type="number"
                             min="0"
                             placeholder="€/wk"
+                            title={t("Per week (basis)", "Per week (base)", "Haftalık (temel)")}
                             value={a.pricePerWeek}
                             onChange={e => setEditCrossSell(prev => prev.map((x, i) => i === idx ? { ...x, pricePerWeek: e.target.value } : x))}
+                            className="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 text-xs text-slate-800 outline-none focus:border-amber-500"
+                          />
+                          <input
+                            type="number"
+                            min="0"
+                            placeholder="€/2dg"
+                            title={t("Per 2 dagen (optioneel)", "Per 2 days (optional)", "2 günlük (opsiyonel)")}
+                            value={a.pricePerTwoDay}
+                            onChange={e => setEditCrossSell(prev => prev.map((x, i) => i === idx ? { ...x, pricePerTwoDay: e.target.value } : x))}
+                            className="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 text-xs text-slate-800 outline-none focus:border-amber-500"
+                          />
+                          <input
+                            type="number"
+                            min="0"
+                            placeholder="€/dag"
+                            title={t("Per dag (optioneel)", "Per day (optional)", "Günlük (opsiyonel)")}
+                            value={a.pricePerDay}
+                            onChange={e => setEditCrossSell(prev => prev.map((x, i) => i === idx ? { ...x, pricePerDay: e.target.value } : x))}
                             className="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 text-xs text-slate-800 outline-none focus:border-amber-500"
                           />
                           <button

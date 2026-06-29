@@ -23,6 +23,24 @@ export function billableWeeks(days: number, minRentalDays?: number): number {
   return Math.max(1, Math.ceil(billDays / 7));
 }
 
+// Price for one product-specific cross-sell add-on over the rental period.
+// Default basis is per started week (pricePerWeek × billableWeeks). The optional
+// flat pricePerDay / pricePerTwoDay only apply to short, non-weekly-only rentals
+// of exactly 1 or 2 days when the admin has set a positive value. Backwards
+// compatible: with no short prices set the result equals pricePerWeek × weeks.
+// Mirrored EXACTLY by server/routes/orders.ts — keep identical.
+export function addonPriceForRental(
+  addon: { pricePerWeek: number; pricePerDay?: number | null; pricePerTwoDay?: number | null },
+  days: number,
+  machine: { weeklyOnly?: boolean; minRentalDays?: number }
+): number {
+  if (!machine.weeklyOnly) {
+    if (days === 1 && addon.pricePerDay != null && addon.pricePerDay > 0) return addon.pricePerDay;
+    if (days === 2 && addon.pricePerTwoDay != null && addon.pricePerTwoDay > 0) return addon.pricePerTwoDay;
+  }
+  return (addon.pricePerWeek || 0) * billableWeeks(days, machine.minRentalDays);
+}
+
 // Strict weekend: a 2-day rental on Sat+Sun (start = Saturday).
 // getUTCDay(): 0=Sun, 6=Sat. Dates are "YYYY-MM-DD" → parsed as UTC midnight,
 // so getUTCDay() is timezone-safe.

@@ -43,7 +43,9 @@ export interface CrossSellAddon {
   id: string;
   name: string;
   description?: string;
-  pricePerWeek: number; // excl. BTW, charged per started week (same week count as the machine)
+  pricePerWeek: number; // excl. BTW, charged per started week (same week count as the machine) — default basis
+  pricePerDay?: number; // optional flat price for an exactly-1-day rental (non-weekly products only)
+  pricePerTwoDay?: number; // optional flat price for an exactly-2-day rental (non-weekly products only)
 }
 
 export type DeliveryType = "self_pickup" | "delivery_by_us" | "trailer_rental" | "trailer_drop_return";

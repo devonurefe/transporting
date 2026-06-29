@@ -603,7 +603,11 @@ export default function BookingStep1({
                   <p className="text-xs text-slate-600 leading-normal">{addon.description}</p>
                 )}
               </div>
-              <span className="text-xs font-mono font-bold text-slate-700 mt-3 block">+€{addon.pricePerWeek},- / per week</span>
+              <span className="text-xs font-mono font-bold text-slate-700 mt-3 block">
+                +€{addon.pricePerWeek},- / per week
+                {!selectedMachine?.weeklyOnly && addon.pricePerTwoDay ? <span className="text-slate-500 font-normal"> · €{addon.pricePerTwoDay},- / 2 dgn</span> : null}
+                {!selectedMachine?.weeklyOnly && addon.pricePerDay ? <span className="text-slate-500 font-normal"> · €{addon.pricePerDay},- / dag</span> : null}
+              </span>
             </div>
           ))}
 

@@ -141,15 +141,30 @@ function validateMachineInput(body: any): { valid: boolean; error?: string } {
 }
 
 // Cross-sell addons are stored as JSON — sanitise to a fixed shape and cap counts/lengths.
-function sanitizeCrossSell(raw: unknown): { id: string; name: string; description: string; pricePerWeek: number }[] | null {
+function sanitizeCrossSell(raw: unknown): { id: string; name: string; description: string; pricePerWeek: number; pricePerDay?: number; pricePerTwoDay?: number }[] | null {
   if (!Array.isArray(raw) || raw.length === 0) return null;
+  // Parse an optional flat short-rental price: positive number → keep, otherwise drop the field.
+  const optPrice = (v: any): number | undefined => {
+    if (v === undefined || v === null || v === "") return undefined;
+    const n = Number(v);
+    return !isNaN(n) && n > 0 && n <= 100000 ? n : undefined;
+  };
   const cleaned = raw
-    .map((a: any, i: number) => ({
-      id: String(a?.id ?? "").slice(0, 60).trim() || `addon-${i + 1}`,
-      name: String(a?.name ?? "").slice(0, 120).trim(),
-      description: String(a?.description ?? "").slice(0, 300).trim(),
-      pricePerWeek: Number(a?.pricePerWeek ?? 0)
-    }))
+    .map((a: any, i: number) => {
+      const base = {
+        id: String(a?.id ?? "").slice(0, 60).trim() || `addon-${i + 1}`,
+        name: String(a?.name ?? "").slice(0, 120).trim(),
+        description: String(a?.description ?? "").slice(0, 300).trim(),
+        pricePerWeek: Number(a?.pricePerWeek ?? 0)
+      };
+      const pricePerDay = optPrice(a?.pricePerDay);
+      const pricePerTwoDay = optPrice(a?.pricePerTwoDay);
+      return {
+        ...base,
+        ...(pricePerDay !== undefined ? { pricePerDay } : {}),
+        ...(pricePerTwoDay !== undefined ? { pricePerTwoDay } : {})
+      };
+    })
     .filter(a => a.name && !isNaN(a.pricePerWeek) && a.pricePerWeek >= 0 && a.pricePerWeek <= 100000)
     .slice(0, 10);
   return cleaned.length > 0 ? cleaned : null;

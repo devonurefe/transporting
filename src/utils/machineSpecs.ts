@@ -103,7 +103,7 @@ export const MACHINE_SPECS: Record<string, SpecRow[]> = {
     { label: "Min. deuropening",   value: "74 cm breed" },
   ],
   "altrex-rs44": [
-    { label: "Platformhoogte",   value: "2,0 m" },
+    { label: "Platformhoogte",   value: "0,75 m" },
     { label: "Platformafmeting", value: "ca. 135 × 60 cm" },
     { label: "Draagvermogen",    value: "200 kg" },
     { label: "Machinebreedte",   value: "75 cm" },

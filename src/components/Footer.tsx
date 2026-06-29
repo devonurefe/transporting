@@ -67,12 +67,12 @@ const REVIEWS = [
 
 function ReviewCard({ r }: { r: typeof REVIEWS[0] }) {
   return (
-    <div className="bg-slate-900 border border-slate-700/60 rounded-2xl p-4 sm:p-5 space-y-2.5">
-      <div className="text-amber-400 text-sm leading-none tracking-wide">★★★★★</div>
-      <p className="text-[13px] text-slate-300 leading-relaxed line-clamp-3">{r.text}</p>
+    <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-4 sm:p-5 space-y-2.5">
+      <div className="text-amber-500 text-sm leading-none tracking-wide">★★★★★</div>
+      <p className="text-[13px] text-slate-600 leading-relaxed line-clamp-3">{r.text}</p>
       <div className="flex items-center justify-between gap-3 pt-1.5">
-        <span className="text-[11px] font-bold text-white">{r.name}</span>
-        <span className="text-[10px] text-slate-500 shrink-0">{r.date}</span>
+        <span className="text-[11px] font-bold text-slate-900">{r.name}</span>
+        <span className="text-[10px] text-slate-400 shrink-0">{r.date}</span>
       </div>
     </div>
   );
@@ -119,27 +119,27 @@ export default function Footer({ siteName, setActiveTab, setShowContactModal }: 
   return (
     <footer className="bg-slate-950 pb-20 md:pb-0">
 
-      {/* Transition bridge — softens the hard light→dark cut from the page above
-          into the dark footer instead of an abrupt edge. */}
-      <div className="h-12 bg-gradient-to-b from-slate-100 to-slate-950" aria-hidden="true" />
+      {/* Transition bridge — eases the page above (slate-50) into the warm,
+          light brand band below instead of an abrupt edge. */}
+      <div className="h-12 bg-gradient-to-b from-slate-100 to-amber-50/60" aria-hidden="true" />
 
       {/* ── WHY HUURGO — factual trust band (replaces fabricated testimonials) ── */}
-      <div className="bg-slate-950 border-b border-slate-800">
+      <div className="bg-gradient-to-b from-amber-50/60 to-white border-b border-amber-100/70">
         <div className="py-10 sm:py-14 px-5 sm:px-8 lg:px-10 mx-auto max-w-7xl">
 
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
             <div>
-              <h3 className="font-display text-xl sm:text-2xl font-black text-white tracking-tight">
-                Waarom{"  "}<BrandedText text="HuurGo" dark />
+              <h3 className="font-display text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+                Waarom{"  "}<BrandedText text="HuurGo" />
               </h3>
-              <p className="text-xs text-slate-400 mt-1.5">Betrouwbaar materieel, eerlijk advies en scherpe tarieven in heel Nederland.</p>
+              <p className="text-xs text-slate-500 mt-1.5">Betrouwbaar materieel, eerlijk advies en scherpe tarieven in heel Nederland.</p>
             </div>
             {rating && (
-              <div className="flex items-center gap-2.5 bg-slate-900 border border-slate-700/60 rounded-2xl px-4 py-2.5 shrink-0">
+              <div className="flex items-center gap-2.5 bg-white border border-amber-100 shadow-sm rounded-2xl px-4 py-2.5 shrink-0">
                 <Star className="h-5 w-5 text-amber-400 fill-amber-400 shrink-0" />
                 <div className="leading-none">
-                  <span className="text-white font-black text-lg">{rating.average.toFixed(1)}</span>
-                  <span className="text-slate-400 text-xs ml-1.5">gemiddeld · {rating.count} {rating.count === 1 ? "beoordeling" : "beoordelingen"}</span>
+                  <span className="text-slate-900 font-black text-lg">{rating.average.toFixed(1)}</span>
+                  <span className="text-slate-500 text-xs ml-1.5">gemiddeld · {rating.count} {rating.count === 1 ? "beoordeling" : "beoordelingen"}</span>
                 </div>
               </div>
             )}
@@ -149,13 +149,13 @@ export default function Footer({ siteName, setActiveTab, setShowContactModal }: 
             {TRUST_POINTS.map(({ Icon, title, body }, i) => (
               <div
                 key={title}
-                className="group bg-slate-900 border border-slate-700/60 rounded-2xl p-5 space-y-2.5 hover:border-orange-500/40 hover:-translate-y-1 transition-all duration-300"
+                className="group bg-white border border-slate-200 shadow-sm rounded-2xl p-5 space-y-2.5 hover:border-orange-300 hover:shadow-md hover:-translate-y-1 transition-all duration-300"
               >
-                <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-orange-500/10 text-orange-400 border border-orange-500/20 group-hover:bg-orange-500/20 group-hover:scale-105 transition-all duration-300">
+                <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-orange-500/10 text-orange-500 border border-orange-500/20 group-hover:bg-orange-500/20 group-hover:scale-105 transition-all duration-300">
                   <Icon className="h-5 w-5" strokeWidth={2.2} />
                 </span>
-                <h4 className="text-sm font-bold text-white">{title}</h4>
-                <p className="text-[13px] text-slate-400 leading-relaxed">{body}</p>
+                <h4 className="text-sm font-bold text-slate-900">{title}</h4>
+                <p className="text-[13px] text-slate-500 leading-relaxed">{body}</p>
               </div>
             ))}
           </div>
@@ -164,38 +164,38 @@ export default function Footer({ siteName, setActiveTab, setShowContactModal }: 
       </div>
 
       {/* ── GOOGLE REVIEWS ticker ── */}
-      <div className="bg-slate-950 border-b border-slate-800">
+      <div className="bg-white border-b border-slate-100">
         <div className="py-10 sm:py-12 px-5 sm:px-8 lg:px-10 mx-auto max-w-7xl">
 
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-6">
             <div className="flex items-center gap-3">
-              <span className="h-9 w-9 rounded-full bg-white flex items-center justify-center shrink-0">
+              <span className="h-9 w-9 rounded-full bg-white border border-slate-200 shadow-sm flex items-center justify-center shrink-0">
                 <span className="text-base font-black" style={{ background: "linear-gradient(135deg, #4285F4 25%, #EA4335 50%, #FBBC05 75%, #34A853 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>G</span>
               </span>
               <div>
                 <div className="flex items-center gap-2">
                   {rating ? (
                     <>
-                      <span className="text-white font-bold text-base leading-none">{rating.average.toFixed(1)}</span>
+                      <span className="text-slate-900 font-bold text-base leading-none">{rating.average.toFixed(1)}</span>
                       <Star className="h-4 w-4 text-amber-400 fill-amber-400" />
                       <span className="text-xs text-slate-500">({rating.count} {rating.count === 1 ? "beoordeling" : "beoordelingen"})</span>
                     </>
                   ) : (
                     <>
-                      <span className="text-white font-bold text-base leading-none">4.9</span>
-                      <span className="text-amber-400 text-sm leading-none">★★★★★</span>
+                      <span className="text-slate-900 font-bold text-base leading-none">4.9</span>
+                      <span className="text-amber-500 text-sm leading-none">★★★★★</span>
                     </>
                   )}
                 </div>
-                <p className="text-xs text-slate-400 mt-0.5">Beoordeeld door klanten op Google</p>
+                <p className="text-xs text-slate-500 mt-0.5">Beoordeeld door klanten op Google</p>
               </div>
             </div>
             <a
               href="https://www.google.com/maps/place/MB+Hoogwerkers+bv/@52.1398936,4.5166788,18z"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-xs text-slate-400 hover:text-white transition-colors no-underline sm:ml-auto"
+              className="text-xs text-slate-500 hover:text-slate-900 transition-colors no-underline sm:ml-auto"
             >
               Bekijk alle reviews op Google →
             </a>
@@ -205,8 +205,8 @@ export default function Footer({ siteName, setActiveTab, setShowContactModal }: 
           <div className="relative overflow-hidden review-ticker-wrap h-[370px] sm:h-[430px] cursor-default select-none">
 
             {/* Top + bottom fade masks */}
-            <div className="absolute top-0 inset-x-0 h-14 bg-gradient-to-b from-slate-950 to-transparent z-10 pointer-events-none" />
-            <div className="absolute bottom-0 inset-x-0 h-14 bg-gradient-to-t from-slate-950 to-transparent z-10 pointer-events-none" />
+            <div className="absolute top-0 inset-x-0 h-14 bg-gradient-to-b from-white to-transparent z-10 pointer-events-none" />
+            <div className="absolute bottom-0 inset-x-0 h-14 bg-gradient-to-t from-white to-transparent z-10 pointer-events-none" />
 
             {/* Mobile: single column */}
             <div className="sm:hidden review-ticker flex flex-col gap-3">
@@ -231,10 +231,13 @@ export default function Footer({ siteName, setActiveTab, setShowContactModal }: 
 
           </div>
 
-          <p className="text-center text-[10px] text-slate-600 mt-4">Zweef om te pauzeren</p>
+          <p className="text-center text-[10px] text-slate-400 mt-4">Zweef om te pauzeren</p>
 
         </div>
       </div>
+
+      {/* Transition bridge — eases the light reviews band into the dark footer */}
+      <div className="h-12 bg-gradient-to-b from-white to-slate-950" aria-hidden="true" />
 
       <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-10 py-14 sm:py-16">
 

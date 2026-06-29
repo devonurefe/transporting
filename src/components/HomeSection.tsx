@@ -347,7 +347,7 @@ export default function HomeSection({
           Text/icons are rendered as HTML (not baked into the image) so they
           stay razor-sharp at any resolution/zoom and are translatable. Upload
           a TEXT-FREE photo in Admin → Customizer for the best result. */}
-      <div className="relative bg-slate-900 overflow-hidden h-[175px] sm:h-[380px] lg:h-[420px]">
+      <div className="relative bg-slate-900 overflow-hidden h-[210px] sm:h-[440px] lg:h-[500px]">
         {siteConfigLoaded ? (
           <motion.img
             key={siteConfig.heroImageUrl || 'default'}

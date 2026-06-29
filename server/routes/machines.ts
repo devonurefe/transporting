@@ -322,7 +322,7 @@ machinesRouter.put("/:id", requireAdmin as any, async (req: AuthenticatedRequest
         pricePerDay: Number(pricePerDay),
         oneDayPrice: oneDayPrice !== undefined && oneDayPrice !== null && oneDayPrice !== "" ? Number(oneDayPrice) : null,
         powerType: powerType || "Elektrisch",
-        imageUrl: imageUrl !== undefined && imageUrl !== null ? sanitizeImageUrl(imageUrl) : "",
+        imageUrl: imageUrl !== undefined && imageUrl !== null && imageUrl !== "" ? sanitizeImageUrl(imageUrl) : undefined,
         imageAlt: typeof imageAlt === "string" && imageAlt.trim() ? imageAlt.trim().slice(0, 300) : name,
         description: (description || "Gebruiksvriendelijke hoogwerker geschikt voor lichte installatie of inspectie.").slice(0, 2000),
         suitableFor: sanitizeSuitableFor(suitableFor),
@@ -343,6 +343,7 @@ machinesRouter.put("/:id", requireAdmin as any, async (req: AuthenticatedRequest
         minRentalDays: req.body.minRentalDays !== undefined && req.body.minRentalDays !== null && req.body.minRentalDays !== "" ? Math.round(Number(req.body.minRentalDays)) : null,
         weeklyOnly: Boolean(req.body.weeklyOnly),
         pickupOnly: Boolean(req.body.pickupOnly),
+        showInWeeklyOffers: req.body.showInWeeklyOffers !== undefined ? Boolean(req.body.showInWeeklyOffers) : undefined,
         crossSellAddons: req.body.crossSellAddons !== undefined ? (sanitizeCrossSell(req.body.crossSellAddons) ?? Prisma.JsonNull) : undefined
       }
     });

@@ -775,6 +775,22 @@ async function main() {
     }
   });
 
+  // Altrex RS 44: ensure weeklyOnly=false and minRentalDays=2 on every seed run.
+  // The pricePerDay: 35 guard above only ran once — production machines that already had
+  // pricePerDay: 19 kept weeklyOnly: true (old default) and minRentalDays: null/7,
+  // causing the calendar to block all sub-week selections. weeklyOnly must always be false:
+  // this machine uses the tiered flat-rate system (twoDayPrice + weeklyPrice tiers), not
+  // per-week billing. minRentalDays is only corrected when null to preserve intentional edits.
+  console.log("Correcting Altrex RS 44 billing mode (weeklyOnly=false, minRentalDays≥2)...");
+  await prisma.machine.updateMany({
+    where: { id: "altrex-rs44" },
+    data: { weeklyOnly: false }
+  });
+  await prisma.machine.updateMany({
+    where: { id: "altrex-rs44", minRentalDays: null },
+    data: { minRentalDays: 2 }
+  });
+
   // One-off correction: RS 44-POWER base working height is 2.75 m (Module B upgrades it to 4 m),
   // and Module B (Uitbreidingsset) is €19/week. Guarded on the previous height (4 m) so any later
   // admin edit to the height is preserved and re-runs are a no-op.

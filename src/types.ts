@@ -31,6 +31,7 @@ export interface Machine {
   additionalImages?: string[];
   specs?: { label: string; value: string }[];
   isActive?: boolean;
+  showInWeeklyOffers?: boolean; // display in "Weekaanbiedingen" section on catalog
   bufferDays?: number; // 0=no buffer, 1=1-day maintenance buffer after each rental
   minRentalDays?: number; // minimum billable rental length in days (e.g. 7 = 1 week)
   weeklyOnly?: boolean; // bill per started week (weeklyPrice = price/week), ignore daily/2-day/monthly tiers

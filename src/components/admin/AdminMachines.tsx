@@ -114,6 +114,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
   const [editMinRentalDays, setEditMinRentalDays] = useState("");
   const [editWeeklyOnly, setEditWeeklyOnly] = useState(false);
   const [editPickupOnly, setEditPickupOnly] = useState(false);
+  const [editShowInWeeklyOffers, setEditShowInWeeklyOffers] = useState(false);
   const [editCrossSell, setEditCrossSell] = useState<{ id: string; name: string; description: string; pricePerWeek: string; pricePerDay: string; pricePerTwoDay: string }[]>([]);
 
   const handleEditAdditionalImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -183,6 +184,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
     setEditMinRentalDays(m.minRentalDays ? String(m.minRentalDays) : "");
     setEditWeeklyOnly(!!m.weeklyOnly);
     setEditPickupOnly(!!m.pickupOnly);
+    setEditShowInWeeklyOffers(!!m.showInWeeklyOffers);
     setEditCrossSell(Array.isArray(m.crossSellAddons)
       ? m.crossSellAddons.map(a => ({ id: a.id, name: a.name, description: a.description ?? "", pricePerWeek: String(a.pricePerWeek), pricePerDay: a.pricePerDay != null ? String(a.pricePerDay) : "", pricePerTwoDay: a.pricePerTwoDay != null ? String(a.pricePerTwoDay) : "" }))
       : []);
@@ -315,6 +317,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
       minRentalDays: editMinRentalDays ? Number(editMinRentalDays) : undefined,
       weeklyOnly: editWeeklyOnly,
       pickupOnly: editPickupOnly,
+      showInWeeklyOffers: editShowInWeeklyOffers,
       crossSellAddons: editCrossSell
         .filter(a => a.name.trim())
         .map(a => ({
@@ -987,6 +990,22 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                       aria-checked={editPickupOnly}
                     >
                       <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${editPickupOnly ? 'translate-x-6' : 'translate-x-1'}`} />
+                    </button>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs font-bold text-slate-700">{t("In Weekaanbiedingen weergeven", "Show in Weekly Offers", "Haftalık Tekliflerde Göster")}</p>
+                      <p className="text-[11px] text-slate-500 mt-0.5">{t("Weergeven in de 'Weekaanbiedingen' sectie.", "Display in the Weekly Offers section.", "Haftalık Tekliflerde bölümünde görüntülenir.")}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setEditShowInWeeklyOffers(v => !v)}
+                      className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus:outline-none ${editShowInWeeklyOffers ? 'bg-orange-500' : 'bg-slate-300'}`}
+                      role="switch"
+                      aria-checked={editShowInWeeklyOffers}
+                    >
+                      <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${editShowInWeeklyOffers ? 'translate-x-6' : 'translate-x-1'}`} />
                     </button>
                   </div>
 

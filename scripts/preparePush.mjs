@@ -289,12 +289,14 @@ try {
   console.warn("[preparePush] Skipped specs backfill:", err?.message ?? err);
 }
 
-// One-off correction for the live Altrex RS 44 record: base working height is
-// 2.75 m (Module B upgrades it to 4 m) and Module B is €19/week. Guarded on the
-// previous height (4) so any later admin edit is preserved and re-runs are no-ops.
-// (`prisma db seed` does NOT run on deploy — this script does, so the fix lives here.)
+// One-off corrections for the live Altrex RS 44 record.
+// Each block is idempotent: guarded on the OLD value so re-runs are no-ops and
+// any later admin edit is preserved. (`prisma db seed` does NOT run on deploy —
+// this script does, so all live-data fixes must live here.)
 try {
   const rs44 = await prisma.machine.findUnique({ where: { id: "altrex-rs44" } });
+
+  // Fix 1 (PR #122): base working height was wrong (4 → 2.75 m).
   if (rs44 && Number(rs44.height) === 4) {
     await prisma.machine.update({
       where: { id: "altrex-rs44" },
@@ -307,10 +309,26 @@ try {
         ]
       }
     });
-    console.log("[preparePush] Corrected Altrex RS 44 (2.75 m base, Module B → 4 m @ €19/wk, platform 0.75 m)");
+    console.log("[preparePush] RS44 fix 1: corrected height 4 → 2.75 m");
+  }
+
+  // Fix 2: migrate from weekly-only billing to 2-day minimum flat-rate pricing.
+  // New tiers: 2 days = €15, 3–5 days = €19 flat, 6+ days = €19/5 × days pro-rata.
+  // Guard: weeklyOnly === true (the old config).
+  if (rs44 && rs44.weeklyOnly === true) {
+    await prisma.machine.update({
+      where: { id: "altrex-rs44" },
+      data: {
+        weeklyOnly: false,
+        minRentalDays: 2,
+        twoDayPrice: 15,
+        oneDayPrice: null,
+      }
+    });
+    console.log("[preparePush] RS44 fix 2: migrated to 2-day minimum (2d=€15, 3-5d=€19 flat, 6+d pro-rata)");
   }
 } catch (err) {
-  console.warn("[preparePush] Skipped RS 44 correction:", err?.message ?? err);
+  console.warn("[preparePush] Skipped RS 44 corrections:", err?.message ?? err);
 } finally {
   await prisma.$disconnect();
 }

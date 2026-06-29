@@ -245,14 +245,15 @@ describe("evaluateDiscountPercent — campaign rules", () => {
   });
 });
 
-// Altrex Kamersteiger — weekly-only loss leader (€19/week, min 1 week, per-started-week)
+// Altrex Kamersteiger — min 2 days, 2d=€15, 3–5d=€19 flat, 6+d=€19/5×days pro-rata
 const kamersteiger = {
   id: "altrex-rs44",
   category: "kamersteiger",
   pricePerDay: 19,
+  twoDayPrice: 15,
   weeklyPrice: 19,
-  weeklyOnly: true,
-  minRentalDays: 7,
+  weeklyOnly: false,
+  minRentalDays: 2,
 } as Machine;
 
 describe("billableWeeks", () => {
@@ -272,19 +273,22 @@ describe("billableWeeks", () => {
   });
 });
 
-describe("calculateItemSubtotal — weekly-only product", () => {
-  it("1 day still bills a full week (€19)", () => {
-    expect(calculateItemSubtotal(kamersteiger, 1, "Particulier", noRules, MON)).toBe(19);
+describe("calculateItemSubtotal — RS44 kamersteiger (2-day minimum, flat-rate tiers)", () => {
+  it("2 days = twoDayPrice (€15)", () => {
+    expect(calculateItemSubtotal(kamersteiger, 2, "Particulier", noRules, MON)).toBe(15);
   });
-  it("7 days = 1 week (€19)", () => {
-    expect(calculateItemSubtotal(kamersteiger, 7, "Particulier", noRules, MON)).toBe(19);
+  it("3 days = weeklyPrice flat (€19)", () => {
+    expect(calculateItemSubtotal(kamersteiger, 3, "Particulier", noRules, MON)).toBe(19);
   });
-  it("10 days = 2 started weeks (€38)", () => {
+  it("5 days = weeklyPrice flat (€19)", () => {
+    expect(calculateItemSubtotal(kamersteiger, 5, "Particulier", noRules, MON)).toBe(19);
+  });
+  it("10 days = pro-rata weeklyPrice (€38 = round(10 × 19/5))", () => {
     expect(calculateItemSubtotal(kamersteiger, 10, "Particulier", noRules, MON)).toBe(38);
   });
-  it("weekly-only takes priority over weekend/2-day tiers", () => {
-    const m = { ...kamersteiger, weekendPrice: 999, twoDayPrice: 999 } as Machine;
-    expect(calculateItemSubtotal(m, 2, "Particulier", noRules, SAT)).toBe(19);
+  it("1 day (pre-enforcement) falls back to pricePerDay × 1 (€19)", () => {
+    // minRentalDays enforcement is at UI/server level; the pricing fn still computes a value
+    expect(calculateItemSubtotal(kamersteiger, 1, "Particulier", noRules, MON)).toBe(19);
   });
 });
 

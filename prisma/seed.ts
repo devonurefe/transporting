@@ -417,7 +417,7 @@ const defaultMachines = [
     monthlyPrice: 340
   },
 
-  // CATEGORIE 4c: Kamersteigers — Altrex RS TOWER 44-Power (weekly-only loss leader)
+  // CATEGORIE 4c: Kamersteigers — Altrex RS TOWER 44-Power (2-dag minimum, €15/2dgn, €19/week)
   {
     id: "altrex-rs44",
     name: "Altrex RS TOWER 44-Power Kamersteiger",
@@ -438,10 +438,11 @@ const defaultMachines = [
     campaignDiscountPercent: null,
     campaignDiscountAmount: null,
     weekendPrice: null,
+    twoDayPrice: 15,
     weeklyPrice: 19,
     monthlyPrice: null,
-    minRentalDays: 7,
-    weeklyOnly: true,
+    minRentalDays: 2,
+    weeklyOnly: false,
     pickupOnly: true,
     packageContents: "Inklapbaar hoofdframe (Module A); Werkplatform; Zwenkwielenset met rem; **Wettelijk verplichte driehoekstabilisatoren (inbegrepen)**",
     crossSellAddons: [
@@ -751,18 +752,19 @@ async function main() {
     await prisma.machine.updateMany({ where: { id, pricePerDay: wrongPrice }, data: { pricePerDay: correctPrice } });
   }
 
-  // Configure the Altrex Kamersteiger as a weekly-only, pickup-only loss leader.
+  // Configure the Altrex Kamersteiger: min 2 days, 2-day €15, 3-5 days €19 flat, pickup-only.
   // Guarded on the original scaffold day-rate (35) so a later admin edit is never clobbered;
   // brand-new databases get the full config via `create` above and skip this no-op.
-  console.log("Configuring Altrex Kamersteiger (weekly-only, pickup-only)...");
+  console.log("Configuring Altrex Kamersteiger (2-dag min, €15/2dgn, €19/week, pickup-only)...");
   await prisma.machine.updateMany({
     where: { id: "altrex-rs44", pricePerDay: 35 },
     data: {
       name: "Altrex RS TOWER 44-Power Kamersteiger",
       pricePerDay: 19,
+      twoDayPrice: 15,
       weeklyPrice: 19,
-      minRentalDays: 7,
-      weeklyOnly: true,
+      minRentalDays: 2,
+      weeklyOnly: false,
       pickupOnly: true,
       description: "Veilig, licht en originele Altrex-kwaliteit. Inklapbaar en eenvoudig op te bouwen voor uw renovatieklussen binnen en buiten.",
       packageContents: "Inklapbaar hoofdframe (Module A); Werkplatform; Zwenkwielenset met rem; **Wettelijk verplichte driehoekstabilisatoren (inbegrepen)**",

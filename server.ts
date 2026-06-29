@@ -626,6 +626,21 @@ async function applyDataMigrations() {
       console.log("[Migration] Fixed stale heroSubtitle.");
     }
 
+    // Altrex RS44: correct weeklyOnly and minRentalDays — idempotent, safe every startup.
+    // Production DB was left with weeklyOnly: true (old default) because the preparePush.mjs
+    // guard only fired when the file was called, which never happened from the start script.
+    const rs44 = await prisma.machine.findUnique({ where: { id: "altrex-rs44" } });
+    if (rs44 && (rs44 as any).weeklyOnly === true) {
+      await prisma.machine.update({
+        where: { id: "altrex-rs44" },
+        data: { weeklyOnly: false, minRentalDays: 2, twoDayPrice: 15, oneDayPrice: null }
+      });
+      console.log("[Migration] RS44: corrected to weeklyOnly=false, minRentalDays=2.");
+    } else if (rs44 && (rs44 as any).minRentalDays == null) {
+      await prisma.machine.update({ where: { id: "altrex-rs44" }, data: { minRentalDays: 2 } });
+      console.log("[Migration] RS44: set minRentalDays=2.");
+    }
+
     // Loud warning if the admin account still uses the old seeded default password
     const seededAdmin = await prisma.admin.findUnique({ where: { email: "admin@huurgo.nl" } });
     if (seededAdmin) {

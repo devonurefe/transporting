@@ -423,7 +423,7 @@ const defaultMachines = [
     name: "Altrex RS TOWER 44-Power Kamersteiger",
     category: "kamersteiger",
     categoryLabel: "Kamersteiger",
-    height: 4.0,
+    height: 2.75,
     reach: 0,
     weight: 105,
     pricePerDay: 19,
@@ -445,7 +445,7 @@ const defaultMachines = [
     pickupOnly: true,
     packageContents: "Inklapbaar hoofdframe (Module A); Werkplatform; Zwenkwielenset met rem; **Wettelijk verplichte driehoekstabilisatoren (inbegrepen)**",
     crossSellAddons: [
-      { id: "altrex-rs44-uitbreiding", name: "Uitbreidingsset (Module B)", description: "Extra originele Altrex bovenbuizenset om uw werkhoogte van 4 m naar 5,5 m te verhogen.", pricePerWeek: 15 },
+      { id: "altrex-rs44-uitbreiding", name: "Uitbreidingsset (Module B)", description: "Extra originele Altrex bovenbuizenset om uw werkhoogte van 2,75 m naar 4 m te verhogen.", pricePerWeek: 19 },
       { id: "altrex-rs44-toolbuddy", name: "Altrex Toolbuddy", description: "Praktische ophanghaak zodat uw gereedschap en verfemmer binnen handbereik blijven tijdens het werken.", pricePerWeek: 5 }
     ]
   },
@@ -767,7 +767,22 @@ async function main() {
       description: "Veilig, licht en originele Altrex-kwaliteit. Inklapbaar en eenvoudig op te bouwen voor uw renovatieklussen binnen en buiten.",
       packageContents: "Inklapbaar hoofdframe (Module A); Werkplatform; Zwenkwielenset met rem; **Wettelijk verplichte driehoekstabilisatoren (inbegrepen)**",
       crossSellAddons: [
-        { id: "altrex-rs44-uitbreiding", name: "Uitbreidingsset (Module B)", description: "Extra originele Altrex bovenbuizenset om uw werkhoogte van 4 m naar 5,5 m te verhogen.", pricePerWeek: 15 },
+        { id: "altrex-rs44-uitbreiding", name: "Uitbreidingsset (Module B)", description: "Extra originele Altrex bovenbuizenset om uw werkhoogte van 2,75 m naar 4 m te verhogen.", pricePerWeek: 19 },
+        { id: "altrex-rs44-toolbuddy", name: "Altrex Toolbuddy", description: "Praktische ophanghaak zodat uw gereedschap en verfemmer binnen handbereik blijven tijdens het werken.", pricePerWeek: 5 }
+      ]
+    }
+  });
+
+  // One-off correction: RS 44-POWER base working height is 2.75 m (Module B upgrades it to 4 m),
+  // and Module B (Uitbreidingsset) is €19/week. Guarded on the previous height (4 m) so any later
+  // admin edit to the height is preserved and re-runs are a no-op.
+  console.log("Correcting Altrex RS 44 (2.75 m base, Module B → 4 m @ €19/wk)...");
+  await prisma.machine.updateMany({
+    where: { id: "altrex-rs44", height: 4 },
+    data: {
+      height: 2.75,
+      crossSellAddons: [
+        { id: "altrex-rs44-uitbreiding", name: "Uitbreidingsset (Module B)", description: "Extra originele Altrex bovenbuizenset om uw werkhoogte van 2,75 m naar 4 m te verhogen.", pricePerWeek: 19 },
         { id: "altrex-rs44-toolbuddy", name: "Altrex Toolbuddy", description: "Praktische ophanghaak zodat uw gereedschap en verfemmer binnen handbereik blijven tijdens het werken.", pricePerWeek: 5 }
       ]
     }

@@ -147,7 +147,7 @@ export default function AdminDashboard({ setSubTab, setOrdersFilter, adminLangua
   const currentMonthRevenue = monthlyRevenue.at(-1)?.revenue ?? 0;
   const prevMonthRevenue = monthlyRevenue.at(-2)?.revenue ?? 0;
   const revenueTrend = prevMonthRevenue > 0
-    ? `${currentMonthRevenue >= prevMonthRevenue ? "+" : ""}${((currentMonthRevenue - prevMonthRevenue) / prevMonthRevenue * 100).toFixed(1)}% t.o.v. vorige maand`
+    ? `${currentMonthRevenue >= prevMonthRevenue ? "+" : ""}${((currentMonthRevenue - prevMonthRevenue) / prevMonthRevenue * 100).toFixed(1)}% ${t("t.o.v. vorige maand", "vs last month", "geçen aya göre")}`
     : (currentMonthRevenue > 0 ? t("Eerste omzet dit jaar", "First revenue this year", "İlk ciro") : t("Nog geen omzet", "No revenue yet", "Henüz ciro yok"));
 
   return (

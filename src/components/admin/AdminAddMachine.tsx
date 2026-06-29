@@ -49,6 +49,7 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
   const [newBufferDays, setNewBufferDays] = useState(0);
   const [isAdding, setIsAdding] = useState<boolean>(false);
   const [imageUrl, setImageUrl] = useState("");
+  const [imageAlt, setImageAlt] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const [additionalImages, setAdditionalImages] = useState<string[]>([]);
   const [isUploadingAdditional, setIsUploadingAdditional] = useState(false);
@@ -205,6 +206,7 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
       oneDayPrice: newOneDayPrice ? Number(newOneDayPrice) : undefined,
       powerType: newPower,
       imageUrl: imageUrl.trim() || undefined,
+      imageAlt: imageAlt.trim() || undefined,
       description: newDescription,
       suitableFor: parsedSuitable.length > 0 ? parsedSuitable : ["Algemeen"],
       weeklyDiscountPercent: weeklyDiscountPercent ? Number(weeklyDiscountPercent) : undefined,
@@ -253,6 +255,7 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
       setCampaignDiscountPercent("");
       setCampaignDiscountAmount("");
       setImageUrl("");
+      setImageAlt("");
       setAdditionalImages([]);
       setPackageContents("");
       setNewSpecs([]);
@@ -665,6 +668,18 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
                   </div>
                 </div>
               )}
+
+              <div className="col-span-1 md:col-span-2 space-y-1">
+                <label className="text-[10px] text-slate-500 font-bold block">{t("Afbeelding alt-tekst (SEO/toegankelijkheid)", "Image alt text (SEO/accessibility)", "Resim alt metni (SEO/erişilebilirlik)")}</label>
+                <input
+                  type="text"
+                  maxLength={300}
+                  value={imageAlt}
+                  onChange={(e) => setImageAlt(e.target.value)}
+                  placeholder={t("Bijv. Smalle schaarlift in magazijngang (leeg = modelnaam)", "e.g. Narrow scissor lift in a warehouse aisle (empty = model name)", "örn. Dar depo koridorunda makaslı platform (boş = model adı)")}
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500"
+                />
+              </div>
 
               {/* Additional Images Section */}
               <div className="col-span-1 md:col-span-2 border-t border-slate-200/80 pt-4 mt-2 space-y-3">

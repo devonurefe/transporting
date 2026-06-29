@@ -95,6 +95,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
   const [editDescription, setEditDescription] = useState("");
   const [editSuitable, setEditSuitable] = useState("");
   const [editImageUrl, setEditImageUrl] = useState("");
+  const [editImageAlt, setEditImageAlt] = useState("");
   const [editWeeklyDiscountPercent, setEditWeeklyDiscountPercent] = useState("");
   const [editMonthlyDiscountPercent, setEditMonthlyDiscountPercent] = useState("");
   const [editWeekendPrice, setEditWeekendPrice] = useState("");
@@ -165,6 +166,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
     setEditDescription(m.description || "");
     setEditSuitable(Array.isArray(m.suitableFor) ? m.suitableFor.join(", ") : String(m.suitableFor || ""));
     setEditImageUrl(m.imageUrl || "");
+    setEditImageAlt(m.imageAlt || "");
     setEditWeeklyDiscountPercent(m.weeklyDiscountPercent ? String(m.weeklyDiscountPercent) : "");
     setEditMonthlyDiscountPercent(m.monthlyDiscountPercent ? String(m.monthlyDiscountPercent) : "");
     setEditWeekendPrice(m.weekendPrice ? String(m.weekendPrice) : "");
@@ -292,6 +294,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
       oneDayPrice: editOneDayPrice ? Number(editOneDayPrice) : undefined,
       powerType: editPower,
       imageUrl: editImageUrl,
+      imageAlt: editImageAlt,
       description: editDescription,
       suitableFor: parsedSuitable,
       weeklyDiscountPercent: editWeeklyDiscountPercent ? Number(editWeeklyDiscountPercent) : undefined,
@@ -663,6 +666,18 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                             )}
                           </div>
                           <p className="text-[10px] text-slate-400 mt-1">Aanbevolen: liggende foto (4:3 of 16:9), min. 800×600 px, JPG/WebP, max 3 MB. Wordt automatisch verkleind.</p>
+                          <div className="space-y-1 pt-1">
+                            <label className="text-[11px] text-slate-600 block font-bold">{t("Afbeelding alt-tekst (SEO/toegankelijkheid)", "Image alt text (SEO/accessibility)", "Resim alt metni (SEO/erişilebilirlik)")}</label>
+                            <input
+                              type="text"
+                              maxLength={300}
+                              value={editImageAlt}
+                              onChange={(e) => setEditImageAlt(e.target.value)}
+                              placeholder={t("Bijv. Smalle schaarlift in magazijngang", "e.g. Narrow scissor lift in a warehouse aisle", "örn. Dar depo koridorunda makaslı platform")}
+                              className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500"
+                            />
+                            <p className="text-[10px] text-slate-400">{t("Leeg = automatisch de modelnaam.", "Empty = the model name automatically.", "Boş = otomatik olarak model adı.")}</p>
+                          </div>
                         </div>
                       </div>
 

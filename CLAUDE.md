@@ -6,20 +6,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with th
 
 **HuurGo** — full-stack Dutch-language rental marketplace for aerial lifts, scissor lifts, spider platforms and ladder lifts. Operated by MB Hoogwerkers B.V. (Zoeterwoude). Features a real-time availability calendar, multi-step checkout with WhatsApp payment flow, PDF invoice generation, and a comprehensive admin console.
 
-**Live URL:** hoogwerkerhub.onrender.com  
-**Deploy:** push to `main` → Render auto-deploys (build: `npm run build && node scripts/preparePush.mjs && npx prisma db push`, start: `node dist/server.js`)
+**Live URL:** huurgo.nl (TransIP VPS, Amsterdam)  
+**Deploy:** TransIP VPS — Docker Compose (`docker compose up -d --build`). Nginx reverse proxy + Let's Encrypt SSL. PostgreSQL draait in dezelfde Docker stack.
 
 ### Branching & PR workflow
 
-`main` is the deployed/production branch — Render auto-deploys every push to it,
-so **never push directly to `main`**. Instead:
+`main` is the stable production branch — **never push directly to `main`**. Instead:
 
 - **One PR per feature.** Create a dedicated branch per change (e.g.
   `claude/<short-feature-name>`), branched off the latest `origin/main`.
 - Keep each PR scoped to a single feature/fix so changes can be reviewed,
   reverted, or revisited feature by feature.
 - Run `npm run lint` and `npm run test` before opening the PR.
-- Open the PR against `main` and merge it once approved; Render deploys on merge.
+- Open the PR against `main` and merge it once approved; deploy to VPS manually after merge.
 - Don't bundle unrelated changes into one PR.
 
 ---
@@ -80,7 +79,7 @@ Single-package full-stack monorepo — one `package.json` for both React fronten
 
 - ORM: Prisma 6, **PostgreSQL** only (no SQLite).
 - Local dev: `docker-compose up postgres` → `DATABASE_URL=postgresql://huurgo:huurgo_dev_pass@localhost:5432/huurgo`.
-- Production (Render): managed PostgreSQL connection string.
+- Production (TransIP VPS): PostgreSQL draait in Docker, `DATABASE_URL` via `.env` op de server.
 - Use `prisma db push` (not `migrate`) during development.
 - Schema models: `Machine`, `Category`, `BlockedDate`, `Order`, `Customer`, `Admin`, `SiteConfig`, `Notification`, `InvoiceCounter`, `OrderRating`.
 - Indexes on `Order`: `[machineId]`, `[customerId]`, `[status]`, `[machineId, startDate, endDate, status]`, `[createdAt]`. On `BlockedDate`: `[machineId, date]`.

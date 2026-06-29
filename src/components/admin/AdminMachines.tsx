@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from "react";
-import { Plus, Trash2, Wrench, X, Sparkles } from "lucide-react";
+import { Plus, Trash2, Wrench, X, Sparkles, Image as ImageIcon } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useAppStore } from "../../store/appStore";
 import { useAuthStore } from "../../store/authStore";
@@ -613,25 +613,43 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                           />
                         </div>
                         <div className="space-y-2">
-                          <div className="relative">
-                            <input
-                              type="text"
-                              value={editImageUrl}
-                              onChange={(e) => setEditImageUrl(e.target.value)}
-                              placeholder="/placeholder-machine.webp"
-                              className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 pr-8 text-xs text-slate-800 outline-none focus:border-amber-500 font-mono"
-                            />
-                            {editImageUrl && (
+                          {editImageUrl.startsWith("data:") ? (
+                            // Embedded base64 image: show a readable chip instead of the raw (huge) data-URI string
+                            <div className="flex items-center gap-2 w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs">
+                              <ImageIcon className="h-3.5 w-3.5 text-amber-600 shrink-0" />
+                              <span className="flex-1 truncate text-slate-600">
+                                {t("Geüploade afbeelding (ingesloten data)", "Uploaded image (embedded data)", "Yüklenmiş resim (gömülü veri)")}
+                              </span>
                               <button
                                 type="button"
                                 onClick={() => setEditImageUrl("")}
-                                className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 text-slate-400 hover:text-red-500 cursor-pointer border-none bg-transparent"
-                                title="URL wissen"
+                                className="p-0.5 text-slate-400 hover:text-red-500 cursor-pointer border-none bg-transparent shrink-0"
+                                title={t("Afbeelding wissen", "Clear image", "Resmi temizle")}
                               >
                                 <X className="h-3.5 w-3.5" />
                               </button>
-                            )}
-                          </div>
+                            </div>
+                          ) : (
+                            <div className="relative">
+                              <input
+                                type="text"
+                                value={editImageUrl}
+                                onChange={(e) => setEditImageUrl(e.target.value)}
+                                placeholder="/placeholder-machine.webp"
+                                className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 pr-8 text-xs text-slate-800 outline-none focus:border-amber-500 font-mono"
+                              />
+                              {editImageUrl && (
+                                <button
+                                  type="button"
+                                  onClick={() => setEditImageUrl("")}
+                                  className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 text-slate-400 hover:text-red-500 cursor-pointer border-none bg-transparent"
+                                  title={t("URL wissen", "Clear URL", "URL'yi temizle")}
+                                >
+                                  <X className="h-3.5 w-3.5" />
+                                </button>
+                              )}
+                            </div>
+                          )}
                           <div className="relative">
                             <input
                               type="file"
@@ -772,7 +790,19 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                       </div>
                     </div>
 
-                    <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-slate-100 pt-3">
+                    <div className="md:col-span-2 border-t border-slate-100 pt-4 space-y-3">
+                      <div>
+                        <p className="text-sm font-bold text-slate-800">{t("Prijzen & kortingen", "Pricing & discounts", "Fiyatlar ve indirimler")}</p>
+                        <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">
+                          {t(
+                            "Vaste pakketprijzen gaan vóór kortingspercentages. Laat een veld leeg om de standaard dagprijs te gebruiken.",
+                            "Fixed package prices take priority over discount percentages. Leave a field empty to use the standard daily rate.",
+                            "Sabit paket fiyatları indirim oranlarından önceliklidir. Standart günlük ücreti kullanmak için bir alanı boş bırakın."
+                          )}
+                        </p>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div className="space-y-1">
                         <label className="text-xs text-slate-700 block font-bold">{t("1 Dag Actie €", "1 Day Promo €", "1 Gün Kampanya €")}</label>
                         <input
@@ -783,6 +813,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                           onChange={(e) => setEditOneDayPrice(e.target.value)}
                           className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
                         />
+                        <p className="text-[10px] text-slate-400">{t("Bij precies 1 huurdag", "For exactly 1 rental day", "Tam olarak 1 kiralama gününde")}</p>
                       </div>
                       <div className="space-y-1">
                         <label className="text-xs text-slate-700 block font-bold">{t("2 Dagen (doordeweeks) €", "2 Days (weekdays) €", "2 Gün (hafta içi) €")}</label>
@@ -794,6 +825,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                           onChange={(e) => setEditTwoDayPrice(e.target.value)}
                           className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
                         />
+                        <p className="text-[10px] text-slate-400">{t("Bij 2 doordeweekse dagen", "For 2 weekday days", "2 hafta içi günde")}</p>
                       </div>
 
                       <div className="space-y-1">
@@ -806,6 +838,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                           onChange={(e) => setEditWeekendPrice(e.target.value)}
                           className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
                         />
+                        <p className="text-[10px] text-slate-400">{t("Bij 2–3 dagen (weekend)", "For 2–3 days (weekend)", "2–3 günde (hafta sonu)")}</p>
                       </div>
 
                       <div className="space-y-1">
@@ -818,6 +851,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                           onChange={(e) => setEditWeeklyPrice(e.target.value)}
                           className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
                         />
+                        <p className="text-[10px] text-slate-400">{t("Bij 5–27 dagen (naar rato)", "For 5–27 days (pro-rata)", "5–27 günde (orantılı)")}</p>
                       </div>
 
                       <div className="space-y-1">
@@ -830,6 +864,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                           onChange={(e) => setEditMonthlyFlatPrice(e.target.value)}
                           className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
                         />
+                        <p className="text-[10px] text-slate-400">{t("Bij 28+ dagen (naar rato)", "For 28+ days (pro-rata)", "28+ günde (orantılı)")}</p>
                       </div>
 
                       <div className="space-y-1">
@@ -842,6 +877,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                           onChange={(e) => setEditWeeklyDiscountPercent(e.target.value)}
                           className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
                         />
+                        <p className="text-[10px] text-slate-400">{t("Alleen als geen vaste weekprijs", "Only if no fixed week price", "Yalnızca sabit hafta fiyatı yoksa")}</p>
                       </div>
 
                       <div className="space-y-1">
@@ -854,6 +890,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                           onChange={(e) => setEditMonthlyDiscountPercent(e.target.value)}
                           className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
                         />
+                        <p className="text-[10px] text-slate-400">{t("Alleen als geen vaste maandprijs", "Only if no fixed month price", "Yalnızca sabit ay fiyatı yoksa")}</p>
                       </div>
 
                       <div className="space-y-1">
@@ -864,30 +901,32 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                           onChange={(e) => setEditCampaignText(e.target.value)}
                           className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
                         />
+                        <p className="text-[10px] text-slate-400">{t("Tekst op de actie-badge", "Text on the promo badge", "Kampanya rozetindeki metin")}</p>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-1">
-                          <label className="text-xs text-slate-700 block font-bold">{t("Campagne %", "Campaign %", "Kampanya %")}</label>
+                      <div className="space-y-1">
+                        <label className="text-xs text-slate-700 block font-bold">{t("Campagnekorting", "Campaign discount", "Kampanya indirimi")}</label>
+                        <div className="grid grid-cols-2 gap-3">
                           <input
                             type="number"
                             min="0"
                             max="100"
+                            placeholder="%"
                             value={editCampaignDiscountPercent}
                             onChange={(e) => setEditCampaignDiscountPercent(e.target.value)}
                             className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
                           />
-                        </div>
-                        <div className="space-y-1">
-                          <label className="text-xs text-slate-700 block font-bold">{t("Campagne €", "Campaign €", "Kampanya €")}</label>
                           <input
                             type="number"
                             min="0"
+                            placeholder="€"
                             value={editCampaignDiscountAmount}
                             onChange={(e) => setEditCampaignDiscountAmount(e.target.value)}
                             className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
                           />
                         </div>
+                        <p className="text-[10px] text-slate-400">{t("Percentage of vast bedrag", "Percentage or fixed amount", "Yüzde veya sabit tutar")}</p>
+                      </div>
                       </div>
                     </div>
 

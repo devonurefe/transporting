@@ -347,7 +347,7 @@ export default function HomeSection({
           Text/icons are rendered as HTML (not baked into the image) so they
           stay razor-sharp at any resolution/zoom and are translatable. Upload
           a TEXT-FREE photo in Admin → Customizer for the best result. */}
-      <div className="relative bg-slate-900 overflow-hidden h-[210px] sm:h-[440px] lg:h-[500px]">
+      <div className="relative bg-slate-900 overflow-hidden h-[240px] sm:h-[480px] lg:h-[540px]">
         {siteConfigLoaded ? (
           <motion.img
             key={siteConfig.heroImageUrl || 'default'}
@@ -356,7 +356,7 @@ export default function HomeSection({
             transition={{ duration: 0.4 }}
             src={siteConfig.heroImageUrl || '/hero-huurgo-v2.jpg'}
             alt=""
-            className="w-full h-full block object-cover animate-kenburns [object-position:55%_center] sm:[object-position:65%_center]"
+            className="w-full h-full block object-cover animate-kenburns [object-position:80%_center] sm:[object-position:85%_center]"
           />
         ) : (
           // Skeleton placeholder while the config is still loading

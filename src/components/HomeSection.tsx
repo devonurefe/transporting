@@ -347,7 +347,7 @@ export default function HomeSection({
           Text/icons are rendered as HTML (not baked into the image) so they
           stay razor-sharp at any resolution/zoom and are translatable. Upload
           a TEXT-FREE photo in Admin → Customizer for the best result. */}
-      <div className="relative bg-slate-900 overflow-hidden h-[210px] sm:h-[380px] lg:h-[420px]">
+      <div className="relative bg-slate-900 overflow-hidden h-[175px] sm:h-[380px] lg:h-[420px]">
         {siteConfigLoaded ? (
           <motion.img
             key={siteConfig.heroImageUrl || 'default'}
@@ -432,7 +432,7 @@ export default function HomeSection({
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.14 }}
-              className="grid grid-cols-3 gap-2 sm:hidden mt-4"
+              className="grid grid-cols-3 gap-2 sm:hidden mt-3"
             >
               {[
                 { Icon: Clock, label: t("Online boeken", "Book online", "Online kirala") },

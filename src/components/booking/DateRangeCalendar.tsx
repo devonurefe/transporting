@@ -245,8 +245,10 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
   // When only start is picked (no end yet), treat it as a 1-day selection so
   // the confirm button enables immediately after the first tap.
   const effectiveEnd = draftEnd || draftStart;
-  const validRange = !!draftStart && someUnitAvailable(unitIds, draftStart, effectiveEnd, orders, blockedDates, today);
-  const days = validRange ? calculateRentalDays(draftStart, effectiveEnd) : 0;
+  const rangeAvail = !!draftStart && someUnitAvailable(unitIds, draftStart, effectiveEnd, orders, blockedDates, today);
+  const days = rangeAvail ? calculateRentalDays(draftStart, effectiveEnd) : 0;
+  const minDays = machine.minRentalDays ?? 1;
+  const validRange = rangeAvail && days >= minDays;
   const subtotal = validRange ? calculateItemSubtotal(machine, days, profile, campaignRules, draftStart, weekendWork) : 0;
 
   const confirm = () => { if (!validRange) return; onConfirm(draftStart, effectiveEnd); close(); };
@@ -389,6 +391,19 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
                 {weekendWork === "nee" && (
                   <p className="text-[10px] text-center text-slate-400 px-5 pb-1 leading-relaxed">
                     U werkt niet in het weekend — zaterdag en zondag zijn niet als startdag te kiezen.
+                  </p>
+                )}
+
+                {/* Hint: minimum rental period not yet reached */}
+                {minDays > 1 && rangeAvail && days < minDays && (
+                  <p className="text-[10px] text-center text-amber-600 font-semibold px-5 pb-1 leading-relaxed">
+                    Minimale huurperiode is {minDays} dagen — selecteer een langere periode.
+                  </p>
+                )}
+                {/* Static minimum period note */}
+                {minDays > 1 && !(rangeAvail && days < minDays) && (
+                  <p className="text-[10px] text-center text-slate-400 px-5 pb-1 leading-relaxed">
+                    Minimale huurperiode: {minDays} dagen.
                   </p>
                 )}
 

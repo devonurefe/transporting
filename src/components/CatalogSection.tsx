@@ -467,6 +467,13 @@ export default function CatalogSection({
                                   <span className="line-through">{formatPrice(vp(machine.pricePerDay))}</span> per dag {vatLabel}
                                 </div>
                               </>
+                            ) : machine.weeklyPrice && machine.minRentalDays && machine.minRentalDays >= 2 ? (
+                              <>
+                                <div className="text-xl font-display font-black leading-none text-slate-900">
+                                  {formatPrice(vp(machine.weeklyPrice))}
+                                </div>
+                                <div className="text-[10px] text-slate-400 mt-0.5">per week {vatLabel}</div>
+                              </>
                             ) : (
                               <>
                                 <div className="text-xl font-display font-black leading-none text-slate-900">
@@ -568,16 +575,19 @@ export default function CatalogSection({
           const vp = (n: number) => withVat(n, vatDisplay);
           const rows: { period: string; when: string; price: number; badge?: string; highlight?: "fire" | "green" | "teal" | "violet" }[] = [];
 
-          // 1 dag: always first row; actie highlight only when cheaper than day rate
-          const oneDayHasActie = !!(m.oneDayPrice && m.oneDayPrice < m.pricePerDay);
-          rows.push({
-            period: oneDayHasActie ? "Dagactie" : "1 dag",
-            when: "Ma – Vr",
-            price: oneDayHasActie ? m.oneDayPrice! : m.pricePerDay,
-            highlight: oneDayHasActie ? "fire" : undefined,
-          });
-          // Always show 2-day: use twoDayPrice if set, otherwise pricePerDay × 2
-          rows.push({ period: "2 dagen (doordeweeks)", when: "Ma – Do", price: m.twoDayPrice ?? (m.pricePerDay * 2) });
+          // 1 dag: only when there is no minimum rental period of 2+ days
+          const minRental = m.minRentalDays ?? 1;
+          if (minRental < 2) {
+            const oneDayHasActie = !!(m.oneDayPrice && m.oneDayPrice < m.pricePerDay);
+            rows.push({
+              period: oneDayHasActie ? "Dagactie" : "1 dag",
+              when: "Ma – Vr",
+              price: oneDayHasActie ? m.oneDayPrice! : m.pricePerDay,
+              highlight: oneDayHasActie ? "fire" : undefined,
+            });
+          }
+          // 2 dagen: use twoDayPrice if set, otherwise pricePerDay × 2
+          rows.push({ period: minRental >= 2 ? "2 dagen (min.)" : "2 dagen (doordeweeks)", when: "Ma – Do", price: m.twoDayPrice ?? (m.pricePerDay * 2) });
           if (m.weekendPrice) {
             rows.push({ period: "Weekend", when: "Za – Zo", price: m.weekendPrice, highlight: "violet" });
           }

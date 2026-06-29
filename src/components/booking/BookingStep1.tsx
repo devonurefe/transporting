@@ -517,8 +517,8 @@ export default function BookingStep1({
         </div>
       )}
 
-      {/* Minimum-rental notice for weekly-only products (e.g. Kamersteiger) */}
-      {selectedMachine?.weeklyOnly && (
+      {/* Minimum-rental notice */}
+      {selectedMachine?.weeklyOnly ? (
         <div className="p-3 rounded-xl bg-sky-50 border border-sky-200 text-sky-800 text-xs leading-relaxed flex items-start gap-2">
           <Calendar className="h-4 w-4 text-sky-600 shrink-0 mt-0.5" />
           <span>
@@ -526,7 +526,15 @@ export default function BookingStep1({
             1 week. Kortere periodes worden afgerekend als een volledige week.
           </span>
         </div>
-      )}
+      ) : selectedMachine?.minRentalDays && selectedMachine.minRentalDays > 1 ? (
+        <div className="p-3 rounded-xl bg-sky-50 border border-sky-200 text-sky-800 text-xs leading-relaxed flex items-start gap-2">
+          <Calendar className="h-4 w-4 text-sky-600 shrink-0 mt-0.5" />
+          <span>
+            Minimale huurperiode voor dit product is <span className="font-bold">{selectedMachine.minRentalDays} dagen</span>.
+            Selecteer een periode van minimaal {selectedMachine.minRentalDays} dagen.
+          </span>
+        </div>
+      ) : null}
 
       {/* Extra opties */}
       <div className="space-y-3 pt-4 border-t-2 border-slate-200">

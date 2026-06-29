@@ -302,12 +302,21 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
     // the client. The global "safety" addon plus this machine's own product-specific
     // cross-sell extras are the only accepted ids. (Weekend handling is no longer an
     // addon — it adjusts the subtotal via orderData.weekendWork below.)
-    const crossSell: Array<{ id: string; name?: string; pricePerWeek: number }> =
+    const crossSell: Array<{ id: string; name?: string; pricePerWeek: number; pricePerDay?: number; pricePerTwoDay?: number }> =
       Array.isArray((machine as any).crossSellAddons) ? (machine as any).crossSellAddons : [];
     const crossSellMap = new Map(crossSell.map(a => [String(a.id), a]));
+    const machineWeeklyOnly = Boolean((machine as any).weeklyOnly);
     const addonWeeks = Math.max(1, Math.ceil(
       Math.max(rentalDays, ((machine as any).minRentalDays > 0 ? (machine as any).minRentalDays : 7)) / 7
     ));
+    // Authoritative add-on price — mirrors src/utils/pricing.ts addonPriceForRental EXACTLY.
+    const addonPrice = (sa: { pricePerWeek?: number; pricePerDay?: number; pricePerTwoDay?: number }): number => {
+      if (!machineWeeklyOnly) {
+        if (rentalDays === 1 && sa.pricePerDay != null && sa.pricePerDay > 0) return Number(sa.pricePerDay);
+        if (rentalDays === 2 && sa.pricePerTwoDay != null && sa.pricePerTwoDay > 0) return Number(sa.pricePerTwoDay);
+      }
+      return Number(sa.pricePerWeek || 0) * addonWeeks;
+    };
     const rawAddons = Array.isArray(orderData.addons) ? orderData.addons : [];
     let addonsTotal = 0;
     for (const a of rawAddons) {
@@ -318,7 +327,7 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
       if (id === "safety") {
         addonsTotal += 15 * rentalDays;
       } else if (crossSellMap.has(id)) {
-        addonsTotal += Number(crossSellMap.get(id)!.pricePerWeek || 0) * addonWeeks;
+        addonsTotal += addonPrice(crossSellMap.get(id)!);
       } else {
         return res.status(400).json({ error: "Ongeldige toevoeging in bestelling" });
       }
@@ -533,7 +542,7 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
             const id = String(a.id ?? "");
             if (id === "safety") return { id: "safety", name: "Veiligheidskit", price: 15 * rentalDays };
             const sa = crossSellMap.get(id);
-            return { id, name: sa?.name ?? id, price: Number(sa?.pricePerWeek ?? 0) * addonWeeks };
+            return { id, name: sa?.name ?? id, price: sa ? addonPrice(sa) : 0 };
           })),
           weekendWork: weekendWork === "ja" || weekendWork === "nee" ? weekendWork : null,
           invoiceNumber,

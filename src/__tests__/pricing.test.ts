@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { calculateItemSubtotal, calculateRentalDays, evaluateDiscountPercent, isStrictWeekend, billableWeeks } from "../utils/pricing";
+import { calculateItemSubtotal, calculateRentalDays, evaluateDiscountPercent, isStrictWeekend, billableWeeks, addonPriceForRental } from "../utils/pricing";
 import { Machine, CampaignRule } from "../types";
 
 // Reference weekdays (UTC): 2026-06-08 = Monday, 2026-06-12 = Friday, 2026-06-13 = Saturday
@@ -285,5 +285,42 @@ describe("calculateItemSubtotal — weekly-only product", () => {
   it("weekly-only takes priority over weekend/2-day tiers", () => {
     const m = { ...kamersteiger, weekendPrice: 999, twoDayPrice: 999 } as Machine;
     expect(calculateItemSubtotal(m, 2, "Particulier", noRules, SAT)).toBe(19);
+  });
+});
+
+describe("addonPriceForRental — cross-sell accessory pricing tiers", () => {
+  const machine = { weeklyOnly: false, minRentalDays: undefined };
+  const weeklyOnlyMachine = { weeklyOnly: true, minRentalDays: 7 };
+
+  it("falls back to pricePerWeek × weeks when no short prices are set (unchanged behaviour)", () => {
+    const addon = { pricePerWeek: 15 };
+    expect(addonPriceForRental(addon, 1, machine)).toBe(15); // 1 day → 1 started week
+    expect(addonPriceForRental(addon, 8, machine)).toBe(30); // 8 days → 2 weeks
+  });
+
+  it("applies pricePerDay only for an exactly-1-day rental", () => {
+    const addon = { pricePerWeek: 19, pricePerDay: 7, pricePerTwoDay: 12 };
+    expect(addonPriceForRental(addon, 1, machine)).toBe(7);
+  });
+
+  it("applies pricePerTwoDay only for an exactly-2-day rental", () => {
+    const addon = { pricePerWeek: 19, pricePerDay: 7, pricePerTwoDay: 12 };
+    expect(addonPriceForRental(addon, 2, machine)).toBe(12);
+  });
+
+  it("uses the weekly basis for 3+ day rentals even when short prices exist", () => {
+    const addon = { pricePerWeek: 19, pricePerDay: 7, pricePerTwoDay: 12 };
+    expect(addonPriceForRental(addon, 3, machine)).toBe(19); // 3 days → 1 started week
+  });
+
+  it("weekly-only products ignore short prices (always per started week)", () => {
+    const addon = { pricePerWeek: 19, pricePerDay: 7, pricePerTwoDay: 12 };
+    expect(addonPriceForRental(addon, 2, weeklyOnlyMachine)).toBe(19);
+  });
+
+  it("ignores zero/negative short prices and falls back to weekly", () => {
+    const addon = { pricePerWeek: 19, pricePerDay: 0, pricePerTwoDay: 0 };
+    expect(addonPriceForRental(addon, 1, machine)).toBe(19);
+    expect(addonPriceForRental(addon, 2, machine)).toBe(19);
   });
 });

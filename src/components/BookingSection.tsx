@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { Machine, Order, DeliveryType, UserProfile, CartItem } from "../types";
 import { useAppStore } from "../store/appStore";
 import { checkAvailability } from "../utils/availability";
-import { calculateItemSubtotal, isStrictWeekend, countWeekendDays, calculateRentalDays, billableWeeks } from "../utils/pricing";
+import { calculateItemSubtotal, isStrictWeekend, countWeekendDays, calculateRentalDays, billableWeeks, addonPriceForRental } from "../utils/pricing";
 
 // Import modular Step components
 import { buildWhatsAppUrl } from "../utils/whatsapp";
@@ -382,10 +382,9 @@ export default function BookingSection({
         const cs = item.machine.crossSellAddons;
         if (!cs?.length) continue;
         const itemDays = (item.startDate && item.endDate) ? calculateRentalDays(item.startDate, item.endDate) : 1;
-        const weeks = billableWeeks(itemDays, item.machine.minRentalDays);
         for (const a of cs) {
           if (selectedAddons.includes(a.id)) {
-            const price = a.pricePerWeek * weeks;
+            const price = addonPriceForRental(a, itemDays, item.machine);
             addonCost += price;
             addonDetails.push({ id: a.id, name: a.name, price });
           }
@@ -752,12 +751,15 @@ export default function BookingSection({
               addonsList.push({ id: "safety", name: "Veiligheidskit", price: 15 * days, billing: "flat" });
             }
             // Product-specific cross-sell extras (per started week, server recomputes authoritatively)
-            const csWeeks = billableWeeks(days, item.machine.minRentalDays);
             for (const a of (item.machine.crossSellAddons ?? [])) {
               if (selectedAddons.includes(a.id)) {
-                const price = a.pricePerWeek * csWeeks;
+                const price = addonPriceForRental(a, days, item.machine);
+                const billing: "daily" | "flat" | "weekly" =
+                  !item.machine.weeklyOnly && days === 1 && a.pricePerDay != null && a.pricePerDay > 0 ? "daily"
+                  : !item.machine.weeklyOnly && days === 2 && a.pricePerTwoDay != null && a.pricePerTwoDay > 0 ? "flat"
+                  : "weekly";
                 addonCost += price;
-                addonsList.push({ id: a.id, name: a.name, price, billing: "weekly" });
+                addonsList.push({ id: a.id, name: a.name, price, billing });
               }
             }
 

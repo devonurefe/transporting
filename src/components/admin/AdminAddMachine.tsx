@@ -244,6 +244,8 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
       setSuitableInput("Schilder, Aannemer");
       setWeeklyDiscountPercent("");
       setMonthlyDiscountPercent("");
+      setNewOneDayPrice("");
+      setNewTwoDayPrice("");
       setNewWeekendPrice("");
       setNewWeeklyPrice("");
       setNewMonthlyFlatPrice("");
@@ -474,7 +476,18 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
             </div>
           </div>
 
-          <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-4 gap-4 border-t border-slate-100 pt-3">
+          <div className="md:col-span-2 border-t border-slate-100 pt-4 space-y-3">
+            <div>
+              <p className="text-sm font-bold text-slate-800">{t("Prijzen & kortingen", "Pricing & discounts", "Fiyatlar ve indirimler")}</p>
+              <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">
+                {t(
+                  "Vaste pakketprijzen gaan vóór kortingspercentages. Laat een veld leeg om de standaard dagprijs te gebruiken.",
+                  "Fixed package prices take priority over discount percentages. Leave a field empty to use the standard daily rate.",
+                  "Sabit paket fiyatları indirim oranlarından önceliklidir. Standart günlük ücreti kullanmak için bir alanı boş bırakın."
+                )}
+              </p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="space-y-1">
               <label className="text-xs text-slate-700 block font-bold">{t("1 Dag Actie €", "1 Day Promo €", "1 Gün Kampanya €")}</label>
               <input
@@ -486,6 +499,7 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
                 placeholder="–"
                 className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
               />
+              <p className="text-[10px] text-slate-400">{t("Bij precies 1 huurdag", "For exactly 1 rental day", "Tam olarak 1 kiralama gününde")}</p>
             </div>
             <div className="space-y-1">
               <label className="text-xs text-slate-700 block font-bold">{t("2 Dagen (doordeweeks) €", "2 Days (weekdays) €", "2 Gün (hafta içi) €")}</label>
@@ -498,6 +512,7 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
                 placeholder="–"
                 className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
               />
+              <p className="text-[10px] text-slate-400">{t("Bij 2 doordeweekse dagen", "For 2 weekday days", "2 hafta içi günde")}</p>
             </div>
             <div className="space-y-1">
               <label className="text-xs text-slate-700 block font-bold">{t("Za+Zo 2-dag €", "Sat+Sun 2-day €", "Cmt+Paz 2 gün €")}</label>
@@ -510,6 +525,7 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
                 placeholder="–"
                 className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
               />
+              <p className="text-[10px] text-slate-400">{t("Bij 2–3 dagen (weekend)", "For 2–3 days (weekend)", "2–3 günde (hafta sonu)")}</p>
             </div>
             <div className="space-y-1">
               <label className="text-xs text-slate-700 block font-bold">{t("Werkweek (5 dgn) €", "Work Week (5 days) €", "İş Haftası (5 gün) €")}</label>
@@ -522,6 +538,7 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
                 placeholder="–"
                 className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
               />
+              <p className="text-[10px] text-slate-400">{t("Bij 5–27 dagen (naar rato)", "For 5–27 days (pro-rata)", "5–27 günde (orantılı)")}</p>
             </div>
             <div className="space-y-1">
               <label className="text-xs text-slate-700 block font-bold">{t("4 Weken €", "4 Weeks €", "4 Hafta €")}</label>
@@ -534,6 +551,8 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
                 placeholder="–"
                 className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
               />
+              <p className="text-[10px] text-slate-400">{t("Bij 28+ dagen (naar rato)", "For 28+ days (pro-rata)", "28+ günde (orantılı)")}</p>
+            </div>
             </div>
           </div>
 
@@ -549,6 +568,7 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
                 placeholder={t("Bijv. 8", "e.g., 8", "örn: 8")}
                 className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
               />
+              <p className="text-[10px] text-slate-400">{t("Alleen als geen vaste weekprijs", "Only if no fixed week price", "Yalnızca sabit hafta fiyatı yoksa")}</p>
             </div>
 
             <div className="space-y-1">
@@ -562,6 +582,7 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
                 placeholder={t("Bijv. 15", "e.g., 15", "örn: 15")}
                 className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
               />
+              <p className="text-[10px] text-slate-400">{t("Alleen als geen vaste maandprijs", "Only if no fixed month price", "Yalnızca sabit ay fiyatı yoksa")}</p>
             </div>
 
             <div className="space-y-1">
@@ -623,12 +644,12 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
               </div>
 
               <div className="space-y-1">
-                <span className="text-[10px] text-slate-500 font-bold block mb-1">{t("Optie B: Plak een Unsplash/Gereed URL", "Option B: Paste an Unsplash/Ready URL", "Seçenek B: Unsplash/Hazır URL yapıştır")}</span>
+                <span className="text-[10px] text-slate-500 font-bold block mb-1">{t("Optie B: Plak een externe afbeeldings-URL", "Option B: Paste an external image URL", "Seçenek B: Harici resim URL'si yapıştır")}</span>
                 <input
                   type="text"
                   value={imageUrl}
                   onChange={(e) => setImageUrl(e.target.value)}
-                  placeholder="https://images.unsplash.com/photo-..."
+                  placeholder="https://…/foto.webp"
                   className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500"
                 />
               </div>

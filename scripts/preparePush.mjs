@@ -202,7 +202,7 @@ const MACHINE_SPECS = {
     { label: "Min. deuropening",   value: "74 cm breed" },
   ],
   "altrex-rs44": [
-    { label: "Platformhoogte",   value: "2,0 m" },
+    { label: "Platformhoogte",   value: "0,75 m" },
     { label: "Platformafmeting", value: "ca. 135 × 60 cm" },
     { label: "Draagvermogen",    value: "200 kg" },
     { label: "Machinebreedte",   value: "75 cm" },
@@ -287,6 +287,30 @@ try {
   if (backfilled > 0) console.log(`[preparePush] Back-filled specs for ${backfilled} machines`);
 } catch (err) {
   console.warn("[preparePush] Skipped specs backfill:", err?.message ?? err);
+}
+
+// One-off correction for the live Altrex RS 44 record: base working height is
+// 2.75 m (Module B upgrades it to 4 m) and Module B is €19/week. Guarded on the
+// previous height (4) so any later admin edit is preserved and re-runs are no-ops.
+// (`prisma db seed` does NOT run on deploy — this script does, so the fix lives here.)
+try {
+  const rs44 = await prisma.machine.findUnique({ where: { id: "altrex-rs44" } });
+  if (rs44 && Number(rs44.height) === 4) {
+    await prisma.machine.update({
+      where: { id: "altrex-rs44" },
+      data: {
+        height: 2.75,
+        specs: MACHINE_SPECS["altrex-rs44"],
+        crossSellAddons: [
+          { id: "altrex-rs44-uitbreiding", name: "Uitbreidingsset (Module B)", description: "Extra originele Altrex bovenbuizenset om uw werkhoogte van 2,75 m naar 4 m te verhogen.", pricePerWeek: 19 },
+          { id: "altrex-rs44-toolbuddy", name: "Altrex Toolbuddy", description: "Praktische ophanghaak zodat uw gereedschap en verfemmer binnen handbereik blijven tijdens het werken.", pricePerWeek: 5 }
+        ]
+      }
+    });
+    console.log("[preparePush] Corrected Altrex RS 44 (2.75 m base, Module B → 4 m @ €19/wk, platform 0.75 m)");
+  }
+} catch (err) {
+  console.warn("[preparePush] Skipped RS 44 correction:", err?.message ?? err);
 } finally {
   await prisma.$disconnect();
 }

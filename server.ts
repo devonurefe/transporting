@@ -180,7 +180,7 @@ app.get("/sitemap.xml", async (_req, res) => {
 // Google indexes faster with correct server HTML, so we inject per-route meta
 // (and a Product JSON-LD for machine pages) into the served HTML.
 const SEO_BASE = (process.env.APP_URL || "https://huurgo.nl").replace(/\/$/, "");
-const DEFAULT_OG_IMAGE = `${SEO_BASE}/og-image.jpg`;
+const DEFAULT_OG_IMAGE = `${SEO_BASE}/og-image.png`;
 
 function escapeHtml(s: string): string {
   return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -667,6 +667,18 @@ async function applyDataMigrations() {
         await prisma.machine.update({ where: { id: "altrex-rs44" }, data });
         console.log(`[Migration] RS44: fixed (weeklyOnly=${(rs44 as any).weeklyOnly}, minRentalDays=${(rs44 as any).minRentalDays} → 2).`);
       }
+    }
+
+    // One-time: set showInWeeklyOffers — only the 3 featured machines get true,
+    // all others get false. Admin can override per machine afterwards.
+    const WEEKLY_OFFERS_MIGRATION = "migration-weekly-offers-2026-06";
+    const weeklyOffersDone = await prisma.invoiceCounter.findUnique({ where: { id: WEEKLY_OFFERS_MIGRATION } });
+    if (!weeklyOffersDone) {
+      const featuredIds = ["nifty-170", "nifty-120-1", "nifty-120-2", "nifty-120-3", "compact-10n-1", "compact-10n-2"];
+      await prisma.machine.updateMany({ where: { id: { in: featuredIds } }, data: { showInWeeklyOffers: true } });
+      await prisma.machine.updateMany({ where: { id: { notIn: featuredIds } }, data: { showInWeeklyOffers: false } });
+      await prisma.invoiceCounter.create({ data: { id: WEEKLY_OFFERS_MIGRATION, lastNumber: 1 } });
+      console.log("[Migration] Weekaanbiedingen: 3 featured machines set, rest cleared.");
     }
 
     // Loud warning if the admin account still uses the old seeded default password

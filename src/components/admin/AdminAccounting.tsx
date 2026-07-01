@@ -8,6 +8,7 @@ import { Download, FileSpreadsheet, Filter, CheckCircle2 } from "lucide-react";
 import { motion } from "motion/react";
 import { useAppStore } from "../../store/appStore";
 import { euro } from "../../utils/format";
+import { getAdminAuthHeaders } from "../../utils/authHeaders";
 
 interface AdminAccountingProps {
   key?: string;
@@ -65,11 +66,6 @@ export default function AdminAccounting({ adminLanguage }: AdminAccountingProps)
     .filter((o) => o.paymentStatus === "paid" && o.status !== "Geannuleerd")
     .reduce((sum, o) => sum + o.totalAmount, 0);
 
-  const getAuthHeaders = (): Record<string, string> => {
-    const token = localStorage.getItem("hwh_admin_token");
-    return token ? { Authorization: `Bearer ${token}` } : {};
-  };
-
   const handleDownload = async () => {
     setIsDownloading(true);
     setExportError(null);
@@ -80,7 +76,7 @@ export default function AdminAccounting({ adminLanguage }: AdminAccountingProps)
       if (selectedStatuses.length > 0) params.set("status", selectedStatuses.join(","));
 
       const res = await fetch(`/api/orders/export?${params.toString()}`, {
-        headers: getAuthHeaders(),
+        headers: getAdminAuthHeaders(),
       });
 
       if (!res.ok) {

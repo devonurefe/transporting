@@ -28,6 +28,8 @@ import { printInvoice } from "../../utils/invoice";
 import { euro, formatDateNL } from "../../utils/format";
 import AdminConfirmDialog from "./AdminConfirmDialog";
 import AdminStatusBadge from "./AdminStatusBadge";
+import { OrderStatus } from "../../types";
+import { getAdminAuthHeaders } from "../../utils/authHeaders";
 
 interface AdminOrdersProps {
   key?: string;
@@ -194,7 +196,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
     setShowCancelConfirm(false);
   };
 
-  const handleUpdateStatus = async (orderId: string, nextStatus: string, logMsg: string, order?: any) => {
+  const handleUpdateStatus = async (orderId: string, nextStatus: OrderStatus, logMsg: string, order?: any) => {
     // Pre-validate: "Goedkeuren" requires payment marked first
     if (nextStatus === "Goedgekeurd" && order?.paymentStatus !== "paid") {
       setStatusError(t(
@@ -226,17 +228,12 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
     }
   };
 
-  const getAuthHeaders = (): Record<string, string> => {
-    const token = localStorage.getItem("hwh_admin_token");
-    return token ? { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" } : { "Content-Type": "application/json" };
-  };
-
   const handleUpdatePaymentStatus = async (orderId: string, paymentStatus: string) => {
     setIsUpdatingPayment(true);
     try {
       const res = await fetch(`/api/orders/${orderId}/payment`, {
         method: "PUT",
-        headers: getAuthHeaders(),
+        headers: getAdminAuthHeaders(true),
         body: JSON.stringify({ paymentStatus })
       });
       if (res.ok) {

@@ -328,6 +328,24 @@ export default function HomeSection({
     return map;
   }, [activeMachines]);
 
+  // Track weeklyOnly status and min weekly price per category
+  const categoryWeeklyInfo = React.useMemo(() => {
+    const info: Record<string, { isWeeklyOnly: boolean; weeklyPrice: number }> = {};
+    activeMachines.forEach(m => {
+      const key = m.category;
+      if (!info[key]) {
+        info[key] = { isWeeklyOnly: !!m.weeklyOnly, weeklyPrice: m.weeklyPrice ?? 0 };
+      } else {
+        if (!m.weeklyOnly) info[key].isWeeklyOnly = false;
+        const wp = m.weeklyPrice ?? 0;
+        if (wp > 0 && (info[key].weeklyPrice === 0 || wp < info[key].weeklyPrice)) {
+          info[key].weeklyPrice = wp;
+        }
+      }
+    });
+    return info;
+  }, [activeMachines]);
+
   // First machine image per category for card thumbnails
   const imageByCategory = React.useMemo(() => {
     const map: Record<string, string> = {};
@@ -553,9 +571,20 @@ export default function HomeSection({
                     <span className="font-semibold text-slate-600">{cat.heights}</span>
                     <span className="text-slate-300 select-none">•</span>
                     <span className="font-black text-emerald-600 text-base leading-tight">
-                      {livePriceByCategory[cat.id] !== undefined
-                        ? `€${(() => { const v = withVat(livePriceByCategory[cat.id], vatDisplay); return v % 1 === 0 ? Math.round(v).toLocaleString("nl-NL") : v.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); })()}/dag`
-                        : "Prijs op aanvraag"}
+                      {(() => {
+                        const catInfo = categoryWeeklyInfo[cat.id];
+                        if (catInfo?.isWeeklyOnly && catInfo.weeklyPrice > 0) {
+                          const v = withVat(catInfo.weeklyPrice, vatDisplay);
+                          const fmt = v % 1 === 0 ? Math.round(v).toLocaleString("nl-NL") : v.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                          return `€${fmt}/week`;
+                        }
+                        if (livePriceByCategory[cat.id] !== undefined) {
+                          const v = withVat(livePriceByCategory[cat.id], vatDisplay);
+                          const fmt = v % 1 === 0 ? Math.round(v).toLocaleString("nl-NL") : v.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                          return `€${fmt}/dag`;
+                        }
+                        return "Prijs op aanvraag";
+                      })()}
                     </span>
                   </div>
                 </div>

@@ -7,6 +7,7 @@ import React, { useState, useMemo } from "react";
 import { Download, FileSpreadsheet, Filter, CheckCircle2 } from "lucide-react";
 import { motion } from "motion/react";
 import { useAppStore } from "../../store/appStore";
+import { euro } from "../../utils/format";
 
 interface AdminAccountingProps {
   key?: string;
@@ -228,8 +229,8 @@ export default function AdminAccounting({ adminLanguage }: AdminAccountingProps)
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {[
               { label: t("Geselecteerde orders", "Selected orders", "Seçilen siparişler"), value: filteredOrders.length.toString(), color: "text-slate-800" },
-              { label: t("Totale omzet", "Total revenue", "Toplam ciro"), value: `€ ${totalRevenue.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, color: "text-teal-600" },
-              { label: t("Betaald ontvangen", "Paid received", "Ödenen tutar"), value: `€ ${paidRevenue.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, color: "text-emerald-600" },
+              { label: t("Totale omzet", "Total revenue", "Toplam ciro"), value: euro(totalRevenue), color: "text-teal-600" },
+              { label: t("Betaald ontvangen", "Paid received", "Ödenen tutar"), value: euro(paidRevenue), color: "text-emerald-600" },
             ].map((stat) => (
               <div key={stat.label} className="glass-panel p-4 rounded-2xl">
                 <p className="text-[10px] text-slate-400 font-medium mb-1">{stat.label}</p>

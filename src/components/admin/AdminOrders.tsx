@@ -25,6 +25,8 @@ import { useAppStore } from "../../store/appStore";
 import { useAuthStore } from "../../store/authStore";
 import { HuurGoText } from "../Header";
 import { printInvoice } from "../../utils/invoice";
+import { euro, formatDateNL } from "../../utils/format";
+import AdminConfirmDialog from "./AdminConfirmDialog";
 
 interface AdminOrdersProps {
   key?: string;
@@ -170,6 +172,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
   const [isUpdatingPayment, setIsUpdatingPayment] = useState<boolean>(false);
   const [statusError, setStatusError] = useState<string | null>(null);
   const [staleDismissed, setStaleDismissed] = useState<boolean>(false);
+  const [showCancelConfirm, setShowCancelConfirm] = useState<boolean>(false);
 
   const closeModal = () => {
     setSelectedDetailOrder(null);
@@ -177,6 +180,17 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
     setNewStartDate("");
     setNewEndDate("");
     setStatusError(null);
+  };
+
+  const confirmCancelOrder = () => {
+    if (!selectedDetailOrder) return;
+    handleUpdateStatus(
+      selectedDetailOrder.id,
+      "Geannuleerd",
+      `Huurcontract permanent geannuleerd door verhuurder: ${selectedDetailOrder.id}.`,
+      selectedDetailOrder
+    );
+    setShowCancelConfirm(false);
   };
 
   const handleUpdateStatus = async (orderId: string, nextStatus: string, logMsg: string, order?: any) => {
@@ -437,14 +451,14 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                 </div>
                 <div className="flex justify-between items-center text-xs">
                   <div>
-                    <span className="text-slate-500">{o.startDate} · {o.rentalDays}d</span>
+                    <span className="text-slate-500">{formatDateNL(o.startDate)} · {o.rentalDays}d</span>
                     {o.deliveryTimeSlot && o.deliveryType === "delivery_by_us" && (
                       <span className="ml-2 text-[9.5px] text-indigo-500 font-bold">
                         {o.deliveryTimeSlot === "morning" ? "Ochtend" : "Middag"}
                       </span>
                     )}
                   </div>
-                  <span className="font-mono font-bold text-teal-600">€ {o.totalAmount.toFixed(2)}</span>
+                  <span className="font-mono font-bold text-teal-600">{euro(o.totalAmount)}</span>
                 </div>
                 <div className="flex gap-2 pt-2 border-t border-slate-100">
                   <button
@@ -577,10 +591,10 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                         )}
                       </td>
                       <td className="py-3 px-3 whitespace-nowrap">
-                        <div className="text-slate-800 font-semibold text-xs">{o.startDate}</div>
+                        <div className="text-slate-800 font-semibold text-xs">{formatDateNL(o.startDate)}</div>
                         <span className="text-[10px] text-slate-500 block font-mono mt-1.5">({o.rentalDays}d)</span>
                       </td>
-                      <td className="py-3 px-3 font-mono font-bold text-teal-600 text-xs">€ {o.totalAmount.toFixed(2)}</td>
+                      <td className="py-3 px-3 font-mono font-bold text-teal-600 text-xs">{euro(o.totalAmount)}</td>
                       <td className="py-3 px-3 text-center">
                         <div className="flex flex-col gap-2.5 justify-center items-center">
                           <span className={`inline-block text-[9.5px] font-mono px-3 py-1 rounded-full font-extrabold uppercase tracking-wider ${
@@ -865,14 +879,14 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
 
                       <div className="flex justify-between items-baseline">
                         <span className="text-slate-600">Dagtarief:</span>
-                        <span className="font-mono">€ {selectedDetailOrder.machinePrice.toFixed(2)}</span>
+                        <span className="font-mono">{euro(selectedDetailOrder.machinePrice)}</span>
                       </div>
 
                       <div className="flex justify-between items-start border-b border-slate-200/60 pb-1.5">
                         <span className="text-slate-600 shrink-0">Huurperiode:</span>
                         <div className="text-right">
                           <span className="font-semibold text-slate-800 block">
-                            {selectedDetailOrder.startDate} <span className="text-slate-400 font-normal">t/m</span> {selectedDetailOrder.endDate}
+                            {formatDateNL(selectedDetailOrder.startDate)} <span className="text-slate-400 font-normal">t/m</span> {formatDateNL(selectedDetailOrder.endDate)}
                           </span>
                           <span className="text-[10px] text-slate-500 font-mono">({selectedDetailOrder.rentalDays} dagen)</span>
                         </div>
@@ -883,27 +897,27 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                         
                         <div className="flex justify-between items-baseline text-[11px]">
                           <span className="text-slate-600">Subtotaal ({selectedDetailOrder.rentalDays}d x €{selectedDetailOrder.machinePrice}):</span>
-                          <span className="font-mono">€ {selectedDetailOrder.subtotal.toFixed(2)}</span>
+                          <span className="font-mono">{euro(selectedDetailOrder.subtotal)}</span>
                         </div>
 
                         <div className="flex justify-between items-baseline text-[11px]">
                           <span className="text-slate-600">Transportkosten (Logistiek):</span>
-                          <span className="font-mono">€ {selectedDetailOrder.transportCost.toFixed(2)}</span>
+                          <span className="font-mono">{euro(selectedDetailOrder.transportCost)}</span>
                         </div>
 
                         <div className="flex justify-between items-baseline text-[11px]">
                           <span className="text-slate-600">BMWT Chauffeurskosten:</span>
-                          <span className="font-mono">€ {selectedDetailOrder.driverCost.toFixed(2)}</span>
+                          <span className="font-mono">{euro(selectedDetailOrder.driverCost)}</span>
                         </div>
 
                         <div className="flex justify-between items-baseline text-[11px] border-b border-slate-200 pb-1.5">
                           <span className="text-slate-600">BTW (21%):</span>
-                          <span className="font-mono text-slate-500">€ {selectedDetailOrder.vatAmount.toFixed(2)}</span>
+                          <span className="font-mono text-slate-500">{euro(selectedDetailOrder.vatAmount)}</span>
                         </div>
 
                         <div className="flex justify-between items-center text-sm pt-1">
                           <strong className="text-slate-800 font-extrabold">Eindtotaal:</strong>
-                          <span className="font-mono text-teal-600 font-black text-base">€ {selectedDetailOrder.totalAmount.toFixed(2)}</span>
+                          <span className="font-mono text-teal-600 font-black text-base">{euro(selectedDetailOrder.totalAmount)}</span>
                         </div>
 
                         <div className="border-t border-slate-200 pt-2 mt-1">
@@ -1080,16 +1094,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                     <button
                       type="button"
                       disabled={isUpdatingStatus}
-                      onClick={() => {
-                        if (confirm(t("Weet u zeker dat u dit contract permanent wilt annuleren?", "Are you sure you want to permanently cancel this order?", "Bu siparişi kalıcı olarak iptal etmek istediğinizden emin misiniz?"))) {
-                          handleUpdateStatus(
-                            selectedDetailOrder.id,
-                            "Geannuleerd",
-                            `Huurcontract permanent geannuleerd door verhuurder: ${selectedDetailOrder.id}.`,
-                            selectedDetailOrder
-                          );
-                        }
-                      }}
+                      onClick={() => setShowCancelConfirm(true)}
                       className="w-full py-2 text-rose-600 hover:text-rose-700 border border-rose-200 hover:border-rose-300 hover:bg-rose-50 rounded-xl text-[11px] font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed bg-white"
                     >
                       <X className="h-3.5 w-3.5 shrink-0" />
@@ -1122,6 +1127,16 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
           </div>
         )}
       </AnimatePresence>
+
+      <AdminConfirmDialog
+        open={showCancelConfirm}
+        title={t("Bestelling annuleren", "Cancel order", "Siparişi iptal et")}
+        message={t("Weet u zeker dat u dit contract permanent wilt annuleren?", "Are you sure you want to permanently cancel this order?", "Bu siparişi kalıcı olarak iptal etmek istediğinizden emin misiniz?")}
+        confirmLabel={t("Annuleren bevestigen", "Confirm cancellation", "İptali onayla")}
+        cancelLabel={t("Terug", "Back", "Geri")}
+        onConfirm={confirmCancelOrder}
+        onCancel={() => setShowCancelConfirm(false)}
+      />
     </motion.div>
   );
 }

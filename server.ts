@@ -86,6 +86,15 @@ const authLimiter = rateLimit({
 });
 app.use("/api/auth", authLimiter);
 
+// The iCal feed leaks customer PII (name/phone/address) to anyone holding the
+// token, so it gets a tighter limit than the general /api/ allowance.
+const calendarLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 60,
+  message: { error: "Te veel verzoeken van dit IP. Probeer het later opnieuw." }
+});
+app.use("/api/calendar", calendarLimiter);
+
 // These endpoints carry base64 image payloads — must be registered before the global 256kb parser
 app.use("/api/upload",      express.json({ limit: "10mb" }));
 app.use("/api/machines",    express.json({ limit: "10mb" })); // PUT with base64 imageUrl

@@ -16,7 +16,9 @@ const ENV_CHECKS: EnvCheck[] = [
   { key: "RESEND_API_KEY", required: false, description: "Resend email API key" },
   { key: "EMAIL_FROM", required: false, defaultValue: "onboarding@resend.dev", description: "Sender email address" },
   { key: "ADMIN_EMAIL", required: false, description: "Admin notification email" },
-  { key: "PORT", required: false, defaultValue: "3000", description: "Server listening port" }
+  { key: "PORT", required: false, defaultValue: "3000", description: "Server listening port" },
+  { key: "REMINDER_SECRET", required: false, description: "Secret for the cron reminder endpoint (disabled if unset)" },
+  { key: "CALENDAR_FEED_TOKEN", required: false, description: "Secret gating the read-only iCal feed (disabled if unset)" }
 ];
 
 export function validateEnvironment(): void {

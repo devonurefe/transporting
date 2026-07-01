@@ -49,7 +49,7 @@ blockedDatesRouter.post("/", requireAdmin as any, async (req: AuthenticatedReque
           data: {
             machineId,
             date: parsedDate,
-            reason: reason || "Handmatig geblokkeerd door beheerder"
+            reason: (reason ? String(reason).slice(0, 500) : "") || "Handmatig geblokkeerd door beheerder"
           }
         });
       }

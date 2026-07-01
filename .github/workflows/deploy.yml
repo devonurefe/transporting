@@ -44,6 +44,7 @@ jobs:
               root@${{ secrets.VPS_HOST }} \
               "docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }} --password-stdin <<< '${{ secrets.GITHUB_TOKEN }}' 2>/dev/null; \
                cd /opt/huurgo && \
+               git pull origin main && \
                docker compose pull app && \
                docker compose up -d && \
                docker compose exec -T app npx prisma db push && \

@@ -42,6 +42,7 @@ jobs:
       - name: Deploy to VPS
         run: |
           sudo apt-get install -y sshpass -q
+          success=0
           for attempt in 1 2 3; do
             echo "Deneme $attempt..."
             if sshpass -p "${{ secrets.VPS_PASSWORD }}" ssh \
@@ -56,8 +57,13 @@ jobs:
                docker compose exec -T app npx prisma db push && \
                echo 'Deploy tamamlandi:' \$(date)"; then
               echo "Basarili!"
+              success=1
               break
             fi
             echo "15 saniye bekleniyor..."
             sleep 15
           done
+          if [ "$success" -ne 1 ]; then
+            echo "::error::Deploy 3 denemeden sonra basarisiz oldu"
+            exit 1
+          fi

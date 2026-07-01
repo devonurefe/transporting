@@ -75,6 +75,8 @@ export default function MyOrdersSection({
   const [regPhone, setRegPhone] = useState("");
   const [regCompany, setRegCompany] = useState("");
   const [regProfile, setRegProfile] = useState("Schilder");
+  const [regPrivacyAccepted, setRegPrivacyAccepted] = useState(false);
+  const [regMarketingConsent, setRegMarketingConsent] = useState(false);
 
   const [resendEmailAddress, setResendEmailAddress] = useState<string | null>(null);
   const [isResending, setIsResending] = useState(false);
@@ -353,6 +355,10 @@ export default function MyOrdersSection({
       setRegError("Naam, e-mail en wachtwoord zijn verplicht.");
       return;
     }
+    if (!regPrivacyAccepted) {
+      setRegError("U dient akkoord te gaan met de privacyverklaring om door te gaan.");
+      return;
+    }
     if (regPassword.trim().length < 8) {
       onTriggerNotification("Registratie Mislukt", "Wachtwoord moet minimaal 8 tekens bevatten.", "warning");
       return;
@@ -368,17 +374,18 @@ export default function MyOrdersSection({
       name: regName.trim(),
       phone: regPhone.trim() || undefined,
       profile: regProfile,
-      companyName: regCompany.trim() || undefined
+      companyName: regCompany.trim() || undefined,
+      marketingConsent: regMarketingConsent
     });
 
     if (success) {
       onAddSystemLog?.("signup", regName.trim(), `Nieuw klantaccount aangemaakt.`);
       const needsVerification = useAuthStore.getState().isUnverified;
       onTriggerNotification(
-        "Registratie Voltooid",
+        `Welkom, ${regName.trim().split(" ")[0]}!`,
         needsVerification
-          ? `Account aangemaakt! Controleer uw e-mail om uw account te activeren.`
-          : `Account aangemaakt! U kunt nu direct inloggen met uw e-mailadres.`,
+          ? `Uw account is aangemaakt. Controleer uw e-mail om uw account te activeren.`
+          : `Uw account is aangemaakt. U kunt nu direct werktuigen reserveren.`,
         "success"
       );
       const justRegisteredEmail = regEmail.trim();
@@ -387,6 +394,8 @@ export default function MyOrdersSection({
       setRegPassword("");
       setRegPhone("");
       setRegCompany("");
+      setRegPrivacyAccepted(false);
+      setRegMarketingConsent(false);
       setIsRegistering(false);
       // Pre-fill login email for convenience
       setLoginEmail(justRegisteredEmail);
@@ -693,35 +702,64 @@ export default function MyOrdersSection({
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
-                    <div className="space-y-1.5">
-                      <label className="text-xs text-slate-600 block font-semibold">Vakgebied / Profiel</label>
-                      <select
-                        value={regProfile}
-                        onChange={(e) => setRegProfile(e.target.value)}
-                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-slate-400 h-10 cursor-pointer shadow-sm font-bold"
-                      >
-                        <option value="Schilder">Schilder</option>
-                        <option value="Hovenier / Groenverzorging">Hovenier / Groenverzorging</option>
-                        <option value="Glazenwasser / Gevelreiniger">Glazenwasser / Gevelreiniger</option>
-                        <option value="Aannemer">Aannemer / Renovatie</option>
-                        <option value="Installateur / Elektricien">Installateur / Elektricien</option>
-                        <option value="Dakdekker / Gevelwerker">Dakdekker / Gevelwerker</option>
-                        <option value="Industrieel Onderhoud">Industrieel Onderhoud</option>
-                        <option value="Particulier">Particulier</option>
-                        <option value="Overig / Anders">Overig / Anders</option>
-                      </select>
-                    </div>
-                    <div className="flex items-end">
-                      <button
-                        type="submit"
-                        className="w-full h-10 bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs rounded-xl transition-all shadow-md active:scale-98 cursor-pointer flex items-center justify-center space-x-1 border-none"
-                      >
-                        <UserPlus className="h-4 w-4 text-emerald-300" />
-                        <span>Versturen</span>
-                      </button>
-                    </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-slate-600 block font-semibold">Vakgebied / Profiel</label>
+                    <select
+                      value={regProfile}
+                      onChange={(e) => setRegProfile(e.target.value)}
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-slate-400 h-10 cursor-pointer shadow-sm font-bold"
+                    >
+                      <option value="Schilder">Schilder</option>
+                      <option value="Hovenier / Groenverzorging">Hovenier / Groenverzorging</option>
+                      <option value="Glazenwasser / Gevelreiniger">Glazenwasser / Gevelreiniger</option>
+                      <option value="Aannemer">Aannemer / Renovatie</option>
+                      <option value="Installateur / Elektricien">Installateur / Elektricien</option>
+                      <option value="Dakdekker / Gevelwerker">Dakdekker / Gevelwerker</option>
+                      <option value="Industrieel Onderhoud">Industrieel Onderhoud</option>
+                      <option value="Particulier">Particulier</option>
+                      <option value="Overig / Anders">Overig / Anders</option>
+                    </select>
                   </div>
+
+                  {/* GDPR consent checkboxes */}
+                  <div className="space-y-3 pt-1">
+                    <label className={`flex items-start gap-2.5 cursor-pointer group rounded-xl p-2.5 transition-colors ${regPrivacyAccepted ? "bg-emerald-50/70 border border-emerald-200/70" : "bg-slate-50 border border-slate-200 hover:border-slate-300"}`}>
+                      <input
+                        type="checkbox"
+                        checked={regPrivacyAccepted}
+                        onChange={(e) => setRegPrivacyAccepted(e.target.checked)}
+                        className="mt-0.5 h-4 w-4 accent-orange-500 shrink-0 cursor-pointer"
+                      />
+                      <span className="text-[11px] text-slate-700 leading-relaxed">
+                        <span className="font-bold">Verplicht</span> — Ik ga akkoord met de{" "}
+                        <a href="/privacy" target="_blank" rel="noopener" className="text-orange-600 underline underline-offset-2 hover:text-orange-700">privacyverklaring</a>
+                        {" "}en{" "}
+                        <a href="/voorwaarden" target="_blank" rel="noopener" className="text-orange-600 underline underline-offset-2 hover:text-orange-700">algemene voorwaarden</a>
+                        {" "}van MB Hoogwerkers B.V.
+                      </span>
+                    </label>
+
+                    <label className={`flex items-start gap-2.5 cursor-pointer group rounded-xl p-2.5 transition-colors ${regMarketingConsent ? "bg-blue-50/60 border border-blue-200/60" : "bg-slate-50 border border-slate-100 hover:border-slate-200"}`}>
+                      <input
+                        type="checkbox"
+                        checked={regMarketingConsent}
+                        onChange={(e) => setRegMarketingConsent(e.target.checked)}
+                        className="mt-0.5 h-4 w-4 accent-orange-500 shrink-0 cursor-pointer"
+                      />
+                      <span className="text-[11px] text-slate-600 leading-relaxed">
+                        <span className="font-semibold">Optioneel</span> — Ja, ik ontvang graag aanbiedingen, kortingsacties en nieuws van MB Hoogwerkers via e-mail. Ik kan mij altijd afmelden.
+                      </span>
+                    </label>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={!regPrivacyAccepted}
+                    className="w-full py-3 bg-orange-500 hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-xs rounded-xl transition-all shadow-md active:scale-[0.99] cursor-pointer flex items-center justify-center space-x-1.5 border-none"
+                  >
+                    <UserPlus className="h-4 w-4 text-emerald-300" />
+                    <span>Account aanmaken</span>
+                  </button>
 
                   {regError && (
                     <p className="text-[11px] text-rose-600 font-semibold bg-rose-50 border border-rose-200 rounded-xl px-3 py-2">{regError}</p>

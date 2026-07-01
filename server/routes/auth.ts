@@ -3,7 +3,7 @@ import { z } from "zod";
 import crypto from "crypto";
 import { prisma } from "../../prisma/client.js";
 import { hashPassword, comparePassword, generateToken, revokeUserTokens } from "../utils/auth.js";
-import { AuthenticatedRequest, authenticateToken, requireAuth } from "../middleware/auth.js";
+import { AuthenticatedRequest, authenticateToken, requireAuth, requireAdmin } from "../middleware/auth.js";
 import { emailService } from "../services/emailService.js";
 
 export const authRouter = Router();
@@ -48,7 +48,8 @@ const registerSchema = z.object({
   profile: z.string().optional(),
   companyName: z.string().optional(),
   address: z.string().optional(),
-  avatarUrl: z.string().optional()
+  avatarUrl: z.string().optional(),
+  marketingConsent: z.boolean().optional()
 });
 
 const loginSchema = z.object({
@@ -92,6 +93,7 @@ authRouter.post("/register", async (req: AuthenticatedRequest, res: Response) =>
         companyName: validated.companyName || null,
         address: validated.address || null,
         avatarUrl: validated.avatarUrl || null,
+        marketingConsent: validated.marketingConsent ?? false,
         isEmailVerified: autoVerify,
         verificationToken: autoVerify ? null : verificationToken,
         verificationExpiry: autoVerify ? null : new Date(Date.now() + 24 * 60 * 60 * 1000)
@@ -530,6 +532,31 @@ authRouter.post("/resend-verification", async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Resend verification error:", error);
     return res.status(500).json({ error: "Kan verificatiemail niet verzenden." });
+  }
+});
+
+// GET /api/auth/customers — admin-only: list all registered customers
+authRouter.get("/customers", authenticateToken, requireAdmin, async (_req: AuthenticatedRequest, res: Response) => {
+  try {
+    const customers = await prisma.customer.findMany({
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        companyName: true,
+        profile: true,
+        marketingConsent: true,
+        isEmailVerified: true,
+        createdAt: true,
+        _count: { select: { orders: true } }
+      },
+      orderBy: { createdAt: "desc" }
+    });
+    return res.json({ customers });
+  } catch (error) {
+    console.error("Get customers error:", error);
+    return res.status(500).json({ error: "Klanten ophalen mislukt." });
   }
 });
 

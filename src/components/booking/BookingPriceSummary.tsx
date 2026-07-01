@@ -110,7 +110,7 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
   // calendar is no longer visible in steps 2-3). Falls back to neutral copy
   // when the cart mixes machines with different periods.
   const periodLabel = multiplePeriods
-    ? "Meerdere periodes"
+    ? t("priceSummaryMultiplePeriods")
     : startDate && endDate
     ? `${formatShortDate(startDate)} – ${formatShortDate(endDate)}`
     : null;
@@ -124,7 +124,7 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
         <div>
           <h4 className="text-xs font-bold text-slate-700">{t("priceSummaryChooseMachine")}</h4>
           <p className="text-[10px] text-slate-500 mt-1 max-w-[200px] mx-auto leading-normal">
-            Selecteer een hoogwerker uit de catalogus om uw prijs te zien.
+            {t("priceSummaryChooseMachineHint")}
           </p>
         </div>
       </div>
@@ -162,13 +162,13 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
   const rateLabel = sums.isFlatRate && sums.tierLabel
     ? sums.tierLabel
     : sums.weeklyBreakdown
-    ? "Werkweektarief"
-    : "Dagtarief";
+    ? t("priceSummaryWorkWeekRate")
+    : t("priceSummaryDayRate");
 
   const transportFree = sums.transport === 0 && sums.driver === 0;
-  const transportName = sums.deliveryType === "trailer_drop_return" ? "Aanhanger Drop & Return"
-    : sums.deliveryType === "trailer_rental" ? "Aanhanger op locatie"
-    : sums.deliveryType === "delivery_by_us" ? "Transportkosten"
+  const transportName = sums.deliveryType === "trailer_drop_return" ? t("priceSummaryTrailerDropReturn")
+    : sums.deliveryType === "trailer_rental" ? t("priceSummaryTrailerOnLocation")
+    : sums.deliveryType === "delivery_by_us" ? t("priceSummaryDelivery")
     : t("priceSummaryPickup");
   const transportValue = transportFree ? t("priceSummaryPickupFree") : euro(sums.transport + sums.driver);
 
@@ -196,21 +196,21 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
         <div className="min-w-0 flex-1">
           <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wide leading-none mb-1.5">{t("priceSummaryReservation")}</p>
           <h4 className="text-sm font-extrabold text-slate-900 leading-tight mb-1">
-            {machineCount > 1 ? `${machineCount} machines gereserveerd` : selectedMachine.name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "")}
+            {machineCount > 1 ? `${machineCount} ${t("priceSummaryMachinesReserved")}` : selectedMachine.name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "")}
           </h4>
           {machineCount === 1 && (
             selectedMachine.weeklyOnly && selectedMachine.weeklyPrice ? (
               <span className="text-sm font-black text-slate-800 font-mono">
-                {euroCompact(selectedMachine.weeklyPrice)}/week
+                {euroCompact(selectedMachine.weeklyPrice)}{t("priceSummaryPerWeek")}
               </span>
             ) : hasTierDeal ? (
               <span className="font-mono flex items-baseline gap-1.5 flex-wrap">
-                <span className="text-sm font-black text-emerald-600">{euroCompact(effectivePerDay)}/dag</span>
-                <span className="text-xs line-through text-slate-400 font-semibold">{euroCompact(selectedMachine.pricePerDay)}/dag</span>
+                <span className="text-sm font-black text-emerald-600">{euroCompact(effectivePerDay)}{t("priceSummaryPerDay")}</span>
+                <span className="text-xs line-through text-slate-400 font-semibold">{euroCompact(selectedMachine.pricePerDay)}{t("priceSummaryPerDay")}</span>
               </span>
             ) : (
               <span className="text-sm font-black text-slate-800 font-mono">
-                {euroCompact(selectedMachine.pricePerDay)}/dag
+                {euroCompact(selectedMachine.pricePerDay)}{t("priceSummaryPerDay")}
               </span>
             )
           )}
@@ -224,12 +224,12 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
           <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5">{t("priceSummaryTotal")}</p>
           <p className="text-3xl font-black text-slate-900 font-mono leading-none">{euro(sums.total)}</p>
           <p className="text-[11px] text-slate-400 mt-1.5 leading-snug">
-            {t("priceSummaryInclVAT")} · {sums.days} {sums.days === 1 ? "dag" : "dagen"} huur
+            {t("priceSummaryInclVAT")} · {sums.days} {sums.days === 1 ? t("priceSummaryDayRental") : t("priceSummaryDaysRental")}
           </p>
           {periodLabel && (
             <p className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-600 mt-1.5 leading-snug">
               <Calendar className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-              <span>Huurperiode: {periodLabel}</span>
+              <span>{t("priceSummaryRentPeriod")}: {periodLabel}</span>
             </p>
           )}
         </div>
@@ -238,7 +238,7 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
         <div className="space-y-2.5 pt-1 border-t border-slate-100">
           <SummaryRow
             icon={<Calendar className="h-3.5 w-3.5" />}
-            label="Tarief"
+            label={t("priceSummaryRate")}
             value={rateLabel}
           />
           <SummaryRow
@@ -252,7 +252,7 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
               icon={(sums.isFlatRate || !!sums.weeklyBreakdown)
                 ? <Tag className="h-3.5 w-3.5" />
                 : <TrendingDown className="h-3.5 w-3.5" />}
-              label={(sums.isFlatRate || !!sums.weeklyBreakdown) ? "Campagnekorting" : "Je bespaart"}
+              label={(sums.isFlatRate || !!sums.weeklyBreakdown) ? t("priceSummaryCampaignDiscount") : t("priceSummaryYouSave")}
               value={`− ${euro(totalSavings)}`}
               accent={(sums.isFlatRate || !!sums.weeklyBreakdown) ? "amber" : "emerald"}
             />
@@ -260,8 +260,8 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
           {showWeekendFree && (
             <SummaryRow
               icon={<Calendar className="h-3.5 w-3.5" />}
-              label={(sums.weekendDays ?? 0) === 1 ? "Weekenddag" : "Weekenddagen"}
-              value="Gratis (geen gebruik)"
+              label={(sums.weekendDays ?? 0) === 1 ? t("priceSummaryWeekendDay") : t("priceSummaryWeekendDays")}
+              value={t("priceSummaryFreeNoUse")}
               accent="emerald"
             />
           )}
@@ -281,7 +281,7 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
           onClick={() => setBreakdownOpen(o => !o)}
           className="w-full flex items-center justify-between text-xs text-slate-400 hover:text-slate-700 font-semibold py-1 border-t border-slate-100 transition-colors cursor-pointer bg-transparent border-x-0 border-b-0"
         >
-          <span>Prijsopbouw bekijken</span>
+          <span>{t("priceSummaryViewBreakdown")}</span>
           <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${breakdownOpen ? "rotate-180" : ""}`} />
         </button>
 
@@ -291,14 +291,14 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
 
             {/* BEREKENING */}
             <div className="space-y-2">
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Berekening</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{t("priceSummaryCalculation")}</p>
 
               {!sums.weeklyBreakdown && !sums.isFlatRate && sums.effectiveDailyRate != null && sums.days >= 6 && (
                 <div className="flex items-center gap-1.5">
                   <TrendingDown className="h-3 w-3 text-emerald-500 shrink-0" />
                   <span className="text-[10px] text-emerald-700 font-semibold leading-snug">
-                    Werkweektarief {euroCompact(sums.effectiveDailyRate)}/dag
-                    <span className="ml-1.5 line-through text-slate-400 font-normal">{euroCompact(selectedMachine.pricePerDay)}/dag</span>
+                    {t("priceSummaryWorkWeekRate")} {euroCompact(sums.effectiveDailyRate)}{t("priceSummaryPerDay")}
+                    <span className="ml-1.5 line-through text-slate-400 font-normal">{euroCompact(selectedMachine.pricePerDay)}{t("priceSummaryPerDay")}</span>
                   </span>
                 </div>
               )}
@@ -306,24 +306,24 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
               {isWeekendNoWork ? (
                 <>
                   <Row
-                    label={`${workingDays} ${workingDays === 1 ? "werkdag" : "werkdagen"} berekend`}
+                    label={`${workingDays} ${workingDays === 1 ? t("priceSummaryWorkingDay") : t("priceSummaryWorkingDays")} ${t("priceSummaryCalculated")}`}
                     value={euro(sums.subtotal)}
                   />
                   <Row
-                    label={`${sums.weekendDays ?? 0} ${(sums.weekendDays ?? 0) === 1 ? "weekenddag" : "weekenddagen"}`}
-                    value="Gratis"
+                    label={`${sums.weekendDays ?? 0} ${(sums.weekendDays ?? 0) === 1 ? t("priceSummaryWeekendDayLower") : t("priceSummaryWeekendDaysLower")}`}
+                    value={t("priceSummaryFree")}
                     accent="emerald"
                   />
                 </>
               ) : sums.weeklyBreakdown ? (
                 <>
                   <Row
-                    label={`${sums.weeklyBreakdown.weeks}× Werkweektarief (5 dgn)`}
+                    label={`${sums.weeklyBreakdown.weeks}× ${t("priceSummaryWorkWeekRate5Days")}`}
                     value={euro(sums.weeklyBreakdown.weeks * sums.weeklyBreakdown.pricePerWeek)}
                   />
                   {sums.weeklyBreakdown.remainder > 0 && (
                     <Row
-                      label={`${sums.weeklyBreakdown.remainder} extra ${sums.weeklyBreakdown.remainder === 1 ? "dag" : "dagen"}`}
+                      label={`${sums.weeklyBreakdown.remainder} ${sums.weeklyBreakdown.remainder === 1 ? t("priceSummaryExtraDay") : t("priceSummaryExtraDays")}`}
                       value={euro(sums.weeklyBreakdown.remainderCost ?? sums.weeklyBreakdown.remainder * sums.weeklyBreakdown.dailyRate)}
                     />
                   )}
@@ -332,7 +332,7 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
                 <Row label={`1× ${sums.tierLabel}`} value={euro(sums.subtotal)} />
               ) : (
                 <Row
-                  label={`${sums.days} ${sums.days === 1 ? "dag" : "dagen"} × ${euroCompact(selectedMachine.pricePerDay)}`}
+                  label={`${sums.days} ${sums.days === 1 ? t("priceSummaryDay") : t("priceSummaryDays")} × ${euroCompact(selectedMachine.pricePerDay)}`}
                   value={euro(sums.rawSubtotal)}
                 />
               )}
@@ -343,7 +343,7 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
               <>
                 <div className="h-px bg-slate-100" />
                 <div className="space-y-2">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Kortingen</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{t("priceSummaryDiscounts")}</p>
                   {!sums.weeklyBreakdown && !sums.isFlatRate && sums.discountAmount > 0 && (
                     <Row
                       label={<span className="flex items-center gap-1"><TrendingDown className="h-3 w-3 shrink-0" />{sums.discountLabel}</span>}
@@ -353,7 +353,7 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
                   )}
                   {(sums.campaignSavings ?? 0) > 0 && (
                     <Row
-                      label={<span className="flex items-center gap-1"><TrendingDown className="h-3 w-3 shrink-0" />Campagnekorting</span>}
+                      label={<span className="flex items-center gap-1"><TrendingDown className="h-3 w-3 shrink-0" />{t("priceSummaryCampaignDiscount")}</span>}
                       value={`− ${euro(sums.campaignSavings!)}`}
                       accent="amber"
                     />
@@ -367,7 +367,7 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
             <div className="space-y-2">
               {sums.transport > 0 || sums.driver > 0 ? (
                 <Row
-                  label={sums.deliveryType === "trailer_drop_return" ? "Aanhanger Drop & Return"
+                  label={sums.deliveryType === "trailer_drop_return" ? t("priceSummaryTrailerDropReturn")
                     : sums.deliveryType === "trailer_rental" ? t("priceSummaryTrailer")
                     : t("priceSummaryDelivery")}
                   value={euro(sums.transport + sums.driver)}
@@ -386,8 +386,8 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
             {/* SUBTOTAAL + BTW */}
             <div className="h-px bg-slate-100" />
             <div className="space-y-1.5">
-              <Row label="Subtotaal (excl. BTW)" value={euro(priceExVat)} />
-              <Row label="BTW 21%" value={euro(sums.vat)} dim />
+              <Row label={t("priceSummarySubtotalExclVAT")} value={euro(priceExVat)} />
+              <Row label={t("priceSummaryVAT21")} value={euro(sums.vat)} dim />
             </div>
 
           </div>

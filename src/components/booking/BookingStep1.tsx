@@ -129,15 +129,15 @@ export default function BookingStep1({
       {cartItems.length > 0 && asksWeekend && (
         <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl space-y-3">
           <div>
-            <p className="text-sm font-bold text-amber-900">🗓 Gaat u in het weekend (za/zo) met de machine werken?</p>
+            <p className="text-sm font-bold text-amber-900">{t("step1WeekendQuestion")}</p>
             <ul className="mt-1.5 space-y-1">
               <li className="flex items-start gap-1.5 text-xs text-amber-700">
-                <span className="font-black text-amber-800 shrink-0">Ja →</span>
-                <span>Volledig werkweektarief, za/zo inbegrepen</span>
+                <span className="font-black text-amber-800 shrink-0">{t("step1WeekendYesShort")} →</span>
+                <span>{t("step1WeekendYesExplainer")}</span>
               </li>
               <li className="flex items-start gap-1.5 text-xs text-amber-700">
-                <span className="font-black text-amber-800 shrink-0">Nee →</span>
-                <span>Alleen werkdagen tellen · voordeliger, geen start op za/zo</span>
+                <span className="font-black text-amber-800 shrink-0">{t("step1WeekendNoShort")} →</span>
+                <span>{t("step1WeekendNoExplainer")}</span>
               </li>
             </ul>
           </div>
@@ -151,9 +151,9 @@ export default function BookingStep1({
                   : 'bg-white border-slate-300 text-slate-700 hover:border-slate-500'
               }`}
             >
-              <span className="text-sm font-semibold">Nee, niet werken</span>
+              <span className="text-sm font-semibold">{t("step1WeekendNo")}</span>
               <span className={`text-xs font-medium ${weekendWorkAnswer === 'nee' ? 'text-emerald-50' : 'text-emerald-600'}`}>
-                Alleen werkdagen · voordeliger
+                {t("step1WeekendNoSub")}
               </span>
             </button>
             <button
@@ -165,17 +165,15 @@ export default function BookingStep1({
                   : 'bg-white border-slate-300 text-slate-700 hover:border-slate-500'
               }`}
             >
-              <span className="text-sm font-semibold">Ja, ik werk in het weekend</span>
+              <span className="text-sm font-semibold">{t("step1WeekendYes")}</span>
               <span className={`text-xs font-medium ${weekendWorkAnswer === 'ja' ? 'text-slate-300' : 'text-slate-500'}`}>
-                Volledig werkweektarief
+                {t("step1WeekendYesSub")}
               </span>
             </button>
           </div>
           {weekendWorkAnswer === 'nee' && (
             <p className="text-xs text-amber-700 leading-relaxed bg-amber-100 rounded-lg p-2.5">
-              ⚠️ U betaalt nu alleen de werkdagen. Wordt gebruik van de machine op weekenddagen
-              geconstateerd via de urenteller, dan wordt het volledige werkweektarief alsnog in
-              rekening gebracht.
+              {t("step1WeekendNoWarning")}
             </p>
           )}
         </div>

@@ -45,6 +45,10 @@ COPY --from=builder /app/node_modules/@prisma /app/node_modules/@prisma
 COPY --from=builder /app/dist /app/dist
 COPY --from=builder /app/prisma /app/prisma
 
+# Run as the non-root "node" user built into the base image (not root)
+RUN mkdir -p /app/uploads && chown -R node:node /app
+USER node
+
 EXPOSE 3000
 
 # Script to push Prisma schema, seed the database, and start the server

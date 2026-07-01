@@ -9,7 +9,6 @@ import { Machine, Order, DeliveryType, UserProfile, CartItem } from "../types";
 import { useAppStore } from "../store/appStore";
 import { checkAvailability } from "../utils/availability";
 import { calculateItemSubtotal, isStrictWeekend, countWeekendDays, calculateRentalDays, billableWeeks, addonPriceForRental } from "../utils/pricing";
-import { euro } from "../utils/format";
 
 // Import modular Step components
 import { buildWhatsAppUrl } from "../utils/whatsapp";
@@ -933,23 +932,6 @@ export default function BookingSection({
           </div>
         )}
 
-        {/* Mobile price bar — sticks below header while scrolling, hidden on desktop */}
-        {step < 4 && cartItems.length > 0 && sums.total > 0 && (
-          <div className="lg:hidden sticky top-[4.5rem] z-30 mb-5 bg-white/95 backdrop-blur-sm border border-slate-200 rounded-2xl shadow-md px-4 py-3 flex items-center justify-between gap-3">
-            <div className="min-w-0 flex-1">
-              <p className="text-[11px] text-slate-500 leading-none mb-0.5 truncate">
-                {cartItems.length === 1
-                  ? cartItems[0].machine.name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "")
-                  : `${cartItems.length} machines gereserveerd`}
-              </p>
-              <p className="text-xl font-black text-slate-900 font-mono leading-tight">{euro(sums.total)}</p>
-            </div>
-            <div className="shrink-0 text-right space-y-0.5">
-              <p className="text-[10px] text-slate-400 leading-none">incl. 21% BTW</p>
-              <p className="text-[10px] font-semibold text-emerald-600 leading-none">{sums.days} {sums.days === 1 ? "dag" : "dagen"} huur</p>
-            </div>
-          </div>
-        )}
 
         <AnimatePresence mode="wait">
           {step < 4 ? (

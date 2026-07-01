@@ -193,14 +193,14 @@ export default function BookingSuccess({
             ))}
           </ol>
 
-          {/* WhatsApp button */}
+          {/* WhatsApp button — primary CTA */}
           <motion.a
             href={whatsappUrl}
             target="_blank"
             rel="noopener noreferrer"
-            whileHover={{ scale: 1.02 }}
+            whileHover={{ scale: 1.02, y: -2 }}
             whileTap={{ scale: 0.98 }}
-            className="flex items-center justify-center gap-3 w-full py-3.5 rounded-xl bg-[#25D366] hover:bg-[#1da851] text-white font-bold text-sm transition-colors duration-200 cursor-pointer no-underline shadow-sm"
+            className="flex items-center justify-center gap-3 w-full py-4 rounded-xl bg-[#25D366] hover:bg-[#1da851] text-white font-black text-base transition-all duration-200 cursor-pointer no-underline shadow-lg shadow-[#25D366]/30 hover:shadow-xl hover:shadow-[#25D366]/35"
           >
             <MessageCircle className="h-5 w-5 shrink-0" />
             {t("successConfirmWA")}
@@ -208,29 +208,33 @@ export default function BookingSuccess({
         </div>
       )}
 
-      {/* Bottom actions */}
-      <div className="px-6 py-4 border-t border-slate-100 flex flex-col sm:flex-row gap-2">
+      {/* Bottom actions — secondary, kept visually subdued so they don't compete with the WhatsApp CTA */}
+      <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-center gap-5">
         <button
           onClick={() => printInvoice((successOrders ?? []).length > 0 ? successOrders : successOrder, undefined, true, siteConfig)}
-          className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-bold transition-all duration-200 cursor-pointer"
+          className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-600 font-medium transition-colors duration-150 cursor-pointer"
         >
-          <Download className="h-4 w-4 shrink-0" />
+          <Download className="h-3.5 w-3.5 shrink-0" />
           {t("successPdfBtn")}
         </button>
 
+        <span className="text-slate-200 select-none">|</span>
+
         <button
           onClick={() => { setStep(1); setSuccessOrder(null); setActiveTab("orders"); }}
-          className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold transition-all duration-200 cursor-pointer shadow-sm"
+          className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-600 font-medium transition-colors duration-150 cursor-pointer"
         >
-          <ClipboardList className="h-4 w-4 shrink-0" />
+          <ClipboardList className="h-3.5 w-3.5 shrink-0" />
           {t("successOrdersBtn")}
         </button>
 
+        <span className="text-slate-200 select-none">|</span>
+
         <button
           onClick={() => { setStep(1); setSuccessOrder(null); setActiveTab("home"); }}
-          className="sm:hidden flex items-center justify-center gap-2 py-2.5 rounded-xl border border-slate-200 text-slate-500 hover:text-slate-700 text-xs font-medium transition-all duration-200 cursor-pointer"
+          className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-600 font-medium transition-colors duration-150 cursor-pointer"
         >
-          <ArrowLeft className="h-3.5 w-3.5" />
+          <ArrowLeft className="h-3.5 w-3.5 shrink-0" />
           Terug
         </button>
       </div>

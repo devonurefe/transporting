@@ -10,10 +10,12 @@ import {
   CheckCircle,
   XCircle,
   Megaphone,
-  ChevronDown,
   X,
   Send,
+  MessageCircle,
 } from "lucide-react";
+
+const WHATSAPP_NUMBER = (import.meta as any).env?.VITE_WHATSAPP_NUMBER ?? "";
 import { useAuthStore } from "../../store/authStore";
 import { useLanguageStore } from "../../store/languageStore";
 
@@ -182,20 +184,30 @@ export default function AdminCustomers({ adminLanguage }: AdminCustomersProps) {
     setEmailBody(tpl.body);
   };
 
-  // Simulate send (opens mailto for now; replace with real bulk API if Resend supports it)
   const handleSendEmail = async () => {
     setSendingEmail(true);
-    const targets = customers.filter((c) => {
-      if (sendOnlyMarketing && !c.marketingConsent) return false;
-      if (selectedIds.size > 0 && !selectedIds.has(c.id)) return false;
-      return true;
-    });
-    // For now, open a mailto with BCC (real implementation would call a backend bulk-send endpoint)
-    const emails = targets.map((c) => c.email).join(";");
-    const mailtoUrl = `mailto:?bcc=${encodeURIComponent(emails)}&subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody.replace("{naam}", "klant"))}`;
-    window.location.href = mailtoUrl;
-    setEmailSentCount(targets.length);
-    setSendingEmail(false);
+    try {
+      const customerIds = selectedIds.size > 0 ? Array.from(selectedIds) : undefined;
+      const res = await fetch("/api/auth/campaigns/email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ customerIds, subject: emailSubject, body: emailBody, sendOnlyMarketing }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Versturen mislukt");
+      setEmailSentCount(data.sent ?? 0);
+    } catch (err: any) {
+      alert(err.message || "Campagne versturen mislukt");
+    } finally {
+      setSendingEmail(false);
+    }
+  };
+
+  const buildCustomerWaUrl = (phone: string, name: string): string => {
+    const digits = phone.replace(/\D/g, "");
+    const formatted = digits.startsWith("0") ? `31${digits.slice(1)}` : digits;
+    const msg = encodeURIComponent(`Hallo ${name}! 🦾 Dit is een bericht van MB Hoogwerkers B.V. (huurgo.nl). Hoe kunnen wij u helpen?`);
+    return `https://wa.me/${formatted}?text=${msg}`;
   };
 
   const marketingCount = customers.filter((c) => c.marketingConsent).length;
@@ -365,13 +377,25 @@ export default function AdminCustomers({ adminLanguage }: AdminCustomersProps) {
                     <span className="truncate">{c.email}</span>
                   </a>
                   {c.phone && (
-                    <a
-                      href={`tel:${c.phone}`}
-                      className="text-[10px] text-slate-400 hover:text-slate-600 flex items-center gap-1 mt-0.5 transition-colors"
-                    >
-                      <Phone className="h-2.5 w-2.5 shrink-0" />
-                      {c.phone}
-                    </a>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <a
+                        href={`tel:${c.phone}`}
+                        className="text-[10px] text-slate-400 hover:text-slate-600 flex items-center gap-1 transition-colors"
+                      >
+                        <Phone className="h-2.5 w-2.5 shrink-0" />
+                        {c.phone}
+                      </a>
+                      <a
+                        href={buildCustomerWaUrl(c.phone, c.name)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title="WhatsApp klant"
+                        className="flex items-center justify-center h-4 w-4 rounded-full bg-[#25D366] hover:bg-[#1da851] transition-colors shrink-0"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <MessageCircle className="h-2.5 w-2.5 text-white" />
+                      </a>
+                    </div>
                   )}
                 </div>
                 <span className="text-center font-mono font-bold text-slate-700 text-[11px]">
@@ -426,9 +450,9 @@ export default function AdminCustomers({ adminLanguage }: AdminCustomersProps) {
               <div className="text-center py-8 space-y-3">
                 <CheckCircle className="h-12 w-12 text-emerald-500 mx-auto" />
                 <p className="font-bold text-slate-800">
-                  {t(`E-mailclient geopend voor ${emailSentCount} ontvangers.`, `Email client opened for ${emailSentCount} recipients.`, `${emailSentCount} alıcı için e-posta istemcisi açıldı.`)}
+                  {t(`Campagne verstuurd naar ${emailSentCount} ontvanger(s).`, `Campaign sent to ${emailSentCount} recipient(s).`, `Kampanya ${emailSentCount} alıcıya gönderildi.`)}
                 </p>
-                <p className="text-xs text-slate-500">{t("Verstuur de e-mail vanuit uw e-mailclient.", "Send the email from your email client.", "E-postayı e-posta istemcinizden gönderin.")}</p>
+                <p className="text-xs text-slate-500">{t("E-mails zijn direct verstuurd via Resend.", "Emails were sent directly via Resend.", "E-postalar Resend üzerinden gönderildi.")}</p>
               </div>
             ) : (
               <>
@@ -514,11 +538,11 @@ export default function AdminCustomers({ adminLanguage }: AdminCustomersProps) {
                 >
                   <Send className="h-4 w-4" />
                   {sendingEmail
-                    ? t("Bezig...", "Sending...", "Gönderiliyor...")
-                    : t("E-mail versturen via client", "Open in email client", "E-posta istemcisinde aç")}
+                    ? t("Bezig met versturen...", "Sending...", "Gönderiliyor...")
+                    : t("Campagne versturen via Resend", "Send campaign via Resend", "Resend ile kampanya gönder")}
                 </button>
                 <p className="text-[10px] text-slate-400 text-center">
-                  {t("Opent uw standaard e-mailclient met BCC-lijst.", "Opens your default email client with BCC list.", "Varsayılan e-posta istemcinizi BCC listesiyle açar.")}
+                  {t("E-mails worden direct verstuurd via Resend (gepersonaliseerd per ontvanger).", "Emails are sent directly via Resend (personalised per recipient).", "E-postalar Resend üzerinden doğrudan gönderilir.")}
                 </p>
               </>
             )}

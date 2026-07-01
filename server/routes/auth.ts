@@ -560,3 +560,52 @@ authRouter.get("/customers", authenticateToken, requireAdmin, async (_req: Authe
   }
 });
 
+// POST /api/auth/campaigns/email — admin-only: send bulk campaign emails via Resend
+authRouter.post("/campaigns/email", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { customerIds, subject, body, sendOnlyMarketing } = req.body;
+    if (!subject || typeof subject !== "string" || subject.trim().length < 3) {
+      return res.status(400).json({ error: "Onderwerp is verplicht" });
+    }
+    if (!body || typeof body !== "string" || body.trim().length < 10) {
+      return res.status(400).json({ error: "Berichttekst is verplicht" });
+    }
+
+    // Build filter
+    const where: Record<string, unknown> = {};
+    if (Array.isArray(customerIds) && customerIds.length > 0) {
+      where.id = { in: customerIds.map(String) };
+    }
+    if (sendOnlyMarketing) {
+      where.marketingConsent = true;
+    }
+    where.isEmailVerified = true;
+
+    const targets = await prisma.customer.findMany({
+      where,
+      select: { id: true, name: true, email: true }
+    });
+
+    if (targets.length === 0) {
+      return res.json({ sent: 0, failed: 0 });
+    }
+
+    // Rate-cap: max 200 recipients per campaign call
+    const capped = targets.slice(0, 200);
+
+    let sent = 0;
+    let failed = 0;
+    for (const customer of capped) {
+      const personalBody = body.replace(/\{naam\}/g, customer.name);
+      const ok = await emailService.sendCampaignEmail(customer, subject.trim(), personalBody);
+      if (ok) sent++; else failed++;
+    }
+
+    console.log(`[Campaign] Admin sent campaign "${subject.slice(0, 40)}" → ${sent} sent, ${failed} failed`);
+    return res.json({ sent, failed });
+  } catch (error) {
+    console.error("Campaign email error:", error);
+    return res.status(500).json({ error: "Campagne versturen mislukt" });
+  }
+});
+

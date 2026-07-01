@@ -376,7 +376,7 @@ export default function HomeSection({
             transition={{ duration: 0.5 }}
             src={(siteConfigLoaded && siteConfig.heroImageUrl) ? siteConfig.heroImageUrl : '/hero-huurgo-v2.jpg'}
             alt=""
-            className="w-full h-full block object-cover animate-kenburns [object-position:80%_center] sm:[object-position:85%_center]"
+            className="w-full h-full block object-cover animate-kenburns [object-position:80%_center] sm:[object-position:85%_center] [transform-origin:80%_center] sm:[transform-origin:85%_center]"
           />
 
           {/* Readability scrim — darker toward the bottom-left where the text sits */}

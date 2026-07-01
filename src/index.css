@@ -335,6 +335,32 @@
   animation-play-state: paused;
 }
 
+/* Tarieven deal button — soft periodic shimmer that sweeps every 3.5 s so
+   the button catches the eye without being distracting. Only applied when
+   the machine actually has a weekly/campaign discount (orange gradient). */
+@keyframes tariefSheen {
+  0%, 70%  { left: -75%; }
+  85%      { left: 130%; }
+  100%     { left: 130%; }
+}
+.tarief-deal::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -75%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    100deg,
+    transparent,
+    rgba(255, 255, 255, 0.32),
+    transparent
+  );
+  transform: skewX(-20deg);
+  pointer-events: none;
+  animation: tariefSheen 3.5s ease-out infinite;
+}
+
 /* ── Accessibility — honour the OS "reduce motion" preference. Decorative
    animations (review ticker, hero zoom, sheen, float, scroll-reveal,
    pulses) are disabled so motion-sensitive visitors get a calm, static UI
@@ -351,7 +377,8 @@
   .animate-kenburns,
   .float-slow,
   .pulse-bg,
-  .advice-btn {
+  .advice-btn,
+  .tarief-deal::after {
     animation: none !important;
     transform: none !important;
   }

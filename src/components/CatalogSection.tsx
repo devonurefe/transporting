@@ -485,18 +485,44 @@ export default function CatalogSection({
                           </div>
                         </div>
 
-                        {/* Tarieven — single button replacing pills */}
-                        <button
-                          type="button"
-                          onClick={(e) => { e.stopPropagation(); setPricingPreviewMachine(machine); }}
-                          className="w-full flex items-center justify-between px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 hover:border-slate-300 text-slate-600 text-[11px] font-semibold transition-all cursor-pointer group"
-                        >
-                          <span className="flex items-center gap-1.5">
-                            <Tag className="h-3 w-3 text-slate-400 shrink-0" />
-                            Alle tarieven &amp; kortingen
-                          </span>
-                          <ChevronRight className="h-3.5 w-3.5 text-slate-400 group-hover:text-slate-600 group-hover:translate-x-0.5 transition-all" />
-                        </button>
+                        {/* Tarieven — visually upgraded: amber gradient + shimmer when discounts exist */}
+                        {(() => {
+                          const d = computeDiscounts(machine);
+                          const hasCampaign = !!(machine.campaignDiscountPercent && machine.campaignDiscountPercent > 0);
+                          const hasWeekly = d.weekly > 0;
+                          const hasMonthly = d.monthly > 0;
+                          const hasAnyDiscount = hasWeekly || hasMonthly || hasCampaign;
+                          const badgeLabel = hasCampaign
+                            ? `-${machine.campaignDiscountPercent}% actie`
+                            : hasWeekly
+                            ? `-${d.weekly}%/week`
+                            : hasMonthly
+                            ? `-${d.monthly}%/maand`
+                            : null;
+                          return (
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); setPricingPreviewMachine(machine); }}
+                              className={[
+                                "w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-[11px] font-semibold transition-all cursor-pointer group relative overflow-hidden",
+                                hasAnyDiscount
+                                  ? "tarief-deal bg-gradient-to-r from-amber-500 to-orange-500 text-white border border-amber-400/40 shadow-sm hover:from-amber-600 hover:to-orange-600"
+                                  : "bg-slate-50 border border-slate-200 text-slate-600 hover:bg-slate-100 hover:border-slate-300",
+                              ].join(" ")}
+                            >
+                              <span className="flex items-center gap-1.5 relative z-10 min-w-0">
+                                <Tag className={`h-3 w-3 shrink-0 ${hasAnyDiscount ? "text-white/90" : "text-slate-400"}`} />
+                                <span className="truncate">Alle tarieven &amp; kortingen</span>
+                                {badgeLabel && (
+                                  <span className="shrink-0 bg-white/30 text-white text-[9px] font-black px-1.5 py-0.5 rounded leading-none whitespace-nowrap">
+                                    {badgeLabel}
+                                  </span>
+                                )}
+                              </span>
+                              <ChevronRight className={`h-3.5 w-3.5 shrink-0 ml-1 group-hover:translate-x-0.5 transition-all relative z-10 ${hasAnyDiscount ? "text-white/80" : "text-slate-400 group-hover:text-slate-600"}`} />
+                            </button>
+                          );
+                        })()}
 
                         {/* Spec + SuitableFor — single row */}
                         <div className="flex items-center gap-2 flex-wrap text-[10px] font-mono text-slate-600 border-t border-slate-100 pt-2.5">

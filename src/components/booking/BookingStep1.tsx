@@ -209,10 +209,10 @@ export default function BookingStep1({
             );
             return (
               <div key={item.id} className="p-4 rounded-2xl bg-slate-50/50 border border-slate-200 space-y-4 shadow-sm">
-                <div className="flex justify-between items-start gap-4">
-                  <div className="flex items-start space-x-3 min-w-0 flex-1">
+                <div className="flex justify-between items-start gap-3">
+                  <div className="flex items-start gap-3 min-w-0 flex-1">
                     <div
-                      className="h-16 w-16 shrink-0 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden shadow-sm cursor-pointer hover:ring-2 hover:ring-slate-400 transition-all relative group/thumb"
+                      className="h-20 w-20 shrink-0 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden shadow-sm cursor-pointer hover:ring-2 hover:ring-slate-400 transition-all relative group/thumb"
                       onClick={() => setPreviewMachine(item.machine)}
                       title="Bekijk details"
                     >
@@ -225,16 +225,16 @@ export default function BookingStep1({
                           e.currentTarget.src = "/placeholder-machine.webp";
                         }}
                       />
-                      <div className="absolute inset-0 bg-black/0 group-hover/thumb:bg-black/20 transition-colors duration-200 rounded-xl" />
+                      <div className="absolute inset-0 bg-black/0 group-hover/thumb:bg-black/20 transition-colors duration-200 rounded-2xl" />
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <h4 className="text-sm font-extrabold text-slate-900 leading-snug">{item.machine.name}</h4>
+                    <div className="min-w-0 flex-1 pt-0.5">
+                      <h4 className="text-sm font-extrabold text-slate-900 leading-tight">{item.machine.name}</h4>
                     </div>
                   </div>
                   <button
                     type="button"
                     onClick={() => onRemoveCartItem(item.id)}
-                    className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 transition-colors border-none cursor-pointer"
+                    className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 transition-colors border-none cursor-pointer shrink-0"
                     title="Verwijderen"
                     aria-label="Verwijderen uit winkelwagen"
                   >

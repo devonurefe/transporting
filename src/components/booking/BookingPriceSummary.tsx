@@ -176,8 +176,8 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
     <div className="bg-white border border-slate-200 shadow-sm rounded-2xl overflow-hidden">
 
       {/* Machine preview */}
-      <div className="flex items-center gap-3 p-4 bg-slate-50 border-b border-slate-100">
-        <div className="h-14 w-20 rounded-xl overflow-hidden bg-slate-200 shrink-0">
+      <div className="flex items-center gap-4 p-4 bg-slate-50 border-b border-slate-100">
+        <div className="h-20 w-20 rounded-2xl overflow-hidden bg-slate-200 shrink-0 shadow-sm">
           <img
             src={selectedMachine.imageUrl || selectedMachine.additionalImages?.[0] || "/placeholder-machine.webp"}
             alt=""
@@ -194,8 +194,8 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
           />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wide leading-none mb-1">{t("priceSummaryReservation")}</p>
-          <h4 className="text-sm font-extrabold text-slate-900 leading-snug">
+          <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wide leading-none mb-1.5">{t("priceSummaryReservation")}</p>
+          <h4 className="text-sm font-extrabold text-slate-900 leading-tight mb-1">
             {machineCount > 1 ? `${machineCount} machines gereserveerd` : selectedMachine.name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "")}
           </h4>
           {machineCount === 1 && (

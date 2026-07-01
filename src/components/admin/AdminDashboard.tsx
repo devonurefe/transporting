@@ -4,9 +4,10 @@
  */
 
 import React, { useState, useMemo, useEffect, useRef } from "react";
-import { ArrowUpRight, Bell, Smartphone, Calendar } from "lucide-react";
+import { ArrowUpRight, Bell, Smartphone, Calendar, UserPlus } from "lucide-react";
 import { motion } from "motion/react";
 import { useAppStore } from "../../store/appStore";
+import { useAuthStore } from "../../store/authStore";
 
 interface AdminDashboardProps {
   key?: string;
@@ -19,6 +20,7 @@ export default function AdminDashboard({ setSubTab, setOrdersFilter, adminLangua
   const machines = useAppStore((state) => state.machines);
   const orders = useAppStore((state) => state.orders);
   const fetchOrders = useAppStore((state) => state.fetchOrders);
+  const token = useAuthStore((state) => state.token);
 
   const [hoveredSector, setHoveredSector] = useState<string | null>(null);
   const [hoveredTrendMonth, setHoveredTrendMonth] = useState<string | null>(null);
@@ -27,6 +29,7 @@ export default function AdminDashboard({ setSubTab, setOrdersFilter, adminLangua
     typeof window !== "undefined" && "Notification" in window ? Notification.permission : "unsupported"
   );
   const prevOrderCount = useRef(orders.length);
+  const [customerStats, setCustomerStats] = useState<{ total: number; newThisMonth: number } | null>(null);
 
   const last6Months = useMemo(() => {
     const months = [];
@@ -131,6 +134,23 @@ export default function AdminDashboard({ setSubTab, setOrdersFilter, adminLangua
     return () => clearInterval(interval);
   }, [fetchOrders]);
 
+  // Fetch customer count once on mount
+  useEffect(() => {
+    if (!token) return;
+    fetch("/api/auth/customers", { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (!data?.customers) return;
+        const now = new Date();
+        const thisMonth = data.customers.filter((c: any) => {
+          const d = new Date(c.createdAt);
+          return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+        }).length;
+        setCustomerStats({ total: data.customers.length, newThisMonth: thisMonth });
+      })
+      .catch(() => {});
+  }, [token]);
+
   useEffect(() => {
     if (notifPermission !== "granted") return;
     if (orders.length > prevOrderCount.current) {
@@ -159,7 +179,7 @@ export default function AdminDashboard({ setSubTab, setOrdersFilter, adminLangua
       className="space-y-6"
     >
       {/* Glowing Premium KPI Card deck */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {[
           { title: t("Cumulatieve Omzet", "Cumulative Revenue", "Toplam Ciro"), value: `€ ${totalEarnings.toFixed(2)}`, trend: revenueTrend, color: "bg-amber-50 border border-amber-200 text-amber-900 shadow-sm", tab: "accounting" as const, filter: [] as string[] },
           { title: t("Actieve Huren", "Active Rentals", "Aktif Kiralamalar"), value: `${activeRentals} ${t("machines", "machines", "makine")}`, trend: t("Klik voor details →", "Click for details →", "Detay için tıkla →"), color: "border border-slate-200 bg-slate-50 text-slate-800 shadow-sm", tab: "orders" as const, filter: ["Goedgekeurd", "Onderweg"] as string[] },
@@ -186,6 +206,32 @@ export default function AdminDashboard({ setSubTab, setOrdersFilter, adminLangua
             </div>
           );
         })}
+
+        {/* New customers KPI */}
+        <div
+          onClick={() => (setSubTab as any)("customers")}
+          className="p-5 rounded-2xl flex flex-col justify-between min-h-[140px] cursor-pointer hover:shadow-md hover:scale-[1.01] transition-all active:scale-[0.99] border border-teal-200 bg-teal-50 shadow-sm"
+        >
+          <div className="flex items-start justify-between">
+            <span className="text-[10px] uppercase font-bold text-teal-500 font-mono tracking-wider block leading-none">
+              {t("Nieuwe Klanten", "New Customers", "Yeni Müşteriler")}
+            </span>
+            <UserPlus className="h-4 w-4 text-teal-400 shrink-0" />
+          </div>
+          <div>
+            <span className="text-xl font-display font-extrabold text-teal-900 block mt-3.5">
+              {customerStats !== null ? customerStats.newThisMonth : "—"}
+              {customerStats !== null && (
+                <span className="text-sm font-normal text-teal-600 ml-1">{t("deze maand", "this month", "bu ay")}</span>
+              )}
+            </span>
+          </div>
+          <span className="text-[10px] font-mono text-teal-600 block mt-auto leading-none pt-4">
+            {customerStats !== null
+              ? t(`${customerStats.total} totaal geregistreerd`, `${customerStats.total} total registered`, `${customerStats.total} toplam kayıtlı`)
+              : t("Laden...", "Loading...", "Yükleniyor...")}
+          </span>
+        </div>
       </div>
 
       {/* VISUAL ANALYTICS GRAPHICS */}

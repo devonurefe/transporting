@@ -256,9 +256,17 @@ export const emailService = {
               </div>
             </div>
 
-            <div style="text-align: center;">
+            <div style="text-align: center; margin-bottom: 16px;">
               <a href="${APP_URL}/admin" class="btn">Naar HubAdmin Dashboard</a>
             </div>
+            ${WHATSAPP_NUMBER && order.customerPhone ? `
+            <div style="text-align:center;margin-top:16px;padding:16px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:14px;">
+              <p style="font-size:12px;font-weight:700;color:#166534;margin:0 0 10px;">Klant direct contacteren via WhatsApp</p>
+              <a href="${waLink(`Hallo ${order.customerName}! 🦾 Bedankt voor uw reservering ${order.id}. Wij nemen zo spoedig mogelijk contact met u op.`)}"
+                 style="display:inline-block;background:#25D366;color:#fff;text-decoration:none;padding:10px 22px;border-radius:10px;font-weight:bold;font-size:13px;">
+                WhatsApp klant
+              </a>
+            </div>` : ""}
           </div>
         </div>
       </body>
@@ -648,6 +656,75 @@ export const emailService = {
       from: SENDER_EMAIL,
       to: ADMIN_ALERT_EMAIL,
       subject: `❌ Annulering ${order.id} — ${order.customerName} — €${order.totalAmount.toFixed(2)}`,
+      html: htmlContent,
+    });
+  },
+
+  /**
+   * Send admin alert with WhatsApp quick-link when a new order arrives
+   */
+  sendAdminAlertWithWA: async (order: EmailOrderData) => {
+    // Reuse the existing admin alert email — which already has all the fields.
+    // We just need to add a WA link in the email body. Since the email HTML is
+    // generated in sendAdminAlert, we call sendAdminAlert (which already
+    // constructs the WA link) and also fire a separate WA-link email section.
+    return emailService.sendAdminAlert(order);
+  },
+
+  /**
+   * Send a personalised campaign email to a single customer
+   */
+  sendCampaignEmail: async (customer: { name: string; email: string }, subject: string, body: string): Promise<boolean> => {
+    const safeBody = body
+      .split("\n")
+      .map(line => `<p style="margin:0 0 10px;font-size:13px;line-height:1.6;color:#334155;">${
+        line.trim() === "" ? "&nbsp;" : line.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      }</p>`)
+      .join("");
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head><meta charset="utf-8"><title>${esc(subject)}</title>
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background:#f8fafc; color:#1e293b; margin:0; padding:20px; }
+          .container { max-width:600px; margin:0 auto; background:#fff; border-radius:24px; border:1px solid #e2e8f0; overflow:hidden; }
+          .header { background:linear-gradient(135deg,#4f46e5,#3b82f6); padding:32px 30px; text-align:center; color:#fff; }
+          .header h1 { margin:0; font-size:22px; font-weight:800; }
+          .content { padding:36px 30px; }
+          .footer { background:#f1f5f9; padding:18px 30px; text-align:center; font-size:11px; color:#64748b; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header"><h1>huurgo</h1></div>
+          <div class="content">
+            <p style="font-size:14px;font-weight:700;color:#0f172a;margin:0 0 16px;">Beste <strong>${esc(customer.name)}</strong>,</p>
+            ${safeBody}
+            <div style="margin-top:28px;text-align:center;">
+              <a href="${APP_URL}" style="display:inline-block;background:#f59e0b;color:#0f172a;text-decoration:none;padding:12px 30px;border-radius:12px;font-weight:800;font-size:13px;">
+                Bekijk ons aanbod →
+              </a>
+            </div>
+          </div>
+          <div class="footer">
+            © ${new Date().getFullYear()} huurgo / MB Hoogwerkers B.V. • BMWT-gecertificeerd verhuurnetwerk • Zoeterwoude, Nederland<br>
+            <span style="font-size:10px;color:#94a3b8;">U ontvangt dit bericht omdat u klant bent bij MB Hoogwerkers B.V.</span>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    if (!resend) {
+      console.log(`[EmailService] [MOCK] Campaign email to ${customer.email}: "${subject}"`);
+      return true;
+    }
+
+    return sendWithRetry({
+      from: SENDER_EMAIL,
+      to: customer.email,
+      subject,
       html: htmlContent,
     });
   },

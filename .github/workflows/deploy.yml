@@ -52,7 +52,7 @@ jobs:
                cd /opt/huurgo && \
                git pull origin main && \
                docker compose pull app && \
-               docker compose up -d && \
+               docker compose up -d --force-recreate --no-deps app && \
                docker compose exec -T app npx prisma db push && \
                echo 'Deploy tamamlandi:' \$(date)"; then
               echo "Basarili!"

@@ -3,22 +3,23 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { 
-  X, 
-  Calendar, 
-  MapPin, 
-  Phone, 
-  Mail, 
-  User, 
-  ShieldAlert, 
-  AlertTriangle, 
-  Check, 
-  DollarSign, 
+import {
+  X,
+  Calendar,
+  MapPin,
+  Phone,
+  Mail,
+  User,
+  ShieldAlert,
+  AlertTriangle,
+  Check,
+  DollarSign,
   Clock,
   Briefcase,
-  Printer
+  Printer,
+  Truck
 } from "lucide-react";
 import { useAppStore } from "../../store/appStore";
 import { useAuthStore } from "../../store/authStore";
@@ -46,6 +47,19 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
   const [dateFilter, setDateFilter] = useState<"all" | "today" | "tomorrow" | "week">("all");
   const [searchText, setSearchText] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [localStatusFilter, setLocalStatusFilter] = useState<string>(
+    statusFilter && statusFilter.length > 0 ? statusFilter[0] : "all"
+  );
+
+  // Sync when external statusFilter prop changes (e.g. KPI card click from dashboard)
+  const statusFilterKey = statusFilter?.join(",") ?? "";
+  useEffect(() => {
+    if (statusFilter && statusFilter.length > 0) {
+      setLocalStatusFilter(statusFilter[0]);
+    } else {
+      setLocalStatusFilter("all");
+    }
+  }, [statusFilterKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const toggleSelect = (id: string) =>
     setSelectedIds(prev => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s; });
@@ -64,8 +78,8 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
     return d.toISOString().split("T")[0];
   })();
 
-  const statusFiltered = statusFilter && statusFilter.length > 0
-    ? orders.filter(o => statusFilter.includes(o.status))
+  const statusFiltered = localStatusFilter !== "all"
+    ? orders.filter(o => o.status === localStatusFilter)
     : orders;
 
   const q = searchText.trim().toLowerCase();
@@ -282,21 +296,41 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
     >
       <div className="glass-panel p-6 rounded-3xl space-y-4">
         <div className="border-b border-slate-200 pb-3">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <h3 className="font-display font-bold text-sm text-slate-900">{t("Alle Actieve & Historische Contracten", "All Active & Historical Contracts", "Tüm Aktif ve Geçmiş Sözleşmeler")}</h3>
-              <p className="text-[11px] text-slate-500 mt-0.5">{t("Hier accordeert u inkomende reserveringen en past u de logistieke status aan van klanten.", "Here you approve incoming reservations and adjust the logistics status.", "Buradan gelen rezervasyonları onaylar ve müşterilerin lojistik durumlarını düzenlersiniz.")}</p>
-            </div>
-            {statusFilter && statusFilter.length > 0 && (
+          <h3 className="font-display font-bold text-sm text-slate-900">{t("Alle Actieve & Historische Contracten", "All Active & Historical Contracts", "Tüm Aktif ve Geçmiş Sözleşmeler")}</h3>
+          <p className="text-[11px] text-slate-500 mt-0.5">{t("Hier accordeert u inkomende reserveringen en past u de logistieke status aan van klanten.", "Here you approve incoming reservations and adjust the logistics status.", "Buradan gelen rezervasyonları onaylar ve müşterilerin lojistik durumlarını düzenlersiniz.")}</p>
+        </div>
+
+        {/* Status filter chips */}
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {([
+            { key: "all",           nl: "Alle",          en: "All",        tr: "Tümü" },
+            { key: "In behandeling",nl: "In behandeling",en: "Pending",    tr: "İşlemde",   color: "amber"  },
+            { key: "Goedgekeurd",   nl: "Goedgekeurd",   en: "Approved",   tr: "Onaylandı", color: "teal"   },
+            { key: "Onderweg",      nl: "Onderweg",      en: "Delivery",   tr: "Yolda",     color: "blue"   },
+            { key: "Voltooid",      nl: "Voltooid",      en: "Completed",  tr: "Tamamlandı",color: "slate"  },
+            { key: "Geannuleerd",   nl: "Geannuleerd",   en: "Cancelled",  tr: "İptal",     color: "rose"   },
+          ] as const).map((s) => {
+            const label = adminLanguage === "tr" ? s.tr : adminLanguage === "en" ? s.en : s.nl;
+            const isActive = localStatusFilter === s.key;
+            const colorClass = isActive
+              ? s.key === "all"           ? "bg-indigo-600 text-white border-indigo-700"
+              : s.key === "In behandeling"? "bg-amber-500 text-white border-amber-600"
+              : s.key === "Goedgekeurd"   ? "bg-teal-500 text-white border-teal-600"
+              : s.key === "Onderweg"      ? "bg-blue-600 text-white border-blue-700"
+              : s.key === "Voltooid"      ? "bg-slate-600 text-white border-slate-700"
+              : "bg-rose-600 text-white border-rose-700"
+              : "bg-white text-slate-500 border-slate-200 hover:border-slate-300 hover:text-slate-700";
+            return (
               <button
-                onClick={onClearStatusFilter}
-                className="flex items-center gap-1.5 flex-shrink-0 text-[10px] font-bold px-3 py-1.5 rounded-full bg-indigo-100 text-indigo-700 border border-indigo-200 hover:bg-indigo-200 transition-colors"
+                key={s.key}
+                type="button"
+                onClick={() => { setLocalStatusFilter(s.key); if (s.key === "all") onClearStatusFilter?.(); }}
+                className={`px-3 py-1.5 rounded-full text-[11px] font-bold transition-all border cursor-pointer shadow-sm ${colorClass}`}
               >
-                <span>{statusFilter.join(" / ")}</span>
-                <X className="h-3 w-3" />
+                {label}
               </button>
-            )}
-          </div>
+            );
+          })}
         </div>
 
         {/* Free-text search */}
@@ -322,7 +356,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
         {/* Date filter */}
         <div className="flex items-center gap-1.5 flex-wrap">
           {(["all", "today", "tomorrow", "week"] as const).map((f) => {
-            const label = f === "all" ? "Alle" : f === "today" ? "Vandaag" : f === "tomorrow" ? "Morgen" : "Deze Week";
+            const label = f === "all" ? t("Alle", "All", "Tümü") : f === "today" ? t("Vandaag", "Today", "Bugün") : f === "tomorrow" ? t("Morgen", "Tomorrow", "Yarın") : t("Deze Week", "This Week", "Bu Hafta");
             return (
               <button
                 key={f}
@@ -966,57 +1000,88 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                   </div>
                 )}
 
-                {/* Row 1: Utility actions */}
-                <div className="flex items-center justify-between gap-2 flex-wrap">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className={`text-[9px] font-mono px-2.5 py-1 rounded-full font-extrabold uppercase ${
-                      selectedDetailOrder.status === "In behandeling" ? "bg-amber-100 text-amber-700"
-                      : selectedDetailOrder.status === "Goedgekeurd" ? "bg-teal-100 text-teal-700"
-                      : selectedDetailOrder.status === "Onderweg" ? "bg-blue-100 text-blue-700"
-                      : selectedDetailOrder.status === "Geannuleerd" ? "bg-rose-100 text-rose-700"
-                      : "bg-slate-100 text-slate-500"
-                    }`}>
-                      {selectedDetailOrder.status}
-                    </span>
-                    {selectedDetailOrder.paymentStatus !== "paid" && (
-                      <button
-                        type="button"
-                        disabled={isUpdatingPayment}
-                        onClick={() => handleUpdatePaymentStatus(selectedDetailOrder.id, "paid")}
-                        className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1 disabled:opacity-50"
-                      >
-                        <DollarSign className="h-3 w-3 shrink-0" />
-                        <span>{t("Betaling Ontvangen ✓", "Payment Received ✓", "Ödeme Alındı ✓")}</span>
-                      </button>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2">
+                {/* Row 1: Status badge + payment confirmation */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className={`text-[9px] font-mono px-2.5 py-1 rounded-full font-extrabold uppercase ${
+                    selectedDetailOrder.status === "In behandeling" ? "bg-amber-100 text-amber-700"
+                    : selectedDetailOrder.status === "Goedgekeurd" ? "bg-teal-100 text-teal-700"
+                    : selectedDetailOrder.status === "Onderweg" ? "bg-blue-100 text-blue-700"
+                    : selectedDetailOrder.status === "Geannuleerd" ? "bg-rose-100 text-rose-700"
+                    : "bg-slate-100 text-slate-500"
+                  }`}>
+                    {selectedDetailOrder.status}
+                  </span>
+                  {selectedDetailOrder.paymentStatus !== "paid" && (
                     <button
                       type="button"
-                      onClick={() => printInvoice(selectedDetailOrder, undefined, false, siteConfig)}
-                      className="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1.5"
+                      disabled={isUpdatingPayment}
+                      onClick={() => handleUpdatePaymentStatus(selectedDetailOrder.id, "paid")}
+                      className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1 disabled:opacity-50"
                     >
-                      <Printer className="h-3.5 w-3.5 shrink-0 text-indigo-600" />
-                      <span>{t("Afdrukken / PDF", "Print / PDF", "Yazdır / PDF")}</span>
+                      <DollarSign className="h-3 w-3 shrink-0" />
+                      <span>{t("Betaling Ontvangen ✓", "Payment Received ✓", "Ödeme Alındı ✓")}</span>
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => closeModal()}
-                      className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-[10px] font-bold transition-all cursor-pointer border-none"
-                    >
-                      {t("Sluiten", "Close", "Kapat")}
-                    </button>
-                  </div>
+                  )}
                 </div>
 
-                {/* Row 2: Status actions */}
-                {selectedDetailOrder.status !== "Geannuleerd" && selectedDetailOrder.status !== "Voltooid" && selectedDetailOrder.status !== "Onderweg" && (
-                  <div className="flex items-center justify-between gap-2 pt-3 border-t border-slate-100">
+                {/* Row 2: Primary action (forward status) — full width, dominant */}
+                {selectedDetailOrder.status !== "Geannuleerd" && selectedDetailOrder.status !== "Voltooid" && (
+                  <div className="space-y-2 pt-1 border-t border-slate-100">
+                    {selectedDetailOrder.status === "In behandeling" && (
+                      <button
+                        type="button"
+                        disabled={isUpdatingStatus}
+                        onClick={() => handleUpdateStatus(
+                          selectedDetailOrder.id,
+                          "Goedgekeurd",
+                          `Bestelling goedgekeurd: ${selectedDetailOrder.id} voor ${selectedDetailOrder.customerName}.`,
+                          selectedDetailOrder
+                        )}
+                        className="w-full bg-teal-500 hover:bg-teal-600 text-white text-sm font-black py-3 rounded-xl cursor-pointer transition-all active:scale-[0.98] border-none flex items-center justify-center gap-2 disabled:opacity-60 shadow-md shadow-teal-500/20"
+                      >
+                        <Check className="h-5 w-5 shrink-0" />
+                        <span>{t("Goedkeuren", "Approve", "Onayla")}</span>
+                      </button>
+                    )}
+                    {selectedDetailOrder.status === "Goedgekeurd" && (
+                      <button
+                        type="button"
+                        disabled={isUpdatingStatus}
+                        onClick={() => handleUpdateStatus(
+                          selectedDetailOrder.id,
+                          "Onderweg",
+                          `Chauffeur ingepland & machine onderweg: ${selectedDetailOrder.id}.`,
+                          selectedDetailOrder
+                        )}
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-black py-3 rounded-xl cursor-pointer transition-all active:scale-[0.98] border-none flex items-center justify-center gap-2 disabled:opacity-60 shadow-md shadow-blue-500/20"
+                      >
+                        <Truck className="h-5 w-5 shrink-0" />
+                        <span>{t("Bezorging starten", "Start delivery", "Teslimatı Başlat")}</span>
+                      </button>
+                    )}
+                    {selectedDetailOrder.status === "Onderweg" && (
+                      <button
+                        type="button"
+                        disabled={isUpdatingStatus}
+                        onClick={() => handleUpdateStatus(
+                          selectedDetailOrder.id,
+                          "Voltooid",
+                          `Verhuurcontract succesvol afgerond: ${selectedDetailOrder.id}.`,
+                          selectedDetailOrder
+                        )}
+                        className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-black py-3 rounded-xl cursor-pointer transition-all active:scale-[0.98] border-none flex items-center justify-center gap-2 disabled:opacity-60 shadow-md shadow-indigo-500/20"
+                      >
+                        <Check className="h-5 w-5 shrink-0" />
+                        <span>{t("Huur afgerond", "Mark complete", "Tamamlandı")}</span>
+                      </button>
+                    )}
+
+                    {/* Cancel — destructive, separated below primary */}
                     <button
                       type="button"
                       disabled={isUpdatingStatus}
                       onClick={() => {
-                        if (confirm("Weet u zeker dat u dit contract permanent wilt annuleren?")) {
+                        if (confirm(t("Weet u zeker dat u dit contract permanent wilt annuleren?", "Are you sure you want to permanently cancel this order?", "Bu siparişi kalıcı olarak iptal etmek istediğinizden emin misiniz?"))) {
                           handleUpdateStatus(
                             selectedDetailOrder.id,
                             "Geannuleerd",
@@ -1025,61 +1090,32 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                           );
                         }
                       }}
-                      className="px-3 py-1.5 bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white border border-rose-200 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1 disabled:opacity-50 disabled:hover:bg-rose-50 disabled:hover:text-rose-700 disabled:cursor-not-allowed"
+                      className="w-full py-2 text-rose-600 hover:text-rose-700 border border-rose-200 hover:border-rose-300 hover:bg-rose-50 rounded-xl text-[11px] font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed bg-white"
                     >
                       <X className="h-3.5 w-3.5 shrink-0" />
                       <span>{t("Bestelling annuleren", "Cancel order", "Siparişi İptal Et")}</span>
                     </button>
-                    <div className="flex items-center gap-2">
-                      {selectedDetailOrder.status === "In behandeling" && (
-                        <button
-                          type="button"
-                          disabled={isUpdatingStatus}
-                          onClick={() => handleUpdateStatus(
-                            selectedDetailOrder.id,
-                            "Goedgekeurd",
-                            `Bestelling goedgekeurd: ${selectedDetailOrder.id} voor ${selectedDetailOrder.customerName}.`,
-                            selectedDetailOrder
-                          )}
-                          className="bg-teal-500 hover:bg-teal-600 text-slate-950 text-xs font-black px-4 py-2 rounded-lg cursor-pointer transition-transform active:scale-95 border-none flex items-center gap-1.5 disabled:opacity-60"
-                        >
-                          <Check className="h-4 w-4 shrink-0" />
-                          <span>Goedkeuren</span>
-                        </button>
-                      )}
-                      {selectedDetailOrder.status === "Goedgekeurd" && (
-                        <button
-                          type="button"
-                          disabled={isUpdatingStatus}
-                          onClick={() => handleUpdateStatus(
-                            selectedDetailOrder.id,
-                            "Onderweg",
-                            `Chauffeur ingepland & machine onderweg: ${selectedDetailOrder.id}.`,
-                            selectedDetailOrder
-                          )}
-                          className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-4 py-2 rounded-lg cursor-pointer transition-transform active:scale-95 border-none disabled:opacity-60"
-                        >
-                          {t("Bezorging starten", "Start delivery", "Teslimatı Başlat")}
-                        </button>
-                      )}
-                      {selectedDetailOrder.status === "Onderweg" && (
-                        <button
-                          type="button"
-                          disabled={isUpdatingStatus}
-                          onClick={() => handleUpdateStatus(
-                            selectedDetailOrder.id,
-                            "Voltooid",
-                            `Verhuurcontract succesvol afgerond: ${selectedDetailOrder.id}.`,
-                            selectedDetailOrder
-                          )}
-                          className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-4 py-2 rounded-lg cursor-pointer transition-transform active:scale-95 border-none disabled:opacity-60"
-                        >
-                          {t("Huur afgerond", "Mark complete", "Tamamlandı")}
-                        </button>
-                      )}
-                    </div>
                   </div>
                 )}
+
+                {/* Row 3: Utility actions (print + close) */}
+                <div className="flex items-center gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => printInvoice(selectedDetailOrder, undefined, false, siteConfig)}
+                    className="flex-1 px-3 py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200 rounded-xl text-[10px] font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                  >
+                    <Printer className="h-3.5 w-3.5 shrink-0" />
+                    <span>{t("PDF / Afdruk", "PDF / Print", "PDF / Yazdır")}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => closeModal()}
+                    className="flex-1 px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-[10px] font-bold transition-all cursor-pointer border-none flex items-center justify-center gap-1.5"
+                  >
+                    {t("Sluiten", "Close", "Kapat")}
+                  </button>
+                </div>
               </div>
 
             </motion.div>

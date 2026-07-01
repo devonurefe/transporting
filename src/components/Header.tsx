@@ -149,10 +149,8 @@ export default function Header({
         {/* Brand Logo & State Indicator */}
         <div 
           onClick={() => {
-            if (!isAdminMode) {
-              setActiveTab("home");
-            }
-          }} 
+            setActiveTab(isAdminMode ? "admin" : "home");
+          }}
           className="flex cursor-pointer items-center hover:opacity-90 active:scale-95 transition-all shrink-0"
         >
           {isAdminMode ? (

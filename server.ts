@@ -681,6 +681,18 @@ async function applyDataMigrations() {
       console.log("[Migration] Weekaanbiedingen: 3 featured machines set, rest cleared.");
     }
 
+    // Corrective: v1 migration set 6 machines (all unit variants); reduce to exactly
+    // 1 Nifty 170, 1 Nifty 120 (unit 1), and 1 Compact 10N (unit 1).
+    const WEEKLY_OFFERS_V2 = "migration-weekly-offers-v2-2026-07";
+    const v2Done = await prisma.invoiceCounter.findUnique({ where: { id: WEEKLY_OFFERS_V2 } });
+    if (!v2Done) {
+      const exactThree = ["nifty-170", "nifty-120-1", "compact-10n-1"];
+      await prisma.machine.updateMany({ where: { id: { in: exactThree } }, data: { showInWeeklyOffers: true } });
+      await prisma.machine.updateMany({ where: { id: { notIn: exactThree } }, data: { showInWeeklyOffers: false } });
+      await prisma.invoiceCounter.create({ data: { id: WEEKLY_OFFERS_V2, lastNumber: 1 } });
+      console.log("[Migration] Weekaanbiedingen v2: exactly 3 machines set (nifty-170, nifty-120-1, compact-10n-1).");
+    }
+
     // Loud warning if the admin account still uses the old seeded default password
     const seededAdmin = await prisma.admin.findUnique({ where: { email: "admin@huurgo.nl" } });
     if (seededAdmin) {

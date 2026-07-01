@@ -248,18 +248,9 @@ export default function Footer({ siteName, setActiveTab, setShowContactModal }: 
         </div>
       </div>
 
-      {/* Transition into dark footer — crisp angled cut instead of a blended
-          gradient bar, for a more deliberate, designed hand-off. */}
-      <div className="relative h-14 sm:h-20 bg-amber-50 overflow-hidden" aria-hidden="true">
-        <svg
-          className="absolute bottom-0 left-0 w-full h-full text-slate-950"
-          viewBox="0 0 1440 100"
-          preserveAspectRatio="none"
-          fill="currentColor"
-        >
-          <polygon points="0,100 1440,35 1440,100" />
-        </svg>
-      </div>
+      {/* Transition into dark footer — straight, crisp cut with a thin
+          accent line instead of a blended gradient bar. */}
+      <div className="h-10 sm:h-14 bg-amber-50 border-b-2 border-orange-400" aria-hidden="true" />
 
       {/* ── DARK FOOTER — 3-column symmetrical layout ── */}
       <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-10 pb-14 sm:pb-16">

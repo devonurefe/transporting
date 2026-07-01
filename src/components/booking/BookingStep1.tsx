@@ -208,38 +208,38 @@ export default function BookingStep1({
               item.endDate || new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]
             );
             return (
-              <div key={item.id} className="p-4 rounded-2xl bg-slate-50/50 border border-slate-200 space-y-4 shadow-sm">
-                <div className="flex justify-between items-start gap-3">
-                  <div className="flex items-start gap-3 min-w-0 flex-1">
-                    <div
-                      className="h-20 w-20 shrink-0 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden shadow-sm cursor-pointer hover:ring-2 hover:ring-slate-400 transition-all relative group/thumb"
-                      onClick={() => setPreviewMachine(item.machine)}
-                      title="Bekijk details"
-                    >
-                      <img
-                        src={item.machine.imageUrl || item.machine.additionalImages?.[0] || "/placeholder-machine.webp"}
-                        alt={item.machine.name}
-                        className="object-cover h-full w-full group-hover/thumb:scale-110 transition-transform duration-300"
-                        referrerPolicy="no-referrer"
-                        onError={(e) => {
-                          e.currentTarget.src = "/placeholder-machine.webp";
-                        }}
-                      />
-                      <div className="absolute inset-0 bg-black/0 group-hover/thumb:bg-black/20 transition-colors duration-200 rounded-2xl" />
-                    </div>
-                    <div className="min-w-0 flex-1 pt-0.5">
-                      <h4 className="text-sm font-extrabold text-slate-900 leading-tight">{item.machine.name}</h4>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => onRemoveCartItem(item.id)}
-                    className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 transition-colors border-none cursor-pointer shrink-0"
-                    title="Verwijderen"
-                    aria-label="Verwijderen uit winkelwagen"
+              <div key={item.id} className="relative p-4 rounded-2xl bg-slate-50/50 border border-slate-200 space-y-4 shadow-sm">
+                {/* X — absolute top-right, never overlaps the name */}
+                <button
+                  type="button"
+                  onClick={() => onRemoveCartItem(item.id)}
+                  className="absolute top-3 right-3 h-8 w-8 inline-flex items-center justify-center rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-500 transition-colors border-none cursor-pointer"
+                  title="Verwijderen"
+                  aria-label="Verwijderen uit winkelwagen"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+
+                <div className="flex items-start gap-3 pr-10">
+                  <div
+                    className="h-20 w-20 shrink-0 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden shadow-sm cursor-pointer hover:ring-2 hover:ring-slate-400 transition-all relative group/thumb"
+                    onClick={() => setPreviewMachine(item.machine)}
+                    title="Bekijk details"
                   >
-                    <X className="h-4 w-4" />
-                  </button>
+                    <img
+                      src={item.machine.imageUrl || item.machine.additionalImages?.[0] || "/placeholder-machine.webp"}
+                      alt={item.machine.name}
+                      className="object-cover h-full w-full group-hover/thumb:scale-110 transition-transform duration-300"
+                      referrerPolicy="no-referrer"
+                      onError={(e) => {
+                        e.currentTarget.src = "/placeholder-machine.webp";
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-black/0 group-hover/thumb:bg-black/20 transition-colors duration-200 rounded-2xl" />
+                  </div>
+                  <div className="min-w-0 flex-1 pt-1">
+                    <h4 className="text-sm font-extrabold text-slate-900 leading-tight">{item.machine.name}</h4>
+                  </div>
                 </div>
 
                 {/* Pill — full card width, same as calendar below */}

@@ -30,6 +30,17 @@ export const priceNum = (p: number): string =>
     ? Math.round(p).toLocaleString("nl-NL")
     : p.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
+/**
+ * Formats an ISO/YYYY-MM-DD date string as a readable Dutch date, e.g.
+ * "2026-07-15" → "15 jul 2026". Falls back to the raw input if it isn't
+ * a parseable date, so callers never render "Invalid Date".
+ */
+export const formatDateNL = (dateStr: string): string => {
+  const d = new Date(dateStr);
+  if (Number.isNaN(d.getTime())) return dateStr;
+  return d.toLocaleDateString("nl-NL", { day: "numeric", month: "short", year: "numeric" });
+};
+
 export const VAT_RATE = 0.21;
 
 /**

@@ -7,6 +7,7 @@ import React, { useState, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { CalendarDays, Truck, RotateCcw, Lock, ChevronLeft, ChevronRight, X, Phone, Mail, MapPin, Package } from "lucide-react";
 import { useAppStore } from "../../store/appStore";
+import { euro } from "../../utils/format";
 
 type AnyOrder = any;
 
@@ -612,7 +613,7 @@ export default function AdminPlanning({ adminLanguage }: AdminPlanningProps) {
                   </div>
                   <div className="flex items-center justify-between px-3 py-2 bg-indigo-50">
                     <span className="text-indigo-600 font-mono text-[10px] font-bold">{al("Totaal", "Total", "Toplam")}</span>
-                    <span className="font-extrabold text-indigo-700 font-mono">€ {selectedOrder.totalAmount?.toFixed(2)}</span>
+                    <span className="font-extrabold text-indigo-700 font-mono">{selectedOrder.totalAmount != null ? euro(selectedOrder.totalAmount) : ""}</span>
                   </div>
                 </div>
 

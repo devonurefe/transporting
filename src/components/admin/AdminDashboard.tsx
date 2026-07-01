@@ -8,6 +8,7 @@ import { ArrowUpRight, Bell, Smartphone, Calendar, UserPlus } from "lucide-react
 import { motion } from "motion/react";
 import { useAppStore } from "../../store/appStore";
 import { useAuthStore } from "../../store/authStore";
+import { euro } from "../../utils/format";
 
 interface AdminDashboardProps {
   key?: string;
@@ -181,7 +182,7 @@ export default function AdminDashboard({ setSubTab, setOrdersFilter, adminLangua
       {/* Glowing Premium KPI Card deck */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {[
-          { title: t("Cumulatieve Omzet", "Cumulative Revenue", "Toplam Ciro"), value: `€ ${totalEarnings.toFixed(2)}`, trend: revenueTrend, color: "bg-amber-50 border border-amber-200 text-amber-900 shadow-sm", tab: "accounting" as const, filter: [] as string[] },
+          { title: t("Cumulatieve Omzet", "Cumulative Revenue", "Toplam Ciro"), value: `${euro(totalEarnings)}`, trend: revenueTrend, color: "bg-amber-50 border border-amber-200 text-amber-900 shadow-sm", tab: "accounting" as const, filter: [] as string[] },
           { title: t("Actieve Huren", "Active Rentals", "Aktif Kiralamalar"), value: `${activeRentals} ${t("machines", "machines", "makine")}`, trend: t("Klik voor details →", "Click for details →", "Detay için tıkla →"), color: "border border-slate-200 bg-slate-50 text-slate-800 shadow-sm", tab: "orders" as const, filter: ["Goedgekeurd", "Onderweg"] as string[] },
           { title: t("Vloot Bezetting", "Fleet Occupancy", "Filo Doluluk Oranı"), value: `${machines.length > 0 ? Math.round((activeRentals / machines.length) * 100) : 0}% ${t("bezet", "occupied", "dolu")}`, trend: `${machines.length} ${t("units totaal", "total units", "toplam adet")}`, color: "border border-slate-200 bg-slate-50 text-slate-800 shadow-sm", tab: "machines" as const, filter: [] as string[] },
           { title: t("Ter Beoordeling", "To Review", "Onay Bekleyenler"), value: `${pendingRegistrations} ${t("aanvragen", "requests", "başvuru")}`, trend: t("Klik voor details →", "Click for details →", "Detay için tıkla →"), color: pendingRegistrations > 0 ? "border border-amber-200 bg-amber-50 text-amber-950 shadow-sm" : "border border-slate-200 bg-slate-50 text-slate-500 shadow-sm", tab: "orders" as const, filter: ["In behandeling"] as string[] }
@@ -274,7 +275,7 @@ export default function AdminDashboard({ setSubTab, setOrdersFilter, adminLangua
                     {/* Tooltip wrapper */}
                     <div className={`absolute -top-4 transition-all duration-250 ease-out flex flex-col items-center pointer-events-none ${isHovered ? "opacity-100 scale-100" : "opacity-0 scale-90 translate-y-1"}`}>
                       <span className="bg-slate-900 border border-slate-200 px-2 py-1 rounded-lg text-[10px] text-white font-black font-mono shadow-xl">
-                        € {val.toFixed(2)}
+                        {euro(val)}
                       </span>
                       <div className="w-1.5 h-1.5 bg-slate-900 border-r border-b border-slate-200 rotate-45 -mt-1" />
                     </div>
@@ -394,7 +395,7 @@ export default function AdminDashboard({ setSubTab, setOrdersFilter, adminLangua
             </p>
           </div>
           <div className="text-[10px] font-mono font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-xl border border-indigo-200/30 shadow-inner">
-            {t("Totaal", "Total", "Toplam")}: € {totalEarnings.toFixed(2)}
+            {t("Totaal", "Total", "Toplam")}: {euro(totalEarnings)}
           </div>
         </div>
 
@@ -435,7 +436,7 @@ export default function AdminDashboard({ setSubTab, setOrdersFilter, adminLangua
                     >
                       <div className="bg-slate-900 border border-slate-700 px-2.5 py-1 rounded-xl text-[10px] text-white font-extrabold font-mono shadow-2xl flex flex-col items-center">
                         <span className="text-[8.5px] uppercase tracking-wider text-slate-400 font-black">{p.label}</span>
-                        <span className="mt-0.5 text-teal-400">€ {p.revenue.toFixed(2)}</span>
+                        <span className="mt-0.5 text-teal-400">{euro(p.revenue)}</span>
                       </div>
                       <div className="w-2 h-2 bg-slate-900 border-r border-b border-slate-700 rotate-45 mx-auto -mt-1" />
                     </div>
@@ -586,7 +587,7 @@ export default function AdminDashboard({ setSubTab, setOrdersFilter, adminLangua
                       <span className="block leading-snug">{o.machineName}</span>
                       <span className="text-[11px] text-slate-400 font-mono">{o.rentalDays}d</span>
                     </td>
-                    <td className="py-4 pr-4 font-mono text-teal-600 font-bold hidden sm:table-cell">€ {o.totalAmount.toFixed(2)}</td>
+                    <td className="py-4 pr-4 font-mono text-teal-600 font-bold hidden sm:table-cell">{euro(o.totalAmount)}</td>
                     <td className="py-4 text-center">
                       <span className={`inline-block text-[10px] font-bold px-2.5 py-1 rounded-full ${
                         o.status === "In behandeling"

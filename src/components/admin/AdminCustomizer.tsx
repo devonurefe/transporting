@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { useAppStore } from "../../store/appStore";
 import { useAuthStore } from "../../store/authStore";
 import { CampaignRule } from "../../types";
+import AdminConfirmDialog from "./AdminConfirmDialog";
 
 interface AdminCustomizerProps {
   key?: string;
@@ -79,6 +80,8 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
   const [ruleScope, setRuleScope] = useState<"global" | "category" | "product" | "role">("global");
   const [ruleScopeValue, setRuleScopeValue] = useState("global");
   const [ruleDiscount, setRuleDiscount] = useState<number>(5);
+  const [pendingDeleteRule, setPendingDeleteRule] = useState<{ id: string; name: string } | null>(null);
+  const [pendingDeleteCategory, setPendingDeleteCategory] = useState<{ id: string; label: string } | null>(null);
 
   const handleToggleRule = (id: string) => {
     const updated = campaignRules.map(r => r.id === id ? { ...r, isActive: !r.isActive } : r);
@@ -87,11 +90,16 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
   };
 
   const handleDeleteRule = (id: string, name: string) => {
-    if (confirm(t(`Weet u zeker dat u de campagneregel "${name}" wilt verwijderen?`, `Are you sure you want to delete the campaign rule "${name}"?`, `Kampanya kuralını "${name}" silmek istediğinizden emin misiniz?`))) {
-      const updated = campaignRules.filter(r => r.id !== id);
-      updateCampaignRules(updated);
-      onAddSystemLog("system", adminUser?.name ?? "Admin", t("Campagneregel verwijderd: ", "Campaign rule deleted: ", "Kampanya kuralı silindi: ") + name);
-    }
+    setPendingDeleteRule({ id, name });
+  };
+
+  const confirmDeleteRule = () => {
+    if (!pendingDeleteRule) return;
+    const { id, name } = pendingDeleteRule;
+    const updated = campaignRules.filter(r => r.id !== id);
+    updateCampaignRules(updated);
+    onAddSystemLog("system", adminUser?.name ?? "Admin", t("Campagneregel verwijderd: ", "Campaign rule deleted: ", "Kampanya kuralı silindi: ") + name);
+    setPendingDeleteRule(null);
   };
 
   const [addRuleError, setAddRuleError] = useState<string>("");
@@ -297,14 +305,19 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
     }
   };
 
-  const handleDeleteCategory = async (id: string, label: string) => {
-    if (confirm(t(`Weet u zeker dat u de categorie "${label}" wilt verwijderen?`, `Are you sure you want to delete the category "${label}"?`, `Kategoriyi "${label}" silmek istediğinizden emin misiniz?`))) {
-      const updated = customCategories.filter((c) => c.id !== id);
-      const success = await updateCategories(updated);
-      if (success) {
-        onAddSystemLog("system", adminUser?.name ?? "Admin", t("Categorie verwijderd: ", "Category deleted: ", "Kategori silindi: ") + `${label} (${id}).`);
-      }
+  const handleDeleteCategory = (id: string, label: string) => {
+    setPendingDeleteCategory({ id, label });
+  };
+
+  const confirmDeleteCategory = async () => {
+    if (!pendingDeleteCategory) return;
+    const { id, label } = pendingDeleteCategory;
+    const updated = customCategories.filter((c) => c.id !== id);
+    const success = await updateCategories(updated);
+    if (success) {
+      onAddSystemLog("system", adminUser?.name ?? "Admin", t("Categorie verwijderd: ", "Category deleted: ", "Kategori silindi: ") + `${label} (${id}).`);
     }
+    setPendingDeleteCategory(null);
   };
 
   return (
@@ -1024,6 +1037,25 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
           </div>
         </form>
       </div>
+
+      <AdminConfirmDialog
+        open={!!pendingDeleteRule}
+        title={t("Campagneregel verwijderen", "Delete campaign rule", "Kampanya kuralını sil")}
+        message={pendingDeleteRule ? t(`Weet u zeker dat u de campagneregel "${pendingDeleteRule.name}" wilt verwijderen?`, `Are you sure you want to delete the campaign rule "${pendingDeleteRule.name}"?`, `Kampanya kuralını "${pendingDeleteRule.name}" silmek istediğinizden emin misiniz?`) : ""}
+        confirmLabel={t("Verwijderen", "Delete", "Sil")}
+        cancelLabel={t("Annuleren", "Cancel", "İptal")}
+        onConfirm={confirmDeleteRule}
+        onCancel={() => setPendingDeleteRule(null)}
+      />
+      <AdminConfirmDialog
+        open={!!pendingDeleteCategory}
+        title={t("Categorie verwijderen", "Delete category", "Kategoriyi sil")}
+        message={pendingDeleteCategory ? t(`Weet u zeker dat u de categorie "${pendingDeleteCategory.label}" wilt verwijderen?`, `Are you sure you want to delete the category "${pendingDeleteCategory.label}"?`, `Kategoriyi "${pendingDeleteCategory.label}" silmek istediğinizden emin misiniz?`) : ""}
+        confirmLabel={t("Verwijderen", "Delete", "Sil")}
+        cancelLabel={t("Annuleren", "Cancel", "İptal")}
+        onConfirm={confirmDeleteCategory}
+        onCancel={() => setPendingDeleteCategory(null)}
+      />
     </motion.div>
   );
 }

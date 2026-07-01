@@ -85,6 +85,7 @@ model Customer {
   verificationExpiry   DateTime?
   passwordResetToken   String?
   passwordResetExpiry  DateTime?
+  marketingConsent     Boolean   @default(false)
   createdAt            DateTime  @default(now())
   orders               Order[]
 }

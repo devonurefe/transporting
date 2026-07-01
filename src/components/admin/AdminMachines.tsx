@@ -788,28 +788,30 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                       )}
                       <div className="space-y-1.5">
                         {editSpecs.map((spec, idx) => (
-                          <div key={idx} className="flex items-center gap-2">
+                          <div key={idx} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5 sm:gap-2">
                             <input
                               type="text"
                               placeholder={t("Label (bijv. Capaciteit)", "Label (e.g. Capacity)", "Etiket (örn. Kapasite)")}
                               value={spec.label}
                               onChange={e => setEditSpecs(prev => prev.map((s, i) => i === idx ? { ...s, label: e.target.value } : s))}
-                              className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
+                              className="flex-1 min-w-0 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
                             />
-                            <input
-                              type="text"
-                              placeholder={t("Waarde (bijv. 230 kg)", "Value (e.g. 230 kg)", "Değer (örn. 230 kg)")}
-                              value={spec.value}
-                              onChange={e => setEditSpecs(prev => prev.map((s, i) => i === idx ? { ...s, value: e.target.value } : s))}
-                              className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => setEditSpecs(prev => prev.filter((_, i) => i !== idx))}
-                              className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-500 hover:text-rose-700 transition-colors cursor-pointer border-none shrink-0"
-                            >
-                              <X className="h-3 w-3" />
-                            </button>
+                            <div className="flex items-center gap-1.5 sm:gap-2">
+                              <input
+                                type="text"
+                                placeholder={t("Waarde (bijv. 230 kg)", "Value (e.g. 230 kg)", "Değer (örn. 230 kg)")}
+                                value={spec.value}
+                                onChange={e => setEditSpecs(prev => prev.map((s, i) => i === idx ? { ...s, value: e.target.value } : s))}
+                                className="flex-1 min-w-0 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setEditSpecs(prev => prev.filter((_, i) => i !== idx))}
+                                className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-500 hover:text-rose-700 transition-colors cursor-pointer border-none shrink-0"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </div>
                           </div>
                         ))}
                       </div>

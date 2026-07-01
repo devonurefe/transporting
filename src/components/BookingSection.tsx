@@ -887,39 +887,40 @@ export default function BookingSection({
         
         {/* Stepper — hide on success */}
         {step < 4 && (
-          <div className="mb-8 text-center">
-
-            {/* Stepper tracker */}
-            <div className="flex items-center justify-center max-w-md mx-auto relative px-6">
+          <div className="mb-8">
+            <p className="text-center text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-5">
+              Stap {step} van 2
+            </p>
+            <div className="flex items-center justify-center max-w-xs mx-auto">
               {[
                 { number: 1, label: "Logistiek" },
                 { number: 2, label: "Gegevens" }
               ].map((s, idx) => {
-                const isActive = step >= s.number;
+                const isDone = step > s.number;
                 const isCurrent = step === s.number;
                 return (
                   <React.Fragment key={idx}>
                     {idx > 0 && (
-                      <div className={`flex-grow h-0.5 transition-all duration-300 ${
-                        step >= s.number ? "bg-slate-700" : "bg-slate-200"
-                      }`} />
+                      <div className="flex-1 h-0.5 mx-4 rounded-full overflow-hidden bg-slate-200">
+                        <div className={`h-full rounded-full transition-all duration-500 ease-out ${isDone ? "w-full bg-orange-500" : "w-0"}`} />
+                      </div>
                     )}
-                    <div className="flex flex-col items-center relative z-10">
-                      <div className={`h-8 w-8 rounded-full border flex items-center justify-center font-mono font-bold text-xs transition-all duration-300 ${
-                        isCurrent 
-                          ? "bg-slate-800 border-slate-800 text-white shadow-md scale-110"
-                          : isActive 
-                            ? "bg-teal-50 border-teal-300 text-teal-700" 
-                            : "bg-white border-slate-200 text-slate-400"
+                    <div className="flex flex-col items-center">
+                      <div className={`h-10 w-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 ${
+                        isCurrent
+                          ? "bg-orange-500 text-white shadow-lg shadow-orange-500/25 scale-110"
+                          : isDone
+                            ? "bg-emerald-500 text-white"
+                            : "bg-slate-100 text-slate-400"
                       }`}>
-                        {isActive && !isCurrent ? (
-                          <svg className="h-4 w-4 text-teal-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                        {isDone ? (
+                          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                           </svg>
                         ) : s.number}
                       </div>
-                      <span className={`text-[10px] tracking-wider font-extrabold uppercase mt-2.5 ${
-                        isCurrent ? "text-slate-800" : isActive ? "text-teal-600" : "text-slate-400"
+                      <span className={`text-[10px] font-extrabold uppercase tracking-wider mt-2 ${
+                        isCurrent ? "text-orange-600" : isDone ? "text-emerald-600" : "text-slate-400"
                       }`}>
                         {s.label}
                       </span>
@@ -930,6 +931,7 @@ export default function BookingSection({
             </div>
           </div>
         )}
+
 
         <AnimatePresence mode="wait">
           {step < 4 ? (

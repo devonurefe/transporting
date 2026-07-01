@@ -50,6 +50,16 @@ const CAT_GRADIENT: Record<string, string> = {
   kamersteiger: "from-slate-100 to-slate-200",
 };
 
+const CAT_LABEL: Record<string, string> = {
+  schaarlift:   "Schaarlift",
+  spin:         "Rupshoogwerker",
+  aanhanger:    "Aanhangerhoogwerker",
+  mastlift:     "Mastlift",
+  ladderlift:   "Ladderlift",
+  ecolift:      "Pecolift",
+  kamersteiger: "Kamersteiger",
+};
+
 interface HomeSectionProps {
   onSearch: (query: string, category: string) => void;
   setActiveTab: (tab: string) => void;
@@ -73,6 +83,9 @@ interface HomeSectionProps {
 }
 
 const SKIP_IDS = new Set(["klussensets", "schaarlift-smal", "schaarlift-6m"]);
+
+// Categories that are billed per week, not per day
+const WEEKLY_PRICED_CATEGORIES = new Set(["kamersteiger"]);
 
 // Machines excluded from the deals carousel (image fit issues)
 const CAROUSEL_SKIP_NAMES = new Set([
@@ -146,7 +159,7 @@ function DealsCarousel({ machines, onSearch }: { machines: Machine[]; onSearch: 
   const fmt = (p: number) => p % 1 === 0 ? `€${Math.round(p)}` : `€${p.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   return (
-    <div className="bg-gradient-to-b from-amber-50 to-white border-b border-amber-100 pt-6 pb-7">
+    <div className="bg-gradient-to-b from-amber-50 to-white border-b border-amber-100 pt-8 pb-10">
       <div className="flex items-end justify-between mb-4 px-4 sm:px-6 max-w-5xl mx-auto">
         <div>
           <div className="flex items-center gap-2">
@@ -175,7 +188,7 @@ function DealsCarousel({ machines, onSearch }: { machines: Machine[]; onSearch: 
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
       >
-        <div className="flex gap-3 px-4" style={{ width: "max-content" }}>
+        <div className="flex gap-4 px-4" style={{ width: "max-content" }}>
           {allCards.map((m, i) => {
             const baseName = m.name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "").trim();
             const machineImage = m.imageUrl || (m.additionalImages as string[])?.[0];
@@ -196,10 +209,10 @@ function DealsCarousel({ machines, onSearch }: { machines: Machine[]; onSearch: 
                 aria-hidden={isClone || undefined}
                 tabIndex={isClone ? -1 : undefined}
                 onClick={() => !isDragging.current && onSearch(baseName, m.category)}
-                className="shrink-0 w-[148px] rounded-2xl shadow-sm hover:shadow-lg hover:-translate-y-1 active:scale-[0.98] transition-all text-left group"
+                className="shrink-0 w-[176px] rounded-2xl shadow-sm hover:shadow-lg hover:-translate-y-1 active:scale-[0.98] transition-all text-left group"
               >
                 <div className="overflow-hidden rounded-2xl border border-amber-100 bg-white flex flex-col h-full">
-                  <div className="relative aspect-[3/2] w-full bg-amber-50 shrink-0 overflow-hidden">
+                  <div className="relative aspect-[4/3] w-full bg-amber-50 shrink-0 overflow-hidden">
                     {machineImage ? (
                       <img src={machineImage} alt={baseName} loading="lazy" draggable={false} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                     ) : (
@@ -218,15 +231,18 @@ function DealsCarousel({ machines, onSearch }: { machines: Machine[]; onSearch: 
                       </div>
                     )}
                   </div>
-                  <div className="p-2.5 flex flex-col gap-1 flex-1">
-                    <p className="font-display font-black text-[11px] text-slate-900 leading-snug line-clamp-2">{baseName}</p>
+                  <div className="p-3.5 flex flex-col gap-2 flex-1">
+                    <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide leading-none">
+                      {CAT_LABEL[m.category] ?? m.category}
+                    </span>
+                    <p className="font-display font-black text-xs text-slate-900 leading-snug line-clamp-2">{baseName}</p>
                     <div className="flex items-baseline gap-1 flex-wrap">
                       <span className="text-sm font-black text-amber-600">{fmt(displayPrice)}</span>
-                      {hasDiscount && <span className="text-[9px] text-slate-400 line-through">{fmt(originalPrice)}</span>}
-                      <span className="text-[9px] text-slate-400">/ dag</span>
+                      {hasDiscount && <span className="text-[10px] text-slate-400 line-through">{fmt(originalPrice)}</span>}
+                      <span className="text-[10px] text-slate-400">/ dag</span>
                     </div>
-                    <div className="mt-auto pt-1">
-                      <div className="w-full text-center bg-amber-500 group-hover:bg-amber-600 text-white text-[9px] font-black py-1.5 px-2 rounded-lg transition-colors">
+                    <div className="mt-auto pt-0.5">
+                      <div className="w-full text-center bg-amber-500 group-hover:bg-amber-600 text-white text-[10px] font-black py-2 px-2 rounded-lg transition-colors">
                         {t("Direct boeken →", "Book now →", "Hemen rezervasyon →")}
                       </div>
                     </div>
@@ -348,34 +364,37 @@ export default function HomeSection({
           Text/icons are rendered as HTML (not baked into the image) so they
           stay razor-sharp at any resolution/zoom and are translatable. Upload
           a TEXT-FREE photo in Admin → Customizer for the best result. */}
-      <div className="relative bg-slate-900 overflow-hidden h-[240px] sm:h-[480px] lg:h-[540px]">
-        {siteConfigLoaded ? (
-          <motion.img
-            key={siteConfig.heroImageUrl || 'default'}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.4 }}
-            src={siteConfig.heroImageUrl || '/hero-huurgo-v2.jpg'}
-            alt=""
-            className="w-full h-full block object-cover animate-kenburns [object-position:80%_center] sm:[object-position:85%_center]"
-          />
-        ) : (
-          // Skeleton placeholder while the config is still loading
-          <div className="w-full h-full bg-gradient-to-br from-slate-800 to-slate-900 animate-pulse" />
-        )}
+      <div className="relative bg-slate-900 h-[240px] sm:h-[480px] lg:h-[540px]">
+        {/* Image + decorative layers clipped so Ken Burns / glows don't escape */}
+        <div className="absolute inset-0 overflow-hidden">
+          {siteConfigLoaded ? (
+            <motion.img
+              key={siteConfig.heroImageUrl || 'default'}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.4 }}
+              src={siteConfig.heroImageUrl || '/hero-huurgo-v2.jpg'}
+              alt=""
+              className="w-full h-full block object-cover animate-kenburns [object-position:80%_center] sm:[object-position:85%_center]"
+            />
+          ) : (
+            // Skeleton placeholder while the config is still loading
+            <div className="w-full h-full bg-gradient-to-br from-slate-800 to-slate-900 animate-pulse" />
+          )}
 
-        {/* Readability scrim — darker toward the bottom-left where the text sits */}
-        <div className="absolute inset-0 bg-gradient-to-tr from-black/85 via-black/45 to-black/10 pointer-events-none" />
+          {/* Readability scrim — darker toward the bottom-left where the text sits */}
+          <div className="absolute inset-0 bg-gradient-to-tr from-black/85 via-black/45 to-black/10 pointer-events-none" />
 
-        {/* Ambient brand glows — drift slowly to give the dark hero subtle,
-            premium life without hurting text contrast (low opacity + blur). */}
-        <div className="float-slow pointer-events-none absolute -bottom-16 -left-16 h-72 w-72 rounded-full bg-orange-500/25 blur-[90px] mix-blend-screen" aria-hidden="true" />
-        <div className="float-slow pointer-events-none absolute -top-20 right-0 h-64 w-64 rounded-full bg-emerald-400/15 blur-[90px] mix-blend-screen" style={{ animationDelay: "-3.5s" }} aria-hidden="true" />
+          {/* Ambient brand glows — drift slowly to give the dark hero subtle,
+              premium life without hurting text contrast (low opacity + blur). */}
+          <div className="float-slow pointer-events-none absolute -bottom-16 -left-16 h-72 w-72 rounded-full bg-orange-500/25 blur-[90px] mix-blend-screen" aria-hidden="true" />
+          <div className="float-slow pointer-events-none absolute -top-20 right-0 h-64 w-64 rounded-full bg-emerald-400/15 blur-[90px] mix-blend-screen" style={{ animationDelay: "-3.5s" }} aria-hidden="true" />
 
-        {/* Soft bottom feather — eases the hard cut into the white section below */}
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/30 to-transparent" />
+          {/* Soft bottom feather — eases the hard cut into the white section below */}
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/30 to-transparent" />
+        </div>
 
-        {/* Overlay content — anchored bottom-left */}
+        {/* Overlay content — outside overflow-hidden so the logo dot is never clipped */}
         <div className="absolute inset-0 flex items-end pointer-events-none">
           <div className="px-5 sm:px-8 lg:px-14 pb-5 sm:pb-7 lg:pb-9 w-full max-w-2xl">
             {/* Brand wordmark in its original logo form, with tagline */}
@@ -537,9 +556,14 @@ export default function HomeSection({
                     <span className="font-semibold text-slate-600">{cat.heights}</span>
                     <span className="text-slate-300 select-none">•</span>
                     <span className="font-black text-emerald-600 text-base leading-tight">
-                      {livePriceByCategory[cat.id] !== undefined
-                        ? `€${(() => { const v = withVat(livePriceByCategory[cat.id], vatDisplay); return v % 1 === 0 ? Math.round(v).toLocaleString("nl-NL") : v.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); })()}/dag`
-                        : "Prijs op aanvraag"}
+                      {(() => {
+                        const price = livePriceByCategory[cat.id];
+                        if (price === undefined) return "Prijs op aanvraag";
+                        const v = withVat(price, vatDisplay);
+                        const fmt = v % 1 === 0 ? Math.round(v).toLocaleString("nl-NL") : v.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                        const unit = WEEKLY_PRICED_CATEGORIES.has(cat.id) ? "week" : "dag";
+                        return `€${fmt}/${unit}`;
+                      })()}
                     </span>
                   </div>
                 </div>

@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { CalendarDays, Truck, RotateCcw, Lock, ChevronLeft, ChevronRight, X, Phone, Mail, MapPin, Package } from "lucide-react";
 import { useAppStore } from "../../store/appStore";
 import { euro } from "../../utils/format";
+import AdminStatusBadge from "./AdminStatusBadge";
 
 type AnyOrder = any;
 
@@ -46,12 +47,6 @@ const DayPanel = React.memo(function DayPanel({
 }: DayPanelProps) {
   const al = makeAl(adminLanguage);
   const isTargetToday = targetStr === todayStr;
-
-  const statusBadge = (status: string) => {
-    if (status === "Goedgekeurd") return "bg-teal-100 text-teal-700";
-    if (status === "Onderweg") return "bg-blue-100 text-blue-700";
-    return "bg-amber-100 text-amber-700";
-  };
 
   const deliveryLabel = (type: string) => {
     if (type === "delivery_by_us") return al("Bezorging", "Delivery", "Teslimat");
@@ -97,9 +92,7 @@ const DayPanel = React.memo(function DayPanel({
                       {deliveryLabel(o.deliveryType)} · {o.rentalDays} {al("dag", "day", "gün")}{o.rentalDays !== 1 ? (adminLanguage === "nl" ? "en" : adminLanguage === "en" ? "s" : "") : ""}
                     </p>
                   </div>
-                  <span className={`shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded-md ${statusBadge(o.status)}`}>
-                    {o.status}
-                  </span>
+                  <AdminStatusBadge status={o.status} adminLanguage={adminLanguage} className="shrink-0" />
                 </button>
               ))}
             </div>
@@ -138,9 +131,7 @@ const DayPanel = React.memo(function DayPanel({
                       {deliveryLabel(o.deliveryType)} · #{o.id}
                     </p>
                   </div>
-                  <span className={`shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded-md ${statusBadge(o.status)}`}>
-                    {o.status}
-                  </span>
+                  <AdminStatusBadge status={o.status} adminLanguage={adminLanguage} className="shrink-0" />
                 </button>
               ))}
             </div>
@@ -388,12 +379,6 @@ export default function AdminPlanning({ adminLanguage }: AdminPlanningProps) {
     return al("Ophalen", "Pickup", "Teslim Al");
   };
 
-  const statusBadge = (status: string) => {
-    if (status === "Goedgekeurd") return "bg-teal-100 text-teal-700";
-    if (status === "Onderweg") return "bg-blue-100 text-blue-700";
-    return "bg-amber-100 text-amber-700";
-  };
-
   return (
     <motion.div
       key="planning"
@@ -555,13 +540,7 @@ export default function AdminPlanning({ adminLanguage }: AdminPlanningProps) {
                   <h3 className="font-display font-black text-slate-900 text-base leading-snug mt-0.5">
                     {selectedOrder.machineName}
                   </h3>
-                  <span className={`inline-block mt-1 text-[9px] font-bold px-2 py-0.5 rounded-full ${
-                    selectedOrder.status === "Goedgekeurd" ? "bg-teal-100 text-teal-700"
-                    : selectedOrder.status === "Onderweg" ? "bg-blue-100 text-blue-700"
-                    : selectedOrder.status === "Voltooid" ? "bg-slate-100 text-slate-600"
-                    : selectedOrder.status === "Geannuleerd" ? "bg-rose-100 text-rose-700"
-                    : "bg-amber-100 text-amber-700"
-                  }`}>{selectedOrder.status}</span>
+                  <AdminStatusBadge status={selectedOrder.status} adminLanguage={adminLanguage} className="mt-1" />
                 </div>
                 <button
                   onClick={() => setSelectedOrder(null)}

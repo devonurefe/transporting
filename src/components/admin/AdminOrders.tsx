@@ -27,6 +27,7 @@ import { HuurGoText } from "../Header";
 import { printInvoice } from "../../utils/invoice";
 import { euro, formatDateNL } from "../../utils/format";
 import AdminConfirmDialog from "./AdminConfirmDialog";
+import AdminStatusBadge from "./AdminStatusBadge";
 
 interface AdminOrdersProps {
   key?: string;
@@ -431,15 +432,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                     <div className="font-bold text-sm text-slate-900 truncate">{o.customerName}</div>
                     <div className="text-[10px] text-slate-400 font-mono mt-0.5">{o.id}</div>
                   </div>
-                  <span className={`flex-shrink-0 text-[9px] font-mono px-2.5 py-1 rounded-full font-extrabold uppercase ${
-                    o.status === "In behandeling" ? "bg-amber-100 text-amber-600 border border-amber-200"
-                    : o.status === "Goedgekeurd" ? "bg-teal-100 text-teal-600 border border-teal-200"
-                    : o.status === "Onderweg" ? "bg-blue-100 text-blue-600 border border-blue-200"
-                    : o.status === "Geannuleerd" ? "bg-rose-100 text-rose-600 border border-rose-200"
-                    : "bg-slate-100 text-slate-500 border border-slate-200"
-                  }`}>
-                    {t(o.status, o.status, o.status)}
-                  </span>
+                  <AdminStatusBadge status={o.status} adminLanguage={adminLanguage} className="flex-shrink-0" />
                 </div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-xs font-semibold text-slate-700">{getBaseName(o.machineName)}</span>
@@ -597,28 +590,8 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                       <td className="py-3 px-3 font-mono font-bold text-teal-600 text-xs">{euro(o.totalAmount)}</td>
                       <td className="py-3 px-3 text-center">
                         <div className="flex flex-col gap-2.5 justify-center items-center">
-                          <span className={`inline-block text-[9.5px] font-mono px-3 py-1 rounded-full font-extrabold uppercase tracking-wider ${
-                            o.status === "In behandeling" 
-                              ? "bg-amber-400/20 text-amber-500 border border-amber-300/30" 
-                              : o.status === "Goedgekeurd"
-                                ? "bg-teal-500/20 text-teal-500 border border-teal-400/30"
-                                : o.status === "Onderweg"
-                                  ? "bg-blue-500/20 text-blue-500 border border-blue-400/30"
-                                  : o.status === "Geannuleerd"
-                                    ? "bg-rose-500/20 text-rose-500 border border-rose-400/30"
-                                    : "bg-slate-700/30 text-slate-400 border border-slate-500/30"
-                          }`}>
-                            {o.status === "In behandeling" 
-                              ? t("In behandeling", "Pending", "Beklemede") 
-                              : o.status === "Goedgekeurd"
-                                ? t("Goedgekeurd", "Approved", "Onaylandı")
-                                : o.status === "Onderweg"
-                                  ? t("Onderweg", "Dispatched", "Yolda")
-                                  : o.status === "Geannuleerd"
-                                    ? t("Geannuleerd", "Cancelled", "İptal Edildi")
-                                    : t("Voltooid", "Completed", "Tamamlandı")}
-                          </span>
- 
+                          <AdminStatusBadge status={o.status} adminLanguage={adminLanguage} variant="translucent" />
+
                           <div className="flex space-x-1.5 mt-0.5">
                             <button
                               onClick={() => { setSelectedDetailOrder(o); setIsProposingDate(false); }}
@@ -1016,15 +989,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
 
                 {/* Row 1: Status badge + payment confirmation */}
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className={`text-[9px] font-mono px-2.5 py-1 rounded-full font-extrabold uppercase ${
-                    selectedDetailOrder.status === "In behandeling" ? "bg-amber-100 text-amber-700"
-                    : selectedDetailOrder.status === "Goedgekeurd" ? "bg-teal-100 text-teal-700"
-                    : selectedDetailOrder.status === "Onderweg" ? "bg-blue-100 text-blue-700"
-                    : selectedDetailOrder.status === "Geannuleerd" ? "bg-rose-100 text-rose-700"
-                    : "bg-slate-100 text-slate-500"
-                  }`}>
-                    {selectedDetailOrder.status}
-                  </span>
+                  <AdminStatusBadge status={selectedDetailOrder.status} adminLanguage={adminLanguage} />
                   {selectedDetailOrder.paymentStatus !== "paid" && (
                     <button
                       type="button"

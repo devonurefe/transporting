@@ -101,6 +101,31 @@ app.use("/api", apiRouter);
 // Global Error Handler Middleware
 app.use(errorHandler);
 
+// Serve machine main image by ID — needed so base64-stored photos can appear
+// in og:image meta tags (social crawlers require a real URL, not a data: URI).
+app.get("/machine-image/:id", async (req, res) => {
+  try {
+    const m = await prisma.machine.findUnique({ where: { id: req.params.id }, select: { imageUrl: true } });
+    const url = m?.imageUrl;
+    if (!url) return res.redirect(DEFAULT_OG_IMAGE);
+    if (url.startsWith("data:image/")) {
+      const commaIdx = url.indexOf(",");
+      if (commaIdx < 0) return res.redirect(DEFAULT_OG_IMAGE);
+      const mimeMatch = url.slice(0, commaIdx).match(/data:([^;]+);base64/);
+      if (!mimeMatch) return res.redirect(DEFAULT_OG_IMAGE);
+      const buf = Buffer.from(url.slice(commaIdx + 1), "base64");
+      res.setHeader("Content-Type", mimeMatch[1]);
+      res.setHeader("Cache-Control", "public, max-age=86400");
+      return res.send(buf);
+    }
+    if (url.startsWith("/")) return res.redirect(url);
+    if (/^https?:\/\//.test(url)) return res.redirect(url);
+    return res.redirect(DEFAULT_OG_IMAGE);
+  } catch {
+    return res.redirect(DEFAULT_OG_IMAGE);
+  }
+});
+
 // SEO: robots.txt
 app.get("/robots.txt", (_req, res) => {
   const base = (process.env.APP_URL || "https://huurgo.nl").replace(/\/$/, "");
@@ -155,7 +180,7 @@ app.get("/sitemap.xml", async (_req, res) => {
 // Google indexes faster with correct server HTML, so we inject per-route meta
 // (and a Product JSON-LD for machine pages) into the served HTML.
 const SEO_BASE = (process.env.APP_URL || "https://huurgo.nl").replace(/\/$/, "");
-const DEFAULT_OG_IMAGE = `${SEO_BASE}/og-image.jpg`;
+const DEFAULT_OG_IMAGE = `${SEO_BASE}/og-image.png`;
 
 function escapeHtml(s: string): string {
   return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -163,8 +188,9 @@ function escapeHtml(s: string): string {
 
 type RouteMeta = { title: string; description: string; canonical: string; ogImage: string; noindex?: boolean; jsonLd?: string };
 
-function absoluteImage(url: string | null | undefined): string {
+function absoluteImage(url: string | null | undefined, machineId?: string): string {
   if (!url) return DEFAULT_OG_IMAGE;
+  if (url.startsWith("data:image/") && machineId) return `${SEO_BASE}/machine-image/${encodeURIComponent(machineId)}`;
   if (/^https?:\/\//.test(url)) return url;
   if (url.startsWith("/")) return `${SEO_BASE}${url}`;
   return DEFAULT_OG_IMAGE;
@@ -236,7 +262,7 @@ async function machineMeta(id: string): Promise<RouteMeta | null> {
     const title = `${m.name} huren${priceTxt} | huurgo`;
     const description = (m.description ? String(m.description).replace(/\s+/g, " ").trim().slice(0, 155)
       : `${m.name} huren bij huurgo. Werkhoogte ${m.height}m. Direct online reserveren, zonder borg, snel geleverd in Zuid-Holland.`);
-    const ogImage = absoluteImage(m.imageUrl);
+    const ogImage = absoluteImage(m.imageUrl, id);
     const jsonLd = JSON.stringify({
       "@context": "https://schema.org",
       "@type": "Product",
@@ -641,6 +667,18 @@ async function applyDataMigrations() {
         await prisma.machine.update({ where: { id: "altrex-rs44" }, data });
         console.log(`[Migration] RS44: fixed (weeklyOnly=${(rs44 as any).weeklyOnly}, minRentalDays=${(rs44 as any).minRentalDays} → 2).`);
       }
+    }
+
+    // One-time: set showInWeeklyOffers — only the 3 featured machines get true,
+    // all others get false. Admin can override per machine afterwards.
+    const WEEKLY_OFFERS_MIGRATION = "migration-weekly-offers-2026-06";
+    const weeklyOffersDone = await prisma.invoiceCounter.findUnique({ where: { id: WEEKLY_OFFERS_MIGRATION } });
+    if (!weeklyOffersDone) {
+      const featuredIds = ["nifty-170", "nifty-120-1", "nifty-120-2", "nifty-120-3", "compact-10n-1", "compact-10n-2"];
+      await prisma.machine.updateMany({ where: { id: { in: featuredIds } }, data: { showInWeeklyOffers: true } });
+      await prisma.machine.updateMany({ where: { id: { notIn: featuredIds } }, data: { showInWeeklyOffers: false } });
+      await prisma.invoiceCounter.create({ data: { id: WEEKLY_OFFERS_MIGRATION, lastNumber: 1 } });
+      console.log("[Migration] Weekaanbiedingen: 3 featured machines set, rest cleared.");
     }
 
     // Loud warning if the admin account still uses the old seeded default password

@@ -303,6 +303,7 @@ export default function HomeSection({
   const SCHAARLIFT_VARIANTS = new Set(["schaarlift", "schaarlift-smal", "schaarlift-6m"]);
 
   const activeMachines = React.useMemo(() => machines.filter(m => m.isActive !== false), [machines]);
+  const weeklyOfferMachines = React.useMemo(() => activeMachines.filter(m => m.showInWeeklyOffers === true), [activeMachines]);
 
   // Live minimum price per category (each schaarlift sub-type keeps its own key)
   const livePriceByCategory = React.useMemo(() => {
@@ -384,7 +385,7 @@ export default function HomeSection({
               transition={{ duration: 0.4 }}
               className="mb-2.5 sm:mb-3.5"
             >
-              <span className="text-2xl sm:text-3xl lg:text-4xl drop-shadow-sm">
+              <span className="inline-block text-2xl sm:text-3xl lg:text-4xl drop-shadow-sm">
                 <HuurGoText dark />
               </span>
               <span className="block font-semibold text-[9px] sm:text-[11px] uppercase tracking-[0.18em] text-white/70 mt-0.5">
@@ -500,7 +501,7 @@ export default function HomeSection({
       </div>
 
       {/* ── DEALS CAROUSEL ── */}
-      {activeMachines.length > 0 && <DealsCarousel machines={activeMachines} onSearch={onSearch} />}
+      {weeklyOfferMachines.length > 0 && <DealsCarousel machines={weeklyOfferMachines} onSearch={onSearch} />}
 
       {/* ── CATEGORY CARDS ── */}
       <div className="bg-gradient-to-b from-white to-slate-50 px-4 sm:px-6 pt-10 pb-14">

@@ -322,7 +322,7 @@ machinesRouter.put("/:id", requireAdmin as any, async (req: AuthenticatedRequest
         pricePerDay: Number(pricePerDay),
         oneDayPrice: oneDayPrice !== undefined && oneDayPrice !== null && oneDayPrice !== "" ? Number(oneDayPrice) : null,
         powerType: powerType || "Elektrisch",
-        imageUrl: imageUrl !== undefined && imageUrl !== null && imageUrl !== "" ? sanitizeImageUrl(imageUrl) : undefined,
+        imageUrl: imageUrl !== undefined && imageUrl !== null ? sanitizeImageUrl(imageUrl) : undefined,
         imageAlt: typeof imageAlt === "string" && imageAlt.trim() ? imageAlt.trim().slice(0, 300) : name,
         description: (description || "Gebruiksvriendelijke hoogwerker geschikt voor lichte installatie of inspectie.").slice(0, 2000),
         suitableFor: sanitizeSuitableFor(suitableFor),

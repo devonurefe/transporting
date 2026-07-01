@@ -18,7 +18,8 @@ import {
   ShieldCheck,
   Calendar,
   CalendarDays,
-  Database
+  Database,
+  Users
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { UserProfile } from "../types";
@@ -39,6 +40,7 @@ const AdminLogs = React.lazy(() => import("./admin/AdminLogs"));
 const AdminDiagnostics = React.lazy(() => import("./admin/AdminDiagnostics"));
 const AdminAccounting = React.lazy(() => import("./admin/AdminAccounting"));
 const AdminPlanning = React.lazy(() => import("./admin/AdminPlanning"));
+const AdminCustomers = React.lazy(() => import("./admin/AdminCustomers"));
 
 function AdminLoadingSpinner() {
   return (
@@ -68,7 +70,7 @@ export default function AdminSection({
   onAddSystemLog,
   onClearSystemLogs,
 }: AdminSectionProps) {
-  const [subTab, setSubTab] = useState<"dashboard" | "orders" | "machines" | "calendar" | "planning" | "add" | "logs" | "customizer" | "diagnostics" | "accounting">("dashboard");
+  const [subTab, setSubTab] = useState<"dashboard" | "orders" | "machines" | "calendar" | "planning" | "customers" | "add" | "logs" | "customizer" | "diagnostics" | "accounting">("dashboard");
   const [ordersFilter, setOrdersFilter] = useState<string[]>([]);
   const [showAdvancedSubmenu, setShowAdvancedSubmenu] = useState<boolean>(false);
   const [showMobileMenu, setShowMobileMenu] = useState<boolean>(false);
@@ -266,6 +268,7 @@ export default function AdminSection({
                       { id: "machines", label: tAdmin("adminTabMachines"), icon: Layers },
                       { id: "calendar", label: tAdmin("adminTabCalendar"), icon: Calendar },
                       { id: "planning", label: adminLanguage === "tr" ? "Planlama" : adminLanguage === "en" ? "Planning" : "Planning", icon: CalendarDays },
+                      { id: "customers", label: adminLanguage === "tr" ? "Müşteriler" : adminLanguage === "en" ? "Customers" : "Klanten", icon: Users },
                       { id: "add", label: tAdmin("adminTabAdd"), icon: PlusCircle },
                       { id: "customizer", label: tAdmin("adminTabCustomizer"), icon: Settings },
                       { id: "accounting", label: adminLanguage === "tr" ? "Muhasebe (Exact)" : adminLanguage === "en" ? "Accounting (Exact)" : "Boekhouding (Exact)", icon: Database },
@@ -299,7 +302,8 @@ export default function AdminSection({
                         { id: "orders", label: tAdmin("adminTabOrders"), icon: Truck, count: orders.length },
                         { id: "machines", label: tAdmin("adminTabMachines"), icon: Layers, count: machines.length },
                         { id: "calendar", label: tAdmin("adminTabCalendar"), icon: Calendar, count: blockedDates.length },
-                        { id: "planning", label: adminLanguage === "tr" ? "Planlama" : adminLanguage === "en" ? "Planning" : "Planning", icon: CalendarDays }
+                        { id: "planning", label: adminLanguage === "tr" ? "Planlama" : adminLanguage === "en" ? "Planning" : "Planning", icon: CalendarDays },
+                        { id: "customers", label: adminLanguage === "tr" ? "Müşteriler" : adminLanguage === "en" ? "Customers" : "Klanten", icon: Users }
                       ].map((sub) => {
                         const Icon = sub.icon;
                         const isSel = subTab === sub.id;
@@ -397,7 +401,8 @@ export default function AdminSection({
                 { id: "orders", label: tAdmin("adminTabOrders"), icon: Truck, count: orders.length },
                 { id: "machines", label: tAdmin("adminTabMachines"), icon: Layers, count: machines.length },
                 { id: "calendar", label: tAdmin("adminTabCalendar"), icon: Calendar, count: blockedDates.length },
-                { id: "planning", label: adminLanguage === "tr" ? "Planlama" : adminLanguage === "en" ? "Planning" : "Planning", icon: CalendarDays }
+                { id: "planning", label: adminLanguage === "tr" ? "Planlama" : adminLanguage === "en" ? "Planning" : "Planning", icon: CalendarDays },
+                { id: "customers", label: adminLanguage === "tr" ? "Müşteriler" : adminLanguage === "en" ? "Customers" : "Klanten", icon: Users }
               ].map((sub) => {
                 const Icon = sub.icon;
                 const isSel = subTab === sub.id;
@@ -519,6 +524,9 @@ export default function AdminSection({
                 )}
                 {subTab === "planning" && (
                   <AdminPlanning key="planning" adminLanguage={adminLanguage} />
+                )}
+                {subTab === "customers" && (
+                  <AdminCustomers key="customers" adminLanguage={adminLanguage} />
                 )}
                 {subTab === "add" && (
                   <AdminAddMachine key="add" setSubTab={setSubTab} onAddSystemLog={onAddSystemLog} adminLanguage={adminLanguage} />

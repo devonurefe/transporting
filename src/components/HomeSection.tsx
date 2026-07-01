@@ -209,10 +209,10 @@ function DealsCarousel({ machines, onSearch }: { machines: Machine[]; onSearch: 
                 aria-hidden={isClone || undefined}
                 tabIndex={isClone ? -1 : undefined}
                 onClick={() => !isDragging.current && onSearch(baseName, m.category)}
-                className="shrink-0 w-[176px] rounded-2xl shadow-sm hover:shadow-lg hover:-translate-y-1 active:scale-[0.98] transition-all text-left group"
+                className="shrink-0 w-[200px] rounded-2xl shadow-sm hover:shadow-lg hover:-translate-y-1 active:scale-[0.98] transition-all text-left group"
               >
                 <div className="overflow-hidden rounded-2xl border border-amber-100 bg-white flex flex-col h-full">
-                  <div className="relative aspect-[4/3] w-full bg-amber-50 shrink-0 overflow-hidden">
+                  <div className="relative aspect-square w-full bg-amber-50 shrink-0 overflow-hidden">
                     {machineImage ? (
                       <img src={machineImage} alt={baseName} loading="lazy" draggable={false} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                     ) : (
@@ -367,20 +367,17 @@ export default function HomeSection({
       <div className="relative bg-slate-900 h-[240px] sm:h-[480px] lg:h-[540px]">
         {/* Image + decorative layers clipped so Ken Burns / glows don't escape */}
         <div className="absolute inset-0 overflow-hidden">
-          {siteConfigLoaded ? (
-            <motion.img
-              key={siteConfig.heroImageUrl || 'default'}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.4 }}
-              src={siteConfig.heroImageUrl || '/hero-huurgo-v2.jpg'}
-              alt=""
-              className="w-full h-full block object-cover animate-kenburns [object-position:80%_center] sm:[object-position:85%_center]"
-            />
-          ) : (
-            // Skeleton placeholder while the config is still loading
-            <div className="w-full h-full bg-gradient-to-br from-slate-800 to-slate-900 animate-pulse" />
-          )}
+          {/* Show fallback image immediately — eliminates the skeleton flash on first visit.
+              Key changes when a custom admin URL loads so the image cross-fades smoothly. */}
+          <motion.img
+            key={(siteConfigLoaded && siteConfig.heroImageUrl) ? siteConfig.heroImageUrl : 'default'}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+            src={(siteConfigLoaded && siteConfig.heroImageUrl) ? siteConfig.heroImageUrl : '/hero-huurgo-v2.jpg'}
+            alt=""
+            className="w-full h-full block object-cover animate-kenburns [object-position:80%_center] sm:[object-position:85%_center]"
+          />
 
           {/* Readability scrim — darker toward the bottom-left where the text sits */}
           <div className="absolute inset-0 bg-gradient-to-tr from-black/85 via-black/45 to-black/10 pointer-events-none" />

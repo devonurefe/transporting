@@ -318,111 +318,172 @@ export default function AdminCustomers({ adminLanguage }: AdminCustomersProps) {
         </div>
       )}
 
-      {/* Table */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        {/* Table header */}
-        <div className="grid grid-cols-[auto_1fr_1fr_auto_auto_auto_auto] gap-2 px-4 py-2.5 bg-slate-50 border-b border-slate-100 text-[10px] font-black text-slate-500 uppercase tracking-wider">
-          <input
-            type="checkbox"
-            checked={allFilteredSelected}
-            onChange={toggleAll}
-            className="h-3.5 w-3.5 accent-amber-500 cursor-pointer"
-          />
-          <span>{t("Naam / Bedrijf", "Name / Company", "İsim / Şirket")}</span>
-          <span>{t("E-mail", "Email", "E-posta")}</span>
-          <span className="text-center">{t("Bestellingen", "Orders", "Siparişler")}</span>
-          <span className="text-center">{t("Marketing", "Marketing", "Pazarlama")}</span>
-          <span className="text-center">{t("Verified", "Verified", "Doğrulandı")}</span>
-          <span>{t("Aangemeld", "Registered", "Kayıt tarihi")}</span>
+      {/* Customer list — cards on mobile, table on desktop */}
+      {filtered.length === 0 ? (
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm py-16 text-center text-sm text-slate-400 font-semibold">
+          {t("Geen klanten gevonden.", "No customers found.", "Müşteri bulunamadı.")}
         </div>
-
-        {filtered.length === 0 ? (
-          <div className="py-16 text-center text-sm text-slate-400 font-semibold">
-            {t("Geen klanten gevonden.", "No customers found.", "Müşteri bulunamadı.")}
-          </div>
-        ) : (
-          <div className="divide-y divide-slate-50">
-            {filtered.map((c) => (
-              <div
-                key={c.id}
-                className={`grid grid-cols-[auto_1fr_1fr_auto_auto_auto_auto] gap-2 items-center px-4 py-3 text-xs transition-colors ${
-                  selectedIds.has(c.id) ? "bg-amber-50/60" : "hover:bg-slate-50/80"
-                }`}
-              >
-                <input
-                  type="checkbox"
-                  checked={selectedIds.has(c.id)}
-                  onChange={() => toggleOne(c.id)}
-                  className="h-3.5 w-3.5 accent-amber-500 cursor-pointer"
-                />
-                <div className="min-w-0">
-                  <p className="font-bold text-slate-800 truncate">{c.name}</p>
-                  <p className="text-[10px] text-slate-400 truncate flex items-center gap-1 mt-0.5">
-                    {c.companyName ? (
-                      <>
-                        <Building2 className="h-2.5 w-2.5 shrink-0" />
-                        {c.companyName}
-                      </>
-                    ) : (
-                      <span className="text-slate-300">{c.profile}</span>
-                    )}
-                  </p>
-                </div>
-                <div className="min-w-0">
-                  <a
-                    href={`mailto:${c.email}`}
-                    className="text-slate-600 hover:text-orange-600 truncate flex items-center gap-1 transition-colors"
-                  >
-                    <Mail className="h-2.5 w-2.5 shrink-0 text-slate-400" />
-                    <span className="truncate">{c.email}</span>
-                  </a>
-                  {c.phone && (
-                    <div className="flex items-center gap-1.5 mt-0.5">
-                      <a
-                        href={`tel:${c.phone}`}
-                        className="text-[10px] text-slate-400 hover:text-slate-600 flex items-center gap-1 transition-colors"
-                      >
-                        <Phone className="h-2.5 w-2.5 shrink-0" />
-                        {c.phone}
-                      </a>
-                      <a
-                        href={buildCustomerWaUrl(c.phone, c.name)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        title="WhatsApp klant"
-                        className="flex items-center justify-center h-4 w-4 rounded-full bg-[#25D366] hover:bg-[#1da851] transition-colors shrink-0"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <MessageCircle className="h-2.5 w-2.5 text-white" />
-                      </a>
+      ) : (
+        <>
+          {/* ── Mobile card view (hidden on md+) ── */}
+          <div className="md:hidden space-y-2.5">
+            {filtered.map((c) => {
+              const initials = c.name.split(" ").map(w => w[0]).slice(0, 2).join("").toUpperCase();
+              return (
+                <div
+                  key={c.id}
+                  className={`bg-white rounded-2xl border shadow-sm transition-all ${selectedIds.has(c.id) ? "border-amber-300 bg-amber-50/30" : "border-slate-200"}`}
+                >
+                  <div className="flex items-start gap-3 p-4">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(c.id)}
+                      onChange={() => toggleOne(c.id)}
+                      className="h-3.5 w-3.5 accent-amber-500 cursor-pointer mt-1 shrink-0"
+                    />
+                    {/* Avatar */}
+                    <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-amber-100 to-amber-200 flex items-center justify-center shrink-0">
+                      <span className="text-xs font-black text-amber-700">{initials}</span>
                     </div>
-                  )}
+                    <div className="flex-1 min-w-0">
+                      {/* Name + date */}
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="font-bold text-slate-800 text-sm leading-tight">{c.name}</p>
+                        <span className="text-[10px] text-slate-400 font-mono shrink-0 mt-0.5">
+                          {new Date(c.createdAt).toLocaleDateString("nl-NL", { day: "2-digit", month: "2-digit", year: "2-digit" })}
+                        </span>
+                      </div>
+                      {/* Company / profile */}
+                      {c.companyName ? (
+                        <p className="text-[11px] text-slate-500 flex items-center gap-1 mt-0.5">
+                          <Building2 className="h-2.5 w-2.5 shrink-0" /> {c.companyName}
+                        </p>
+                      ) : c.profile ? (
+                        <p className="text-[11px] text-slate-400 mt-0.5">{c.profile}</p>
+                      ) : null}
+                      {/* Email + phone */}
+                      <a href={`mailto:${c.email}`} className="flex items-center gap-1 mt-1.5 text-[11px] text-slate-500 hover:text-orange-600 transition-colors no-underline">
+                        <Mail className="h-3 w-3 shrink-0" /> <span className="truncate">{c.email}</span>
+                      </a>
+                      {c.phone && (
+                        <div className="flex items-center gap-2 mt-1">
+                          <a href={`tel:${c.phone}`} className="flex items-center gap-1 text-[11px] text-slate-400 hover:text-slate-700 transition-colors no-underline">
+                            <Phone className="h-3 w-3 shrink-0" /> {c.phone}
+                          </a>
+                          <a
+                            href={buildCustomerWaUrl(c.phone, c.name)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title="WhatsApp"
+                            className="flex items-center justify-center h-5 w-5 rounded-full bg-[#25D366] hover:bg-[#1da851] transition-colors"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <MessageCircle className="h-3 w-3 text-white" />
+                          </a>
+                        </div>
+                      )}
+                      {/* Badges */}
+                      <div className="flex items-center gap-2 mt-2.5 flex-wrap">
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${c._count.orders > 0 ? "bg-slate-100 text-slate-600" : "bg-slate-50 text-slate-400"}`}>
+                          {c._count.orders} {c._count.orders === 1 ? "bestelling" : "bestellingen"}
+                        </span>
+                        {c.marketingConsent && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700">
+                            <CheckCircle className="h-3 w-3" /> Marketing
+                          </span>
+                        )}
+                        {c.isEmailVerified ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-teal-50 text-teal-700">
+                            <CheckCircle className="h-3 w-3" /> Verified
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-700">
+                            <XCircle className="h-3 w-3" /> Niet geverifieerd
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <span className="text-center font-mono font-bold text-slate-700 text-[11px]">
-                  {c._count.orders}
-                </span>
-                <span className="flex justify-center">
-                  {c.marketingConsent ? (
-                    <CheckCircle className="h-4 w-4 text-emerald-500" />
-                  ) : (
-                    <XCircle className="h-4 w-4 text-slate-300" />
-                  )}
-                </span>
-                <span className="flex justify-center">
-                  {c.isEmailVerified ? (
-                    <CheckCircle className="h-4 w-4 text-teal-500" />
-                  ) : (
-                    <XCircle className="h-4 w-4 text-amber-400" />
-                  )}
-                </span>
-                <span className="text-[10px] text-slate-400 font-mono whitespace-nowrap">
-                  {new Date(c.createdAt).toLocaleDateString("nl-NL", { day: "2-digit", month: "2-digit", year: "2-digit" })}
-                </span>
-              </div>
-            ))}
+              );
+            })}
           </div>
-        )}
-      </div>
+
+          {/* ── Desktop table view (hidden below md) ── */}
+          <div className="hidden md:block bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            {/* Table header */}
+            <div className="grid grid-cols-[auto_auto_1fr_1fr_auto_auto_auto_auto] gap-2 px-4 py-2.5 bg-slate-50 border-b border-slate-100 text-[10px] font-black text-slate-500 uppercase tracking-wider">
+              <input
+                type="checkbox"
+                checked={allFilteredSelected}
+                onChange={toggleAll}
+                className="h-3.5 w-3.5 accent-amber-500 cursor-pointer"
+              />
+              <span />
+              <span>{t("Naam / Bedrijf", "Name / Company", "İsim / Şirket")}</span>
+              <span>{t("E-mail", "Email", "E-posta")}</span>
+              <span className="text-center">{t("Orders", "Orders", "Siparişler")}</span>
+              <span className="text-center">Mktg</span>
+              <span className="text-center">✓</span>
+              <span>{t("Datum", "Date", "Tarih")}</span>
+            </div>
+            <div className="divide-y divide-slate-50">
+              {filtered.map((c) => {
+                const initials = c.name.split(" ").map(w => w[0]).slice(0, 2).join("").toUpperCase();
+                return (
+                  <div
+                    key={c.id}
+                    className={`grid grid-cols-[auto_auto_1fr_1fr_auto_auto_auto_auto] gap-2 items-center px-4 py-3 text-xs transition-colors ${selectedIds.has(c.id) ? "bg-amber-50/60" : "hover:bg-slate-50/80"}`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(c.id)}
+                      onChange={() => toggleOne(c.id)}
+                      className="h-3.5 w-3.5 accent-amber-500 cursor-pointer"
+                    />
+                    {/* Avatar */}
+                    <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-amber-100 to-amber-200 flex items-center justify-center shrink-0">
+                      <span className="text-[9px] font-black text-amber-700">{initials}</span>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-bold text-slate-800 truncate">{c.name}</p>
+                      <p className="text-[10px] text-slate-400 truncate flex items-center gap-1 mt-0.5">
+                        {c.companyName ? <><Building2 className="h-2.5 w-2.5 shrink-0" />{c.companyName}</> : <span className="text-slate-300">{c.profile}</span>}
+                      </p>
+                    </div>
+                    <div className="min-w-0">
+                      <a href={`mailto:${c.email}`} className="text-slate-600 hover:text-orange-600 truncate flex items-center gap-1 transition-colors">
+                        <Mail className="h-2.5 w-2.5 shrink-0 text-slate-400" />
+                        <span className="truncate">{c.email}</span>
+                      </a>
+                      {c.phone && (
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <a href={`tel:${c.phone}`} className="text-[10px] text-slate-400 hover:text-slate-600 flex items-center gap-1 transition-colors">
+                            <Phone className="h-2.5 w-2.5 shrink-0" />{c.phone}
+                          </a>
+                          <a href={buildCustomerWaUrl(c.phone, c.name)} target="_blank" rel="noopener noreferrer" title="WhatsApp klant" className="flex items-center justify-center h-4 w-4 rounded-full bg-[#25D366] hover:bg-[#1da851] transition-colors shrink-0" onClick={(e) => e.stopPropagation()}>
+                            <MessageCircle className="h-2.5 w-2.5 text-white" />
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                    <span className="text-center font-mono font-bold text-slate-700 text-[11px]">{c._count.orders}</span>
+                    <span className="flex justify-center">
+                      {c.marketingConsent ? <CheckCircle className="h-4 w-4 text-emerald-500" /> : <XCircle className="h-4 w-4 text-slate-300" />}
+                    </span>
+                    <span className="flex justify-center">
+                      {c.isEmailVerified ? <CheckCircle className="h-4 w-4 text-teal-500" /> : <XCircle className="h-4 w-4 text-amber-400" />}
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-mono whitespace-nowrap">
+                      {new Date(c.createdAt).toLocaleDateString("nl-NL", { day: "2-digit", month: "2-digit", year: "2-digit" })}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Email Campaign Modal */}
       {emailModal && (

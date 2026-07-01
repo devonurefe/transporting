@@ -130,12 +130,16 @@ export default function BookingStep1({
         <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl space-y-3">
           <div>
             <p className="text-sm font-bold text-amber-900">🗓 Gaat u in het weekend (za/zo) met de machine werken?</p>
-            <p className="text-xs text-amber-700 mt-1">
-              Beantwoord dit eerst — het bepaalt uw prijs en welke startdatums u in de
-              kalender kunt kiezen. Werkt u in het weekend, dan geldt het volledige
-              werkweektarief (weekend inbegrepen). Werkt u niet, dan tellen alleen de
-              werkdagen en kunt u niet op zaterdag of zondag starten.
-            </p>
+            <ul className="mt-1.5 space-y-1">
+              <li className="flex items-start gap-1.5 text-xs text-amber-700">
+                <span className="font-black text-amber-800 shrink-0">Ja →</span>
+                <span>Volledig werkweektarief, za/zo inbegrepen</span>
+              </li>
+              <li className="flex items-start gap-1.5 text-xs text-amber-700">
+                <span className="font-black text-amber-800 shrink-0">Nee →</span>
+                <span>Alleen werkdagen tellen · voordeliger, geen start op za/zo</span>
+              </li>
+            </ul>
           </div>
           <div className="flex gap-2">
             <button
@@ -661,14 +665,14 @@ export default function BookingStep1({
         <button
           onClick={handleNextStep}
           disabled={!canProceed}
-          className={`font-semibold text-xs w-full sm:w-auto px-6 py-3.5 rounded-xl transition-all flex items-center justify-center space-x-1.5 border-none shadow-md order-1 sm:order-2 ${
+          className={`font-bold text-sm w-full sm:w-auto px-8 py-4 rounded-xl transition-all flex items-center justify-center gap-2 border-none order-1 sm:order-2 ${
             canProceed
-              ? "cta-shine bg-orange-500 hover:bg-orange-600 text-white cursor-pointer active:scale-95 shadow-orange-200"
+              ? "cta-shine bg-orange-500 hover:bg-orange-600 text-white cursor-pointer active:scale-[0.98] shadow-lg shadow-orange-500/25"
               : "bg-slate-100 text-slate-400 cursor-not-allowed"
           }`}
         >
           <span>Doorgaan naar gegevens</span>
-          <ArrowRight className="h-4 w-4" />
+          <ArrowRight className="h-4.5 w-4.5" />
         </button>
           );
         })()}

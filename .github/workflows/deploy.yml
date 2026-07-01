@@ -5,7 +5,32 @@ on:
     branches: [main]
 
 jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ghcr.io/devonurefe/transporting:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
   deploy:
+    needs: build
     runs-on: ubuntu-latest
     steps:
       - name: Deploy to VPS
@@ -17,10 +42,16 @@ jobs:
               -o StrictHostKeyChecking=no \
               -o ConnectTimeout=30 \
               root@${{ secrets.VPS_HOST }} \
-              'nohup bash -c "cd /opt/huurgo && git pull origin main && docker compose up -d --build && docker compose exec -T app npx prisma db push" > /tmp/deploy.log 2>&1 & echo "Deploy baslatildi: PID=$!"'; then
+              "docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }} --password-stdin <<< '${{ secrets.GITHUB_TOKEN }}' 2>/dev/null; \
+               cd /opt/huurgo && \
+               git pull origin main && \
+               docker compose pull app && \
+               docker compose up -d && \
+               docker compose exec -T app npx prisma db push && \
+               echo 'Deploy tamamlandi:' \$(date)"; then
               echo "Basarili!"
               break
             fi
-            echo "Baglanti kurulamadi, 15 saniye bekleniyor..."
+            echo "15 saniye bekleniyor..."
             sleep 15
           done

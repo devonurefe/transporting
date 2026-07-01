@@ -39,6 +39,9 @@ services:
       - EMAIL_FROM=${EMAIL_FROM:-onboarding@resend.dev}
       - ADMIN_EMAIL=${ADMIN_EMAIL:-info@huurgo.nl}
       - DATABASE_URL=${DATABASE_URL:-postgresql://huurgo:huurgo_dev_pass@postgres:5432/huurgo}
+      - APP_URL=${APP_URL:-https://huurgo.nl}
+      - REMINDER_SECRET=${REMINDER_SECRET}
+      - CALENDAR_FEED_TOKEN=${CALENDAR_FEED_TOKEN}
     volumes:
       - ./uploads:/app/uploads
 

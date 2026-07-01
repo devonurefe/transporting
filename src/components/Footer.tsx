@@ -118,11 +118,10 @@ export default function Footer({ siteName, setActiveTab, setShowContactModal }: 
   return (
     <footer className="bg-slate-950 pb-20 md:pb-0">
 
-      {/* Transition bridge — taller, softer entry from content above */}
-      <div className="h-20 bg-gradient-to-b from-slate-50 to-amber-50" aria-hidden="true" />
-
-      {/* ── WHY HUURGO — scroll-revealed trust band ── */}
-      <div className="bg-gradient-to-b from-amber-50 to-white border-b border-amber-100">
+      {/* ── WHY HUURGO — scroll-revealed trust band ──
+          Crisp top edge (shadow, not a blended gradient bar) for a cleaner
+          hand-off from the page content above. */}
+      <div className="bg-gradient-to-b from-amber-50 to-white border-b border-amber-100 shadow-[0_-12px_24px_-20px_rgba(15,23,42,0.15)]">
         <div className="py-10 sm:py-14 px-5 sm:px-8 lg:px-10 mx-auto max-w-7xl">
 
           <motion.div
@@ -249,8 +248,18 @@ export default function Footer({ siteName, setActiveTab, setShowContactModal }: 
         </div>
       </div>
 
-      {/* Transition bridge — deeper gradient into dark footer */}
-      <div className="h-20 bg-gradient-to-b from-amber-50 to-slate-950" aria-hidden="true" />
+      {/* Transition into dark footer — crisp angled cut instead of a blended
+          gradient bar, for a more deliberate, designed hand-off. */}
+      <div className="relative h-14 sm:h-20 bg-amber-50 overflow-hidden" aria-hidden="true">
+        <svg
+          className="absolute bottom-0 left-0 w-full h-full text-slate-950"
+          viewBox="0 0 1440 100"
+          preserveAspectRatio="none"
+          fill="currentColor"
+        >
+          <polygon points="0,100 1440,35 1440,100" />
+        </svg>
+      </div>
 
       {/* ── DARK FOOTER — 3-column symmetrical layout ── */}
       <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-10 pb-14 sm:pb-16">

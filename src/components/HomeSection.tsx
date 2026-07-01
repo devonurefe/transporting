@@ -348,34 +348,37 @@ export default function HomeSection({
           Text/icons are rendered as HTML (not baked into the image) so they
           stay razor-sharp at any resolution/zoom and are translatable. Upload
           a TEXT-FREE photo in Admin → Customizer for the best result. */}
-      <div className="relative bg-slate-900 overflow-hidden h-[240px] sm:h-[480px] lg:h-[540px]">
-        {siteConfigLoaded ? (
-          <motion.img
-            key={siteConfig.heroImageUrl || 'default'}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.4 }}
-            src={siteConfig.heroImageUrl || '/hero-huurgo-v2.jpg'}
-            alt=""
-            className="w-full h-full block object-cover animate-kenburns [object-position:80%_center] sm:[object-position:85%_center]"
-          />
-        ) : (
-          // Skeleton placeholder while the config is still loading
-          <div className="w-full h-full bg-gradient-to-br from-slate-800 to-slate-900 animate-pulse" />
-        )}
+      <div className="relative bg-slate-900 h-[240px] sm:h-[480px] lg:h-[540px]">
+        {/* Image + decorative layers clipped so Ken Burns / glows don't escape */}
+        <div className="absolute inset-0 overflow-hidden">
+          {siteConfigLoaded ? (
+            <motion.img
+              key={siteConfig.heroImageUrl || 'default'}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.4 }}
+              src={siteConfig.heroImageUrl || '/hero-huurgo-v2.jpg'}
+              alt=""
+              className="w-full h-full block object-cover animate-kenburns [object-position:80%_center] sm:[object-position:85%_center]"
+            />
+          ) : (
+            // Skeleton placeholder while the config is still loading
+            <div className="w-full h-full bg-gradient-to-br from-slate-800 to-slate-900 animate-pulse" />
+          )}
 
-        {/* Readability scrim — darker toward the bottom-left where the text sits */}
-        <div className="absolute inset-0 bg-gradient-to-tr from-black/85 via-black/45 to-black/10 pointer-events-none" />
+          {/* Readability scrim — darker toward the bottom-left where the text sits */}
+          <div className="absolute inset-0 bg-gradient-to-tr from-black/85 via-black/45 to-black/10 pointer-events-none" />
 
-        {/* Ambient brand glows — drift slowly to give the dark hero subtle,
-            premium life without hurting text contrast (low opacity + blur). */}
-        <div className="float-slow pointer-events-none absolute -bottom-16 -left-16 h-72 w-72 rounded-full bg-orange-500/25 blur-[90px] mix-blend-screen" aria-hidden="true" />
-        <div className="float-slow pointer-events-none absolute -top-20 right-0 h-64 w-64 rounded-full bg-emerald-400/15 blur-[90px] mix-blend-screen" style={{ animationDelay: "-3.5s" }} aria-hidden="true" />
+          {/* Ambient brand glows — drift slowly to give the dark hero subtle,
+              premium life without hurting text contrast (low opacity + blur). */}
+          <div className="float-slow pointer-events-none absolute -bottom-16 -left-16 h-72 w-72 rounded-full bg-orange-500/25 blur-[90px] mix-blend-screen" aria-hidden="true" />
+          <div className="float-slow pointer-events-none absolute -top-20 right-0 h-64 w-64 rounded-full bg-emerald-400/15 blur-[90px] mix-blend-screen" style={{ animationDelay: "-3.5s" }} aria-hidden="true" />
 
-        {/* Soft bottom feather — eases the hard cut into the white section below */}
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/30 to-transparent" />
+          {/* Soft bottom feather — eases the hard cut into the white section below */}
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/30 to-transparent" />
+        </div>
 
-        {/* Overlay content — anchored bottom-left */}
+        {/* Overlay content — outside overflow-hidden so the logo dot is never clipped */}
         <div className="absolute inset-0 flex items-end pointer-events-none">
           <div className="px-5 sm:px-8 lg:px-14 pb-5 sm:pb-7 lg:pb-9 w-full max-w-2xl">
             {/* Brand wordmark in its original logo form, with tagline */}

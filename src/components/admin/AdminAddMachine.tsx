@@ -48,6 +48,7 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
   const [campaignDiscountAmount, setCampaignDiscountAmount] = useState("");
   const [newBufferDays, setNewBufferDays] = useState(0);
   const [isAdding, setIsAdding] = useState<boolean>(false);
+  const [formError, setFormError] = useState<string | null>(null);
   const [imageUrl, setImageUrl] = useState("");
   const [imageAlt, setImageAlt] = useState("");
   const [isUploading, setIsUploading] = useState(false);
@@ -96,6 +97,7 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
       }
     }
     setIsUploadingAdditional(false);
+    e.target.value = "";
   };
 
   const handleImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -131,13 +133,15 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
       alert(t("Fout bij uploaden afbeelding.", "Error uploading image.", "Resim yükleme hatası."));
     } finally {
       setIsUploading(false);
+      e.target.value = "";
     }
   };
 
   const handleSubmitNewMachine = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormError(null);
     if (!newName.trim() || !newHeight || !newPrice) {
-      alert(t("Naam, Hoogte en Prijs per dag zijn verplicht.", "Name, Height, and Price per day are required.", "Ad, Yükseklik ve Günlük Ücret zorunludur."));
+      setFormError(t("Naam, Hoogte en Prijs per dag zijn verplicht.", "Name, Height, and Price per day are required.", "Ad, Yükseklik ve Günlük Ücret zorunludur."));
       return;
     }
 
@@ -147,47 +151,47 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
     const numPrice = Number(newPrice);
 
     if (isNaN(numHeight) || numHeight <= 0) {
-      alert(t("Werkhoogte moet een positief getal groter dan 0 zijn.", "Working height must be a positive number greater than 0.", "Çalışma yüksekliği 0'dan büyük pozitif bir sayı olmalıdır."));
+      setFormError(t("Werkhoogte moet een positief getal groter dan 0 zijn.", "Working height must be a positive number greater than 0.", "Çalışma yüksekliği 0'dan büyük pozitif bir sayı olmalıdır."));
       return;
     }
     if (isNaN(numReach) || numReach < 0) {
-      alert(t("Zijwaarts bereik moet 0 of groter zijn.", "Horizontal reach must be 0 or greater.", "Yatay erişim 0 veya daha büyük olmalıdır."));
+      setFormError(t("Zijwaarts bereik moet 0 of groter zijn.", "Horizontal reach must be 0 or greater.", "Yatay erişim 0 veya daha büyük olmalıdır."));
       return;
     }
     if (isNaN(numWeight) || numWeight <= 0) {
-      alert(t("Gewicht moet een positief getal groter dan 0 zijn.", "Weight must be a positive number greater than 0.", "Ağırlık 0'dan büyük pozitif bir sayı olmalıdır."));
+      setFormError(t("Gewicht moet een positief getal groter dan 0 zijn.", "Weight must be a positive number greater than 0.", "Ağırlık 0'dan büyük pozitif bir sayı olmalıdır."));
       return;
     }
     if (isNaN(numPrice) || numPrice <= 0) {
-      alert(t("Huurtarief moet een positief getal groter dan 0 zijn.", "Rental rate must be a positive number greater than 0.", "Kiralama ücreti 0'dan büyük pozitif bir sayı olmalıdır."));
+      setFormError(t("Huurtarief moet een positief getal groter dan 0 zijn.", "Rental rate must be a positive number greater than 0.", "Kiralama ücreti 0'dan büyük pozitif bir sayı olmalıdır."));
       return;
     }
 
     if (weeklyDiscountPercent) {
       const numWeekly = Number(weeklyDiscountPercent);
       if (isNaN(numWeekly) || numWeekly < 0 || numWeekly > 100) {
-        alert(t("Weekkorting moet tussen 0% en 100% liggen.", "Weekly discount must be between 0% and 100%.", "Haftalık indirim %0 ile %100 arasında olmalıdır."));
+        setFormError(t("Weekkorting moet tussen 0% en 100% liggen.", "Weekly discount must be between 0% and 100%.", "Haftalık indirim %0 ile %100 arasında olmalıdır."));
         return;
       }
     }
     if (monthlyDiscountPercent) {
       const numMonthly = Number(monthlyDiscountPercent);
       if (isNaN(numMonthly) || numMonthly < 0 || numMonthly > 100) {
-        alert(t("Maandkorting moet tussen 0% en 100% liggen.", "Monthly discount must be between 0% and 100%.", "Aylık indirim %0 ile %100 arasında olmalıdır."));
+        setFormError(t("Maandkorting moet tussen 0% en 100% liggen.", "Monthly discount must be between 0% and 100%.", "Aylık indirim %0 ile %100 arasında olmalıdır."));
         return;
       }
     }
     if (campaignDiscountPercent) {
       const numCampPercent = Number(campaignDiscountPercent);
       if (isNaN(numCampPercent) || numCampPercent < 0 || numCampPercent > 100) {
-        alert(t("Campagne kortingspercentage moet tussen 0% en 100% liggen.", "Campaign discount percentage must be between 0% and 100%.", "Kampanya indirim oranı %0 ile %100 arasında olmalıdır."));
+        setFormError(t("Campagne kortingspercentage moet tussen 0% en 100% liggen.", "Campaign discount percentage must be between 0% and 100%.", "Kampanya indirim oranı %0 ile %100 arasında olmalıdır."));
         return;
       }
     }
     if (campaignDiscountAmount) {
       const numCampAmt = Number(campaignDiscountAmount);
       if (isNaN(numCampAmt) || numCampAmt < 0) {
-        alert(t("Campagne kortingsbedrag moet 0 of groter zijn.", "Campaign discount amount must be 0 or greater.", "Kampanya indirim tutarı 0 veya daha büyük olmalıdır."));
+        setFormError(t("Campagne kortingsbedrag moet 0 of groter zijn.", "Campaign discount amount must be 0 or greater.", "Kampanya indirim tutarı 0 veya daha büyük olmalıdır."));
         return;
       }
     }
@@ -273,7 +277,7 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
       setCrossSell([]);
       setSubTab("machines");
     } else {
-      alert(t("Fout bij opslaan.", "Error saving.", "Kaydetme hatası."));
+      setFormError(t("Fout bij opslaan.", "Error saving.", "Kaydetme hatası."));
     }
   };
 
@@ -872,7 +876,10 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
           </div>
         </div>
 
-        <div className="flex justify-end pt-4 border-t border-slate-200">
+        <div className="flex flex-col items-end gap-2 pt-4 border-t border-slate-200">
+          {formError && (
+            <p className="text-xs font-bold text-rose-600 text-right">{formError}</p>
+          )}
           <button
             type="submit"
             disabled={isAdding}

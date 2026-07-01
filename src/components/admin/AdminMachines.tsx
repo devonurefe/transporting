@@ -149,6 +149,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
       }
     }
     setIsUploadingEditAdditional(false);
+    e.target.value = "";
   };
 
   const handleStartEdit = (m: Machine) => {
@@ -221,6 +222,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
       alert(t("Fout bij uploaden afbeelding.", "Error uploading image.", "Resim yükleme hatası."));
     } finally {
       setIsUploadingEditImage(false);
+      e.target.value = "";
     }
   };
 

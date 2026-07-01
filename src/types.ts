@@ -51,6 +51,8 @@ export interface CrossSellAddon {
 
 export type DeliveryType = "self_pickup" | "delivery_by_us" | "trailer_rental" | "trailer_drop_return";
 
+export type OrderStatus = "In behandeling" | "Goedgekeurd" | "Onderweg" | "Voltooid" | "Geannuleerd";
+
 export interface Order {
   id: string;
   machineId: string;
@@ -71,7 +73,7 @@ export interface Order {
   driverCost: number;
   vatAmount: number;
   totalAmount: number;
-  status: "In behandeling" | "Goedgekeurd" | "Onderweg" | "Voltooid" | "Geannuleerd";
+  status: OrderStatus;
   createdAt: string;
   addons?: { id: string; name: string; price: number; billing: "daily" | "flat" | "weekly" }[];
   weekendWork?: "ja" | "nee" | null;

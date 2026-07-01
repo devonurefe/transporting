@@ -14,7 +14,7 @@ import PWAInstallBanner from "./components/PWAInstallBanner";
 import ToastNotification from "./components/ToastNotification";
 import CookieBanner from "./components/CookieBanner";
 import ErrorBoundary from "./components/ErrorBoundary";
-import { Machine, Order, AppNotification, UserProfile, CartItem } from "./types";
+import { Machine, Order, OrderStatus, AppNotification, UserProfile, CartItem } from "./types";
 import { useAuthStore } from "./store/authStore";
 import { useAppStore } from "./store/appStore";
 import { buildWhatsAppGeneralUrl, buildWhatsAppOrderStatusUrl, buildWhatsAppPaymentLinkUrl, buildWhatsAppAdviceUrl } from "./utils/whatsapp";
@@ -633,7 +633,7 @@ export default function App() {
   };
 
   // Action: Progress order status in Admin table
-  const handleUpdateOrderStatus = async (orderId: string, nextStatus: any) => {
+  const handleUpdateOrderStatus = async (orderId: string, nextStatus: OrderStatus) => {
     const success = await updateOrderStatus(orderId, nextStatus);
     if (success) {
       triggerNotification(

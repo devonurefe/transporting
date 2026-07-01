@@ -25,7 +25,7 @@ import {
   AlertTriangle
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { Order, UserProfile } from "../types";
+import { Order, OrderStatus, UserProfile } from "../types";
 import { useAuthStore } from "../store/authStore";
 import { useAppStore } from "../store/appStore";
 import { printInvoice } from "../utils/invoice";
@@ -37,7 +37,7 @@ interface MyOrdersSectionProps {
   currentUser: UserProfile | null;
   setCurrentUser: (user: UserProfile | null) => void;
   userProfiles?: UserProfile[];
-  onUpdateOrderStatus: (orderId: string, nextStatus: any) => void;
+  onUpdateOrderStatus: (orderId: string, nextStatus: OrderStatus) => void;
   onAddSystemLog?: (type: "login" | "logout" | "signup" | "booking" | "fleet" | "status" | "system", user: string, description: string) => void;
   setActiveTab?: (tab: string) => void;
 }

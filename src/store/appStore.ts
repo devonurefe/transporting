@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { Machine, Order, CartItem, CampaignRule } from "../types";
+import { Machine, Order, OrderStatus, CartItem, CampaignRule } from "../types";
 
 interface Category {
   id: string;
@@ -68,7 +68,7 @@ interface AppState {
   addMachine: (machData: Partial<Machine>) => Promise<boolean>;
   updateMachine: (id: string, machData: Partial<Machine>) => Promise<boolean>;
   deleteMachine: (id: string) => Promise<boolean>;
-  updateOrderStatus: (orderId: string, status: string) => Promise<true | false | string>;
+  updateOrderStatus: (orderId: string, status: OrderStatus) => Promise<true | false | string>;
   blockDate: (machineId: string, date: string, reason: string) => Promise<boolean>;
   unblockDate: (machineId: string, date: string) => Promise<boolean>;
   updateCategories: (categories: Category[]) => Promise<boolean>;
@@ -377,13 +377,13 @@ export const useAppStore = create<AppState>((set, get) => ({
 
     // Optimistic frontend update
     set(state => ({
-      orders: state.orders.map(o => o.id === orderId ? { ...o, status: status as any } : o)
+      orders: state.orders.map(o => o.id === orderId ? { ...o, status } : o)
     }));
 
     const rollback = () => {
       if (originalStatus) {
         set(state => ({
-          orders: state.orders.map(o => o.id === orderId ? { ...o, status: originalStatus as any } : o)
+          orders: state.orders.map(o => o.id === orderId ? { ...o, status: originalStatus } : o)
         }));
       }
     };

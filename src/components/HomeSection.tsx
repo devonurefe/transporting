@@ -385,7 +385,7 @@ export default function HomeSection({
               transition={{ duration: 0.4 }}
               className="mb-2.5 sm:mb-3.5"
             >
-              <span className="text-2xl sm:text-3xl lg:text-4xl drop-shadow-sm">
+              <span className="inline-block text-2xl sm:text-3xl lg:text-4xl drop-shadow-sm">
                 <HuurGoText dark />
               </span>
               <span className="block font-semibold text-[9px] sm:text-[11px] uppercase tracking-[0.18em] text-white/70 mt-0.5">

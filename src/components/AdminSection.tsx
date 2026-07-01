@@ -3,7 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { useLocation } from "react-router-dom";
 import {
   BarChart3,
   Layers,
@@ -71,6 +72,16 @@ export default function AdminSection({
   const [ordersFilter, setOrdersFilter] = useState<string[]>([]);
   const [showAdvancedSubmenu, setShowAdvancedSubmenu] = useState<boolean>(false);
   const [showMobileMenu, setShowMobileMenu] = useState<boolean>(false);
+
+  // Reset to dashboard when logo is clicked (navigate to /admin while already on /admin)
+  const location = useLocation();
+  const isMounted = useRef(false);
+  useEffect(() => {
+    if (!isMounted.current) { isMounted.current = true; return; }
+    setSubTab("dashboard");
+    setOrdersFilter([]);
+    setShowMobileMenu(false);
+  }, [location.key]);
 
   React.useEffect(() => {
     if (["add", "customizer", "accounting", "diagnostics", "logs"].includes(subTab)) {

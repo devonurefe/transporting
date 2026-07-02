@@ -2,6 +2,7 @@ import {StrictMode} from 'react';
 import {createRoot} from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
+import { isChunkLoadError, tryAutoReloadOnce } from './utils/chunkError';
 
 // Silence benign HMR / WebSocket errors; auto-reload on chunk load failures
 if (typeof window !== "undefined") {
@@ -12,19 +13,11 @@ if (typeof window !== "undefined") {
       event.stopPropagation();
       return;
     }
-    // Chunk load failures after a new deploy — just reload once
-    if (
-      msg.includes("not a valid JavaScript MIME type") ||
-      msg.includes("Failed to fetch dynamically imported") ||
-      msg.includes("ChunkLoadError") ||
-      event?.reason?.name === "ChunkLoadError"
-    ) {
+    // Chunk load failures after a new deploy (stale index.html referencing an
+    // old JS chunk hash) — just reload once to pick up the new build.
+    if (isChunkLoadError(event?.reason)) {
       event.preventDefault();
-      const reloaded = sessionStorage.getItem("chunk_reload");
-      if (!reloaded) {
-        sessionStorage.setItem("chunk_reload", "1");
-        window.location.reload();
-      }
+      tryAutoReloadOnce();
     }
   });
 

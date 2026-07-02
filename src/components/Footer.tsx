@@ -105,6 +105,11 @@ export default function Footer({ siteName, setActiveTab, setShowContactModal }: 
   const leftCol = REVIEWS.filter((_, i) => i % 2 === 0);
   const rightCol = REVIEWS.filter((_, i) => i % 2 !== 0);
 
+  // Echte externe Google-score (door admin ingevoerd); los van onze eigen
+  // interne klantbeoordelingen (rating hieronder, uit /api/orders/ratings/summary).
+  const googleRating = siteConfig.googleRating ?? null;
+  const googleReviewCount = siteConfig.googleReviewCount ?? null;
+
   const [rating, setRating] = useState<{ average: number; count: number } | null>(null);
   useEffect(() => {
     let active = true;
@@ -187,12 +192,16 @@ export default function Footer({ siteName, setActiveTab, setShowContactModal }: 
               </span>
               <div>
                 <div className="flex items-center gap-2">
-                  {/* Toon alleen een echt cijfer — nooit een verzonnen score */}
-                  {rating ? (
+                  {/* Echte Google-score uit siteConfig (admin voert deze in via
+                      Customizer). Nooit een verzonnen cijfer: zonder waarde
+                      tonen we alleen het label. */}
+                  {googleRating != null ? (
                     <>
-                      <span className="text-slate-900 font-bold text-base leading-none">{rating.average.toFixed(1)}</span>
+                      <span className="text-slate-900 font-bold text-base leading-none">{googleRating.toFixed(1)}</span>
                       <Star className="h-4 w-4 text-amber-400 fill-amber-400" />
-                      <span className="text-xs text-slate-500">({rating.count} {rating.count === 1 ? "beoordeling" : "beoordelingen"})</span>
+                      {googleReviewCount != null && (
+                        <span className="text-xs text-slate-500">({googleReviewCount} {googleReviewCount === 1 ? "beoordeling" : "beoordelingen"})</span>
+                      )}
                     </>
                   ) : (
                     <span className="text-slate-900 font-bold text-base leading-none">Google Reviews</span>

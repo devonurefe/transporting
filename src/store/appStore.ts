@@ -32,6 +32,8 @@ interface SiteConfig {
   kvkNumber?: string;
   btwNumber?: string;
   companyLegalName?: string;
+  googleRating?: number | null;
+  googleReviewCount?: number | null;
 }
 
 interface BlockedDate {

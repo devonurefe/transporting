@@ -145,6 +145,21 @@ export default function Footer({ siteName, setActiveTab, setShowContactModal }: 
       <div className="bg-gradient-to-b from-white to-amber-50 border-b border-amber-100">
         <div className="py-10 sm:py-12 px-5 sm:px-8 lg:px-10 mx-auto max-w-7xl">
 
+          {/* Section title — names this block so it reads as its own feature
+              (real customer reviews) instead of a continuation of the trust
+              band above. Real HuurGo wordmark, not just plain text. */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-40px" }}
+            transition={{ duration: 0.3 }}
+            className="flex items-center gap-3 mb-7"
+          >
+            <HuurGoLogo className="h-6 sm:h-7" />
+            <span className="h-6 w-px bg-slate-300" aria-hidden="true" />
+            <h3 className="font-display text-lg sm:text-xl font-black text-slate-900 tracking-tight">Wat klanten zeggen</h3>
+          </motion.div>
+
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}

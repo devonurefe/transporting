@@ -619,9 +619,10 @@ export default function HomeSection({
                 className="group bg-white border border-slate-200 rounded-2xl overflow-hidden text-left cursor-pointer hover:border-orange-300 hover:shadow-xl hover:shadow-orange-500/5 hover:-translate-y-1.5 active:scale-[0.98] transition-all duration-300 flex flex-col"
               >
                 {/* Top — text info: name + height • price, then the CTA right under it
-                    (left-aligned with the price, bold, so it's the obvious next click),
-                    then a lighter footer line for model count + the discount badge —
-                    kept apart from the CTA on purpose so the two don't crowd together. */}
+                    (left-aligned with the price, bold, so it's the obvious next click)
+                    with the discount badge on the same line, vertically centered with
+                    it — not floating below on its own. Model count gets its own
+                    lighter line underneath so it doesn't crowd either one. */}
                 <div className="p-4 flex flex-col gap-1.5 min-w-0">
                   <p className="font-display font-black text-base sm:text-lg text-slate-900 leading-snug line-clamp-2">
                     {cat.listLabel || cat.label}
@@ -639,21 +640,16 @@ export default function HomeSection({
                       })()}
                     </span>
                   </div>
-                  <span className="inline-flex items-center gap-1 text-sm font-bold text-orange-600 group-hover:text-orange-700 group-hover:gap-1.5 transition-all duration-300">
-                    {meta && meta.badge !== "none"
-                      ? t("Bekijk actieprijzen", "View deal prices", "Kampanya fiyatlarını gör")
-                      : t("Bekijk modellen", "View models", "Modelleri gör")}
-                    <ChevronRight className="h-4 w-4" />
-                  </span>
-                  <div className="flex items-center justify-between gap-2 mt-1">
-                    {meta && meta.count > 1 ? (
-                      <span className="text-[11px] text-slate-400 font-medium">
-                        {t(`${meta.count} modellen`, `${meta.count} models`, `${meta.count} model`)}
-                      </span>
-                    ) : <span />}
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="inline-flex items-center gap-1 text-sm font-bold text-orange-600 group-hover:text-orange-700 group-hover:gap-1.5 transition-all duration-300">
+                      {meta && meta.badge !== "none"
+                        ? t("Bekijk actieprijzen", "View deal prices", "Kampanya fiyatlarını gör")
+                        : t("Bekijk modellen", "View models", "Modelleri gör")}
+                      <ChevronRight className="h-4 w-4" />
+                    </span>
                     {meta && meta.badge !== "none" && (
                       <span
-                        className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold text-white ${
+                        className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold text-white shrink-0 ${
                           meta.badge === "tier" ? "bg-indigo-600" : "bg-rose-600"
                         }`}
                       >
@@ -665,6 +661,11 @@ export default function HomeSection({
                       </span>
                     )}
                   </div>
+                  {meta && meta.count > 1 && (
+                    <span className="text-[11px] text-slate-400 font-medium">
+                      {t(`${meta.count} modellen`, `${meta.count} models`, `${meta.count} model`)}
+                    </span>
+                  )}
                 </div>
 
                 {/* Bottom — wide machine photo on a pure white background so the

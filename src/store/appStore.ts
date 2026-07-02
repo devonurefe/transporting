@@ -34,6 +34,14 @@ interface SiteConfig {
   companyLegalName?: string;
   googleRating?: number | null;
   googleReviewCount?: number | null;
+  googleReviews?: GoogleReview[] | null;
+}
+
+export interface GoogleReview {
+  author: string;
+  rating: number;
+  text: string;
+  date: string;
 }
 
 interface BlockedDate {

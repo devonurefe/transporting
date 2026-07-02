@@ -8,7 +8,7 @@ import { Mail, MapPin, Clock, ShieldCheck, Truck, MessageCircle, Star } from "lu
 import { Link } from "react-router-dom";
 import { motion } from "motion/react";
 import { useLanguageStore } from "../store/languageStore";
-import { useAppStore } from "../store/appStore";
+import { useAppStore, type GoogleReview } from "../store/appStore";
 import { HuurGoLogo, BrandedText } from "./Header";
 import { SERVICE_CITIES } from "../data/serviceCities";
 
@@ -18,41 +18,20 @@ interface FooterProps {
   setShowContactModal: (show: boolean) => void;
 }
 
-// Echte klantbeoordeling uit /api/orders/ratings/recent. Privacy: geen naam —
-// alleen score, tekst en datum. Attributie is bewust anoniem ("Geverifieerde
-// huurder") omdat OrderRating geen naam bevat en we klantidentiteit niet in een
-// publieke feed zetten.
-interface RealReview {
-  rating: number;
-  comment: string;
-  createdAt: string;
-}
-
-// Nederlandstalige relatieve datum ("3 weken geleden") uit een ISO-timestamp.
-function relativeDateNL(iso: string): string {
-  const then = new Date(iso).getTime();
-  if (isNaN(then)) return "";
-  const days = Math.max(0, Math.floor((Date.now() - then) / 86_400_000));
-  if (days === 0) return "vandaag";
-  if (days === 1) return "gisteren";
-  if (days < 14) return `${days} dagen geleden`;
-  if (days < 60) return `${Math.floor(days / 7)} weken geleden`;
-  if (days < 365) return `${Math.floor(days / 30)} maanden geleden`;
-  const years = Math.floor(days / 365);
-  return years === 1 ? "1 jaar geleden" : `${years} jaar geleden`;
-}
-
-function ReviewCard({ r }: { r: RealReview }) {
-  const filled = Math.max(0, Math.min(5, Math.round(r.rating)));
+// Admin-curated echte Google-review (uit siteConfig.googleReviews). De eigenaar
+// plaatst hier echte reviews van het Google-bedrijfsprofiel — naam mag getoond
+// worden want die staat al publiek op Google.
+function ReviewCard({ r }: { r: GoogleReview }) {
+  const filled = Math.max(0, Math.min(5, Math.round(r.rating || 5)));
   return (
     <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-4 sm:p-5 space-y-2.5">
       <div className="text-amber-500 text-sm leading-none tracking-wide" aria-label={`${filled} van 5 sterren`}>
         {"★".repeat(filled)}<span className="text-slate-200">{"★".repeat(5 - filled)}</span>
       </div>
-      <p className="text-[13px] text-slate-600 leading-relaxed line-clamp-3">{r.comment}</p>
+      <p className="text-[13px] text-slate-600 leading-relaxed line-clamp-4">{r.text}</p>
       <div className="flex items-center justify-between gap-3 pt-1.5">
-        <span className="text-[11px] font-bold text-slate-900">Geverifieerde huurder</span>
-        <span className="text-[10px] text-slate-400 shrink-0">{relativeDateNL(r.createdAt)}</span>
+        <span className="text-[11px] font-bold text-slate-900">{r.author || "Google-gebruiker"}</span>
+        {r.date && <span className="text-[10px] text-slate-400 shrink-0">{r.date}</span>}
       </div>
     </div>
   );
@@ -87,28 +66,23 @@ export default function Footer({ siteName, setActiveTab, setShowContactModal }: 
   const googleReviewCount = siteConfig.googleReviewCount ?? null;
 
   const [rating, setRating] = useState<{ average: number; count: number } | null>(null);
-  // Echte reviews voor de ticker. Bij minder dan dit aantal tonen we de ticker
-  // niet — liever geen carrousel dan een schrale of verzonnen indruk.
-  const MIN_REVIEWS_FOR_TICKER = 3;
-  const [realReviews, setRealReviews] = useState<RealReview[]>([]);
   useEffect(() => {
     let active = true;
     fetch("/api/orders/ratings/summary")
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => { if (active && d && d.count > 0) setRating({ average: d.average, count: d.count }); })
       .catch(() => {});
-    fetch("/api/orders/ratings/recent")
-      .then((r) => (r.ok ? r.json() : []))
-      .then((d) => { if (active && Array.isArray(d)) setRealReviews(d); })
-      .catch(() => {});
     return () => { active = false; };
   }, []);
 
-  const showTicker = realReviews.length >= MIN_REVIEWS_FOR_TICKER;
-  const leftCol = realReviews.filter((_, i) => i % 2 === 0);
-  const rightCol = realReviews.filter((_, i) => i % 2 !== 0);
+  // Door de admin gecureerde echte Google-reviews. De ticker toont deze; zonder
+  // reviews wordt de ticker verborgen (nooit verzonnen content).
+  const reviews = siteConfig.googleReviews ?? [];
+  const showTicker = reviews.length >= 1;
+  const leftCol = reviews.filter((_, i) => i % 2 === 0);
+  const rightCol = reviews.filter((_, i) => i % 2 !== 0);
   // De sectie verschijnt alleen als er iets echts te tonen is: een Google-score
-  // óf voldoende echte reviews.
+  // óf gecureerde reviews.
   const showReviewsSection = googleRating != null || showTicker;
 
   return (
@@ -223,7 +197,7 @@ export default function Footer({ siteName, setActiveTab, setShowContactModal }: 
 
             {/* Mobile: single column */}
             <div className="sm:hidden review-ticker flex flex-col gap-3">
-              {[...realReviews, ...realReviews].map((r, i) => (
+              {[...reviews, ...reviews].map((r, i) => (
                 <ReviewCard key={i} r={r} />
               ))}
             </div>

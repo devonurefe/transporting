@@ -46,8 +46,24 @@ const SITE_CONFIG_FIELDS = [
   "contactEmail", "contactPhone", "companyAddress", "kvkNumber", "btwNumber", "companyLegalName"
 ] as const;
 
-function pickSiteConfigFields(body: any): Record<string, string | number | null> {
-  const data: Record<string, string | number | null> = {};
+// Sanitize one admin-curated Google review. Everything is length-capped and the
+// rating clamped to 1–5; malformed entries are dropped rather than stored.
+function sanitizeGoogleReview(r: any): { author: string; rating: number; text: string; date: string } | null {
+  if (!r || typeof r !== "object") return null;
+  const text = typeof r.text === "string" ? r.text.trim().slice(0, 600) : "";
+  if (!text) return null; // a review without text is useless in the ticker
+  const ratingNum = Number(r.rating);
+  const rating = isNaN(ratingNum) ? 5 : Math.max(1, Math.min(5, Math.round(ratingNum)));
+  return {
+    author: typeof r.author === "string" ? r.author.trim().slice(0, 80) : "",
+    rating,
+    text,
+    date: typeof r.date === "string" ? r.date.trim().slice(0, 40) : "",
+  };
+}
+
+function pickSiteConfigFields(body: any): Record<string, string | number | null | unknown[]> {
+  const data: Record<string, string | number | null | unknown[]> = {};
   for (const field of SITE_CONFIG_FIELDS) {
     // heroImageUrl stores a base64 data URL — allow up to 5 MB; all other fields max 1 KB
     const maxLen = field === "heroImageUrl" ? 5_000_000 : 1000;
@@ -75,6 +91,16 @@ function pickSiteConfigFields(body: any): Record<string, string | number | null>
     } else {
       const n = Number(raw);
       if (!isNaN(n) && n >= 0 && n <= 1_000_000) data.googleReviewCount = Math.round(n);
+    }
+  }
+
+  // Admin-curated Google reviews (max 20). Send [] or null to clear.
+  if ("googleReviews" in (body ?? {})) {
+    const raw = body.googleReviews;
+    if (raw === null || raw === "") {
+      data.googleReviews = [];
+    } else if (Array.isArray(raw)) {
+      data.googleReviews = raw.slice(0, 20).map(sanitizeGoogleReview).filter(Boolean);
     }
   }
 

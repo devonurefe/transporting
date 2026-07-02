@@ -131,7 +131,7 @@ export default function AdminSection({
   const advancedTabs: { id: AdminSubTab; label: string; icon: typeof Settings; count?: number }[] = [
     { id: "add", label: tAdmin("adminTabAdd"), icon: PlusCircle },
     { id: "customizer", label: tAdmin("adminTabCustomizer"), icon: Settings },
-    { id: "accounting", label: al("Boekhouding (Exact)", "Accounting (Exact)", "Muhasebe (Exact)"), icon: Database },
+    { id: "accounting", label: al("Omzet & Export", "Revenue & Export", "Ciro ve Dışa Aktarma"), icon: Database },
     { id: "diagnostics", label: al("Systeemdiagnose", "System Diagnostics", "Sistem Teşhisi"), icon: ShieldAlert },
     { id: "logs", label: tAdmin("adminTabLogs"), icon: Terminal, count: systemLogs.length },
   ];

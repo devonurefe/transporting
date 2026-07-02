@@ -29,7 +29,7 @@ import { Order, OrderStatus, UserProfile } from "../types";
 import { useAuthStore } from "../store/authStore";
 import { useAppStore } from "../store/appStore";
 import { printInvoice } from "../utils/invoice";
-import { buildWhatsAppOrderStatusUrl, buildWhatsAppPaymentLinkUrl } from "../utils/whatsapp";
+import { buildWhatsAppOrderStatusUrl, buildWhatsAppPaymentLinkUrl, buildWhatsAppLogisticsUrl } from "../utils/whatsapp";
 
 interface MyOrdersSectionProps {
   orders: Order[];
@@ -108,13 +108,8 @@ export default function MyOrdersSection({
     }
   }, []);
 
-  const { login, register, updateProfile, resendVerification, logout } = useAuthStore();
+  const { login, register, updateProfile, updateEmailOptIn, resendVerification, logout } = useAuthStore();
   const isAuthLoading = useAuthStore((state) => state.isLoading);
-
-
-
-  const [emailSubscription, setEmailSubscription] = useState(true);
-  const [smsSubscription, setSmsSubscription] = useState(false);
 
   // Form profile edits state
   const [profileName, setProfileName] = useState("");
@@ -1195,40 +1190,29 @@ export default function MyOrdersSection({
                 <span>Mijn Notificaties</span>
               </h4>
               <p className="text-[11px] text-slate-600 font-semibold leading-relaxed">
-                Kies uw voorkeurskanalen voor reserveringsbevestigingen, BMWT certificaten, en status updates van de chauffeur.
+                Kies of u e-mails ontvangt bij statuswijzigingen van uw boeking en een herinnering vlak voor levering. Uw orderbevestiging ontvangt u altijd.
               </p>
-              
+
               <div className="space-y-3.5 pt-2 border-t border-slate-100">
-                
+
                 {/* Email toggle */}
                 <label className="flex items-center justify-between cursor-pointer group">
                   <div>
                     <span className="text-xs font-black block text-slate-700 group-hover:text-slate-900 transition-colors animate-fade-in">E-mail Notificaties</span>
-                    <span className="text-[9.5px] text-slate-500">Live contracten, orders & facturen in inbox</span>
+                    <span className="text-[9.5px] text-slate-500">Statusupdates & leveringsherinneringen in inbox</span>
                   </div>
                   <input
                     type="checkbox"
-                    checked={emailSubscription}
-                    onChange={(e) => {
-                      setEmailSubscription(e.target.checked);
-                      onTriggerNotification("Voorkeuren Gewijzigd", `E-mailmeldingen zijn ${e.target.checked ? 'geactiveerd' : 'gedeactiveerd'}.`, "info");
-                    }}
-                    className="h-4 w-4 accent-orange-500 rounded border-slate-300 text-orange-500 bg-white"
-                  />
-                </label>
-
-                {/* SMS toggle */}
-                <label className="flex items-center justify-between cursor-pointer group pt-1">
-                  <div>
-                    <span className="text-xs font-black block text-slate-700 group-hover:text-slate-900 transition-colors">SMS Bezorgupdates</span>
-                    <span className="text-[9.5px] text-slate-500">Sms wanneer de chauffeur onze Hub verlaat</span>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={smsSubscription}
-                    onChange={(e) => {
-                      setSmsSubscription(e.target.checked);
-                      onTriggerNotification("SMS Activatie", `SMS notificaties zijn ${e.target.checked ? 'ingeschakeld' : 'uitgeschakeld'}.`, "info");
+                    checked={currentUser?.emailOptIn !== false}
+                    onChange={async (e) => {
+                      const ok = await updateEmailOptIn(e.target.checked);
+                      onTriggerNotification(
+                        ok ? "Voorkeuren Gewijzigd" : "Bijwerken mislukt",
+                        ok
+                          ? `E-mailmeldingen zijn ${e.target.checked ? 'geactiveerd' : 'gedeactiveerd'}.`
+                          : "Kon uw voorkeur niet opslaan. Probeer het opnieuw.",
+                        ok ? "info" : "warning"
+                      );
                     }}
                     className="h-4 w-4 accent-orange-500 rounded border-slate-300 text-orange-500 bg-white"
                   />
@@ -1257,7 +1241,7 @@ export default function MyOrdersSection({
             </div>
           </div>
           <a
-            href={`https://wa.me/${import.meta.env.VITE_WHATSAPP_NUMBER ?? "31611848899"}`}
+            href={buildWhatsAppLogisticsUrl()}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center space-x-1.5 bg-[#25D366] hover:bg-[#1da851] text-white font-bold text-xs px-4 py-2.5 rounded-xl transition-all hover:scale-[1.02] active:scale-98 shadow-sm cursor-pointer whitespace-nowrap border-none"

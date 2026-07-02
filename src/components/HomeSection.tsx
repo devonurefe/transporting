@@ -183,7 +183,7 @@ function DealsCarousel({ machines, onSearch }: { machines: Machine[]; onSearch: 
       <div
         ref={ref}
         className="overflow-x-scroll cursor-grab active:cursor-grabbing select-none"
-        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+        style={{ scrollbarWidth: "none", msOverflowStyle: "none", touchAction: "pan-y" }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}

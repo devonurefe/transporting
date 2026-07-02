@@ -228,6 +228,22 @@ export function buildWhatsAppPaymentLinkUrl(orderId?: string): string {
 }
 
 /**
+ * Customer with a logistics question about an existing booking (delivery change,
+ * driver running late, etc.) — used by the general contact banner on the account page.
+ */
+export function buildWhatsAppLogisticsUrl(): string {
+  const lines = [
+    "Hallo huurgo! 👋",
+    "",
+    "Ik heb een logistieke vraag over de levering van mijn bestelling.",
+    "",
+    "Kunt u mij hierbij helpen?",
+    "Alvast bedankt! 🦾",
+  ];
+  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(lines.join("\n"))}`;
+}
+
+/**
  * Customer requesting advice on which machine suits their job.
  */
 export function buildWhatsAppAdviceUrl(jobDescription?: string): string {

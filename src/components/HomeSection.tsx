@@ -326,32 +326,44 @@ export default function HomeSection({
   // Live pricing per category (each schaarlift sub-type keeps its own key). `price`,
   // `campaignPct` and `weeklyDiscountPct` all come from the single cheapest active
   // machine in the category — never mixed across different units — so every number
-  // on the card traces back to one real, bookable product. `campaignPct` surfaces an
-  // active promo; `weeklyDiscountPct` (from the flat-rate week price vs. 5x the day
-  // price) is how we show that renting longer gets progressively cheaper.
+  // on the card traces back to one real, bookable product.
+  //
+  // `campaignPct` only counts discounts that single THIS machine or its category
+  // out (its own campaignDiscountPercent/Amount, or a category/product-scoped
+  // campaign rule). A sitewide "global" campaign rule is excluded from it on
+  // purpose: if every product already gets the same cut, showing an "Actie"
+  // badge on every single card isn't special — it's noise. `price` itself still
+  // reflects every active discount (global included), so the number is always
+  // accurate even when the badge stays hidden.
   const categoryMeta = React.useMemo(() => {
     const map: Record<string, { price: number; count: number; campaignPct: number; weeklyDiscountPct: number }> = {};
     activeMachines.forEach(m => {
       const key = m.category;
-      let pct = m.campaignDiscountPercent ?? 0;
+      let globalPct = 0;
+      let specialPct = m.campaignDiscountPercent ?? 0;
       for (const rule of campaignRules) {
         if (!rule.isActive) continue;
-        const matches = rule.scope === "global"
-          || (rule.scope === "category" && m.category.toLowerCase() === rule.scopeValue.toLowerCase())
+        if (rule.scope === "global") { globalPct = Math.max(globalPct, rule.discountPercent); continue; }
+        const matches = (rule.scope === "category" && m.category.toLowerCase() === rule.scopeValue.toLowerCase())
           || (rule.scope === "product" && m.id === rule.scopeValue);
-        if (matches) pct = Math.max(pct, rule.discountPercent);
+        if (matches) specialPct = Math.max(specialPct, rule.discountPercent);
       }
-      let effective = m.pricePerDay * (1 - pct / 100);
+
+      let specialEffective = m.pricePerDay * (1 - specialPct / 100);
+      if (m.campaignDiscountAmount) specialEffective = Math.max(0, specialEffective - m.campaignDiscountAmount);
+      const specialDiscountPct = m.pricePerDay > 0 ? Math.round((1 - specialEffective / m.pricePerDay) * 100) : 0;
+
+      let effective = m.pricePerDay * (1 - Math.max(specialPct, globalPct) / 100);
       if (m.campaignDiscountAmount) effective = Math.max(0, effective - m.campaignDiscountAmount);
 
       const entry = map[key];
       if (!entry) {
-        map[key] = { price: effective, count: 1, campaignPct: Math.round(pct), weeklyDiscountPct: computeDiscounts(m).weekly };
+        map[key] = { price: effective, count: 1, campaignPct: specialDiscountPct, weeklyDiscountPct: computeDiscounts(m).weekly };
       } else {
         entry.count += 1;
         if (effective < entry.price) {
           entry.price = effective;
-          entry.campaignPct = Math.round(pct);
+          entry.campaignPct = specialDiscountPct;
           entry.weeklyDiscountPct = computeDiscounts(m).weekly;
         }
       }

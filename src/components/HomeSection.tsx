@@ -61,6 +61,19 @@ const CAT_LABEL: Record<string, string> = {
   kamersteiger: "Kamersteiger",
 };
 
+// Short plural noun for the category-card CTA ("Bekijk Schaarliften →") — kept
+// separate from listLabel, which gets overridden with marketing copy like
+// "Schaarliften 6-8-10" for the card title and would make an awkward CTA.
+const CAT_CTA_LABEL: Record<string, string> = {
+  schaarlift:   "Schaarliften",
+  spin:         "Rupshoogwerkers",
+  aanhanger:    "Aanhangerhoogwerkers",
+  mastlift:     "Mastliften",
+  ladderlift:   "Ladderliften",
+  ecolift:      "Pecolift",
+  kamersteiger: "Kamersteigers",
+};
+
 interface HomeSectionProps {
   onSearch: (query: string, category: string) => void;
   setActiveTab: (tab: string) => void;
@@ -618,41 +631,37 @@ export default function HomeSection({
                 onClick={() => onSearch("", cat.id)}
                 className="group bg-white border border-slate-200 rounded-2xl overflow-hidden text-left cursor-pointer hover:border-orange-300 hover:shadow-xl hover:shadow-orange-500/5 hover:-translate-y-1.5 active:scale-[0.98] transition-all duration-300 flex flex-col"
               >
-                {/* Top — text info: name + height • price, then the CTA right under it
-                    (left-aligned with the price, bold, so it's the obvious next click)
-                    with the discount badge on the same line, vertically centered with
-                    it — not floating below on its own. Model count gets its own
-                    lighter line underneath so it doesn't crowd either one. */}
-                <div className="p-4 flex flex-col gap-1.5 min-w-0">
-                  <p className="font-display font-black text-base sm:text-lg text-slate-900 leading-snug line-clamp-2">
+                {/* Top — text info: name gets its own breathing room, then height •
+                    price with the discount badge vertically aligned to it on the
+                    right (not floating between rows), then a category-focused CTA
+                    ("Bekijk Schaarliften →") with the model count trailing it. */}
+                <div className="p-4 sm:p-5 flex flex-col min-w-0">
+                  <p className="font-display font-black text-base sm:text-lg text-slate-900 leading-snug line-clamp-2 mb-2.5">
                     {cat.listLabel || cat.label}
                   </p>
-                  <div className="flex items-center gap-2 flex-wrap text-sm">
-                    <span className="font-semibold text-slate-600">{cat.heights}</span>
-                    <span className="text-slate-300 select-none">•</span>
-                    <span className="font-black text-emerald-600 text-base leading-tight">
-                      {(() => {
-                        if (!meta) return "Prijs op aanvraag";
-                        const v = withVat(meta.price, vatDisplay);
-                        const fmt = v % 1 === 0 ? Math.round(v).toLocaleString("nl-NL") : v.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                        const unit = WEEKLY_PRICED_CATEGORIES.has(cat.id) ? "week" : "dag";
-                        return `€${fmt}/${unit}`;
-                      })()}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="inline-flex items-center gap-1 text-sm font-bold text-orange-600 group-hover:text-orange-700 group-hover:gap-1.5 transition-all duration-300">
-                      {meta && meta.badge !== "none"
-                        ? t("Bekijk actieprijzen", "View deal prices", "Kampanya fiyatlarını gör")
-                        : t("Bekijk modellen", "View models", "Modelleri gör")}
-                      <ChevronRight className="h-4 w-4" />
-                    </span>
+                  <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5 mb-3">
+                    <div className="flex items-center gap-2 text-sm shrink-0 whitespace-nowrap">
+                      <span className="font-semibold text-slate-600">{cat.heights}</span>
+                      <span className="text-slate-300 select-none">•</span>
+                      <span className="font-black text-emerald-600 text-base leading-tight">
+                        {(() => {
+                          if (!meta) return "Prijs op aanvraag";
+                          const v = withVat(meta.price, vatDisplay);
+                          const fmt = v % 1 === 0 ? Math.round(v).toLocaleString("nl-NL") : v.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                          const unit = WEEKLY_PRICED_CATEGORIES.has(cat.id) ? "week" : "dag";
+                          return `€${fmt}/${unit}`;
+                        })()}
+                      </span>
+                    </div>
                     {meta && meta.badge !== "none" && (
                       <span
-                        className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold text-white shrink-0 ${
-                          meta.badge === "tier" ? "bg-indigo-600" : "bg-rose-600"
+                        className={`inline-flex items-center gap-1 shrink-0 rounded-full pl-2.5 pr-3 py-1.5 text-[11px] font-black text-white shadow-md ring-1 ring-white/40 ${
+                          meta.badge === "tier"
+                            ? "bg-gradient-to-r from-indigo-600 to-violet-600 shadow-indigo-500/25"
+                            : "bg-gradient-to-r from-rose-600 to-red-500 shadow-rose-500/25"
                         }`}
                       >
+                        <Zap className="h-3 w-3 shrink-0 fill-current" />
                         {meta.badge === "dag"
                           ? t(`Dagactie −${meta.badgePct}%`, `Day deal −${meta.badgePct}%`, `Gün fırsatı −%${meta.badgePct}`)
                           : meta.badge === "actie"
@@ -661,11 +670,17 @@ export default function HomeSection({
                       </span>
                     )}
                   </div>
-                  {meta && meta.count > 1 && (
-                    <span className="text-[11px] text-slate-400 font-medium">
-                      {t(`${meta.count} modellen`, `${meta.count} models`, `${meta.count} model`)}
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="inline-flex items-center gap-1 text-sm font-bold text-orange-600 group-hover:text-orange-700 group-hover:gap-1.5 transition-all duration-300">
+                      {t("Bekijk", "View", "Görüntüle")} {CAT_CTA_LABEL[cat.id] ?? cat.label}
+                      <ChevronRight className="h-4 w-4" />
                     </span>
-                  )}
+                    {meta && meta.count > 1 && (
+                      <span className="text-[11px] text-slate-400 font-medium shrink-0">
+                        {t(`${meta.count} modellen`, `${meta.count} models`, `${meta.count} model`)}
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 {/* Bottom — wide machine photo on a pure white background so the

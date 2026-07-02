@@ -209,10 +209,10 @@ export default function BookingSuccess({
       )}
 
       {/* Bottom actions — secondary, kept visually subdued so they don't compete with the WhatsApp CTA */}
-      <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-center gap-5">
+      <div className="px-6 py-4 border-t border-slate-100 flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
         <button
           onClick={() => printInvoice((successOrders ?? []).length > 0 ? successOrders : successOrder, undefined, true, siteConfig)}
-          className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-600 font-medium transition-colors duration-150 cursor-pointer"
+          className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-600 font-medium transition-colors duration-150 cursor-pointer whitespace-nowrap"
         >
           <Download className="h-3.5 w-3.5 shrink-0" />
           {t("successPdfBtn")}
@@ -222,7 +222,7 @@ export default function BookingSuccess({
 
         <button
           onClick={() => { setStep(1); setSuccessOrder(null); setActiveTab("orders"); }}
-          className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-600 font-medium transition-colors duration-150 cursor-pointer"
+          className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-600 font-medium transition-colors duration-150 cursor-pointer whitespace-nowrap"
         >
           <ClipboardList className="h-3.5 w-3.5 shrink-0" />
           {t("successOrdersBtn")}
@@ -232,7 +232,7 @@ export default function BookingSuccess({
 
         <button
           onClick={() => { setStep(1); setSuccessOrder(null); setActiveTab("home"); }}
-          className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-600 font-medium transition-colors duration-150 cursor-pointer"
+          className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-600 font-medium transition-colors duration-150 cursor-pointer whitespace-nowrap"
         >
           <ArrowLeft className="h-3.5 w-3.5 shrink-0" />
           Terug

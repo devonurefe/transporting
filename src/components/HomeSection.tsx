@@ -326,22 +326,33 @@ export default function HomeSection({
   const activeMachines = React.useMemo(() => machines.filter(m => m.isActive !== false), [machines]);
   const weeklyOfferMachines = React.useMemo(() => activeMachines.filter(m => m.showInWeeklyOffers === true), [activeMachines]);
 
-  // Live pricing per category (each schaarlift sub-type keeps its own key). `price`,
-  // `campaignPct` and `weeklyDiscountPct` all come from the single cheapest active
-  // machine in the category — never mixed across different units — so every number
-  // on the card traces back to one real, bookable product.
-  //
-  // `campaignPct` only counts discounts that single THIS machine or its category
-  // out (its own campaignDiscountPercent/Amount, or a category/product-scoped
-  // campaign rule). A sitewide "global" campaign rule is excluded from it on
-  // purpose: if every product already gets the same cut, showing an "Actie"
-  // badge on every single card isn't special — it's noise. `price` itself still
-  // reflects every active discount (global included), so the number is always
-  // accurate even when the badge stays hidden.
+  // Live pricing per category (each schaarlift sub-type keeps its own key). Every
+  // field comes from ONE representative machine — never mixed across different
+  // units — so the price and badge on a card always describe the same real,
+  // bookable product. Picking that representative machine follows a priority so
+  // a genuine deal never gets buried by a merely-cheaper unit:
+  //   1. A live "1 dag actie" (oneDayPrice below the normal day rate) — the most
+  //      concrete, product-specific promo (e.g. "Slechts 1 dag korting!").
+  //   2. A campaign that singles this machine or its category out (its own
+  //      campaignDiscountPercent/Amount, or a category/product-scoped campaign
+  //      rule). A sitewide "global" campaign rule doesn't count here — if every
+  //      product already gets the same cut, flagging it as a per-card "Actie"
+  //      badge on every single card isn't special, it's noise.
+  //   3. Otherwise, whichever active machine is currently cheapest per day
+  //      (global campaigns included), so the number shown is still accurate.
+  // The headline €/day figure always stays the day rate (never the 1-day-only
+  // price) — the badge explains the deal without the bold number implying it
+  // applies to every day of the rental.
   const categoryMeta = React.useMemo(() => {
-    const map: Record<string, { price: number; count: number; campaignPct: number; weeklyDiscountPct: number }> = {};
+    type Badge = "dag" | "actie" | "tier" | "none";
+    type Meta = { price: number; count: number; badge: Badge; badgePct: number };
+    const winners: Record<string, { rank: number; sortKey: number; meta: Meta }> = {};
+    const counts: Record<string, number> = {};
+
     activeMachines.forEach(m => {
       const key = m.category;
+      counts[key] = (counts[key] ?? 0) + 1;
+
       let globalPct = 0;
       let specialPct = m.campaignDiscountPercent ?? 0;
       for (const rule of campaignRules) {
@@ -359,17 +370,36 @@ export default function HomeSection({
       let effective = m.pricePerDay * (1 - Math.max(specialPct, globalPct) / 100);
       if (m.campaignDiscountAmount) effective = Math.max(0, effective - m.campaignDiscountAmount);
 
-      const entry = map[key];
-      if (!entry) {
-        map[key] = { price: effective, count: 1, campaignPct: specialDiscountPct, weeklyDiscountPct: computeDiscounts(m).weekly };
+      const dagActiePct = m.oneDayPrice && m.oneDayPrice > 0 && m.oneDayPrice < m.pricePerDay
+        ? Math.round((1 - m.oneDayPrice / m.pricePerDay) * 100)
+        : 0;
+
+      let rank: number;
+      let sortKey: number;
+      let badge: Badge;
+      let badgePct: number;
+      if (dagActiePct > 0) {
+        rank = 0; sortKey = -dagActiePct; badge = "dag"; badgePct = dagActiePct;
+      } else if (specialDiscountPct > 0 || m.campaignDiscountAmount) {
+        rank = 1; sortKey = -specialDiscountPct; badge = "actie"; badgePct = specialDiscountPct;
       } else {
-        entry.count += 1;
-        if (effective < entry.price) {
-          entry.price = effective;
-          entry.campaignPct = specialDiscountPct;
-          entry.weeklyDiscountPct = computeDiscounts(m).weekly;
-        }
+        // kamersteiger's "day" price field is really its flat week rate (see
+        // WEEKLY_PRICED_CATEGORIES), so a day-vs-week comparison there would be
+        // comparing the same number to itself — skip the tier badge for it.
+        const weekly = WEEKLY_PRICED_CATEGORIES.has(m.category) ? 0 : computeDiscounts(m).weekly;
+        rank = 2; sortKey = effective; badge = weekly >= 5 ? "tier" : "none"; badgePct = weekly;
       }
+
+      const current = winners[key];
+      if (!current || rank < current.rank || (rank === current.rank && sortKey < current.sortKey)) {
+        winners[key] = { rank, sortKey, meta: { price: effective, count: counts[key], badge, badgePct } };
+      }
+    });
+
+    const map: Record<string, Meta> = {};
+    Object.entries(winners).forEach(([key, w]) => {
+      w.meta.count = counts[key];
+      map[key] = w.meta;
     });
     return map;
   }, [activeMachines, campaignRules]);
@@ -588,10 +618,9 @@ export default function HomeSection({
                 onClick={() => onSearch("", cat.id)}
                 className="group bg-white border border-slate-200 rounded-2xl overflow-hidden text-left cursor-pointer hover:border-orange-300 hover:shadow-xl hover:shadow-orange-500/5 hover:-translate-y-1.5 active:scale-[0.98] transition-all duration-300 flex flex-col"
               >
-                {/* Top — text info: name + height • price, plus an actie badge when a
-                    real promo is live and a "cheaper the longer you rent" hint pulled
-                    from the flat-rate week price, so the card never implies a single
-                    fixed price and always signals there's more (and cheaper) inside */}
+                {/* Top — text info: name + height • price on one clean line, then a
+                    slim model-count / CTA line. The discount badge lives on the photo
+                    below (not squeezed in here) to keep this block to two tight lines. */}
                 <div className="p-4 flex flex-col gap-1.5 min-w-0">
                   <p className="font-display font-black text-base sm:text-lg text-slate-900 leading-snug line-clamp-2">
                     {cat.listLabel || cat.label}
@@ -608,15 +637,6 @@ export default function HomeSection({
                         return `€${fmt}/${unit}`;
                       })()}
                     </span>
-                    {meta && meta.campaignPct > 0 ? (
-                      <span className="inline-flex items-center rounded-full bg-rose-50 text-rose-600 text-[10px] font-bold px-1.5 py-0.5 leading-none">
-                        {t(`Actie −${meta.campaignPct}%`, `Deal −${meta.campaignPct}%`, `Kampanya −%${meta.campaignPct}`)}
-                      </span>
-                    ) : meta && !WEEKLY_PRICED_CATEGORIES.has(cat.id) && meta.weeklyDiscountPct >= 5 ? (
-                      <span className="inline-flex items-center rounded-full bg-indigo-50 text-indigo-600 text-[10px] font-bold px-1.5 py-0.5 leading-none">
-                        {t(`Tot −${meta.weeklyDiscountPct}% per week`, `Up to −${meta.weeklyDiscountPct}%/week`, `Haftada %${meta.weeklyDiscountPct}'e varan indirim`)}
-                      </span>
-                    ) : null}
                   </div>
                   <div className="flex items-center justify-between gap-2 mt-0.5">
                     {meta && meta.count > 1 ? (
@@ -625,7 +645,7 @@ export default function HomeSection({
                       </span>
                     ) : <span />}
                     <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-orange-500 group-hover:text-orange-600 group-hover:gap-1.5 transition-all duration-300">
-                      {meta && meta.campaignPct > 0
+                      {meta && (meta.badge === "dag" || meta.badge === "actie")
                         ? t("Bekijk actieprijzen", "View deal prices", "Kampanya fiyatlarını gör")
                         : t("Bekijk modellen", "View models", "Modelleri gör")}
                       <ChevronRight className="h-3 w-3" />
@@ -634,8 +654,23 @@ export default function HomeSection({
                 </div>
 
                 {/* Bottom — wide machine photo on a pure white background so the
-                    white-background product photos sit flush with no grey halo */}
+                    white-background product photos sit flush with no grey halo.
+                    Any discount badge sits here as a corner ribbon on the photo
+                    itself, so it never crowds the text block above. */}
                 <div className="relative w-full aspect-[4/3] overflow-hidden border-t border-slate-100 bg-white">
+                  {meta && meta.badge !== "none" && (
+                    <span
+                      className={`absolute top-2.5 right-2.5 z-10 inline-flex items-center rounded-full px-2 py-1 text-[10px] font-bold text-white shadow-sm ${
+                        meta.badge === "tier" ? "bg-indigo-600" : "bg-rose-600"
+                      }`}
+                    >
+                      {meta.badge === "dag"
+                        ? t(`Dagactie −${meta.badgePct}%`, `Day deal −${meta.badgePct}%`, `Gün fırsatı −%${meta.badgePct}`)
+                        : meta.badge === "actie"
+                        ? t(`Actie −${meta.badgePct}%`, `Deal −${meta.badgePct}%`, `Kampanya −%${meta.badgePct}`)
+                        : t(`−${meta.badgePct}% per week`, `−${meta.badgePct}%/week`, `Haftada −%${meta.badgePct}`)}
+                    </span>
+                  )}
                   {catImage ? (
                     <img
                       src={catImage}

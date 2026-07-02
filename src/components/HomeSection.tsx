@@ -24,6 +24,7 @@ import {
 import { motion, AnimatePresence } from "motion/react";
 import { buildWhatsAppGeneralUrl } from "../utils/whatsapp";
 import { withVat } from "../utils/format";
+import { computeDiscounts } from "../utils/pricing";
 import VatToggle from "./VatToggle";
 import { BrandedText, HuurGoText } from "./Header";
 import { Machine } from "../types";
@@ -322,33 +323,49 @@ export default function HomeSection({
   const activeMachines = React.useMemo(() => machines.filter(m => m.isActive !== false), [machines]);
   const weeklyOfferMachines = React.useMemo(() => activeMachines.filter(m => m.showInWeeklyOffers === true), [activeMachines]);
 
-  // Live pricing per category (each schaarlift sub-type keeps its own key): lowest
-  // *current* day rate — including any active campaign discount — plus how many
-  // active models sit behind that price, so the card never shows a rate that's
-  // actually higher than what a customer can get, and hints there's more to see.
+  // Live pricing per category (each schaarlift sub-type keeps its own key). `price`,
+  // `campaignPct` and `weeklyDiscountPct` all come from the single cheapest active
+  // machine in the category — never mixed across different units — so every number
+  // on the card traces back to one real, bookable product.
+  //
+  // `campaignPct` only counts discounts that single THIS machine or its category
+  // out (its own campaignDiscountPercent/Amount, or a category/product-scoped
+  // campaign rule). A sitewide "global" campaign rule is excluded from it on
+  // purpose: if every product already gets the same cut, showing an "Actie"
+  // badge on every single card isn't special — it's noise. `price` itself still
+  // reflects every active discount (global included), so the number is always
+  // accurate even when the badge stays hidden.
   const categoryMeta = React.useMemo(() => {
-    const map: Record<string, { price: number; count: number; discounted: boolean }> = {};
+    const map: Record<string, { price: number; count: number; campaignPct: number; weeklyDiscountPct: number }> = {};
     activeMachines.forEach(m => {
       const key = m.category;
-      let pct = m.campaignDiscountPercent ?? 0;
+      let globalPct = 0;
+      let specialPct = m.campaignDiscountPercent ?? 0;
       for (const rule of campaignRules) {
         if (!rule.isActive) continue;
-        const matches = rule.scope === "global"
-          || (rule.scope === "category" && m.category.toLowerCase() === rule.scopeValue.toLowerCase())
+        if (rule.scope === "global") { globalPct = Math.max(globalPct, rule.discountPercent); continue; }
+        const matches = (rule.scope === "category" && m.category.toLowerCase() === rule.scopeValue.toLowerCase())
           || (rule.scope === "product" && m.id === rule.scopeValue);
-        if (matches) pct = Math.max(pct, rule.discountPercent);
+        if (matches) specialPct = Math.max(specialPct, rule.discountPercent);
       }
-      let effective = m.pricePerDay * (1 - pct / 100);
+
+      let specialEffective = m.pricePerDay * (1 - specialPct / 100);
+      if (m.campaignDiscountAmount) specialEffective = Math.max(0, specialEffective - m.campaignDiscountAmount);
+      const specialDiscountPct = m.pricePerDay > 0 ? Math.round((1 - specialEffective / m.pricePerDay) * 100) : 0;
+
+      let effective = m.pricePerDay * (1 - Math.max(specialPct, globalPct) / 100);
       if (m.campaignDiscountAmount) effective = Math.max(0, effective - m.campaignDiscountAmount);
-      const discounted = pct > 0 || !!m.campaignDiscountAmount;
 
       const entry = map[key];
       if (!entry) {
-        map[key] = { price: effective, count: 1, discounted };
+        map[key] = { price: effective, count: 1, campaignPct: specialDiscountPct, weeklyDiscountPct: computeDiscounts(m).weekly };
       } else {
         entry.count += 1;
-        if (effective < entry.price) entry.price = effective;
-        if (discounted) entry.discounted = true;
+        if (effective < entry.price) {
+          entry.price = effective;
+          entry.campaignPct = specialDiscountPct;
+          entry.weeklyDiscountPct = computeDiscounts(m).weekly;
+        }
       }
     });
     return map;
@@ -568,9 +585,10 @@ export default function HomeSection({
                 onClick={() => onSearch("", cat.id)}
                 className="group bg-white border border-slate-200 rounded-2xl overflow-hidden text-left cursor-pointer hover:border-orange-300 hover:shadow-xl hover:shadow-orange-500/5 hover:-translate-y-1.5 active:scale-[0.98] transition-all duration-300 flex flex-col"
               >
-                {/* Top — text info: name + height • "vanaf" price, model count and a
-                    "Bekijk modellen" CTA so the card never implies a fixed price and
-                    always signals there's more (and possibly cheaper) behind it */}
+                {/* Top — text info: name + height • price, plus an actie badge when a
+                    real promo is live and a "cheaper the longer you rent" hint pulled
+                    from the flat-rate week price, so the card never implies a single
+                    fixed price and always signals there's more (and cheaper) inside */}
                 <div className="p-4 flex flex-col gap-1.5 min-w-0">
                   <p className="font-display font-black text-base sm:text-lg text-slate-900 leading-snug line-clamp-2">
                     {cat.listLabel || cat.label}
@@ -584,14 +602,18 @@ export default function HomeSection({
                         const v = withVat(meta.price, vatDisplay);
                         const fmt = v % 1 === 0 ? Math.round(v).toLocaleString("nl-NL") : v.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                         const unit = WEEKLY_PRICED_CATEGORIES.has(cat.id) ? "week" : "dag";
-                        return `${t("vanaf", "from", "başlayan")} €${fmt}/${unit}`;
+                        return `€${fmt}/${unit}`;
                       })()}
                     </span>
-                    {meta?.discounted && (
-                      <span className="inline-flex items-center rounded-full bg-orange-50 text-orange-600 text-[10px] font-bold px-1.5 py-0.5 leading-none">
-                        {t("Actieprijs", "Special price", "Kampanya fiyatı")}
+                    {meta && meta.campaignPct > 0 ? (
+                      <span className="inline-flex items-center rounded-full bg-rose-50 text-rose-600 text-[10px] font-bold px-1.5 py-0.5 leading-none">
+                        {t(`Actie −${meta.campaignPct}%`, `Deal −${meta.campaignPct}%`, `Kampanya −%${meta.campaignPct}`)}
                       </span>
-                    )}
+                    ) : meta && !WEEKLY_PRICED_CATEGORIES.has(cat.id) && meta.weeklyDiscountPct >= 5 ? (
+                      <span className="inline-flex items-center rounded-full bg-indigo-50 text-indigo-600 text-[10px] font-bold px-1.5 py-0.5 leading-none">
+                        {t(`Tot −${meta.weeklyDiscountPct}% per week`, `Up to −${meta.weeklyDiscountPct}%/week`, `Haftada %${meta.weeklyDiscountPct}'e varan indirim`)}
+                      </span>
+                    ) : null}
                   </div>
                   <div className="flex items-center justify-between gap-2 mt-0.5">
                     {meta && meta.count > 1 ? (
@@ -600,7 +622,9 @@ export default function HomeSection({
                       </span>
                     ) : <span />}
                     <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-orange-500 group-hover:text-orange-600 group-hover:gap-1.5 transition-all duration-300">
-                      {t("Bekijk modellen", "View models", "Modelleri gör")}
+                      {meta && meta.campaignPct > 0
+                        ? t("Bekijk actieprijzen", "View deal prices", "Kampanya fiyatlarını gör")
+                        : t("Bekijk modellen", "View models", "Modelleri gör")}
                       <ChevronRight className="h-3 w-3" />
                     </span>
                   </div>

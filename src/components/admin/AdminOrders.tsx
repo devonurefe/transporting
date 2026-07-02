@@ -1018,7 +1018,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                       className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1 disabled:opacity-50"
                     >
                       <DollarSign className="h-3 w-3 shrink-0" />
-                      <span>{t("Betaling Ontvangen ✓", "Payment Received ✓", "Ödeme Alındı ✓")}</span>
+                      <span>{t("Betaling Ontvangen ✓", "Payment Received ✓", "Ödeme Alındı Onayı")}</span>
                     </button>
                   )}
                 </div>

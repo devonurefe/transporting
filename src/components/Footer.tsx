@@ -18,62 +18,41 @@ interface FooterProps {
   setShowContactModal: (show: boolean) => void;
 }
 
-const REVIEWS = [
-  {
-    name: "Pieter van den Berg",
-    date: "2 maanden geleden",
-    text: "Super service! De Nifty 120 was binnen 5 minuten opgesteld, perfect voor mijn dakgoot klus. Fijne communicatie via WhatsApp en eerlijk advies. Aanrader!",
-  },
-  {
-    name: "Erik Janssen",
-    date: "3 maanden geleden",
-    text: "Machine was goed onderhouden en op tijd geleverd. Prima prijs-kwaliteitverhouding. Inmiddels voor het tweede project bij MB Hoogwerkers gehuurd.",
-  },
-  {
-    name: "Sandra Bakker",
-    date: "1 maand geleden",
-    text: "De rupshoogwerker paste precies door ons 80 cm tuinpoortje. Uitstekend advies vooraf over welke machine het beste paste. Zeker een aanrader!",
-  },
-  {
-    name: "J. de Vries Schildersbedrijf",
-    date: "5 maanden geleden",
-    text: "Als aannemer huur ik regelmatig bij MB Hoogwerkers. Altijd betrouwbaar materiaal, eerlijk advies en scherpe tarieven. Echt een topper in de regio.",
-  },
-  {
-    name: "Thomas Willems",
-    date: "6 weken geleden",
-    text: "Ladderlift was perfect voor onze verhuizing naar de 4e verdieping. Vriendelijke en snelle service. Zeker voor herhaling vatbaar!",
-  },
-  {
-    name: "Karin Hoogenbosch",
-    date: "4 maanden geleden",
-    text: "Vlotte service van begin tot eind. Machine was schoon en goed onderhouden, de instructie helder. Comfortabel werken op hoogte. Zeker een aanrader!",
-  },
-  {
-    name: "Frank Verhoeven Schilderwerken",
-    date: "2 weken geleden",
-    text: "Schaarlift op tijd afgeleverd en de chauffeur legde alles goed uit. Ideaal voor ons schilderproject op de tweede verdieping. Prima tarief voor de kwaliteit.",
-  },
-  {
-    name: "Bouwbedrijf Smits B.V.",
-    date: "7 maanden geleden",
-    text: "Al meerdere jaren vaste klant bij MB Hoogwerkers. Betrouwbaar materiaal, scherpe tarieven en altijd goed bereikbaar via WhatsApp. Een echte topper.",
-  },
-  {
-    name: "Anita Timmers",
-    date: "3 weken geleden",
-    text: "Mastlift paste precies door ons smalle poortje van 80 cm. Goede uitleg vooraf en het apparaat werkte de hele week foutloos. Fijn dat ze meedachten!",
-  },
-];
+// Echte klantbeoordeling uit /api/orders/ratings/recent. Privacy: geen naam —
+// alleen score, tekst en datum. Attributie is bewust anoniem ("Geverifieerde
+// huurder") omdat OrderRating geen naam bevat en we klantidentiteit niet in een
+// publieke feed zetten.
+interface RealReview {
+  rating: number;
+  comment: string;
+  createdAt: string;
+}
 
-function ReviewCard({ r }: { r: typeof REVIEWS[0] }) {
+// Nederlandstalige relatieve datum ("3 weken geleden") uit een ISO-timestamp.
+function relativeDateNL(iso: string): string {
+  const then = new Date(iso).getTime();
+  if (isNaN(then)) return "";
+  const days = Math.max(0, Math.floor((Date.now() - then) / 86_400_000));
+  if (days === 0) return "vandaag";
+  if (days === 1) return "gisteren";
+  if (days < 14) return `${days} dagen geleden`;
+  if (days < 60) return `${Math.floor(days / 7)} weken geleden`;
+  if (days < 365) return `${Math.floor(days / 30)} maanden geleden`;
+  const years = Math.floor(days / 365);
+  return years === 1 ? "1 jaar geleden" : `${years} jaar geleden`;
+}
+
+function ReviewCard({ r }: { r: RealReview }) {
+  const filled = Math.max(0, Math.min(5, Math.round(r.rating)));
   return (
     <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-4 sm:p-5 space-y-2.5">
-      <div className="text-amber-500 text-sm leading-none tracking-wide">★★★★★</div>
-      <p className="text-[13px] text-slate-600 leading-relaxed line-clamp-3">{r.text}</p>
+      <div className="text-amber-500 text-sm leading-none tracking-wide" aria-label={`${filled} van 5 sterren`}>
+        {"★".repeat(filled)}<span className="text-slate-200">{"★".repeat(5 - filled)}</span>
+      </div>
+      <p className="text-[13px] text-slate-600 leading-relaxed line-clamp-3">{r.comment}</p>
       <div className="flex items-center justify-between gap-3 pt-1.5">
-        <span className="text-[11px] font-bold text-slate-900">{r.name}</span>
-        <span className="text-[10px] text-slate-400 shrink-0">{r.date}</span>
+        <span className="text-[11px] font-bold text-slate-900">Geverifieerde huurder</span>
+        <span className="text-[10px] text-slate-400 shrink-0">{relativeDateNL(r.createdAt)}</span>
       </div>
     </div>
   );
@@ -102,23 +81,35 @@ export default function Footer({ siteName, setActiveTab, setShowContactModal }: 
   const siteConfig = useAppStore((state) => state.siteConfig);
   const contactEmail = siteConfig.contactEmail || "info@mbhoogwerkers.com";
 
-  const leftCol = REVIEWS.filter((_, i) => i % 2 === 0);
-  const rightCol = REVIEWS.filter((_, i) => i % 2 !== 0);
-
   // Echte externe Google-score (door admin ingevoerd); los van onze eigen
   // interne klantbeoordelingen (rating hieronder, uit /api/orders/ratings/summary).
   const googleRating = siteConfig.googleRating ?? null;
   const googleReviewCount = siteConfig.googleReviewCount ?? null;
 
   const [rating, setRating] = useState<{ average: number; count: number } | null>(null);
+  // Echte reviews voor de ticker. Bij minder dan dit aantal tonen we de ticker
+  // niet — liever geen carrousel dan een schrale of verzonnen indruk.
+  const MIN_REVIEWS_FOR_TICKER = 3;
+  const [realReviews, setRealReviews] = useState<RealReview[]>([]);
   useEffect(() => {
     let active = true;
     fetch("/api/orders/ratings/summary")
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => { if (active && d && d.count > 0) setRating({ average: d.average, count: d.count }); })
       .catch(() => {});
+    fetch("/api/orders/ratings/recent")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((d) => { if (active && Array.isArray(d)) setRealReviews(d); })
+      .catch(() => {});
     return () => { active = false; };
   }, []);
+
+  const showTicker = realReviews.length >= MIN_REVIEWS_FOR_TICKER;
+  const leftCol = realReviews.filter((_, i) => i % 2 === 0);
+  const rightCol = realReviews.filter((_, i) => i % 2 !== 0);
+  // De sectie verschijnt alleen als er iets echts te tonen is: een Google-score
+  // óf voldoende echte reviews.
+  const showReviewsSection = googleRating != null || showTicker;
 
   return (
     <footer className="bg-slate-950 pb-20 md:pb-0">
@@ -175,7 +166,8 @@ export default function Footer({ siteName, setActiveTab, setShowContactModal }: 
         </div>
       </div>
 
-      {/* ── GOOGLE REVIEWS ticker ── */}
+      {/* ── GOOGLE REVIEWS ticker — alleen tonen bij echte content ── */}
+      {showReviewsSection && (
       <div className="bg-gradient-to-b from-white to-amber-50 border-b border-amber-100">
         <div className="py-10 sm:py-12 px-5 sm:px-8 lg:px-10 mx-auto max-w-7xl">
 
@@ -220,7 +212,9 @@ export default function Footer({ siteName, setActiveTab, setShowContactModal }: 
             </a>
           </motion.div>
 
-          {/* Review ticker */}
+          {/* Review ticker — alleen bij voldoende echte reviews */}
+          {showTicker && (
+          <>
           <div className="relative overflow-hidden review-ticker-wrap h-[370px] sm:h-[430px] cursor-default select-none">
 
             {/* Top + bottom fade masks */}
@@ -229,7 +223,7 @@ export default function Footer({ siteName, setActiveTab, setShowContactModal }: 
 
             {/* Mobile: single column */}
             <div className="sm:hidden review-ticker flex flex-col gap-3">
-              {[...REVIEWS, ...REVIEWS].map((r, i) => (
+              {[...realReviews, ...realReviews].map((r, i) => (
                 <ReviewCard key={i} r={r} />
               ))}
             </div>
@@ -251,9 +245,12 @@ export default function Footer({ siteName, setActiveTab, setShowContactModal }: 
           </div>
 
           <p className="text-center text-[10px] text-slate-400 mt-4">Zweef om te pauzeren</p>
+          </>
+          )}
 
         </div>
       </div>
+      )}
 
       {/* Transition into dark footer — straight, crisp cut with a thin
           accent line instead of a blended gradient bar. */}

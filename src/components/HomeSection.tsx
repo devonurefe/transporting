@@ -738,6 +738,14 @@ export default function HomeSection({
             ))}
           </div>
         </div>
+
+        {/* Seam marker — light but crisp break before the footer's trust/reviews
+            band below, so the FAQ list doesn't visually run straight into it. */}
+        <div className="max-w-[140px] mx-auto mt-10 flex items-center gap-3" aria-hidden="true">
+          <span className="h-px flex-1 bg-gradient-to-r from-transparent to-orange-300" />
+          <span className="h-1.5 w-1.5 rounded-full bg-orange-400 shrink-0" />
+          <span className="h-px flex-1 bg-gradient-to-l from-transparent to-orange-300" />
+        </div>
       </div>
 
     </div>

@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from "react";
-import { Calendar, Building2, X, Truck, ShieldAlert, ArrowRight, MessageCircle, ChevronLeft, Info, CheckCircle2 } from "lucide-react";
+import { Calendar, Building2, X, Truck, ShieldAlert, ArrowRight, MessageCircle, ChevronLeft, Info } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { CartItem, DeliveryType, Machine } from "../../types";
 import { buildWhatsAppUrl, buildWhatsAppTransportInquiryUrl, buildWhatsAppAlternativeDatesUrl } from "../../utils/whatsapp";
@@ -200,13 +200,9 @@ export default function BookingStep1({
       ) : (
         <div className="space-y-4">
           {cartItems.map((item) => {
-            const availability = getItemAvailability(
-              item.machine.id, 
-              item.startDate || new Date().toISOString().split("T")[0], 
-              item.endDate || new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]
-            );
+            const availability = getItemAvailability(item.machine.id, item.startDate || "", item.endDate || "");
             return (
-              <div key={item.id} className="relative p-4 rounded-2xl bg-slate-50/50 border border-slate-200 space-y-4 shadow-sm">
+              <div key={item.id} className="relative p-4 rounded-2xl bg-slate-50/50 border border-slate-200 space-y-5 shadow-sm">
                 {/* X — absolute top-right, never overlaps the name */}
                 <button
                   type="button"
@@ -244,12 +240,12 @@ export default function BookingStep1({
                 <button
                   type="button"
                   onClick={() => setPreviewMachine(item.machine)}
-                  className="w-full flex justify-center items-center gap-1.5 text-xs bg-orange-50 border border-orange-200 text-orange-700 hover:bg-orange-100 hover:border-orange-300 font-bold px-3 py-2 rounded-full cursor-pointer transition-colors"
+                  className="w-full flex justify-center items-center gap-1.5 text-xs bg-orange-50 border border-orange-200 text-orange-700 hover:bg-orange-100 hover:border-orange-300 font-bold px-3 py-2.5 mt-1 rounded-full cursor-pointer transition-colors"
                 >
                   Tarieven &amp; specificaties →
                 </button>
 
-                <div className="pt-2 border-t border-slate-200">
+                <div className="pt-3 border-t border-slate-200">
                   <DateRangeCalendar
                     machine={item.machine}
                     startDate={item.startDate}
@@ -260,26 +256,21 @@ export default function BookingStep1({
                   />
                 </div>
 
-                {/* Item Availability status bar */}
-                <div className={`p-2.5 rounded-xl border text-xs flex items-center space-x-2 shadow-sm ${
-                  availability.available
-                    ? "bg-teal-50 border-teal-200 text-teal-800 font-semibold"
-                    : "bg-rose-50 border-rose-200 text-rose-700 font-semibold"
-                }`}>
-                  {availability.available ? (
-                    <>
-                      <CheckCircle2 className="h-4 w-4 text-teal-600 shrink-0" />
-                      <span>{t("step1Available")}</span>
-                    </>
-                  ) : (
-                    <>
-                      <ShieldAlert className="h-4 w-4 text-rose-600 shrink-0" />
-                      <span className="font-semibold">{availability.reason}</span>
-                    </>
-                  )}
-                </div>
+                {/* Item Availability status bar — only shown for a genuine conflict on
+                    chosen dates. A plain "available" state and the not-yet-picked state
+                    both stay silent, so the pill + calendar above get the visual room
+                    (the calendar's own "Selecteer periode" placeholder already covers
+                    that hint) instead of a default green/red banner. */}
+                {!availability.available && item.startDate && item.endDate && (
+                  <div className="p-2.5 rounded-xl border text-xs flex items-center space-x-2 shadow-sm bg-rose-50 border-rose-200 text-rose-700 font-semibold">
+                    <ShieldAlert className="h-4 w-4 text-rose-600 shrink-0" />
+                    <span className="font-semibold">{availability.reason}</span>
+                  </div>
+                )}
 
-                {!availability.available && (
+                {/* WhatsApp fallback only for a genuine conflict on chosen dates —
+                    not shown while the customer simply hasn't picked a period yet. */}
+                {!availability.available && item.startDate && item.endDate && (
                   <a
                     href={buildWhatsAppAlternativeDatesUrl(item.machine.name, item.startDate, item.endDate)}
                     target="_blank"

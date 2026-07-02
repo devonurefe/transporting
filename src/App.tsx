@@ -539,10 +539,11 @@ export default function App() {
   // Replaces the cart with the chosen machine and moves to the booking flow.
   const proceedWithBooking = (machine: Machine) => {
     setSelectedMachine(machine);
-    const todayStr = new Date().toISOString().split("T")[0];
-    const endStr = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
     clearCart();
-    addToCart(machine, todayStr, endStr);
+    // No default date range — the calendar starts empty so the customer picks
+    // their own period instead of seeing a pre-filled price for dates they
+    // never chose.
+    addToCart(machine, "", "");
     fetchBlockedDates();
     setActiveTab("booking");
 

@@ -10,7 +10,7 @@ import { Machine } from "../../types";
 import { useAppStore } from "../../store/appStore";
 import { useLanguageStore } from "../../store/languageStore";
 import { someUnitAvailable, SimpleOrder } from "../../utils/availability";
-import { calculateRentalDays, calculateItemSubtotal } from "../../utils/pricing";
+import { calculateRentalDays, calculateItemSubtotal, displayRentalDays } from "../../utils/pricing";
 import { euro, withVat } from "../../utils/format";
 
 interface DateRangeCalendarProps {
@@ -250,12 +250,16 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
   const minDays = machine.minRentalDays ?? 1;
   const validRange = rangeAvail && days >= minDays;
   const subtotal = validRange ? calculateItemSubtotal(machine, days, profile, campaignRules, draftStart, weekendWork) : 0;
+  // Working-days count for display — weekend days already dropped from the price
+  // when "nee" applies, so the preview should read the days actually paid for.
+  const displayDays = displayRentalDays(machine, draftStart, days, weekendWork);
 
   const confirm = () => { if (!validRange) return; onConfirm(draftStart, effectiveEnd); close(); };
   const reset = () => { setDraftStart(""); setDraftEnd(""); };
 
+  const committedDays = startDate && endDate ? displayRentalDays(machine, startDate, calculateRentalDays(startDate, endDate), weekendWork) : 0;
   const buttonLabel = startDate && endDate
-    ? `${formatShort(startDate)} – ${formatShort(endDate)} · ${calculateRentalDays(startDate, endDate)} ${calculateRentalDays(startDate, endDate) === 1 ? "dag" : "dagen"}`
+    ? `${formatShort(startDate)} – ${formatShort(endDate)} · ${committedDays} ${committedDays === 1 ? "dag" : "dagen"}`
     : t("calSelectPeriod");
 
   const dayAria = (key: string, status: string) => {
@@ -291,8 +295,12 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onPointerDown={(e) => {
-                // Guard against phantom touch-through right after open (< 350 ms)
-                if (Date.now() - openedAtRef.current < 350) return;
+                // Guard against phantom touch-through right after open. Some mobile
+                // browsers fire a delayed "ghost click" at the same coordinates as the
+                // opening tap, landing on this backdrop and instantly closing the modal
+                // — which reads to the user as "I had to tap 2-3 times to open it".
+                // 600 ms comfortably outlives that ghost-click window on slower devices.
+                if (Date.now() - openedAtRef.current < 600) return;
                 e.stopPropagation();
                 close();
               }}
@@ -418,7 +426,7 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
               {/* Price preview — outside scroll, always visible above footer */}
               {validRange && (
                 <div className="mx-4 mb-2 flex items-center justify-between bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
-                  <span className="text-xs font-bold text-slate-800">{days} {days === 1 ? "dag" : "dagen"}</span>
+                  <span className="text-xs font-bold text-slate-800">{displayDays} {displayDays === 1 ? "dag" : "dagen"}</span>
                   <span className="text-sm font-black font-mono text-slate-900">{euro(withVat(subtotal, vatDisplay))} <span className="text-[10px] font-normal text-slate-400">{vatDisplay === "incl" ? "incl. btw" : "excl. btw"}</span></span>
                 </div>
               )}

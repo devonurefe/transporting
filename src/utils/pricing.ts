@@ -199,6 +199,24 @@ function tierPrice(machine: Machine, n: number, startDate?: string | Date): numb
   return null;
 }
 
+// Day count to SHOW the customer, as opposed to the calendar span. When the
+// customer declared "nee" (not working the weekend) on a weekly-basis rental
+// that spans a weekend, the Sat/Sun days are already dropped from the price
+// (see calculateItemSubtotal above) — so the displayed count should read as
+// working days too (Fri–Mon = 2, not 4), matching what they are actually paying
+// for. Same eligibility condition as the price path — keep them identical.
+export function displayRentalDays(machine: Machine, startDate: string | Date | undefined, days: number, weekendWork?: "ja" | "nee" | null): number {
+  if (weekendWork === "nee" && startDate && machine.weeklyPrice && !machine.weeklyOnly
+      && days >= 3 && days < 28 && !isStrictWeekend(startDate, days)) {
+    const start = new Date(startDate);
+    const end = new Date(start);
+    end.setUTCDate(end.getUTCDate() + (days - 1));
+    const weekendDays = countWeekendDays(start, end);
+    if (weekendDays > 0) return days - weekendDays;
+  }
+  return days;
+}
+
 // Counts Saturday + Sunday days within a rental range (both ends inclusive).
 // Used to detect weekend-spanning rentals for "Gratis weekendopslag" badge.
 export function countWeekendDays(startDate: string | Date, endDate: string | Date): number {

@@ -328,8 +328,11 @@ export default function BookingSection({
       let campaignSavings = 0;
 
       for (const item of cartItems) {
-        const itemStart = item.startDate || new Date().toISOString().split("T")[0];
-        const itemEnd = item.endDate || new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+        // No period picked yet for this item — it contributes nothing to the
+        // price until the customer actually selects dates in the calendar.
+        if (!item.startDate || !item.endDate) continue;
+        const itemStart = item.startDate;
+        const itemEnd = item.endDate;
         const start = new Date(itemStart);
         const end = new Date(itemEnd);
         const timeDiff = end.getTime() - start.getTime();
@@ -969,11 +972,7 @@ export default function BookingSection({
                     validationError={validationError}
                     setValidationError={setValidationError}
                     isAvailable={cartItems.length > 0 && cartItems.every(item => {
-                      const av = getItemAvailability(
-                        item.machine.id,
-                        item.startDate || new Date().toISOString().split("T")[0],
-                        item.endDate || new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]
-                      );
+                      const av = getItemAvailability(item.machine.id, item.startDate || "", item.endDate || "");
                       return av.available;
                     })}
                     handleNextStep={handleNextStep}
@@ -1049,16 +1048,24 @@ export default function BookingSection({
                   screens, so keep the running total in view while scrolling.
                   bottom-14 clears the mobile bottom nav (h-14, hidden from md:);
                   pr-20 keeps the amount clear of the WhatsApp FAB. */}
-              {sums.total > 0 && (
+              {sums.total > 0 && (() => {
+                // Weekend "niet werken": the total is already priced on the working
+                // days only, so this bar should read the same day count — not the
+                // full calendar span (Fri–Mon = 2 dagen, not 4).
+                const mobileBarDays = (sums.spansWeekend && sums.weekendWorkAnswer === "nee")
+                  ? Math.max(0, sums.days - (sums.weekendDays ?? 0))
+                  : sums.days;
+                return (
                 <div className="lg:hidden fixed bottom-14 md:bottom-0 left-0 right-0 z-40 border-t border-slate-200 bg-white/95 backdrop-blur-lg px-5 py-2.5 pr-20 shadow-[0_-4px_12px_rgba(0,0,0,0.06)] flex items-center justify-between">
                   <span className="text-xs text-slate-500">
-                    {sums.days} {sums.days === 1 ? "dag" : "dagen"}{cartItems.length > 1 ? ` • ${cartItems.length} machines` : ""}
+                    {mobileBarDays} {mobileBarDays === 1 ? "dag" : "dagen"}{cartItems.length > 1 ? ` • ${cartItems.length} machines` : ""}
                   </span>
                   <span className="text-sm font-bold text-slate-900">
                     Totaal <span className="text-teal-700">{euro(sums.total)}</span> <span className="font-normal text-xs text-slate-500">incl. BTW</span>
                   </span>
                 </div>
-              )}
+                );
+              })()}
 
             </motion.div>
           ) : (

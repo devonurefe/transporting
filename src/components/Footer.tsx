@@ -187,6 +187,7 @@ export default function Footer({ siteName, setActiveTab, setShowContactModal }: 
               </span>
               <div>
                 <div className="flex items-center gap-2">
+                  {/* Toon alleen een echt cijfer — nooit een verzonnen score */}
                   {rating ? (
                     <>
                       <span className="text-slate-900 font-bold text-base leading-none">{rating.average.toFixed(1)}</span>
@@ -194,10 +195,7 @@ export default function Footer({ siteName, setActiveTab, setShowContactModal }: 
                       <span className="text-xs text-slate-500">({rating.count} {rating.count === 1 ? "beoordeling" : "beoordelingen"})</span>
                     </>
                   ) : (
-                    <>
-                      <span className="text-slate-900 font-bold text-base leading-none">4.9</span>
-                      <span className="text-amber-500 text-sm leading-none">★★★★★</span>
-                    </>
+                    <span className="text-slate-900 font-bold text-base leading-none">Google Reviews</span>
                   )}
                 </div>
                 <p className="text-xs text-slate-500 mt-0.5">Beoordeeld door klanten op Google</p>

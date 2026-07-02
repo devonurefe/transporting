@@ -3,6 +3,7 @@ import {createRoot} from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
 import { isChunkLoadError, tryAutoReloadOnce } from './utils/chunkError';
+import { devLog } from './utils/log';
 
 // Silence benign HMR / WebSocket errors; auto-reload on chunk load failures
 if (typeof window !== "undefined") {
@@ -61,7 +62,7 @@ if (typeof window !== "undefined" && window.location.hostname === "localhost") {
     navigator.serviceWorker.getRegistrations().then((registrations) => {
       for (const registration of registrations) {
         registration.unregister().then((success) => {
-          if (success) console.log("Unregistered development service worker");
+          if (success) devLog("Unregistered development service worker");
         });
       }
     });
@@ -69,14 +70,14 @@ if (typeof window !== "undefined" && window.location.hostname === "localhost") {
   if (typeof caches !== "undefined") {
     caches.keys().then((keys) => {
       keys.forEach((key) => {
-        caches.delete(key).then(() => console.log("Cleared cache:", key));
+        caches.delete(key).then(() => devLog("Cleared cache:", key));
       });
     });
   }
 } else if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("/sw.js")
-      .then((reg) => console.log("Service Worker registered:", reg.scope))
+      .then((reg) => devLog("Service Worker registered:", reg.scope))
       .catch((err) => console.error("Service Worker registration failed:", err));
   });
 }

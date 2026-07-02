@@ -7,7 +7,7 @@ import React, { useState } from "react";
 import { Calendar, Building2, X, Truck, ShieldAlert, ArrowRight, MessageCircle, ChevronLeft, Info, CheckCircle2 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { CartItem, DeliveryType, Machine } from "../../types";
-import { buildWhatsAppUrl, buildWhatsAppTransportInquiryUrl } from "../../utils/whatsapp";
+import { buildWhatsAppUrl, buildWhatsAppTransportInquiryUrl, buildWhatsAppAlternativeDatesUrl } from "../../utils/whatsapp";
 import BookingPriceSummary from "./BookingPriceSummary";
 import DateRangeCalendar from "./DateRangeCalendar";
 import { useLanguageStore } from "../../store/languageStore";
@@ -281,10 +281,7 @@ export default function BookingStep1({
 
                 {!availability.available && (
                   <a
-                    href={(() => {
-                      const msg = `Hallo huurgo! 👋\n\nIk zie dat ${item.machine.name} niet beschikbaar is voor mijn periode (${item.startDate} t/m ${item.endDate}).\n\nKunt u mij helpen met alternatieve datums of een vergelijkbare machine?\n\nAlvast bedankt!`;
-                      return `https://wa.me/${import.meta.env.VITE_WHATSAPP_NUMBER ?? "31611848899"}?text=${encodeURIComponent(msg)}`;
-                    })()}
+                    href={buildWhatsAppAlternativeDatesUrl(item.machine.name, item.startDate, item.endDate)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center justify-center gap-2 p-2.5 rounded-xl border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold transition-all shadow-sm"
@@ -324,9 +321,11 @@ export default function BookingStep1({
         ) : (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {/* Opt 1 — Wij bezorgen */}
-          <div
+          <button
+            type="button"
             onClick={() => setDeliveryType("delivery_by_us")}
-            className={`p-4 rounded-xl border transition-all cursor-pointer ${
+            aria-pressed={deliveryType === "delivery_by_us"}
+            className={`w-full text-left p-4 rounded-xl border transition-all cursor-pointer ${
               deliveryType === "delivery_by_us"
                 ? "bg-slate-50 border-slate-400 ring-1 ring-slate-200"
                 : "bg-white border-slate-200 hover:border-slate-300"
@@ -356,18 +355,29 @@ export default function BookingStep1({
                 </p>
               </div>
             )}
-          </div>
+          </button>
 
           {/* Opt 2 — Aanhanger huren */}
           {(() => {
             const trailerSelected = deliveryType === "trailer_rental" || deliveryType === "trailer_drop_return";
+            const selectTrailer = () => {
+              if (!trailerSelected) {
+                setDeliveryType("trailer_rental");
+                setDeliveryAddress("");
+                setDeliveryTimeSlot("");
+              }
+            };
             return (
+              /* role="button" i.p.v. <button>: bevat geneste sub-optie-knoppen */
               <div
-                onClick={() => {
-                  if (!trailerSelected) {
-                    setDeliveryType("trailer_rental");
-                    setDeliveryAddress("");
-                    setDeliveryTimeSlot("");
+                role="button"
+                tabIndex={0}
+                aria-pressed={trailerSelected}
+                onClick={selectTrailer}
+                onKeyDown={e => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    selectTrailer();
                   }
                 }}
                 className={`p-4 rounded-xl border transition-all ${trailerSelected ? "bg-slate-50 border-slate-400 ring-1 ring-slate-200" : "bg-white border-slate-200 hover:border-slate-300 cursor-pointer"}`}
@@ -434,13 +444,15 @@ export default function BookingStep1({
           })()}
 
           {/* Opt 3 — Zelf ophalen */}
-          <div
+          <button
+            type="button"
             onClick={() => {
               setDeliveryType("self_pickup");
               setDeliveryAddress("");
               setDeliveryTimeSlot("");
             }}
-            className={`p-4 rounded-xl border transition-all cursor-pointer ${
+            aria-pressed={deliveryType === "self_pickup"}
+            className={`w-full text-left p-4 rounded-xl border transition-all cursor-pointer ${
               deliveryType === "self_pickup"
                 ? "bg-slate-50 border-slate-400 ring-1 ring-slate-200"
                 : "bg-white border-slate-200 hover:border-slate-300"
@@ -459,7 +471,7 @@ export default function BookingStep1({
               Ophalen bij ons depot — gratis.
             </p>
             <span className="text-sm font-black text-emerald-600 mt-2 block">Kosteloos</span>
-          </div>
+          </button>
         </div>
         )}
       </div>

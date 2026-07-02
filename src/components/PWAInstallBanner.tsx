@@ -6,6 +6,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { HuurGoText } from "./Header";
+import { devLog } from "../utils/log";
 
 export default function PWAInstallBanner() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
@@ -31,7 +32,7 @@ export default function PWAInstallBanner() {
     if (!deferredPrompt) return;
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
-    console.log(`User response to install prompt: ${outcome}`);
+    devLog(`User response to install prompt: ${outcome}`);
     setDeferredPrompt(null);
     setShowInstallBanner(false);
   };

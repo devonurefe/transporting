@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { Machine, Order, OrderStatus, CartItem, CampaignRule } from "../types";
+import { devWarn } from "../utils/log";
 
 interface Category {
   id: string;
@@ -154,7 +155,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       const stored = localStorage.getItem("hwh_campaign_rules");
       if (stored) return JSON.parse(stored);
     } catch (e) {
-      console.warn("Failed to load campaign rules from localStorage");
+      devWarn("Failed to load campaign rules from localStorage");
     }
     return [];
   })(),
@@ -179,7 +180,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         set({ error: data.error || "Fout bij ophalen machines." });
       }
     } catch (e: any) {
-      console.warn("Machines fetch failed.");
+      devWarn("Machines fetch failed.");
       set({ error: e.message || "Netwerkfout bij ophalen machines." });
     }
   },
@@ -208,7 +209,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         set({ error: data.error || "Fout bij ophalen bestellingen." });
       }
     } catch (e: any) {
-      console.warn("Orders fetch failed.");
+      devWarn("Orders fetch failed.");
       set({ error: e.message || "Netwerkfout bij ophalen bestellingen." });
     }
   },
@@ -224,7 +225,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         set(state => ({ orders: [...state.orders, ...newOrders], ordersPage: nextPage }));
       }
     } catch (e: any) {
-      console.warn("Load more orders failed.");
+      devWarn("Load more orders failed.");
     }
   },
 
@@ -238,7 +239,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         set({ error: data.error || "Fout bij ophalen categorieën." });
       }
     } catch (e: any) {
-      console.warn("Categories fetch failed.");
+      devWarn("Categories fetch failed.");
       set({ error: e.message || "Netwerkfout bij ophalen categorieën." });
     }
   },
@@ -255,7 +256,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         set({ error: data.error || "Fout bij ophalen site configuratie." });
       }
     } catch (e: any) {
-      console.warn("Site config fetch failed.");
+      devWarn("Site config fetch failed.");
       set({ error: e.message || "Netwerkfout bij ophalen site configuratie." });
     }
   },
@@ -270,7 +271,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         set({ error: data.error || "Fout bij ophalen geblokkeerde datums." });
       }
     } catch (e: any) {
-      console.warn("Blocked dates fetch failed.");
+      devWarn("Blocked dates fetch failed.");
       set({ error: e.message || "Netwerkfout bij ophalen geblokkeerde datums." });
     }
   },
@@ -286,7 +287,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         }
       }
     } catch (e) {
-      console.warn("Failed to fetch campaign rules from API, using local fallback.");
+      devWarn("Failed to fetch campaign rules from API, using local fallback.");
     }
   },
 
@@ -547,7 +548,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       body: JSON.stringify(rules)
     }).then((res) => {
       if (res.ok) get().fetchCampaignRules();
-    }).catch(() => console.warn("Failed to save campaign rules to DB, localStorage fallback active."));
+    }).catch(() => devWarn("Failed to save campaign rules to DB, localStorage fallback active."));
   }
 }));
 

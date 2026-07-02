@@ -147,6 +147,24 @@ export function buildWhatsAppGeneralUrl(categoryLabel?: string): string {
 }
 
 /**
+ * Builds a WhatsApp URL to ask for alternative dates when a machine is unavailable
+ * for the selected rental period.
+ */
+export function buildWhatsAppAlternativeDatesUrl(
+  machineName: string,
+  startDate?: string,
+  endDate?: string
+): string {
+  const period = startDate && endDate ? ` (${startDate} t/m ${endDate})` : "";
+  const message =
+    `Hallo huurgo! 👋\n\n` +
+    `Ik zie dat ${machineName} niet beschikbaar is voor mijn periode${period}.\n\n` +
+    `Kunt u mij helpen met alternatieve datums of een vergelijkbare machine?\n\n` +
+    `Alvast bedankt! 🦾`;
+  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+}
+
+/**
  * Builds a WhatsApp URL for transport outside 20 km radius — redirects to custom quote flow.
  */
 export function buildWhatsAppTransportInquiryUrl(

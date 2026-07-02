@@ -273,6 +273,7 @@ export default function HomeSection({
   const siteConfig = useAppStore((state) => state.siteConfig);
   const siteConfigLoaded = useAppStore((state) => state.siteConfigLoaded);
   const machines = useAppStore((state) => state.machines);
+  const campaignRules = useAppStore((state) => state.campaignRules);
   const vatDisplay = useAppStore((state) => state.vatDisplay);
   const language = useLanguageStore((state) => state.language);
   const t = useLanguageStore((state) => state.t);
@@ -321,15 +322,37 @@ export default function HomeSection({
   const activeMachines = React.useMemo(() => machines.filter(m => m.isActive !== false), [machines]);
   const weeklyOfferMachines = React.useMemo(() => activeMachines.filter(m => m.showInWeeklyOffers === true), [activeMachines]);
 
-  // Live minimum price per category (each schaarlift sub-type keeps its own key)
-  const livePriceByCategory = React.useMemo(() => {
-    const map: Record<string, number> = {};
+  // Live pricing per category (each schaarlift sub-type keeps its own key): lowest
+  // *current* day rate — including any active campaign discount — plus how many
+  // active models sit behind that price, so the card never shows a rate that's
+  // actually higher than what a customer can get, and hints there's more to see.
+  const categoryMeta = React.useMemo(() => {
+    const map: Record<string, { price: number; count: number; discounted: boolean }> = {};
     activeMachines.forEach(m => {
       const key = m.category;
-      if (map[key] === undefined || m.pricePerDay < map[key]) map[key] = m.pricePerDay;
+      let pct = m.campaignDiscountPercent ?? 0;
+      for (const rule of campaignRules) {
+        if (!rule.isActive) continue;
+        const matches = rule.scope === "global"
+          || (rule.scope === "category" && m.category.toLowerCase() === rule.scopeValue.toLowerCase())
+          || (rule.scope === "product" && m.id === rule.scopeValue);
+        if (matches) pct = Math.max(pct, rule.discountPercent);
+      }
+      let effective = m.pricePerDay * (1 - pct / 100);
+      if (m.campaignDiscountAmount) effective = Math.max(0, effective - m.campaignDiscountAmount);
+      const discounted = pct > 0 || !!m.campaignDiscountAmount;
+
+      const entry = map[key];
+      if (!entry) {
+        map[key] = { price: effective, count: 1, discounted };
+      } else {
+        entry.count += 1;
+        if (effective < entry.price) entry.price = effective;
+        if (discounted) entry.discounted = true;
+      }
     });
     return map;
-  }, [activeMachines]);
+  }, [activeMachines, campaignRules]);
 
   // First machine image per category for card thumbnails
   const imageByCategory = React.useMemo(() => {
@@ -537,6 +560,7 @@ export default function HomeSection({
             const Icon = CATEGORY_ICONS[cat.id] ?? Truck;
             const catImage = imageByCategory[cat.id];
             const fallbackGradient = CAT_GRADIENT[cat.id] ?? "from-slate-100 to-slate-200";
+            const meta = categoryMeta[cat.id];
 
             return (
               <button
@@ -544,7 +568,9 @@ export default function HomeSection({
                 onClick={() => onSearch("", cat.id)}
                 className="group bg-white border border-slate-200 rounded-2xl overflow-hidden text-left cursor-pointer hover:border-orange-300 hover:shadow-xl hover:shadow-orange-500/5 hover:-translate-y-1.5 active:scale-[0.98] transition-all duration-300 flex flex-col"
               >
-                {/* Top — text info: name + height • price on one line */}
+                {/* Top — text info: name + height • "vanaf" price, model count and a
+                    "Bekijk modellen" CTA so the card never implies a fixed price and
+                    always signals there's more (and possibly cheaper) behind it */}
                 <div className="p-4 flex flex-col gap-1.5 min-w-0">
                   <p className="font-display font-black text-base sm:text-lg text-slate-900 leading-snug line-clamp-2">
                     {cat.listLabel || cat.label}
@@ -554,13 +580,28 @@ export default function HomeSection({
                     <span className="text-slate-300 select-none">•</span>
                     <span className="font-black text-emerald-600 text-base leading-tight">
                       {(() => {
-                        const price = livePriceByCategory[cat.id];
-                        if (price === undefined) return "Prijs op aanvraag";
-                        const v = withVat(price, vatDisplay);
+                        if (!meta) return "Prijs op aanvraag";
+                        const v = withVat(meta.price, vatDisplay);
                         const fmt = v % 1 === 0 ? Math.round(v).toLocaleString("nl-NL") : v.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                         const unit = WEEKLY_PRICED_CATEGORIES.has(cat.id) ? "week" : "dag";
-                        return `€${fmt}/${unit}`;
+                        return `${t("vanaf", "from", "başlayan")} €${fmt}/${unit}`;
                       })()}
+                    </span>
+                    {meta?.discounted && (
+                      <span className="inline-flex items-center rounded-full bg-orange-50 text-orange-600 text-[10px] font-bold px-1.5 py-0.5 leading-none">
+                        {t("Actieprijs", "Special price", "Kampanya fiyatı")}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center justify-between gap-2 mt-0.5">
+                    {meta && meta.count > 1 ? (
+                      <span className="text-[11px] text-slate-400 font-medium">
+                        {t(`${meta.count} modellen`, `${meta.count} models`, `${meta.count} model`)}
+                      </span>
+                    ) : <span />}
+                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-orange-500 group-hover:text-orange-600 group-hover:gap-1.5 transition-all duration-300">
+                      {t("Bekijk modellen", "View models", "Modelleri gör")}
+                      <ChevronRight className="h-3 w-3" />
                     </span>
                   </div>
                 </div>

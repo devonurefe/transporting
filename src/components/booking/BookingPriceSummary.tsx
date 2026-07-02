@@ -199,7 +199,7 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
           <img
             src={selectedMachine.imageUrl || selectedMachine.additionalImages?.[0] || "/placeholder-machine.webp"}
             alt=""
-            className="h-full w-full object-cover"
+            className="h-full w-full object-cover scale-125"
             referrerPolicy="no-referrer"
             onError={(e) => {
               const fallback = selectedMachine.additionalImages?.[0];

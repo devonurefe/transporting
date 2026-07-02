@@ -8,10 +8,11 @@ import { PlusCircle, Sparkles, Trash2, Plus, X } from "lucide-react";
 import { motion } from "motion/react";
 import { useAppStore } from "../../store/appStore";
 import { resizeImage } from "../../utils/image";
+import { showAdminToast } from "./AdminToast";
+import type { AdminSubTab } from "../AdminSection";
 
 interface AdminAddMachineProps {
-  key?: string;
-  setSubTab: (tab: "dashboard" | "orders" | "machines" | "calendar" | "add" | "logs" | "customizer") => void;
+  setSubTab: (tab: AdminSubTab) => void;
   onAddSystemLog: (type: "login" | "logout" | "signup" | "booking" | "fleet" | "status" | "system", user: string, description: string) => void;
   adminLanguage?: string;
 }
@@ -89,11 +90,11 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
           setAdditionalImages((prev) => [...prev, data.url]);
           onAddSystemLog("fleet", "Beheerder", t("Extra afbeelding geüpload: ", "Extra image uploaded: ", "Ek resim yüklendi: ") + file.name);
         } else {
-          alert(t("Uploaden mislukt voor: ", "Upload failed for: ", "Yükleme başarısız: ") + file.name);
+          showAdminToast(t("Uploaden mislukt voor: ", "Upload failed for: ", "Yükleme başarısız: ") + file.name, "error");
         }
       } catch (err) {
         console.error(err);
-        alert(t("Fout bij uploaden afbeelding.", "Error uploading image.", "Resim yükleme hatası."));
+        showAdminToast(t("Fout bij uploaden afbeelding.", "Error uploading image.", "Resim yükleme hatası."), "error");
       }
     }
     setIsUploadingAdditional(false);
@@ -126,11 +127,11 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
         setImageUrl(data.url);
         onAddSystemLog("fleet", "Beheerder", t("Afbeelding lokaal geüpload: ", "Image uploaded locally: ", "Resim yerel olarak yüklendi: ") + file.name);
       } else {
-        alert(t("Uploaden mislukt.", "Upload failed.", "Yükleme başarısız."));
+        showAdminToast(t("Uploaden mislukt.", "Upload failed.", "Yükleme başarısız."), "error");
       }
     } catch (err) {
       console.error(err);
-      alert(t("Fout bij uploaden afbeelding.", "Error uploading image.", "Resim yükleme hatası."));
+      showAdminToast(t("Fout bij uploaden afbeelding.", "Error uploading image.", "Resim yükleme hatası."), "error");
     } finally {
       setIsUploading(false);
       e.target.value = "";

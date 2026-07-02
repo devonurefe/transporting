@@ -31,9 +31,9 @@ import AdminConfirmDialog from "./AdminConfirmDialog";
 import AdminStatusBadge from "./AdminStatusBadge";
 import { OrderStatus } from "../../types";
 import { getAdminAuthHeaders } from "../../utils/authHeaders";
+import { showAdminToast } from "./AdminToast";
 
 interface AdminOrdersProps {
-  key?: string;
   onAddSystemLog: (type: "login" | "logout" | "signup" | "booking" | "fleet" | "status" | "system", user: string, description: string) => void;
   adminLanguage?: string;
   statusFilter?: string[];
@@ -276,11 +276,11 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
   const handleSendDateProposal = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newStartDate || !newEndDate) {
-      alert("Voer zowel de startdatum als de einddatum in.");
+      showAdminToast("Voer zowel de startdatum als de einddatum in.", "error");
       return;
     }
     if (new Date(newEndDate) < new Date(newStartDate)) {
-      alert("Einddatum moet op of na de startdatum liggen.");
+      showAdminToast("Einddatum moet op of na de startdatum liggen.", "error");
       return;
     }
     const machine = getBaseName(selectedDetailOrder.machineName);

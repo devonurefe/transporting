@@ -11,9 +11,9 @@ import { useAppStore } from "../../store/appStore";
 import { useAuthStore } from "../../store/authStore";
 import { CampaignRule } from "../../types";
 import AdminConfirmDialog from "./AdminConfirmDialog";
+import { showAdminToast } from "./AdminToast";
 
 interface AdminCustomizerProps {
-  key?: string;
   onAddSystemLog: (type: "login" | "logout" | "signup" | "booking" | "fleet" | "status" | "system", user: string, description: string) => void;
   adminLanguage?: string;
 }
@@ -234,10 +234,10 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
         const data = await res.json();
         setHeroImageUrl(data.url);
       } else {
-        alert(t("Uploaden mislukt.", "Upload failed.", "Yükleme başarısız."));
+        showAdminToast(t("Uploaden mislukt.", "Upload failed.", "Yükleme başarısız."), "error");
       }
     } catch {
-      alert(t("Fout bij uploaden afbeelding.", "Error uploading image.", "Resim yükleme hatası."));
+      showAdminToast(t("Fout bij uploaden afbeelding.", "Error uploading image.", "Resim yükleme hatası."), "error");
     } finally {
       setIsUploadingHero(false);
       e.target.value = "";
@@ -1086,14 +1086,14 @@ function AddCategoryForm({ onAddSystemLog, adminLanguage }: AddCategoryFormProps
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!id.trim() || !label.trim()) {
-      alert(t("Groep ID en Groep Label zijn verplicht.", "Group ID and Group Label are required.", "Grup ID'si ve Grup Etiketi zorunludur."));
+      showAdminToast(t("Groep ID en Groep Label zijn verplicht.", "Group ID and Group Label are required.", "Grup ID'si ve Grup Etiketi zorunludur."), "error");
       return;
     }
     const cleanId = id.trim().toLowerCase().replace(/\s+/g, "");
     
     // Check duplication
     if (customCategories.some((c: any) => c.id === cleanId)) {
-      alert(t("Groep met deze ID bestaat al.", "Group with this ID already exists.", "Bu ID'ye sahip grup zaten mevcut."));
+      showAdminToast(t("Groep met deze ID bestaat al.", "Group with this ID already exists.", "Bu ID'ye sahip grup zaten mevcut."), "error");
       return;
     }
 
@@ -1118,7 +1118,7 @@ function AddCategoryForm({ onAddSystemLog, adminLanguage }: AddCategoryFormProps
       setHeights("");
       setPrice("");
     } else {
-      alert(t("Fout bij opslaan van categorie.", "Error saving category.", "Kategori kaydedilirken hata oluştu."));
+      showAdminToast(t("Fout bij opslaan van categorie.", "Error saving category.", "Kategori kaydedilirken hata oluştu."), "error");
     }
   };
 

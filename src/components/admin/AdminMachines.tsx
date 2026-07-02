@@ -11,10 +11,12 @@ import { useAuthStore } from "../../store/authStore";
 import { resizeImage } from "../../utils/image";
 import { Machine } from "../../types";
 import { getSpecsForMachine } from "../../utils/machineSpecs";
+import { showAdminToast } from "./AdminToast";
+import { getAdminAuthHeaders } from "../../utils/authHeaders";
+import type { AdminSubTab } from "../AdminSection";
 
 interface AdminMachinesProps {
-  key?: string;
-  setSubTab: (tab: "dashboard" | "orders" | "machines" | "calendar" | "add" | "logs" | "customizer") => void;
+  setSubTab: (tab: AdminSubTab) => void;
   onAddSystemLog: (type: "login" | "logout" | "signup" | "booking" | "fleet" | "status" | "system", user: string, description: string) => void;
   adminLanguage?: string;
 }
@@ -48,11 +50,10 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
   const [togglingId, setTogglingId] = useState<string | null>(null);
   const handleToggleActive = async (m: Machine) => {
     setTogglingId(m.id);
-    const token = localStorage.getItem("hwh_admin_token");
     try {
       const res = await fetch(`/api/machines/${m.id}/toggle-active`, {
         method: "PATCH",
-        headers: { Authorization: `Bearer ${token}` }
+        headers: getAdminAuthHeaders()
       });
       if (res.ok) {
         const { isActive } = await res.json();
@@ -61,10 +62,10 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
         }));
         onAddSystemLog("fleet", adminUser?.name ?? "Admin", `Machine ${m.name} ${isActive ? "geactiveerd" : "gedeactiveerd"}`);
       } else {
-        alert(t("Fout bij het wijzigen van de machinestatus.", "Error toggling machine status.", "Makine durumu değiştirilirken hata oluştu."));
+        showAdminToast(t("Fout bij het wijzigen van de machinestatus.", "Error toggling machine status.", "Makine durumu değiştirilirken hata oluştu."), "error");
       }
     } catch {
-      alert(t("Netwerkfout bij het wijzigen van de machinestatus.", "Network error toggling machine status.", "Makine durumu değiştirilirken ağ hatası."));
+      showAdminToast(t("Netwerkfout bij het wijzigen van de machinestatus.", "Network error toggling machine status.", "Makine durumu değiştirilirken ağ hatası."), "error");
     }
     setTogglingId(null);
   };
@@ -79,7 +80,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
       setDeleteTarget(null);
       setDeleteConfirmText("");
     } else {
-      alert(t("Fout bij het verwijderen.", "Error deleting machine.", "Silme sırasında bir hata oluştu."));
+      showAdminToast(t("Fout bij het verwijderen.", "Error deleting machine.", "Silme sırasında bir hata oluştu."), "error");
     }
   };
 
@@ -127,13 +128,9 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
       try {
         const base64 = await resizeImage(file);
         const ext = base64.startsWith("data:image/webp") ? ".webp" : ".jpg";
-        const token = localStorage.getItem("hwh_admin_token") || localStorage.getItem("hwh_token");
         const res = await fetch("/api/upload", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {})
-          },
+          headers: getAdminAuthHeaders(true),
           body: JSON.stringify({ fileName: `machine-extra${ext}`, base64Data: base64 })
         });
         if (res.ok) {
@@ -141,11 +138,11 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
           setEditAdditionalImages((prev) => [...prev, data.url]);
           onAddSystemLog("fleet", "Beheerder", t("Extra afbeelding toegevoegd: ", "Extra image added: ", "Ek resim eklendi: ") + file.name);
         } else {
-          alert(t("Uploaden mislukt voor: ", "Upload failed for: ", "Yükleme başarısız: ") + file.name);
+          showAdminToast(t("Uploaden mislukt voor: ", "Upload failed for: ", "Yükleme başarısız: ") + file.name, "error");
         }
       } catch (err) {
         console.error(err);
-        alert(t("Fout bij uploaden afbeelding.", "Error uploading image.", "Resim yükleme hatası."));
+        showAdminToast(t("Fout bij uploaden afbeelding.", "Error uploading image.", "Resim yükleme hatası."), "error");
       }
     }
     setIsUploadingEditAdditional(false);
@@ -201,13 +198,9 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
     try {
       const base64 = await resizeImage(file);
       const ext = base64.startsWith("data:image/webp") ? ".webp" : ".jpg";
-      const token = localStorage.getItem("hwh_admin_token") || localStorage.getItem("hwh_token");
       const res = await fetch("/api/upload", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {})
-        },
+        headers: getAdminAuthHeaders(true),
         body: JSON.stringify({ fileName: `machine${ext}`, base64Data: base64 })
       });
       if (res.ok) {
@@ -215,11 +208,11 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
         setEditImageUrl(data.url);
         onAddSystemLog("fleet", "Beheerder", t("Machine-afbeelding vervangen: ", "Machine image replaced: ", "Makine resmi değiştirildi: ") + file.name);
       } else {
-        alert(t("Uploaden mislukt.", "Upload failed.", "Yükleme başarısız."));
+        showAdminToast(t("Uploaden mislukt.", "Upload failed.", "Yükleme başarısız."), "error");
       }
     } catch (err) {
       console.error(err);
-      alert(t("Fout bij uploaden afbeelding.", "Error uploading image.", "Resim yükleme hatası."));
+      showAdminToast(t("Fout bij uploaden afbeelding.", "Error uploading image.", "Resim yükleme hatası."), "error");
     } finally {
       setIsUploadingEditImage(false);
       e.target.value = "";
@@ -230,7 +223,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
     e.preventDefault();
     if (!editingMachine) return;
     if (!editName.trim() || !editHeight || !editPrice) {
-      alert(t("Naam, Hoogte en Prijs per dag zijn verplicht.", "Name, Height, and Price per day are required.", "Ad, Yükseklik ve Günlük Ücret zorunludur."));
+      showAdminToast(t("Naam, Hoogte en Prijs per dag zijn verplicht.", "Name, Height, and Price per day are required.", "Ad, Yükseklik ve Günlük Ücret zorunludur."), "error");
       return;
     }
 
@@ -240,47 +233,47 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
     const numPrice = Number(editPrice);
 
     if (isNaN(numHeight) || numHeight <= 0) {
-      alert(t("Werkhoogte moet een positief getal groter dan 0 zijn.", "Working height must be a positive number greater than 0.", "Çalışma yüksekliği 0'dan büyük pozitif bir sayı olmalıdır."));
+      showAdminToast(t("Werkhoogte moet een positief getal groter dan 0 zijn.", "Working height must be a positive number greater than 0.", "Çalışma yüksekliği 0'dan büyük pozitif bir sayı olmalıdır."), "error");
       return;
     }
     if (isNaN(numReach) || numReach < 0) {
-      alert(t("Zijwaarts bereik moet 0 of groter zijn.", "Horizontal reach must be 0 or greater.", "Yatay erişim 0 veya daha büyük olmalıdır."));
+      showAdminToast(t("Zijwaarts bereik moet 0 of groter zijn.", "Horizontal reach must be 0 or greater.", "Yatay erişim 0 veya daha büyük olmalıdır."), "error");
       return;
     }
     if (isNaN(numWeight) || numWeight <= 0) {
-      alert(t("Gewicht moet een positief getal groter dan 0 zijn.", "Weight must be a positive number greater than 0.", "Ağırlık 0'dan büyük pozitif bir sayı olmalıdır."));
+      showAdminToast(t("Gewicht moet een positief getal groter dan 0 zijn.", "Weight must be a positive number greater than 0.", "Ağırlık 0'dan büyük pozitif bir sayı olmalıdır."), "error");
       return;
     }
     if (isNaN(numPrice) || numPrice <= 0) {
-      alert(t("Huurtarief moet een positief getal groter dan 0 zijn.", "Rental rate must be a positive number greater than 0.", "Kiralama ücreti 0'dan büyük pozitif bir sayı olmalıdır."));
+      showAdminToast(t("Huurtarief moet een positief getal groter dan 0 zijn.", "Rental rate must be a positive number greater than 0.", "Kiralama ücreti 0'dan büyük pozitif bir sayı olmalıdır."), "error");
       return;
     }
 
     if (editWeeklyDiscountPercent) {
       const numWeekly = Number(editWeeklyDiscountPercent);
       if (isNaN(numWeekly) || numWeekly < 0 || numWeekly > 100) {
-        alert(t("Weekkorting moet tussen 0% en 100% liggen.", "Weekly discount must be between 0% and 100%.", "Haftalık indirim %0 ile %100 arasında olmalıdır."));
+        showAdminToast(t("Weekkorting moet tussen 0% en 100% liggen.", "Weekly discount must be between 0% and 100%.", "Haftalık indirim %0 ile %100 arasında olmalıdır."), "error");
         return;
       }
     }
     if (editMonthlyDiscountPercent) {
       const numMonthly = Number(editMonthlyDiscountPercent);
       if (isNaN(numMonthly) || numMonthly < 0 || numMonthly > 100) {
-        alert(t("Maandkorting moet tussen 0% en 100% liggen.", "Monthly discount must be between 0% and 100%.", "Aylık indirim %0 ile %100 arasında olmalıdır."));
+        showAdminToast(t("Maandkorting moet tussen 0% en 100% liggen.", "Monthly discount must be between 0% and 100%.", "Aylık indirim %0 ile %100 arasında olmalıdır."), "error");
         return;
       }
     }
     if (editCampaignDiscountPercent) {
       const numCampPercent = Number(editCampaignDiscountPercent);
       if (isNaN(numCampPercent) || numCampPercent < 0 || numCampPercent > 100) {
-        alert(t("Campagne kortingspercentage moet tussen 0% en 100% liggen.", "Campaign discount percentage must be between 0% and 100%.", "Kampanya indirim oranı %0 ile %100 arasında olmalıdır."));
+        showAdminToast(t("Campagne kortingspercentage moet tussen 0% en 100% liggen.", "Campaign discount percentage must be between 0% and 100%.", "Kampanya indirim oranı %0 ile %100 arasında olmalıdır."), "error");
         return;
       }
     }
     if (editCampaignDiscountAmount) {
       const numCampAmt = Number(editCampaignDiscountAmount);
       if (isNaN(numCampAmt) || numCampAmt < 0) {
-        alert(t("Campagne kortingsbedrag moet 0 of groter zijn.", "Campaign discount amount must be 0 or greater.", "Kampanya indirim tutarı 0 veya daha büyük olmalıdır."));
+        showAdminToast(t("Campagne kortingsbedrag moet 0 of groter zijn.", "Campaign discount amount must be 0 or greater.", "Kampanya indirim tutarı 0 veya daha büyük olmalıdır."), "error");
         return;
       }
     }
@@ -340,9 +333,9 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
         t(`Hoogwerker succesvol bijgewerkt: ${editName} (${editPower}).`, `Aerial platform successfully updated: ${editName} (${editPower}).`, `Sepetli platform başarıyla güncellendi: ${editName} (${editPower}).`)
       );
       setEditingMachine(null);
-      alert(t("Machine succesvol bijgewerkt!", "Machine successfully updated!", "Makine başarıyla güncellendi!"));
+      showAdminToast(t("Machine succesvol bijgewerkt!", "Machine successfully updated!", "Makine başarıyla güncellendi!"), "success");
     } else {
-      alert(t("Fout bij het bijwerken.", "Error updating.", "Güncelleme sırasında hata oluştu."));
+      showAdminToast(t("Fout bij het bijwerken.", "Error updating.", "Güncelleme sırasında hata oluştu."), "error");
     }
   };
 

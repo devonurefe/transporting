@@ -9,10 +9,10 @@ import { motion } from "motion/react";
 import { useAppStore } from "../../store/appStore";
 import { useAuthStore } from "../../store/authStore";
 import { euro } from "../../utils/format";
+import type { AdminSubTab } from "../AdminSection";
 
 interface AdminDashboardProps {
-  key?: string;
-  setSubTab: (tab: "dashboard" | "orders" | "machines" | "calendar" | "add" | "logs" | "customizer" | "accounting") => void;
+  setSubTab: (tab: AdminSubTab) => void;
   setOrdersFilter?: (filter: string[]) => void;
   adminLanguage?: string;
 }
@@ -210,7 +210,7 @@ export default function AdminDashboard({ setSubTab, setOrdersFilter, adminLangua
 
         {/* New customers KPI */}
         <div
-          onClick={() => (setSubTab as any)("customers")}
+          onClick={() => setSubTab("customers")}
           className="p-5 rounded-2xl flex flex-col justify-between min-h-[140px] cursor-pointer hover:shadow-md hover:scale-[1.01] transition-all active:scale-[0.99] border border-teal-200 bg-teal-50 shadow-sm"
         >
           <div className="flex items-start justify-between">

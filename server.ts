@@ -716,6 +716,15 @@ async function applyDataMigrations() {
   }
 }
 
-autoSeedIfEmpty().then(() => applyDataMigrations()).then(() => startServer()).catch(err => {
-  console.error("Failed to start server:", err);
-});
+// Export the configured Express app so integration tests (supertest) can drive
+// the /api routes without opening a port. All routers/middleware are registered
+// at module load above; startServer() only adds SPA/static serving + listen.
+export { app };
+
+// Skip the auto-seed/migrate/listen bootstrap when imported under Vitest — tests
+// manage their own database and never need the HTTP listener.
+if (!process.env.VITEST) {
+  autoSeedIfEmpty().then(() => applyDataMigrations()).then(() => startServer()).catch(err => {
+    console.error("Failed to start server:", err);
+  });
+}

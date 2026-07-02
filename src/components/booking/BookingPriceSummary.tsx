@@ -54,15 +54,15 @@ function Row({
   const lCls = accent === "emerald" ? "text-emerald-700 font-semibold"
     : accent === "amber" ? "text-amber-700 font-semibold"
     : dim ? "text-slate-500"
-    : "text-slate-600";
-  const vCls = accent === "emerald" ? "text-emerald-700 font-semibold"
-    : accent === "amber" ? "text-amber-700 font-semibold"
-    : dim ? "text-slate-500"
-    : "text-slate-700 font-semibold";
+    : "text-slate-600 font-medium";
+  const vCls = accent === "emerald" ? "text-emerald-700 font-bold"
+    : accent === "amber" ? "text-amber-700 font-bold"
+    : dim ? "text-slate-500 font-semibold"
+    : "text-slate-900 font-bold";
   return (
-    <div className="flex justify-between items-center gap-3">
+    <div className="flex justify-between items-center gap-3 py-0.5">
       <span className={`text-xs leading-snug ${lCls}`}>{label}</span>
-      <span className={`text-xs font-mono shrink-0 ${vCls}`}>{value}</span>
+      <span className={`text-sm font-mono shrink-0 ${vCls}`}>{value}</span>
     </div>
   );
 }
@@ -297,7 +297,7 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
         <button
           type="button"
           onClick={() => setBreakdownOpen(o => !o)}
-          className="w-full flex items-center justify-between text-xs text-slate-400 hover:text-slate-700 font-semibold py-1 border-t border-slate-100 transition-colors cursor-pointer bg-transparent border-x-0 border-b-0"
+          className={`w-full flex items-center justify-between text-xs font-bold py-2 border-t border-slate-100 transition-colors cursor-pointer bg-transparent border-x-0 border-b-0 ${breakdownOpen ? "text-slate-800" : "text-slate-500 hover:text-slate-800"}`}
         >
           <span>{t("priceSummaryViewBreakdown")}</span>
           <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${breakdownOpen ? "rotate-180" : ""}`} />
@@ -305,11 +305,11 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
 
         {/* ── ACCORDION BODY ─────────────────────── */}
         {breakdownOpen && (
-          <div className="space-y-3 pt-1 border-t border-slate-100">
+          <div className="space-y-4 rounded-xl bg-slate-50 border border-slate-100 p-4">
 
             {/* BEREKENING */}
-            <div className="space-y-2">
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{t("priceSummaryCalculation")}</p>
+            <div className="space-y-2.5">
+              <p className="text-xs font-black uppercase tracking-wide text-slate-500">{t("priceSummaryCalculation")}</p>
 
               {!sums.weeklyBreakdown && !sums.isFlatRate && sums.effectiveDailyRate != null && sums.days >= 6 && (
                 <div className="flex items-center gap-1.5">
@@ -359,9 +359,9 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
             {/* KORTINGEN */}
             {((!sums.weeklyBreakdown && !sums.isFlatRate && sums.discountAmount > 0) || (sums.campaignSavings ?? 0) > 0) && (
               <>
-                <div className="h-px bg-slate-100" />
-                <div className="space-y-2">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{t("priceSummaryDiscounts")}</p>
+                <div className="h-px bg-slate-200" />
+                <div className="space-y-2.5">
+                  <p className="text-xs font-black uppercase tracking-wide text-slate-500">{t("priceSummaryDiscounts")}</p>
                   {!sums.weeklyBreakdown && !sums.isFlatRate && sums.discountAmount > 0 && (
                     <Row
                       label={<span className="flex items-center gap-1"><TrendingDown className="h-3 w-3 shrink-0" />{sums.discountLabel}</span>}
@@ -381,8 +381,8 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
             )}
 
             {/* BEZORGING + ADD-ONS */}
-            <div className="h-px bg-slate-100" />
-            <div className="space-y-2">
+            <div className="h-px bg-slate-200" />
+            <div className="space-y-2.5">
               {sums.transport > 0 || sums.driver > 0 ? (
                 <Row
                   label={sums.deliveryType === "trailer_drop_return" ? t("priceSummaryTrailerDropReturn")
@@ -391,9 +391,9 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
                   value={euro(sums.transport + sums.driver)}
                 />
               ) : (
-                <div className="flex justify-between items-center gap-3">
-                  <span className="text-xs text-slate-600">{t("priceSummaryPickup")}</span>
-                  <span className="text-xs font-semibold text-emerald-600">{t("priceSummaryPickupFree")}</span>
+                <div className="flex justify-between items-center gap-3 py-0.5">
+                  <span className="text-xs font-medium text-slate-600">{t("priceSummaryPickup")}</span>
+                  <span className="text-sm font-bold text-emerald-600">{t("priceSummaryPickupFree")}</span>
                 </div>
               )}
               {sums.addonCost > 0 && sums.addonDetails.map(addon => (
@@ -402,8 +402,8 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
             </div>
 
             {/* SUBTOTAAL + BTW */}
-            <div className="h-px bg-slate-100" />
-            <div className="space-y-1.5">
+            <div className="h-px bg-slate-200" />
+            <div className="space-y-2 pt-0.5">
               <Row label={t("priceSummarySubtotalExclVAT")} value={euro(priceExVat)} />
               <Row label={t("priceSummaryVAT21")} value={euro(sums.vat)} dim />
             </div>

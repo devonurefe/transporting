@@ -8,11 +8,10 @@ import { motion, AnimatePresence } from "motion/react";
 import { Machine, Order, DeliveryType, UserProfile, CartItem } from "../types";
 import { useAppStore } from "../store/appStore";
 import { checkAvailability } from "../utils/availability";
-import { calculateItemSubtotal, isStrictWeekend, countWeekendDays, calculateRentalDays, billableWeeks, addonPriceForRental } from "../utils/pricing";
+import { calculateItemSubtotal, isStrictWeekend, countWeekendDays, calculateRentalDays, addonPriceForRental, buildTierDisplay, WeeklyBreakdown } from "../utils/pricing";
 
 // Import modular Step components
 import { buildWhatsAppUrl } from "../utils/whatsapp";
-import { euro } from "../utils/format";
 import BookingStep1 from "./booking/BookingStep1";
 import BookingStep2 from "./booking/BookingStep2";
 import BookingSuccess from "./booking/BookingSuccess";
@@ -418,31 +417,17 @@ export default function BookingSection({
         ? leadItem.weeklyPrice / 5
         : null;
 
-      // Tier label for flat-rate price display (single-item cart only)
+      // Tier label for flat-rate price display (single-item cart only) — shared
+      // with the legacy path and unit-tested against calculateItemSubtotal in
+      // pricing-display.test.ts so the breakdown can never drift from the real charge.
       let tierLabel: string | null = null;
       let isFlatRate = false;
-      let weeklyBreakdown: { weeks: number; pricePerWeek: number; remainder: number; dailyRate: number; remainderCost?: number } | null = null;
+      let weeklyBreakdown: WeeklyBreakdown | null = null;
       if (cartItems.length === 1 && leadItem) {
-        if (leadItem.weeklyOnly && leadItem.weeklyPrice) {
-          const weeks = billableWeeks(totalDays, leadItem.minRentalDays);
-          tierLabel = weeks === 1 ? "Weektarief" : `Weektarief × ${weeks} weken`;
-          isFlatRate = true;
-        } else if (totalDays === 1 && leadItem.oneDayPrice) {
-          tierLabel = "1-Dag Actie"; isFlatRate = true;
-        } else if (totalDays === 2 && isStrictWeekend(leadStart, 2) && leadItem.weekendPrice) {
-          tierLabel = "Weekendtarief (za+zo)"; isFlatRate = true;
-        } else if (totalDays === 2 && leadItem.twoDayPrice) {
-          tierLabel = "2-Daags Tarief (ma-vr)"; isFlatRate = true;
-        } else if ((totalDays === 3 || totalDays === 4 || totalDays === 5) && leadItem.weeklyPrice) {
-          tierLabel = "Werkweektarief"; isFlatRate = true;
-        } else if (totalDays >= 6 && totalDays <= 27 && leadItem.weeklyPrice) {
-          const wks = Math.floor(totalDays / 5);
-          const rem = totalDays % 5;
-          const wkBase = Math.round(totalDays * (leadItem.weeklyPrice / 5));
-          weeklyBreakdown = { weeks: wks, pricePerWeek: leadItem.weeklyPrice, remainder: rem, dailyRate: Math.round(leadItem.weeklyPrice / 5), remainderCost: rem * Math.round(leadItem.weeklyPrice / 5) };
-        } else if (totalDays >= 28 && leadItem.monthlyPrice) {
-          tierLabel = "Maandtarief"; isFlatRate = true;
-        }
+        const display = buildTierDisplay(leadItem, totalDays, leadStart);
+        tierLabel = display.tierLabel;
+        isFlatRate = display.isFlatRate;
+        weeklyBreakdown = display.weeklyBreakdown;
         // Weekend "niet werken": the subtotal is already reduced to the working days
         // (weekend dropped) and priced on the normal tier, so show one clean flat line
         // instead of a pro-rata breakdown that wouldn't add up.
@@ -531,25 +516,10 @@ export default function BookingSection({
       ? selectedMachine.weeklyPrice / 5
       : null;
 
-    let tierLabel: string | null = null;
-    let isFlatRate = false;
-    let weeklyBreakdown: { weeks: number; pricePerWeek: number; remainder: number; dailyRate: number; remainderCost?: number } | null = null;
-    if (days === 1 && selectedMachine.oneDayPrice) {
-      tierLabel = "1-Dag Actie"; isFlatRate = true;
-    } else if (days === 2 && isStrictWeekend(startDate, 2) && selectedMachine.weekendPrice) {
-      tierLabel = "Weekendtarief (za+zo)"; isFlatRate = true;
-    } else if (days === 2 && selectedMachine.twoDayPrice) {
-      tierLabel = "2-Daags Tarief (ma-vr)"; isFlatRate = true;
-    } else if ((days === 3 || days === 4 || days === 5) && selectedMachine.weeklyPrice) {
-      tierLabel = "Werkweektarief"; isFlatRate = true;
-    } else if (days >= 6 && days <= 27 && selectedMachine.weeklyPrice) {
-      const wks = Math.floor(days / 5);
-      const rem = days % 5;
-      const wkBase = Math.round(days * (selectedMachine.weeklyPrice / 5));
-      weeklyBreakdown = { weeks: wks, pricePerWeek: selectedMachine.weeklyPrice, remainder: rem, dailyRate: Math.round(selectedMachine.weeklyPrice / 5), remainderCost: wkBase - wks * selectedMachine.weeklyPrice };
-    } else if (days >= 28 && selectedMachine.monthlyPrice) {
-      tierLabel = "Maandtarief"; isFlatRate = true;
-    }
+    const legacyDisplay = buildTierDisplay(selectedMachine, days, startDate);
+    let tierLabel: string | null = legacyDisplay.tierLabel;
+    let isFlatRate = legacyDisplay.isFlatRate;
+    let weeklyBreakdown: WeeklyBreakdown | null = legacyDisplay.weeklyBreakdown;
     // Weekend "niet werken": subtotal already reduced to working days — show a single flat line.
     if (weekendWorkAnswer === 'nee' && spansWeekend) {
       tierLabel = "Tarief (alleen werkdagen)"; isFlatRate = true; weeklyBreakdown = null;
@@ -1047,29 +1017,6 @@ export default function BookingSection({
               <div className="hidden lg:block lg:col-span-4 lg:sticky lg:top-24 space-y-4">
                 <BookingPriceSummary selectedMachine={cartItems && cartItems.length > 0 ? cartItems[0].machine : null} machineCount={cartItems.length || 1} startDate={summaryStartDate} endDate={summaryEndDate} multiplePeriods={mixedCartPeriods} sums={sums} />
               </div>
-
-              {/* Mobile total bar — the full summary sits below the form on small
-                  screens, so keep the running total in view while scrolling.
-                  bottom-14 clears the mobile bottom nav (h-14, hidden from md:);
-                  pr-20 keeps the amount clear of the WhatsApp FAB. */}
-              {sums.total > 0 && (() => {
-                // Weekend "niet werken": the total is already priced on the working
-                // days only, so this bar should read the same day count — not the
-                // full calendar span (Fri–Mon = 2 dagen, not 4).
-                const mobileBarDays = (sums.spansWeekend && sums.weekendWorkAnswer === "nee")
-                  ? Math.max(0, sums.days - (sums.weekendDays ?? 0))
-                  : sums.days;
-                return (
-                <div className="lg:hidden fixed bottom-14 md:bottom-0 left-0 right-0 z-40 border-t border-slate-200 bg-white/95 backdrop-blur-lg px-5 py-2.5 pr-20 shadow-[0_-4px_12px_rgba(0,0,0,0.06)] flex items-center justify-between">
-                  <span className="text-xs text-slate-500">
-                    {mobileBarDays} {mobileBarDays === 1 ? "dag" : "dagen"}{cartItems.length > 1 ? ` • ${cartItems.length} machines` : ""}
-                  </span>
-                  <span className="text-sm font-bold text-slate-900">
-                    Totaal <span className="text-teal-700">{euro(sums.total)}</span> <span className="font-normal text-xs text-slate-500">incl. BTW</span>
-                  </span>
-                </div>
-                );
-              })()}
 
             </motion.div>
           ) : (

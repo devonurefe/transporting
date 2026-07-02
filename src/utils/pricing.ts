@@ -199,6 +199,76 @@ function tierPrice(machine: Machine, n: number, startDate?: string | Date): numb
   return null;
 }
 
+export interface WeeklyBreakdown {
+  weeks: number;
+  pricePerWeek: number;
+  remainder: number;
+  dailyRate: number;
+  remainderCost?: number;
+}
+
+export interface TierDisplay {
+  tierLabel: string | null;
+  isFlatRate: boolean;
+  weeklyBreakdown: WeeklyBreakdown | null;
+}
+
+// Customer-facing tier label / pro-rata breakdown for the price summary UI —
+// e.g. "4× Werkweektarief (5 dgn)" + "2 extra dagen" in the "Prijsopbouw
+// bekijken" accordion. Mirrors tierPrice() branch-for-branch (including its
+// monthlyPrice cap for 6–27 days) so the numbers shown always sum to exactly
+// what calculateItemSubtotal() actually charges — the two must never drift
+// apart, hence they're kept side by side and exercised together in
+// pricing-display.test.ts.
+export function buildTierDisplay(machine: Machine, days: number, startDate?: string | Date): TierDisplay {
+  if (machine.weeklyOnly && machine.weeklyPrice) {
+    const weeks = billableWeeks(days, machine.minRentalDays);
+    return { tierLabel: weeks === 1 ? "Weektarief" : `Weektarief × ${weeks} weken`, isFlatRate: true, weeklyBreakdown: null };
+  }
+
+  if (days === 1 && machine.oneDayPrice) {
+    return { tierLabel: "1-Dag Actie", isFlatRate: true, weeklyBreakdown: null };
+  }
+
+  if (days === 2 && isStrictWeekend(startDate, 2) && machine.weekendPrice) {
+    return { tierLabel: "Weekendtarief (za+zo)", isFlatRate: true, weeklyBreakdown: null };
+  }
+  if (days === 2 && machine.twoDayPrice) {
+    return { tierLabel: "2-Daags Tarief (ma-vr)", isFlatRate: true, weeklyBreakdown: null };
+  }
+
+  if ((days === 3 || days === 4 || days === 5) && machine.weeklyPrice) {
+    return { tierLabel: "Werkweektarief", isFlatRate: true, weeklyBreakdown: null };
+  }
+
+  if (days >= 6 && days <= 27 && machine.weeklyPrice) {
+    const weeks = Math.floor(days / 5);
+    const remainder = days % 5;
+    const dailyRate = Math.round(machine.weeklyPrice / 5);
+    const wkBase = Math.round(days * (machine.weeklyPrice / 5));
+    if (machine.monthlyPrice && wkBase > machine.monthlyPrice) {
+      // Pro-rata weekly rate would exceed the monthly price — tierPrice() caps the
+      // actual charge at monthlyPrice, so a weeks/remainder breakdown would no
+      // longer sum to what's charged. Show one flat line instead.
+      return { tierLabel: "Maandtarief (voordeliger)", isFlatRate: true, weeklyBreakdown: null };
+    }
+    // remainderCost derived from wkBase (not remainder × dailyRate) so
+    // weeks × pricePerWeek + remainderCost always sums to exactly wkBase,
+    // regardless of rounding when weeklyPrice isn't a multiple of 5.
+    return {
+      tierLabel: null,
+      isFlatRate: false,
+      weeklyBreakdown: { weeks, pricePerWeek: machine.weeklyPrice, remainder, dailyRate, remainderCost: wkBase - weeks * machine.weeklyPrice }
+    };
+  }
+
+  if (days >= 28 && machine.monthlyPrice) {
+    return { tierLabel: "Maandtarief", isFlatRate: true, weeklyBreakdown: null };
+  }
+
+  return { tierLabel: null, isFlatRate: false, weeklyBreakdown: null };
+}
+
 // Day count to SHOW the customer, as opposed to the calendar span. When the
 // customer declared "nee" (not working the weekend) on a weekly-basis rental
 // that spans a weekend, the Sat/Sun days are already dropped from the price

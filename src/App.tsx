@@ -271,7 +271,8 @@ export default function App() {
           companyName: storeUser.companyName || undefined,
           address: storeUser.address || undefined,
           avatarUrl: storeUser.avatarUrl || undefined,
-          pastRentalsCount: 0
+          pastRentalsCount: 0,
+          emailOptIn: storeUser.emailOptIn !== false
         });
         setIsAdminMode(false);
       }

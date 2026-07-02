@@ -86,6 +86,7 @@ model Customer {
   passwordResetToken   String?
   passwordResetExpiry  DateTime?
   marketingConsent     Boolean   @default(false)
+  emailOptIn           Boolean   @default(true)
   createdAt            DateTime  @default(now())
   orders               Order[]
 }

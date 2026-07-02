@@ -3,10 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { Download, FileSpreadsheet, Filter, CheckCircle2 } from "lucide-react";
 import { motion } from "motion/react";
-import { useAppStore } from "../../store/appStore";
 import { euro } from "../../utils/format";
 import { getAdminAuthHeaders } from "../../utils/authHeaders";
 
@@ -22,9 +21,14 @@ const STATUS_OPTIONS = [
   "Geannuleerd",
 ];
 
-export default function AdminAccounting({ adminLanguage }: AdminAccountingProps) {
-  const orders = useAppStore((state) => state.orders);
+interface ExportSummaryOrder {
+  id: string;
+  status: string;
+  paymentStatus: string | null;
+  totalAmount: number;
+}
 
+export default function AdminAccounting({ adminLanguage }: AdminAccountingProps) {
   const todayISO = new Date().toISOString().split("T")[0];
   const firstOfMonthISO = todayISO.slice(0, 7) + "-01";
 
@@ -38,6 +42,13 @@ export default function AdminAccounting({ adminLanguage }: AdminAccountingProps)
   const [exportError, setExportError] = useState<string | null>(null);
   const dateRangeInvalid = !!fromDate && !!toDate && fromDate > toDate;
 
+  // Server-side filtered summary — mirrors exactly what the CSV download will contain.
+  // (The global orders store is capped at 100 most-recent rows for pagination, which
+  // silently under-counted older orders here, so the on-screen totals could disagree
+  // with the actual export.)
+  const [summaryOrders, setSummaryOrders] = useState<ExportSummaryOrder[]>([]);
+  const [isLoadingSummary, setIsLoadingSummary] = useState(false);
+
   const t = (nl: string, en: string, tr: string) => {
     if (adminLanguage === "tr") return tr;
     if (adminLanguage === "en") return en;
@@ -49,19 +60,45 @@ export default function AdminAccounting({ adminLanguage }: AdminAccountingProps)
       prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]
     );
 
-  const filteredOrders = useMemo(() => {
-    return orders.filter((o) => {
-      const inRange = (!fromDate || o.startDate >= fromDate) && (!toDate || o.startDate <= toDate);
-      const statusMatch = selectedStatuses.length === 0 || selectedStatuses.includes(o.status);
-      return inRange && statusMatch;
-    });
-  }, [orders, fromDate, toDate, selectedStatuses]);
+  const buildFilterParams = () => {
+    const params = new URLSearchParams();
+    if (fromDate) params.set("from", fromDate);
+    if (toDate) params.set("to", toDate);
+    if (selectedStatuses.length > 0) params.set("status", selectedStatuses.join(","));
+    return params;
+  };
 
-  const totalRevenue = filteredOrders
+  useEffect(() => {
+    if (dateRangeInvalid) {
+      setSummaryOrders([]);
+      return;
+    }
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      setIsLoadingSummary(true);
+      try {
+        const params = buildFilterParams();
+        params.set("format", "json");
+        const res = await fetch(`/api/orders/export?${params.toString()}`, {
+          headers: getAdminAuthHeaders(),
+        });
+        if (!res.ok) throw new Error();
+        const body = await res.json();
+        if (!cancelled) setSummaryOrders(body.orders ?? []);
+      } catch {
+        if (!cancelled) setSummaryOrders([]);
+      } finally {
+        if (!cancelled) setIsLoadingSummary(false);
+      }
+    }, 300);
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [fromDate, toDate, selectedStatuses, dateRangeInvalid]);
+
+  const totalRevenue = summaryOrders
     .filter((o) => o.status !== "Geannuleerd")
     .reduce((sum, o) => sum + o.totalAmount, 0);
 
-  const paidRevenue = filteredOrders
+  const paidRevenue = summaryOrders
     .filter((o) => o.paymentStatus === "paid" && o.status !== "Geannuleerd")
     .reduce((sum, o) => sum + o.totalAmount, 0);
 
@@ -69,10 +106,7 @@ export default function AdminAccounting({ adminLanguage }: AdminAccountingProps)
     setIsDownloading(true);
     setExportError(null);
     try {
-      const params = new URLSearchParams();
-      if (fromDate) params.set("from", fromDate);
-      if (toDate) params.set("to", toDate);
-      if (selectedStatuses.length > 0) params.set("status", selectedStatuses.join(","));
+      const params = buildFilterParams();
 
       const res = await fetch(`/api/orders/export?${params.toString()}`, {
         headers: getAdminAuthHeaders(),
@@ -223,7 +257,7 @@ export default function AdminAccounting({ adminLanguage }: AdminAccountingProps)
           {/* Stats */}
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {[
-              { label: t("Geselecteerde orders", "Selected orders", "Seçilen siparişler"), value: filteredOrders.length.toString(), color: "text-slate-800" },
+              { label: t("Geselecteerde orders", "Selected orders", "Seçilen siparişler"), value: isLoadingSummary ? "…" : summaryOrders.length.toString(), color: "text-slate-800" },
               { label: t("Totale omzet", "Total revenue", "Toplam ciro"), value: euro(totalRevenue), color: "text-teal-600" },
               { label: t("Betaald ontvangen", "Paid received", "Ödenen tutar"), value: euro(paidRevenue), color: "text-emerald-600" },
             ].map((stat) => (
@@ -258,16 +292,18 @@ export default function AdminAccounting({ adminLanguage }: AdminAccountingProps)
             <button
               type="button"
               onClick={handleDownload}
-              disabled={isDownloading || filteredOrders.length === 0 || dateRangeInvalid}
+              disabled={isDownloading || isLoadingSummary || summaryOrders.length === 0 || dateRangeInvalid}
               className="w-full bg-amber-500 hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed text-slate-950 font-extrabold text-sm py-3 rounded-2xl transition-all cursor-pointer flex items-center justify-center gap-2.5 border-none shadow-sm active:scale-95"
             >
               <Download className={`h-4.5 w-4.5 ${isDownloading ? "animate-bounce" : ""}`} />
               <span>
                 {isDownloading
                   ? t("Bezig met exporteren…", "Exporting…", "Dışa aktarılıyor…")
-                  : filteredOrders.length === 0
+                  : isLoadingSummary
+                  ? t("Bezig met filteren…", "Filtering…", "Filtreleniyor…")
+                  : summaryOrders.length === 0
                   ? t("Geen orders in selectie", "No orders in selection", "Seçimde sipariş yok")
-                  : t(`${filteredOrders.length} orders downloaden (CSV)`, `Download ${filteredOrders.length} orders (CSV)`, `${filteredOrders.length} sipariş indir (CSV)`)}
+                  : t(`${summaryOrders.length} orders downloaden (CSV)`, `Download ${summaryOrders.length} orders (CSV)`, `${summaryOrders.length} sipariş indir (CSV)`)}
               </span>
             </button>
 

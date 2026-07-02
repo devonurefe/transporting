@@ -101,6 +101,7 @@ export interface UserProfile {
   avatarUrl?: string;
   address?: string;
   historyRecommendedIds?: string[];
+  emailOptIn?: boolean;
 }
 
 export interface CartItem {

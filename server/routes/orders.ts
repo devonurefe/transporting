@@ -20,6 +20,17 @@ function safeParseAddons(raw: string | null): any[] {
   }
 }
 
+// Guests (no customerId) never had a preference to set, so they keep receiving
+// live-update emails by default; only a registered customer can opt out.
+async function customerWantsEmail(customerId: string | null): Promise<boolean> {
+  if (!customerId) return true;
+  const customer = await prisma.customer.findUnique({
+    where: { id: customerId },
+    select: { emailOptIn: true }
+  });
+  return customer?.emailOptIn !== false;
+}
+
 // Serializable transactions abort with P2034 when two bookings race on the same
 // machine — retry with backoff instead of surfacing a 500 to the customer
 async function withSerializableRetry<T>(fn: () => Promise<T>, retries = 3): Promise<T> {
@@ -651,7 +662,9 @@ ordersRouter.put("/:id/cancel", requireAuth as any, async (req: AuthenticatedReq
       endDate: updatedOrder.endDate.toISOString().split("T")[0],
       customerPhone: updatedOrder.customerPhone || ""
     };
-    emailService.sendStatusUpdate(emailData).catch(err => console.error("Cancel email error:", err));
+    if (await customerWantsEmail(updatedOrder.customerId)) {
+      emailService.sendStatusUpdate(emailData).catch(err => console.error("Cancel email error:", err));
+    }
     emailService.sendAdminCancelAlert(emailData).catch(err => console.error("Admin cancel alert error:", err));
 
     res.json({
@@ -812,9 +825,11 @@ ordersRouter.get("/:id/rating", requireAuth as any, async (req: AuthenticatedReq
 });
 
 // GET /api/orders/export — download all orders as CSV (admin only)
-// Query params: from (YYYY-MM-DD), to (YYYY-MM-DD), status (comma-separated)
+// Query params: from (YYYY-MM-DD), to (YYYY-MM-DD), status (comma-separated), format ("csv"|"json")
+// format=json returns the same server-filtered result set (unbounded by list-endpoint pagination)
+// so the admin UI can show accurate totals for a filter before committing to the download.
 ordersRouter.get("/export", requireAdmin as any, async (req: AuthenticatedRequest, res: Response) => {
-  const { from, to, status } = req.query as Record<string, string>;
+  const { from, to, status, format } = req.query as Record<string, string>;
 
   const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
   if (from && !ISO_DATE_RE.test(from)) {
@@ -837,6 +852,18 @@ ordersRouter.get("/export", requireAdmin as any, async (req: AuthenticatedReques
       where,
       orderBy: { createdAt: "desc" }
     });
+
+    if (format === "json") {
+      return res.json({
+        count: orders.length,
+        orders: orders.map(o => ({
+          id: o.id,
+          status: o.status,
+          paymentStatus: o.paymentStatus,
+          totalAmount: o.totalAmount
+        }))
+      });
+    }
 
     const escape = (v: any) => {
       const s = String(v ?? "");
@@ -927,14 +954,16 @@ ordersRouter.put("/:id/status", requireAdmin as any, async (req: AuthenticatedRe
       data: { status }
     });
 
-    // Trigger status update email asynchronously
-    const emailData = {
-      ...updatedOrder,
-      startDate: updatedOrder.startDate.toISOString().split("T")[0],
-      endDate: updatedOrder.endDate.toISOString().split("T")[0],
-      customerPhone: updatedOrder.customerPhone || ""
-    };
-    emailService.sendStatusUpdate(emailData).catch(err => console.error("Status update email error:", err));
+    // Trigger status update email asynchronously — respects the customer's live-update preference
+    if (await customerWantsEmail(updatedOrder.customerId)) {
+      const emailData = {
+        ...updatedOrder,
+        startDate: updatedOrder.startDate.toISOString().split("T")[0],
+        endDate: updatedOrder.endDate.toISOString().split("T")[0],
+        customerPhone: updatedOrder.customerPhone || ""
+      };
+      emailService.sendStatusUpdate(emailData).catch(err => console.error("Status update email error:", err));
+    }
 
     res.json({
       ...updatedOrder,
@@ -1007,6 +1036,7 @@ ordersRouter.post("/send-reminders", async (req: AuthenticatedRequest, res: Resp
 
     let sent = 0;
     for (const order of orders) {
+      if (!(await customerWantsEmail(order.customerId))) continue;
       const emailData = {
         ...order,
         startDate: order.startDate.toISOString().split("T")[0],

@@ -9,6 +9,7 @@ export interface User {
   companyName?: string;
   address?: string;
   avatarUrl?: string;
+  emailOptIn?: boolean;
   role: string;
 }
 
@@ -25,6 +26,7 @@ interface AuthState {
   register: (data: { email: string; password?: string; name: string; phone?: string; profile?: string; companyName?: string; marketingConsent?: boolean }) => Promise<boolean>;
   resendVerification: (email: string) => Promise<boolean>;
   updateProfile: (data: { name: string; phone?: string; profile?: string; companyName?: string; address?: string; avatarUrl?: string }) => Promise<boolean>;
+  updateEmailOptIn: (emailOptIn: boolean) => Promise<boolean>;
   logout: () => void;
   checkAuth: () => Promise<void>;
   clearError: () => void;
@@ -249,6 +251,28 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       return true;
     } catch (err: any) {
       set({ error: err.message, isLoading: false });
+      return false;
+    }
+  },
+
+  updateEmailOptIn: async (emailOptIn) => {
+    const previousUser = get().user;
+    // Optimistic update — toggle feels instant, revert on failure
+    if (previousUser) set({ user: { ...previousUser, emailOptIn } });
+    try {
+      const token = get().token;
+      const res = await fetch("/api/auth/notifications", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({ emailOptIn })
+      });
+      if (!res.ok) throw new Error();
+      return true;
+    } catch {
+      if (previousUser) set({ user: previousUser });
       return false;
     }
   }

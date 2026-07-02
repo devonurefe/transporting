@@ -211,6 +211,7 @@ authRouter.post("/login", async (req: AuthenticatedRequest, res: Response) => {
           companyName: customer.companyName,
           address: customer.address,
           avatarUrl: customer.avatarUrl,
+          emailOptIn: customer.emailOptIn,
           role: "customer"
         }
       });
@@ -264,6 +265,7 @@ authRouter.get("/me", authenticateToken, requireAuth, async (req: AuthenticatedR
           companyName: customer.companyName,
           address: customer.address,
           avatarUrl: customer.avatarUrl,
+          emailOptIn: customer.emailOptIn,
           role: "customer"
         }
       });
@@ -315,12 +317,33 @@ authRouter.put("/profile", requireAuth as any, async (req: AuthenticatedRequest,
         companyName: updatedCustomer.companyName,
         address: updatedCustomer.address,
         avatarUrl: updatedCustomer.avatarUrl,
+        emailOptIn: updatedCustomer.emailOptIn,
         role: "customer"
       }
     });
   } catch (error) {
     console.error("Profile update error:", error);
     res.status(500).json({ error: "Profiel bijwerken mislukt" });
+  }
+});
+
+// PUT /api/auth/notifications — customer toggles their live-update email preference
+authRouter.put("/notifications", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
+  const { emailOptIn } = req.body;
+  if (typeof emailOptIn !== "boolean") {
+    return res.status(400).json({ error: "emailOptIn moet true of false zijn" });
+  }
+
+  try {
+    const updatedCustomer = await prisma.customer.update({
+      where: { id: req.user!.id },
+      data: { emailOptIn }
+    });
+
+    res.json({ success: true, emailOptIn: updatedCustomer.emailOptIn });
+  } catch (error) {
+    console.error("Notification preference update error:", error);
+    res.status(500).json({ error: "Voorkeuren bijwerken mislukt" });
   }
 });
 

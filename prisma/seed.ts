@@ -831,7 +831,7 @@ async function main() {
     adminPassword = crypto.randomBytes(12).toString("base64url");
     console.warn(`[Seed] ADMIN_DEFAULT_PASSWORD not set — generated admin password (save it now, shown only once): ${adminPassword}`);
   }
-  const adminPasswordHash = await bcrypt.hash(adminPassword, 10);
+  const adminPasswordHash = await bcrypt.hash(adminPassword, 12);
   await prisma.admin.upsert({
     where: { email: adminEmail },
     update: {}, // Preserve existing admin password if already set
@@ -843,8 +843,19 @@ async function main() {
     }
   });
 
+  // Demo-klanten en demo-orders horen niet in productie thuis (voorheen
+  // moest scripts/cleanup-demo-data.sh ze achteraf verwijderen). Alleen
+  // seeden buiten productie, of wanneer expliciet gevraagd.
+  const seedDemoData =
+    process.env.SEED_DEMO_DATA === "true" || process.env.NODE_ENV !== "production";
+  if (!seedDemoData) {
+    console.log("Skipping demo customers/orders (production — set SEED_DEMO_DATA=true to include).");
+    console.log("Seeding completed successfully!");
+    return;
+  }
+
   console.log("Seeding customer profiles (upsert)...");
-  const customerPasswordHash = await bcrypt.hash("customer123", 10);
+  const customerPasswordHash = await bcrypt.hash("customer123", 12);
   const createdCustomers: Record<string, string> = {};
 
   for (const customerData of mockCustomers) {
@@ -885,7 +896,7 @@ async function main() {
         startDate: new Date("2026-06-05"),
         endDate: new Date("2026-06-08"),
         rentalDays: 3,
-        deliveryType: "delivery_with_driver",
+        deliveryType: "delivery_by_us",
         deliveryAddress: "Keizersgracht 420, 1016 EK Amsterdam",
         customerName: "Jan de Vries",
         customerEmail: "jan@devriesschilderwerken.nl",

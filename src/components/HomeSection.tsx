@@ -261,14 +261,17 @@ function DealsCarousel({ machines, onSearch }: { machines: Machine[]; onSearch: 
 
 export default function HomeSection({
   onSearch,
+  // Fallback-labels (alleen zichtbaar in de adminbeheer + als de live prijs
+  // ontbreekt); de kaart zelf toont altijd de live "vanaf"-prijs. Consistent
+  // "v.a."-formaat en één schaarlift-vanafprijs (€49, ook in SEO/marketing).
   customCategories = [
-    { id: "aanhanger", label: "\"Toe & Go\" Aanhangerhoogwerker", listLabel: "\"Toe & Go\" Aanhangerhoogwerkers", desc: "", heights: "12m - 17m", price: "€80/dag" },
-    { id: "spin", label: "Rupshoogwerker", listLabel: "Rupshoogwerkers", desc: "", heights: "15m - 17m", price: "€160/dag" },
-    { id: "schaarlift", label: "Schaarlift", listLabel: "Schaarliften", desc: "", heights: "6m - 10m", price: "€65/dag" },
-    { id: "mastlift", label: "Mastlift", listLabel: "Mastliften", desc: "", heights: "5m - 10m", price: "€75/dag" },
-    { id: "kamersteiger", label: "Kamersteiger", listLabel: "Kamersteigers", desc: "", heights: "4m", price: "€35/dag" },
-    { id: "ladderlift", label: "Ladderlift", listLabel: "Ladderliften / Verhuisliften", desc: "", heights: "18m - 21m", price: "€90/dag" },
-    { id: "ecolift", label: "Pecolift", listLabel: "Pecolift", desc: "", heights: "4.2m", price: "€45/dag" },
+    { id: "aanhanger", label: "\"Toe & Go\" Aanhangerhoogwerker", listLabel: "\"Toe & Go\" Aanhangerhoogwerkers", desc: "", heights: "12m - 17m", price: "v.a. €80/dag" },
+    { id: "spin", label: "Rupshoogwerker", listLabel: "Rupshoogwerkers", desc: "", heights: "15m - 17m", price: "v.a. €160/dag" },
+    { id: "schaarlift", label: "Schaarlift", listLabel: "Schaarliften", desc: "", heights: "6m - 10m", price: "v.a. €49/dag" },
+    { id: "mastlift", label: "Mastlift", listLabel: "Mastliften", desc: "", heights: "5m - 10m", price: "v.a. €75/dag" },
+    { id: "kamersteiger", label: "Kamersteiger", listLabel: "Kamersteigers", desc: "", heights: "4m", price: "v.a. €35/dag" },
+    { id: "ladderlift", label: "Ladderlift", listLabel: "Ladderliften / Verhuisliften", desc: "", heights: "18m - 21m", price: "v.a. €90/dag" },
+    { id: "ecolift", label: "Pecolift", listLabel: "Pecolift", desc: "", heights: "4.2m", price: "v.a. €45/dag" },
   ]
 }: HomeSectionProps) {
   const siteConfig = useAppStore((state) => state.siteConfig);
@@ -388,7 +391,7 @@ export default function HomeSection({
   const displayCategories = customCategories
     .filter(c => !SKIP_IDS.has(c.id))
     .map(c => c.id === "schaarlift"
-      ? { ...c, label: "Schaarliften 6-8-10", listLabel: "Schaarliften 6-8-10", heights: "6 / 8 / 10 m", price: "€49/dag" }
+      ? { ...c, label: "Schaarliften 6-8-10", listLabel: "Schaarliften 6-8-10", heights: "6 / 8 / 10 m", price: "v.a. €49/dag" }
       : c
     )
     .sort((a, b) => {

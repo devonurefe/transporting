@@ -56,7 +56,11 @@ export default function BookingSection({
   onUpdateCartItemDates = () => {},
   onClearCart = () => {}
 }: BookingSectionProps) {
-  // Booking Stepper state
+  // Booking Stepper state. Twee echte stappen (1: Logistiek, 2: Gegevens); na
+  // het plaatsen komt de succespagina. Voorheen was succes de "magische" stap 4
+  // (stap 3 werd overgeslagen); nu een expliciete, aaneengesloten constante.
+  const TOTAL_STEPS = 2;
+  const STEP_SUCCESS = 3;
   const campaignRules = useAppStore((state) => state.campaignRules);
   const [step, setStep] = useState<number>(1);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -825,7 +829,7 @@ export default function BookingSection({
             }
             setSuccessOrder(firstSuccessfulOrder);
             onClearCart();
-            setStep(4);
+            setStep(STEP_SUCCESS);
           } else {
             setBookingError("Er is een fout opgetreden bij het verwerken van uw boeking. Controleer uw gegevens en probeer het opnieuw.");
           }
@@ -848,7 +852,7 @@ export default function BookingSection({
             `maar ${cartItems.length - placedOrders.length} machine(s) konden niet worden verwerkt. ` +
             `Neem contact op via WhatsApp zodat wij dit kunnen oplossen.`
           );
-          setStep(4);
+          setStep(STEP_SUCCESS);
           return;
         }
 
@@ -890,10 +894,10 @@ export default function BookingSection({
       <div className="mx-auto max-w-6xl">
         
         {/* Stepper — hide on success */}
-        {step < 4 && (
+        {step < STEP_SUCCESS && (
           <div className="mb-8">
             <p className="text-center text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-5">
-              Stap {step} van 2
+              Stap {step} van {TOTAL_STEPS}
             </p>
             <div className="flex items-center justify-center max-w-xs mx-auto">
               {[
@@ -938,7 +942,7 @@ export default function BookingSection({
 
 
         <AnimatePresence mode="wait">
-          {step < 4 ? (
+          {step < STEP_SUCCESS ? (
             <motion.div 
               key="booking-content"
               initial={{ opacity: 0, y: 15 }}

@@ -135,7 +135,7 @@ If you add a new schema field that needs seeding, use the conditional `updateMan
 
 ## Admin Panel
 
-Nine lazy-loaded panels inside `src/components/admin/`:
+Eleven lazy-loaded panels inside `src/components/admin/`:
 
 | Panel | File | Purpose |
 |-------|------|---------|
@@ -144,10 +144,14 @@ Nine lazy-loaded panels inside `src/components/admin/`:
 | Machines | `AdminMachines.tsx` | Edit existing machines — prices, images, flat rates, gallery |
 | Add Machine | `AdminAddMachine.tsx` | Add new machine — includes Weekend/Werkweek/4W price inputs |
 | Calendar | `AdminCalendar.tsx` | Block/unblock dates per machine with reason dropdown |
+| Planning | `AdminPlanning.tsx` | Daily logistics timeline (departures/returns, addresses) |
+| Customers | `AdminCustomers.tsx` | Customer list, order history, lifetime value |
 | Logs | `AdminLogs.tsx` | System activity log |
-| Diagnostics | `AdminDiagnostics.tsx` | System health (cosmetic metrics, 4s interval) |
-| Customizer | `AdminCustomizer.tsx` | Site config (hero text, labels) |
-| Accounting | `AdminAccounting.tsx` | Exact Online integration log |
+| Diagnostics | `AdminDiagnostics.tsx` | System health (KPIs + live DB latency probe, 15s interval) |
+| Customizer | `AdminCustomizer.tsx` | Site config (hero text, labels), campaign rules, categories |
+| Accounting | `AdminAccounting.tsx` | Revenue reporting + CSV export |
+
+Shared admin widgets (not panels): `AdminStatusBadge.tsx`, `AdminConfirmDialog.tsx`, `AdminAvailabilityWidget.tsx`.
 
 ### Image upload in admin
 - Main image: URL field with X button (clears to "") + file upload → sets `editImageUrl`

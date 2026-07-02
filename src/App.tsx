@@ -70,8 +70,6 @@ function LoadingSpinner() {
   );
 }
 
-// Mock user profiles are now dynamically fetched from the database via `/api/auth/mock-profiles` inside components.
-
 export default function App() {
   const navigate = useNavigate();
   const location = useLocation();

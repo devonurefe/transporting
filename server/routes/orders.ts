@@ -770,6 +770,29 @@ ordersRouter.get("/ratings/by-machine", publicReadLimiter, async (_req: Authenti
   }
 });
 
+// GET /api/orders/ratings/recent — public list of the most recent REAL customer
+// reviews that have written text, for the footer testimonial ticker. Privacy:
+// deliberately returns NO customer name (OrderRating has none, and we don't join
+// customer identity into a public feed). Only rating + comment + date.
+ordersRouter.get("/ratings/recent", publicReadLimiter, async (_req: AuthenticatedRequest, res: Response) => {
+  try {
+    const rows = await prisma.orderRating.findMany({
+      where: { comment: { not: null } },
+      orderBy: { createdAt: "desc" },
+      take: 12,
+      select: { rating: true, comment: true, createdAt: true },
+    });
+    // Guard against empty/whitespace comments slipping through.
+    const reviews = rows
+      .filter((r) => (r.comment ?? "").trim().length > 0)
+      .map((r) => ({ rating: r.rating, comment: (r.comment ?? "").trim(), createdAt: r.createdAt }));
+    res.json(reviews);
+  } catch (error) {
+    console.error("Error fetching recent ratings:", error);
+    res.json([]);
+  }
+});
+
 // GET /api/orders/:id/rating — fetch an order's rating
 ordersRouter.get("/:id/rating", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
   const { id } = req.params;

@@ -618,9 +618,10 @@ export default function HomeSection({
                 onClick={() => onSearch("", cat.id)}
                 className="group bg-white border border-slate-200 rounded-2xl overflow-hidden text-left cursor-pointer hover:border-orange-300 hover:shadow-xl hover:shadow-orange-500/5 hover:-translate-y-1.5 active:scale-[0.98] transition-all duration-300 flex flex-col"
               >
-                {/* Top — text info: name + height • price on one clean line, then a
-                    slim model-count / CTA line, then the discount badge (if any)
-                    tucked right under the CTA text it belongs to — not on the photo. */}
+                {/* Top — text info: name + height • price, then the CTA right under it
+                    (left-aligned with the price, bold, so it's the obvious next click),
+                    then a lighter footer line for model count + the discount badge —
+                    kept apart from the CTA on purpose so the two don't crowd together. */}
                 <div className="p-4 flex flex-col gap-1.5 min-w-0">
                   <p className="font-display font-black text-base sm:text-lg text-slate-900 leading-snug line-clamp-2">
                     {cat.listLabel || cat.label}
@@ -638,32 +639,32 @@ export default function HomeSection({
                       })()}
                     </span>
                   </div>
-                  <div className="flex items-center justify-between gap-2 mt-0.5">
+                  <span className="inline-flex items-center gap-1 text-sm font-bold text-orange-600 group-hover:text-orange-700 group-hover:gap-1.5 transition-all duration-300">
+                    {meta && meta.badge !== "none"
+                      ? t("Bekijk actieprijzen", "View deal prices", "Kampanya fiyatlarını gör")
+                      : t("Bekijk modellen", "View models", "Modelleri gör")}
+                    <ChevronRight className="h-4 w-4" />
+                  </span>
+                  <div className="flex items-center justify-between gap-2 mt-1">
                     {meta && meta.count > 1 ? (
                       <span className="text-[11px] text-slate-400 font-medium">
                         {t(`${meta.count} modellen`, `${meta.count} models`, `${meta.count} model`)}
                       </span>
                     ) : <span />}
-                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-orange-500 group-hover:text-orange-600 group-hover:gap-1.5 transition-all duration-300">
-                      {meta && (meta.badge === "dag" || meta.badge === "actie")
-                        ? t("Bekijk actieprijzen", "View deal prices", "Kampanya fiyatlarını gör")
-                        : t("Bekijk modellen", "View models", "Modelleri gör")}
-                      <ChevronRight className="h-3 w-3" />
-                    </span>
+                    {meta && meta.badge !== "none" && (
+                      <span
+                        className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold text-white ${
+                          meta.badge === "tier" ? "bg-indigo-600" : "bg-rose-600"
+                        }`}
+                      >
+                        {meta.badge === "dag"
+                          ? t(`Dagactie −${meta.badgePct}%`, `Day deal −${meta.badgePct}%`, `Gün fırsatı −%${meta.badgePct}`)
+                          : meta.badge === "actie"
+                          ? t(`Actie −${meta.badgePct}%`, `Deal −${meta.badgePct}%`, `Kampanya −%${meta.badgePct}`)
+                          : t(`−${meta.badgePct}% per week`, `−${meta.badgePct}%/week`, `Haftada −%${meta.badgePct}`)}
+                      </span>
+                    )}
                   </div>
-                  {meta && meta.badge !== "none" && (
-                    <span
-                      className={`self-end inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold text-white ${
-                        meta.badge === "tier" ? "bg-indigo-600" : "bg-rose-600"
-                      }`}
-                    >
-                      {meta.badge === "dag"
-                        ? t(`Dagactie −${meta.badgePct}%`, `Day deal −${meta.badgePct}%`, `Gün fırsatı −%${meta.badgePct}`)
-                        : meta.badge === "actie"
-                        ? t(`Actie −${meta.badgePct}%`, `Deal −${meta.badgePct}%`, `Kampanya −%${meta.badgePct}`)
-                        : t(`−${meta.badgePct}% per week`, `−${meta.badgePct}%/week`, `Haftada −%${meta.badgePct}`)}
-                    </span>
-                  )}
                 </div>
 
                 {/* Bottom — wide machine photo on a pure white background so the

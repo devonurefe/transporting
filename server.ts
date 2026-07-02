@@ -702,6 +702,43 @@ async function applyDataMigrations() {
       console.log("[Migration] Weekaanbiedingen v2: exactly 3 machines set (nifty-170, nifty-120-1, compact-10n-1).");
     }
 
+    // Seed de echte Google-reviews (van het bedrijfsprofiel, door de eigenaar
+    // aangeleverd) éénmalig in de bestaande SiteConfig — alleen als er nog geen
+    // reviews staan, zodat een latere admin-bewerking nooit wordt overschreven.
+    const GOOGLE_REVIEWS_SEED = "migration-google-reviews-2026-07";
+    const grDone = await prisma.invoiceCounter.findUnique({ where: { id: GOOGLE_REVIEWS_SEED } });
+    if (!grDone) {
+      const REAL_GOOGLE_REVIEWS = [
+        { author: "Márton 'Martin' Nagy", rating: 5, text: "De enige plek in Nederland waar je hoogwerkers kunt huren voor een redelijke prijs zonder al te veel gedoe.", date: "3 weken geleden" },
+        { author: "Fatih Soy", rating: 5, text: "Nou deze mensen hebben mij meerdere keren uit de nood geholpen, zeer vriendelijk maar los van vriendelijkheid super flexibel. Super bedankt.", date: "een maand geleden" },
+        { author: "Arno van Zaanen", rating: 5, text: "Super vriendelijk, erg behulpzaam, ruime selectie, snelle service en stuk goedkoper dan andere verhuurders. Gespecialiseerd in hoogwerkers.", date: "een week geleden" },
+        { author: "Uzair Guman", rating: 5, text: "Mustafa is een zeer behulpzame en vriendelijke ondernemer!", date: "een week geleden" },
+        { author: "Elías", rating: 5, text: "Hele vriendelijke gasten. Mooie prijzen, aanrader!", date: "2 weken geleden" },
+        { author: "Robbert Plarina", rating: 5, text: "Fijne service en uitleg. Scherpe tarieven. Je huurt een hoogwerker bijna voor de prijs van een xl ladder. Materiaal prima in orde.", date: "een maand geleden" },
+        { author: "Alikagan Telek", rating: 5, text: "Topbedrijf met nette en goed onderhouden machines. Alles werkte perfect en de service was snel en betrouwbaar. Aanrader!", date: "een maand geleden" },
+        { author: "Dichter Robert", rating: 5, text: "Snel leveren en vriendelijke medewerker.", date: "een maand geleden" },
+        { author: "", rating: 5, text: "Top service, zeker een aanrader.", date: "2 weken geleden" },
+      ];
+      const cfg = await prisma.siteConfig.findUnique({ where: { id: "default" } });
+      const existing = (cfg as any)?.googleReviews;
+      const hasReviews = Array.isArray(existing) && existing.length > 0;
+      // SiteConfig bestaat altijd (autoSeed draaide hiervoor). Alleen aanvullen
+      // als er nog geen reviews staan, zodat admin-bewerkingen blijven staan.
+      if (cfg && !hasReviews) {
+        await prisma.siteConfig.update({
+          where: { id: "default" },
+          data: {
+            googleReviews: REAL_GOOGLE_REVIEWS,
+            // Zet de aggregaatscore alleen als die nog niet is ingevoerd.
+            ...((cfg as any).googleRating == null ? { googleRating: 5.0 } : {}),
+            ...((cfg as any).googleReviewCount == null ? { googleReviewCount: 66 } : {}),
+          } as any,
+        });
+        console.log("[Migration] Seeded 9 echte Google-reviews in SiteConfig.");
+      }
+      await prisma.invoiceCounter.create({ data: { id: GOOGLE_REVIEWS_SEED, lastNumber: 1 } });
+    }
+
     // Loud warning if the admin account still uses the old seeded default password
     const seededAdmin = await prisma.admin.findUnique({ where: { email: "admin@huurgo.nl" } });
     if (seededAdmin) {

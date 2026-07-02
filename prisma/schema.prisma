@@ -175,6 +175,10 @@ model SiteConfig {
   // unset the footer shows no score.
   googleRating      Float?
   googleReviewCount Int?
+  // Admin-curated echte Google-reviews voor de footer-ticker. Array van
+  // { author, rating, text, date }. De eigenaar plaatst hier echte reviews van
+  // het Google-bedrijfsprofiel; niets verzonnen.
+  googleReviews     Json?
 }
 
 model Notification {

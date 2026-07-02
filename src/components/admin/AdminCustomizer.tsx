@@ -7,7 +7,7 @@ import React, { useState } from "react";
 import { Settings, Check, Trash2, Tag, Plus, ChevronDown, Upload } from "lucide-react";
 import { resizeImage } from "../../utils/image";
 import { motion, AnimatePresence } from "motion/react";
-import { useAppStore } from "../../store/appStore";
+import { useAppStore, type GoogleReview } from "../../store/appStore";
 import { useAuthStore } from "../../store/authStore";
 import { CampaignRule } from "../../types";
 import AdminConfirmDialog from "./AdminConfirmDialog";
@@ -195,6 +195,15 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
   // Echte Google-score — leeg = niets tonen in de footer
   const [googleRating, setGoogleRating] = useState(siteConfig.googleRating != null ? String(siteConfig.googleRating) : "");
   const [googleReviewCount, setGoogleReviewCount] = useState(siteConfig.googleReviewCount != null ? String(siteConfig.googleReviewCount) : "");
+  // Admin-gecureerde echte Google-reviews (footer-ticker)
+  const [googleReviews, setGoogleReviews] = useState<GoogleReview[]>(siteConfig.googleReviews ?? []);
+  const [reviewsOpen, setReviewsOpen] = useState(false);
+  const updateReview = (i: number, patch: Partial<GoogleReview>) =>
+    setGoogleReviews((prev) => prev.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
+  const addReview = () =>
+    setGoogleReviews((prev) => [...prev, { author: "", rating: 5, text: "", date: "" }]);
+  const removeReview = (i: number) =>
+    setGoogleReviews((prev) => prev.filter((_, idx) => idx !== i));
 
   // Sync state if backend updates siteConfig
   React.useEffect(() => {
@@ -215,6 +224,7 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
       setCompanyLegalName(siteConfig.companyLegalName || "");
       setGoogleRating(siteConfig.googleRating != null ? String(siteConfig.googleRating) : "");
       setGoogleReviewCount(siteConfig.googleReviewCount != null ? String(siteConfig.googleReviewCount) : "");
+      setGoogleReviews(siteConfig.googleReviews ?? []);
     }
   }, [siteConfig]);
 
@@ -269,7 +279,9 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
       companyLegalName,
       // Lege string wist de score (server zet dan null); anders het getal
       googleRating: googleRating.trim() === "" ? null : Number(googleRating),
-      googleReviewCount: googleReviewCount.trim() === "" ? null : Number(googleReviewCount)
+      googleReviewCount: googleReviewCount.trim() === "" ? null : Number(googleReviewCount),
+      // Alleen reviews met tekst opslaan
+      googleReviews: googleReviews.filter((r) => r.text.trim() !== "")
     });
     setIsSavingConfig(false);
     if (success) {
@@ -512,6 +524,77 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
                   <label className="text-xs text-slate-700 block font-bold">{t("Aantal beoordelingen", "Number of reviews", "Değerlendirme sayısı")}</label>
                   <input type="number" step="1" min="0" value={googleReviewCount} onChange={(e) => setGoogleReviewCount(e.target.value)} placeholder="127" className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500" />
                 </div>
+              </div>
+
+              {/* Inklapbare beheerder voor echte Google-reviews (footer-ticker) */}
+              <div className="pt-3 mt-1 border-t border-slate-200/60">
+                <button
+                  type="button"
+                  onClick={() => setReviewsOpen((o) => !o)}
+                  className="w-full flex items-center justify-between text-left cursor-pointer bg-transparent border-none py-1"
+                >
+                  <span className="text-xs font-bold text-slate-700">
+                    {t("Google-reviews (footer-carrousel)", "Google reviews (footer carousel)", "Google yorumları (altbilgi)")} · {googleReviews.length}
+                  </span>
+                  <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform ${reviewsOpen ? "rotate-180" : ""}`} />
+                </button>
+
+                {reviewsOpen && (
+                  <div className="mt-2 space-y-3">
+                    <p className="text-[10px] text-slate-500">{t("Plaats hier échte reviews van uw Google-profiel. Elke review verschijnt in de carrousel boven de footer.", "Add real reviews from your Google profile here. Each shows in the carousel above the footer.", "Google profilinizdeki gerçek yorumları girin. Her biri altbilgi üstündeki karuselde görünür.")}</p>
+
+                    {googleReviews.map((rev, i) => (
+                      <div key={i} className="p-3 rounded-xl bg-white border border-slate-200 space-y-2">
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            value={rev.author}
+                            onChange={(e) => updateReview(i, { author: e.target.value })}
+                            placeholder={t("Naam (Google)", "Name (Google)", "Ad (Google)")}
+                            className="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 outline-none focus:border-amber-500"
+                          />
+                          <select
+                            value={rev.rating}
+                            onChange={(e) => updateReview(i, { rating: Number(e.target.value) })}
+                            className="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 text-xs text-slate-800 outline-none focus:border-amber-500"
+                          >
+                            {[5, 4, 3, 2, 1].map((n) => <option key={n} value={n}>{n} ★</option>)}
+                          </select>
+                          <button
+                            type="button"
+                            onClick={() => removeReview(i)}
+                            className="shrink-0 text-rose-600 hover:text-rose-700 cursor-pointer bg-transparent border-none p-1"
+                            title={t("Verwijderen", "Remove", "Sil")}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                        <textarea
+                          rows={2}
+                          value={rev.text}
+                          onChange={(e) => updateReview(i, { text: e.target.value })}
+                          placeholder={t("Reviewtekst", "Review text", "Yorum metni")}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 outline-none focus:border-amber-500 resize-none"
+                        />
+                        <input
+                          type="text"
+                          value={rev.date}
+                          onChange={(e) => updateReview(i, { date: e.target.value })}
+                          placeholder={t("Datum-label (bijv. '2 weken geleden')", "Date label (e.g. '2 weeks ago')", "Tarih etiketi (örn. '2 hafta önce')")}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 outline-none focus:border-amber-500"
+                        />
+                      </div>
+                    ))}
+
+                    <button
+                      type="button"
+                      onClick={addReview}
+                      className="flex items-center gap-1.5 text-xs font-bold text-amber-700 hover:text-amber-900 cursor-pointer bg-transparent border-none"
+                    >
+                      <Plus className="h-3.5 w-3.5" /> {t("Review toevoegen", "Add review", "Yorum ekle")}
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>

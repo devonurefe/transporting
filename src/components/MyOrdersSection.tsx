@@ -1017,7 +1017,7 @@ export default function MyOrdersSection({
                         <div className="flex gap-2 shrink-0 flex-wrap">
                           <button
                             onClick={() => handleDownloadInvoice(o)}
-                            className="flex items-center space-x-1 font-black text-[10px] bg-white hover:bg-slate-50 transition-colors text-slate-700 px-3 py-2 rounded-lg border border-slate-200 shadow-sm cursor-pointer"
+                            className="flex items-center space-x-1 font-black text-[10px] bg-white hover:bg-slate-50 transition-colors text-slate-700 px-3 py-2 rounded-lg border border-slate-200 shadow-sm cursor-pointer whitespace-nowrap"
                           >
                             <Download className="h-3.5 w-3.5 text-slate-600" />
                             <span>Factuur PDF</span>
@@ -1029,7 +1029,7 @@ export default function MyOrdersSection({
                               href={buildWhatsAppPaymentLinkUrl(o.id)}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="flex items-center space-x-1 font-black text-[10px] bg-[#25D366]/10 hover:bg-[#25D366]/20 text-[#1a9b4b] px-3 py-2 rounded-lg border border-[#25D366]/30 shadow-sm no-underline transition-colors"
+                              className="flex items-center space-x-1 font-black text-[10px] bg-[#25D366]/10 hover:bg-[#25D366]/20 text-[#1a9b4b] px-3 py-2 rounded-lg border border-[#25D366]/30 shadow-sm no-underline transition-colors whitespace-nowrap"
                               title="Vraag uw betaallink op via WhatsApp"
                             >
                               <MessageSquare className="h-3.5 w-3.5" />
@@ -1041,7 +1041,7 @@ export default function MyOrdersSection({
                               href={buildWhatsAppOrderStatusUrl(o.id, o.machineName)}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="flex items-center space-x-1 font-black text-[10px] bg-[#25D366]/10 hover:bg-[#25D366]/20 text-[#1a9b4b] px-3 py-2 rounded-lg border border-[#25D366]/30 shadow-sm no-underline transition-colors"
+                              className="flex items-center space-x-1 font-black text-[10px] bg-[#25D366]/10 hover:bg-[#25D366]/20 text-[#1a9b4b] px-3 py-2 rounded-lg border border-[#25D366]/30 shadow-sm no-underline transition-colors whitespace-nowrap"
                               title="Vraag de status op via WhatsApp"
                             >
                               <MessageSquare className="h-3.5 w-3.5" />
@@ -1053,7 +1053,7 @@ export default function MyOrdersSection({
                             <button
                               disabled={cancellingOrderId === o.id}
                               onClick={() => setCancelModalOrderId(o.id)}
-                              className="flex items-center space-x-1 font-black text-[10px] bg-white hover:bg-rose-50 transition-colors text-rose-600 hover:text-rose-700 px-3 py-2 rounded-lg border border-rose-200 shadow-sm cursor-pointer disabled:opacity-50"
+                              className="flex items-center space-x-1 font-black text-[10px] bg-white hover:bg-rose-50 transition-colors text-rose-600 hover:text-rose-700 px-3 py-2 rounded-lg border border-rose-200 shadow-sm cursor-pointer disabled:opacity-50 whitespace-nowrap"
                             >
                               {cancellingOrderId === o.id ? (
                                 <div className="h-3 w-3 border border-current border-t-transparent rounded-full animate-spin" />

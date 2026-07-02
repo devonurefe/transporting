@@ -398,7 +398,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                           }}
                         />
                       </div>
-                      <span>{m.name}</span>
+                      <span className="truncate max-w-[140px] sm:max-w-[220px]" title={m.name}>{m.name}</span>
                     </td>
                     <td className="py-3 uppercase font-mono text-[9px] text-slate-500 font-extrabold">{m.category}</td>
                     <td className="py-3 text-slate-700 font-mono">{m.height} m</td>
@@ -609,11 +609,11 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                     <div className="space-y-1 md:col-span-2">
                       <label className="text-xs text-slate-700 block font-bold">{t("Afbeelding", "Image", "Resim")}</label>
                       <div className="grid grid-cols-1 sm:grid-cols-[120px_1fr] gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3">
-                        <div className="h-20 w-full overflow-hidden rounded-xl border border-slate-200 bg-white">
+                        <div className="h-28 w-full overflow-hidden rounded-xl border border-slate-200 bg-white flex items-center justify-center">
                           <img
                             src={editImageUrl || "/placeholder-machine.webp"}
                             alt={t("Voorbeeld", "Preview", "Önizleme")}
-                            className="h-full w-full object-cover"
+                            className="h-full w-full object-contain"
                             referrerPolicy="no-referrer"
                             onError={(e) => {
                               e.currentTarget.src = "/placeholder-machine.webp";
@@ -783,7 +783,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                       )}
                       <div className="space-y-1.5">
                         {editSpecs.map((spec, idx) => (
-                          <div key={idx} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5 sm:gap-2">
+                          <div key={idx} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5 sm:gap-2 rounded-xl border border-slate-200 bg-white/70 p-1.5 sm:border-0 sm:bg-transparent sm:p-0">
                             <input
                               type="text"
                               placeholder={t("Label (bijv. Capaciteit)", "Label (e.g. Capacity)", "Etiket (örn. Kapasite)")}

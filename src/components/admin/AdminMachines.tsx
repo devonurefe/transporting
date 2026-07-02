@@ -382,7 +382,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                 return (
                    <tr key={m.id} className={`hover:bg-slate-50 transition-colors ${inactive ? "opacity-50" : ""}`}>
                     <td className="py-3 font-bold text-slate-800 flex items-center space-x-2.5">
-                      <div className="h-11 w-16 rounded-lg overflow-hidden shrink-0 border border-slate-200 bg-slate-100">
+                      <div className="h-16 w-16 rounded-lg overflow-hidden shrink-0 border border-slate-200 bg-slate-100">
                         <img
                           src={m.imageUrl || (m.additionalImages as string[])?.[0] || "/placeholder-machine.webp"}
                           alt={m.name}
@@ -398,7 +398,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                           }}
                         />
                       </div>
-                      <span className="truncate max-w-[140px] sm:max-w-[220px]" title={m.name}>{m.name}</span>
+                      <span className="whitespace-normal break-words leading-snug max-w-[200px] sm:max-w-[320px]" title={m.name}>{m.name}</span>
                     </td>
                     <td className="py-3 uppercase font-mono text-[9px] text-slate-500 font-extrabold">{m.category}</td>
                     <td className="py-3 text-slate-700 font-mono">{m.height} m</td>

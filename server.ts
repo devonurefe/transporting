@@ -380,9 +380,9 @@ async function startServer() {
     // Diagnostics checks
     console.log(`\n🩺 [DIAGNOSTICS] Auditing environment parameters...`);
     
-    // JWT Secret Check
+    // JWT Secret Check — moet de dev-fallback in server/utils/auth.ts spiegelen
     const jwtSecret = process.env.JWT_SECRET;
-    if (!jwtSecret || jwtSecret === "dev-only-huurgo-jwt-secret") {
+    if (!jwtSecret || jwtSecret === "dev-only-huurgo-jwt-secret-do-not-use-in-prod") {
       console.log(`⚠️  [JWT_SECRET]: USING DEVELOPMENT DEFAULT KEY. Please set a secure key in production.`);
     } else {
       console.log(`✅ [JWT_SECRET]: Configured securely.`);

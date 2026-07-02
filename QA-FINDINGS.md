@@ -63,5 +63,7 @@ PostgreSQL + dev server üzerinde HTTP ile uçtan uca sürülerek test edildi.
 ## Kapsam dışı / ayrı izlenecek
 - Mevcut baseline tip hataları (`HomeSection` `t()` 3-arg, `BookingSection` `DeliveryType`)
   bu çalışmada eklenmedi; ayrı bir temizlik gerektirir.
-- Kalıntı Gemini/AI artefaktları (`@google/genai` bağımlılığı, `GEMINI_API_KEY` config'leri,
-  `menuAdvisorLabel`) — kullanıcıyla kapsam netleştiriliyor.
+- Kalıntı Gemini/AI artefaktları: `@google/genai` bağımlılığı ve `GEMINI_API_KEY`
+  config'leri kaldırıldı (2026-07 itibarıyla `package.json`'da yok). Yalnızca
+  `menuAdvisorLabel` sütunu şemada bilinçli olarak duruyor (destructive `db push`
+  önlemek için — bkz. `prisma/schema.prisma`).

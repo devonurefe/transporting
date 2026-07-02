@@ -107,104 +107,13 @@
   background: rgba(15, 23, 42, 0.2);
 }
 
-/* Glassmorphism templates & animations */
-.premium-glow {
-  box-shadow: 0 0 50px -10px rgba(79, 70, 229, 0.12);
-}
-
-.teal-glow {
-  box-shadow: 0 0 45px -10px rgba(13, 148, 136, 0.12);
-}
-
+/* Glassmorphism panel (gedeeld door storefront + admin) */
 .glass-panel {
   background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(15, 23, 42, 0.07);
   border-radius: 16px;
-}
-
-.glass-panel-hover {
-  transition: all 0.2s ease-out;
-}
-
-.glass-panel-hover:hover {
-  background: rgba(255, 255, 255, 0.97);
-  border-color: rgba(99, 102, 241, 0.2);
-  box-shadow: 0 8px 32px -8px rgba(99, 102, 241, 0.12);
-  transform: translateY(-1px);
-}
-
-.gradient-text {
-  background: linear-gradient(90deg, #4f46e5, #2563eb);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.btn-primary {
-  background: linear-gradient(135deg, #4f46e5 0%, #2563eb 100%);
-  color: white;
-  padding: 10px 20px;
-  border-radius: 10px;
-  font-weight: 600;
-  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25);
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-}
-
-.btn-primary:hover {
-  opacity: 0.95;
-  transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.35);
-}
-
-.machine-chip {
-  background: rgba(79, 70, 229, 0.07);
-  color: #4f46e5;
-  padding: 4.5px 10px;
-  border-radius: 6px;
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  border: 1px solid rgba(79, 70, 229, 0.14);
-  display: inline-block;
-}
-
-.glow-bg {
-  position: absolute;
-  width: 450px;
-  height: 450px;
-  background: radial-gradient(circle, rgba(79, 70, 229, 0.07) 0%, transparent 70%);
-  top: -120px;
-  right: -120px;
-  z-index: 0;
-  pointer-events: none;
-}
-
-.nav-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 16px;
-  border-radius: 8px;
-  transition: all 0.2s;
-  cursor: pointer;
-  color: #64748b;
-  font-size: 13.5px;
-  font-weight: 500;
-}
-
-.nav-item:hover {
-  color: #1e293b;
-  background: rgba(15, 23, 42, 0.03);
-}
-
-.nav-item.active {
-  background: rgba(79, 70, 229, 0.08);
-  color: #4f46e5;
-  border: 1px solid rgba(79, 70, 229, 0.15);
 }
 
 /* Subtle ring-pulse for "Geschikt voor mij?" advice button */

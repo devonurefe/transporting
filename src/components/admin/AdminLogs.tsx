@@ -9,7 +9,6 @@ import { motion } from "motion/react";
 import { UserProfile } from "../../types";
 
 interface AdminLogsProps {
-  key?: string;
   systemLogs: any[];
   onClearSystemLogs: () => void;
   userProfiles: UserProfile[];

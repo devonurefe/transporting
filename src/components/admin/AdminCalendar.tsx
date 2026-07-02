@@ -8,9 +8,9 @@ import { Calendar, RefreshCw, Plus, Copy, Check, Link2 } from "lucide-react";
 import { motion } from "motion/react";
 import { useAppStore } from "../../store/appStore";
 import { useAuthStore } from "../../store/authStore";
+import { showAdminToast } from "./AdminToast";
 
 interface AdminCalendarProps {
-  key?: string;
   onAddSystemLog: (type: "login" | "logout" | "signup" | "booking" | "fleet" | "status" | "system", user: string, description: string) => void;
   adminLanguage?: string;
 }
@@ -97,7 +97,7 @@ export default function AdminCalendar({ onAddSystemLog, adminLanguage }: AdminCa
       const rangeLabel = datesToBlock.length > 1 ? `${blockDate} t/m ${end}` : blockDate;
       onAddSystemLog("system", adminUser?.name ?? "Admin", t(`Periode ${rangeLabel} geblokkeerd voor machine ID: ${selectedBlockMachineId}`, `Period ${rangeLabel} blocked for machine ID: ${selectedBlockMachineId}`, `${rangeLabel} tarihleri makine ID'si ${selectedBlockMachineId} için engellendi`));
     } else {
-      alert(t("Fout bij het blokkeren van datum.", "Error blocking date.", "Tarih engellenirken hata oluştu."));
+      showAdminToast(t("Fout bij het blokkeren van datum.", "Error blocking date.", "Tarih engellenirken hata oluştu."), "error");
     }
   };
 
@@ -106,7 +106,7 @@ export default function AdminCalendar({ onAddSystemLog, adminLanguage }: AdminCa
     if (success) {
       onAddSystemLog("system", adminUser?.name ?? "Admin", t(`Blokkade opgeheven voor datum ${date} op machine ID: ${machineId}`, `Block lifted for date ${date} on machine ID: ${machineId}`, `Makine ID'si ${machineId} üzerinde ${date} tarihi için engel kaldırıldı`));
     } else {
-      alert(t("Fout bij het vrijgeven van datum.", "Error releasing date.", "Tarih kullanıma açılırken hata oluştu."));
+      showAdminToast(t("Fout bij het vrijgeven van datum.", "Error releasing date.", "Tarih kullanıma açılırken hata oluştu."), "error");
     }
   };
 

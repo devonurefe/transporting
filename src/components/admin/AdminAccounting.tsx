@@ -11,7 +11,6 @@ import { euro } from "../../utils/format";
 import { getAdminAuthHeaders } from "../../utils/authHeaders";
 
 interface AdminAccountingProps {
-  key?: string;
   adminLanguage?: string;
 }
 

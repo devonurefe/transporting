@@ -118,11 +118,12 @@ export default function App() {
     }
   }, [searchQuery, selectedCategory, activeTab, location.search, navigate]);
 
-  // Warm the most-linked lazy chunks (catalog + FAQ) while the browser is idle,
-  // so footer/nav clicks open instantly instead of waiting on a Suspense spinner.
+  // Warm the most-linked lazy chunks (catalog + booking + FAQ) while the browser
+  // is idle, so nav clicks open instantly instead of waiting on a Suspense spinner.
   useEffect(() => {
     const warm = () => {
       import("./components/CatalogSection");
+      import("./components/BookingSection");
       import("./components/FaqSection");
     };
     const ric = (window as unknown as { requestIdleCallback?: (cb: () => void) => number }).requestIdleCallback;
@@ -760,150 +761,84 @@ export default function App() {
       {/* Primary Workspace Sections */}
       <main id="main-content" className="flex-grow">
         <Suspense fallback={<LoadingSpinner />}>
-          <AnimatePresence mode="wait">
-            <Routes location={location}>
-              <Route path="/" element={
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <HomeSection
-                    onSearch={handleLandingPageSearch}
-                    setActiveTab={setActiveTab}
-                    siteConfig={siteConfig}
-                    customCategories={customCategories}
-                  />
-                </motion.div>
-              } />
+          {/* No route-level exit/enter animation: an exit fade (AnimatePresence
+              mode="wait") blocked every tab switch for ~0.6s before content
+              appeared. Navigation must feel instant. */}
+          <Routes location={location}>
+            <Route path="/" element={
+              <HomeSection
+                onSearch={handleLandingPageSearch}
+                setActiveTab={setActiveTab}
+                siteConfig={siteConfig}
+                customCategories={customCategories}
+              />
+            } />
 
-              <Route path="/catalog" element={
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <CatalogSection 
-                    machines={machines}
-                    customCategories={customCategories}
-                    searchQuery={searchQuery}
-                    setSearchQuery={setSearchQuery}
-                    selectedCategory={selectedCategory}
-                    setSelectedCategory={setSelectedCategory}
-                    onSelectMachineForBooking={handleSelectMachineForBooking}
-                    onAddSystemLog={handleAddSystemLog}
-                    currentUser={currentUser}
-                  />
-                </motion.div>
-              } />
+            <Route path="/catalog" element={
+              <CatalogSection
+                machines={machines}
+                customCategories={customCategories}
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                selectedCategory={selectedCategory}
+                setSelectedCategory={setSelectedCategory}
+                onSelectMachineForBooking={handleSelectMachineForBooking}
+                onAddSystemLog={handleAddSystemLog}
+                currentUser={currentUser}
+              />
+            } />
 
-              <Route path="/hoogwerker/:id" element={
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <MachineDetailPage onSelectMachineForBooking={handleSelectMachineForBooking} />
-                </motion.div>
-              } />
+            <Route path="/hoogwerker/:id" element={
+              <MachineDetailPage onSelectMachineForBooking={handleSelectMachineForBooking} />
+            } />
 
-              <Route path="/hoogwerker-huren/:stad" element={
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <CityLandingPage onSelectMachineForBooking={handleSelectMachineForBooking} />
-                </motion.div>
-              } />
+            <Route path="/hoogwerker-huren/:stad" element={
+              <CityLandingPage onSelectMachineForBooking={handleSelectMachineForBooking} />
+            } />
 
-              <Route path="/veelgestelde-vragen" element={
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <FaqSection />
-                </motion.div>
-              } />
+            <Route path="/veelgestelde-vragen" element={<FaqSection />} />
 
-              <Route path="/booking" element={
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <BookingSection
-                    selectedMachine={selectedMachine}
-                    onCreateReservation={handleCreateReservation}
-                    setActiveTab={setActiveTab}
-                    machines={machines}
-                    onSelectMachine={setSelectedMachine}
-                    currentUser={currentUser}
-                    cartItems={cartItems}
-                    onRemoveCartItem={handleRemoveCartItem}
-                    onUpdateCartItemDates={handleUpdateCartItemDates}
-                    onClearCart={handleClearCart}
-                  />
-                </motion.div>
-              } />
+            <Route path="/booking" element={
+              <BookingSection
+                selectedMachine={selectedMachine}
+                onCreateReservation={handleCreateReservation}
+                setActiveTab={setActiveTab}
+                machines={machines}
+                onSelectMachine={setSelectedMachine}
+                currentUser={currentUser}
+                cartItems={cartItems}
+                onRemoveCartItem={handleRemoveCartItem}
+                onUpdateCartItemDates={handleUpdateCartItemDates}
+                onClearCart={handleClearCart}
+              />
+            } />
 
-              <Route path="/orders" element={
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <MyOrdersSection
-                    orders={orders}
-                    onTriggerNotification={triggerNotification}
-                    currentUser={currentUser}
-                    setCurrentUser={setCurrentUser}
-                    onUpdateOrderStatus={handleUpdateOrderStatus}
-                    onAddSystemLog={handleAddSystemLog}
-                    setActiveTab={setActiveTab}
-                  />
-                </motion.div>
-              } />
+            <Route path="/orders" element={
+              <MyOrdersSection
+                orders={orders}
+                onTriggerNotification={triggerNotification}
+                currentUser={currentUser}
+                setCurrentUser={setCurrentUser}
+                onUpdateOrderStatus={handleUpdateOrderStatus}
+                onAddSystemLog={handleAddSystemLog}
+                setActiveTab={setActiveTab}
+              />
+            } />
 
-              <Route path="/admin" element={
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <ErrorBoundary>
-                    <AdminSection
-                      isAdminMode={isAdminMode}
-                      setIsAdminMode={setIsAdminMode}
-                      systemLogs={systemLogs}
-                      onAddSystemLog={handleAddSystemLog}
-                      onClearSystemLogs={handleClearSystemLogs}
-                    />
-                  </ErrorBoundary>
-                </motion.div>
-              } />
+            <Route path="/admin" element={
+              <ErrorBoundary>
+                <AdminSection
+                  isAdminMode={isAdminMode}
+                  setIsAdminMode={setIsAdminMode}
+                  systemLogs={systemLogs}
+                  onAddSystemLog={handleAddSystemLog}
+                  onClearSystemLogs={handleClearSystemLogs}
+                />
+              </ErrorBoundary>
+            } />
 
-              <Route path="*" element={
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <NotFoundPage setActiveTab={setActiveTab} />
-                </motion.div>
-              } />
-            </Routes>
-          </AnimatePresence>
+            <Route path="*" element={<NotFoundPage setActiveTab={setActiveTab} />} />
+          </Routes>
         </Suspense>
       </main>
 

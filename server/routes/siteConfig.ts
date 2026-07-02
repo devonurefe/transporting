@@ -46,8 +46,8 @@ const SITE_CONFIG_FIELDS = [
   "contactEmail", "contactPhone", "companyAddress", "kvkNumber", "btwNumber", "companyLegalName"
 ] as const;
 
-function pickSiteConfigFields(body: any): Record<string, string> {
-  const data: Record<string, string> = {};
+function pickSiteConfigFields(body: any): Record<string, string | number | null> {
+  const data: Record<string, string | number | null> = {};
   for (const field of SITE_CONFIG_FIELDS) {
     // heroImageUrl stores a base64 data URL — allow up to 5 MB; all other fields max 1 KB
     const maxLen = field === "heroImageUrl" ? 5_000_000 : 1000;
@@ -55,6 +55,29 @@ function pickSiteConfigFields(body: any): Record<string, string> {
       data[field] = body[field];
     }
   }
+
+  // Google rating: real external number, admin-entered. Accept a value in [0,5]
+  // (one decimal) and a non-negative integer count; "" or null clears the field
+  // so the footer stops showing a score. Anything malformed is ignored.
+  if ("googleRating" in (body ?? {})) {
+    const raw = body.googleRating;
+    if (raw === null || raw === "") {
+      data.googleRating = null;
+    } else {
+      const n = Number(raw);
+      if (!isNaN(n) && n >= 0 && n <= 5) data.googleRating = Math.round(n * 10) / 10;
+    }
+  }
+  if ("googleReviewCount" in (body ?? {})) {
+    const raw = body.googleReviewCount;
+    if (raw === null || raw === "") {
+      data.googleReviewCount = null;
+    } else {
+      const n = Number(raw);
+      if (!isNaN(n) && n >= 0 && n <= 1_000_000) data.googleReviewCount = Math.round(n);
+    }
+  }
+
   return data;
 }
 

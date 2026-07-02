@@ -18,6 +18,7 @@ import {
 const WHATSAPP_NUMBER = (import.meta as any).env?.VITE_WHATSAPP_NUMBER ?? "";
 import { useAuthStore } from "../../store/authStore";
 import { useLanguageStore } from "../../store/languageStore";
+import { showAdminToast } from "./AdminToast";
 
 interface Customer {
   id: string;
@@ -197,7 +198,7 @@ export default function AdminCustomers({ adminLanguage }: AdminCustomersProps) {
       if (!res.ok) throw new Error(data.error || "Versturen mislukt");
       setEmailSentCount(data.sent ?? 0);
     } catch (err: any) {
-      alert(err.message || "Campagne versturen mislukt");
+      showAdminToast(err.message || "Campagne versturen mislukt", "error");
     } finally {
       setSendingEmail(false);
     }

@@ -237,7 +237,7 @@ transporting/
 - Volume: `./uploads:/app/uploads` (⚠️ run `chown -R 1000:1000 uploads` once on host)
 - Port: `127.0.0.1:3000` (localhost-only, accessed via Nginx)
 - User: `node` (UID 1000, non-root)
-- Startup CMD: `prisma db push && prisma db seed && npm run start`
+- Startup CMD: `npm run start` (runs `prisma db push` once; an empty database is auto-seeded by the server)
 
 #### Service: `nginx`
 - Image: `nginx:alpine`
@@ -264,17 +264,15 @@ transporting/
 Pushes to `main` trigger `.github/workflows/deploy.yml`:
 
 1. **test** — `npm ci`, `prisma generate`, `npm run lint`, `npm run test` (also runs on PRs)
-2. **build** — Docker image → `ghcr.io/devonurefe/transporting:latest` (only after tests pass)
-3. **deploy** — key-based SSH to the VPS: `git pull`, `docker compose pull app`, recreate, `prisma db push`
+2. **build** — Docker image → `ghcr.io/devonurefe/transporting:latest` (only after tests pass, push to `main` only)
+3. **deploy** — SSH to the VPS (password-based via `sshpass`, retried 3×): `git pull`, `docker compose pull app`, recreate app container (schema push happens at container start via `npm run start`)
 
 Required repository secrets:
 
 | Secret | Purpose |
 |--------|---------|
 | `VPS_HOST` | Server address |
-| `VPS_SSH_KEY` | Private key whose public half is in the server's `authorized_keys` |
-| `VPS_SSH_USER` | SSH user (optional, defaults to `root`) |
-| `VPS_HOST_KEY` | Output of `ssh-keyscan <host>` for host-key pinning (optional but recommended) |
+| `VPS_PASSWORD` | SSH password for the deploy user (`root`) |
 
 ### Deployment Checklist
 

@@ -11,9 +11,9 @@ import { useAppStore } from "../../store/appStore";
 import { useAuthStore } from "../../store/authStore";
 import { CampaignRule } from "../../types";
 import AdminConfirmDialog from "./AdminConfirmDialog";
+import { showAdminToast } from "./AdminToast";
 
 interface AdminCustomizerProps {
-  key?: string;
   onAddSystemLog: (type: "login" | "logout" | "signup" | "booking" | "fleet" | "status" | "system", user: string, description: string) => void;
   adminLanguage?: string;
 }
@@ -192,6 +192,9 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
   const [kvkNumber, setKvkNumber] = useState(siteConfig.kvkNumber || "");
   const [btwNumber, setBtwNumber] = useState(siteConfig.btwNumber || "");
   const [companyLegalName, setCompanyLegalName] = useState(siteConfig.companyLegalName || "");
+  // Echte Google-score — leeg = niets tonen in de footer
+  const [googleRating, setGoogleRating] = useState(siteConfig.googleRating != null ? String(siteConfig.googleRating) : "");
+  const [googleReviewCount, setGoogleReviewCount] = useState(siteConfig.googleReviewCount != null ? String(siteConfig.googleReviewCount) : "");
 
   // Sync state if backend updates siteConfig
   React.useEffect(() => {
@@ -210,6 +213,8 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
       setKvkNumber(siteConfig.kvkNumber || "");
       setBtwNumber(siteConfig.btwNumber || "");
       setCompanyLegalName(siteConfig.companyLegalName || "");
+      setGoogleRating(siteConfig.googleRating != null ? String(siteConfig.googleRating) : "");
+      setGoogleReviewCount(siteConfig.googleReviewCount != null ? String(siteConfig.googleReviewCount) : "");
     }
   }, [siteConfig]);
 
@@ -234,10 +239,10 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
         const data = await res.json();
         setHeroImageUrl(data.url);
       } else {
-        alert(t("Uploaden mislukt.", "Upload failed.", "Yükleme başarısız."));
+        showAdminToast(t("Uploaden mislukt.", "Upload failed.", "Yükleme başarısız."), "error");
       }
     } catch {
-      alert(t("Fout bij uploaden afbeelding.", "Error uploading image.", "Resim yükleme hatası."));
+      showAdminToast(t("Fout bij uploaden afbeelding.", "Error uploading image.", "Resim yükleme hatası."), "error");
     } finally {
       setIsUploadingHero(false);
       e.target.value = "";
@@ -261,7 +266,10 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
       companyAddress,
       kvkNumber,
       btwNumber,
-      companyLegalName
+      companyLegalName,
+      // Lege string wist de score (server zet dan null); anders het getal
+      googleRating: googleRating.trim() === "" ? null : Number(googleRating),
+      googleReviewCount: googleReviewCount.trim() === "" ? null : Number(googleReviewCount)
     });
     setIsSavingConfig(false);
     if (success) {
@@ -485,6 +493,25 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
               <div className="space-y-1">
                 <label className="text-xs text-slate-700 block font-bold">BTW-nummer</label>
                 <input type="text" value={btwNumber} onChange={(e) => setBtwNumber(e.target.value)} placeholder="NL000000000B01" className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500" />
+              </div>
+            </div>
+
+            {/* Google-beoordeling: echt cijfer, handmatig ingevoerd */}
+            <div className="pt-3 mt-1 border-t border-slate-200/80 space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-black" style={{ background: "linear-gradient(135deg, #4285F4 25%, #EA4335 50%, #FBBC05 75%, #34A853 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>G</span>
+                <span className="text-xs font-bold text-slate-700">{t("Google-beoordeling (footer)", "Google rating (footer)", "Google puanı (altbilgi)")}</span>
+              </div>
+              <p className="text-[10px] text-slate-500">{t("Voer het echte cijfer van uw Google-bedrijfsprofiel in. Laat leeg om geen score te tonen — verzin nooit een cijfer.", "Enter the real number from your Google Business profile. Leave empty to show no score — never invent a rating.", "Google İşletme profilinizdeki gerçek sayıyı girin. Boş bırakırsanız puan gösterilmez — asla uydurma bir sayı girmeyin.")}</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-xs text-slate-700 block font-bold">{t("Score (0–5)", "Score (0–5)", "Puan (0–5)")}</label>
+                  <input type="number" step="0.1" min="0" max="5" value={googleRating} onChange={(e) => setGoogleRating(e.target.value)} placeholder="4.9" className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500" />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs text-slate-700 block font-bold">{t("Aantal beoordelingen", "Number of reviews", "Değerlendirme sayısı")}</label>
+                  <input type="number" step="1" min="0" value={googleReviewCount} onChange={(e) => setGoogleReviewCount(e.target.value)} placeholder="127" className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500" />
+                </div>
               </div>
             </div>
           </div>
@@ -1086,14 +1113,14 @@ function AddCategoryForm({ onAddSystemLog, adminLanguage }: AddCategoryFormProps
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!id.trim() || !label.trim()) {
-      alert(t("Groep ID en Groep Label zijn verplicht.", "Group ID and Group Label are required.", "Grup ID'si ve Grup Etiketi zorunludur."));
+      showAdminToast(t("Groep ID en Groep Label zijn verplicht.", "Group ID and Group Label are required.", "Grup ID'si ve Grup Etiketi zorunludur."), "error");
       return;
     }
     const cleanId = id.trim().toLowerCase().replace(/\s+/g, "");
     
     // Check duplication
     if (customCategories.some((c: any) => c.id === cleanId)) {
-      alert(t("Groep met deze ID bestaat al.", "Group with this ID already exists.", "Bu ID'ye sahip grup zaten mevcut."));
+      showAdminToast(t("Groep met deze ID bestaat al.", "Group with this ID already exists.", "Bu ID'ye sahip grup zaten mevcut."), "error");
       return;
     }
 
@@ -1118,7 +1145,7 @@ function AddCategoryForm({ onAddSystemLog, adminLanguage }: AddCategoryFormProps
       setHeights("");
       setPrice("");
     } else {
-      alert(t("Fout bij opslaan van categorie.", "Error saving category.", "Kategori kaydedilirken hata oluştu."));
+      showAdminToast(t("Fout bij opslaan van categorie.", "Error saving category.", "Kategori kaydedilirken hata oluştu."), "error");
     }
   };
 

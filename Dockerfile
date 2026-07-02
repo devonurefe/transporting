@@ -35,7 +35,7 @@ COPY package*.json ./
 COPY tsconfig.json ./
 
 # Install only production dependencies
-RUN npm ci --only=production
+RUN npm ci --omit=dev
 
 # Copy generated Prisma client from builder
 COPY --from=builder /app/node_modules/.prisma /app/node_modules/.prisma
@@ -51,5 +51,7 @@ USER node
 
 EXPOSE 3000
 
-# Script to push Prisma schema, seed the database, and start the server
-CMD ["sh", "-c", "npx prisma db push && npx prisma db seed && npm run start"]
+# npm run start voert zelf al "prisma db push" uit en de server seedt een
+# lege database automatisch (autoSeedIfEmpty in server.ts) — geen dubbele
+# push/seed meer bij elke containerstart.
+CMD ["sh", "-c", "npm run start"]

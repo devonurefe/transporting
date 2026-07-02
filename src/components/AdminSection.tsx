@@ -28,6 +28,7 @@ import { useAppStore } from "../store/appStore";
 import { useLanguageStore } from "../store/languageStore";
 
 import AdminAvailabilityWidget from "./admin/AdminAvailabilityWidget";
+import { AdminToastHost, showAdminToast } from "./admin/AdminToast";
 
 // Lazy load modular sub-components for code splitting and better initial bundle load performance
 const AdminDashboard = React.lazy(() => import("./admin/AdminDashboard"));
@@ -53,6 +54,14 @@ function AdminLoadingSpinner() {
   );
 }
 
+// Alle admin-subtabs — panelen die setSubTab als prop krijgen importeren dit
+// type zodat de unions niet uit elkaar lopen.
+export type AdminSubTab =
+  | "dashboard" | "orders" | "machines" | "calendar" | "planning" | "customers"
+  | "add" | "logs" | "customizer" | "diagnostics" | "accounting";
+
+const ADVANCED_TAB_IDS: AdminSubTab[] = ["add", "customizer", "accounting", "diagnostics", "logs"];
+
 interface AdminSectionProps {
   isAdminMode: boolean;
   setIsAdminMode: (adminMode: boolean) => void;
@@ -70,7 +79,7 @@ export default function AdminSection({
   onAddSystemLog,
   onClearSystemLogs,
 }: AdminSectionProps) {
-  const [subTab, setSubTab] = useState<"dashboard" | "orders" | "machines" | "calendar" | "planning" | "customers" | "add" | "logs" | "customizer" | "diagnostics" | "accounting">("dashboard");
+  const [subTab, setSubTab] = useState<AdminSubTab>("dashboard");
   const [ordersFilter, setOrdersFilter] = useState<string[]>([]);
   const [showAdvancedSubmenu, setShowAdvancedSubmenu] = useState<boolean>(false);
   const [showMobileMenu, setShowMobileMenu] = useState<boolean>(false);
@@ -86,7 +95,7 @@ export default function AdminSection({
   }, [location.key]);
 
   React.useEffect(() => {
-    if (["add", "customizer", "accounting", "diagnostics", "logs"].includes(subTab)) {
+    if (ADVANCED_TAB_IDS.includes(subTab)) {
       setShowAdvancedSubmenu(true);
     }
   }, [subTab]);
@@ -107,6 +116,26 @@ export default function AdminSection({
   const setAdminLanguage = useLanguageStore((state) => state.setAdminLanguage);
   const tAdmin = useLanguageStore((state) => state.tAdmin);
 
+  // Eén navigatiedefinitie voor mobiel dropdown + desktop sidebar (voorheen
+  // drie keer gedupliceerd — een tabwijziging vereiste drie edits).
+  const al = (nl: string, en: string, tr: string) =>
+    adminLanguage === "tr" ? tr : adminLanguage === "en" ? en : nl;
+  const coreTabs: { id: AdminSubTab; label: string; icon: typeof Settings; count?: number }[] = [
+    { id: "dashboard", label: tAdmin("adminTabDashboard"), icon: BarChart3 },
+    { id: "orders", label: tAdmin("adminTabOrders"), icon: Truck, count: orders.length },
+    { id: "machines", label: tAdmin("adminTabMachines"), icon: Layers, count: machines.length },
+    { id: "calendar", label: tAdmin("adminTabCalendar"), icon: Calendar, count: blockedDates.length },
+    { id: "planning", label: al("Planning", "Planning", "Planlama"), icon: CalendarDays },
+    { id: "customers", label: al("Klanten", "Customers", "Müşteriler"), icon: Users },
+  ];
+  const advancedTabs: { id: AdminSubTab; label: string; icon: typeof Settings; count?: number }[] = [
+    { id: "add", label: tAdmin("adminTabAdd"), icon: PlusCircle },
+    { id: "customizer", label: tAdmin("adminTabCustomizer"), icon: Settings },
+    { id: "accounting", label: al("Boekhouding (Exact)", "Accounting (Exact)", "Muhasebe (Exact)"), icon: Database },
+    { id: "diagnostics", label: al("Systeemdiagnose", "System Diagnostics", "Sistem Teşhisi"), icon: ShieldAlert },
+    { id: "logs", label: tAdmin("adminTabLogs"), icon: Terminal, count: systemLogs.length },
+  ];
+
   // Admin login credentials
   const [adminEmail, setAdminEmail] = useState("");
   const [adminPassword, setAdminPassword] = useState("");
@@ -114,7 +143,7 @@ export default function AdminSection({
   const handleAdminVerifyLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!adminEmail.trim() || !adminPassword.trim()) {
-      alert("E-mailadres en wachtwoord zijn verplicht.");
+      showAdminToast(al("E-mailadres en wachtwoord zijn verplicht.", "Email address and password are required.", "E-posta adresi ve şifre zorunludur."), "error");
       return;
     }
 
@@ -133,11 +162,11 @@ export default function AdminSection({
       } else {
         logout();
         setIsAdminMode(false);
-        alert("Toegang geweigerd. Dit account heeft geen beheerdersrechten.");
+        showAdminToast(al("Toegang geweigerd. Dit account heeft geen beheerdersrechten.", "Access denied. This account has no administrator rights.", "Erişim reddedildi. Bu hesabın yönetici yetkisi yok."), "error");
       }
     } else {
       const errorMsg = useAuthStore.getState().error || "Fout bij beheerdersinlog.";
-      alert(`Inloggen mislukt: ${errorMsg}`);
+      showAdminToast(`${al("Inloggen mislukt", "Login failed", "Giriş başarısız")}: ${errorMsg}`, "error");
     }
   };
 
@@ -145,6 +174,7 @@ export default function AdminSection({
   if (!isAdminMode) {
     return (
       <div className="relative min-h-[calc(100vh-4.5rem)] py-16 px-5 sm:px-6 lg:px-8 flex items-center justify-center">
+        <AdminToastHost />
         <div className="absolute top-1/4 left-1/4 h-80 w-80 rounded-full bg-amber-500/5 blur-[120px] -z-10" />
         <div className="absolute bottom-1/4 right-1/4 h-80 w-80 rounded-full bg-orange-600/3 blur-[120px] -z-10" />
 
@@ -205,7 +235,8 @@ export default function AdminSection({
 
   return (
     <div className="relative min-h-[calc(100vh-3.5rem)] py-4 sm:py-8 px-5 sm:px-6 lg:px-8">
-      
+      <AdminToastHost />
+
       {/* Absolute Neon Grid lines decorative */}
       <div className="absolute top-1/2 left-1/3 h-96 w-96 rounded-full bg-amber-500/5 blur-[120px] -z-10" />
 
@@ -262,19 +293,7 @@ export default function AdminSection({
               >
                 <div className="flex items-center space-x-2.5">
                   {(() => {
-                    const activeTabInfo = [
-                      { id: "dashboard", label: tAdmin("adminTabDashboard"), icon: BarChart3 },
-                      { id: "orders", label: tAdmin("adminTabOrders"), icon: Truck },
-                      { id: "machines", label: tAdmin("adminTabMachines"), icon: Layers },
-                      { id: "calendar", label: tAdmin("adminTabCalendar"), icon: Calendar },
-                      { id: "planning", label: adminLanguage === "tr" ? "Planlama" : adminLanguage === "en" ? "Planning" : "Planning", icon: CalendarDays },
-                      { id: "customers", label: adminLanguage === "tr" ? "Müşteriler" : adminLanguage === "en" ? "Customers" : "Klanten", icon: Users },
-                      { id: "add", label: tAdmin("adminTabAdd"), icon: PlusCircle },
-                      { id: "customizer", label: tAdmin("adminTabCustomizer"), icon: Settings },
-                      { id: "accounting", label: adminLanguage === "tr" ? "Muhasebe (Exact)" : adminLanguage === "en" ? "Accounting (Exact)" : "Boekhouding (Exact)", icon: Database },
-                      { id: "diagnostics", label: adminLanguage === "tr" ? "Sistem Teşhisi" : adminLanguage === "en" ? "System Diagnostics" : "Systeemdiagnose", icon: ShieldAlert },
-                      { id: "logs", label: tAdmin("adminTabLogs"), icon: Terminal }
-                    ].find(t => t.id === subTab);
+                    const activeTabInfo = [...coreTabs, ...advancedTabs].find(t => t.id === subTab);
                     const Icon = activeTabInfo?.icon || Settings;
                     return (
                       <>
@@ -297,14 +316,7 @@ export default function AdminSection({
                     className="absolute left-0 right-0 mt-1.5 bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden divide-y divide-slate-200 z-30"
                   >
                     <div className="p-2 space-y-0.5">
-                      {[
-                        { id: "dashboard", label: tAdmin("adminTabDashboard"), icon: BarChart3 },
-                        { id: "orders", label: tAdmin("adminTabOrders"), icon: Truck, count: orders.length },
-                        { id: "machines", label: tAdmin("adminTabMachines"), icon: Layers, count: machines.length },
-                        { id: "calendar", label: tAdmin("adminTabCalendar"), icon: Calendar, count: blockedDates.length },
-                        { id: "planning", label: adminLanguage === "tr" ? "Planlama" : adminLanguage === "en" ? "Planning" : "Planning", icon: CalendarDays },
-                        { id: "customers", label: adminLanguage === "tr" ? "Müşteriler" : adminLanguage === "en" ? "Customers" : "Klanten", icon: Users }
-                      ].map((sub) => {
+                      {coreTabs.map((sub) => {
                         const Icon = sub.icon;
                         const isSel = subTab === sub.id;
                         return (
@@ -312,7 +324,7 @@ export default function AdminSection({
                             key={sub.id}
                             type="button"
                             onClick={() => {
-                              setSubTab(sub.id as any);
+                              setSubTab(sub.id);
                               setShowMobileMenu(false);
                             }}
                             className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left text-xs font-bold transition-all cursor-pointer border-none ${
@@ -349,13 +361,7 @@ export default function AdminSection({
                         
                         {showAdvancedSubmenu && (
                           <div className="mt-1 pl-3 border-l-2 border-slate-100 space-y-0.5">
-                            {[
-                              { id: "add", label: tAdmin("adminTabAdd"), icon: PlusCircle },
-                              { id: "customizer", label: tAdmin("adminTabCustomizer"), icon: Settings },
-                              { id: "accounting", label: adminLanguage === "tr" ? "Muhasebe (Exact)" : adminLanguage === "en" ? "Accounting (Exact)" : "Boekhouding (Exact)", icon: Database },
-                              { id: "diagnostics", label: adminLanguage === "tr" ? "Sistem Teşhisi" : adminLanguage === "en" ? "System Diagnostics" : "Systeemdiagnose", icon: ShieldAlert },
-                              { id: "logs", label: tAdmin("adminTabLogs"), icon: Terminal, count: systemLogs.length }
-                            ].map((sub) => {
+                            {advancedTabs.map((sub) => {
                               const Icon = sub.icon;
                               const isSel = subTab === sub.id;
                               return (
@@ -363,7 +369,7 @@ export default function AdminSection({
                                   key={sub.id}
                                   type="button"
                                   onClick={() => {
-                                    setSubTab(sub.id as any);
+                                    setSubTab(sub.id);
                                     setShowMobileMenu(false);
                                   }}
                                   className={`w-full flex items-center justify-between px-3.5 py-2 rounded-xl text-left text-xs font-bold transition-all cursor-pointer border-none ${
@@ -396,20 +402,13 @@ export default function AdminSection({
             {/* Desktop Navigation */}
             <div className="hidden lg:flex lg:flex-col lg:space-y-1 glass-panel p-4 rounded-2xl gap-1 pb-4">
               {/* MVP Core tabs */}
-              {[
-                { id: "dashboard", label: tAdmin("adminTabDashboard"), icon: BarChart3 },
-                { id: "orders", label: tAdmin("adminTabOrders"), icon: Truck, count: orders.length },
-                { id: "machines", label: tAdmin("adminTabMachines"), icon: Layers, count: machines.length },
-                { id: "calendar", label: tAdmin("adminTabCalendar"), icon: Calendar, count: blockedDates.length },
-                { id: "planning", label: adminLanguage === "tr" ? "Planlama" : adminLanguage === "en" ? "Planning" : "Planning", icon: CalendarDays },
-                { id: "customers", label: adminLanguage === "tr" ? "Müşteriler" : adminLanguage === "en" ? "Customers" : "Klanten", icon: Users }
-              ].map((sub) => {
+              {coreTabs.map((sub) => {
                 const Icon = sub.icon;
                 const isSel = subTab === sub.id;
                 return (
                   <button
                     key={sub.id}
-                    onClick={() => setSubTab(sub.id as any)}
+                    onClick={() => setSubTab(sub.id)}
                     className={`flex items-center justify-between px-4 py-2.5 rounded-xl text-left text-xs font-bold transition-all cursor-pointer border-none ${
                       isSel 
                         ? "bg-amber-500 hover:bg-amber-600 text-slate-950 border border-amber-500/20 shadow-[0_4px_12px_rgba(245,158,11,0.25)]" 
@@ -434,8 +433,8 @@ export default function AdminSection({
                 type="button"
                 onClick={() => setShowAdvancedSubmenu(!showAdvancedSubmenu)}
                 className={`flex items-center justify-between px-4 py-2.5 rounded-xl text-left text-xs font-bold transition-all cursor-pointer border-none ${
-                  ["add", "customizer", "accounting", "diagnostics", "logs"].includes(subTab)
-                    ? "bg-slate-100 text-slate-900 border border-slate-200" 
+                  ADVANCED_TAB_IDS.includes(subTab)
+                    ? "bg-slate-100 text-slate-900 border border-slate-200"
                     : "text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent bg-transparent"
                 }`}
               >
@@ -447,19 +446,13 @@ export default function AdminSection({
               </button>
 
               {/* Advanced sub tabs */}
-              {showAdvancedSubmenu && [
-                { id: "add", label: tAdmin("adminTabAdd"), icon: PlusCircle },
-                { id: "customizer", label: tAdmin("adminTabCustomizer"), icon: Settings },
-                { id: "accounting", label: adminLanguage === "tr" ? "Muhasebe (Exact)" : adminLanguage === "en" ? "Accounting (Exact)" : "Boekhouding (Exact)", icon: Database },
-                { id: "diagnostics", label: adminLanguage === "tr" ? "Sistem Teşhisi" : adminLanguage === "en" ? "System Diagnostics" : "Systeemdiagnose", icon: ShieldAlert },
-                { id: "logs", label: tAdmin("adminTabLogs"), icon: Terminal, count: systemLogs.length }
-              ].map((sub) => {
+              {showAdvancedSubmenu && advancedTabs.map((sub) => {
                 const Icon = sub.icon;
                 const isSel = subTab === sub.id;
                 return (
                   <button
                     key={sub.id}
-                    onClick={() => setSubTab(sub.id as any)}
+                    onClick={() => setSubTab(sub.id)}
                     className={`flex items-center justify-between px-4 py-2.5 rounded-xl text-left text-xs font-bold transition-all cursor-pointer border-none pl-7 ${
                       isSel 
                         ? "bg-amber-500 hover:bg-amber-600 text-slate-950 border border-amber-500/20 shadow-[0_4px_12px_rgba(245,158,11,0.25)]" 
@@ -480,27 +473,9 @@ export default function AdminSection({
               })}
             </div>
 
-            {/* Live website indicators */}
-            <div className="glass-panel p-4 rounded-2xl hidden lg:block space-y-3">
-              <h4 className="font-display font-bold text-[10px] uppercase text-slate-500 tracking-wider">BMWT Status</h4>
-              <div className="space-y-2 text-xs">
-                <div className="flex items-center justify-between text-slate-600">
-                  <span>Server Gateway</span>
-                  <span className="text-teal-600 font-semibold flex items-center space-x-1">
-                    <span className="h-1.5 w-1.5 rounded-full bg-teal-500" />
-                    <span className="font-mono">ONLINE</span>
-                  </span>
-                </div>
-                <div className="flex items-center justify-between text-slate-600">
-                  <span>SSL Handshake</span>
-                  <span className="text-teal-600 font-semibold font-mono">SECURE</span>
-                </div>
-                <div className="flex items-center justify-between text-slate-600">
-                  <span>Fleet Availability</span>
-                  <span className="text-slate-800 font-mono font-bold">100% Gecertificeerd</span>
-                </div>
-              </div>
-            </div>
+            {/* Het voormalige "BMWT Status"-blok stond hier: hardcoded
+                ONLINE/SECURE-teksten zonder echte telemetrie. Verwijderd —
+                echte systeemstatus staat in het Diagnostics-paneel. */}
 
             {/* Availability Checker Widget */}
             <AdminAvailabilityWidget />

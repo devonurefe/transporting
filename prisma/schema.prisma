@@ -170,6 +170,11 @@ model SiteConfig {
   kvkNumber        String?
   btwNumber        String?
   companyLegalName String?
+  // Real external Google Business rating — entered by an admin (Customizer) and
+  // shown in the footer's "Google Reviews" block. Never invent a value: when
+  // unset the footer shows no score.
+  googleRating      Float?
+  googleReviewCount Int?
 }
 
 model Notification {

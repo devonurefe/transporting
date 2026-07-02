@@ -92,10 +92,11 @@ calendarRouter.get("/:token/huurgo.ics", async (req: Request, res: Response) => 
     for (const o of orders) {
       // All-day events: DTEND is exclusive, so add one day to the inclusive endDate.
       const summary = `${nameOf(o.machineId)} — ${o.customerName} (${o.status})`;
+      // Keep PII minimal: no phone number in the feed — if the token ever leaks,
+      // exposure is limited to name + address. Phone lives in the admin panel.
       const desc = [
         `Order: ${o.id}`,
         `Status: ${o.status}`,
-        o.customerPhone ? `Tel: ${o.customerPhone}` : "",
         o.deliveryType === "self_pickup" ? "Zelf afhalen" : (o.deliveryAddress || "Bezorging"),
       ].filter(Boolean).join("\n");
       lines.push(

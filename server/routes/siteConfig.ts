@@ -40,7 +40,9 @@ siteConfigRouter.get("/site-config", publicReadLimiter, async (req: Authenticate
 // Whitelist of editable SiteConfig fields — never pass req.body straight to Prisma
 const SITE_CONFIG_FIELDS = [
   "siteName", "heroTagline", "heroTitle", "heroSubtitle", "heroImageUrl",
-  "menuHomeLabel", "menuCatalogLabel", "menuAdvisorLabel", "menuOrdersLabel", "menuAdminLabel",
+  // menuAdvisorLabel is a legacy AI-advisor column: kept in the schema to avoid a
+  // destructive db push, but no longer editable — the advisor feature is gone.
+  "menuHomeLabel", "menuCatalogLabel", "menuOrdersLabel", "menuAdminLabel",
   "contactEmail", "contactPhone", "companyAddress", "kvkNumber", "btwNumber", "companyLegalName"
 ] as const;
 

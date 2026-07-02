@@ -65,7 +65,7 @@
 
 ---
 
-### Admin Console (9 Lazy-Loaded Panels)
+### Admin Console (11 Lazy-Loaded Panels)
 
 **Dashboard**
 - Key performance indicators: total revenue (YTD/MTD), available machines, active orders
@@ -116,9 +116,11 @@
 - Cosmetic counters (4s refresh interval)
 - Environment variable verification
 
-**Accounting** (Legacy / Optional)
-- Placeholder for Exact Online integration logging
-- Future expansion for automated invoice sync
+**Logs**
+- System activity feed: logins, bookings, fleet changes, status updates
+
+**Accounting**
+- Revenue reporting with date/status filters and CSV export
 
 ---
 
@@ -128,7 +130,7 @@
 |-------|-----------|
 | **Frontend** | React 19 + Vite 6, React Router v7, TailwindCSS v4, Lucide React, Framer Motion (motion/react) |
 | **Backend** | Node.js 20 (Alpine), Express 4.21, TypeScript, tsx (dev), esbuild (prod bundling) |
-| **Database** | PostgreSQL 16 (production), SQLite (local dev), Prisma ORM v6 |
+| **Database** | PostgreSQL 16 (production and local dev via Docker), Prisma ORM v6 — PostgreSQL only, no SQLite |
 | **Security** | Helmet (HSTS, CSP, frameguard), express-rate-limit, bcryptjs, JWT |
 | **Email** | Resend API with exponential backoff + mock fallback |
 | **Deployment** | Docker (multi-stage build), Docker Compose v3.8, Nginx (Alpine), Let's Encrypt Certbot, TransIP VPS |
@@ -146,51 +148,42 @@ Single `package.json` for frontend + backend, unified TypeScript configuration, 
 
 ```
 transporting/
+├── server.ts                    # Express entry point (dev + prod)
 ├── src/                         # React SPA + shared utilities
-│   ├── main.tsx                 # Entry point
-│   ├── App.tsx                  # Route definitions
-│   ├── components/
-│   │   ├── sections/            # Main pages (CatalogSection, BookingSection, AdminSection)
-│   │   ├── admin/               # 9 lazy-loaded admin panels
-│   │   └── common/              # Reusable UI (Header, Footer, etc.)
-│   ├── stores/                  # Zustand stores (appStore, authStore, languageStore)
+│   ├── main.tsx                 # React DOM root
+│   ├── App.tsx                  # Route definitions, orchestration
+│   ├── components/              # Main pages (CatalogSection, BookingSection, AdminSection, ...)
+│   │   ├── admin/               # 11 lazy-loaded admin panels + shared admin widgets
+│   │   └── booking/             # Booking step components + price summary + calendar
+│   ├── store/                   # Zustand stores (appStore, authStore, languageStore)
 │   ├── utils/
 │   │   ├── availability.ts      # Availability engine (O(1) lookup with Map<string,string>)
+│   │   ├── pricing.ts           # Tiered pricing (mirrored in server/routes/orders.ts)
 │   │   ├── invoice.ts           # HTML invoice generation & print
 │   │   ├── whatsapp.ts          # WA message builders
 │   │   └── ...
-│   └── __tests__/               # Vitest unit tests (e.g. availability.test.ts)
+│   └── __tests__/               # Vitest unit tests (pricing, availability, image, ...)
 │
 ├── server/                      # Express backend
-│   ├── server.ts                # Entry point (dev + prod)
 │   ├── routes/
-│   │   ├── auth.ts              # JWT login, password reset
-│   │   ├── machines.ts          # GET/PUT machines (admin CRUD)
-│   │   ├── orders.ts            # POST (create order), GET (list/detail)
-│   │   ├── blockedDates.ts      # POST/DELETE calendar blocks
-│   │   ├── siteConfig.ts        # Admin customizer (hero text, labels)
+│   │   ├── auth.ts              # Register/login, verification, password reset, admin customer list
+│   │   ├── machines.ts          # Machine CRUD (admin)
+│   │   ├── orders.ts            # Order create/list/status + ratings + export + reminders
+│   │   ├── blockedDates.ts      # Calendar blocks
+│   │   ├── siteConfig.ts        # Site config, categories, campaign rules
 │   │   ├── calendar.ts          # iCal feed for calendar subscriptions
 │   │   └── api.ts               # File uploads, health check
-│   ├── middleware/
-│   │   ├── auth.ts              # JWT validation, requireAdmin guard
-│   │   ├── logger.ts            # Structured logging
-│   │   └── errorHandler.ts      # Global error handler
-│   ├── services/
-│   │   └── emailService.ts      # Transactional email with retries
-│   └── utils/
-│       ├── auth.ts              # bcryptjs, JWT helpers
-│       └── env.ts               # Environment variable validation
+│   ├── middleware/auth.ts       # JWT validation, requireAdmin guard
+│   ├── services/emailService.ts # Transactional email with retries
+│   └── utils/auth.ts            # bcryptjs, JWT helpers
 │
 ├── prisma/
-│   ├── schema.prisma            # PostgreSQL schema
-│   ├── seed.ts                  # Database seeding (40+ machines)
-│   └── migrations/              # Migration history (not used in dev: `db push`)
+│   ├── schema.prisma            # PostgreSQL schema (declarative — applied via `prisma db push`)
+│   ├── client.ts                # Shared PrismaClient instance
+│   └── seed.ts                  # Database seeding (40+ machines)
 │
 ├── dist/                        # Built output (prod)
-│   ├── index.html               # SPA entry (built by Vite)
-│   ├── assets/                  # JS/CSS chunks
-│   └── server.js                # Server bundle (esbuild)
-│
+├── .github/workflows/deploy.yml # CI (lint + test gate) → Docker build → VPS deploy
 ├── package.json                 # Unified dependencies + scripts
 ├── vite.config.ts               # SPA build config
 ├── tsconfig.json                # TypeScript settings (strict mode, ES2022)
@@ -265,6 +258,23 @@ transporting/
 - Image: `certbot/certbot`
 - Renewal loop: `certbot renew` every 12 hours
 - Volumes: shared Let's Encrypt paths with Nginx
+
+### CI/CD (GitHub Actions)
+
+Pushes to `main` trigger `.github/workflows/deploy.yml`:
+
+1. **test** — `npm ci`, `prisma generate`, `npm run lint`, `npm run test` (also runs on PRs)
+2. **build** — Docker image → `ghcr.io/devonurefe/transporting:latest` (only after tests pass)
+3. **deploy** — key-based SSH to the VPS: `git pull`, `docker compose pull app`, recreate, `prisma db push`
+
+Required repository secrets:
+
+| Secret | Purpose |
+|--------|---------|
+| `VPS_HOST` | Server address |
+| `VPS_SSH_KEY` | Private key whose public half is in the server's `authorized_keys` |
+| `VPS_SSH_USER` | SSH user (optional, defaults to `root`) |
+| `VPS_HOST_KEY` | Output of `ssh-keyscan <host>` for host-key pinning (optional but recommended) |
 
 ### Deployment Checklist
 
@@ -576,7 +586,7 @@ Calculated per-item and summed at checkout (Step 2).
 
 - **Node.js** v18+ (v20 Alpine in Docker)
 - **npm** v9+
-- **PostgreSQL** 16 (optional, for local; SQLite for dev is fine)
+- **PostgreSQL** 16 (required — run locally via `docker compose up postgres`)
 
 ### Quick Start
 
@@ -622,7 +632,7 @@ npm run dev
 
 | Variable | Purpose | Example |
 |----------|---------|---------|
-| `DATABASE_URL` | PostgreSQL or SQLite connection | `postgresql://user:pass@localhost/huurgo` or `file:./dev.db` |
+| `DATABASE_URL` | PostgreSQL connection (PostgreSQL only) | `postgresql://huurgo:huurgo_dev_pass@localhost:5432/huurgo` |
 | `JWT_SECRET` | JWT signing key | `super-secret-key-min-32-chars` |
 | `RESEND_API_KEY` | Email service API key (optional) | `re_xxxx` |
 | `EMAIL_FROM` | Sender email | `noreply@huurgo.nl` |
@@ -642,67 +652,61 @@ src/
 ├── App.tsx                      # Route definitions (/, /booking, /admin, /orders)
 ├── main.tsx                     # React DOM root
 ├── components/
-│   ├── sections/
-│   │   ├── CatalogSection.tsx   # Browse machines, add to cart, compute % discounts
-│   │   ├── BookingSection.tsx   # Multi-step checkout (3 steps + success)
-│   │   ├── AdminSection.tsx     # Admin panel router
-│   │   ├── OrdersSection.tsx    # Customer order tracking
-│   │   └── HomeSection.tsx      # Landing page
-│   ├── admin/
-│   │   ├── AdminDashboard.tsx   # KPIs, revenue chart, fleet composition
-│   │   ├── AdminOrders.tsx      # Order list, details, status changes
-│   │   ├── AdminMachines.tsx    # Edit machine prices, images, categories
-│   │   ├── AdminAddMachine.tsx  # Create new machine
-│   │   ├── AdminCalendar.tsx    # Block/unblock dates, reason dropdown
-│   │   ├── AdminCustomers.tsx   # Customer list, lifetime value
-│   │   ├── AdminPlanning.tsx    # Timeline for delivery coordination
-│   │   ├── AdminCustomizer.tsx  # Site config (hero text, labels, footer)
-│   │   ├── AdminDiagnostics.tsx # System health checks
-│   │   ├── AdminAccounting.tsx  # Exact Online integration log (placeholder)
-│   │   └── AdminStatusBadge.tsx # Status color helper
-│   └── common/
-│       ├── Header.tsx           # Navigation, login button
-│       ├── Footer.tsx           # Company info, links
-│       ├── WhatsAppFab.tsx      # Floating help button
-│       └── ...
-├── stores/
+│   ├── HomeSection.tsx          # Landing page
+│   ├── CatalogSection.tsx       # Browse machines, add to cart, compute % discounts
+│   ├── BookingSection.tsx       # Multi-step checkout orchestration
+│   ├── MyOrdersSection.tsx      # Customer order tracking
+│   ├── AdminSection.tsx         # Admin panel router
+│   ├── Header.tsx / Footer.tsx  # Navigation, company info
+│   ├── MachineDetailModal.tsx   # Machine detail popup / MachineDetailPage.tsx (deep-link page)
+│   ├── booking/
+│   │   ├── BookingStep1.tsx     # Dates, delivery type, addons, weekend question
+│   │   ├── BookingStep2.tsx     # Customer details + PDOK address lookup
+│   │   ├── BookingSuccess.tsx   # Confirmation + WhatsApp payment link
+│   │   ├── BookingPriceSummary.tsx
+│   │   └── DateRangeCalendar.tsx
+│   └── admin/
+│       ├── AdminDashboard.tsx   # KPIs, revenue chart, fleet composition
+│       ├── AdminOrders.tsx      # Order list, details, status changes
+│       ├── AdminMachines.tsx    # Edit machine prices, images, categories
+│       ├── AdminAddMachine.tsx  # Create new machine
+│       ├── AdminCalendar.tsx    # Block/unblock dates, reason dropdown
+│       ├── AdminCustomers.tsx   # Customer list, lifetime value
+│       ├── AdminPlanning.tsx    # Timeline for delivery coordination
+│       ├── AdminCustomizer.tsx  # Site config (hero text, labels, footer)
+│       ├── AdminDiagnostics.tsx # System health checks
+│       ├── AdminLogs.tsx        # System activity feed
+│       ├── AdminAccounting.tsx  # Revenue reporting + CSV export
+│       └── AdminStatusBadge.tsx # Status color helper
+├── store/
 │   ├── appStore.ts              # Zustand: machines, orders, cart, blockedDates
-│   ├── authStore.ts             # JWT token, admin login state
-│   └── languageStore.ts         # i18n (NL/EN/TR strings, switch on demand)
+│   ├── authStore.ts             # JWT token, login state
+│   └── languageStore.ts         # i18n (NL/EN public, +TR in admin)
 ├── utils/
-│   ├── availability.ts          # Booking engine (1000-day lookahead, O(1) date lookup)
+│   ├── availability.ts          # Booking engine (O(1) date lookup, buffer days)
+│   ├── pricing.ts               # Tiered pricing (mirrored server-side)
 │   ├── invoice.ts               # HTML invoice + print (supports Order | Order[])
 │   ├── whatsapp.ts              # WA message builders (inquiry, confirmation, payment)
-│   ├── pdok.ts                  # PDOK address lookup API client
 │   └── ...
-└── __tests__/
-    ├── availability.test.ts     # Unit tests for booking engine
-    └── ...
+└── __tests__/                   # pricing, availability, whatsapp, image, auth tests
 
 server/
-├── server.ts                    # Express app (dev + prod mode)
 ├── routes/
-│   ├── auth.ts                  # POST /api/auth/login, /reset-password
-│   ├── machines.ts              # GET /, PUT /:id, POST / (admin CRUD)
-│   ├── orders.ts                # POST / (create), GET / (list), GET /:id
-│   ├── blockedDates.ts          # POST / (block), DELETE /:id (unblock)
-│   ├── siteConfig.ts            # GET /, PUT / (admin customizer)
-│   ├── calendar.ts              # GET /feed/:token (iCal export)
+│   ├── auth.ts                  # Register, login, verification, password reset
+│   ├── machines.ts              # Machine CRUD (admin)
+│   ├── orders.ts                # Order create/list/status, ratings, export, reminders
+│   ├── blockedDates.ts          # GET / (list), POST / (block/unblock)
+│   ├── siteConfig.ts            # Site config, categories, campaign rules
+│   ├── calendar.ts              # iCal feed + admin subscribe URL
 │   └── api.ts                   # POST /upload (images), GET /health
-├── middleware/
-│   ├── auth.ts                  # JWT validation, requireAdmin guard
-│   ├── logger.ts                # Structured logging middleware
-│   └── errorHandler.ts          # Global error handler (500 responses)
-├── services/
-│   └── emailService.ts          # Resend with 3x retry, mock fallback
-└── utils/
-    ├── auth.ts                  # bcryptjs hashing, JWT signing
-    └── env.ts                   # Environment variable validation
+├── middleware/auth.ts           # JWT validation, requireAdmin guard
+├── services/emailService.ts     # Resend with 3x retry, mock fallback
+└── utils/auth.ts                # bcryptjs hashing, JWT signing
 
 prisma/
-├── schema.prisma                # PostgreSQL ORM schema
-├── seed.ts                      # Database seeding (40+ machines, admin account)
-└── migrations/                  # Migration history (not used in dev)
+├── schema.prisma                # PostgreSQL ORM schema (applied via `prisma db push`)
+├── client.ts                    # Shared PrismaClient instance
+└── seed.ts                      # Database seeding (40+ machines, admin account)
 ```
 
 ---
@@ -861,75 +865,86 @@ model SiteConfig {
 
 ## 🔌 API Routes
 
-### Authentication
+### Authentication (`/api/auth`)
 
 | Endpoint | Method | Auth | Purpose |
 |----------|--------|------|---------|
-| `/api/auth/login` | POST | — | Admin login (email + password) |
-| `/api/auth/logout` | POST | JWT | Logout (clears token) |
-| `/api/auth/reset-password` | POST | — | Password reset email |
-| `/api/auth/verify-token` | GET | JWT | Check token validity |
-| `/api/auth/me` | GET | JWT | Current admin profile |
-| `/api/auth/mock-profiles` | GET | — | Test profiles (dev/staging only) |
+| `/api/auth/register` | POST | — | Customer registration (email verification sent) |
+| `/api/auth/login` | POST | — | Customer/admin login (email + password) |
+| `/api/auth/me` | GET | JWT | Current user profile |
+| `/api/auth/profile` | PUT | JWT | Update own profile |
+| `/api/auth/verify` | GET | Token | Email verification link |
+| `/api/auth/resend-verification` | POST | — | Resend verification email |
+| `/api/auth/forgot-password` | POST | — | Password reset email |
+| `/api/auth/reset-password` | POST | Token | Set new password via reset token |
+| `/api/auth/change-password` | POST | JWT | Change password (revokes old tokens) |
+| `/api/auth/customers` | GET | JWT (admin) | Customer list with order stats |
+| `/api/auth/campaigns/email` | POST | JWT (admin) | Bulk campaign email (max 200 recipients) |
 
-### Machines
+### Machines (`/api/machines`)
 
 | Endpoint | Method | Auth | Purpose |
 |----------|--------|------|---------|
-| `/api/machines` | GET | — | List all machines (catalog) |
-| `/api/machines/:id` | GET | — | Machine detail + images |
+| `/api/machines` | GET | — | List machines (catalog, paginated) |
 | `/api/machines` | POST | JWT (admin) | Create machine |
 | `/api/machines/:id` | PUT | JWT (admin) | Update machine (prices, images, etc.) |
-| `/api/machines/:id` | DELETE | JWT (admin) | Soft-delete (sets isActive = false) |
+| `/api/machines/:id/toggle-active` | PATCH | JWT (admin) | Show/hide machine in catalog |
+| `/api/machines/:id` | DELETE | JWT (admin) | Delete machine |
 
-### Orders
-
-| Endpoint | Method | Auth | Purpose |
-|----------|--------|------|---------|
-| `/api/orders` | POST | — | Create new order (customer checkout) |
-| `/api/orders` | GET | JWT (admin) or email | List orders (admin: all, customer: own) |
-| `/api/orders/:id` | GET | JWT (admin) or email | Order detail + invoice |
-| `/api/orders/:id` | PUT | JWT (admin) | Update order status, add notes |
-| `/api/orders/:id/invoice` | GET | — | Download invoice (PDF or HTML) |
-
-### Blocked Dates
+### Orders (`/api/orders`)
 
 | Endpoint | Method | Auth | Purpose |
 |----------|--------|------|---------|
-| `/api/blocked-dates` | POST | JWT (admin) | Block a date range for machine |
-| `/api/blocked-dates/:id` | DELETE | JWT (admin) | Unblock a date |
-| `/api/blocked-dates/machine/:machineId` | GET | — | Get all blocked dates for machine |
+| `/api/orders` | POST | — | Create order (server re-validates all prices; idempotency-key support) |
+| `/api/orders` | GET | JWT | List orders (admin: all, customer: own) |
+| `/api/orders/availability` | GET | — | Availability check for a machine + date range |
+| `/api/orders/:id/status` | PUT | JWT (admin) | Change order status (validated transitions) |
+| `/api/orders/:id/payment` | PUT | JWT (admin) | Mark payment received |
+| `/api/orders/:id/cancel` | PUT | JWT | Customer cancels own pending order |
+| `/api/orders/:id/rating` | POST/GET | JWT | Rate a completed order / fetch own rating |
+| `/api/orders/:id/rating/guest` | POST | Token | Guest rating via emailed link |
+| `/api/orders/ratings/summary` | GET | — | Aggregate rating for the storefront |
+| `/api/orders/ratings/by-machine` | GET | — | Ratings per machine |
+| `/api/orders/export` | GET | JWT (admin) | CSV export (accounting) |
+| `/api/orders/send-reminders` | POST | `REMINDER_SECRET` | Trigger rental reminder emails (cron) |
 
-### Site Config
+### Blocked Dates (`/api/blocked-dates`)
+
+| Endpoint | Method | Auth | Purpose |
+|----------|--------|------|---------|
+| `/api/blocked-dates` | GET | — | All blocked dates (used by availability engine) |
+| `/api/blocked-dates` | POST | JWT (admin) | Block / unblock dates for a machine |
+
+### Site Config & Categories
 
 | Endpoint | Method | Auth | Purpose |
 |----------|--------|------|---------|
 | `/api/site-config` | GET | — | Fetch site customizer settings |
-| `/api/site-config` | PUT | JWT (admin) | Update hero text, labels, footer |
+| `/api/site-config` | POST | JWT (admin) | Update hero text, labels, footer (whitelisted fields) |
+| `/api/categories` | GET / POST | — / JWT (admin) | Category list / update |
+| `/api/campaign-rules` | GET / POST | — / JWT (admin) | Campaign discount rules |
 
 ### Calendar
 
 | Endpoint | Method | Auth | Purpose |
 |----------|--------|------|---------|
-| `/api/calendar/:token/huurgo.ics` | GET | Token | iCal export (Google Calendar subscribe) |
+| `/api/calendar/:token/huurgo.ics` | GET | `CALENDAR_FEED_TOKEN` | iCal feed (Google/iPhone calendar subscribe) |
+| `/api/calendar/subscribe-url` | GET | JWT (admin) | Full subscribe URL for the admin panel |
 
 ### General
 
 | Endpoint | Method | Auth | Purpose |
 |----------|--------|------|---------|
-| `/api/upload` | POST | JWT (admin) | Upload machine image (base64 → file) |
+| `/api/upload` | POST | JWT (admin) | Upload machine image (max 3 MB, magic-byte validated, no SVG) |
 | `/api/health` | GET | — | Health check (database connection, uptime) |
 
 ### Error Responses
 
-All errors follow a standard format:
+Errors return a Dutch-language message in a consistent shape:
 ```json
-{
-  "error": "Machine not found",
-  "code": "MACHINE_NOT_FOUND",
-  "status": 404
-}
+{ "error": "Machine niet gevonden" }
 ```
+Validation errors may include extra fields (e.g. `conflictingDates` on a 409 booking conflict).
 
 ---
 
@@ -965,9 +980,10 @@ All errors follow a standard format:
 - Parameterized queries via Prisma (prevents SQL injection)
 
 **Data Privacy**
-- Customer PII encrypted at rest (PostgreSQL SSL connection)
-- Admin passwords never logged or exposed
+- Database reachable only from localhost/Docker network (port bound to `127.0.0.1`)
+- Admin passwords stored as bcrypt hashes, never logged or exposed
 - Invoices stored with order records, not in filesystem
+- iCal feed omits customer phone numbers; gated by secret token + tight rate limit
 
 ### Performance Optimizations
 
@@ -984,9 +1000,9 @@ All errors follow a standard format:
 - Email service: async, 3x retry with exponential backoff
 
 **Caching**
-- SPA assets: versioned chunks (Vite), browser cache 1 year
-- API responses: ETag headers for conditional requests
-- Database: Prisma query batching for N+1 prevention
+- SPA assets: content-hashed chunks (Vite) — safe for long browser caching
+- Site config cached client-side in sessionStorage; cart persisted in localStorage
+- iCal feed: `Cache-Control: public, max-age=300`
 
 **Nginx**
 - Gzip compression (6 level, min 256 bytes)
@@ -1020,18 +1036,28 @@ All errors follow a standard format:
 
 ### Unit Tests (`npm run test`)
 
-Located in `src/__tests__/`:
+Located in `src/__tests__/` (Vitest):
 
-**`availability.test.ts`**
-- Test booking engine: flat-rate pricing, pro-rata calculations
-- Test availability checker: blocked dates, booked dates
-- Test 1000-day lookahead performance
+| File | Covers |
+|------|--------|
+| `pricing.test.ts` + `pricing-scenarios.test.ts` + `pricing-helpers.test.ts` | Tiered pricing, discounts, VAT, weekend logic, real-world scenarios |
+| `availability.test.ts` | Overlaps, blocked dates, buffer days |
+| `whatsapp.test.ts` | Message templates |
+| `image.test.ts` | Client-side image resize/compression |
+| `authVerification.test.ts` | Hashing + verification tokens |
+
+Coverage is focused on calculation logic; there are no component or API integration tests yet.
 
 ### Type Checking (`npm run lint`)
 
 - `tsc --noEmit`: Full TypeScript strict mode check
 - No ESLint (TypeScript configuration only)
-- Runs on every commit (via pre-commit hooks, if configured)
+
+### Continuous Integration
+
+`.github/workflows/deploy.yml` runs `npm run lint` + `npm run test` on every PR and
+push to `main`. On `main`, a Docker image is built and pushed to GHCR only after the
+test job passes, then deployed to the VPS over key-based SSH.
 
 ### Manual Testing
 

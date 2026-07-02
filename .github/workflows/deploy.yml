@@ -1,11 +1,43 @@
-name: Deploy to VPS
+name: CI & Deploy to VPS
 
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
 
 jobs:
+  # Test kapisi: lint + test gecmeden image build edilmez, deploy edilmez.
+  # PR'larda da calisir, boylece main'e merge oncesi kirmizi/yesil gorunur.
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+        env:
+          DATABASE_URL: postgresql://dummy:dummy@localhost:5432/db
+
+      - name: Type-check
+        run: npm run lint
+
+      - name: Run tests
+        run: npm run test
+
   build:
+    if: github.event_name == 'push'
+    needs: test
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -33,22 +65,50 @@ jobs:
           cache-to: type=gha,mode=max
 
   deploy:
+    if: github.event_name == 'push'
     needs: build
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: read
     steps:
-      - name: Deploy to VPS
+      # SSH anahtari ile bagolanti (sifre + sshpass kaldirildi).
+      # Kurulum (bir kere, VPS'te):
+      #   ssh-keygen -t ed25519 -C "github-deploy" -f deploy_key  (lokalde)
+      #   cat deploy_key.pub >> /root/.ssh/authorized_keys        (VPS'te)
+      #   GitHub repo secrets: VPS_SSH_KEY = deploy_key icerigi (private key),
+      #   VPS_HOST = sunucu adresi. Istege bagli: VPS_SSH_USER (varsayilan root),
+      #   VPS_HOST_KEY = `ssh-keyscan <host>` ciktisi (host key pinning icin).
+      - name: Prepare SSH
+        env:
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_HOST_KEY: ${{ secrets.VPS_HOST_KEY }}
         run: |
-          sudo apt-get install -y sshpass -q
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          if [ -n "$VPS_HOST_KEY" ]; then
+            # Pinned host key: MITM'e karsi en guvenli yol
+            printf '%s\n' "$VPS_HOST_KEY" > ~/.ssh/known_hosts
+          else
+            # Pin yoksa ilk baglantida ogren (trust-on-first-use)
+            ssh-keyscan -H "$VPS_HOST" > ~/.ssh/known_hosts 2>/dev/null
+          fi
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: Deploy to VPS
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_SSH_USER || 'root' }}
+        run: |
           success=0
           for attempt in 1 2 3; do
             echo "Deneme $attempt..."
-            if sshpass -p "${{ secrets.VPS_PASSWORD }}" ssh \
-              -o StrictHostKeyChecking=no \
+            if ssh -i ~/.ssh/deploy_key \
+              -o StrictHostKeyChecking=yes \
               -o ConnectTimeout=30 \
-              root@${{ secrets.VPS_HOST }} \
+              "$VPS_USER@$VPS_HOST" \
               "echo '${{ secrets.GITHUB_TOKEN }}' | docker login ghcr.io -u ${{ github.actor }} --password-stdin && \
                cd /opt/huurgo && \
                git pull origin main && \

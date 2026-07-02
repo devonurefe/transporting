@@ -12,6 +12,7 @@ import { calculateItemSubtotal, isStrictWeekend, countWeekendDays, calculateRent
 
 // Import modular Step components
 import { buildWhatsAppUrl } from "../utils/whatsapp";
+import { euro } from "../utils/format";
 import BookingStep1 from "./booking/BookingStep1";
 import BookingStep2 from "./booking/BookingStep2";
 import BookingSuccess from "./booking/BookingSuccess";
@@ -1043,6 +1044,21 @@ export default function BookingSection({
               <div className="hidden lg:block lg:col-span-4 lg:sticky lg:top-24 space-y-4">
                 <BookingPriceSummary selectedMachine={cartItems && cartItems.length > 0 ? cartItems[0].machine : null} machineCount={cartItems.length || 1} startDate={summaryStartDate} endDate={summaryEndDate} multiplePeriods={mixedCartPeriods} sums={sums} />
               </div>
+
+              {/* Mobile total bar — the full summary sits below the form on small
+                  screens, so keep the running total in view while scrolling.
+                  bottom-14 clears the mobile bottom nav (h-14, hidden from md:);
+                  pr-20 keeps the amount clear of the WhatsApp FAB. */}
+              {sums.total > 0 && (
+                <div className="lg:hidden fixed bottom-14 md:bottom-0 left-0 right-0 z-40 border-t border-slate-200 bg-white/95 backdrop-blur-lg px-5 py-2.5 pr-20 shadow-[0_-4px_12px_rgba(0,0,0,0.06)] flex items-center justify-between">
+                  <span className="text-xs text-slate-500">
+                    {sums.days} {sums.days === 1 ? "dag" : "dagen"}{cartItems.length > 1 ? ` • ${cartItems.length} machines` : ""}
+                  </span>
+                  <span className="text-sm font-bold text-slate-900">
+                    Totaal <span className="text-teal-700">{euro(sums.total)}</span> <span className="font-normal text-xs text-slate-500">incl. BTW</span>
+                  </span>
+                </div>
+              )}
 
             </motion.div>
           ) : (

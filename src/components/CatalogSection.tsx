@@ -232,6 +232,10 @@ export default function CatalogSection({
     return count > 0 ? { average: total / count, count } : null;
   };
 
+  // Defer the search query so typing stays responsive: the input updates
+  // immediately while the (heavier) filter + grid re-render lags a keystroke behind.
+  const deferredSearchQuery = React.useDeferredValue(searchQuery);
+
   // Filtered Machines — category + search only, deduplicated to show ONE card per model
   const filteredMachines = useMemo(() => {
     const filtered = activeMachines.filter((machine) => {
@@ -241,7 +245,7 @@ export default function CatalogSection({
         ? SCHAARLIFT_IDS.has(machine.category)
         : machine.category === selectedCategory;
 
-      const q = searchQuery.trim().toLowerCase();
+      const q = deferredSearchQuery.trim().toLowerCase();
       const matchesSearch = q === "" ||
         machine.id.toLowerCase().includes(q) ||
         machine.category.toLowerCase().includes(q) ||
@@ -267,7 +271,7 @@ export default function CatalogSection({
       return a.pricePerDay - b.pricePerDay;
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeMachines, selectedCategory, searchQuery]);
+  }, [activeMachines, selectedCategory, deferredSearchQuery]);
 
   return (
     <div className="relative min-h-[calc(100vh-3.5rem)] py-6 sm:py-10 px-5 sm:px-6 lg:px-8">

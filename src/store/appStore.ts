@@ -59,6 +59,7 @@ interface AppState {
   fetchMachines: () => Promise<void>;
   fetchOrders: () => Promise<void>;
   loadMoreOrders: () => Promise<void>;
+  loadAllOrders: () => Promise<void>;
   fetchCategories: () => Promise<void>;
   fetchSiteConfig: () => Promise<void>;
   fetchBlockedDates: () => Promise<void>;
@@ -226,6 +227,18 @@ export const useAppStore = create<AppState>((set, get) => ({
       }
     } catch (e: any) {
       devWarn("Load more orders failed.");
+    }
+  },
+
+  // Haalt alle resterende orderpagina's op. Nodig zodra een admin-filter
+  // actief is: filtering gebeurt client-side, dus zonder de volledige
+  // dataset zijn oudere orders onvindbaar.
+  loadAllOrders: async () => {
+    const MAX_PAGES = 50; // veiligheidsgrens (50 × 100 orders)
+    for (let i = 0; i < MAX_PAGES && get().ordersPage < get().ordersTotalPages; i++) {
+      const before = get().ordersPage;
+      await get().loadMoreOrders();
+      if (get().ordersPage === before) break; // fetch mislukt — stop stil
     }
   },
 

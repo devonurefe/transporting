@@ -19,7 +19,8 @@ import {
   Clock,
   Briefcase,
   Printer,
-  Truck
+  Truck,
+  Loader2
 } from "lucide-react";
 import { useAppStore } from "../../store/appStore";
 import { useAuthStore } from "../../store/authStore";
@@ -45,6 +46,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
   const ordersTotalPages = useAppStore((state) => state.ordersTotalPages);
   const ordersTotalCount = useAppStore((state) => state.ordersTotalCount);
   const loadMoreOrders = useAppStore((state) => state.loadMoreOrders);
+  const loadAllOrders = useAppStore((state) => state.loadAllOrders);
   const updateOrderStatus = useAppStore((state) => state.updateOrderStatus);
   const siteConfig = useAppStore((state) => state.siteConfig);
   const adminUser = useAuthStore((state) => state.user);
@@ -82,6 +84,20 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
     const d = new Date(); const dow = d.getDay(); d.setDate(d.getDate() + (dow === 0 ? 0 : 7 - dow));
     return d.toISOString().split("T")[0];
   })();
+
+  // Filters draaien client-side over de geladen orders. Zodra een filter
+  // actief is, laden we daarom automatisch ALLE pagina's — anders zijn
+  // orders buiten de eerste pagina onvindbaar voor de admin.
+  const filtersActive = searchText.trim() !== "" || dateFilter !== "all" || localStatusFilter !== "all";
+  const allLoaded = ordersPage >= ordersTotalPages;
+  const [loadingAll, setLoadingAll] = useState(false);
+  useEffect(() => {
+    if (!filtersActive || allLoaded || loadingAll) return;
+    let active = true;
+    setLoadingAll(true);
+    loadAllOrders().finally(() => { if (active) setLoadingAll(false); });
+    return () => { active = false; };
+  }, [filtersActive, allLoaded, loadingAll, loadAllOrders]);
 
   const statusFiltered = localStatusFilter !== "all"
     ? orders.filter(o => o.status === localStatusFilter)
@@ -660,8 +676,9 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
           </table>
         </div>
 
-        {/* Pagination — only shown when all filters are off and more pages exist */}
-        {ordersPage < ordersTotalPages && !searchText && dateFilter === "all" && (!statusFilter || statusFilter.length === 0) && (
+        {/* Pagination: handmatig bijladen zonder filters; met een actief
+            filter laden we automatisch alles en tonen we de voortgang. */}
+        {ordersPage < ordersTotalPages && !filtersActive && (
           <div className="flex flex-col items-center gap-1.5 pt-1">
             <button
               type="button"
@@ -670,6 +687,12 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
             >
               {t("Meer laden", "Load more", "Daha fazla yükle")} ({orders.length} / {ordersTotalCount})
             </button>
+          </div>
+        )}
+        {filtersActive && loadingAll && (
+          <div className="flex items-center justify-center gap-2 pt-1 text-xs font-semibold text-slate-500">
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            {t("Alle bestellingen doorzoeken…", "Searching all orders…", "Tüm siparişler taranıyor…")} ({orders.length} / {ordersTotalCount})
           </div>
         )}
       </div>

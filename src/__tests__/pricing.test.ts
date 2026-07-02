@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { calculateItemSubtotal, calculateRentalDays, evaluateDiscountPercent, isStrictWeekend, billableWeeks, addonPriceForRental } from "../utils/pricing";
+import { calculateItemSubtotal, calculateRentalDays, evaluateDiscountPercent, isStrictWeekend, billableWeeks, addonPriceForRental, displayRentalDays } from "../utils/pricing";
 import { Machine, CampaignRule } from "../types";
 
 // Reference weekdays (UTC): 2026-06-08 = Monday, 2026-06-12 = Friday, 2026-06-13 = Saturday
@@ -202,6 +202,32 @@ describe("calculateItemSubtotal — weekend 'niet werken' (tier on working days)
   });
   it("5 days Fri→Tue, 'nee', 3 working days → weeklyPrice", () => {
     expect(calculateItemSubtotal(optimum8, 5, "Particulier", noRules, FRI, "nee")).toBe(159);
+  });
+});
+
+describe("displayRentalDays — shown day count matches what is actually billed", () => {
+  it("4 calendar days Fri→Mon, 'nee' → displays 2 (working days), not 4", () => {
+    expect(displayRentalDays(nifty120, FRI, 4, "nee")).toBe(2);
+  });
+
+  it("4 calendar days Fri→Mon, 'ja' → still displays 4 (full werkweektarief includes weekend)", () => {
+    expect(displayRentalDays(nifty120, FRI, 4, "ja")).toBe(4);
+  });
+
+  it("4 calendar days Fri→Mon, no answer yet → still displays 4", () => {
+    expect(displayRentalDays(nifty120, FRI, 4)).toBe(4);
+  });
+
+  it("strict Sat+Sun 2-day, 'nee' → displays 2 unchanged (weekendPrice path, not the working-day drop)", () => {
+    expect(displayRentalDays(nifty120, SAT, 2, "nee")).toBe(2);
+  });
+
+  it("3 weekday days Mon→Wed, 'nee' → no weekend days inside range → displays 3 unchanged", () => {
+    expect(displayRentalDays(nifty120, MON, 3, "nee")).toBe(3);
+  });
+
+  it("monthly 28+ days, 'nee' → not weekly-basis eligible → displays 28 unchanged", () => {
+    expect(displayRentalDays(nifty120, FRI, 28, "nee")).toBe(28);
   });
 });
 

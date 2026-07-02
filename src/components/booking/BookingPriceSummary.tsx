@@ -131,6 +131,24 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
     );
   }
 
+  // No period picked yet (sums.days === 0, nothing priced) — show a neutral
+  // placeholder instead of a misleading "€0,00 · 0 dagen" total.
+  if (!multiplePeriods && sums.days === 0) {
+    return (
+      <div className="bg-white border border-slate-200 shadow-sm p-6 rounded-2xl text-center space-y-3">
+        <div className="mx-auto h-10 w-10 bg-slate-50 text-slate-400 flex items-center justify-center rounded-full border border-slate-100">
+          <Calendar className="h-5 w-5" />
+        </div>
+        <div>
+          <h4 className="text-xs font-bold text-slate-700">{t("priceSummaryChooseDates")}</h4>
+          <p className="text-[10px] text-slate-500 mt-1 max-w-[200px] mx-auto leading-normal">
+            {t("priceSummaryChooseDatesHint")}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   const priceExVat = sums.subtotal + sums.transport + sums.driver + sums.addonCost;
   // Only surface the "free weekend days" line once the customer has explicitly
   // declared they will NOT work the weekend — in that case the subtotal is already
@@ -224,7 +242,7 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
           <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5">{t("priceSummaryTotal")}</p>
           <p className="text-3xl font-black text-slate-900 font-mono leading-none">{euro(sums.total)}</p>
           <p className="text-[11px] text-slate-400 mt-1.5 leading-snug">
-            {t("priceSummaryInclVAT")} · {sums.days} {sums.days === 1 ? t("priceSummaryDayRental") : t("priceSummaryDaysRental")}
+            {t("priceSummaryInclVAT")} · {isWeekendNoWork ? workingDays : sums.days} {(isWeekendNoWork ? workingDays : sums.days) === 1 ? t("priceSummaryDayRental") : t("priceSummaryDaysRental")}
           </p>
           {periodLabel && (
             <p className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-600 mt-1.5 leading-snug">

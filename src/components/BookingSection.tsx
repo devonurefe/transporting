@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { Machine, Order, DeliveryType, UserProfile, CartItem } from "../types";
 import { useAppStore } from "../store/appStore";
 import { checkAvailability } from "../utils/availability";
-import { calculateItemSubtotal, isStrictWeekend, countWeekendDays, calculateRentalDays, billableWeeks, addonPriceForRental } from "../utils/pricing";
+import { calculateItemSubtotal, isStrictWeekend, countWeekendDays, calculateRentalDays, addonPriceForRental, buildTierDisplay, WeeklyBreakdown } from "../utils/pricing";
 
 // Import modular Step components
 import { buildWhatsAppUrl } from "../utils/whatsapp";
@@ -417,39 +417,17 @@ export default function BookingSection({
         ? leadItem.weeklyPrice / 5
         : null;
 
-      // Tier label for flat-rate price display (single-item cart only)
+      // Tier label for flat-rate price display (single-item cart only) — shared
+      // with the legacy path and unit-tested against calculateItemSubtotal in
+      // pricing-display.test.ts so the breakdown can never drift from the real charge.
       let tierLabel: string | null = null;
       let isFlatRate = false;
-      let weeklyBreakdown: { weeks: number; pricePerWeek: number; remainder: number; dailyRate: number; remainderCost?: number } | null = null;
+      let weeklyBreakdown: WeeklyBreakdown | null = null;
       if (cartItems.length === 1 && leadItem) {
-        if (leadItem.weeklyOnly && leadItem.weeklyPrice) {
-          const weeks = billableWeeks(totalDays, leadItem.minRentalDays);
-          tierLabel = weeks === 1 ? "Weektarief" : `Weektarief × ${weeks} weken`;
-          isFlatRate = true;
-        } else if (totalDays === 1 && leadItem.oneDayPrice) {
-          tierLabel = "1-Dag Actie"; isFlatRate = true;
-        } else if (totalDays === 2 && isStrictWeekend(leadStart, 2) && leadItem.weekendPrice) {
-          tierLabel = "Weekendtarief (za+zo)"; isFlatRate = true;
-        } else if (totalDays === 2 && leadItem.twoDayPrice) {
-          tierLabel = "2-Daags Tarief (ma-vr)"; isFlatRate = true;
-        } else if ((totalDays === 3 || totalDays === 4 || totalDays === 5) && leadItem.weeklyPrice) {
-          tierLabel = "Werkweektarief"; isFlatRate = true;
-        } else if (totalDays >= 6 && totalDays <= 27 && leadItem.weeklyPrice) {
-          const wks = Math.floor(totalDays / 5);
-          const rem = totalDays % 5;
-          const wkBase = Math.round(totalDays * (leadItem.weeklyPrice / 5));
-          if (leadItem.monthlyPrice && wkBase > leadItem.monthlyPrice) {
-            // Pro-rata weekly rate would exceed the monthly price — tierPrice() in
-            // pricing.ts caps the actual charge at monthlyPrice, so the weeks/remainder
-            // breakdown would no longer add up to what's charged. Show one flat line
-            // (mirrors the isFlatRate render path) instead of a misleading breakdown.
-            tierLabel = "Maandtarief (voordeliger)"; isFlatRate = true;
-          } else {
-            weeklyBreakdown = { weeks: wks, pricePerWeek: leadItem.weeklyPrice, remainder: rem, dailyRate: Math.round(leadItem.weeklyPrice / 5), remainderCost: rem * Math.round(leadItem.weeklyPrice / 5) };
-          }
-        } else if (totalDays >= 28 && leadItem.monthlyPrice) {
-          tierLabel = "Maandtarief"; isFlatRate = true;
-        }
+        const display = buildTierDisplay(leadItem, totalDays, leadStart);
+        tierLabel = display.tierLabel;
+        isFlatRate = display.isFlatRate;
+        weeklyBreakdown = display.weeklyBreakdown;
         // Weekend "niet werken": the subtotal is already reduced to the working days
         // (weekend dropped) and priced on the normal tier, so show one clean flat line
         // instead of a pro-rata breakdown that wouldn't add up.
@@ -538,33 +516,10 @@ export default function BookingSection({
       ? selectedMachine.weeklyPrice / 5
       : null;
 
-    let tierLabel: string | null = null;
-    let isFlatRate = false;
-    let weeklyBreakdown: { weeks: number; pricePerWeek: number; remainder: number; dailyRate: number; remainderCost?: number } | null = null;
-    if (days === 1 && selectedMachine.oneDayPrice) {
-      tierLabel = "1-Dag Actie"; isFlatRate = true;
-    } else if (days === 2 && isStrictWeekend(startDate, 2) && selectedMachine.weekendPrice) {
-      tierLabel = "Weekendtarief (za+zo)"; isFlatRate = true;
-    } else if (days === 2 && selectedMachine.twoDayPrice) {
-      tierLabel = "2-Daags Tarief (ma-vr)"; isFlatRate = true;
-    } else if ((days === 3 || days === 4 || days === 5) && selectedMachine.weeklyPrice) {
-      tierLabel = "Werkweektarief"; isFlatRate = true;
-    } else if (days >= 6 && days <= 27 && selectedMachine.weeklyPrice) {
-      const wks = Math.floor(days / 5);
-      const rem = days % 5;
-      const wkBase = Math.round(days * (selectedMachine.weeklyPrice / 5));
-      if (selectedMachine.monthlyPrice && wkBase > selectedMachine.monthlyPrice) {
-        // Pro-rata weekly rate would exceed the monthly price — tierPrice() in
-        // pricing.ts caps the actual charge at monthlyPrice, so the weeks/remainder
-        // breakdown would no longer add up to what's charged. Show one flat line
-        // (mirrors the isFlatRate render path) instead of a misleading breakdown.
-        tierLabel = "Maandtarief (voordeliger)"; isFlatRate = true;
-      } else {
-        weeklyBreakdown = { weeks: wks, pricePerWeek: selectedMachine.weeklyPrice, remainder: rem, dailyRate: Math.round(selectedMachine.weeklyPrice / 5), remainderCost: wkBase - wks * selectedMachine.weeklyPrice };
-      }
-    } else if (days >= 28 && selectedMachine.monthlyPrice) {
-      tierLabel = "Maandtarief"; isFlatRate = true;
-    }
+    const legacyDisplay = buildTierDisplay(selectedMachine, days, startDate);
+    let tierLabel: string | null = legacyDisplay.tierLabel;
+    let isFlatRate = legacyDisplay.isFlatRate;
+    let weeklyBreakdown: WeeklyBreakdown | null = legacyDisplay.weeklyBreakdown;
     // Weekend "niet werken": subtotal already reduced to working days — show a single flat line.
     if (weekendWorkAnswer === 'nee' && spansWeekend) {
       tierLabel = "Tarief (alleen werkdagen)"; isFlatRate = true; weeklyBreakdown = null;

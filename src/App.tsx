@@ -14,6 +14,7 @@ import PWAInstallBanner from "./components/PWAInstallBanner";
 import ToastNotification from "./components/ToastNotification";
 import CookieBanner from "./components/CookieBanner";
 import ErrorBoundary from "./components/ErrorBoundary";
+import { clearChunkReloadFlag } from "./utils/chunkError";
 import { Machine, Order, OrderStatus, AppNotification, UserProfile, CartItem } from "./types";
 import { useAuthStore } from "./store/authStore";
 import { useAppStore } from "./store/appStore";
@@ -96,6 +97,12 @@ export default function App() {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [location.pathname]);
+
+  // A successful mount proves the current build's chunks loaded fine, so clear
+  // the one-shot auto-reload flag — the next deploy's chunk error can retry too.
+  useEffect(() => {
+    clearChunkReloadFlag();
+  }, []);
 
   // Mirror the active catalog filters into the URL query string (replace, so we
   // don't spam browser history) so a refresh or shared link restores them.

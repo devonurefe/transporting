@@ -12,7 +12,6 @@ import { calculateItemSubtotal, isStrictWeekend, countWeekendDays, calculateRent
 
 // Import modular Step components
 import { buildWhatsAppUrl } from "../utils/whatsapp";
-import { euro } from "../utils/format";
 import BookingStep1 from "./booking/BookingStep1";
 import BookingStep2 from "./booking/BookingStep2";
 import BookingSuccess from "./booking/BookingSuccess";
@@ -439,7 +438,15 @@ export default function BookingSection({
           const wks = Math.floor(totalDays / 5);
           const rem = totalDays % 5;
           const wkBase = Math.round(totalDays * (leadItem.weeklyPrice / 5));
-          weeklyBreakdown = { weeks: wks, pricePerWeek: leadItem.weeklyPrice, remainder: rem, dailyRate: Math.round(leadItem.weeklyPrice / 5), remainderCost: rem * Math.round(leadItem.weeklyPrice / 5) };
+          if (leadItem.monthlyPrice && wkBase > leadItem.monthlyPrice) {
+            // Pro-rata weekly rate would exceed the monthly price — tierPrice() in
+            // pricing.ts caps the actual charge at monthlyPrice, so the weeks/remainder
+            // breakdown would no longer add up to what's charged. Show one flat line
+            // (mirrors the isFlatRate render path) instead of a misleading breakdown.
+            tierLabel = "Maandtarief (voordeliger)"; isFlatRate = true;
+          } else {
+            weeklyBreakdown = { weeks: wks, pricePerWeek: leadItem.weeklyPrice, remainder: rem, dailyRate: Math.round(leadItem.weeklyPrice / 5), remainderCost: rem * Math.round(leadItem.weeklyPrice / 5) };
+          }
         } else if (totalDays >= 28 && leadItem.monthlyPrice) {
           tierLabel = "Maandtarief"; isFlatRate = true;
         }
@@ -546,7 +553,15 @@ export default function BookingSection({
       const wks = Math.floor(days / 5);
       const rem = days % 5;
       const wkBase = Math.round(days * (selectedMachine.weeklyPrice / 5));
-      weeklyBreakdown = { weeks: wks, pricePerWeek: selectedMachine.weeklyPrice, remainder: rem, dailyRate: Math.round(selectedMachine.weeklyPrice / 5), remainderCost: wkBase - wks * selectedMachine.weeklyPrice };
+      if (selectedMachine.monthlyPrice && wkBase > selectedMachine.monthlyPrice) {
+        // Pro-rata weekly rate would exceed the monthly price — tierPrice() in
+        // pricing.ts caps the actual charge at monthlyPrice, so the weeks/remainder
+        // breakdown would no longer add up to what's charged. Show one flat line
+        // (mirrors the isFlatRate render path) instead of a misleading breakdown.
+        tierLabel = "Maandtarief (voordeliger)"; isFlatRate = true;
+      } else {
+        weeklyBreakdown = { weeks: wks, pricePerWeek: selectedMachine.weeklyPrice, remainder: rem, dailyRate: Math.round(selectedMachine.weeklyPrice / 5), remainderCost: wkBase - wks * selectedMachine.weeklyPrice };
+      }
     } else if (days >= 28 && selectedMachine.monthlyPrice) {
       tierLabel = "Maandtarief"; isFlatRate = true;
     }
@@ -1047,29 +1062,6 @@ export default function BookingSection({
               <div className="hidden lg:block lg:col-span-4 lg:sticky lg:top-24 space-y-4">
                 <BookingPriceSummary selectedMachine={cartItems && cartItems.length > 0 ? cartItems[0].machine : null} machineCount={cartItems.length || 1} startDate={summaryStartDate} endDate={summaryEndDate} multiplePeriods={mixedCartPeriods} sums={sums} />
               </div>
-
-              {/* Mobile total bar — the full summary sits below the form on small
-                  screens, so keep the running total in view while scrolling.
-                  bottom-14 clears the mobile bottom nav (h-14, hidden from md:);
-                  pr-20 keeps the amount clear of the WhatsApp FAB. */}
-              {sums.total > 0 && (() => {
-                // Weekend "niet werken": the total is already priced on the working
-                // days only, so this bar should read the same day count — not the
-                // full calendar span (Fri–Mon = 2 dagen, not 4).
-                const mobileBarDays = (sums.spansWeekend && sums.weekendWorkAnswer === "nee")
-                  ? Math.max(0, sums.days - (sums.weekendDays ?? 0))
-                  : sums.days;
-                return (
-                <div className="lg:hidden fixed bottom-14 md:bottom-0 left-0 right-0 z-40 border-t border-slate-200 bg-white/95 backdrop-blur-lg px-5 py-2.5 pr-20 shadow-[0_-4px_12px_rgba(0,0,0,0.06)] flex items-center justify-between">
-                  <span className="text-xs text-slate-500">
-                    {mobileBarDays} {mobileBarDays === 1 ? "dag" : "dagen"}{cartItems.length > 1 ? ` • ${cartItems.length} machines` : ""}
-                  </span>
-                  <span className="text-sm font-bold text-slate-900">
-                    Totaal <span className="text-teal-700">{euro(sums.total)}</span> <span className="font-normal text-xs text-slate-500">incl. BTW</span>
-                  </span>
-                </div>
-                );
-              })()}
 
             </motion.div>
           ) : (

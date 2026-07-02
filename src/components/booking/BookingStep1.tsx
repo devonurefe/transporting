@@ -77,6 +77,12 @@ export default function BookingStep1({
   const t = useLanguageStore((state) => state.t);
   const vatDisplay = useAppStore((state) => state.vatDisplay);
   const [previewMachine, setPreviewMachine] = useState<Machine | null>(null);
+  // Set once the customer tries to proceed — gates the red "missing field"
+  // highlights below so they never show before the first attempt.
+  const [attempted, setAttempted] = useState(false);
+
+  const timeSlotBlocked = deliveryType === "delivery_by_us" && !deliveryTimeSlot;
+  const weekendBlocked = !!(sums?.spansWeekend && weekendWorkAnswer === null);
 
   // Reservation period for the price summary — neutral copy when the cart
   // mixes machines booked for different periods.
@@ -127,7 +133,7 @@ export default function BookingStep1({
       {/* Weekend-work question — asked BEFORE the calendar so it can steer both the
           selectable start days and the price. Shown for weekly-basis machines. */}
       {cartItems.length > 0 && asksWeekend && (
-        <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl space-y-3">
+        <div className={`p-4 bg-amber-50 border rounded-xl space-y-3 transition-colors ${attempted && weekendBlocked ? "border-rose-400 ring-2 ring-rose-200" : "border-amber-200"}`}>
           <div>
             <p className="text-sm font-bold text-amber-900">{t("step1WeekendQuestion")}</p>
             <ul className="mt-1.5 space-y-1">
@@ -174,6 +180,12 @@ export default function BookingStep1({
           {weekendWorkAnswer === 'nee' && (
             <p className="text-xs text-amber-700 leading-relaxed bg-amber-100 rounded-lg p-2.5">
               {t("step1WeekendNoWarning")}
+            </p>
+          )}
+          {attempted && weekendBlocked && (
+            <p className="text-xs font-bold text-rose-600 flex items-center gap-1.5">
+              <ShieldAlert className="h-3.5 w-3.5 shrink-0" />
+              Maak een keuze om door te gaan
             </p>
           )}
         </div>
@@ -499,7 +511,7 @@ export default function BookingStep1({
             <span className="text-sm text-slate-800 font-bold">Gewenst bezorgmoment</span>
             <span className="text-xs text-rose-500 font-semibold uppercase tracking-wide">Verplicht</span>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className={`grid grid-cols-2 gap-3 rounded-xl border p-2 transition-colors ${attempted && timeSlotBlocked ? "border-rose-400 bg-rose-50/40" : "border-transparent"}`}>
             {[
               { id: "morning", label: "Ochtend", time: "07:00 – 09:00" },
               { id: "afternoon", label: "Middag", time: "13:00 – 17:00" },
@@ -519,6 +531,12 @@ export default function BookingStep1({
               </button>
             ))}
           </div>
+          {attempted && timeSlotBlocked && (
+            <p className="text-xs font-bold text-rose-600 flex items-center gap-1.5">
+              <ShieldAlert className="h-3.5 w-3.5 shrink-0" />
+              Kies een bezorgmoment om door te gaan
+            </p>
+          )}
         </div>
       )}
 
@@ -653,30 +671,17 @@ export default function BookingStep1({
         </div>
       )}
 
-      {/* Step control */}
+      {/* Step control — always clickable: a click while a required choice is
+          missing highlights that section in red (above) instead of doing
+          nothing, so the customer can see exactly what to fill in. */}
       <div className="flex flex-col sm:flex-row sm:justify-end gap-3 pt-4 border-t border-slate-100">
-        {(() => {
-          const distanceBlocked = deliveryType === "delivery_by_us" && !!deliveryDistanceKm && deliveryDistanceKm > 20;
-          const weekendBlocked = !!(sums?.spansWeekend && weekendWorkAnswer === null);
-          const canProceed = isAvailable && cartItems.length > 0
-            && !(deliveryType === "delivery_by_us" && !deliveryTimeSlot)
-            && !distanceBlocked
-            && !weekendBlocked;
-          return (
         <button
-          onClick={handleNextStep}
-          disabled={!canProceed}
-          className={`font-bold text-sm w-full sm:w-auto px-8 py-4 rounded-xl transition-all flex items-center justify-center gap-2 border-none order-1 sm:order-2 ${
-            canProceed
-              ? "cta-shine bg-orange-500 hover:bg-orange-600 text-white cursor-pointer active:scale-[0.98] shadow-lg shadow-orange-500/25"
-              : "bg-slate-100 text-slate-400 cursor-not-allowed"
-          }`}
+          onClick={() => { setAttempted(true); handleNextStep(); }}
+          className="cta-shine bg-orange-500 hover:bg-orange-600 text-white cursor-pointer active:scale-[0.98] shadow-lg shadow-orange-500/25 font-bold text-sm w-full sm:w-auto px-8 py-4 rounded-xl transition-all flex items-center justify-center gap-2 border-none order-1 sm:order-2"
         >
           <span>Doorgaan naar gegevens</span>
           <ArrowRight className="h-4.5 w-4.5" />
         </button>
-          );
-        })()}
       </div>
       {/* Machine detail modal — full shared component */}
       <AnimatePresence>

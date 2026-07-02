@@ -104,6 +104,19 @@ export default function BookingStep2({
   const [isGuestConfirmed, setIsGuestConfirmed] = React.useState<boolean>(false);
   const [sectorOpen, setSectorOpen] = React.useState(false);
   const selectedProfession = PROFESSIONS.find(p => p.value === customerProfile) ?? PROFESSIONS[0];
+  // Set once the customer tries to submit — gates the red "missing field"
+  // highlights below so they never show before the first attempt.
+  const [attempted, setAttempted] = React.useState(false);
+
+  const emailOk = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/.test(customerEmail);
+  const phoneOk = /^\d{7,15}$/.test(customerPhone.replace(/[\s\-().+]/g, ""));
+  const nameInvalid = attempted && !customerName.trim();
+  const emailInvalid = attempted && (!customerEmail.trim() || !emailOk);
+  const phoneInvalid = attempted && (!customerPhone.trim() || !phoneOk);
+  const addressInvalid = attempted && deliveryType === "delivery_by_us" && !deliveryAddress.trim();
+  const fieldBorder = (invalid: boolean) => invalid
+    ? "border-rose-400 ring-1 ring-rose-200"
+    : "border-slate-200 focus-within:border-slate-400";
 
   if (!currentUser && !isGuestConfirmed) {
     return (
@@ -194,7 +207,7 @@ export default function BookingStep2({
         
         <div className="space-y-1.5">
           <label htmlFor="bs2-name" className="text-xs text-slate-700 block font-bold">Naam Contactpersoon</label>
-          <div className="flex items-center bg-white rounded-xl px-3 py-2.5 border border-slate-200 focus-within:border-slate-400 transition-colors shadow-inner">
+          <div className={`flex items-center bg-white rounded-xl px-3 py-2.5 border transition-colors shadow-inner ${fieldBorder(nameInvalid)}`}>
             <User className="h-4 w-4 text-slate-400 mr-2" />
             <input
               id="bs2-name"
@@ -210,7 +223,7 @@ export default function BookingStep2({
 
         <div className="space-y-1.5">
           <label htmlFor="bs2-email" className="text-xs text-slate-700 block font-bold">E-mail (Facturatie & updates)</label>
-          <div className="flex items-center bg-white rounded-xl px-3 py-2.5 border border-slate-200 focus-within:border-slate-400 transition-colors shadow-inner">
+          <div className={`flex items-center bg-white rounded-xl px-3 py-2.5 border transition-colors shadow-inner ${fieldBorder(emailInvalid)}`}>
             <Mail className="h-4 w-4 text-slate-400 mr-2" />
             <input
               id="bs2-email"
@@ -226,7 +239,7 @@ export default function BookingStep2({
 
         <div className="space-y-1.5">
           <label htmlFor="bs2-phone" className="text-xs text-slate-700 block font-bold">Telefoonnummer</label>
-          <div className="flex items-center bg-white rounded-xl px-3 py-2.5 border border-slate-200 focus-within:border-slate-400 transition-colors shadow-inner">
+          <div className={`flex items-center bg-white rounded-xl px-3 py-2.5 border transition-colors shadow-inner ${fieldBorder(phoneInvalid)}`}>
             <Phone className="h-4 w-4 text-slate-400 mr-2" />
             <input
               id="bs2-phone"
@@ -382,8 +395,14 @@ export default function BookingStep2({
                 value={deliveryAddress}
                 onChange={(e) => setDeliveryAddress(e.target.value)}
                 placeholder="Kortingstraat 5, 2404 CB Alphen aan den Rijn"
-                className="w-full bg-white border border-slate-200 focus:border-slate-400 rounded-xl px-4 py-2.5 text-xs text-slate-800 font-semibold outline-none transition-colors focus:ring-0 placeholder:text-slate-400 shadow-sm resize-none leading-relaxed"
+                className={`w-full bg-white border rounded-xl px-4 py-2.5 text-xs text-slate-800 font-semibold outline-none transition-colors focus:ring-0 placeholder:text-slate-400 shadow-sm resize-none leading-relaxed ${addressInvalid ? "border-rose-400 ring-1 ring-rose-200" : "border-slate-200 focus:border-slate-400"}`}
               />
+              {addressInvalid && (
+                <p className="text-xs font-bold text-rose-600 mt-1.5 flex items-center gap-1.5">
+                  <ShieldAlert className="h-3.5 w-3.5 shrink-0" />
+                  Vul een afleveradres in om door te gaan
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -432,7 +451,7 @@ export default function BookingStep2({
         </button>
 
         <button
-          onClick={handleNextStep}
+          onClick={() => { setAttempted(true); handleNextStep(); }}
           disabled={isSubmitting || !!(deliveryDistanceKm && deliveryDistanceKm > 20)}
           className="cta-shine font-extrabold text-xs px-4 sm:px-7 py-3.5 rounded-xl transition-all flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer border-none shadow-md flex-1 sm:flex-initial bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-emerald-100/50"
         >

@@ -118,6 +118,14 @@ export default function BookingStep2({
     ? "border-rose-400 ring-1 ring-rose-200"
     : "border-slate-200 focus-within:border-slate-400";
 
+  // The error banner above reflects a validation snapshot from the last
+  // submit attempt — once the customer actually fixes the field it
+  // complained about, clear it immediately instead of leaving it stale.
+  React.useEffect(() => {
+    if (validationError) setValidationError(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [customerName, customerEmail, customerPhone, deliveryAddress, customerProfile]);
+
   if (!currentUser && !isGuestConfirmed) {
     return (
       <div className="bg-white border border-slate-200 shadow-sm p-6 rounded-2xl space-y-6 animate-fade-in text-center py-10 text-slate-800">
@@ -438,32 +446,40 @@ export default function BookingStep2({
         </div>
       )}
 
-      <div className="flex flex-row items-stretch justify-between gap-3 pt-4 border-t border-slate-200">
-        <button
-          onClick={() => {
-            setValidationError(null);
-            setStep(1);
-          }}
-          className="bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold text-xs px-4 sm:px-5 py-3 rounded-xl transition-all flex items-center justify-center space-x-1.5 border border-slate-200 cursor-pointer shadow-sm shrink-0"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          <span>Terug</span>
-        </button>
+      <div className="pt-4 border-t border-slate-200">
+        <div className="flex flex-row items-stretch justify-between gap-3">
+          <button
+            onClick={() => {
+              setValidationError(null);
+              setStep(1);
+            }}
+            className="bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold text-xs px-4 sm:px-5 py-3 rounded-xl transition-all flex items-center justify-center space-x-1.5 border border-slate-200 cursor-pointer shadow-sm shrink-0"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span>Terug</span>
+          </button>
 
-        <button
-          onClick={() => { setAttempted(true); handleNextStep(); }}
-          disabled={isSubmitting || !!(deliveryDistanceKm && deliveryDistanceKm > 20)}
-          className="cta-shine font-extrabold text-xs px-4 sm:px-7 py-3.5 rounded-xl transition-all flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer border-none shadow-md flex-1 sm:flex-initial bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-emerald-100/50"
-        >
-          {isSubmitting ? (
-            <>
-              <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-              <span>Verwerken...</span>
-            </>
-          ) : (
-            <span>Boeking Afronden via WhatsApp 💬</span>
-          )}
-        </button>
+          <button
+            onClick={() => { setAttempted(true); handleNextStep(); }}
+            disabled={isSubmitting || !!(deliveryDistanceKm && deliveryDistanceKm > 20)}
+            className="cta-shine font-extrabold text-xs px-4 sm:px-7 py-3.5 rounded-xl transition-all flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer border-none shadow-md flex-1 sm:flex-initial bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-emerald-100/50"
+          >
+            {isSubmitting ? (
+              <>
+                <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                <span>Verwerken...</span>
+              </>
+            ) : (
+              <span>Boeking Afronden via WhatsApp 💬</span>
+            )}
+          </button>
+        </div>
+        {attempted && validationError && (
+          <p className="text-xs text-rose-600 font-bold mt-2.5 flex items-center gap-1.5 justify-end">
+            <ShieldAlert className="h-3.5 w-3.5 shrink-0" />
+            Vul de verplichte velden hierboven in om door te gaan
+          </p>
+        )}
       </div>
 
     </div>

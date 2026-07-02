@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Calendar, Building2, X, Truck, ShieldAlert, ArrowRight, MessageCircle, ChevronLeft, Info } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { CartItem, DeliveryType, Machine } from "../../types";
@@ -83,6 +83,14 @@ export default function BookingStep1({
 
   const timeSlotBlocked = deliveryType === "delivery_by_us" && !deliveryTimeSlot;
   const weekendBlocked = !!(sums?.spansWeekend && weekendWorkAnswer === null);
+
+  // The error banner/highlights above reflect a validation snapshot from the
+  // last click — once the customer actually fixes the thing it complained
+  // about, clear it immediately instead of leaving a stale message on screen.
+  useEffect(() => {
+    if (validationError) setValidationError(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deliveryTimeSlot, weekendWorkAnswer, deliveryType, cartItems.length, deliveryDistanceKm]);
 
   // Reservation period for the price summary — neutral copy when the cart
   // mixes machines booked for different periods.
@@ -674,14 +682,22 @@ export default function BookingStep1({
       {/* Step control — always clickable: a click while a required choice is
           missing highlights that section in red (above) instead of doing
           nothing, so the customer can see exactly what to fill in. */}
-      <div className="flex flex-col sm:flex-row sm:justify-end gap-3 pt-4 border-t border-slate-100">
-        <button
-          onClick={() => { setAttempted(true); handleNextStep(); }}
-          className="cta-shine bg-orange-500 hover:bg-orange-600 text-white cursor-pointer active:scale-[0.98] shadow-lg shadow-orange-500/25 font-bold text-sm w-full sm:w-auto px-8 py-4 rounded-xl transition-all flex items-center justify-center gap-2 border-none order-1 sm:order-2"
-        >
-          <span>Doorgaan naar gegevens</span>
-          <ArrowRight className="h-4.5 w-4.5" />
-        </button>
+      <div className="pt-4 border-t border-slate-100">
+        <div className="flex flex-col sm:flex-row sm:justify-end gap-3">
+          <button
+            onClick={() => { setAttempted(true); handleNextStep(); }}
+            className="cta-shine bg-orange-500 hover:bg-orange-600 text-white cursor-pointer active:scale-[0.98] shadow-lg shadow-orange-500/25 font-bold text-sm w-full sm:w-auto px-8 py-4 rounded-xl transition-all flex items-center justify-center gap-2 border-none order-1 sm:order-2"
+          >
+            <span>Doorgaan naar gegevens</span>
+            <ArrowRight className="h-4.5 w-4.5" />
+          </button>
+        </div>
+        {attempted && validationError && (
+          <p className="text-xs text-rose-600 font-bold mt-2.5 flex items-center gap-1.5 sm:justify-end">
+            <ShieldAlert className="h-3.5 w-3.5 shrink-0" />
+            Vul de verplichte velden hierboven in om door te gaan
+          </p>
+        )}
       </div>
       {/* Machine detail modal — full shared component */}
       <AnimatePresence>

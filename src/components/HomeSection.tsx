@@ -619,8 +619,8 @@ export default function HomeSection({
                 className="group bg-white border border-slate-200 rounded-2xl overflow-hidden text-left cursor-pointer hover:border-orange-300 hover:shadow-xl hover:shadow-orange-500/5 hover:-translate-y-1.5 active:scale-[0.98] transition-all duration-300 flex flex-col"
               >
                 {/* Top — text info: name + height • price on one clean line, then a
-                    slim model-count / CTA line. The discount badge lives on the photo
-                    below (not squeezed in here) to keep this block to two tight lines. */}
+                    slim model-count / CTA line, then the discount badge (if any)
+                    tucked right under the CTA text it belongs to — not on the photo. */}
                 <div className="p-4 flex flex-col gap-1.5 min-w-0">
                   <p className="font-display font-black text-base sm:text-lg text-slate-900 leading-snug line-clamp-2">
                     {cat.listLabel || cat.label}
@@ -651,16 +651,9 @@ export default function HomeSection({
                       <ChevronRight className="h-3 w-3" />
                     </span>
                   </div>
-                </div>
-
-                {/* Bottom — wide machine photo on a pure white background so the
-                    white-background product photos sit flush with no grey halo.
-                    Any discount badge sits here as a corner ribbon on the photo
-                    itself, so it never crowds the text block above. */}
-                <div className="relative w-full aspect-[4/3] overflow-hidden border-t border-slate-100 bg-white">
                   {meta && meta.badge !== "none" && (
                     <span
-                      className={`absolute top-2.5 right-2.5 z-10 inline-flex items-center rounded-full px-2 py-1 text-[10px] font-bold text-white shadow-sm ${
+                      className={`self-end inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold text-white ${
                         meta.badge === "tier" ? "bg-indigo-600" : "bg-rose-600"
                       }`}
                     >
@@ -671,6 +664,11 @@ export default function HomeSection({
                         : t(`−${meta.badgePct}% per week`, `−${meta.badgePct}%/week`, `Haftada −%${meta.badgePct}`)}
                     </span>
                   )}
+                </div>
+
+                {/* Bottom — wide machine photo on a pure white background so the
+                    white-background product photos sit flush with no grey halo */}
+                <div className="relative w-full aspect-[4/3] overflow-hidden border-t border-slate-100 bg-white">
                   {catImage ? (
                     <img
                       src={catImage}

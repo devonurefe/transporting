@@ -836,7 +836,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                         </p>
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="grid grid-cols-1 gap-4">
                       <div className="space-y-1">
                         <label className="text-xs text-slate-700 block font-bold">{t("1 Dag Actie €", "1 Day Promo €", "1 Gün Kampanya €")}</label>
                         <input
@@ -940,7 +940,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                         <p className="text-[10px] text-slate-400">{t("Huur t/m za → +toeslag (retour ma)", "Rent thru Sat → +surcharge (return Mon)", "Cmt'ye taşarsa → +ücret (iade Pzt)")}</p>
                       </div>
 
-                      <label className="col-span-2 flex items-start gap-2.5 cursor-pointer rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5">
+                      <label className="flex items-start gap-2.5 cursor-pointer rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5">
                         <input
                           type="checkbox"
                           checked={editWeekendRulesEnabled}

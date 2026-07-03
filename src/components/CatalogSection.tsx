@@ -381,7 +381,12 @@ export default function CatalogSection({
 
             {/* Grid layout — wider cards: 1-col mobile, 2-col tablet+ */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
-              <AnimatePresence mode="popLayout">
+              {/* initial={false}: skip the fly-in animation for cards already on
+                  screen when this mounts — otherwise every card in the grid
+                  animates in at once on first visit, which reads as jittery/
+                  broken rather than a real page. Still animates smoothly when
+                  the filtered set changes (search/category switch). */}
+              <AnimatePresence mode="popLayout" initial={false}>
                 {filteredMachines.map((machine) => {
                   return (
                     <motion.div

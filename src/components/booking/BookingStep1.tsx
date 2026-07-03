@@ -243,7 +243,7 @@ export default function BookingStep1({
                     <img
                       src={item.machine.imageUrl || item.machine.additionalImages?.[0] || "/placeholder-machine.webp"}
                       alt={item.machine.name}
-                      className="object-cover h-full w-full scale-125 group-hover/thumb:scale-[1.4] transition-transform duration-300"
+                      className="object-cover h-full w-full scale-150 group-hover/thumb:scale-[1.65] transition-transform duration-300"
                       referrerPolicy="no-referrer"
                       onError={(e) => {
                         e.currentTarget.src = "/placeholder-machine.webp";

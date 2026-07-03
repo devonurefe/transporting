@@ -911,9 +911,12 @@ export default function BookingSection({
         )}
 
 
-        <AnimatePresence mode="wait">
+        {/* initial={false}: don't fade+slide the step content in on first
+            landing on this tab — only animate the transition between steps,
+            so opening "Boeken" feels instant instead of jittery. */}
+        <AnimatePresence mode="wait" initial={false}>
           {step < STEP_SUCCESS ? (
-            <motion.div 
+            <motion.div
               key="booking-content"
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}

@@ -7,11 +7,14 @@ import { publicReadLimiter, softOriginGuard } from "../middleware/publicGuard.js
 
 export const machinesRouter = Router();
 
+// Mirrors sanitizeImageUrl's allow-list (local /paths, uploaded data:image/ URLs,
+// http/https) per array item — previously only accepted https:, which silently
+// dropped every image uploaded via the admin file picker (POST /api/upload
+// returns a data:image/... URL), making the additional-images gallery a no-op.
 function sanitizeImageUrls(arr: unknown[]): string[] {
-  return arr.filter((u): u is string => {
-    if (typeof u !== "string") return false;
-    try { return new URL(u).protocol === "https:"; } catch { return false; }
-  });
+  return arr
+    .map((u) => sanitizeImageUrl(u))
+    .filter((u) => u.length > 0);
 }
 
 function sanitizeSuitableFor(raw: unknown): string[] {
@@ -252,6 +255,7 @@ machinesRouter.post("/", requireAdmin as any, async (req: AuthenticatedRequest, 
         minRentalDays: req.body.minRentalDays !== undefined && req.body.minRentalDays !== null && req.body.minRentalDays !== "" ? Math.round(Number(req.body.minRentalDays)) : null,
         weeklyOnly: Boolean(req.body.weeklyOnly),
         pickupOnly: Boolean(req.body.pickupOnly),
+        showInWeeklyOffers: Boolean(req.body.showInWeeklyOffers),
         crossSellAddons: sanitizeCrossSell(req.body.crossSellAddons) ?? Prisma.JsonNull
       }
     });

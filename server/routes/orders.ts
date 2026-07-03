@@ -265,7 +265,11 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
   try {
     // Server-side price validation — reject if client price deviates from DB
     const machine = await prisma.machine.findUnique({ where: { id: orderData.machineId } });
-    if (!machine) {
+    // Deactivated/soft-deleted machines are unbookable regardless of how the
+    // customer reached this machineId (direct link, shared WhatsApp URL, or a
+    // raw API call) — the admin's "Deactiveer" action must be a hard block, not
+    // just a catalog/homepage visibility filter.
+    if (!machine || machine.isActive === false || machine.deletedAt) {
       return res.status(404).json({ error: "Machine niet gevonden" });
     }
     if (Math.abs(machine.pricePerDay - Number(orderData.machinePrice)) > 0.01) {

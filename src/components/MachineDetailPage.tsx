@@ -45,7 +45,9 @@ export default function MachineDetailPage({ onSelectMachineForBooking }: Machine
     );
   }
 
-  if (!machine) {
+  // Deactivated machines are treated as "not found" — a direct/shared link must
+  // never bypass the admin's decision to take a unit offline for booking.
+  if (!machine || machine.isActive === false) {
     return (
       <div className="max-w-3xl mx-auto px-4 py-20 text-center space-y-4">
         <h1 className="text-lg font-black text-slate-900">Machine niet gevonden</h1>

@@ -64,6 +64,7 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
   const [minRentalDays, setMinRentalDays] = useState("");
   const [weeklyOnly, setWeeklyOnly] = useState(false);
   const [pickupOnly, setPickupOnly] = useState(false);
+  const [showInWeeklyOffers, setShowInWeeklyOffers] = useState(false);
   const [crossSell, setCrossSell] = useState<{ id: string; name: string; description: string; pricePerWeek: string; pricePerDay: string; pricePerTwoDay: string }[]>([]);
 
   const handleAdditionalImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -240,6 +241,7 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
       minRentalDays: minRentalDays ? Number(minRentalDays) : undefined,
       weeklyOnly,
       pickupOnly,
+      showInWeeklyOffers,
       crossSellAddons: crossSell
         .filter(a => a.name.trim())
         .map(a => ({
@@ -829,6 +831,22 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
               aria-checked={pickupOnly}
             >
               <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${pickupOnly ? 'translate-x-6' : 'translate-x-1'}`} />
+            </button>
+          </div>
+
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-xs font-bold text-slate-700">{t("Tonen bij Weekaanbiedingen", "Show in Weekly Offers", "Haftalık Fırsatlarda göster")}</p>
+              <p className="text-[11px] text-slate-500 mt-0.5">{t("Machine verschijnt in de \"Weekaanbiedingen\" sectie op de homepage.", "Machine appears in the \"Weekly Offers\" section on the homepage.", "Makine ana sayfadaki \"Haftalık Fırsatlar\" bölümünde görünür.")}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowInWeeklyOffers(v => !v)}
+              className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus:outline-none ${showInWeeklyOffers ? 'bg-orange-500' : 'bg-slate-300'}`}
+              role="switch"
+              aria-checked={showInWeeklyOffers}
+            >
+              <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${showInWeeklyOffers ? 'translate-x-6' : 'translate-x-1'}`} />
             </button>
           </div>
 

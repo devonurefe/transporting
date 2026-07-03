@@ -551,15 +551,16 @@ export default function CatalogSection({
                           </div>
                         )}
 
-                        {/* Action buttons — primary CTA is dominant */}
-                        <div className="flex gap-2 mt-auto pt-1.5">
+                        {/* Action buttons — evenly split so the CTA reads as its own
+                            button instead of a stretched block fused to the other one */}
+                        <div className="flex gap-3 mt-auto pt-1.5">
                           <button
                             onClick={() => {
                               setSelectedDetailMachine(machine);
                               setDetailSource("info");
                               onAddSystemLog?.("system", currentUser?.name ?? "Gast", `Bekijkt specificaties: "${machine.name}"`);
                             }}
-                            className="advice-btn flex-none px-3 py-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300 text-slate-600 hover:text-slate-800 text-[11px] font-semibold transition-all duration-200 active:scale-[0.97] cursor-pointer"
+                            className="advice-btn flex-1 px-3 py-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300 text-slate-600 hover:text-slate-800 text-[11px] font-semibold transition-all duration-200 active:scale-[0.97] cursor-pointer"
                           >
                             {t("btnSpecifications")}
                           </button>

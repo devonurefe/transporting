@@ -236,7 +236,7 @@ export default function BookingStep1({
 
                 <div className="flex items-start gap-3 pr-10">
                   <div
-                    className="h-20 w-20 shrink-0 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden shadow-sm cursor-pointer hover:ring-2 hover:ring-slate-400 transition-all relative group/thumb"
+                    className="h-20 w-20 shrink-0 rounded-2xl bg-white border border-slate-200 flex items-center justify-center overflow-hidden shadow-sm cursor-pointer hover:ring-2 hover:ring-slate-400 transition-all relative group/thumb"
                     onClick={() => setPreviewMachine(item.machine)}
                     title="Bekijk details"
                   >

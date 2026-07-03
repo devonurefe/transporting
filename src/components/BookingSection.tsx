@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { Machine, Order, DeliveryType, UserProfile, CartItem } from "../types";
 import { useAppStore } from "../store/appStore";
 import { checkAvailability } from "../utils/availability";
-import { calculateItemSubtotal, isStrictWeekend, countWeekendDays, calculateRentalDays, addonPriceForRental, buildTierDisplay, WeeklyBreakdown } from "../utils/pricing";
+import { calculateItemSubtotal, isStrictWeekend, countWeekendDays, hasSundayBlock, calculateRentalDays, addonPriceForRental, buildTierDisplay, WeeklyBreakdown } from "../utils/pricing";
 
 // Import modular Step components
 import { buildWhatsAppUrl } from "../utils/whatsapp";
@@ -135,9 +135,6 @@ export default function BookingSection({
 
   // Addon / Shopping Cart Options state
   const [selectedAddons, setSelectedAddons] = useState<string[]>([]);
-
-  // Weekend work declaration (required when rental spans a weekend)
-  const [weekendWorkAnswer, setWeekendWorkAnswer] = useState<'ja' | 'nee' | null>(null);
 
   // Delivery distance & time slot
   const [deliveryDistanceKm, setDeliveryDistanceKm] = useState<number | null>(null);
@@ -342,13 +339,13 @@ export default function BookingSection({
         const days = Math.max(1, Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1);
         totalDays += days;
 
-        const itemSub = calculateItemSubtotal(item.machine, days, customerProfile, campaignRules, itemStart, weekendWorkAnswer);
+        const itemSub = calculateItemSubtotal(item.machine, days, customerProfile, campaignRules, itemStart);
         // Weekly-only products bill per week, not per day — the day-rate "raw" total is
         // meaningless and would surface as a phantom discount, so anchor raw to the subtotal.
         const itemRaw = item.machine.weeklyOnly ? itemSub : item.machine.pricePerDay * days;
         const itemSubNoCampaign = calculateItemSubtotal(
           { ...item.machine, campaignDiscountPercent: undefined, campaignDiscountAmount: undefined } as any,
-          days, customerProfile, [], itemStart, weekendWorkAnswer
+          days, customerProfile, [], itemStart
         );
         const itemDisc = Math.max(0, itemRaw - itemSub);
         rawSubtotal += itemRaw;
@@ -362,18 +359,14 @@ export default function BookingSection({
       const trailerCost = deliveryType === "trailer_rental" ? 25 * leadCartDays : deliveryType === "trailer_drop_return" ? 35 : 0;
       const driver = 0;
 
-      // spansWeekend: true if ANY cart item triggers the weekend-work question, i.e.
-      // it is priced on the weekly basis (werkweektarief / pro-rata, 3–27 days) and its
-      // rental period includes weekend days but is NOT a strict Sat+Sun 2-day rental
-      // (those already have weekendPrice priced in). Monthly / day-rate tiers do not ask.
-      const spansWeekend = cartItems.some(item => {
-        const s = item.startDate || "";
-        const e = item.endDate || "";
-        if (!s || !e) return false;
-        const d = calculateRentalDays(s, e);
-        return !!item.machine.weeklyPrice && !item.machine.weeklyOnly && d >= 3 && d < 28
-          && countWeekendDays(s, e) > 0 && !isStrictWeekend(s, d);
-      });
+      // Forced Sunday block total: when a rental's last work day is Saturday the
+      // machine is held over the closed Sunday (return Monday 08:00) — sum the flat
+      // sundayBlockFee across cart items so the price summary can surface it.
+      const sundayBlockTotal = cartItems.reduce((sum, item) => {
+        if (!item.startDate || !item.endDate) return sum;
+        const d = calculateRentalDays(item.startDate, item.endDate);
+        return hasSundayBlock(item.machine, item.startDate, d) ? sum + (item.machine.sundayBlockFee ?? 0) : sum;
+      }, 0);
       const weekendDays = (leadCartStart && leadCartEnd) ? countWeekendDays(leadCartStart, leadCartEnd) : 0;
 
       // Addon calculation
@@ -428,12 +421,6 @@ export default function BookingSection({
         tierLabel = display.tierLabel;
         isFlatRate = display.isFlatRate;
         weeklyBreakdown = display.weeklyBreakdown;
-        // Weekend "niet werken": the subtotal is already reduced to the working days
-        // (weekend dropped) and priced on the normal tier, so show one clean flat line
-        // instead of a pro-rata breakdown that wouldn't add up.
-        if (weekendWorkAnswer === 'nee' && spansWeekend) {
-          tierLabel = "Tarief (alleen werkdagen)"; isFlatRate = true; weeklyBreakdown = null;
-        }
       }
 
       return {
@@ -450,13 +437,12 @@ export default function BookingSection({
         total,
         deliveryType,
         weekendDays,
-        spansWeekend,
+        sundayBlockTotal,
         effectiveDailyRate,
         tierLabel,
         isFlatRate,
         weeklyBreakdown,
-        campaignSavings,
-        weekendWorkAnswer
+        campaignSavings
       };
     }
 
@@ -471,10 +457,10 @@ export default function BookingSection({
     const days = Math.max(1, Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1);
 
     const rawSubtotal = selectedMachine.pricePerDay * days;
-    const itemSub = calculateItemSubtotal(selectedMachine, days, customerProfile, campaignRules, startDate, weekendWorkAnswer);
+    const itemSub = calculateItemSubtotal(selectedMachine, days, customerProfile, campaignRules, startDate);
     const itemSubNoCampaign = calculateItemSubtotal(
       { ...selectedMachine, campaignDiscountPercent: undefined, campaignDiscountAmount: undefined } as any,
-      days, customerProfile, [], startDate, weekendWorkAnswer
+      days, customerProfile, [], startDate
     );
     const discountAmount = Math.max(0, rawSubtotal - itemSub);
     const campaignSavings = Math.max(0, itemSubNoCampaign - itemSub);
@@ -510,20 +496,15 @@ export default function BookingSection({
     const total = totalExcl + vat;
 
     const weekendDays = countWeekendDays(startDate, endDate);
-    const spansWeekend = !!selectedMachine.weeklyPrice && !selectedMachine.weeklyOnly
-      && days >= 3 && days < 28 && weekendDays > 0 && !isStrictWeekend(startDate, days);
+    const sundayBlockTotal = hasSundayBlock(selectedMachine, startDate, days) ? (selectedMachine.sundayBlockFee ?? 0) : 0;
     const effectiveDailyRate = (days >= 6 && days < 28 && selectedMachine.weeklyPrice)
       ? selectedMachine.weeklyPrice / 5
       : null;
 
     const legacyDisplay = buildTierDisplay(selectedMachine, days, startDate);
-    let tierLabel: string | null = legacyDisplay.tierLabel;
-    let isFlatRate = legacyDisplay.isFlatRate;
-    let weeklyBreakdown: WeeklyBreakdown | null = legacyDisplay.weeklyBreakdown;
-    // Weekend "niet werken": subtotal already reduced to working days — show a single flat line.
-    if (weekendWorkAnswer === 'nee' && spansWeekend) {
-      tierLabel = "Tarief (alleen werkdagen)"; isFlatRate = true; weeklyBreakdown = null;
-    }
+    const tierLabel: string | null = legacyDisplay.tierLabel;
+    const isFlatRate = legacyDisplay.isFlatRate;
+    const weeklyBreakdown: WeeklyBreakdown | null = legacyDisplay.weeklyBreakdown;
 
     return {
       days,
@@ -539,13 +520,12 @@ export default function BookingSection({
       total,
       deliveryType,
       weekendDays,
-      spansWeekend,
+      sundayBlockTotal,
       effectiveDailyRate,
       tierLabel,
       isFlatRate,
       weeklyBreakdown,
-      campaignSavings,
-      weekendWorkAnswer
+      campaignSavings
     };
   };
 
@@ -667,10 +647,6 @@ export default function BookingSection({
         setValidationError("Bezorging buiten 20 km is alleen op aanvraag. Neem contact op via WhatsApp.");
         return;
       }
-      if (sums.spansWeekend && weekendWorkAnswer === null) {
-        setValidationError("Geef aan of u in het weekend gaat werken om door te gaan.");
-        return;
-      }
       setStep(2);
     } else if (step === 2) {
       if (!customerName || !customerEmail || !customerPhone) {
@@ -717,7 +693,7 @@ export default function BookingSection({
             const timeDiff = end.getTime() - start.getTime();
             const days = Math.max(1, Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1);
 
-            const itemSubtotal = calculateItemSubtotal(item.machine, days, customerProfile, campaignRules, item.startDate, weekendWorkAnswer);
+            const itemSubtotal = calculateItemSubtotal(item.machine, days, customerProfile, campaignRules, item.startDate);
             const transport = (deliveryType === "delivery_by_us" && i === 0) ? 150 : 0;
             const trailerCost = (deliveryType === "trailer_rental" && i === 0) ? 25 * days : (deliveryType === "trailer_drop_return" && i === 0) ? 35 : 0;
             const driver = 0;
@@ -763,8 +739,7 @@ export default function BookingSection({
               driverCost: parseFloat(driver.toFixed(2)),
               vatAmount: parseFloat(itemVat.toFixed(2)),
               totalAmount: parseFloat(itemTotal.toFixed(2)),
-              addons: addonsList,
-              weekendWork: weekendWorkAnswer ?? null
+              addons: addonsList
             };
 
             const result = await onCreateReservation(orderObj);
@@ -792,7 +767,7 @@ export default function BookingSection({
                 vat: placedOrders.reduce((s, o) => s + o.vatAmount, 0),
                 total: placedOrders.reduce((s, o) => s + o.totalAmount, 0)
               };
-              const waUrl = buildWhatsAppUrl(checkoutItems, deliveryType, customerName, customerEmail, customerPhone || undefined, orderTotals, weekendWorkAnswer ?? undefined);
+              const waUrl = buildWhatsAppUrl(checkoutItems, deliveryType, customerName, customerEmail, customerPhone || undefined, orderTotals);
               setWhatsappUrl(waUrl);
             } else {
               setWhatsappUrl("");
@@ -843,7 +818,7 @@ export default function BookingSection({
     () => calculationSummary(),
     // calculationSummary closes over these values — re-run only when they change
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [cartItems, selectedAddons, deliveryType, customerProfile, weekendWorkAnswer, campaignRules, startDate, endDate]
+    [cartItems, selectedAddons, deliveryType, customerProfile, campaignRules, startDate, endDate]
   );
 
   // Reservation period for the price summary box — neutral copy when the cart
@@ -961,8 +936,6 @@ export default function BookingSection({
                     deliveryTimeSlot={deliveryTimeSlot}
                     setDeliveryTimeSlot={setDeliveryTimeSlot}
                     deliveryAddress={deliveryAddress}
-                    weekendWorkAnswer={weekendWorkAnswer}
-                    onWeekendWorkAnswer={setWeekendWorkAnswer}
                   />
                   </motion.div>
                 )}

@@ -121,7 +121,7 @@ function validateMachineInput(body: any): { valid: boolean; error?: string } {
     if (isNaN(v) || v < 0) return { valid: false, error: "Campagne kortingsbedrag moet 0 of groter zijn." };
   }
 
-  for (const f of ["weekendPrice", "twoDayPrice", "weeklyPrice", "monthlyPrice", "oneDayPrice"] as const) {
+  for (const f of ["weekendPrice", "twoDayPrice", "threeDayPrice", "fourDayPrice", "weeklyPrice", "monthlyPrice", "oneDayPrice", "sundayBlockFee"] as const) {
     if (body[f] !== undefined && body[f] !== null && body[f] !== "") {
       const v = Number(body[f]);
       if (isNaN(v) || v <= 0) return { valid: false, error: `${f} moet een positief getal groter dan 0 zijn.` };
@@ -239,8 +239,12 @@ machinesRouter.post("/", requireAdmin as any, async (req: AuthenticatedRequest, 
         campaignDiscountAmount: campaignDiscountAmount ? Number(campaignDiscountAmount) : null,
         weekendPrice: weekendPrice ? Number(weekendPrice) : null,
         twoDayPrice: twoDayPrice ? Number(twoDayPrice) : null,
+        threeDayPrice: req.body.threeDayPrice ? Number(req.body.threeDayPrice) : null,
+        fourDayPrice: req.body.fourDayPrice ? Number(req.body.fourDayPrice) : null,
         weeklyPrice: weeklyPrice ? Number(weeklyPrice) : null,
         monthlyPrice: monthlyPrice ? Number(monthlyPrice) : null,
+        sundayBlockFee: req.body.sundayBlockFee ? Number(req.body.sundayBlockFee) : null,
+        weekendRulesEnabled: Boolean(req.body.weekendRulesEnabled),
         packageContents: packageContents || null,
         additionalImages: Array.isArray(additionalImages) ? sanitizeImageUrls(additionalImages) : [],
         specs: Array.isArray(specs) && specs.length > 0 ? specs : Prisma.JsonNull,
@@ -333,8 +337,12 @@ machinesRouter.put("/:id", requireAdmin as any, async (req: AuthenticatedRequest
         campaignDiscountAmount: campaignDiscountAmount !== undefined && campaignDiscountAmount !== null ? Number(campaignDiscountAmount) : null,
         weekendPrice: weekendPrice !== undefined && weekendPrice !== null && weekendPrice !== "" ? Number(weekendPrice) : null,
         twoDayPrice: twoDayPrice !== undefined && twoDayPrice !== null && twoDayPrice !== "" ? Number(twoDayPrice) : null,
+        threeDayPrice: req.body.threeDayPrice !== undefined && req.body.threeDayPrice !== null && req.body.threeDayPrice !== "" ? Number(req.body.threeDayPrice) : null,
+        fourDayPrice: req.body.fourDayPrice !== undefined && req.body.fourDayPrice !== null && req.body.fourDayPrice !== "" ? Number(req.body.fourDayPrice) : null,
         weeklyPrice: weeklyPrice !== undefined && weeklyPrice !== null && weeklyPrice !== "" ? Number(weeklyPrice) : null,
         monthlyPrice: monthlyPrice !== undefined && monthlyPrice !== null && monthlyPrice !== "" ? Number(monthlyPrice) : null,
+        sundayBlockFee: req.body.sundayBlockFee !== undefined && req.body.sundayBlockFee !== null && req.body.sundayBlockFee !== "" ? Number(req.body.sundayBlockFee) : null,
+        weekendRulesEnabled: Boolean(req.body.weekendRulesEnabled),
         packageContents: packageContents !== undefined ? packageContents : null,
         additionalImages: Array.isArray(additionalImages) ? sanitizeImageUrls(additionalImages) : [],
         specs: specsUpdate === undefined ? undefined : (specsUpdate ?? Prisma.JsonNull),

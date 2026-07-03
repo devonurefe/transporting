@@ -144,90 +144,70 @@ describe("calculateItemSubtotal — flat rates", () => {
   });
 });
 
-describe("calculateItemSubtotal — weekend 'niet werken' (tier on working days)", () => {
-  // FRI = Friday. When the customer won't work the weekend, Sat+Sun drop out and the
-  // normal tier table is applied to the remaining working days (owner's price sketch).
-  it("5 days Fri→Tue, 'ja' (works weekend) → full werkweektarief", () => {
-    expect(calculateItemSubtotal(nifty120, 5, "Particulier", noRules, FRI, "ja")).toBe(335);
+describe("calculateItemSubtotal — weekend rules (tiered model + Sunday block + package)", () => {
+  // Reference weekdays (UTC): THU 2026-06-11, SUN 2026-06-14, TUE2 2026-06-02.
+  const THU = "2026-06-11";
+  const SUN = "2026-06-14";
+  const TUE2 = "2026-06-02"; // +11 days = SAT 2026-06-13
+  // Bravi Leonardo pilot tariff. No monthlyPrice → the pro-rata ladder is uncapped,
+  // matching the owner's worked examples exactly.
+  const bravi = {
+    id: "bravi-mini-hd", category: "mastlift", pricePerDay: 45,
+    twoDayPrice: 80, threeDayPrice: 105, fourDayPrice: 125, weeklyPrice: 140,
+    weekendPrice: 69, sundayBlockFee: 20, weekendRulesEnabled: true,
+  } as Machine;
+
+  it("distinct day tiers: 1→€45, 2→€80, 3→€105, 4→€125, 5→€140 (all Mon-start, ends weekday)", () => {
+    expect(calculateItemSubtotal(bravi, 1, "Particulier", noRules, MON)).toBe(45);
+    expect(calculateItemSubtotal(bravi, 2, "Particulier", noRules, MON)).toBe(80);
+    expect(calculateItemSubtotal(bravi, 3, "Particulier", noRules, MON)).toBe(105);
+    expect(calculateItemSubtotal(bravi, 4, "Particulier", noRules, MON)).toBe(125);
+    expect(calculateItemSubtotal(bravi, 5, "Particulier", noRules, MON)).toBe(140);
   });
 
-  it("5 days Fri→Tue, no answer → full werkweektarief (unchanged behaviour)", () => {
-    expect(calculateItemSubtotal(nifty120, 5, "Particulier", noRules, FRI)).toBe(335);
+  it("Scenario 1: Thu start, 3 working days (Thu+Fri+Sat) → €105 + €20 Sunday block = €125", () => {
+    expect(calculateItemSubtotal(bravi, 3, "Particulier", noRules, THU)).toBe(125);
   });
 
-  it("4 days Fri→Mon, 'nee' → 2 working days → twoDayPrice", () => {
-    expect(calculateItemSubtotal(nifty120, 4, "Particulier", noRules, FRI, "nee")).toBe(190);
+  it("Scenario 2: Fri start, 2 working days (Fri+Sat) → €80 + €20 Sunday block = €100", () => {
+    expect(calculateItemSubtotal(bravi, 2, "Particulier", noRules, FRI)).toBe(100);
   });
 
-  it("5 days Fri→Tue, 'nee' → 3 working days → weeklyPrice", () => {
-    expect(calculateItemSubtotal(nifty120, 5, "Particulier", noRules, FRI, "nee")).toBe(335);
+  it("12 days ending Saturday → 12 × (140/5) + €20 block = 336 + 20 = €356", () => {
+    expect(calculateItemSubtotal(bravi, 12, "Particulier", noRules, TUE2)).toBe(356);
   });
 
-  it("6 days Fri→Wed, 'nee' → 4 working days → weeklyPrice", () => {
-    expect(calculateItemSubtotal(nifty120, 6, "Particulier", noRules, FRI, "nee")).toBe(335);
+  it("weekend package: single Sat, single Sun, Sat+Sun, Fri+Sat+Sun → flat €69 (no block)", () => {
+    expect(calculateItemSubtotal(bravi, 1, "Particulier", noRules, SAT)).toBe(69);
+    expect(calculateItemSubtotal(bravi, 1, "Particulier", noRules, SUN)).toBe(69);
+    expect(calculateItemSubtotal(bravi, 2, "Particulier", noRules, SAT)).toBe(69);
+    expect(calculateItemSubtotal(bravi, 3, "Particulier", noRules, FRI)).toBe(69);
   });
 
-  it("7 days Fri→Thu, 'nee' → 5 working days → weeklyPrice", () => {
-    expect(calculateItemSubtotal(nifty120, 7, "Particulier", noRules, FRI, "nee")).toBe(335);
+  it("no Sunday block when the rental ends on a weekday (Thu+Fri = €80, ends Friday)", () => {
+    expect(calculateItemSubtotal(bravi, 2, "Particulier", noRules, THU)).toBe(80);
   });
 
-  it("3 days Fri→Sun, 'nee' → 1 working day → oneDayPrice", () => {
-    expect(calculateItemSubtotal(nifty120, 3, "Particulier", noRules, FRI, "nee")).toBe(50);
+  it("5-day werkweek Mon→Fri → €140, no block (ends Friday)", () => {
+    expect(calculateItemSubtotal(bravi, 5, "Particulier", noRules, MON)).toBe(140);
   });
 
-  it("8 days Fri→Fri, 'nee' → 6 working days → pro-rata ladder (round(6 × weeklyPrice/5))", () => {
-    expect(calculateItemSubtotal(nifty120, 8, "Particulier", noRules, FRI, "nee")).toBe(Math.round(6 * 335 / 5));
+  it("monthly cap: with monthlyPrice €320, a 12-day ending Saturday caps at 320 + €20 = €340", () => {
+    const braviCapped = { ...bravi, monthlyPrice: 320 } as Machine;
+    expect(calculateItemSubtotal(braviCapped, 12, "Particulier", noRules, TUE2)).toBe(340);
   });
 
-  it("3 weekday days Mon→Wed, 'nee' → no weekend days, full werkweektarief", () => {
-    expect(calculateItemSubtotal(nifty120, 3, "Particulier", noRules, MON, "nee")).toBe(335);
-  });
-
-  it("monthly 28+ days, 'nee' → discount does NOT apply (monthlyPrice unchanged)", () => {
-    expect(calculateItemSubtotal(nifty120, 28, "Particulier", noRules, FRI, "nee")).toBe(490);
-  });
-
-  it("strict Sat+Sun 2-day, 'nee' → weekendPrice unchanged (not weekly basis)", () => {
-    expect(calculateItemSubtotal(nifty120, 2, "Particulier", noRules, SAT, "nee")).toBe(150);
-  });
-
-  // optimum8 has no oneDayPrice/twoDayPrice → the 1- and 2-working-day tiers fall back
-  // to pricePerDay × workingDays.
-  const optimum8 = { id: "optimum-8", category: "schaarlift", pricePerDay: 65, weekendPrice: 99, weeklyPrice: 159, monthlyPrice: 420 } as Machine;
-  it("3 days Fri→Sun, 'nee', 1 working day → pricePerDay (no oneDayPrice)", () => {
-    expect(calculateItemSubtotal(optimum8, 3, "Particulier", noRules, FRI, "nee")).toBe(65);
-  });
-  it("4 days Fri→Mon, 'nee', 2 working days → pricePerDay × 2 (no twoDayPrice)", () => {
-    expect(calculateItemSubtotal(optimum8, 4, "Particulier", noRules, FRI, "nee")).toBe(130);
-  });
-  it("5 days Fri→Tue, 'nee', 3 working days → weeklyPrice", () => {
-    expect(calculateItemSubtotal(optimum8, 5, "Particulier", noRules, FRI, "nee")).toBe(159);
+  it("legacy machine (no weekendRulesEnabled) is unaffected: Nifty 2-day Sat+Sun → weekendPrice, no block", () => {
+    expect(calculateItemSubtotal(nifty120, 2, "Particulier", noRules, SAT)).toBe(150);
+    expect(calculateItemSubtotal(nifty120, 3, "Particulier", noRules, THU)).toBe(335); // no block
   });
 });
 
-describe("displayRentalDays — shown day count matches what is actually billed", () => {
-  it("4 calendar days Fri→Mon, 'nee' → displays 2 (working days), not 4", () => {
-    expect(displayRentalDays(nifty120, FRI, 4, "nee")).toBe(2);
-  });
-
-  it("4 calendar days Fri→Mon, 'ja' → still displays 4 (full werkweektarief includes weekend)", () => {
-    expect(displayRentalDays(nifty120, FRI, 4, "ja")).toBe(4);
-  });
-
-  it("4 calendar days Fri→Mon, no answer yet → still displays 4", () => {
+describe("displayRentalDays — shown day count equals the selected span", () => {
+  it("returns the calendar day count as-is", () => {
     expect(displayRentalDays(nifty120, FRI, 4)).toBe(4);
-  });
-
-  it("strict Sat+Sun 2-day, 'nee' → displays 2 unchanged (weekendPrice path, not the working-day drop)", () => {
-    expect(displayRentalDays(nifty120, SAT, 2, "nee")).toBe(2);
-  });
-
-  it("3 weekday days Mon→Wed, 'nee' → no weekend days inside range → displays 3 unchanged", () => {
-    expect(displayRentalDays(nifty120, MON, 3, "nee")).toBe(3);
-  });
-
-  it("monthly 28+ days, 'nee' → not weekly-basis eligible → displays 28 unchanged", () => {
-    expect(displayRentalDays(nifty120, FRI, 28, "nee")).toBe(28);
+    expect(displayRentalDays(nifty120, MON, 3)).toBe(3);
+    expect(displayRentalDays(nifty120, FRI, 28)).toBe(28);
   });
 });
 

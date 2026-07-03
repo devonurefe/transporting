@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect } from "react";
 import {
-  X, ShoppingCart, ChevronLeft, ChevronRight, Package, Zap,
+  X, ShoppingCart, ChevronLeft, ChevronRight, Package, Zap, Info,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Machine } from "../types";
@@ -277,23 +277,50 @@ export default function MachineDetailModal({
                     </div>
                   );
                 })()}
-                {!!machine.weekendPrice && (
-                  <div className="flex items-center px-4 py-2.5 bg-amber-50">
+                {machine.weekendRulesEnabled && !!(machine.threeDayPrice ?? machine.weeklyPrice) && (
+                  <div className="flex items-center px-4 py-2.5 bg-white">
                     <div className="flex-1">
-                      <p className="text-xs font-bold text-amber-700">Weekend</p>
-                      <p className="text-[10px] text-amber-600">Za – Zo</p>
+                      <p className="text-xs font-bold text-slate-800">3 dagen</p>
+                      <p className="text-[10px] text-slate-400">Doordeweeks</p>
                     </div>
-                    <span className="font-mono font-extrabold text-sm text-amber-700">€{priceNum(vp(machine.weekendPrice))}</span>
+                    <span className="font-mono font-extrabold text-sm text-slate-900">€{priceNum(vp((machine.threeDayPrice ?? machine.weeklyPrice)!))}</span>
+                  </div>
+                )}
+                {machine.weekendRulesEnabled && !!(machine.fourDayPrice ?? machine.weeklyPrice) && (
+                  <div className="flex items-center px-4 py-2.5 bg-white">
+                    <div className="flex-1">
+                      <p className="text-xs font-bold text-slate-800">4 dagen</p>
+                      <p className="text-[10px] text-slate-400">Doordeweeks</p>
+                    </div>
+                    <span className="font-mono font-extrabold text-sm text-slate-900">€{priceNum(vp((machine.fourDayPrice ?? machine.weeklyPrice)!))}</span>
                   </div>
                 )}
                 {!!machine.weeklyPrice && (
                   <div className="flex items-center px-4 py-2.5 bg-emerald-50">
                     <div className="flex-1">
-                      <p className="text-xs font-bold text-emerald-700">3–5 dagen (werkweek)</p>
+                      <p className="text-xs font-bold text-emerald-700">{machine.weekendRulesEnabled ? "5 dagen (werkweek)" : "3–5 dagen (werkweek)"}</p>
                       <p className="text-[10px] text-emerald-600">Ma – Vr</p>
                     </div>
                     {d.weekly > 0 && <span className="text-[10px] font-black px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 mr-2">−{d.weekly}%</span>}
                     <span className="font-mono font-extrabold text-sm text-emerald-700">€{priceNum(vp(machine.weeklyPrice))}</span>
+                  </div>
+                )}
+                {machine.weekendRulesEnabled && !!machine.weeklyPrice && (
+                  <div className="flex items-center px-4 py-2.5 bg-white">
+                    <div className="flex-1">
+                      <p className="text-xs font-bold text-slate-800">Extra dag</p>
+                      <p className="text-[10px] text-slate-400">Vanaf dag 6, per dag</p>
+                    </div>
+                    <span className="font-mono font-extrabold text-sm text-slate-900">+ €{priceNum(vp(machine.weeklyPrice / 5))}</span>
+                  </div>
+                )}
+                {!!machine.weekendPrice && (
+                  <div className="flex items-center px-4 py-2.5 bg-amber-50">
+                    <div className="flex-1">
+                      <p className="text-xs font-bold text-amber-700">Weekend</p>
+                      <p className="text-[10px] text-amber-600">{machine.weekendRulesEnabled ? "Vrijdagmiddag ophalen t/m maandagochtend 08:00 uur retourneren" : "Za – Zo"}</p>
+                    </div>
+                    <span className="font-mono font-extrabold text-sm text-amber-700">€{priceNum(vp(machine.weekendPrice))}</span>
                   </div>
                 )}
                 {!!machine.monthlyPrice && (
@@ -312,6 +339,19 @@ export default function MachineDetailModal({
                     <span className="text-xs font-bold text-amber-700">
                       {machine.campaignText}{machine.campaignDiscountPercent ? ` −${machine.campaignDiscountPercent}%` : ""}
                     </span>
+                  </div>
+                )}
+                {machine.weekendRulesEnabled && (
+                  <div className="px-4 py-3 bg-amber-50/60 space-y-1">
+                    <p className="text-[10px] text-amber-800 leading-snug flex items-start gap-1.5">
+                      <Info className="h-3.5 w-3.5 text-amber-600 shrink-0 mt-0.5" />
+                      <span><span className="font-bold">Weekend?</span> Ons depot is dan gesloten, dus de machine blijft het hele weekend bij u — daarom geldt alleen ons vaste weekendpakket (geen losse zaterdag of zondag).</span>
+                    </p>
+                    {machine.sundayBlockFee ? (
+                      <p className="text-[10px] text-amber-800 leading-snug pl-5">
+                        Loopt de huur doordeweeks door t/m zaterdag? Dan komt er een zondagblokkade van €{priceNum(vp(machine.sundayBlockFee))} bij (retour maandag 08:00).
+                      </p>
+                    ) : null}
                   </div>
                 )}
               </div>

@@ -517,9 +517,17 @@ const defaultMachines = [
     campaignText: null,
     campaignDiscountPercent: null,
     campaignDiscountAmount: null,
+    // Tiered pricing + weekend rules (pilot product). 1d €45, 2d €80, 3d €105,
+    // 4d €125, 5d (werkweek) €140, dag 6+ = €140/5 = €28/dag, weekendpakket €69,
+    // zondagblokkade €20. Depot gesloten za/zo → weekendRulesEnabled.
+    twoDayPrice: 80,
+    threeDayPrice: 105,
+    fourDayPrice: 125,
     weekendPrice: 69,
-    weeklyPrice: 110,
-    monthlyPrice: 320
+    weeklyPrice: 140,
+    monthlyPrice: 320,
+    sundayBlockFee: 20,
+    weekendRulesEnabled: true
   },
   {
     id: "jlg-1230es",
@@ -731,15 +739,38 @@ async function main() {
     // Only write them when the column is still null (first run after db push).
     const wp  = (mach as any).weekendPrice ?? null;
     const tdp = (mach as any).twoDayPrice  ?? null;
+    const t3p = (mach as any).threeDayPrice ?? null;
+    const t4p = (mach as any).fourDayPrice  ?? null;
     const wkp = (mach as any).weeklyPrice  ?? null;
     const mp  = (mach as any).monthlyPrice ?? null;
     const odp = (mach as any).oneDayPrice  ?? null;
+    const sbf = (mach as any).sundayBlockFee ?? null;
     if (wp  !== null) await prisma.machine.updateMany({ where: { id: mach.id, weekendPrice: null }, data: { weekendPrice: wp } });
     if (tdp !== null) await prisma.machine.updateMany({ where: { id: mach.id, twoDayPrice:  null }, data: { twoDayPrice:  tdp } });
+    if (t3p !== null) await prisma.machine.updateMany({ where: { id: mach.id, threeDayPrice: null }, data: { threeDayPrice: t3p } });
+    if (t4p !== null) await prisma.machine.updateMany({ where: { id: mach.id, fourDayPrice:  null }, data: { fourDayPrice:  t4p } });
     if (wkp !== null) await prisma.machine.updateMany({ where: { id: mach.id, weeklyPrice:  null }, data: { weeklyPrice:  wkp } });
     if (mp  !== null) await prisma.machine.updateMany({ where: { id: mach.id, monthlyPrice: null }, data: { monthlyPrice: mp } });
     if (odp !== null) await prisma.machine.updateMany({ where: { id: mach.id, oneDayPrice:  null }, data: { oneDayPrice:  odp } });
+    if (sbf !== null) await prisma.machine.updateMany({ where: { id: mach.id, sundayBlockFee: null }, data: { sundayBlockFee: sbf } });
   }
+
+  // Bravi Leonardo — migrate to the tiered pricing + weekend-rules pilot. Guarded on
+  // the previous flat weeklyPrice (110) so intentional admin edits are never clobbered;
+  // brand-new databases already get these via `create` above and skip this no-op.
+  console.log("Configuring Bravi Leonardo (tiered pricing + weekend rules)...");
+  await prisma.machine.updateMany({
+    where: { id: "bravi-mini-hd", weeklyPrice: 110 },
+    data: {
+      twoDayPrice: 80,
+      threeDayPrice: 105,
+      fourDayPrice: 125,
+      weeklyPrice: 140,
+      weekendPrice: 69,
+      sundayBlockFee: 20,
+      weekendRulesEnabled: true
+    }
+  });
 
   // Correct pricePerDay for Nifty actie-machines: it was seeded as the actie price (50/60)
   // but must be the regular day rate (95/120 = twoDayPrice/2) for correct multi-day calculations.

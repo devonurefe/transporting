@@ -609,29 +609,44 @@ export default function CatalogSection({
           const m = pricingPreviewMachine;
           const d = computeDiscounts(m);
           const vp = (n: number) => withVat(n, vatDisplay);
-          const rows: { period: string; when: string; price: number; badge?: string; highlight?: "fire" | "green" | "teal" | "violet" }[] = [];
-
-          // 1 dag: only when there is no minimum rental period of 2+ days
+          const rows: { period: string; when: string; price: number; priceText?: string; badge?: string; highlight?: "fire" | "green" | "teal" | "violet" }[] = [];
           const minRental = m.minRentalDays ?? 1;
-          if (minRental < 2) {
-            const oneDayHasActie = !!(m.oneDayPrice && m.oneDayPrice < m.pricePerDay);
-            rows.push({
-              period: oneDayHasActie ? "Dagactie" : "1 dag",
-              when: "Ma – Vr",
-              price: oneDayHasActie ? m.oneDayPrice! : m.pricePerDay,
-              highlight: oneDayHasActie ? "fire" : undefined,
-            });
-          }
-          // 2 dagen: use twoDayPrice if set, otherwise pricePerDay × 2
-          rows.push({ period: minRental >= 2 ? "2 dagen (min.)" : "2 dagen (doordeweeks)", when: "Ma – Do", price: m.twoDayPrice ?? (m.pricePerDay * 2) });
-          if (m.weekendPrice) {
-            rows.push({ period: "Weekend", when: "Za – Zo", price: m.weekendPrice, highlight: "violet" });
-          }
-          if (m.weeklyPrice) {
-            rows.push({ period: "3–5 dagen (werkweek)", when: "Ma – Vr", price: m.weeklyPrice, badge: d.weekly > 0 ? `−${d.weekly}%` : undefined, highlight: "green" });
-          }
-          if (m.monthlyPrice) {
-            rows.push({ period: "4 weken (28 dagen)", when: "Langlopend", price: m.monthlyPrice, badge: d.monthly > 0 ? `−${d.monthly}%` : undefined, highlight: "teal" });
+
+          if (m.weekendRulesEnabled) {
+            // Tiered pricing model: distinct 1–5 day rates + per-day extra from day 6,
+            // a fixed weekend package, and the automatic Sunday block (info note below).
+            if (minRental < 2) {
+              const oneDayHasActie = !!(m.oneDayPrice && m.oneDayPrice < m.pricePerDay);
+              rows.push({ period: oneDayHasActie ? "Dagactie" : "1 dag", when: "Ma – Vr", price: oneDayHasActie ? m.oneDayPrice! : m.pricePerDay, highlight: oneDayHasActie ? "fire" : undefined });
+            }
+            rows.push({ period: "2 dagen", when: "Doordeweeks", price: m.twoDayPrice ?? (m.pricePerDay * 2) });
+            if (m.threeDayPrice ?? m.weeklyPrice) rows.push({ period: "3 dagen", when: "Doordeweeks", price: (m.threeDayPrice ?? m.weeklyPrice)! });
+            if (m.fourDayPrice ?? m.weeklyPrice) rows.push({ period: "4 dagen", when: "Doordeweeks", price: (m.fourDayPrice ?? m.weeklyPrice)! });
+            if (m.weeklyPrice) rows.push({ period: "5 dagen (werkweek)", when: "Ma – Vr", price: m.weeklyPrice, badge: d.weekly > 0 ? `−${d.weekly}%` : undefined, highlight: "green" });
+            if (m.weeklyPrice) rows.push({ period: "Extra dag", when: "Vanaf dag 6, per dag", price: m.weeklyPrice / 5, priceText: `+ ${formatPrice(vp(m.weeklyPrice / 5))}` });
+            if (m.weekendPrice) rows.push({ period: "Weekend", when: "Vrijdagmiddag ophalen t/m maandagochtend 08:00 uur retourneren", price: m.weekendPrice, highlight: "violet" });
+            if (m.monthlyPrice) rows.push({ period: "4 weken (28 dagen)", when: "Langlopend", price: m.monthlyPrice, badge: d.monthly > 0 ? `−${d.monthly}%` : undefined, highlight: "teal" });
+          } else {
+            // Legacy pricing display (non weekend-rules machines).
+            if (minRental < 2) {
+              const oneDayHasActie = !!(m.oneDayPrice && m.oneDayPrice < m.pricePerDay);
+              rows.push({
+                period: oneDayHasActie ? "Dagactie" : "1 dag",
+                when: "Ma – Vr",
+                price: oneDayHasActie ? m.oneDayPrice! : m.pricePerDay,
+                highlight: oneDayHasActie ? "fire" : undefined,
+              });
+            }
+            rows.push({ period: minRental >= 2 ? "2 dagen (min.)" : "2 dagen (doordeweeks)", when: "Ma – Do", price: m.twoDayPrice ?? (m.pricePerDay * 2) });
+            if (m.weekendPrice) {
+              rows.push({ period: "Weekend", when: "Za – Zo", price: m.weekendPrice, highlight: "violet" });
+            }
+            if (m.weeklyPrice) {
+              rows.push({ period: "3–5 dagen (werkweek)", when: "Ma – Vr", price: m.weeklyPrice, badge: d.weekly > 0 ? `−${d.weekly}%` : undefined, highlight: "green" });
+            }
+            if (m.monthlyPrice) {
+              rows.push({ period: "4 weken (28 dagen)", when: "Langlopend", price: m.monthlyPrice, badge: d.monthly > 0 ? `−${d.monthly}%` : undefined, highlight: "teal" });
+            }
           }
 
           return (
@@ -706,12 +721,29 @@ export default function CatalogSection({
                           row.highlight === "green" ? "text-emerald-700" :
                           row.highlight === "teal" ? "text-teal-700" :
                           row.highlight === "violet" ? "text-amber-700" : "text-slate-900"
-                        }`}>{formatPrice(vp(row.price))}</span>
+                        }`}>{row.priceText ?? formatPrice(vp(row.price))}</span>
                       </div>
                     </div>
                   ))}
                   {rows.length === 0 && (
                     <div className="px-5 py-6 text-center text-xs text-slate-400">Alleen dagprijs beschikbaar</div>
+                  )}
+                  {m.weekendRulesEnabled && (
+                    <div className="px-5 py-3 bg-amber-50/60">
+                      <div className="flex items-start gap-2">
+                        <Info className="h-3.5 w-3.5 text-amber-600 shrink-0 mt-0.5" />
+                        <div className="space-y-1">
+                          <p className="text-[10px] text-amber-800 leading-snug">
+                            <span className="font-bold">Weekend?</span> In het weekend is ons depot gesloten, dus de machine blijft het hele weekend bij u — daarom geldt alleen ons vaste weekendpakket (geen losse zaterdag of zondag).
+                          </p>
+                          {m.sundayBlockFee ? (
+                            <p className="text-[10px] text-amber-800 leading-snug">
+                              Loopt uw huur doordeweeks door t/m zaterdag? Dan komt er automatisch een zondagblokkade van {formatPrice(vp(m.sundayBlockFee))} bij (retour maandagochtend 08:00).
+                            </p>
+                          ) : null}
+                        </div>
+                      </div>
+                    </div>
                   )}
                 </div>
 

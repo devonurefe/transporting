@@ -312,7 +312,7 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
     // Addon prices are recomputed authoritatively from the DB — never trusted from
     // the client. The global "safety" addon plus this machine's own product-specific
     // cross-sell extras are the only accepted ids. (Weekend handling is no longer an
-    // addon — it adjusts the subtotal via orderData.weekendWork below.)
+    // addon — the weekend package / Sunday block adjust the subtotal below.)
     const crossSell: Array<{ id: string; name?: string; pricePerWeek: number; pricePerDay?: number; pricePerTwoDay?: number }> =
       Array.isArray((machine as any).crossSellAddons) ? (machine as any).crossSellAddons : [];
     const crossSellMap = new Map(crossSell.map(a => [String(a.id), a]));
@@ -372,14 +372,17 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
 
     // Flat-rate price for an effective day count `n`, or null when no flat tier
     // applies (caller falls back to the percentage path). Mirrors the tierPrice
-    // helper in src/utils/pricing.ts. `allowStrictWeekend` is only true on the
-    // standard calendar-day path; the weekend "niet werken" path forces twoDayPrice.
-    const tierPrice = (n: number, allowStrictWeekend: boolean): number | null => {
+    // helper in src/utils/pricing.ts. The legacy strict-weekend (Sat+Sun) price
+    // only applies to machines without weekendRulesEnabled; enabled machines route
+    // a Sat+Sun selection through the weekend package below.
+    const tierPrice = (n: number): number | null => {
       if (n === 1 && m.oneDayPrice) return m.oneDayPrice;
       if (n === 2) {
-        if (allowStrictWeekend && strictWeekend && m.weekendPrice) return m.weekendPrice;
+        if (!m.weekendRulesEnabled && strictWeekend && m.weekendPrice) return m.weekendPrice;
         if (m.twoDayPrice) return m.twoDayPrice;
       }
+      if (n === 3 && m.threeDayPrice) return m.threeDayPrice;
+      if (n === 4 && m.fourDayPrice) return m.fourDayPrice;
       if ((n === 3 || n === 4 || n === 5) && m.weeklyPrice) return m.weeklyPrice;
       if (n >= 6 && n < 28 && m.weeklyPrice) {
         let base = Math.round(n * (m.weeklyPrice / 5));
@@ -398,22 +401,20 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
       return null;
     };
 
-    // Weekend "niet werken" — mirrors src/utils/pricing.ts calculateItemSubtotal.
-    // On the weekly basis (3–27 days) a customer who declares they will NOT work the
-    // weekend drops the Sat/Sun days and pays the normal tier for the working days.
-    const weekendWork = String(orderData.weekendWork ?? "");
-    let weekendDaysCount = 0;
-    {
-      const cur = new Date(startDate);
-      cur.setUTCHours(0, 0, 0, 0);
-      for (let i = 0; i < rentalDays; i++) {
-        const d = cur.getUTCDay();
-        if (d === 0 || d === 6) weekendDaysCount++;
-        cur.setUTCDate(cur.getUTCDate() + 1);
-      }
-    }
-    const weekendNoWork = weekendWork === "nee" && m.weeklyPrice && !m.weeklyOnly
-      && rentalDays >= 3 && rentalDays < 28 && !strictWeekend && weekendDaysCount > 0;
+    // Weekend rules (depot closed Sat+Sun) — mirrors src/utils/pricing.ts
+    // isWeekendPackage / hasSundayBlock. getUTCDay(): 0=Sun, 6=Sat.
+    const endDow = (() => {
+      const e = new Date(startDate);
+      e.setUTCHours(0, 0, 0, 0);
+      e.setUTCDate(e.getUTCDate() + (rentalDays - 1));
+      return e.getUTCDay();
+    })();
+    const isWeekendPackage = !!(m.weekendRulesEnabled && m.weekendPrice && (
+      (rentalDays === 1 && (dow === 6 || dow === 0)) ||  // single Sat or single Sun
+      (rentalDays === 2 && dow === 6 && endDow === 0) ||  // Sat + Sun
+      (rentalDays === 3 && dow === 5 && endDow === 0)     // Fri + Sat + Sun
+    ));
+    const hasSundayBlock = !!(m.weekendRulesEnabled && m.sundayBlockFee && !isWeekendPackage && endDow === 6);
 
     if (m.weeklyOnly && m.weeklyPrice) {
       // Weekly-only billing — minimum 1 week, charged per started week.
@@ -421,13 +422,11 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
       const min = m.minRentalDays > 0 ? m.minRentalDays : 7;
       const weeks = Math.max(1, Math.ceil(Math.max(rentalDays, min) / 7));
       serverSubtotal = withCampaign(weeks * m.weeklyPrice);
-    } else if (weekendNoWork) {
-      // Normal tier applied to the working (non-weekend) days only.
-      const workingDays = rentalDays - weekendDaysCount;
-      const base = tierPrice(workingDays, false) ?? machine.pricePerDay * workingDays;
-      serverSubtotal = withCampaign(base);
-    } else if (tierPrice(rentalDays, true) !== null) {
-      serverSubtotal = withCampaign(tierPrice(rentalDays, true) as number);
+    } else if (isWeekendPackage) {
+      // Flat weekend package (Vrijdagmiddag → Maandagochtend). No Sunday block.
+      serverSubtotal = withCampaign(m.weekendPrice);
+    } else if (tierPrice(rentalDays) !== null) {
+      serverSubtotal = withCampaign(tierPrice(rentalDays) as number);
     } else {
       // Mirrors src/utils/pricing.ts evaluateDiscountPercent: take the HIGHEST discount,
       // do not stack volume + campaign discounts. Campaign rules are also applied here.
@@ -455,6 +454,9 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
       }
       serverSubtotal = Math.max(0, rawSubtotal - serverDiscountAmount);
     }
+    // Forced Sunday block: last work day is Saturday → machine held over the closed
+    // Sunday (return Monday 08:00). Flat surcharge on top of the tier, not discounted.
+    if (hasSundayBlock) serverSubtotal += Number(m.sundayBlockFee);
     serverSubtotal = Math.round(serverSubtotal * 100) / 100;
     const serverVat = Math.round((serverSubtotal + transportCostClient + driverCostClient + addonsTotal) * 21) / 100;
     const serverTotal = Math.round((serverSubtotal + transportCostClient + driverCostClient + addonsTotal + serverVat) * 100) / 100;
@@ -555,7 +557,7 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
             const sa = crossSellMap.get(id);
             return { id, name: sa?.name ?? id, price: sa ? addonPrice(sa) : 0 };
           })),
-          weekendWork: weekendWork === "ja" || weekendWork === "nee" ? weekendWork : null,
+          weekendWork: null, // legacy field — weekend work toggle removed; weekend handling is now automatic (package + Sunday block)
           invoiceNumber,
           paymentStatus: "awaiting"
         }

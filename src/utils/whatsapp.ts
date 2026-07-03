@@ -5,7 +5,6 @@
 
 import { CartItem } from "../types";
 import { euro, euroCompact } from "./format";
-import { countWeekendDays, calculateRentalDays } from "./pricing";
 
 // HuurGo WhatsApp business number
 const WHATSAPP_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER ?? "31611848899";
@@ -27,8 +26,7 @@ export function buildWhatsAppUrl(
   customerName?: string,
   customerEmail?: string,
   customerPhone?: string,
-  totals?: OrderTotals,
-  weekendWorkAnswer?: 'ja' | 'nee'
+  totals?: OrderTotals
 ): string {
   const lines: string[] = [];
 
@@ -94,31 +92,6 @@ export function buildWhatsAppUrl(
     lines.push(`   Naam     :  ${customerName}`);
     if (customerPhone) lines.push(`   📞 Tel  :  ${customerPhone}`);
     if (customerEmail) lines.push(`   📧 Mail :  ${customerEmail}`);
-    lines.push("");
-  }
-
-  if (weekendWorkAnswer) {
-    lines.push("─────────────────────────────");
-    lines.push("🗓 *WEEKEND VERKLARING*");
-    lines.push("─────────────────────────────");
-    if (weekendWorkAnswer === 'ja') {
-      lines.push("✅ Werkt in het weekend — volledig werkweektarief (weekend inbegrepen)");
-    } else {
-      lines.push("❌ Klant gaat NIET in het weekend werken — alleen de werkdagen worden berekend.");
-      // Per machine: show how many working days were billed vs. weekend days dropped,
-      // so the lower price matches the calendar span shown above.
-      for (const item of cartItems) {
-        if (!item.startDate || !item.endDate) continue;
-        const weekendDays = countWeekendDays(item.startDate, item.endDate);
-        if (weekendDays <= 0) continue;
-        const workingDays = calculateRentalDays(item.startDate, item.endDate) - weekendDays;
-        lines.push(
-          `   ▸ ${item.machine.name}: ${workingDays} ${workingDays === 1 ? "werkdag" : "werkdagen"} berekend · ` +
-          `${weekendDays} ${weekendDays === 1 ? "weekenddag" : "weekenddagen"} niet gerekend`
-        );
-      }
-      lines.push("   ⚠️ Urenteller wordt gecontroleerd — bij gebruik in het weekend alsnog volledig werkweektarief.");
-    }
     lines.push("");
   }
 

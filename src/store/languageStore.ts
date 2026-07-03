@@ -86,6 +86,7 @@ const dictionary: TranslationDictionary = {
   priceSummaryWeekendDay: { nl: "Weekenddag", en: "Weekend day", tr: "Hafta sonu günü" },
   priceSummaryWeekendDays: { nl: "Weekenddagen", en: "Weekend days", tr: "Hafta sonu günleri" },
   priceSummaryFreeNoUse: { nl: "Gratis (geen gebruik)", en: "Free (no use)", tr: "Ücretsiz (kullanılmadı)" },
+  priceSummarySundayBlock: { nl: "Zondagblokkade (retour ma 08:00)", en: "Sunday block (return Mon 08:00)", tr: "Pazar blokajı (iade Pzt 08:00)" },
   priceSummaryViewBreakdown: { nl: "Prijsopbouw bekijken", en: "View price breakdown", tr: "Fiyat dökümünü görüntüle" },
   priceSummaryCalculation: { nl: "Berekening", en: "Calculation", tr: "Hesaplama" },
   priceSummaryWorkingDay: { nl: "werkdag", en: "working day", tr: "iş günü" },

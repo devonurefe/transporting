@@ -35,7 +35,7 @@ interface BookingStep1Props {
     days: number; rawSubtotal: number; subtotal: number; discountAmount: number; discountLabel: string;
     transport: number; driver: number; addonCost: number; addonDetails: { id: string; name: string; price: number }[];
     vat: number; total: number; deliveryType?: string;
-    weekendDays?: number; spansWeekend?: boolean; effectiveDailyRate?: number | null;
+    weekendDays?: number; sundayBlockTotal?: number; effectiveDailyRate?: number | null;
     tierLabel?: string | null; isFlatRate?: boolean;
     weeklyBreakdown?: { weeks: number; pricePerWeek: number; remainder: number; dailyRate: number; remainderCost?: number } | null;
     campaignSavings?: number;
@@ -45,8 +45,6 @@ interface BookingStep1Props {
   deliveryTimeSlot: string;
   setDeliveryTimeSlot: (slot: string) => void;
   deliveryAddress?: string;
-  weekendWorkAnswer?: 'ja' | 'nee' | null;
-  onWeekendWorkAnswer?: (answer: 'ja' | 'nee') => void;
 }
 
 export default function BookingStep1({
@@ -71,8 +69,6 @@ export default function BookingStep1({
   deliveryTimeSlot,
   setDeliveryTimeSlot,
   deliveryAddress,
-  weekendWorkAnswer,
-  onWeekendWorkAnswer
 }: BookingStep1Props) {
   const t = useLanguageStore((state) => state.t);
   const vatDisplay = useAppStore((state) => state.vatDisplay);
@@ -82,7 +78,6 @@ export default function BookingStep1({
   const [attempted, setAttempted] = useState(false);
 
   const timeSlotBlocked = deliveryType === "delivery_by_us" && !deliveryTimeSlot;
-  const weekendBlocked = !!(sums?.spansWeekend && weekendWorkAnswer === null);
 
   // The error banner/highlights above reflect a validation snapshot from the
   // last click — once the customer actually fixes the thing it complained
@@ -90,7 +85,7 @@ export default function BookingStep1({
   useEffect(() => {
     if (validationError) setValidationError(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [deliveryTimeSlot, weekendWorkAnswer, deliveryType, cartItems.length, deliveryDistanceKm]);
+  }, [deliveryTimeSlot, deliveryType, cartItems.length, deliveryDistanceKm]);
 
   // Reservation period for the price summary — neutral copy when the cart
   // mixes machines booked for different periods.
@@ -98,25 +93,6 @@ export default function BookingStep1({
   const mixedPeriods = cartItems.length > 1 && cartItems.some(
     (i) => i.startDate !== leadItem?.startDate || i.endDate !== leadItem?.endDate
   );
-
-  // Ask the weekend question up front (before the calendar) whenever the cart holds a
-  // machine billed on the weekly basis — that is the only case where working in the
-  // weekend changes the price or restricts the start day. The answer feeds the
-  // calendar (no Sat/Sun start when "nee") and the price calculation.
-  const asksWeekend = cartItems.some((i) => !!i.machine.weeklyPrice && !i.machine.weeklyOnly);
-
-  // Answering "nee" forbids a weekend start: clear any already-picked range that
-  // begins on a Saturday/Sunday so the customer re-picks a valid start day.
-  const handleWeekendAnswer = (answer: 'ja' | 'nee') => {
-    if (answer === 'nee') {
-      cartItems.forEach((i) => {
-        if (!i.startDate) return;
-        const dow = new Date(i.startDate).getUTCDay();
-        if (dow === 0 || dow === 6) onUpdateCartItemDates(i.id, "", "");
-      });
-    }
-    onWeekendWorkAnswer?.(answer);
-  };
 
   return (
     <div className="bg-white border border-slate-200 shadow-sm p-6 rounded-2xl space-y-6">
@@ -137,67 +113,6 @@ export default function BookingStep1({
         </h3>
         <p className="text-xs text-slate-400 mt-1">{t("step1Subtitle")}</p>
       </div>
-
-      {/* Weekend-work question — asked BEFORE the calendar so it can steer both the
-          selectable start days and the price. Shown for weekly-basis machines. */}
-      {cartItems.length > 0 && asksWeekend && (
-        <div className={`p-4 bg-amber-50 border rounded-xl space-y-3 transition-colors ${attempted && weekendBlocked ? "border-rose-400 ring-2 ring-rose-200" : "border-amber-200"}`}>
-          <div>
-            <p className="text-sm font-bold text-amber-900">{t("step1WeekendQuestion")}</p>
-            <ul className="mt-1.5 space-y-1">
-              <li className="flex items-start gap-1.5 text-xs text-amber-700">
-                <span className="font-black text-amber-800 shrink-0">{t("step1WeekendYesShort")} →</span>
-                <span>{t("step1WeekendYesExplainer")}</span>
-              </li>
-              <li className="flex items-start gap-1.5 text-xs text-amber-700">
-                <span className="font-black text-amber-800 shrink-0">{t("step1WeekendNoShort")} →</span>
-                <span>{t("step1WeekendNoExplainer")}</span>
-              </li>
-            </ul>
-          </div>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => handleWeekendAnswer('nee')}
-              className={`flex-1 py-2.5 px-2 rounded-xl border transition-all cursor-pointer flex flex-col items-center gap-0.5 ${
-                weekendWorkAnswer === 'nee'
-                  ? 'bg-emerald-600 text-white border-emerald-600'
-                  : 'bg-white border-slate-300 text-slate-700 hover:border-slate-500'
-              }`}
-            >
-              <span className="text-sm font-semibold">{t("step1WeekendNo")}</span>
-              <span className={`text-xs font-medium ${weekendWorkAnswer === 'nee' ? 'text-emerald-50' : 'text-emerald-600'}`}>
-                {t("step1WeekendNoSub")}
-              </span>
-            </button>
-            <button
-              type="button"
-              onClick={() => handleWeekendAnswer('ja')}
-              className={`flex-1 py-2.5 px-2 rounded-xl border transition-all cursor-pointer flex flex-col items-center gap-0.5 ${
-                weekendWorkAnswer === 'ja'
-                  ? 'bg-slate-800 text-white border-slate-800'
-                  : 'bg-white border-slate-300 text-slate-700 hover:border-slate-500'
-              }`}
-            >
-              <span className="text-sm font-semibold">{t("step1WeekendYes")}</span>
-              <span className={`text-xs font-medium ${weekendWorkAnswer === 'ja' ? 'text-slate-300' : 'text-slate-500'}`}>
-                {t("step1WeekendYesSub")}
-              </span>
-            </button>
-          </div>
-          {weekendWorkAnswer === 'nee' && (
-            <p className="text-xs text-amber-700 leading-relaxed bg-amber-100 rounded-lg p-2.5">
-              {t("step1WeekendNoWarning")}
-            </p>
-          )}
-          {attempted && weekendBlocked && (
-            <p className="text-xs font-bold text-rose-600 flex items-center gap-1.5">
-              <ShieldAlert className="h-3.5 w-3.5 shrink-0" />
-              Maak een keuze om door te gaan
-            </p>
-          )}
-        </div>
-      )}
 
       {cartItems.length === 0 ? (
         <div className="text-center py-10 space-y-4">
@@ -272,7 +187,6 @@ export default function BookingStep1({
                     endDate={item.endDate}
                     profile={customerProfile}
                     onConfirm={(s, e) => onUpdateCartItemDates(item.id, s, e)}
-                    weekendWork={weekendWorkAnswer}
                   />
                 </div>
 

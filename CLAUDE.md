@@ -93,17 +93,27 @@ Machines have two pricing mechanisms. **Flat rates take priority over percentage
 ### Flat-rate fields (primary)
 | Field | When applied |
 |-------|-------------|
-| `weekendPrice` | Exactly 2 or 3 rental days |
-| `weeklyPrice` | 5–27 days (pro-rata: `floor(days/5) × weeklyPrice + remainder × pricePerDay`) |
-| `monthlyPrice` | 28+ days (pro-rata: `floor(days/28) × monthlyPrice + remainder`) |
+| `oneDayPrice` | Exactly 1 day (1-dag actie) |
+| `twoDayPrice` | Exactly 2 weekday days |
+| `threeDayPrice` / `fourDayPrice` | Exactly 3 / 4 days (fall back to `weeklyPrice` when unset) |
+| `weekendPrice` | Weekend package (see weekend rules below). Legacy: strict Sat+Sun 2-day when `weekendRulesEnabled` is false |
+| `weeklyPrice` | 5 days flat; 6–27 days pro-rata `round(days × weeklyPrice/5)`, capped at `monthlyPrice` |
+| `monthlyPrice` | 28+ days (`floor(days/28) × monthlyPrice` + capped remainder) |
+
+### Weekend rules (per-machine, `weekendRulesEnabled`) — depot closed Sat+Sun
+Enabled per machine (pilot: Bravi Leonardo; **off** for scaffolding & campaign products Nifty 120/170). Two mechanics on top of the tier table:
+- **Weekend package** (`weekendPrice`, flat): selection is single Sat, single Sun, Sat+Sun, or Fri+Sat+Sun → fixed price (Vrijdagmiddag ophalen t/m Maandagochtend 08:00).
+- **Automatic Sunday block** (`sundayBlockFee`, flat surcharge): when a rental's **last work day is Saturday**, the machine is held over the closed Sunday (return Monday 08:00) → tier price **+ sundayBlockFee** (not discounted). Interior Sundays in a long rental are counted as normal pro-rata days; only the trailing forced Sunday adds the fee.
+- Helpers: `isWeekendPackage(machine, startDate, days)` and `hasSundayBlock(machine, startDate, days)` in `src/utils/pricing.ts`.
+- The old "hafta sonu çalışıyorum/çalışmıyorum" toggle (`weekendWorkAnswer`) is **removed** — weekend handling is now automatic.
 
 ### Percentage fields (fallback, only if no flat rate)
 `weeklyDiscountPercent`, `monthlyDiscountPercent`, `campaignDiscountPercent`, `campaignDiscountAmount`
 
 ### Where this logic lives
-- **Frontend**: `BookingSection.tsx` → `calculateItemSubtotal()` (lines ~89-125)
-- **Backend validation**: `server/routes/orders.ts` → flat-rate block (lines ~200-234) — **must mirror frontend exactly** or orders fail with "Totaalbedrag klopt niet"
-- **Catalog display**: `CatalogSection.tsx` → `computeDiscounts(m)` helper — derives week/maand % from flat rates for badge display
+- **Frontend**: `src/utils/pricing.ts` → `calculateItemSubtotal()` + `tierPrice()` (called from `BookingSection.tsx` / `DateRangeCalendar.tsx`)
+- **Backend validation**: `server/routes/orders.ts` → flat-rate block (`tierPrice` + `isWeekendPackage`/`hasSundayBlock` mirror) — **must mirror frontend exactly** or orders fail with "Totaalbedrag klopt niet"
+- **Catalog display**: `CatalogSection.tsx` pricing popup + `MachineDetailModal.tsx` (tiered rows + weekend info-icon); `computeDiscounts(m)` derives week/maand % badges from flat rates
 
 ### Showing discount % on cards
 `computeDiscounts(machine)` returns `{ weekly, monthly }` as percentages computed from flat rates:

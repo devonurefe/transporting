@@ -52,6 +52,41 @@ export function isStrictWeekend(startDate: string | Date | undefined, days: numb
   return false;
 }
 
+// Last (inclusive) calendar day of a rental range: the customer's final work day.
+// getUTCDay(): 0=Sun, 6=Sat.
+function rangeEndDow(startDate: string | Date, days: number): number {
+  const end = new Date(startDate);
+  end.setUTCDate(end.getUTCDate() + (days - 1));
+  return end.getUTCDay();
+}
+
+// Weekend rules (depot closed Sat+Sun). Only apply to machines with
+// weekendRulesEnabled — scaffolding and campaign products (Nifty 120/170) opt out.
+//
+// A "weekend package" (weekendPrice, e.g. €69) is the fixed Vrijdagmiddag→Maandag
+// deal. The customer reaches it by selecting exactly one of: single Saturday,
+// single Sunday, Sat+Sun, or Fri+Sat+Sun (Friday afternoon into the weekend).
+// Mirrored by server/routes/orders.ts — keep identical.
+export function isWeekendPackage(machine: Machine, startDate: string | Date | undefined, days: number): boolean {
+  if (!machine.weekendRulesEnabled || !machine.weekendPrice || !startDate) return false;
+  const startDow = new Date(startDate).getUTCDay();
+  const endDow = rangeEndDow(startDate, days);
+  if (days === 1 && (startDow === 6 || startDow === 0)) return true; // single Sat or single Sun
+  if (days === 2 && startDow === 6 && endDow === 0) return true;     // Sat + Sun
+  if (days === 3 && startDow === 5 && endDow === 0) return true;     // Fri + Sat + Sun
+  return false;
+}
+
+// Forced Sunday block: when a weekday rental's last work day is Saturday, the
+// depot is closed Sunday so the machine is unavoidably held until Monday 08:00 —
+// a flat sundayBlockFee (e.g. €20) is added. Never applies to weekend packages.
+// Mirrored by server/routes/orders.ts — keep identical.
+export function hasSundayBlock(machine: Machine, startDate: string | Date | undefined, days: number): boolean {
+  if (!machine.weekendRulesEnabled || !machine.sundayBlockFee || !startDate) return false;
+  if (isWeekendPackage(machine, startDate, days)) return false;
+  return rangeEndDow(startDate, days) === 6; // last work day is Saturday
+}
+
 export function evaluateDiscountPercent(machine: Machine, days: number, profile: string, rules: CampaignRule[]): number {
   let highestDiscount = 0;
 
@@ -91,10 +126,11 @@ export function evaluateDiscountPercent(machine: Machine, days: number, profile:
 
 // Calculate item subtotal using flat-rate prices when available,
 // otherwise fall back to pricePerDay × days × (1 - discountPercent/100).
-// `startDate` ("YYYY-MM-DD") enables real-weekend detection for the 2/3-day tiers.
+// `startDate` ("YYYY-MM-DD") enables real-weekend detection for the 2-day tier,
+// the weekend package, and the automatic Sunday block (weekendRulesEnabled).
 // Mirrored by the server validation in server/routes/orders.ts — any change
 // here must be applied there too, or orders fail with "Totaalbedrag klopt niet".
-export function calculateItemSubtotal(machine: Machine, days: number, profile: string, rules: CampaignRule[], startDate?: string | Date, weekendWork?: "ja" | "nee" | null): number {
+export function calculateItemSubtotal(machine: Machine, days: number, profile: string, rules: CampaignRule[], startDate?: string | Date): number {
   // Apply campaign discounts on top of a flat-rate base price.
   // Volume discounts are already embedded in flat rates — only campaign rules
   // and campaignDiscountPercent are applied here to avoid double-counting.
@@ -120,39 +156,33 @@ export function calculateItemSubtotal(machine: Machine, days: number, profile: s
     return withCampaign(billableWeeks(days, machine.minRentalDays) * machine.weeklyPrice);
   }
 
-  // Weekend "niet werken": when the rental spans a weekend on the weekly basis
-  // (3–27 days) and the customer declares they will NOT work the weekend, the
-  // Saturday/Sunday days are dropped and the normal price tier is applied to the
-  // remaining working days. The flat weekly price already includes the weekend, so
-  // "ja" (or no answer) keeps the normal calendar-day price below. The start day is
-  // omitted from tierPrice so a 2-working-day result uses twoDayPrice, never the
-  // strict-weekend price (a "nee" rental can never start on a weekend).
-  // Mirrored by server/routes/orders.ts — keep identical.
-  if (weekendWork === "nee" && startDate && machine.weeklyPrice && !machine.weeklyOnly
-      && days >= 3 && days < 28 && !isStrictWeekend(startDate, days)) {
-    const start = new Date(startDate);
-    const end = new Date(start);
-    end.setUTCDate(end.getUTCDate() + (days - 1));
-    const weekendDays = countWeekendDays(start, end);
-    if (weekendDays > 0) {
-      const workingDays = days - weekendDays;
-      const base = tierPrice(machine, workingDays) ?? machine.pricePerDay * workingDays;
-      return withCampaign(base);
-    }
+  // Weekend package (depot closed Sat+Sun): flat weekend price, no Sunday block.
+  if (machine.weekendRulesEnabled && machine.weekendPrice && isWeekendPackage(machine, startDate, days)) {
+    return withCampaign(machine.weekendPrice);
   }
 
-  // Standard flat-rate tier table on the inclusive calendar-day count.
+  // Base subtotal: standard flat-rate tier, else pricePerDay × days with discounts.
+  let base: number;
   const tier = tierPrice(machine, days, startDate);
-  if (tier !== null) return withCampaign(tier);
-
-  // Fallback: pricePerDay × days with full discount (volume + campaign)
-  const rawSubtotal = machine.pricePerDay * days;
-  const discountPercent = evaluateDiscountPercent(machine, days, profile, rules);
-  let discountAmount = rawSubtotal * (discountPercent / 100);
-  if (machine.campaignDiscountAmount) {
-    discountAmount += machine.campaignDiscountAmount;
+  if (tier !== null) {
+    base = withCampaign(tier);
+  } else {
+    const rawSubtotal = machine.pricePerDay * days;
+    const discountPercent = evaluateDiscountPercent(machine, days, profile, rules);
+    let discountAmount = rawSubtotal * (discountPercent / 100);
+    if (machine.campaignDiscountAmount) {
+      discountAmount += machine.campaignDiscountAmount;
+    }
+    base = Math.max(0, rawSubtotal - discountAmount);
   }
-  return Math.max(0, rawSubtotal - discountAmount);
+
+  // Forced Sunday block: last work day is Saturday → machine held over the closed
+  // Sunday, returned Monday 08:00, flat sundayBlockFee added on top of the tier.
+  if (hasSundayBlock(machine, startDate, days)) {
+    base += machine.sundayBlockFee ?? 0;
+  }
+
+  return base;
 }
 
 // Flat-rate price for an effective day count `n`, or null when no flat tier applies
@@ -164,13 +194,19 @@ function tierPrice(machine: Machine, n: number, startDate?: string | Date): numb
   // 1-day actie flat rate
   if (n === 1 && machine.oneDayPrice) return machine.oneDayPrice;
 
-  // 2-day: weekend (Sat+Sun) → weekendPrice; weekday → twoDayPrice
+  // 2-day: weekday → twoDayPrice. The legacy strict-weekend (Sat+Sun) → weekendPrice
+  // only applies to machines without weekendRulesEnabled; enabled machines route a
+  // Sat+Sun selection through the weekend package in calculateItemSubtotal instead.
   if (n === 2) {
-    if (isStrictWeekend(startDate, n) && machine.weekendPrice) return machine.weekendPrice;
+    if (!machine.weekendRulesEnabled && isStrictWeekend(startDate, n) && machine.weekendPrice) return machine.weekendPrice;
     if (machine.twoDayPrice) return machine.twoDayPrice;
   }
 
-  // 3–5 days: flat weekly rate
+  // 3 / 4 days: per-day flat rate when set, else fall back to the flat weekly rate.
+  if (n === 3 && machine.threeDayPrice) return machine.threeDayPrice;
+  if (n === 4 && machine.fourDayPrice) return machine.fourDayPrice;
+
+  // 3–5 days: flat weekly rate (also the fallback for 3/4 when no per-day rate set)
   if ((n === 3 || n === 4 || n === 5) && machine.weeklyPrice) return machine.weeklyPrice;
 
   // 6–27 days: linear rate derived from weeklyPrice, capped at the monthly price
@@ -230,14 +266,25 @@ export function buildTierDisplay(machine: Machine, days: number, startDate?: str
     return { tierLabel: "1-Dag Actie", isFlatRate: true, weeklyBreakdown: null };
   }
 
-  if (days === 2 && isStrictWeekend(startDate, 2) && machine.weekendPrice) {
+  // Weekend package (Vrijdagmiddag → Maandagochtend) for weekendRulesEnabled machines.
+  if (machine.weekendRulesEnabled && machine.weekendPrice && isWeekendPackage(machine, startDate, days)) {
+    return { tierLabel: "Weekendpakket", isFlatRate: true, weeklyBreakdown: null };
+  }
+
+  if (days === 2 && !machine.weekendRulesEnabled && isStrictWeekend(startDate, 2) && machine.weekendPrice) {
     return { tierLabel: "Weekendtarief (za+zo)", isFlatRate: true, weeklyBreakdown: null };
   }
   if (days === 2 && machine.twoDayPrice) {
     return { tierLabel: "2-Daags Tarief (ma-vr)", isFlatRate: true, weeklyBreakdown: null };
   }
 
-  if ((days === 3 || days === 4 || days === 5) && machine.weeklyPrice) {
+  if (days === 3 && (machine.threeDayPrice || machine.weeklyPrice)) {
+    return { tierLabel: machine.threeDayPrice ? "3-Daags Tarief" : "Werkweektarief", isFlatRate: true, weeklyBreakdown: null };
+  }
+  if (days === 4 && (machine.fourDayPrice || machine.weeklyPrice)) {
+    return { tierLabel: machine.fourDayPrice ? "4-Daags Tarief" : "Werkweektarief", isFlatRate: true, weeklyBreakdown: null };
+  }
+  if (days === 5 && machine.weeklyPrice) {
     return { tierLabel: "Werkweektarief", isFlatRate: true, weeklyBreakdown: null };
   }
 
@@ -269,21 +316,11 @@ export function buildTierDisplay(machine: Machine, days: number, startDate?: str
   return { tierLabel: null, isFlatRate: false, weeklyBreakdown: null };
 }
 
-// Day count to SHOW the customer, as opposed to the calendar span. When the
-// customer declared "nee" (not working the weekend) on a weekly-basis rental
-// that spans a weekend, the Sat/Sun days are already dropped from the price
-// (see calculateItemSubtotal above) — so the displayed count should read as
-// working days too (Fri–Mon = 2, not 4), matching what they are actually paying
-// for. Same eligibility condition as the price path — keep them identical.
-export function displayRentalDays(machine: Machine, startDate: string | Date | undefined, days: number, weekendWork?: "ja" | "nee" | null): number {
-  if (weekendWork === "nee" && startDate && machine.weeklyPrice && !machine.weeklyOnly
-      && days >= 3 && days < 28 && !isStrictWeekend(startDate, days)) {
-    const start = new Date(startDate);
-    const end = new Date(start);
-    end.setUTCDate(end.getUTCDate() + (days - 1));
-    const weekendDays = countWeekendDays(start, end);
-    if (weekendDays > 0) return days - weekendDays;
-  }
+// Day count to SHOW the customer. The customer always selects their working days
+// directly (the forced Sunday, when a rental ends on Saturday, is never part of
+// the selection — it is charged as the flat sundayBlockFee instead), so the
+// displayed count equals the selected calendar span.
+export function displayRentalDays(machine: Machine, startDate: string | Date | undefined, days: number): number {
   return days;
 }
 

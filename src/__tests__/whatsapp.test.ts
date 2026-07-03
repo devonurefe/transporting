@@ -11,22 +11,18 @@ function decode(url: string): string {
   return decodeURIComponent(url.split("text=")[1] ?? "");
 }
 
-describe("buildWhatsAppUrl — weekend declaration", () => {
-  it("'nee' lists the working/weekend day breakdown per machine", () => {
-    const text = decode(buildWhatsAppUrl([friToMon], "self_pickup", undefined, undefined, undefined, undefined, "nee"));
-    expect(text).toContain("NIET in het weekend");
-    expect(text).toContain("2 werkdagen berekend");
-    expect(text).toContain("2 weekenddagen niet gerekend");
-  });
-
-  it("'ja' states the full werkweektarief and no breakdown", () => {
-    const text = decode(buildWhatsAppUrl([friToMon], "self_pickup", undefined, undefined, undefined, undefined, "ja"));
-    expect(text).toContain("Werkt in het weekend");
-    expect(text).not.toContain("niet gerekend");
-  });
-
-  it("no weekend answer → no weekend declaration block", () => {
+describe("buildWhatsAppUrl", () => {
+  it("builds a rental request with machine, period and transport, without a weekend declaration block", () => {
     const text = decode(buildWhatsAppUrl([friToMon], "self_pickup"));
+    expect(text).toContain("Nifty 120");
+    expect(text).toContain("2026-06-12");
     expect(text).not.toContain("WEEKEND VERKLARING");
+  });
+
+  it("includes contact details and a price overview when provided", () => {
+    const totals = { days: 4, subtotal: 268, transport: 0, vat: 56.28, total: 324.28 };
+    const text = decode(buildWhatsAppUrl([friToMon], "self_pickup", "Jan Jansen", "jan@example.nl", "0612345678", totals));
+    expect(text).toContain("Jan Jansen");
+    expect(text).toContain("PRIJSOVERZICHT");
   });
 });

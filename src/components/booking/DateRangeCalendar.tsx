@@ -10,7 +10,7 @@ import { Machine } from "../../types";
 import { useAppStore } from "../../store/appStore";
 import { useLanguageStore } from "../../store/languageStore";
 import { someUnitAvailable, SimpleOrder } from "../../utils/availability";
-import { calculateRentalDays, calculateItemSubtotal, displayRentalDays } from "../../utils/pricing";
+import { calculateRentalDays, calculateItemSubtotal, displayRentalDays, isWeekendPackage, hasSundayBlock } from "../../utils/pricing";
 import { euro, withVat } from "../../utils/format";
 
 interface DateRangeCalendarProps {
@@ -20,7 +20,6 @@ interface DateRangeCalendarProps {
   profile: string;            // customerProfile, for the live price preview
   onConfirm: (start: string, end: string) => void;
   todayStr?: string;          // injectable for tests
-  weekendWork?: 'ja' | 'nee' | null; // "nee" → Sat/Sun cannot be a start day, weekend days drop from the price
 }
 
 const MONTHS_NL = ["januari", "februari", "maart", "april", "mei", "juni", "juli", "augustus", "september", "oktober", "november", "december"];
@@ -44,7 +43,7 @@ function formatShort(key: string): string {
   return `${d} ${MONTHS_NL[m - 1].slice(0, 3)}`;
 }
 
-export default function DateRangeCalendar({ machine, startDate, endDate, profile, onConfirm, todayStr, weekendWork }: DateRangeCalendarProps) {
+export default function DateRangeCalendar({ machine, startDate, endDate, profile, onConfirm, todayStr }: DateRangeCalendarProps) {
   const t = useLanguageStore((s) => s.t);
   const blockedDates = useAppStore((s) => s.blockedDates);
   const fetchBlockedDates = useAppStore((s) => s.fetchBlockedDates);
@@ -189,17 +188,28 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
       const isCapped = status === "available" && !!draftStart && !draftEnd && maxEnd !== "" && key > maxEnd;
       let cellStatus: "past" | "unavailable" | "available" | "capped" | "weekendoff" = isCapped ? "capped" : status;
       let selectable = status === "available" && !isCapped;
-      // "Niet werken in het weekend": a Saturday/Sunday can never be the START day.
-      // It may still fall inside the range or be the end day (weekend days simply drop
-      // from the price), so only block it while the next click would set a start.
-      // Show it in a clearly-disabled (grey) tone, distinct from "available".
-      if (weekendWork === "nee" && selectable) {
-        const dow = new Date(key).getUTCDay();
-        const isWeekendDay = dow === 0 || dow === 6;
-        const choosingStart = !draftStart || (!!draftStart && !!draftEnd);
-        if (isWeekendDay && (choosingStart || key <= draftStart)) {
-          selectable = false;
-          cellStatus = "weekendoff";
+      // Depot closed Sat+Sun (weekendRulesEnabled): restrict the END day so a normal
+      // work rental never returns on a weekend. When picking the end:
+      //  - weekday start (Mon–Fri): end may be Mon–Sat (a Saturday end auto-adds the
+      //    Sunday block, return Monday). A Sunday end is only the Fri+Sat+Sun package.
+      //  - Saturday start: only Sat+Sun (end Sunday) is a valid weekend package.
+      //  - Sunday start: single day only.
+      // Start days stay open — a Sat/Sun start can only become a weekend package.
+      if (machine.weekendRulesEnabled && selectable) {
+        const dow = new Date(key).getUTCDay(); // 0=Sun .. 6=Sat
+        const choosingEnd = !!draftStart && !draftEnd && key > draftStart;
+        if (choosingEnd) {
+          const startDow = new Date(draftStart).getUTCDay();
+          const span = calculateRentalDays(draftStart, key);
+          let ok = true;
+          if (startDow >= 1 && startDow <= 5) {
+            ok = dow === 0 ? (startDow === 5 && span === 3) : true;
+          } else if (startDow === 6) {
+            ok = dow === 0 && span === 2;
+          } else {
+            ok = false; // Sunday start → single day only
+          }
+          if (!ok) { selectable = false; cellStatus = "weekendoff"; }
         }
       }
       cells.push({
@@ -214,7 +224,7 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
     }
     while (cells.length % 7 !== 0) cells.push(null);
     return cells;
-  }, [viewYear, viewMonth, orders, blockedDates, draftStart, draftEnd, maxEnd, unitKey, today, weekendWork]);
+  }, [viewYear, viewMonth, orders, blockedDates, draftStart, draftEnd, maxEnd, unitKey, today, machine.weekendRulesEnabled]);
 
   const onDayClick = (key: string, selectable: boolean) => {
     if (!selectable) return;
@@ -249,15 +259,16 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
   const days = rangeAvail ? calculateRentalDays(draftStart, effectiveEnd) : 0;
   const minDays = machine.minRentalDays ?? 1;
   const validRange = rangeAvail && days >= minDays;
-  const subtotal = validRange ? calculateItemSubtotal(machine, days, profile, campaignRules, draftStart, weekendWork) : 0;
-  // Working-days count for display — weekend days already dropped from the price
-  // when "nee" applies, so the preview should read the days actually paid for.
-  const displayDays = displayRentalDays(machine, draftStart, days, weekendWork);
+  const subtotal = validRange ? calculateItemSubtotal(machine, days, profile, campaignRules, draftStart) : 0;
+  const displayDays = displayRentalDays(machine, draftStart, days);
+  // Weekend rules feedback for the live preview.
+  const previewIsPackage = validRange && isWeekendPackage(machine, draftStart, days);
+  const previewHasBlock = validRange && hasSundayBlock(machine, draftStart, days);
 
   const confirm = () => { if (!validRange) return; onConfirm(draftStart, effectiveEnd); close(); };
   const reset = () => { setDraftStart(""); setDraftEnd(""); };
 
-  const committedDays = startDate && endDate ? displayRentalDays(machine, startDate, calculateRentalDays(startDate, endDate), weekendWork) : 0;
+  const committedDays = startDate && endDate ? displayRentalDays(machine, startDate, calculateRentalDays(startDate, endDate)) : 0;
   const buttonLabel = startDate && endDate
     ? `${formatShort(startDate)} – ${formatShort(endDate)} · ${committedDays} ${committedDays === 1 ? "dag" : "dagen"}`
     : t("calSelectPeriod");
@@ -266,7 +277,7 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
     const [y, m, d] = key.split("-").map(Number);
     const label = `${d} ${MONTHS_NL[m - 1]} ${y}`;
     const stateNl = status === "unavailable" ? t("calLegendUnavailable")
-      : status === "weekendoff" ? "weekend — niet als startdag"
+      : status === "weekendoff" ? "weekend — niet als retourdag"
       : status === "available" ? t("calLegendAvailable") : "";
     return stateNl ? `${label}, ${stateNl}` : label;
   };
@@ -395,10 +406,10 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
                   </p>
                 )}
 
-                {/* Hint: weekend not selectable as start when the customer won't work the weekend */}
-                {weekendWork === "nee" && (
+                {/* Hint: depot closed in the weekend — Sunday return not possible */}
+                {machine.weekendRulesEnabled && (
                   <p className="text-[10px] text-center text-slate-400 px-5 pb-1 leading-relaxed">
-                    U werkt niet in het weekend — zaterdag en zondag zijn niet als startdag te kiezen.
+                    Ons depot is in het weekend gesloten. Los weekend? Kies het vaste weekendpakket (za/zo). Loopt de huur t/m zaterdag door, dan blijft de machine het weekend bij u (retour maandag 08:00).
                   </p>
                 )}
 
@@ -425,9 +436,19 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
 
               {/* Price preview — outside scroll, always visible above footer */}
               {validRange && (
-                <div className="mx-4 mb-2 flex items-center justify-between bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
-                  <span className="text-xs font-bold text-slate-800">{displayDays} {displayDays === 1 ? "dag" : "dagen"}</span>
-                  <span className="text-sm font-black font-mono text-slate-900">{euro(withVat(subtotal, vatDisplay))} <span className="text-[10px] font-normal text-slate-400">{vatDisplay === "incl" ? "incl. btw" : "excl. btw"}</span></span>
+                <div className="mx-4 mb-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-800">
+                      {previewIsPackage ? "Weekendpakket" : `${displayDays} ${displayDays === 1 ? "dag" : "dagen"}`}
+                    </span>
+                    <span className="text-sm font-black font-mono text-slate-900">{euro(withVat(subtotal, vatDisplay))} <span className="text-[10px] font-normal text-slate-400">{vatDisplay === "incl" ? "incl. btw" : "excl. btw"}</span></span>
+                  </div>
+                  {previewIsPackage && (
+                    <p className="text-[10px] text-amber-700 leading-snug">Vrijdagmiddag ophalen t/m maandagochtend 08:00 uur retour.</p>
+                  )}
+                  {previewHasBlock && (
+                    <p className="text-[10px] text-amber-700 leading-snug">Incl. zondagblokkade (€{machine.sundayBlockFee}) — depot gesloten, retour maandag 08:00.</p>
+                  )}
                 </div>
               )}
 

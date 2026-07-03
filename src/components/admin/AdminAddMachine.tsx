@@ -42,8 +42,12 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
   const [newOneDayPrice, setNewOneDayPrice] = useState("");
   const [newWeekendPrice, setNewWeekendPrice] = useState("");
   const [newTwoDayPrice, setNewTwoDayPrice] = useState("");
+  const [newThreeDayPrice, setNewThreeDayPrice] = useState("");
+  const [newFourDayPrice, setNewFourDayPrice] = useState("");
   const [newWeeklyPrice, setNewWeeklyPrice] = useState("");
   const [newMonthlyFlatPrice, setNewMonthlyFlatPrice] = useState("");
+  const [newSundayBlockFee, setNewSundayBlockFee] = useState("");
+  const [newWeekendRulesEnabled, setNewWeekendRulesEnabled] = useState(false);
   const [campaignText, setCampaignText] = useState("");
   const [campaignDiscountPercent, setCampaignDiscountPercent] = useState("");
   const [campaignDiscountAmount, setCampaignDiscountAmount] = useState("");
@@ -218,8 +222,12 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
       monthlyDiscountPercent: monthlyDiscountPercent ? Number(monthlyDiscountPercent) : undefined,
       weekendPrice: newWeekendPrice ? Number(newWeekendPrice) : undefined,
       twoDayPrice: newTwoDayPrice ? Number(newTwoDayPrice) : undefined,
+      threeDayPrice: newThreeDayPrice ? Number(newThreeDayPrice) : undefined,
+      fourDayPrice: newFourDayPrice ? Number(newFourDayPrice) : undefined,
       weeklyPrice: newWeeklyPrice ? Number(newWeeklyPrice) : undefined,
       monthlyPrice: newMonthlyFlatPrice ? Number(newMonthlyFlatPrice) : undefined,
+      sundayBlockFee: newSundayBlockFee ? Number(newSundayBlockFee) : undefined,
+      weekendRulesEnabled: newWeekendRulesEnabled,
       campaignText: campaignText.trim() || undefined,
       campaignDiscountPercent: campaignDiscountPercent ? Number(campaignDiscountPercent) : undefined,
       campaignDiscountAmount: campaignDiscountAmount ? Number(campaignDiscountAmount) : undefined,
@@ -530,7 +538,33 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
               <p className="text-[10px] text-slate-400">{t("Bij 2 doordeweekse dagen", "For 2 weekday days", "2 hafta içi günde")}</p>
             </div>
             <div className="space-y-1">
-              <label className="text-xs text-slate-700 block font-bold">{t("Za+Zo 2-dag €", "Sat+Sun 2-day €", "Cmt+Paz 2 gün €")}</label>
+              <label className="text-xs text-slate-700 block font-bold">{t("3 Dagen €", "3 Days €", "3 Gün €")}</label>
+              <input
+                type="number"
+                min="0"
+                step="any"
+                value={newThreeDayPrice}
+                onChange={(e) => setNewThreeDayPrice(e.target.value)}
+                placeholder="–"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
+              />
+              <p className="text-[10px] text-slate-400">{t("Bij 3 dagen (anders werkweek)", "For 3 days (else work week)", "3 günde (yoksa iş haftası)")}</p>
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-slate-700 block font-bold">{t("4 Dagen €", "4 Days €", "4 Gün €")}</label>
+              <input
+                type="number"
+                min="0"
+                step="any"
+                value={newFourDayPrice}
+                onChange={(e) => setNewFourDayPrice(e.target.value)}
+                placeholder="–"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
+              />
+              <p className="text-[10px] text-slate-400">{t("Bij 4 dagen (anders werkweek)", "For 4 days (else work week)", "4 günde (yoksa iş haftası)")}</p>
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-slate-700 block font-bold">{t("Weekendpakket €", "Weekend package €", "Hafta sonu paketi €")}</label>
               <input
                 type="number"
                 min="0"
@@ -540,7 +574,7 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
                 placeholder="–"
                 className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
               />
-              <p className="text-[10px] text-slate-400">{t("Bij 2–3 dagen (weekend)", "For 2–3 days (weekend)", "2–3 günde (hafta sonu)")}</p>
+              <p className="text-[10px] text-slate-400">{t("Vast weekendtarief (vr→ma)", "Fixed weekend rate (Fri→Mon)", "Sabit hafta sonu (Cum→Pzt)")}</p>
             </div>
             <div className="space-y-1">
               <label className="text-xs text-slate-700 block font-bold">{t("Werkweek (5 dgn) €", "Work Week (5 days) €", "İş Haftası (5 gün) €")}</label>
@@ -568,7 +602,32 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
               />
               <p className="text-[10px] text-slate-400">{t("Bij 28+ dagen (naar rato)", "For 28+ days (pro-rata)", "28+ günde (orantılı)")}</p>
             </div>
+            <div className="space-y-1">
+              <label className="text-xs text-slate-700 block font-bold">{t("Zondagblokkade €", "Sunday block €", "Pazar blokajı €")}</label>
+              <input
+                type="number"
+                min="0"
+                step="any"
+                value={newSundayBlockFee}
+                onChange={(e) => setNewSundayBlockFee(e.target.value)}
+                placeholder="–"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
+              />
+              <p className="text-[10px] text-slate-400">{t("Huur t/m za → +toeslag (retour ma)", "Rent thru Sat → +surcharge (return Mon)", "Cmt'ye taşarsa → +ücret (iade Pzt)")}</p>
             </div>
+            </div>
+            <label className="mt-3 flex items-start gap-2.5 cursor-pointer rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5">
+              <input
+                type="checkbox"
+                checked={newWeekendRulesEnabled}
+                onChange={(e) => setNewWeekendRulesEnabled(e.target.checked)}
+                className="mt-0.5 h-4 w-4 accent-amber-500 cursor-pointer"
+              />
+              <span>
+                <span className="text-xs font-bold text-slate-800 block">{t("Weekendregels actief", "Weekend rules active", "Hafta sonu kuralları aktif")}</span>
+                <span className="text-[10px] text-slate-400 block">{t("Depot za/zo dicht: weekendpakket + automatische zondagblokkade. Uit voor steigers & campagne (Nifty).", "Depot closed Sat/Sun: weekend package + automatic Sunday block. Off for scaffolding & campaign (Nifty).", "Depo Cmt/Paz kapalı: hafta sonu paketi + otomatik Pazar blokajı. İskele & kampanya (Nifty) için kapalı.")}</span>
+              </span>
+            </label>
           </div>
 
           <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-slate-100 pt-3">

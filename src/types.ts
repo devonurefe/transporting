@@ -23,10 +23,14 @@ export interface Machine {
   campaignText?: string; // campaign tag, e.g., "LenteKorting"
   campaignDiscountPercent?: number; // campaign discount %
   campaignDiscountAmount?: number; // campaign discount EUR amount
-  weekendPrice?: number; // flat rate for sat+sun 2-day booking
-  twoDayPrice?: number; // flat rate for exactly 2 weekday days (distinct from sat+sun weekendPrice)
-  weeklyPrice?: number; // flat rate for 5-day werkweek booking
+  weekendPrice?: number; // weekend package flat price (Vrijdagmiddag ophalen t/m Maandagochtend 08:00). Legacy: sat+sun 2-day when weekendRulesEnabled is false.
+  twoDayPrice?: number; // flat rate for exactly 2 weekday days (distinct from weekend package weekendPrice)
+  threeDayPrice?: number; // flat rate for exactly 3 days (falls back to weeklyPrice when unset)
+  fourDayPrice?: number; // flat rate for exactly 4 days (falls back to weeklyPrice when unset)
+  weeklyPrice?: number; // flat rate for 5-day werkweek booking (also the 6+ day pro-rata basis, /5 per day)
   monthlyPrice?: number; // flat rate for 28-day booking
+  sundayBlockFee?: number; // surcharge added when a rental's last work day is Saturday and the machine is held over the closed Sunday (return Monday). Requires weekendRulesEnabled.
+  weekendRulesEnabled?: boolean; // depot closed Sat+Sun: enables weekend package + automatic Sunday block. Off for scaffolding & campaign products (Nifty 120/170).
   packageContents?: string; // Semicolon separated included items checklist
   additionalImages?: string[];
   specs?: { label: string; value: string }[];

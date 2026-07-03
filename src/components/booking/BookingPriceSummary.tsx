@@ -29,13 +29,12 @@ interface BookingPriceSummaryProps {
     total: number;
     deliveryType?: string;
     weekendDays?: number;
-    spansWeekend?: boolean;
+    sundayBlockTotal?: number;
     effectiveDailyRate?: number | null;
     tierLabel?: string | null;
     isFlatRate?: boolean;
     weeklyBreakdown?: { weeks: number; pricePerWeek: number; remainder: number; dailyRate: number; remainderCost?: number } | null;
     campaignSavings?: number;
-    weekendWorkAnswer?: "ja" | "nee" | null;
   };
 }
 
@@ -150,26 +149,19 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
   }
 
   const priceExVat = sums.subtotal + sums.transport + sums.driver + sums.addonCost;
-  // Only surface the "free weekend days" line once the customer has explicitly
-  // declared they will NOT work the weekend — in that case the subtotal is already
-  // reduced to the working days. When they pick "Ja, ik werk" the full werkweektarief
-  // applies (weekend included) and while unanswered we keep the summary neutral.
-  const showWeekendFree = sums.spansWeekend && sums.weekendWorkAnswer === "nee";
+  // Forced Sunday block (last work day Saturday → machine held over the closed
+  // Sunday, return Monday 08:00). The subtotal already includes it; split it out
+  // for display so the tariff line shows the clean base and the block its own line.
+  const blockFee = sums.sundayBlockTotal ?? 0;
+  const baseSubtotal = sums.subtotal - blockFee;
   const totalSavings = (sums.campaignSavings ?? 0)
     + (!sums.weeklyBreakdown && !sums.isFlatRate ? sums.discountAmount : 0);
-
-  // Weekend "niet werken": only the working (non-weekend) days are charged, so the
-  // per-day rate and breakdown are expressed per WORKING day (not blended over all
-  // calendar days, which would show a misleadingly low €/dag).
-  const isWeekendNoWork = !!showWeekendFree;
-  const workingDays = Math.max(0, sums.days - (sums.weekendDays ?? 0));
 
   // Flat-rate / weekly tiers bake the discount into the price, so "Je bespaart"
   // never fires for them. Surface a small badge when the effective day rate is
   // genuinely below the list day rate so the customer understands the saving.
-  const effectivePerDay = isWeekendNoWork && workingDays > 0 ? sums.subtotal / workingDays
-    : sums.weeklyBreakdown ? sums.weeklyBreakdown.dailyRate
-    : sums.days > 0 ? sums.subtotal / sums.days
+  const effectivePerDay = sums.weeklyBreakdown ? sums.weeklyBreakdown.dailyRate
+    : sums.days > 0 ? baseSubtotal / sums.days
     : selectedMachine.pricePerDay;
   const hasTierDeal = (sums.isFlatRate || !!sums.weeklyBreakdown)
     && effectivePerDay < selectedMachine.pricePerDay - 0.01;
@@ -242,7 +234,7 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
           <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5">{t("priceSummaryTotal")}</p>
           <p className="text-3xl font-black text-slate-900 font-mono leading-none">{euro(sums.total)}</p>
           <p className="text-[11px] text-slate-400 mt-1.5 leading-snug">
-            {t("priceSummaryInclVAT")} · {isWeekendNoWork ? workingDays : sums.days} {(isWeekendNoWork ? workingDays : sums.days) === 1 ? t("priceSummaryDayRental") : t("priceSummaryDaysRental")}
+            {t("priceSummaryInclVAT")} · {sums.days} {sums.days === 1 ? t("priceSummaryDayRental") : t("priceSummaryDaysRental")}
           </p>
           {periodLabel && (
             <p className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-600 mt-1.5 leading-snug">
@@ -275,12 +267,12 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
               accent={(sums.isFlatRate || !!sums.weeklyBreakdown) ? "amber" : "emerald"}
             />
           )}
-          {showWeekendFree && (
+          {blockFee > 0 && (
             <SummaryRow
               icon={<Calendar className="h-3.5 w-3.5" />}
-              label={(sums.weekendDays ?? 0) === 1 ? t("priceSummaryWeekendDay") : t("priceSummaryWeekendDays")}
-              value={t("priceSummaryFreeNoUse")}
-              accent="emerald"
+              label={t("priceSummarySundayBlock")}
+              value={euro(blockFee)}
+              accent="amber"
             />
           )}
           {sums.addonCost > 0 && sums.addonDetails.map(addon => (
@@ -321,19 +313,7 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
                 </div>
               )}
 
-              {isWeekendNoWork ? (
-                <>
-                  <Row
-                    label={`${workingDays} ${workingDays === 1 ? t("priceSummaryWorkingDay") : t("priceSummaryWorkingDays")} ${t("priceSummaryCalculated")}`}
-                    value={euro(sums.subtotal)}
-                  />
-                  <Row
-                    label={`${sums.weekendDays ?? 0} ${(sums.weekendDays ?? 0) === 1 ? t("priceSummaryWeekendDayLower") : t("priceSummaryWeekendDaysLower")}`}
-                    value={t("priceSummaryFree")}
-                    accent="emerald"
-                  />
-                </>
-              ) : sums.weeklyBreakdown ? (
+              {sums.weeklyBreakdown ? (
                 <>
                   <Row
                     label={`${sums.weeklyBreakdown.weeks}× ${t("priceSummaryWorkWeekRate5Days")}`}
@@ -347,11 +327,18 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
                   )}
                 </>
               ) : sums.isFlatRate && sums.tierLabel ? (
-                <Row label={`1× ${sums.tierLabel}`} value={euro(sums.subtotal)} />
+                <Row label={`1× ${sums.tierLabel}`} value={euro(baseSubtotal)} />
               ) : (
                 <Row
                   label={`${sums.days} ${sums.days === 1 ? t("priceSummaryDay") : t("priceSummaryDays")} × ${euroCompact(selectedMachine.pricePerDay)}`}
                   value={euro(sums.rawSubtotal)}
+                />
+              )}
+              {blockFee > 0 && (
+                <Row
+                  label={t("priceSummarySundayBlock")}
+                  value={euro(blockFee)}
+                  accent="amber"
                 />
               )}
             </div>

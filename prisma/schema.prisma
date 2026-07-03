@@ -29,8 +29,12 @@ model Machine {
   campaignDiscountAmount  Float?
   weekendPrice            Float?
   twoDayPrice             Float?
+  threeDayPrice           Float?
+  fourDayPrice            Float?
   weeklyPrice             Float?
   monthlyPrice            Float?
+  sundayBlockFee          Float?
+  weekendRulesEnabled     Boolean       @default(false)
   packageContents         String?
   additionalImages        Json?
   specs                   Json?

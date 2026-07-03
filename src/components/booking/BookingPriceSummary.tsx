@@ -59,7 +59,7 @@ function Row({
     : dim ? "text-slate-500 font-semibold"
     : "text-slate-900 font-bold";
   return (
-    <div className="flex justify-between items-center gap-3 py-0.5">
+    <div className="flex justify-between items-center gap-3 py-1">
       <span className={`text-xs leading-snug ${lCls}`}>{label}</span>
       <span className={`text-sm font-mono shrink-0 ${vCls}`}>{value}</span>
     </div>
@@ -157,13 +157,17 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
   const totalSavings = (sums.campaignSavings ?? 0)
     + (!sums.weeklyBreakdown && !sums.isFlatRate ? sums.discountAmount : 0);
 
+  // Weekend package is a flat deal, not a day rate — dividing €69 by 3 calendar
+  // days would show a misleading "€23/dag", so it gets its own flat display.
+  const isWeekendPkg = sums.isFlatRate && sums.tierLabel === "Weekendpakket";
+
   // Flat-rate / weekly tiers bake the discount into the price, so "Je bespaart"
   // never fires for them. Surface a small badge when the effective day rate is
   // genuinely below the list day rate so the customer understands the saving.
   const effectivePerDay = sums.weeklyBreakdown ? sums.weeklyBreakdown.dailyRate
     : sums.days > 0 ? baseSubtotal / sums.days
     : selectedMachine.pricePerDay;
-  const hasTierDeal = (sums.isFlatRate || !!sums.weeklyBreakdown)
+  const hasTierDeal = !isWeekendPkg && (sums.isFlatRate || !!sums.weeklyBreakdown)
     && effectivePerDay < selectedMachine.pricePerDay - 0.01;
 
   // Day-count is already shown under the total ("· N dagen huur"); the Huurperiode
@@ -213,6 +217,10 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
               <span className="text-sm font-black text-slate-800 font-mono">
                 {euroCompact(selectedMachine.weeklyPrice)}{t("priceSummaryPerWeek")}
               </span>
+            ) : isWeekendPkg ? (
+              <span className="text-sm font-black text-amber-700 font-mono">
+                {euroCompact(baseSubtotal)} · {sums.tierLabel}
+              </span>
             ) : hasTierDeal ? (
               <span className="font-mono flex items-baseline gap-1.5 flex-wrap">
                 <span className="text-sm font-black text-emerald-600">{euroCompact(effectivePerDay)}{t("priceSummaryPerDay")}</span>
@@ -227,25 +235,27 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
         </div>
       </div>
 
-      <div className="p-4 space-y-4">
+      <div className="p-5 space-y-5">
 
         {/* ── TOTAAL (prominent) ──────────────────── */}
         <div>
-          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5">{t("priceSummaryTotal")}</p>
-          <p className="text-3xl font-black text-slate-900 font-mono leading-none">{euro(sums.total)}</p>
-          <p className="text-[11px] text-slate-400 mt-1.5 leading-snug">
-            {t("priceSummaryInclVAT")} · {sums.days} {sums.days === 1 ? t("priceSummaryDayRental") : t("priceSummaryDaysRental")}
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">{t("priceSummaryTotal")}</p>
+          <p className="text-3xl font-black text-slate-900 font-mono leading-none tracking-tight">{euro(sums.total)}</p>
+          <p className="text-[11px] font-normal text-slate-400 mt-2.5 leading-snug">
+            {t("priceSummaryInclVAT")} · {isWeekendPkg
+              ? sums.tierLabel
+              : `${sums.days} ${sums.days === 1 ? t("priceSummaryDayRental") : t("priceSummaryDaysRental")}`}
           </p>
           {periodLabel && (
-            <p className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-600 mt-1.5 leading-snug">
+            <p className="flex items-center gap-1.5 text-[11px] font-medium text-slate-500 mt-2 leading-snug">
               <Calendar className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-              <span>{t("priceSummaryRentPeriod")}: {periodLabel}</span>
+              <span>{t("priceSummaryRentPeriod")}: {periodLabel}{isWeekendPkg ? " · retour ma 08:00" : ""}</span>
             </p>
           )}
         </div>
 
         {/* ── SAMENVATTING ───────────────────────── */}
-        <div className="space-y-2.5 pt-1 border-t border-slate-100">
+        <div className="space-y-3 pt-3 border-t border-slate-100">
           <SummaryRow
             icon={<Calendar className="h-3.5 w-3.5" />}
             label={t("priceSummaryRate")}

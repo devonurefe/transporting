@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Plus, Trash2, Wrench, X, Sparkles, Image as ImageIcon } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useAppStore } from "../../store/appStore";
@@ -45,6 +45,17 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
 
   // Loading state for edit button — gives immediate feedback before heavy form renders
   const [pendingEditId, setPendingEditId] = useState<string | null>(null);
+
+  // Fleet list filters — category + active/inactive, purely client-side over the
+  // already-fetched machines array (same convention as AdminCustomers.tsx).
+  const [filterCategory, setFilterCategory] = useState<string>("all");
+  const [filterStatus, setFilterStatus] = useState<"all" | "active" | "inactive">("all");
+  const filteredMachines = useMemo(() => machines.filter((m) => {
+    if (filterCategory !== "all" && m.category !== filterCategory) return false;
+    if (filterStatus === "active" && m.isActive === false) return false;
+    if (filterStatus === "inactive" && m.isActive !== false) return false;
+    return true;
+  }), [machines, filterCategory, filterStatus]);
 
   // Toggle machine active/inactive
   const [togglingId, setTogglingId] = useState<string | null>(null);
@@ -317,9 +328,10 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
       campaignDiscountAmount: editCampaignDiscountAmount ? Number(editCampaignDiscountAmount) : undefined,
       packageContents: editPackageContents.trim() || undefined,
       additionalImages: editAdditionalImages,
-      specs: editSpecs.filter(s => s.label.trim() && s.value.trim()).length > 0
-        ? editSpecs.filter(s => s.label.trim() && s.value.trim())
-        : undefined,
+      // Always send the array (even empty) so clearing all rows actually clears the
+      // field server-side — `undefined` is dropped by JSON.stringify and the old
+      // specs would silently survive in the database.
+      specs: editSpecs.filter(s => s.label.trim() && s.value.trim()),
       bufferDays: editBufferDays,
       minRentalDays: editMinRentalDays ? Number(editMinRentalDays) : undefined,
       weeklyOnly: editWeeklyOnly,
@@ -374,27 +386,59 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
           </button>
         </div>
 
+        {/* Fleet filters — category + active/inactive, matches AdminCustomers.tsx's
+            search+segmented-toggle pattern (amber accent, consistent with this panel). */}
+        <div className="flex flex-col sm:flex-row gap-2">
+          <select
+            value={filterCategory}
+            onChange={(e) => setFilterCategory(e.target.value)}
+            className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 outline-none focus:border-amber-400 shadow-sm cursor-pointer"
+          >
+            <option value="all">{t("Alle categorieën", "All categories", "Tüm kategoriler")}</option>
+            {customCategories.map((c) => (
+              <option key={c.id} value={c.id}>{c.listLabel || c.label}</option>
+            ))}
+          </select>
+          <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-xl px-1 py-1 shadow-sm">
+            {(["all", "active", "inactive"] as const).map((f) => (
+              <button
+                key={f}
+                type="button"
+                onClick={() => setFilterStatus(f)}
+                className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer border-none whitespace-nowrap ${
+                  filterStatus === f ? "bg-amber-500 text-slate-950 shadow-sm" : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
+                }`}
+              >
+                {f === "all" ? t("Alle", "All", "Tümü") : f === "active" ? t("Actief", "Active", "Aktif") : t("Inactief", "Inactive", "Pasif")}
+              </button>
+            ))}
+          </div>
+        </div>
+        <p className="text-[11px] text-slate-400">
+          {t(`${filteredMachines.length} van ${machines.length} machines`, `${filteredMachines.length} of ${machines.length} machines`, `${machines.length} makineden ${filteredMachines.length} tanesi`)}
+        </p>
+
         <div className="overflow-x-auto scrollbar-thin">
           <table className="w-full text-left text-xs border-collapse whitespace-nowrap">
             <thead>
               <tr className="border-b border-slate-200 text-slate-500">
-                <th className="pb-2.5 font-bold">{t("Machine", "Machine", "Makine")}</th>
-                <th className="pb-2.5 font-bold">{t("Onderdeel", "Category", "Kategori")}</th>
-                <th className="pb-2.5 font-bold">{t("Werkhoogte", "Working Height", "Çalışma Yüksekliği")}</th>
-                <th className="pb-2.5 font-bold">{t("ZijwBereik", "Horizontal Reach", "Yatay Erişim")}</th>
-                <th className="pb-2.5 font-bold">{t("Gewicht", "Weight", "Ağırlık")}</th>
-                <th className="pb-2.5 font-bold">{t("Aandrijving", "Power Type", "Güç Tipi")}</th>
-                <th className="pb-2.5 font-bold">{t("Totaalprijs/dag", "Price per Day", "Günlük Ücret")}</th>
+                <th className="pb-2.5 pr-4 font-bold">{t("Machine", "Machine", "Makine")}</th>
+                <th className="pb-2.5 pr-4 font-bold">{t("Onderdeel", "Category", "Kategori")}</th>
+                <th className="pb-2.5 pr-4 font-bold">{t("Werkhoogte", "Working Height", "Çalışma Yüksekliği")}</th>
+                <th className="pb-2.5 pr-4 font-bold">{t("ZijwBereik", "Horizontal Reach", "Yatay Erişim")}</th>
+                <th className="pb-2.5 pr-4 font-bold">{t("Gewicht", "Weight", "Ağırlık")}</th>
+                <th className="pb-2.5 pr-4 font-bold">{t("Aandrijving", "Power Type", "Güç Tipi")}</th>
+                <th className="pb-2.5 pr-4 font-bold">{t("Totaalprijs/dag", "Price per Day", "Günlük Ücret")}</th>
                 <th className="pb-2.5 font-bold text-right pr-4">{t("Acties", "Actions", "İşlemler")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {machines.map((m) => {
+              {filteredMachines.map((m) => {
                 const inactive = m.isActive === false;
                 return (
                    <tr key={m.id} className={`hover:bg-slate-50 transition-colors ${inactive ? "opacity-50" : ""}`}>
-                    <td className="py-3 font-bold text-slate-800 flex items-center space-x-2.5">
-                      <div className="h-16 w-16 rounded-lg overflow-hidden shrink-0 border border-slate-200 bg-slate-100">
+                    <td className="py-3 pr-4 font-bold text-slate-800 flex items-center space-x-2.5">
+                      <div className="h-10 w-10 rounded-lg overflow-hidden shrink-0 border border-slate-200 bg-slate-100">
                         <img
                           src={m.imageUrl || (m.additionalImages as string[])?.[0] || "/placeholder-machine.webp"}
                           alt={m.name}
@@ -412,12 +456,12 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                       </div>
                       <span className="whitespace-normal break-words leading-snug max-w-[200px] sm:max-w-[320px]" title={m.name}>{m.name}</span>
                     </td>
-                    <td className="py-3 uppercase font-mono text-[9px] text-slate-500 font-extrabold">{m.category}</td>
-                    <td className="py-3 text-slate-700 font-mono">{m.height} m</td>
-                    <td className="py-3 text-slate-700 font-mono">{m.reach || "--"} m</td>
-                    <td className="py-3 text-slate-700 font-mono">{m.weight || "--"} kg</td>
-                    <td className="py-3 text-slate-700">{m.powerType ? (m.powerType === "Elektrisch" ? t("Elektrisch", "Electric", "Elektrikli") : m.powerType === "Diesel" ? t("Diesel", "Diesel", "Dizel") : t("Hybride", "Hybrid", "Hibrit")) : t("Elektrisch", "Electric", "Elektrikli")}</td>
-                    <td className="py-3 font-mono text-teal-600 font-bold">€ {m.pricePerDay}</td>
+                    <td className="py-3 pr-4 uppercase font-mono text-[9px] text-slate-500 font-extrabold">{m.category}</td>
+                    <td className="py-3 pr-4 text-slate-700 font-mono">{m.height} m</td>
+                    <td className="py-3 pr-4 text-slate-700 font-mono">{m.reach || "--"} m</td>
+                    <td className="py-3 pr-4 text-slate-700 font-mono">{m.weight || "--"} kg</td>
+                    <td className="py-3 pr-4 text-slate-700">{m.powerType ? (m.powerType === "Elektrisch" ? t("Elektrisch", "Electric", "Elektrikli") : m.powerType === "Diesel" ? t("Diesel", "Diesel", "Dizel") : t("Hybride", "Hybrid", "Hibrit")) : t("Elektrisch", "Electric", "Elektrikli")}</td>
+                    <td className="py-3 pr-4 font-mono text-teal-600 font-bold">€ {m.pricePerDay}</td>
                     <td className="py-3 text-right pr-4">
                       <div className="flex items-center justify-end space-x-1.5 ml-auto">
                         <button

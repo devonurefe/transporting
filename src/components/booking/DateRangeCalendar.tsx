@@ -160,17 +160,21 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
 
   // Max selectable end: walk forward from start until the first unavailable day,
   // so a range can never span a blocked/booked day. Only constrains while no end yet.
-  const maxEnd = useMemo(() => {
-    if (!draftStart || draftEnd) return "";
+  // `cappedByRealBlock` is true only when that walk actually hit a genuine booked/
+  // blocked day within the search window — the hint text below should stay silent
+  // when the 366-day search simply ran out (nothing nearby is actually blocking).
+  const { maxEnd, cappedByRealBlock } = useMemo(() => {
+    if (!draftStart || draftEnd) return { maxEnd: "", cappedByRealBlock: false };
     let cap = draftStart;
     let cursor = draftStart;
+    let hitBlock = false;
     for (let i = 0; i < 366; i++) {
       const next = addDaysKey(cursor, 1);
       // Require a single unit free for the whole [start..next] span, not just that day
-      if (!someUnitAvailable(unitIds, draftStart, next, orders, blockedDates, today)) break;
+      if (!someUnitAvailable(unitIds, draftStart, next, orders, blockedDates, today)) { hitBlock = true; break; }
       cap = next; cursor = next;
     }
-    return cap;
+    return { maxEnd: cap, cappedByRealBlock: hitBlock };
   }, [draftStart, draftEnd, orders, blockedDates, unitKey, today]);
 
   const grid = useMemo(() => {
@@ -288,10 +292,13 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
       <button
         ref={triggerRef}
         type="button"
-        // Open on pointerdown so the dialog appears on the FIRST touch, before iOS
-        // Safari's synthesized click (which can get swallowed by scroll/ghost-click
-        // heuristics and read as "I had to tap twice"). onClick stays as the
-        // keyboard-activation path; open() itself ignores the duplicate call.
+        // Open on the earliest possible touch signal so the dialog appears on the
+        // FIRST tap, before iOS Safari's synthesized click (which can get swallowed
+        // by scroll/ghost-click heuristics and read as "I had to tap twice"). Both
+        // touchstart and pointerdown are wired (some iOS Safari versions are more
+        // reliable with one or the other); onClick stays as the keyboard-activation
+        // path. open() itself ignores the duplicate calls from the same tap.
+        onTouchStart={() => open()}
         onPointerDown={() => open()}
         onClick={open}
         style={{ touchAction: "manipulation" }}
@@ -414,18 +421,20 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
                   </div>
                 </div>
 
-                {/* Hint when capping is active */}
-                {maxEnd !== "" && !!draftStart && !draftEnd && (
+                {/* Hint when capping is active — only when a genuine booked/blocked day
+                    was found nearby; the 366-day search always resolves to SOME date,
+                    so gate on cappedByRealBlock or this would show for every selection. */}
+                {cappedByRealBlock && !!draftStart && !draftEnd && (
                   <p className="text-[10px] text-center text-slate-400 px-5 pb-1 leading-relaxed">
                     {t("calCappedHint")}
                   </p>
                 )}
 
-                {/* Hint: depot closed in the weekend. Kept to ONE short line — the
-                    contextual notes in the price preview below explain the weekend
+                {/* Hint: depot closed in the weekend. Kept to ONE short, bold line —
+                    the contextual notes in the price preview below explain the weekend
                     package / Sunday block the moment they actually apply. */}
                 {machine.weekendRulesEnabled && (
-                  <p className="text-[10px] text-center text-slate-400 px-5 pb-1 leading-relaxed">
+                  <p className="text-[11px] text-center font-bold text-slate-600 px-5 pb-1 leading-relaxed">
                     Depot in het weekend gesloten — za/zo geen ophalen of retour.
                   </p>
                 )}

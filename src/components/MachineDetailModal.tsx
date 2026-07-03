@@ -315,12 +315,12 @@ export default function MachineDetailModal({
                   </div>
                 )}
                 {!!machine.weekendPrice && (
-                  <div className="flex items-center px-4 py-2.5 bg-amber-50">
-                    <div className="flex-1">
+                  <div className="flex items-start gap-3 px-4 py-2.5 bg-amber-50">
+                    <div className="flex-1 min-w-0">
                       <p className="text-xs font-bold text-amber-700">Weekend</p>
-                      <p className="text-[10px] text-amber-600">{machine.weekendRulesEnabled ? "Vrijdagmiddag ophalen t/m maandagochtend 08:00 uur retourneren" : "Za – Zo"}</p>
+                      <p className="text-[10px] text-amber-600 leading-snug">{machine.weekendRulesEnabled ? "Vrijdagmiddag ophalen t/m maandagochtend 08:00 uur retour" : "Za – Zo"}</p>
                     </div>
-                    <span className="font-mono font-extrabold text-sm text-amber-700">€{priceNum(vp(machine.weekendPrice))}</span>
+                    <span className="font-mono font-extrabold text-sm text-amber-700 shrink-0 whitespace-nowrap">€{priceNum(vp(machine.weekendPrice))}</span>
                   </div>
                 )}
                 {!!machine.monthlyPrice && (
@@ -342,13 +342,13 @@ export default function MachineDetailModal({
                   </div>
                 )}
                 {machine.weekendRulesEnabled && (
-                  <div className="px-4 py-3 bg-amber-50/60 space-y-0.5">
-                    <p className="text-[10px] text-amber-800 leading-snug flex items-start gap-1.5">
-                      <Info className="h-3.5 w-3.5 text-amber-600 shrink-0 mt-0.5" />
-                      <span><span className="font-bold">Weekend?</span> Depot za/zo gesloten — alleen het vaste weekendpakket.</span>
+                  <div className="px-4 py-3 bg-amber-100/70 space-y-1">
+                    <p className="text-xs font-bold text-amber-900 leading-snug flex items-start gap-1.5">
+                      <Info className="h-3.5 w-3.5 text-amber-700 shrink-0 mt-0.5" />
+                      <span>Weekend? Depot za/zo gesloten — alleen het vaste weekendpakket.</span>
                     </p>
                     {machine.sundayBlockFee ? (
-                      <p className="text-[10px] text-amber-800 leading-snug pl-5">
+                      <p className="text-xs font-bold text-amber-900 leading-snug pl-5">
                         Huur t/m zaterdag? +€{priceNum(vp(machine.sundayBlockFee))} zondagblokkade, retour ma 08:00.
                       </p>
                     ) : null}

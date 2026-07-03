@@ -624,7 +624,7 @@ export default function CatalogSection({
             if (m.fourDayPrice ?? m.weeklyPrice) rows.push({ period: "4 dagen", when: "Doordeweeks", price: (m.fourDayPrice ?? m.weeklyPrice)! });
             if (m.weeklyPrice) rows.push({ period: "5 dagen (werkweek)", when: "Ma – Vr", price: m.weeklyPrice, badge: d.weekly > 0 ? `−${d.weekly}%` : undefined, highlight: "green" });
             if (m.weeklyPrice) rows.push({ period: "Extra dag", when: "Vanaf dag 6, per dag", price: m.weeklyPrice / 5, priceText: `+ ${formatPrice(vp(m.weeklyPrice / 5))}` });
-            if (m.weekendPrice) rows.push({ period: "Weekend", when: "Vrijdagmiddag ophalen t/m maandagochtend 08:00 uur retourneren", price: m.weekendPrice, highlight: "violet" });
+            if (m.weekendPrice) rows.push({ period: "Weekend", when: "Vrijdagmiddag ophalen t/m maandagochtend 08:00 uur retour", price: m.weekendPrice, highlight: "violet" });
             if (m.monthlyPrice) rows.push({ period: "4 weken (28 dagen)", when: "Langlopend", price: m.monthlyPrice, badge: d.monthly > 0 ? `−${d.monthly}%` : undefined, highlight: "teal" });
           } else {
             // Legacy pricing display (non weekend-rules machines).
@@ -729,15 +729,15 @@ export default function CatalogSection({
                     <div className="px-5 py-6 text-center text-xs text-slate-400">Alleen dagprijs beschikbaar</div>
                   )}
                   {m.weekendRulesEnabled && (
-                    <div className="px-5 py-3 bg-amber-50/60">
+                    <div className="px-5 py-3 bg-amber-100/70">
                       <div className="flex items-start gap-2">
-                        <Info className="h-3.5 w-3.5 text-amber-600 shrink-0 mt-0.5" />
-                        <div className="space-y-0.5">
-                          <p className="text-[10px] text-amber-800 leading-snug">
-                            <span className="font-bold">Weekend?</span> Depot za/zo gesloten — alleen het vaste weekendpakket.
+                        <Info className="h-3.5 w-3.5 text-amber-700 shrink-0 mt-0.5" />
+                        <div className="space-y-1">
+                          <p className="text-xs font-bold text-amber-900 leading-snug">
+                            Weekend? Depot za/zo gesloten — alleen het vaste weekendpakket.
                           </p>
                           {m.sundayBlockFee ? (
-                            <p className="text-[10px] text-amber-800 leading-snug">
+                            <p className="text-xs font-bold text-amber-900 leading-snug">
                               Huur t/m zaterdag? +{formatPrice(vp(m.sundayBlockFee))} zondagblokkade, retour ma 08:00.
                             </p>
                           ) : null}

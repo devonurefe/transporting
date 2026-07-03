@@ -74,7 +74,7 @@ function SummaryRow({
   accent,
 }: {
   icon: React.ReactNode;
-  label: string;
+  label: React.ReactNode;
   value: string;
   accent?: "emerald" | "blue" | "amber";
 }) {
@@ -90,6 +90,18 @@ function SummaryRow({
       </div>
       <span className={`text-xs font-semibold text-right shrink-0 whitespace-nowrap leading-snug ${vCls}`}>{value}</span>
     </div>
+  );
+}
+
+/* Two-line label for the Sunday-block row: "Zondagblokkade" + a lighter
+   "(retour ma 08:00)" note on its own line, instead of one phrase that
+   wraps mid-word on narrow screens. */
+function SundayBlockLabel({ t }: { t: (key: string) => string }) {
+  return (
+    <span className="block">
+      <span>{t("priceSummarySundayBlock")}</span>
+      <span className="block text-[10px] opacity-75">{t("priceSummarySundayBlockNote")}</span>
+    </span>
   );
 }
 
@@ -280,7 +292,7 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
           {blockFee > 0 && (
             <SummaryRow
               icon={<Calendar className="h-3.5 w-3.5" />}
-              label={t("priceSummarySundayBlock")}
+              label={<SundayBlockLabel t={t} />}
               value={euro(blockFee)}
               accent="amber"
             />
@@ -346,7 +358,7 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
               )}
               {blockFee > 0 && (
                 <Row
-                  label={t("priceSummarySundayBlock")}
+                  label={<SundayBlockLabel t={t} />}
                   value={euro(blockFee)}
                   accent="amber"
                 />

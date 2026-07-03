@@ -342,14 +342,14 @@ export default function MachineDetailModal({
                   </div>
                 )}
                 {machine.weekendRulesEnabled && (
-                  <div className="px-4 py-3 bg-amber-50/60 space-y-1">
+                  <div className="px-4 py-3 bg-amber-50/60 space-y-0.5">
                     <p className="text-[10px] text-amber-800 leading-snug flex items-start gap-1.5">
                       <Info className="h-3.5 w-3.5 text-amber-600 shrink-0 mt-0.5" />
-                      <span><span className="font-bold">Weekend?</span> Ons depot is dan gesloten, dus de machine blijft het hele weekend bij u — daarom geldt alleen ons vaste weekendpakket (geen losse zaterdag of zondag).</span>
+                      <span><span className="font-bold">Weekend?</span> Depot za/zo gesloten — alleen het vaste weekendpakket.</span>
                     </p>
                     {machine.sundayBlockFee ? (
                       <p className="text-[10px] text-amber-800 leading-snug pl-5">
-                        Loopt de huur doordeweeks door t/m zaterdag? Dan komt er een zondagblokkade van €{priceNum(vp(machine.sundayBlockFee))} bij (retour maandag 08:00).
+                        Huur t/m zaterdag? +€{priceNum(vp(machine.sundayBlockFee))} zondagblokkade, retour ma 08:00.
                       </p>
                     ) : null}
                   </div>

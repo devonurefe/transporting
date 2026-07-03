@@ -510,7 +510,7 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
                 )}
               </p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 gap-4">
             <div className="space-y-1">
               <label className="text-xs text-slate-700 block font-bold">{t("1 Dag Actie €", "1 Day Promo €", "1 Gün Kampanya €")}</label>
               <input

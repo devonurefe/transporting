@@ -732,13 +732,13 @@ export default function CatalogSection({
                     <div className="px-5 py-3 bg-amber-50/60">
                       <div className="flex items-start gap-2">
                         <Info className="h-3.5 w-3.5 text-amber-600 shrink-0 mt-0.5" />
-                        <div className="space-y-1">
+                        <div className="space-y-0.5">
                           <p className="text-[10px] text-amber-800 leading-snug">
-                            <span className="font-bold">Weekend?</span> In het weekend is ons depot gesloten, dus de machine blijft het hele weekend bij u — daarom geldt alleen ons vaste weekendpakket (geen losse zaterdag of zondag).
+                            <span className="font-bold">Weekend?</span> Depot za/zo gesloten — alleen het vaste weekendpakket.
                           </p>
                           {m.sundayBlockFee ? (
                             <p className="text-[10px] text-amber-800 leading-snug">
-                              Loopt uw huur doordeweeks door t/m zaterdag? Dan komt er automatisch een zondagblokkade van {formatPrice(vp(m.sundayBlockFee))} bij (retour maandagochtend 08:00).
+                              Huur t/m zaterdag? +{formatPrice(vp(m.sundayBlockFee))} zondagblokkade, retour ma 08:00.
                             </p>
                           ) : null}
                         </div>

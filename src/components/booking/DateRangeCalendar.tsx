@@ -82,6 +82,7 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
   const openedAtRef = useRef(0);
 
   const open = () => {
+    if (isOpen) return; // pointerdown + click both fire on the trigger — open once
     setDraftStart(startDate);
     setDraftEnd(endDate);
     const m = startDate || today;
@@ -287,6 +288,11 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
       <button
         ref={triggerRef}
         type="button"
+        // Open on pointerdown so the dialog appears on the FIRST touch, before iOS
+        // Safari's synthesized click (which can get swallowed by scroll/ghost-click
+        // heuristics and read as "I had to tap twice"). onClick stays as the
+        // keyboard-activation path; open() itself ignores the duplicate call.
+        onPointerDown={() => open()}
         onClick={open}
         style={{ touchAction: "manipulation" }}
         className={`w-full flex items-center gap-2.5 bg-white rounded-xl px-3 py-2.5 border transition-colors shadow-sm cursor-pointer text-left ${
@@ -320,6 +326,15 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
             <motion.div
               ref={dialogRef}
               onClick={(e) => e.stopPropagation()}
+              // The trigger opens on pointerdown; the same tap's click event then
+              // lands on whatever now sits at those coordinates — this dialog. Swallow
+              // any click in the first 500 ms so it can't select a random day.
+              onClickCapture={(e) => {
+                if (Date.now() - openedAtRef.current < 500) {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }
+              }}
               role="dialog"
               aria-modal="true"
               aria-label={`${t("calTitle")} — ${machine.name}`}
@@ -406,10 +421,12 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
                   </p>
                 )}
 
-                {/* Hint: depot closed in the weekend — Sunday return not possible */}
+                {/* Hint: depot closed in the weekend. Kept to ONE short line — the
+                    contextual notes in the price preview below explain the weekend
+                    package / Sunday block the moment they actually apply. */}
                 {machine.weekendRulesEnabled && (
                   <p className="text-[10px] text-center text-slate-400 px-5 pb-1 leading-relaxed">
-                    Ons depot is in het weekend gesloten. Los weekend? Kies het vaste weekendpakket (za/zo). Loopt de huur t/m zaterdag door, dan blijft de machine het weekend bij u (retour maandag 08:00).
+                    Depot in het weekend gesloten — za/zo geen ophalen of retour.
                   </p>
                 )}
 
@@ -444,10 +461,10 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
                     <span className="text-sm font-black font-mono text-slate-900">{euro(withVat(subtotal, vatDisplay))} <span className="text-[10px] font-normal text-slate-400">{vatDisplay === "incl" ? "incl. btw" : "excl. btw"}</span></span>
                   </div>
                   {previewIsPackage && (
-                    <p className="text-[10px] text-amber-700 leading-snug">Vrijdagmiddag ophalen t/m maandagochtend 08:00 uur retour.</p>
+                    <p className="text-[10px] text-amber-700 leading-snug">Ophalen vrijdag vanaf 13:00 · retour maandag 08:00. Vrijdagochtend al nodig? Kies alleen vr + za.</p>
                   )}
                   {previewHasBlock && (
-                    <p className="text-[10px] text-amber-700 leading-snug">Incl. zondagblokkade (€{machine.sundayBlockFee}) — depot gesloten, retour maandag 08:00.</p>
+                    <p className="text-[10px] text-amber-700 leading-snug">Incl. zondagblokkade €{machine.sundayBlockFee} · retour maandag 08:00.</p>
                   )}
                 </div>
               )}

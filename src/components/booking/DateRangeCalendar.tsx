@@ -249,12 +249,22 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
   // Weekend rules feedback for the live preview.
   const previewIsPackage = validRange && isWeekendPackage(machine, draftStart, days);
   const previewHasBlock = validRange && hasSundayBlock(machine, draftStart, days);
+  const draftStartDow = draftStart ? new Date(draftStart).getUTCDay() : -1;
+  const previewEndDow = validRange ? new Date(effectiveEnd).getUTCDay() : -1;
+  // The rental's last day lands on the closed weekend (Sat or Sun) — the depot can
+  // never physically process a return then, so the real return always happens
+  // Monday, regardless of whether that's a package, a block fee, or just a
+  // deliberately-chosen Sunday end.
+  const endsWeekendClosed = validRange && !!machine.weekendRulesEnabled && (previewEndDow === 6 || previewEndDow === 0);
   // Friday start that runs into the closed weekend (Sat and/or Sun end) — the
   // depot hands the machine over Friday afternoon regardless of which weekend
   // day the rental ends on, so this note is independent of the block fee above.
-  const draftStartDow = draftStart ? new Date(draftStart).getUTCDay() : -1;
-  const previewEndDow = validRange ? new Date(effectiveEnd).getUTCDay() : -1;
-  const fridayIntoWeekend = validRange && machine.weekendRulesEnabled && draftStartDow === 5 && (previewEndDow === 6 || previewEndDow === 0);
+  const fridayIntoWeekend = validRange && machine.weekendRulesEnabled && draftStartDow === 5 && endsWeekendClosed;
+  // Sat/Sun can never be a literal pickup day either (depot closed) — whenever the
+  // rental "starts" on Sat or Sun, for ANY length, the machine is always physically
+  // handed over the preceding Friday afternoon instead.
+  const startsWeekendClosed = validRange && !!machine.weekendRulesEnabled && (draftStartDow === 6 || draftStartDow === 0);
+  const showPickupFridayNote = fridayIntoWeekend || startsWeekendClosed;
 
   const confirm = () => { if (!validRange) return; onConfirm(draftStart, effectiveEnd); close(); };
   const reset = () => { setDraftStart(""); setDraftEnd(""); };
@@ -468,8 +478,10 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
                   {previewHasBlock && (
                     <p className="text-[10px] text-amber-700 leading-snug">Incl. zondagblokkade €{machine.sundayBlockFee} · retour maandag 08:00.</p>
                   )}
-                  {fridayIntoWeekend && (
-                    <p className="text-[10px] text-amber-700 leading-snug">Ophalen vrijdag vanaf 13:00 · retour maandag 08:00.</p>
+                  {showPickupFridayNote && (
+                    <p className="text-[10px] text-amber-700 leading-snug">
+                      Ophalen vrijdag vanaf 13:00{endsWeekendClosed ? " · retour maandag 08:00." : "."}
+                    </p>
                   )}
                 </div>
               )}

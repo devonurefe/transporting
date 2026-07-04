@@ -72,6 +72,11 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
   const [loading, setLoading] = useState(false);
   const [draftStart, setDraftStart] = useState(startDate);
   const [draftEnd, setDraftEnd] = useState(endDate);
+  // Explicit opt-in for the Friday weekend package. Without this, Sunday is never
+  // a selectable end day for a Friday start — this is what stops a customer from
+  // tapping one extra day (Sat → Sun) and having the price silently DROP (workday
+  // tier + Sunday block → flat weekend package). Reset whenever the start changes.
+  const [wantsWeekendPackage, setWantsWeekendPackage] = useState(false);
 
   const initMonth = startDate || today;
   const [viewYear, setViewYear] = useState(Number(initMonth.split("-")[0]));
@@ -85,6 +90,7 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
     if (isOpen) return; // pointerdown + click both fire on the trigger — open once
     setDraftStart(startDate);
     setDraftEnd(endDate);
+    setWantsWeekendPackage(false);
     const m = startDate || today;
     setViewYear(Number(m.split("-")[0]));
     setViewMonth(Number(m.split("-")[1]) - 1);
@@ -195,8 +201,13 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
       let selectable = status === "available" && !isCapped;
       // Depot closed Sat+Sun (weekendRulesEnabled): restrict the END day so a normal
       // work rental never returns on a weekend. When picking the end:
-      //  - weekday start (Mon–Fri): end may be Mon–Sat (a Saturday end auto-adds the
-      //    Sunday block, return Monday). A Sunday end is only the Fri+Sat+Sun package.
+      //  - weekday start (Mon–Thu): end may be that weekday–Sat (Saturday end
+      //    auto-adds the Sunday block, return Monday). Sunday is never an end.
+      //  - Friday start: end may be Sat (workday tier + auto block) freely, but
+      //    Sunday (the Fri+Sat+Sun weekend package) is ONLY selectable once the
+      //    customer has explicitly opted in via the toggle below — otherwise
+      //    tapping one extra day would silently DROP the price (workday+block →
+      //    flat package), which is exactly the confusing behaviour reported.
       //  - Saturday start: only Sat+Sun (end Sunday) is a valid weekend package.
       //  - Sunday start: single day only.
       // Start days stay open — a Sat/Sun start can only become a weekend package.
@@ -208,7 +219,7 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
           const span = calculateRentalDays(draftStart, key);
           let ok = true;
           if (startDow >= 1 && startDow <= 5) {
-            ok = dow === 0 ? (startDow === 5 && span === 3) : true;
+            ok = dow === 0 ? (startDow === 5 && span === 3 && wantsWeekendPackage) : true;
           } else if (startDow === 6) {
             ok = dow === 0 && span === 2;
           } else {
@@ -229,23 +240,37 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
     }
     while (cells.length % 7 !== 0) cells.push(null);
     return cells;
-  }, [viewYear, viewMonth, orders, blockedDates, draftStart, draftEnd, maxEnd, unitKey, today, machine.weekendRulesEnabled]);
+  }, [viewYear, viewMonth, orders, blockedDates, draftStart, draftEnd, maxEnd, unitKey, today, machine.weekendRulesEnabled, wantsWeekendPackage]);
 
   const onDayClick = (key: string, selectable: boolean) => {
     if (!selectable) return;
     // Both dates set: any click starts a fresh single-day selection
     if (draftStart && draftEnd) {
       setDraftStart(key);
+      setWantsWeekendPackage(false);
       setDraftEnd("");
       return;
     }
     // No start yet: first click → set start (1-day immediately valid via effectiveEnd)
-    if (!draftStart) { setDraftStart(key); return; }
+    if (!draftStart) { setDraftStart(key); setWantsWeekendPackage(false); return; }
     // Start set, no end: re-clicking the start day deselects; clicking elsewhere sets end
-    if (key === draftStart) { setDraftStart(""); return; }
-    if (key < draftStart) { setDraftStart(key); return; }
+    if (key === draftStart) { setDraftStart(""); setWantsWeekendPackage(false); return; }
+    if (key < draftStart) { setDraftStart(key); setWantsWeekendPackage(false); return; }
     // key > draftStart: set as end
     if (someUnitAvailable(unitIds, draftStart, key, orders, blockedDates, today)) setDraftEnd(key);
+  };
+
+  // Explicit Friday-mode switch: choosing the package auto-completes the fixed
+  // Fri+Sat+Sun selection (no need to hunt for the now-unlocked Sunday cell);
+  // switching back to "full workday" clears an end that's no longer valid.
+  const selectFridayMode = (pkg: boolean) => {
+    setWantsWeekendPackage(pkg);
+    if (!draftStart) return;
+    if (pkg) {
+      setDraftEnd(addDaysKey(draftStart, 2));
+    } else if (draftEnd && new Date(draftEnd).getUTCDay() === 0) {
+      setDraftEnd("");
+    }
   };
 
   const canPrev = !(viewYear === todayYear && viewMonth === todayMonth);
@@ -271,7 +296,8 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
   const previewHasBlock = validRange && hasSundayBlock(machine, draftStart, days);
 
   const confirm = () => { if (!validRange) return; onConfirm(draftStart, effectiveEnd); close(); };
-  const reset = () => { setDraftStart(""); setDraftEnd(""); };
+  const reset = () => { setDraftStart(""); setDraftEnd(""); setWantsWeekendPackage(false); };
+  const draftStartIsFriday = !!draftStart && new Date(draftStart).getUTCDay() === 5;
 
   const committedDays = startDate && endDate ? displayRentalDays(machine, startDate, calculateRentalDays(startDate, endDate)) : 0;
   const buttonLabel = startDate && endDate
@@ -381,14 +407,14 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
                   </button>
                 </div>
 
-                {/* Grid */}
-                <div className="px-4 pt-2 pb-1" aria-busy={loading}>
-                  <div className="grid grid-cols-7 gap-1 mb-1">
+                {/* Grid — extra bottom margin separates it clearly from everything below */}
+                <div className="px-4 pt-3 pb-2 mb-2" aria-busy={loading}>
+                  <div className="grid grid-cols-7 gap-1.5 mb-1.5">
                     {DOW_NL.map((d) => (
                       <div key={d} className="text-center text-[10px] font-black text-slate-400 py-1 select-none">{d}</div>
                     ))}
                   </div>
-                  <div className="grid grid-cols-7 gap-1">
+                  <div className="grid grid-cols-7 gap-1.5">
                     {grid.map((cell, i) => {
                       if (!cell) return <div key={`e-${i}`} />;
                       const { key, day, status, selectable, isStart, isEnd, inRange } = cell;
@@ -421,39 +447,82 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
                   </div>
                 </div>
 
-                {/* Hint when capping is active — only when a genuine booked/blocked day
-                    was found nearby; the 366-day search always resolves to SOME date,
-                    so gate on cappedByRealBlock or this would show for every selection. */}
-                {cappedByRealBlock && !!draftStart && !draftEnd && (
-                  <p className="text-[10px] text-center text-slate-400 px-5 pb-1 leading-relaxed">
-                    {t("calCappedHint")}
-                  </p>
+                {/* Friday weekend-package switch — own bordered card so it reads as a
+                    distinct, tappable decision rather than more calendar text. Shown as
+                    soon as Friday is the draft start; picking "Alleen ophalen" instantly
+                    completes the Fri+Sat+Sun selection, picking "Hele werkdag" keeps
+                    Sunday locked so the price can never silently drop by one extra tap. */}
+                {machine.weekendRulesEnabled && draftStartIsFriday && (
+                  <div className="mx-4 mb-3 rounded-2xl border border-amber-200 bg-amber-50 p-3.5">
+                    <p className="text-xs font-bold text-amber-900 mb-2">Vrijdag: hoe gebruikt u de machine?</p>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        aria-pressed={!wantsWeekendPackage}
+                        onClick={() => selectFridayMode(false)}
+                        className={`flex-1 rounded-xl px-2.5 py-2.5 text-[11px] font-bold border transition-colors cursor-pointer ${
+                          !wantsWeekendPackage ? "bg-amber-500 text-white border-amber-500 shadow-sm" : "bg-white text-amber-800 border-amber-200 hover:border-amber-300"
+                        }`}
+                      >
+                        Hele werkdag
+                      </button>
+                      <button
+                        type="button"
+                        aria-pressed={wantsWeekendPackage}
+                        onClick={() => selectFridayMode(true)}
+                        className={`flex-1 rounded-xl px-2.5 py-2.5 text-[11px] font-bold border transition-colors cursor-pointer ${
+                          wantsWeekendPackage ? "bg-amber-500 text-white border-amber-500 shadow-sm" : "bg-white text-amber-800 border-amber-200 hover:border-amber-300"
+                        }`}
+                      >
+                        Alleen ophalen (weekendpakket)
+                      </button>
+                    </div>
+                    <p className="text-[10px] text-amber-700 mt-2 leading-snug">
+                      {wantsWeekendPackage
+                        ? "Vast weekendpakket: vrijdagmiddag ophalen, maandag 08:00 retour."
+                        : "Vrijdag telt als volledige werkdag — kies zaterdag (of later) als retourdatum."}
+                    </p>
+                  </div>
                 )}
 
-                {/* Hint: depot closed in the weekend. Kept to ONE short, bold line —
-                    the contextual notes in the price preview below explain the weekend
-                    package / Sunday block the moment they actually apply. */}
-                {machine.weekendRulesEnabled && (
-                  <p className="text-[11px] text-center font-bold text-slate-600 px-5 pb-1 leading-relaxed">
-                    Depot in het weekend gesloten — za/zo geen ophalen of retour.
-                  </p>
-                )}
+                {/* Hints group — spaced apart from both the grid above and the legend
+                    below so this reads as its own block, not squeezed against either. */}
+                <div className="px-5 pb-2 space-y-1.5">
+                  {/* Hint when capping is active — only when a genuine booked/blocked day
+                      was found nearby; the 366-day search always resolves to SOME date,
+                      so gate on cappedByRealBlock or this would show for every selection. */}
+                  {cappedByRealBlock && !!draftStart && !draftEnd && (
+                    <p className="text-[10px] text-center text-slate-400 leading-relaxed">
+                      {t("calCappedHint")}
+                    </p>
+                  )}
 
-                {/* Hint: minimum rental period not yet reached */}
-                {minDays > 1 && rangeAvail && days < minDays && (
-                  <p className="text-[10px] text-center text-amber-600 font-semibold px-5 pb-1 leading-relaxed">
-                    Minimale huurperiode is {minDays} dagen — selecteer een langere periode.
-                  </p>
-                )}
-                {/* Static minimum period note */}
-                {minDays > 1 && !(rangeAvail && days < minDays) && (
-                  <p className="text-[10px] text-center text-slate-400 px-5 pb-1 leading-relaxed">
-                    Minimale huurperiode: {minDays} dagen.
-                  </p>
-                )}
+                  {/* Hint: depot closed in the weekend. Kept to ONE short, bold line —
+                      the contextual notes in the price preview below explain the weekend
+                      package / Sunday block the moment they actually apply. */}
+                  {machine.weekendRulesEnabled && (
+                    <p className="text-[11px] text-center font-bold text-slate-600 leading-relaxed">
+                      Depot in het weekend gesloten — za/zo geen ophalen of retour.
+                    </p>
+                  )}
 
-                {/* Legend */}
-                <div className="flex items-center justify-center gap-3 px-4 py-2 text-xs text-slate-500 font-semibold">
+                  {/* Hint: minimum rental period not yet reached */}
+                  {minDays > 1 && rangeAvail && days < minDays && (
+                    <p className="text-[10px] text-center text-amber-600 font-semibold leading-relaxed">
+                      Minimale huurperiode is {minDays} dagen — selecteer een langere periode.
+                    </p>
+                  )}
+                  {/* Static minimum period note */}
+                  {minDays > 1 && !(rangeAvail && days < minDays) && (
+                    <p className="text-[10px] text-center text-slate-400 leading-relaxed">
+                      Minimale huurperiode: {minDays} dagen.
+                    </p>
+                  )}
+                </div>
+
+                {/* Legend — separated with a top border so it reads as a distinct
+                    footer note, not squeezed against the hints above. */}
+                <div className="flex items-center justify-center gap-3 px-4 py-2.5 mt-1 border-t border-slate-100 text-xs text-slate-500 font-semibold">
                   <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-emerald-200 border border-emerald-400" />{t("calLegendAvailable")}</span>
                   <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-amber-400" />{t("calLegendSelected")}</span>
                   <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-rose-300" />{t("calLegendUnavailable")}</span>
@@ -462,7 +531,7 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
 
               {/* Price preview — outside scroll, always visible above footer */}
               {validRange && (
-                <div className="mx-4 mb-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 space-y-1">
+                <div className="mx-4 mb-3 bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-3 space-y-1.5">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-slate-800">
                       {previewIsPackage ? "Weekendpakket" : `${displayDays} ${displayDays === 1 ? "dag" : "dagen"}`}
@@ -470,7 +539,7 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
                     <span className="text-sm font-black font-mono text-slate-900">{euro(withVat(subtotal, vatDisplay))} <span className="text-[10px] font-normal text-slate-400">{vatDisplay === "incl" ? "incl. btw" : "excl. btw"}</span></span>
                   </div>
                   {previewIsPackage && (
-                    <p className="text-[10px] text-amber-700 leading-snug">Ophalen vrijdag vanaf 13:00 · retour maandag 08:00. Vrijdagochtend al nodig? Kies alleen vr + za.</p>
+                    <p className="text-[10px] text-amber-700 leading-snug">Ophalen vrijdag vanaf 13:00 · retour maandag 08:00.</p>
                   )}
                   {previewHasBlock && (
                     <p className="text-[10px] text-amber-700 leading-snug">Incl. zondagblokkade €{machine.sundayBlockFee} · retour maandag 08:00.</p>

@@ -282,25 +282,25 @@ export default function Footer({ siteName, setActiveTab, setShowContactModal }: 
                   <span className="text-slate-500 text-[11px]">{t("footerClosed")}</span>
                 </div>
               </div>
-              <a
-                href="https://www.google.com/maps/search/?api=1&query=Produktieweg+20%2C+2382+PB+Zoeterwoude"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group flex items-center gap-3 no-underline"
-              >
-                <span className="h-14 w-14 rounded-lg overflow-hidden shrink-0 ring-1 ring-slate-700 group-hover:ring-orange-500/60 transition-all bg-slate-800">
+              <div className="flex items-center gap-3">
+                <span className="h-20 w-20 rounded-lg overflow-hidden shrink-0 ring-1 ring-slate-700 bg-slate-800">
                   <iframe
-                    src="https://maps.google.com/maps?q=Produktieweg+20,+2382+PB+Zoeterwoude&z=15&output=embed"
-                    className="h-full w-full pointer-events-none border-0"
+                    src="https://www.google.com/maps?q=Produktieweg+20,+2382+PB+Zoeterwoude&z=15&output=embed"
+                    className="h-full w-full border-0"
                     loading="lazy"
                     title="HuurGo locatie kaart"
                   />
                 </span>
-                <div className="leading-snug">
+                <a
+                  href="https://www.google.com/maps/search/?api=1&query=Produktieweg+20%2C+2382+PB+Zoeterwoude"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group leading-snug no-underline"
+                >
                   <span className="font-semibold text-slate-200 block group-hover:text-white transition-colors">Zoeterwoude (HQ)</span>
-                  <span className="text-slate-500 text-[11px]">Produktieweg 20, 2382 PB</span>
-                </div>
-              </a>
+                  <span className="text-slate-500 text-[11px] group-hover:text-slate-400 transition-colors">Produktieweg 20, 2382 PB</span>
+                </a>
+              </div>
             </div>
           </div>
 

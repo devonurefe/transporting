@@ -15,6 +15,7 @@ import { withVat, priceNum } from "../utils/format";
 import { useLanguageStore } from "../store/languageStore";
 import { useModalA11y } from "../hooks/useModalA11y";
 import VatToggle from "./VatToggle";
+import { CardBrandWatermark } from "./Header";
 
 type CategoryInfoEntry = {
   id: string;
@@ -185,6 +186,7 @@ export default function MachineDetailModal({
           {/* A — Images */}
           <div className="space-y-2">
             <div className="aspect-video w-full rounded-2xl overflow-hidden bg-white border border-slate-200 shadow-sm relative group">
+              <CardBrandWatermark size="lg" />
               <AnimatePresence mode="wait">
                 <motion.img
                   key={activeImageIndex}

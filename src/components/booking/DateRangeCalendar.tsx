@@ -85,6 +85,7 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
   const triggerRef = useRef<HTMLButtonElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   const openedAtRef = useRef(0);
+  const fridayBoxRef = useRef<HTMLDivElement>(null);
 
   const open = () => {
     if (isOpen) return; // pointerdown + click both fire on the trigger — open once
@@ -143,6 +144,19 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
+
+  // Auto-scroll the Friday weekend-package box into view whenever it appears or
+  // its selection changes. On a short device viewport the scrollable area can be
+  // too short to show the grid + this box + the price preview all at once — without
+  // this, the box can end up clipped at the bottom edge, reading as if the price
+  // preview below it were overlapping it.
+  useEffect(() => {
+    if (!draftStart || new Date(draftStart).getUTCDay() !== 5) return;
+    const id = requestAnimationFrame(() => {
+      fridayBoxRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    });
+    return () => cancelAnimationFrame(id);
+  }, [draftStart, wantsWeekendPackage]);
 
   // Escape closes; basic focus management + Tab trap within the dialog
   useEffect(() => {
@@ -339,7 +353,7 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
 
       <AnimatePresence>
         {isOpen && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -371,11 +385,15 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
               role="dialog"
               aria-modal="true"
               aria-label={`${t("calTitle")} — ${machine.name}`}
-              initial={{ opacity: 0, scale: 0.96, y: 12 }}
+              initial={{ opacity: 0, scale: 0.98, y: 12 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.96, y: 12 }}
+              exit={{ opacity: 0, scale: 0.98, y: 12 }}
               transition={{ type: "spring", stiffness: 360, damping: 28 }}
-              className="relative z-[60] w-full max-w-sm bg-white rounded-3xl shadow-2xl border border-slate-200 flex flex-col max-h-[90dvh] overflow-hidden"
+              // Full-height edge-to-edge sheet on mobile (matches the pricing-table
+              // popup pattern) — maximises vertical room so the grid, the Friday
+              // toggle and the confirm button fit without needing to scroll on a
+              // typical phone. Reverts to a centered card on wider screens.
+              className="relative z-[60] w-full h-[92dvh] sm:h-auto sm:max-w-sm bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-200 flex flex-col sm:max-h-[85vh] overflow-hidden"
             >
               {/* Header */}
               <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
@@ -391,7 +409,7 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
               {/* Scrollable body: month nav + grid + legend */}
               <div className="flex-1 min-h-0 overflow-y-auto">
                 {/* Month navigation */}
-                <div className="flex items-center justify-between px-4 pt-3">
+                <div className="flex items-center justify-between px-4 pt-2">
                   <button
                     type="button"
                     onClick={goPrev}
@@ -407,8 +425,8 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
                   </button>
                 </div>
 
-                {/* Grid — extra bottom margin separates it clearly from everything below */}
-                <div className="px-4 pt-3 pb-2 mb-2" aria-busy={loading}>
+                {/* Grid */}
+                <div className="px-4 pt-2 pb-1 mb-1.5" aria-busy={loading}>
                   <div className="grid grid-cols-7 gap-1.5 mb-1.5">
                     {DOW_NL.map((d) => (
                       <div key={d} className="text-center text-[10px] font-black text-slate-400 py-1 select-none">{d}</div>
@@ -453,14 +471,14 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
                     completes the Fri+Sat+Sun selection, picking "Hele werkdag" keeps
                     Sunday locked so the price can never silently drop by one extra tap. */}
                 {machine.weekendRulesEnabled && draftStartIsFriday && (
-                  <div className="mx-4 mb-3 rounded-2xl border border-amber-200 bg-amber-50 p-3.5">
-                    <p className="text-xs font-bold text-amber-900 mb-2">Vrijdag: hoe gebruikt u de machine?</p>
-                    <div className="flex gap-2">
+                  <div ref={fridayBoxRef} className="mx-4 mb-2.5 rounded-2xl border border-amber-200 bg-amber-50 p-2.5">
+                    <p className="text-[11px] font-bold text-amber-900 mb-1.5">Vrijdag: hoe gebruikt u de machine?</p>
+                    <div className="flex gap-1.5">
                       <button
                         type="button"
                         aria-pressed={!wantsWeekendPackage}
                         onClick={() => selectFridayMode(false)}
-                        className={`flex-1 rounded-xl px-2.5 py-2.5 text-[11px] font-bold border transition-colors cursor-pointer ${
+                        className={`flex-1 rounded-xl px-2 py-2 text-[11px] font-bold border transition-colors cursor-pointer ${
                           !wantsWeekendPackage ? "bg-amber-500 text-white border-amber-500 shadow-sm" : "bg-white text-amber-800 border-amber-200 hover:border-amber-300"
                         }`}
                       >
@@ -470,24 +488,24 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
                         type="button"
                         aria-pressed={wantsWeekendPackage}
                         onClick={() => selectFridayMode(true)}
-                        className={`flex-1 rounded-xl px-2.5 py-2.5 text-[11px] font-bold border transition-colors cursor-pointer ${
+                        className={`flex-1 rounded-xl px-2 py-2 text-[11px] font-bold border transition-colors cursor-pointer ${
                           wantsWeekendPackage ? "bg-amber-500 text-white border-amber-500 shadow-sm" : "bg-white text-amber-800 border-amber-200 hover:border-amber-300"
                         }`}
                       >
-                        Alleen ophalen (weekendpakket)
+                        Weekendpakket
                       </button>
                     </div>
-                    <p className="text-[10px] text-amber-700 mt-2 leading-snug">
+                    <p className="text-[10px] text-amber-700 mt-1.5 leading-snug">
                       {wantsWeekendPackage
-                        ? "Vast weekendpakket: vrijdagmiddag ophalen, maandag 08:00 retour."
-                        : "Vrijdag telt als volledige werkdag — kies zaterdag (of later) als retourdatum."}
+                        ? "Vrijdagmiddag ophalen, maandag 08:00 retour."
+                        : "Kies zaterdag (of later) als retourdatum."}
                     </p>
                   </div>
                 )}
 
                 {/* Hints group — spaced apart from both the grid above and the legend
                     below so this reads as its own block, not squeezed against either. */}
-                <div className="px-5 pb-2 space-y-1.5">
+                <div className="px-5 pb-1.5 space-y-1">
                   {/* Hint when capping is active — only when a genuine booked/blocked day
                       was found nearby; the 366-day search always resolves to SOME date,
                       so gate on cappedByRealBlock or this would show for every selection. */}
@@ -497,10 +515,10 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
                     </p>
                   )}
 
-                  {/* Hint: depot closed in the weekend. Kept to ONE short, bold line —
-                      the contextual notes in the price preview below explain the weekend
-                      package / Sunday block the moment they actually apply. */}
-                  {machine.weekendRulesEnabled && (
+                  {/* Hint: depot closed in the weekend. Suppressed while the Friday
+                      toggle card is showing (its own helper text already covers this),
+                      so the two don't repeat the same message back to back. */}
+                  {machine.weekendRulesEnabled && !draftStartIsFriday && (
                     <p className="text-[11px] text-center font-bold text-slate-600 leading-relaxed">
                       Depot in het weekend gesloten — za/zo geen ophalen of retour.
                     </p>
@@ -522,7 +540,7 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
 
                 {/* Legend — separated with a top border so it reads as a distinct
                     footer note, not squeezed against the hints above. */}
-                <div className="flex items-center justify-center gap-3 px-4 py-2.5 mt-1 border-t border-slate-100 text-xs text-slate-500 font-semibold">
+                <div className="flex items-center justify-center gap-3 px-4 py-1.5 mt-0.5 border-t border-slate-100 text-[11px] text-slate-500 font-semibold">
                   <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-emerald-200 border border-emerald-400" />{t("calLegendAvailable")}</span>
                   <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-amber-400" />{t("calLegendSelected")}</span>
                   <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-rose-300" />{t("calLegendUnavailable")}</span>
@@ -531,7 +549,7 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
 
               {/* Price preview — outside scroll, always visible above footer */}
               {validRange && (
-                <div className="mx-4 mb-3 bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-3 space-y-1.5">
+                <div className="mx-4 mb-2 bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 space-y-1">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-slate-800">
                       {previewIsPackage ? "Weekendpakket" : `${displayDays} ${displayDays === 1 ? "dag" : "dagen"}`}

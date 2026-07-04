@@ -525,7 +525,7 @@ export default function CatalogSection({
                                 <Tag className={`h-3 w-3 shrink-0 ${hasAnyDiscount ? "text-white/90" : "text-slate-400"}`} />
                                 <span className="truncate">Alle tarieven &amp; kortingen</span>
                                 {badgeLabel && (
-                                  <span className="shrink-0 bg-white text-orange-600 text-[9px] font-black px-1.5 py-0.5 rounded leading-none whitespace-nowrap shadow-sm">
+                                  <span className="shrink-0 ml-2 bg-white text-slate-900 text-[10.5px] font-black px-2 py-0.5 rounded leading-none whitespace-nowrap shadow-sm">
                                     {badgeLabel}
                                   </span>
                                 )}

@@ -73,12 +73,17 @@ export function HuurGoText({ dark = false }: { dark?: boolean }) {
 /**
  * Small brand watermark pinned to the corner of product/category photo tiles,
  * so every machine card carries the original logo mark without crowding the
- * photo. Own white pill keeps it legible over any product photo.
+ * photo. Own white pill keeps it legible over any product photo. Pass
+ * size="lg" on larger photo surfaces (e.g. the detail modal hero image).
  */
-export function CardBrandWatermark() {
+export function CardBrandWatermark({ size = "sm" }: { size?: "sm" | "lg" }) {
   return (
-    <div className="absolute top-2 right-2 z-10 pointer-events-none bg-white/90 backdrop-blur-sm rounded-md px-1.5 py-1 shadow-sm ring-1 ring-black/5">
-      <span className="text-[11px] leading-none">
+    <div
+      className={`absolute z-10 pointer-events-none bg-white/90 backdrop-blur-sm rounded-md shadow-sm ring-1 ring-black/5 ${
+        size === "lg" ? "top-3 right-3 px-2.5 py-1.5" : "top-2 right-2 px-2 py-1.5"
+      }`}
+    >
+      <span className={`leading-none ${size === "lg" ? "text-sm" : "text-xs"}`}>
         <HuurGoText />
       </span>
     </div>

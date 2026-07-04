@@ -406,15 +406,21 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
     };
 
     // Weekend rules (depot closed Sat+Sun) — mirrors src/utils/pricing.ts
-    // hasSundayBlock. Every combination is priced by the normal day-count tier;
-    // the only surcharge is the forced Sunday block below. getUTCDay(): 0=Sun, 6=Sat.
+    // isWeekendPackage / hasSundayBlock. getUTCDay(): 0=Sun, 6=Sat.
     const endDow = (() => {
       const e = new Date(startDate);
       e.setUTCHours(0, 0, 0, 0);
       e.setUTCDate(e.getUTCDate() + (rentalDays - 1));
       return e.getUTCDay();
     })();
-    const hasSundayBlock = !!(m.weekendRulesEnabled && m.sundayBlockFee && endDow === 6);
+    // Weekend package: only a rental that stays entirely within the closed
+    // weekend (single Sat, single Sun, or Sat+Sun) — never a Friday start, and
+    // never a longer rental that merely starts on Sat/Sun and extends past it.
+    const isWeekendPackage = !!(m.weekendRulesEnabled && m.weekendPrice && (
+      (rentalDays === 1 && (dow === 6 || dow === 0)) ||  // single Sat or single Sun
+      (rentalDays === 2 && dow === 6 && endDow === 0)     // Sat + Sun
+    ));
+    const hasSundayBlock = !!(m.weekendRulesEnabled && m.sundayBlockFee && !isWeekendPackage && endDow === 6);
 
     if (m.weeklyOnly && m.weeklyPrice) {
       // Weekly-only billing — minimum 1 week, charged per started week.
@@ -422,6 +428,9 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
       const min = m.minRentalDays > 0 ? m.minRentalDays : 7;
       const weeks = Math.max(1, Math.ceil(Math.max(rentalDays, min) / 7));
       serverSubtotal = withCampaign(weeks * m.weeklyPrice);
+    } else if (isWeekendPackage) {
+      // Flat weekend package. No Sunday block.
+      serverSubtotal = withCampaign(m.weekendPrice);
     } else if (tierPrice(rentalDays) !== null) {
       serverSubtotal = withCampaign(tierPrice(rentalDays) as number);
     } else {

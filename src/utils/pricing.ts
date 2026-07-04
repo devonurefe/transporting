@@ -62,11 +62,29 @@ function rangeEndDow(startDate: string | Date, days: number): number {
 
 // Weekend rules (depot closed Sat+Sun). Only apply to machines with
 // weekendRulesEnabled — scaffolding and campaign products (Nifty 120/170) opt out.
-// Every combination is priced by the normal day-count tier — there is no flat
-// weekend package. The only surcharge is the forced Sunday block below.
+//
+// A "weekend package" (weekendPrice, e.g. €69) is the fixed flat rate for a rental
+// that stays entirely within the closed weekend: single Saturday, single Sunday,
+// or Sat+Sun together. It does NOT apply to a Friday start (Fri+Sat, Fri+Sat+Sun,
+// etc.) or to any longer rental that starts on Sat/Sun but extends past the
+// weekend — those are always priced by the normal day-count tier instead.
+// Mirrored by server/routes/orders.ts — keep identical.
+export function isWeekendPackage(machine: Machine, startDate: string | Date | undefined, days: number): boolean {
+  if (!machine.weekendRulesEnabled || !machine.weekendPrice || !startDate) return false;
+  const startDow = new Date(startDate).getUTCDay();
+  const endDow = rangeEndDow(startDate, days);
+  if (days === 1 && (startDow === 6 || startDow === 0)) return true; // single Sat or single Sun
+  if (days === 2 && startDow === 6 && endDow === 0) return true;     // Sat + Sun
+  return false;
+}
+
+// Forced Sunday block: when a weekday rental's last work day is Saturday, the
+// depot is closed Sunday so the machine is unavoidably held until Monday 08:00 —
+// a flat sundayBlockFee (e.g. €20) is added. Never applies to weekend packages.
 // Mirrored by server/routes/orders.ts — keep identical.
 export function hasSundayBlock(machine: Machine, startDate: string | Date | undefined, days: number): boolean {
   if (!machine.weekendRulesEnabled || !machine.sundayBlockFee || !startDate) return false;
+  if (isWeekendPackage(machine, startDate, days)) return false;
   return rangeEndDow(startDate, days) === 6; // last work day is Saturday
 }
 
@@ -137,6 +155,11 @@ export function calculateItemSubtotal(machine: Machine, days: number, profile: s
   // started week. Takes priority over every daily/2-day/monthly tier below.
   if (machine.weeklyOnly && machine.weeklyPrice) {
     return withCampaign(billableWeeks(days, machine.minRentalDays) * machine.weeklyPrice);
+  }
+
+  // Weekend package (depot closed Sat+Sun): flat weekend price, no Sunday block.
+  if (machine.weekendRulesEnabled && machine.weekendPrice && isWeekendPackage(machine, startDate, days)) {
+    return withCampaign(machine.weekendPrice);
   }
 
   // Base subtotal: standard flat-rate tier, else pricePerDay × days with discounts.
@@ -238,6 +261,12 @@ export function buildTierDisplay(machine: Machine, days: number, startDate?: str
   if (machine.weeklyOnly && machine.weeklyPrice) {
     const weeks = billableWeeks(days, machine.minRentalDays);
     return { tierLabel: weeks === 1 ? "Weektarief" : `Weektarief × ${weeks} weken`, isFlatRate: true, weeklyBreakdown: null };
+  }
+
+  // Weekend package (single Sat, single Sun, or Sat+Sun) — mirrors the priority
+  // order in calculateItemSubtotal(), which checks this before oneDayPrice/tierPrice.
+  if (machine.weekendRulesEnabled && machine.weekendPrice && isWeekendPackage(machine, startDate, days)) {
+    return { tierLabel: "Weekendpakket", isFlatRate: true, weeklyBreakdown: null };
   }
 
   if (days === 1 && machine.oneDayPrice) {

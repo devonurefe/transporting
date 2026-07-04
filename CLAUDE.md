@@ -96,22 +96,22 @@ Machines have two pricing mechanisms. **Flat rates take priority over percentage
 | `oneDayPrice` | Exactly 1 day (1-dag actie) |
 | `twoDayPrice` | Exactly 2 weekday days |
 | `threeDayPrice` / `fourDayPrice` | Exactly 3 / 4 days (fall back to `weeklyPrice` when unset) |
-| `weekendPrice` | Legacy only: strict Sat+Sun 2-day rate when `weekendRulesEnabled` is false. Unused (no effect on price) when `weekendRulesEnabled` is true |
+| `weekendPrice` | Weekend package (see weekend rules below): flat rate for a rental that stays entirely within the closed weekend (single Sat, single Sun, or Sat+Sun). Legacy: strict Sat+Sun 2-day rate when `weekendRulesEnabled` is false |
 | `weeklyPrice` | 5 days flat; 6–27 days pro-rata `round(days × weeklyPrice/5)`, capped at `monthlyPrice` |
 | `monthlyPrice` | 28+ days (`floor(days/28) × monthlyPrice` + capped remainder) |
 
 ### Weekend rules (per-machine, `weekendRulesEnabled`) — depot closed Sat+Sun
-Enabled per machine (pilot: Bravi Leonardo; **off** for scaffolding & campaign products Nifty 120/170). There is **no flat weekend package** — every combination (regardless of which day it starts or ends on, including Sat/Sun as start or end) is priced by the normal day-count tier table. One surcharge on top:
-- **Automatic Sunday block** (`sundayBlockFee`, flat surcharge): when a rental's **last work day is Saturday**, the machine is held over the closed Sunday (return Monday 08:00) → tier price **+ sundayBlockFee** (not discounted). If Sunday itself is the deliberately chosen end day (e.g. Fri+Sat+Sun), there is **no surcharge** — it's just the normal tier price for that day count. Interior Sundays in a long rental are counted as normal pro-rata days; only a *trailing forced* Sunday adds the fee.
-- Helper: `hasSundayBlock(machine, startDate, days)` in `src/utils/pricing.ts`.
-- The old "hafta sonu çalışıyorum/çalışmıyorum" toggle (`weekendWorkAnswer`) is **removed** — weekend handling is now automatic. A later Friday-specific toggle UI was also removed in favor of this simpler, single day-count rule.
+Enabled per machine (pilot: Bravi Leonardo; **off** for scaffolding & campaign products Nifty 120/170). Two mechanics on top of the tier table:
+- **Weekend package** (`weekendPrice`, flat): triggers ONLY when the entire rental stays within the closed weekend — single Sat, single Sun, or Sat+Sun together (1–2 days, start on Sat or Sun). It never triggers for a Friday start, nor for a longer rental that merely starts on Sat/Sun and extends past the weekend — those always use the normal day-count tier table instead. Helper: `isWeekendPackage(machine, startDate, days)` in `src/utils/pricing.ts`.
+- **Automatic Sunday block** (`sundayBlockFee`, flat surcharge): when a rental's **last work day is Saturday** (and it isn't a weekend package), the machine is held over the closed Sunday (return Monday 08:00) → tier price **+ sundayBlockFee** (not discounted). If Sunday itself is the deliberately chosen end day (e.g. Fri+Sat+Sun, or a long Sat-start rental ending later in the week), there is **no surcharge** — it's just the normal tier price for that day count. Interior Sundays in a long rental are counted as normal pro-rata days; only a *trailing forced* Sunday adds the fee. Helper: `hasSundayBlock(machine, startDate, days)`.
+- The old "hafta sonu çalışıyorum/çalışmıyorum" toggle (`weekendWorkAnswer`) is **removed** — weekend handling is now automatic. A later Friday-specific toggle UI was also removed: a Friday start (1 day / Fri+Sat 2 days+block / Fri+Sat+Sun 3 days no block) always uses the normal tier table, never the weekend package.
 
 ### Percentage fields (fallback, only if no flat rate)
 `weeklyDiscountPercent`, `monthlyDiscountPercent`, `campaignDiscountPercent`, `campaignDiscountAmount`
 
 ### Where this logic lives
 - **Frontend**: `src/utils/pricing.ts` → `calculateItemSubtotal()` + `tierPrice()` (called from `BookingSection.tsx` / `DateRangeCalendar.tsx`)
-- **Backend validation**: `server/routes/orders.ts` → flat-rate block (`tierPrice` + `hasSundayBlock` mirror) — **must mirror frontend exactly** or orders fail with "Totaalbedrag klopt niet"
+- **Backend validation**: `server/routes/orders.ts` → flat-rate block (`tierPrice` + `isWeekendPackage`/`hasSundayBlock` mirror) — **must mirror frontend exactly** or orders fail with "Totaalbedrag klopt niet"
 - **Catalog display**: `CatalogSection.tsx` pricing popup + `MachineDetailModal.tsx` (tiered rows + weekend info-icon); `computeDiscounts(m)` derives week/maand % badges from flat rates
 
 ### Showing discount % on cards

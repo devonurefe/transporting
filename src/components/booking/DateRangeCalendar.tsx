@@ -10,7 +10,7 @@ import { Machine } from "../../types";
 import { useAppStore } from "../../store/appStore";
 import { useLanguageStore } from "../../store/languageStore";
 import { someUnitAvailable, SimpleOrder } from "../../utils/availability";
-import { calculateRentalDays, calculateItemSubtotal, displayRentalDays, hasSundayBlock } from "../../utils/pricing";
+import { calculateRentalDays, calculateItemSubtotal, displayRentalDays, isWeekendPackage, hasSundayBlock } from "../../utils/pricing";
 import { euro, withVat } from "../../utils/format";
 
 interface DateRangeCalendarProps {
@@ -247,6 +247,7 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
   const subtotal = validRange ? calculateItemSubtotal(machine, days, profile, campaignRules, draftStart) : 0;
   const displayDays = displayRentalDays(machine, draftStart, days);
   // Weekend rules feedback for the live preview.
+  const previewIsPackage = validRange && isWeekendPackage(machine, draftStart, days);
   const previewHasBlock = validRange && hasSundayBlock(machine, draftStart, days);
   // Friday start that runs into the closed weekend (Sat and/or Sun end) — the
   // depot hands the machine over Friday afternoon regardless of which weekend
@@ -456,9 +457,14 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
               {validRange && (
                 <div className="mx-4 mb-2 bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-slate-800">{displayDays} {displayDays === 1 ? "dag" : "dagen"}</span>
+                    <span className="text-xs font-bold text-slate-800">
+                      {previewIsPackage ? "Weekendpakket" : `${displayDays} ${displayDays === 1 ? "dag" : "dagen"}`}
+                    </span>
                     <span className="text-sm font-black font-mono text-slate-900">{euro(withVat(subtotal, vatDisplay))} <span className="text-[10px] font-normal text-slate-400">{vatDisplay === "incl" ? "incl. btw" : "excl. btw"}</span></span>
                   </div>
+                  {previewIsPackage && (
+                    <p className="text-[10px] text-amber-700 leading-snug">Vast weekendtarief · retour maandag 08:00.</p>
+                  )}
                   {previewHasBlock && (
                     <p className="text-[10px] text-amber-700 leading-snug">Incl. zondagblokkade €{machine.sundayBlockFee} · retour maandag 08:00.</p>
                   )}

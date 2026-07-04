@@ -578,8 +578,8 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
               />
               <p className="text-[10px] text-slate-400">
                 {newWeekendRulesEnabled
-                  ? t("N.v.t. — bij automatische weekendregels wordt dit veld niet gebruikt", "N/A — unused with automatic weekend rules enabled", "N/A — otomatik hafta sonu kuralında bu alan kullanılmaz")
-                  : t("Vast weekendtarief (vr→ma)", "Fixed weekend rate (Fri→Mon)", "Sabit hafta sonu (Cum→Pzt)")}
+                  ? t("Bij losse za, zo of za+zo (niet bij vrijdag-start)", "For standalone Sat, Sun or Sat+Sun (not a Friday start)", "Tek Cmt/Paz veya Cmt+Paz için (Cuma başlangıçta geçerli değil)")
+                  : t("Vast weekendtarief (za+zo)", "Fixed weekend rate (Sat+Sun)", "Sabit hafta sonu (Cmt+Paz)")}
               </p>
             </div>
             <div className="space-y-1">

@@ -285,7 +285,7 @@ export default function Footer({ siteName, setActiveTab, setShowContactModal }: 
               <div className="flex items-center gap-3">
                 <span className="h-20 w-20 rounded-lg overflow-hidden shrink-0 ring-1 ring-slate-700 bg-slate-800">
                   <iframe
-                    src="https://www.google.com/maps?q=Produktieweg+20,+2382+PB+Zoeterwoude&z=15&output=embed"
+                    src="https://www.openstreetmap.org/export/embed.html?bbox=4.51224%2C52.13682%2C4.52198%2C52.14282&layer=mapnik&marker=52.1398197%2C4.5171132"
                     className="h-full w-full border-0"
                     loading="lazy"
                     title="HuurGo locatie kaart"

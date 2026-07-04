@@ -104,6 +104,7 @@ jobs:
                git pull origin main && \
                docker compose pull app && \
                docker compose up -d --force-recreate --no-deps app && \
+               docker compose exec -T nginx nginx -s reload && \
                echo 'Deploy tamamlandi:' \$(date)"; then
               echo "Basarili!"
               success=1

@@ -413,10 +413,12 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
       e.setUTCDate(e.getUTCDate() + (rentalDays - 1));
       return e.getUTCDay();
     })();
+    // Weekend package: only a rental that stays entirely within the closed
+    // weekend (single Sat, single Sun, or Sat+Sun) — never a Friday start, and
+    // never a longer rental that merely starts on Sat/Sun and extends past it.
     const isWeekendPackage = !!(m.weekendRulesEnabled && m.weekendPrice && (
       (rentalDays === 1 && (dow === 6 || dow === 0)) ||  // single Sat or single Sun
-      (rentalDays === 2 && dow === 6 && endDow === 0) ||  // Sat + Sun
-      (rentalDays === 3 && dow === 5 && endDow === 0)     // Fri + Sat + Sun
+      (rentalDays === 2 && dow === 6 && endDow === 0)     // Sat + Sun
     ));
     const hasSundayBlock = !!(m.weekendRulesEnabled && m.sundayBlockFee && !isWeekendPackage && endDow === 6);
 
@@ -427,7 +429,7 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
       const weeks = Math.max(1, Math.ceil(Math.max(rentalDays, min) / 7));
       serverSubtotal = withCampaign(weeks * m.weeklyPrice);
     } else if (isWeekendPackage) {
-      // Flat weekend package (Vrijdagmiddag → Maandagochtend). No Sunday block.
+      // Flat weekend package. No Sunday block.
       serverSubtotal = withCampaign(m.weekendPrice);
     } else if (tierPrice(rentalDays) !== null) {
       serverSubtotal = withCampaign(tierPrice(rentalDays) as number);

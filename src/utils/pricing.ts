@@ -63,9 +63,11 @@ function rangeEndDow(startDate: string | Date, days: number): number {
 // Weekend rules (depot closed Sat+Sun). Only apply to machines with
 // weekendRulesEnabled — scaffolding and campaign products (Nifty 120/170) opt out.
 //
-// A "weekend package" (weekendPrice, e.g. €69) is the fixed Vrijdagmiddag→Maandag
-// deal. The customer reaches it by selecting exactly one of: single Saturday,
-// single Sunday, Sat+Sun, or Fri+Sat+Sun (Friday afternoon into the weekend).
+// A "weekend package" (weekendPrice, e.g. €69) is the fixed flat rate for a rental
+// that stays entirely within the closed weekend: single Saturday, single Sunday,
+// or Sat+Sun together. It does NOT apply to a Friday start (Fri+Sat, Fri+Sat+Sun,
+// etc.) or to any longer rental that starts on Sat/Sun but extends past the
+// weekend — those are always priced by the normal day-count tier instead.
 // Mirrored by server/routes/orders.ts — keep identical.
 export function isWeekendPackage(machine: Machine, startDate: string | Date | undefined, days: number): boolean {
   if (!machine.weekendRulesEnabled || !machine.weekendPrice || !startDate) return false;
@@ -73,7 +75,6 @@ export function isWeekendPackage(machine: Machine, startDate: string | Date | un
   const endDow = rangeEndDow(startDate, days);
   if (days === 1 && (startDow === 6 || startDow === 0)) return true; // single Sat or single Sun
   if (days === 2 && startDow === 6 && endDow === 0) return true;     // Sat + Sun
-  if (days === 3 && startDow === 5 && endDow === 0) return true;     // Fri + Sat + Sun
   return false;
 }
 
@@ -262,13 +263,14 @@ export function buildTierDisplay(machine: Machine, days: number, startDate?: str
     return { tierLabel: weeks === 1 ? "Weektarief" : `Weektarief × ${weeks} weken`, isFlatRate: true, weeklyBreakdown: null };
   }
 
-  if (days === 1 && machine.oneDayPrice) {
-    return { tierLabel: "1-Dag Actie", isFlatRate: true, weeklyBreakdown: null };
-  }
-
-  // Weekend package (Vrijdagmiddag → Maandagochtend) for weekendRulesEnabled machines.
+  // Weekend package (single Sat, single Sun, or Sat+Sun) — mirrors the priority
+  // order in calculateItemSubtotal(), which checks this before oneDayPrice/tierPrice.
   if (machine.weekendRulesEnabled && machine.weekendPrice && isWeekendPackage(machine, startDate, days)) {
     return { tierLabel: "Weekendpakket", isFlatRate: true, weeklyBreakdown: null };
+  }
+
+  if (days === 1 && machine.oneDayPrice) {
+    return { tierLabel: "1-Dag Actie", isFlatRate: true, weeklyBreakdown: null };
   }
 
   if (days === 2 && !machine.weekendRulesEnabled && isStrictWeekend(startDate, 2) && machine.weekendPrice) {

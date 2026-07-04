@@ -72,11 +72,6 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
   const [loading, setLoading] = useState(false);
   const [draftStart, setDraftStart] = useState(startDate);
   const [draftEnd, setDraftEnd] = useState(endDate);
-  // Explicit opt-in for the Friday weekend package. Without this, Sunday is never
-  // a selectable end day for a Friday start — this is what stops a customer from
-  // tapping one extra day (Sat → Sun) and having the price silently DROP (workday
-  // tier + Sunday block → flat weekend package). Reset whenever the start changes.
-  const [wantsWeekendPackage, setWantsWeekendPackage] = useState(false);
 
   const initMonth = startDate || today;
   const [viewYear, setViewYear] = useState(Number(initMonth.split("-")[0]));
@@ -85,13 +80,11 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
   const triggerRef = useRef<HTMLButtonElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   const openedAtRef = useRef(0);
-  const fridayBoxRef = useRef<HTMLDivElement>(null);
 
   const open = () => {
     if (isOpen) return; // pointerdown + click both fire on the trigger — open once
     setDraftStart(startDate);
     setDraftEnd(endDate);
-    setWantsWeekendPackage(false);
     const m = startDate || today;
     setViewYear(Number(m.split("-")[0]));
     setViewMonth(Number(m.split("-")[1]) - 1);
@@ -145,19 +138,6 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
-  // Auto-scroll the Friday weekend-package box into view whenever it appears or
-  // its selection changes. On a short device viewport the scrollable area can be
-  // too short to show the grid + this box + the price preview all at once — without
-  // this, the box can end up clipped at the bottom edge, reading as if the price
-  // preview below it were overlapping it.
-  useEffect(() => {
-    if (!draftStart || new Date(draftStart).getUTCDay() !== 5) return;
-    const id = requestAnimationFrame(() => {
-      fridayBoxRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
-    });
-    return () => cancelAnimationFrame(id);
-  }, [draftStart, wantsWeekendPackage]);
-
   // Escape closes; basic focus management + Tab trap within the dialog
   useEffect(() => {
     if (!isOpen) return;
@@ -201,7 +181,7 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
     const firstDow = new Date(Date.UTC(viewYear, viewMonth, 1)).getUTCDay();
     const lead = mondayIndex(firstDow);
     const daysInMonth = new Date(Date.UTC(viewYear, viewMonth + 1, 0)).getUTCDate();
-    type Cell = { key: string; day: number; status: "past" | "unavailable" | "available" | "capped" | "weekendoff"; selectable: boolean; isStart: boolean; isEnd: boolean; inRange: boolean } | null;
+    type Cell = { key: string; day: number; status: "past" | "unavailable" | "available" | "capped"; selectable: boolean; isStart: boolean; isEnd: boolean; inRange: boolean } | null;
     const cells: Cell[] = [];
     for (let i = 0; i < lead; i++) cells.push(null);
     for (let d = 1; d <= daysInMonth; d++) {
@@ -211,37 +191,12 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
       else if (!someUnitAvailable(unitIds, key, key, orders, blockedDates, today)) status = "unavailable";
       else status = "available";
       const isCapped = status === "available" && !!draftStart && !draftEnd && maxEnd !== "" && key > maxEnd;
-      let cellStatus: "past" | "unavailable" | "available" | "capped" | "weekendoff" = isCapped ? "capped" : status;
-      let selectable = status === "available" && !isCapped;
-      // Depot closed Sat+Sun (weekendRulesEnabled): restrict the END day so a normal
-      // work rental never returns on a weekend. When picking the end:
-      //  - weekday start (Mon–Thu): end may be that weekday–Sat (Saturday end
-      //    auto-adds the Sunday block, return Monday). Sunday is never an end.
-      //  - Friday start: end may be Sat (workday tier + auto block) freely, but
-      //    Sunday (the Fri+Sat+Sun weekend package) is ONLY selectable once the
-      //    customer has explicitly opted in via the toggle below — otherwise
-      //    tapping one extra day would silently DROP the price (workday+block →
-      //    flat package), which is exactly the confusing behaviour reported.
-      //  - Saturday start: only Sat+Sun (end Sunday) is a valid weekend package.
-      //  - Sunday start: single day only.
-      // Start days stay open — a Sat/Sun start can only become a weekend package.
-      if (machine.weekendRulesEnabled && selectable) {
-        const dow = new Date(key).getUTCDay(); // 0=Sun .. 6=Sat
-        const choosingEnd = !!draftStart && !draftEnd && key > draftStart;
-        if (choosingEnd) {
-          const startDow = new Date(draftStart).getUTCDay();
-          const span = calculateRentalDays(draftStart, key);
-          let ok = true;
-          if (startDow >= 1 && startDow <= 5) {
-            ok = dow === 0 ? (startDow === 5 && span === 3 && wantsWeekendPackage) : true;
-          } else if (startDow === 6) {
-            ok = dow === 0 && span === 2;
-          } else {
-            ok = false; // Sunday start → single day only
-          }
-          if (!ok) { selectable = false; cellStatus = "weekendoff"; }
-        }
-      }
+      const cellStatus: "past" | "unavailable" | "available" | "capped" = isCapped ? "capped" : status;
+      const selectable = status === "available" && !isCapped;
+      // No day-of-week restriction here — every available day is selectable as
+      // start or end (Sat/Sun included). Price is derived purely from the day
+      // count via calculateItemSubtotal(); the only weekend-specific effect is
+      // the automatic Sunday block fee when the rental's last day is Saturday.
       cells.push({
         key,
         day: d,
@@ -254,37 +209,23 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
     }
     while (cells.length % 7 !== 0) cells.push(null);
     return cells;
-  }, [viewYear, viewMonth, orders, blockedDates, draftStart, draftEnd, maxEnd, unitKey, today, machine.weekendRulesEnabled, wantsWeekendPackage]);
+  }, [viewYear, viewMonth, orders, blockedDates, draftStart, draftEnd, maxEnd, unitKey, today]);
 
   const onDayClick = (key: string, selectable: boolean) => {
     if (!selectable) return;
     // Both dates set: any click starts a fresh single-day selection
     if (draftStart && draftEnd) {
       setDraftStart(key);
-      setWantsWeekendPackage(false);
       setDraftEnd("");
       return;
     }
     // No start yet: first click → set start (1-day immediately valid via effectiveEnd)
-    if (!draftStart) { setDraftStart(key); setWantsWeekendPackage(false); return; }
+    if (!draftStart) { setDraftStart(key); return; }
     // Start set, no end: re-clicking the start day deselects; clicking elsewhere sets end
-    if (key === draftStart) { setDraftStart(""); setWantsWeekendPackage(false); return; }
-    if (key < draftStart) { setDraftStart(key); setWantsWeekendPackage(false); return; }
+    if (key === draftStart) { setDraftStart(""); return; }
+    if (key < draftStart) { setDraftStart(key); return; }
     // key > draftStart: set as end
     if (someUnitAvailable(unitIds, draftStart, key, orders, blockedDates, today)) setDraftEnd(key);
-  };
-
-  // Explicit Friday-mode switch: choosing the package auto-completes the fixed
-  // Fri+Sat+Sun selection (no need to hunt for the now-unlocked Sunday cell);
-  // switching back to "full workday" clears an end that's no longer valid.
-  const selectFridayMode = (pkg: boolean) => {
-    setWantsWeekendPackage(pkg);
-    if (!draftStart) return;
-    if (pkg) {
-      setDraftEnd(addDaysKey(draftStart, 2));
-    } else if (draftEnd && new Date(draftEnd).getUTCDay() === 0) {
-      setDraftEnd("");
-    }
   };
 
   const canPrev = !(viewYear === todayYear && viewMonth === todayMonth);
@@ -308,10 +249,15 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
   // Weekend rules feedback for the live preview.
   const previewIsPackage = validRange && isWeekendPackage(machine, draftStart, days);
   const previewHasBlock = validRange && hasSundayBlock(machine, draftStart, days);
+  // Friday start that runs into the closed weekend (Sat and/or Sun end) — the
+  // depot hands the machine over Friday afternoon regardless of which weekend
+  // day the rental ends on, so this note is independent of the block fee above.
+  const draftStartDow = draftStart ? new Date(draftStart).getUTCDay() : -1;
+  const previewEndDow = validRange ? new Date(effectiveEnd).getUTCDay() : -1;
+  const fridayIntoWeekend = validRange && machine.weekendRulesEnabled && draftStartDow === 5 && (previewEndDow === 6 || previewEndDow === 0);
 
   const confirm = () => { if (!validRange) return; onConfirm(draftStart, effectiveEnd); close(); };
-  const reset = () => { setDraftStart(""); setDraftEnd(""); setWantsWeekendPackage(false); };
-  const draftStartIsFriday = !!draftStart && new Date(draftStart).getUTCDay() === 5;
+  const reset = () => { setDraftStart(""); setDraftEnd(""); };
 
   const committedDays = startDate && endDate ? displayRentalDays(machine, startDate, calculateRentalDays(startDate, endDate)) : 0;
   const buttonLabel = startDate && endDate
@@ -322,7 +268,6 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
     const [y, m, d] = key.split("-").map(Number);
     const label = `${d} ${MONTHS_NL[m - 1]} ${y}`;
     const stateNl = status === "unavailable" ? t("calLegendUnavailable")
-      : status === "weekendoff" ? "weekend — niet als retourdag"
       : status === "available" ? t("calLegendAvailable") : "";
     return stateNl ? `${label}, ${stateNl}` : label;
   };
@@ -390,9 +335,9 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
               exit={{ opacity: 0, scale: 0.98, y: 12 }}
               transition={{ type: "spring", stiffness: 360, damping: 28 }}
               // Full-height edge-to-edge sheet on mobile (matches the pricing-table
-              // popup pattern) — maximises vertical room so the grid, the Friday
-              // toggle and the confirm button fit without needing to scroll on a
-              // typical phone. Reverts to a centered card on wider screens.
+              // popup pattern) — maximises vertical room so the grid, hints and
+              // confirm button fit without needing to scroll on a typical phone.
+              // Reverts to a centered card on wider screens.
               className="relative z-[60] w-full h-[92dvh] sm:h-auto sm:max-w-sm bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-200 flex flex-col sm:max-h-[85vh] overflow-hidden"
             >
               {/* Header */}
@@ -442,7 +387,6 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
                       else if (inRange) cls = "bg-amber-100 text-amber-900";
                       else if (status === "available") cls = "bg-emerald-50 text-emerald-800 hover:bg-emerald-100 cursor-pointer";
                       else if (status === "unavailable") cls = "bg-rose-50 text-rose-300 cursor-not-allowed";
-                      else if (status === "weekendoff") cls = "bg-slate-100 text-slate-300 cursor-not-allowed line-through decoration-slate-300"; // weekend, niet als startdag
                       else if (status === "capped") cls = "bg-emerald-50 text-emerald-300 cursor-not-allowed"; // available after block, need new start
                       else cls = "text-slate-300 cursor-not-allowed"; // past
                       return (
@@ -465,44 +409,6 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
                   </div>
                 </div>
 
-                {/* Friday weekend-package switch — own bordered card so it reads as a
-                    distinct, tappable decision rather than more calendar text. Shown as
-                    soon as Friday is the draft start; picking "Alleen ophalen" instantly
-                    completes the Fri+Sat+Sun selection, picking "Hele werkdag" keeps
-                    Sunday locked so the price can never silently drop by one extra tap. */}
-                {machine.weekendRulesEnabled && draftStartIsFriday && (
-                  <div ref={fridayBoxRef} className="mx-4 mb-2.5 rounded-2xl border border-amber-200 bg-amber-50 p-2.5">
-                    <p className="text-[11px] font-bold text-amber-900 mb-1.5">Vrijdag: hoe gebruikt u de machine?</p>
-                    <div className="flex gap-1.5">
-                      <button
-                        type="button"
-                        aria-pressed={!wantsWeekendPackage}
-                        onClick={() => selectFridayMode(false)}
-                        className={`flex-1 rounded-xl px-2 py-2 text-[11px] font-bold border transition-colors cursor-pointer ${
-                          !wantsWeekendPackage ? "bg-amber-500 text-white border-amber-500 shadow-sm" : "bg-white text-amber-800 border-amber-200 hover:border-amber-300"
-                        }`}
-                      >
-                        Hele werkdag
-                      </button>
-                      <button
-                        type="button"
-                        aria-pressed={wantsWeekendPackage}
-                        onClick={() => selectFridayMode(true)}
-                        className={`flex-1 rounded-xl px-2 py-2 text-[11px] font-bold border transition-colors cursor-pointer ${
-                          wantsWeekendPackage ? "bg-amber-500 text-white border-amber-500 shadow-sm" : "bg-white text-amber-800 border-amber-200 hover:border-amber-300"
-                        }`}
-                      >
-                        Weekendpakket
-                      </button>
-                    </div>
-                    <p className="text-[10px] text-amber-700 mt-1.5 leading-snug">
-                      {wantsWeekendPackage
-                        ? "Vrijdagmiddag ophalen, maandag 08:00 retour."
-                        : "Kies zaterdag (of later) als retourdatum."}
-                    </p>
-                  </div>
-                )}
-
                 {/* Hints group — spaced apart from both the grid above and the legend
                     below so this reads as its own block, not squeezed against either. */}
                 <div className="px-5 pb-1.5 space-y-1">
@@ -515,10 +421,10 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
                     </p>
                   )}
 
-                  {/* Hint: depot closed in the weekend. Suppressed while the Friday
-                      toggle card is showing (its own helper text already covers this),
-                      so the two don't repeat the same message back to back. */}
-                  {machine.weekendRulesEnabled && !draftStartIsFriday && (
+                  {/* Hint: depot closed in the weekend — every day is selectable, price
+                      is always the normal day-count tier (+ automatic Sunday block fee
+                      when the rental's last day is Saturday, shown below in the preview). */}
+                  {machine.weekendRulesEnabled && (
                     <p className="text-[11px] text-center font-bold text-slate-600 leading-relaxed">
                       Depot in het weekend gesloten — za/zo geen ophalen of retour.
                     </p>
@@ -557,10 +463,13 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
                     <span className="text-sm font-black font-mono text-slate-900">{euro(withVat(subtotal, vatDisplay))} <span className="text-[10px] font-normal text-slate-400">{vatDisplay === "incl" ? "incl. btw" : "excl. btw"}</span></span>
                   </div>
                   {previewIsPackage && (
-                    <p className="text-[10px] text-amber-700 leading-snug">Ophalen vrijdag vanaf 13:00 · retour maandag 08:00.</p>
+                    <p className="text-[10px] text-amber-700 leading-snug">Vast weekendtarief · retour maandag 08:00.</p>
                   )}
                   {previewHasBlock && (
                     <p className="text-[10px] text-amber-700 leading-snug">Incl. zondagblokkade €{machine.sundayBlockFee} · retour maandag 08:00.</p>
+                  )}
+                  {fridayIntoWeekend && (
+                    <p className="text-[10px] text-amber-700 leading-snug">Ophalen vrijdag vanaf 13:00 · retour maandag 08:00.</p>
                   )}
                 </div>
               )}

@@ -8,7 +8,24 @@ import { motion, AnimatePresence } from "motion/react";
 import { Machine, Order, DeliveryType, UserProfile, CartItem } from "../types";
 import { useAppStore } from "../store/appStore";
 import { checkAvailability } from "../utils/availability";
-import { calculateItemSubtotal, isStrictWeekend, countWeekendDays, hasSundayBlock, calculateRentalDays, addonPriceForRental, buildTierDisplay, WeeklyBreakdown } from "../utils/pricing";
+import { calculateItemSubtotal, isStrictWeekend, countWeekendDays, hasSundayBlock, calculateRentalDays, addonPriceForRental, billableWeeks, buildTierDisplay, WeeklyBreakdown } from "../utils/pricing";
+
+// Global add-ons available on every machine (unless excluded by category — see
+// GLOBAL_ADDON_EXCLUDED_CATEGORIES in BookingStep1.tsx / server/routes/orders.ts,
+// which must stay in sync). Priced like a weekly cross-sell extra: a flat rate for
+// the first started week, +rate for every additional started 7-day block.
+// Mirrored by server/routes/orders.ts — keep identical.
+const GLOBAL_ADDONS: Record<string, { name: string; pricePerWeek: number }> = {
+  safety: { name: "Veiligheidsset Pro", pricePerWeek: 15 },
+  rijplaten: { name: "Rijplaten", pricePerWeek: 6 },
+};
+function globalAddonLine(id: string, days: number): { id: string; name: string; price: number } {
+  const def = GLOBAL_ADDONS[id];
+  const weeks = billableWeeks(days);
+  const price = def.pricePerWeek * weeks;
+  const name = weeks > 1 ? `${def.name} (${weeks}× €${def.pricePerWeek})` : def.name;
+  return { id, name, price };
+}
 
 // Import modular Step components
 import { buildWhatsAppUrl } from "../utils/whatsapp";
@@ -373,9 +390,11 @@ export default function BookingSection({
       let addonCost = 0;
       const addonDetails: { id: string; name: string; price: number }[] = [];
 
-      if (selectedAddons.includes("safety")) {
-        addonCost += 15 * totalDays;
-        addonDetails.push({ id: "safety", name: "Veiligheidskit", price: 15 * totalDays });
+      for (const id of Object.keys(GLOBAL_ADDONS)) {
+        if (!selectedAddons.includes(id)) continue;
+        const line = globalAddonLine(id, totalDays);
+        addonCost += line.price;
+        addonDetails.push(line);
       }
       // Product-specific cross-sell extras (billed per started week, same week count as the machine)
       for (const item of cartItems) {
@@ -486,9 +505,11 @@ export default function BookingSection({
     let addonCost = 0;
     const addonDetails: { id: string; name: string; price: number }[] = [];
 
-    if (selectedAddons.includes("safety")) {
-      addonCost += 15 * days;
-      addonDetails.push({ id: "safety", name: "Veiligheidskit", price: 15 * days });
+    for (const id of Object.keys(GLOBAL_ADDONS)) {
+      if (!selectedAddons.includes(id)) continue;
+      const line = globalAddonLine(id, days);
+      addonCost += line.price;
+      addonDetails.push(line);
     }
 
     const totalExcl = subtotal + transport + trailerCost + driver + addonCost;
@@ -700,9 +721,11 @@ export default function BookingSection({
 
             let addonCost = 0;
             const addonsList: { id: string; name: string; price: number; billing: "daily" | "flat" | "weekly" }[] = [];
-            if (selectedAddons.includes("safety")) {
-              addonCost += 15 * days;
-              addonsList.push({ id: "safety", name: "Veiligheidskit", price: 15 * days, billing: "flat" });
+            for (const id of Object.keys(GLOBAL_ADDONS)) {
+              if (!selectedAddons.includes(id)) continue;
+              const line = globalAddonLine(id, days);
+              addonCost += line.price;
+              addonsList.push({ ...line, billing: "weekly" });
             }
             // Product-specific cross-sell extras (per started week, server recomputes authoritatively)
             for (const a of (item.machine.crossSellAddons ?? [])) {

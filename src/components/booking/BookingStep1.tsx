@@ -15,6 +15,16 @@ import { useAppStore } from "../../store/appStore";
 import MachineDetailModal from "../MachineDetailModal";
 import { euroCompact } from "../../utils/format";
 
+// Categories the global add-ons never apply to. "safety" (Veiligheidsset Pro) only
+// excludes ladderlift (a furniture-moving lift, not a working-at-height platform);
+// "rijplaten" (ground protection plates) also excludes the trailer-mounted "Toe &
+// Go" units, the Kamersteiger and the Pecolift, which never drive onto soft/sloped
+// terrain. Mirrored by server/routes/orders.ts — keep identical.
+const GLOBAL_ADDON_EXCLUDED_CATEGORIES: Record<"safety" | "rijplaten", string[]> = {
+  safety: ["ladderlift"],
+  rijplaten: ["aanhanger", "kamersteiger", "ecolift", "ladderlift"],
+};
+
 interface BookingStep1Props {
   cartItems: CartItem[];
   getItemAvailability: (machineId: string, start: string, end: string) => { available: boolean; reason: string };
@@ -491,8 +501,8 @@ export default function BookingStep1({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          {/* Global safety set — not relevant for weekly-only low-level products */}
-          {!selectedMachine?.weeklyOnly && (
+          {/* Global safety set — not relevant for a furniture-moving ladderlift */}
+          {!!selectedMachine && !GLOBAL_ADDON_EXCLUDED_CATEGORIES.safety.includes(selectedMachine.category) && (
           <div
             onClick={() => {
               if (selectedAddons.includes("safety")) {
@@ -521,7 +531,43 @@ export default function BookingStep1({
                 Luxe veiligheidsharnas combi, lijn met valdemper en TÜV goedgekeurde bouwhelm met gehoorbescherming.
               </p>
             </div>
-            <span className="text-xs font-mono font-bold text-slate-700 mt-3 block">€15,- / per dag</span>
+            <span className="text-xs font-mono font-bold text-slate-700 mt-3 block">€15,- / week (elke 7 dagen +€15)</span>
+          </div>
+          )}
+
+          {/* Ground protection plates — only for platforms that stand directly on the
+              terrain; not relevant for a trailer unit, scaffolding, or manual lift. */}
+          {!!selectedMachine && !GLOBAL_ADDON_EXCLUDED_CATEGORIES.rijplaten.includes(selectedMachine.category) && (
+          <div
+            onClick={() => {
+              if (selectedAddons.includes("rijplaten")) {
+                setSelectedAddons(selectedAddons.filter(x => x !== "rijplaten"));
+              } else {
+                setSelectedAddons([...selectedAddons, "rijplaten"]);
+              }
+            }}
+            className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between ${
+              selectedAddons.includes("rijplaten")
+                ? "bg-slate-50 border-slate-400 shadow-sm"
+                : "bg-white border-slate-200 hover:border-slate-300 shadow-sm"
+            }`}
+          >
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="text-xs font-bold text-slate-900">Rijplaten</h4>
+                <input
+                  type="checkbox"
+                  checked={selectedAddons.includes("rijplaten")}
+                  onChange={()=>{}}
+                  className="h-4 w-4 accent-orange-500 rounded cursor-pointer"
+                />
+              </div>
+              <p className="text-xs text-slate-600 leading-normal">
+                Bij een helling, drempel of oneffen terrein, op zachte ondergrond (zoals gras), of als u de
+                ondergrond niet wilt beschadigen is het gebruik van rijplaten noodzakelijk.
+              </p>
+            </div>
+            <span className="text-xs font-mono font-bold text-slate-700 mt-3 block">€6,- / week (elke 7 dagen +€6)</span>
           </div>
           )}
 

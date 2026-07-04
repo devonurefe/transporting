@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { Mail, Clock, ShieldCheck, Truck, MessageCircle, Star } from "lucide-react";
+import { Mail, MapPin, Clock, ShieldCheck, Truck, MessageCircle, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion } from "motion/react";
 import { useLanguageStore } from "../store/languageStore";
@@ -282,25 +282,27 @@ export default function Footer({ siteName, setActiveTab, setShowContactModal }: 
                   <span className="text-slate-500 text-[11px]">{t("footerClosed")}</span>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <span className="h-20 w-20 rounded-lg overflow-hidden shrink-0 ring-1 ring-slate-700 bg-slate-800">
-                  <iframe
-                    src="https://www.openstreetmap.org/export/embed.html?bbox=4.51224%2C52.13682%2C4.52198%2C52.14282&layer=mapnik&marker=52.1398197%2C4.5171132"
-                    className="h-full w-full border-0"
-                    loading="lazy"
-                    title="HuurGo locatie kaart"
-                  />
-                </span>
-                <a
-                  href="https://www.google.com/maps/search/?api=1&query=Produktieweg+20%2C+2382+PB+Zoeterwoude"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group leading-snug no-underline"
+              <a
+                href="https://www.google.com/maps/search/?api=1&query=Produktieweg+20%2C+2382+PB+Zoeterwoude"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex items-center gap-3 no-underline"
+              >
+                <span
+                  className="relative h-20 w-20 rounded-lg overflow-hidden shrink-0 ring-1 ring-slate-700 group-hover:ring-orange-500/60 transition-all bg-slate-800 flex items-center justify-center"
+                  style={{
+                    backgroundImage:
+                      "linear-gradient(rgba(148,163,184,0.18) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,0.18) 1px, transparent 1px)",
+                    backgroundSize: "10px 10px",
+                  }}
                 >
+                  <MapPin className="h-7 w-7 text-orange-500 fill-orange-500/20 drop-shadow-sm" strokeWidth={2} />
+                </span>
+                <div className="leading-snug">
                   <span className="font-semibold text-slate-200 block group-hover:text-white transition-colors">Zoeterwoude (HQ)</span>
                   <span className="text-slate-500 text-[11px] group-hover:text-slate-400 transition-colors">Produktieweg 20, 2382 PB</span>
-                </a>
-              </div>
+                </div>
+              </a>
             </div>
           </div>
 

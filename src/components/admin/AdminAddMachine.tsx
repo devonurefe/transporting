@@ -576,7 +576,11 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
                 placeholder="–"
                 className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
               />
-              <p className="text-[10px] text-slate-400">{t("Vast weekendtarief (vr→ma)", "Fixed weekend rate (Fri→Mon)", "Sabit hafta sonu (Cum→Pzt)")}</p>
+              <p className="text-[10px] text-slate-400">
+                {newWeekendRulesEnabled
+                  ? t("N.v.t. — bij automatische weekendregels wordt dit veld niet gebruikt", "N/A — unused with automatic weekend rules enabled", "N/A — otomatik hafta sonu kuralında bu alan kullanılmaz")
+                  : t("Vast weekendtarief (vr→ma)", "Fixed weekend rate (Fri→Mon)", "Sabit hafta sonu (Cum→Pzt)")}
+              </p>
             </div>
             <div className="space-y-1">
               <label className="text-xs text-slate-700 block font-bold">{t("Werkweek (5 dgn) €", "Work Week (5 days) €", "İş Haftası (5 gün) €")}</label>

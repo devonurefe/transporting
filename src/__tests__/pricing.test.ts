@@ -177,11 +177,15 @@ describe("calculateItemSubtotal — weekend rules (tiered model + Sunday block +
     expect(calculateItemSubtotal(bravi, 12, "Particulier", noRules, TUE2)).toBe(356);
   });
 
-  it("weekend package: single Sat, single Sun, Sat+Sun, Fri+Sat+Sun → flat €69 (no block)", () => {
-    expect(calculateItemSubtotal(bravi, 1, "Particulier", noRules, SAT)).toBe(69);
-    expect(calculateItemSubtotal(bravi, 1, "Particulier", noRules, SUN)).toBe(69);
-    expect(calculateItemSubtotal(bravi, 2, "Particulier", noRules, SAT)).toBe(69);
-    expect(calculateItemSubtotal(bravi, 3, "Particulier", noRules, FRI)).toBe(69);
+  it("no flat weekend package — Sat/Sun start and Fri+Sat+Sun are priced by day count + Sunday-block rule", () => {
+    // Single Sat (1 day, ends Saturday) → 1-day tier €45 + €20 forced Sunday block.
+    expect(calculateItemSubtotal(bravi, 1, "Particulier", noRules, SAT)).toBe(65);
+    // Single Sun (1 day, ends Sunday directly — a deliberate choice, not a forced hold) → €45, no block.
+    expect(calculateItemSubtotal(bravi, 1, "Particulier", noRules, SUN)).toBe(45);
+    // Sat+Sun (2 days, ends Sunday) → 2-day tier €80, no block.
+    expect(calculateItemSubtotal(bravi, 2, "Particulier", noRules, SAT)).toBe(80);
+    // Fri+Sat+Sun (3 days, ends Sunday) → 3-day tier €105, no block.
+    expect(calculateItemSubtotal(bravi, 3, "Particulier", noRules, FRI)).toBe(105);
   });
 
   it("no Sunday block when the rental ends on a weekday (Thu+Fri = €80, ends Friday)", () => {

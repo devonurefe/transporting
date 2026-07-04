@@ -3,14 +3,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const CACHE_NAME = "huurgo-cache-v3";
+const CACHE_NAME = "huurgo-cache-v4";
 const OFFLINE_URL = "/offline.html";
 
 const ASSETS_TO_CACHE = [
   "/",
   "/index.html",
   "/manifest.json",
-  "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏗️</text></svg>"
+  "/apple-touch-icon.png",
+  "/pwa-192x192.png",
+  "/pwa-512x512.png"
 ];
 
 // Install: pre-cache offline fallback and shell assets

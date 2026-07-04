@@ -26,7 +26,7 @@ import { buildWhatsAppGeneralUrl } from "../utils/whatsapp";
 import { withVat } from "../utils/format";
 import { computeDiscounts } from "../utils/pricing";
 import VatToggle from "./VatToggle";
-import { BrandedText, HuurGoText } from "./Header";
+import { BrandedText, HuurGoText, CardBrandWatermark } from "./Header";
 import { Machine } from "../types";
 
 type IconComponent = React.FC<LucideProps>;
@@ -488,17 +488,14 @@ export default function HomeSection({
               className="mb-2.5 sm:mb-3.5"
             >
               <span className="inline-block text-2xl sm:text-3xl lg:text-4xl drop-shadow-sm">
-                <HuurGoText dark />
-              </span>
-              <span className="block font-semibold text-[9px] sm:text-[11px] uppercase tracking-[0.18em] text-white/70 mt-0.5">
-                {t("heroBannerEyebrow")}
+                <HuurGoText />
               </span>
             </motion.div>
             <motion.h2
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.07 }}
-              className="font-display font-black italic tracking-tight text-white leading-[0.95] text-3xl sm:text-5xl lg:text-6xl drop-shadow-sm"
+              className="font-display font-black italic tracking-tight text-white leading-[0.95] text-2xl sm:text-5xl lg:text-6xl drop-shadow-sm"
             >
               {t("heroBannerLine1")}
               <br />
@@ -686,6 +683,7 @@ export default function HomeSection({
                 {/* Bottom — wide machine photo on a pure white background so the
                     white-background product photos sit flush with no grey halo */}
                 <div className="relative w-full aspect-[4/3] overflow-hidden border-t border-slate-100 bg-white">
+                  <CardBrandWatermark />
                   {catImage ? (
                     <img
                       src={catImage}

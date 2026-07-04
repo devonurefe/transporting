@@ -71,6 +71,21 @@ export function HuurGoText({ dark = false }: { dark?: boolean }) {
 }
 
 /**
+ * Small brand watermark pinned to the corner of product/category photo tiles,
+ * so every machine card carries the original logo mark without crowding the
+ * photo. Own white pill keeps it legible over any product photo.
+ */
+export function CardBrandWatermark() {
+  return (
+    <div className="absolute top-2 right-2 z-10 pointer-events-none bg-white/90 backdrop-blur-sm rounded-md px-1.5 py-1 shadow-sm ring-1 ring-black/5">
+      <span className="text-[11px] leading-none">
+        <HuurGoText />
+      </span>
+    </div>
+  );
+}
+
+/**
  * Renders an arbitrary string and replaces every brand-name occurrence with the
  * branded <HuurGoText /> wordmark. Matching is case-insensitive and tolerates an
  * optional space ("HuurGo", "huurGo", "huurgo", "Huur Go"), so admin-editable

@@ -45,7 +45,7 @@ app.use(helmet({
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
       imgSrc: ["'self'", "data:", "https:", "blob:"],
       connectSrc: ["'self'", "https:"],
-      frameSrc: ["'none'"],
+      frameSrc: ["'self'", "https://www.google.com", "https://maps.google.com"],
       objectSrc: ["'none'"],
     }
   } : false,

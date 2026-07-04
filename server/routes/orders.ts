@@ -314,9 +314,10 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
       return res.status(400).json({ error: "Ongeldig chauffeurskostenbedrag" });
     }
     // Addon prices are recomputed authoritatively from the DB — never trusted from
-    // the client. The global "safety" addon plus this machine's own product-specific
-    // cross-sell extras are the only accepted ids. (Weekend handling is no longer an
-    // addon — the weekend package / Sunday block adjust the subtotal below.)
+    // the client. The global add-ons ("safety" = Veiligheidsset Pro, "rijplaten")
+    // plus this machine's own product-specific cross-sell extras are the only
+    // accepted ids. (Weekend handling is no longer an addon — the weekend package /
+    // Sunday block adjust the subtotal below.)
     const crossSell: Array<{ id: string; name?: string; pricePerWeek: number; pricePerDay?: number; pricePerTwoDay?: number }> =
       Array.isArray((machine as any).crossSellAddons) ? (machine as any).crossSellAddons : [];
     const crossSellMap = new Map(crossSell.map(a => [String(a.id), a]));
@@ -332,6 +333,16 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
       }
       return Number(sa.pricePerWeek || 0) * addonWeeks;
     };
+    // Global add-ons: a flat rate for the first started week, +rate for every
+    // additional started 7-day block (addonWeeks, same formula as above). Not
+    // available on every machine — mirrors GLOBAL_ADDON_EXCLUDED_CATEGORIES in
+    // BookingStep1.tsx / BookingSection.tsx — keep identical.
+    const GLOBAL_ADDON_RATES: Record<string, number> = { safety: 15, rijplaten: 6 };
+    const GLOBAL_ADDON_EXCLUDED_CATEGORIES: Record<string, string[]> = {
+      safety: ["ladderlift"],
+      rijplaten: ["aanhanger", "kamersteiger", "ecolift", "ladderlift"],
+    };
+    const machineCategory = String((machine as any).category ?? "");
     const rawAddons = Array.isArray(orderData.addons) ? orderData.addons : [];
     let addonsTotal = 0;
     for (const a of rawAddons) {
@@ -339,8 +350,11 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
         return res.status(400).json({ error: "Ongeldige toevoeging in bestelling" });
       }
       const id = String(a.id ?? "");
-      if (id === "safety") {
-        addonsTotal += 15 * rentalDays;
+      if (id in GLOBAL_ADDON_RATES) {
+        if (GLOBAL_ADDON_EXCLUDED_CATEGORIES[id].includes(machineCategory)) {
+          return res.status(400).json({ error: "Ongeldige toevoeging in bestelling" });
+        }
+        addonsTotal += GLOBAL_ADDON_RATES[id] * addonWeeks;
       } else if (crossSellMap.has(id)) {
         addonsTotal += addonPrice(crossSellMap.get(id)!);
       } else {
@@ -559,7 +573,8 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
           // Reconstruct from server-side data — never persist client-sent names or prices
           addons: JSON.stringify(rawAddons.map((a: any) => {
             const id = String(a.id ?? "");
-            if (id === "safety") return { id: "safety", name: "Veiligheidskit", price: 15 * rentalDays };
+            if (id === "safety") return { id: "safety", name: "Veiligheidsset Pro", price: 15 * addonWeeks };
+            if (id === "rijplaten") return { id: "rijplaten", name: "Rijplaten", price: 6 * addonWeeks };
             const sa = crossSellMap.get(id);
             return { id, name: sa?.name ?? id, price: sa ? addonPrice(sa) : 0 };
           })),

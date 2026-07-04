@@ -88,7 +88,7 @@ const defaultCategories = [
   {
     id: "ecolift", label: "Pecolift", listLabel: "Pecolift",
     desc: "Milieuvriendelijk en veilig alternatief voor ladders. Geen batterijen of hydrauliek nodig.",
-    heights: "4.2m", price: "v.a. €45/dag",
+    heights: "3.5m", price: "v.a. €45/dag",
     infoContent: {
       useCases: ["Schilderwerk, elektra, installatie binnenshuis", "Kantoren, winkels, scholen", "Licht onderhoud op vaste vloer"],
       advantages: ["Direct klaar: geen montagetijd", "100% handmatig: geen accu of stroom", "Veilig 360° werken", "Beschadigt kwetsbare vloeren niet"],

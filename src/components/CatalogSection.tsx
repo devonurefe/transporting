@@ -21,6 +21,7 @@ import { withVat, priceNum } from "../utils/format";
 import { computeDiscounts } from "../utils/pricing";
 import VatToggle from "./VatToggle";
 import MachineDetailModal from "./MachineDetailModal";
+import { CardBrandWatermark } from "./Header";
 
 
 interface CatalogSectionProps {
@@ -422,6 +423,7 @@ export default function CatalogSection({
                           onAddSystemLog?.("system", currentUser?.name ?? "Gast", `Bekijkt specificaties: "${machine.name}"`);
                         }}
                       >
+                        <CardBrandWatermark />
                         <CardImage
                           src={machine.imageUrl || (machine.additionalImages?.[0] ?? "/placeholder-machine.webp")}
                           alt={machine.imageAlt}

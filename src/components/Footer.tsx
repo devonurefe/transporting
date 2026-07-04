@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { Mail, MapPin, Clock, ShieldCheck, Truck, MessageCircle, Star } from "lucide-react";
+import { Mail, Clock, ShieldCheck, Truck, MessageCircle, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion } from "motion/react";
 import { useLanguageStore } from "../store/languageStore";
@@ -282,15 +282,25 @@ export default function Footer({ siteName, setActiveTab, setShowContactModal }: 
                   <span className="text-slate-500 text-[11px]">{t("footerClosed")}</span>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <span className="h-7 w-7 rounded-lg bg-slate-800 flex items-center justify-center shrink-0">
-                  <MapPin className="h-3.5 w-3.5 text-slate-400" />
+              <a
+                href="https://www.google.com/maps/search/?api=1&query=Produktieweg+20%2C+2382+PB+Zoeterwoude"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex items-center gap-3 no-underline"
+              >
+                <span className="h-14 w-14 rounded-lg overflow-hidden shrink-0 ring-1 ring-slate-700 group-hover:ring-orange-500/60 transition-all bg-slate-800">
+                  <iframe
+                    src="https://maps.google.com/maps?q=Produktieweg+20,+2382+PB+Zoeterwoude&z=15&output=embed"
+                    className="h-full w-full pointer-events-none border-0"
+                    loading="lazy"
+                    title="HuurGo locatie kaart"
+                  />
                 </span>
                 <div className="leading-snug">
-                  <span className="font-semibold text-slate-200 block">Zoeterwoude (HQ)</span>
+                  <span className="font-semibold text-slate-200 block group-hover:text-white transition-colors">Zoeterwoude (HQ)</span>
                   <span className="text-slate-500 text-[11px]">Produktieweg 20, 2382 PB</span>
                 </div>
-              </div>
+              </a>
             </div>
           </div>
 

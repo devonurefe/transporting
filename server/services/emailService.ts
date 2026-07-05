@@ -11,7 +11,9 @@ const resendApiKey = process.env.RESEND_API_KEY || "";
 const resend = resendApiKey && resendApiKey !== "MY_RESEND_API_KEY" ? new Resend(resendApiKey) : null;
 
 // Standard sender email (if domain is verified, use verified domain. Otherwise Resend sandbox uses onboarding@resend.dev)
-const SENDER_EMAIL = process.env.EMAIL_FROM || "onboarding@resend.dev";
+const SENDER_ADDRESS = process.env.EMAIL_FROM || "onboarding@resend.dev";
+// Show a friendly "HuurGo" display name in the recipient's inbox instead of the raw address
+const SENDER_EMAIL = SENDER_ADDRESS.includes("<") ? SENDER_ADDRESS : `HuurGo <${SENDER_ADDRESS}>`;
 const APP_URL = process.env.APP_URL || "https://localhost:3000";
 const ADMIN_ALERT_EMAIL = process.env.ADMIN_EMAIL || "";
 // Payment runs over WhatsApp (customer requests the iDEAL/Tikkie link). The
@@ -100,7 +102,7 @@ export const emailService = {
       <body>
         <div class="container">
           <div class="header">
-            <h1>huurgo</h1>
+            <h1 style="margin:0;font-size:24px;font-weight:800;letter-spacing:-0.025em;">huur<span style="color:#fb923c;">go</span></h1>
             <p>Uw reserveringsbevestiging is succesvol verwerkt</p>
           </div>
           <div class="content">
@@ -343,7 +345,7 @@ export const emailService = {
       <body>
         <div class="container">
           <div class="header">
-            <h1>huurgo</h1>
+            <h1 style="margin:0;font-size:24px;font-weight:800;letter-spacing:-0.025em;">huur<span style="color:#fb923c;">go</span></h1>
             <p>Update over uw reservering ${order.id}</p>
           </div>
           <div class="content">
@@ -437,7 +439,7 @@ export const emailService = {
       <body>
         <div class="container">
           <div class="header">
-            <h1>huurgo</h1>
+            <h1 style="margin:0;font-size:24px;font-weight:800;letter-spacing:-0.025em;">huur<span style="color:#fb923c;">go</span></h1>
             <p>Bevestig uw e-mailadres om uw account te activeren</p>
           </div>
           <div class="content">
@@ -571,7 +573,7 @@ export const emailService = {
       </head>
       <body>
         <div class="container">
-          <div class="header"><h1>huurgo</h1><p>Wachtwoord resetten</p></div>
+          <div class="header"><h1 style="margin:0;font-size:24px;font-weight:800;letter-spacing:-0.025em;">huur<span style="color:#fb923c;">go</span></h1><p>Wachtwoord resetten</p></div>
           <div class="content">
             <p style="text-align:left;">Beste <strong>${esc(name)}</strong>,</p>
             <p style="text-align:left; font-size:13px; color:#475569; line-height:1.6;">
@@ -697,7 +699,7 @@ export const emailService = {
       </head>
       <body>
         <div class="container">
-          <div class="header"><h1>huurgo</h1></div>
+          <div class="header"><h1 style="margin:0;font-size:24px;font-weight:800;letter-spacing:-0.025em;">huur<span style="color:#fb923c;">go</span></h1></div>
           <div class="content">
             <p style="font-size:14px;font-weight:700;color:#0f172a;margin:0 0 16px;">Beste <strong>${esc(customer.name)}</strong>,</p>
             ${safeBody}

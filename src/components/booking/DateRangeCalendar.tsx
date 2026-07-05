@@ -80,6 +80,7 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
   const triggerRef = useRef<HTMLButtonElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   const openedAtRef = useRef(0);
+  const pointerDownPosRef = useRef<{ x: number; y: number } | null>(null);
 
   const open = () => {
     if (isOpen) return; // pointerdown + click both fire on the trigger — open once
@@ -287,14 +288,21 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
       <button
         ref={triggerRef}
         type="button"
-        // Open on the earliest possible touch signal so the dialog appears on the
-        // FIRST tap, before iOS Safari's synthesized click (which can get swallowed
-        // by scroll/ghost-click heuristics and read as "I had to tap twice"). Both
-        // touchstart and pointerdown are wired (some iOS Safari versions are more
-        // reliable with one or the other); onClick stays as the keyboard-activation
-        // path. open() itself ignores the duplicate calls from the same tap.
-        onTouchStart={() => open()}
-        onPointerDown={() => open()}
+        // Open on pointerUP of a genuine tap (pointer barely moved since pointerdown).
+        // Opening on touchstart/pointerdown — the previous approach — also fired when
+        // the customer merely started SCROLLING with their finger on this button,
+        // popping the calendar open uninvited and reading as "it flickers open/closed,
+        // I need 2-3 taps". A scroll gesture either moves >12px or gets a pointercancel,
+        // so it never opens here; a real tap still opens before the synthesized click
+        // (which the dialog's 500 ms click-swallow guard then absorbs). onClick stays
+        // as the keyboard-activation path; open() ignores the duplicate call.
+        onPointerDown={(e) => { pointerDownPosRef.current = { x: e.clientX, y: e.clientY }; }}
+        onPointerUp={(e) => {
+          const d = pointerDownPosRef.current;
+          pointerDownPosRef.current = null;
+          if (d && Math.hypot(e.clientX - d.x, e.clientY - d.y) < 12) open();
+        }}
+        onPointerCancel={() => { pointerDownPosRef.current = null; }}
         onClick={open}
         style={{ touchAction: "manipulation" }}
         className={`w-full flex items-center gap-2.5 bg-white rounded-xl px-3 py-2.5 border transition-colors shadow-sm cursor-pointer text-left ${
@@ -344,11 +352,12 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.98, y: 12 }}
               transition={{ type: "spring", stiffness: 360, damping: 28 }}
-              // Full-height edge-to-edge sheet on mobile (matches the pricing-table
-              // popup pattern) — maximises vertical room so the grid, hints and
-              // confirm button fit without needing to scroll on a typical phone.
+              // Edge-to-edge bottom sheet on mobile that hugs its content: since the
+              // Friday toggle box was removed the content is short enough to fit, and
+              // a fixed 92dvh height left a large empty white band under the legend.
+              // max-h keeps the scrollable body working on very short viewports.
               // Reverts to a centered card on wider screens.
-              className="relative z-[60] w-full h-[92dvh] sm:h-auto sm:max-w-sm bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-200 flex flex-col sm:max-h-[85vh] overflow-hidden"
+              className="relative z-[60] w-full max-h-[92dvh] sm:max-w-sm bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-200 flex flex-col sm:max-h-[85vh] overflow-hidden"
             >
               {/* Header */}
               <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
@@ -435,20 +444,20 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
                       is always the normal day-count tier (+ automatic Sunday block fee
                       when the rental's last day is Saturday, shown below in the preview). */}
                   {machine.weekendRulesEnabled && (
-                    <p className="text-[11px] text-center font-bold text-slate-600 leading-relaxed">
+                    <p className="text-xs text-center font-extrabold text-slate-700 leading-relaxed">
                       Depot in het weekend gesloten — za/zo geen ophalen of retour.
                     </p>
                   )}
 
                   {/* Hint: minimum rental period not yet reached */}
                   {minDays > 1 && rangeAvail && days < minDays && (
-                    <p className="text-[10px] text-center text-amber-600 font-semibold leading-relaxed">
+                    <p className="text-xs text-center text-amber-600 font-bold leading-relaxed">
                       Minimale huurperiode is {minDays} dagen — selecteer een langere periode.
                     </p>
                   )}
                   {/* Static minimum period note */}
                   {minDays > 1 && !(rangeAvail && days < minDays) && (
-                    <p className="text-[10px] text-center text-slate-400 leading-relaxed">
+                    <p className="text-[11px] text-center text-slate-500 font-semibold leading-relaxed">
                       Minimale huurperiode: {minDays} dagen.
                     </p>
                   )}
@@ -473,14 +482,23 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
                     <span className="text-sm font-black font-mono text-slate-900">{euro(withVat(subtotal, vatDisplay))} <span className="text-[10px] font-normal text-slate-400">{vatDisplay === "incl" ? "incl. btw" : "excl. btw"}</span></span>
                   </div>
                   {previewIsPackage && (
-                    <p className="text-[10px] text-amber-700 leading-snug">Vast weekendtarief · retour maandag 08:00.</p>
+                    <p className="text-[11px] font-semibold text-amber-700 leading-snug">Vast weekendtarief · retour maandag 08:00.</p>
                   )}
                   {previewHasBlock && (
-                    <p className="text-[10px] text-amber-700 leading-snug">Incl. zondagblokkade €{machine.sundayBlockFee} · retour maandag 08:00.</p>
+                    <p className="text-[11px] font-semibold text-amber-700 leading-snug">Incl. zondagblokkade €{machine.sundayBlockFee} · retour maandag 08:00.</p>
                   )}
                   {showPickupFridayNote && (
-                    <p className="text-[10px] text-amber-700 leading-snug">
+                    <p className="text-[11px] font-semibold text-amber-700 leading-snug">
                       Ophalen vrijdag vanaf 13:00{endsWeekendClosed ? " · retour maandag 08:00." : "."}
+                    </p>
+                  )}
+                  {/* Any other rental ending on the closed weekend (e.g. a weekday start
+                      ending on Sunday, or ending Saturday without a block fee configured):
+                      the depot can't take a return then, so make the Monday-morning
+                      return explicit instead of leaving the customer guessing. */}
+                  {endsWeekendClosed && !previewIsPackage && !previewHasBlock && !showPickupFridayNote && (
+                    <p className="text-[11px] font-semibold text-amber-700 leading-snug">
+                      Depot za/zo gesloten · retour maandag 08:00.
                     </p>
                   )}
                 </div>

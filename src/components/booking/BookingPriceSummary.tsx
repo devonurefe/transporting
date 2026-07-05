@@ -311,7 +311,11 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
         <button
           type="button"
           onClick={() => setBreakdownOpen(o => !o)}
-          className={`w-full flex items-center justify-between text-xs font-bold py-2 border-t border-slate-100 transition-colors cursor-pointer bg-transparent border-x-0 border-b-0 ${breakdownOpen ? "text-slate-800" : "text-slate-500 hover:text-slate-800"}`}
+          // touch-action: manipulation kills iOS Safari's ~300 ms double-tap-zoom
+          // wait, which otherwise swallows the first tap on this toggle. The larger
+          // py-3 hit area also helps thumbs land it reliably on mobile.
+          style={{ touchAction: "manipulation" }}
+          className={`w-full flex items-center justify-between text-xs font-bold py-3 border-t border-slate-100 transition-colors cursor-pointer bg-transparent border-x-0 border-b-0 select-none ${breakdownOpen ? "text-slate-800" : "text-slate-500 hover:text-slate-800"}`}
         >
           <span>{t("priceSummaryViewBreakdown")}</span>
           <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${breakdownOpen ? "rotate-180" : ""}`} />

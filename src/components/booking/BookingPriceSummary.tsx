@@ -115,7 +115,9 @@ function formatShortDate(iso: string): string {
 
 export default function BookingPriceSummary({ selectedMachine, machineCount = 1, startDate, endDate, multiplePeriods, sums }: BookingPriceSummaryProps) {
   const t = useLanguageStore((state) => state.t);
-  const [breakdownOpen, setBreakdownOpen] = React.useState(false);
+  // Open by default — customers (and staff relaying prices over the phone)
+  // should see what's in the total immediately, not have to find the toggle.
+  const [breakdownOpen, setBreakdownOpen] = React.useState(true);
 
   // Reservation period label: confirm WHICH dates the customer booked (the
   // calendar is no longer visible in steps 2-3). Falls back to neutral copy

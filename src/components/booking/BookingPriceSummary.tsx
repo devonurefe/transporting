@@ -115,7 +115,9 @@ function formatShortDate(iso: string): string {
 
 export default function BookingPriceSummary({ selectedMachine, machineCount = 1, startDate, endDate, multiplePeriods, sums }: BookingPriceSummaryProps) {
   const t = useLanguageStore((state) => state.t);
-  const [breakdownOpen, setBreakdownOpen] = React.useState(false);
+  // Open by default — customers (and staff relaying prices over the phone)
+  // should see what's in the total immediately, not have to find the toggle.
+  const [breakdownOpen, setBreakdownOpen] = React.useState(true);
 
   // Reservation period label: confirm WHICH dates the customer booked (the
   // calendar is no longer visible in steps 2-3). Falls back to neutral copy
@@ -315,10 +317,18 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
           // wait, which otherwise swallows the first tap on this toggle. The larger
           // py-3 hit area also helps thumbs land it reliably on mobile.
           style={{ touchAction: "manipulation" }}
-          className={`w-full flex items-center justify-between text-xs font-bold py-3 border-t border-slate-100 transition-colors cursor-pointer bg-transparent border-x-0 border-b-0 select-none ${breakdownOpen ? "text-slate-800" : "text-slate-500 hover:text-slate-800"}`}
+          // A filled, bordered pill (same shape language as the trailer/delivery
+          // option cards above) instead of a plain text row — the toggle used to
+          // blend into the summary rows above it and read as inert copy, not a
+          // clickable control.
+          className={`w-full flex items-center justify-between gap-2 text-xs font-bold py-3 px-3.5 rounded-xl border transition-colors cursor-pointer select-none ${
+            breakdownOpen
+              ? "bg-slate-50 border-slate-200 text-slate-800"
+              : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100 hover:border-slate-300"
+          }`}
         >
           <span>{t("priceSummaryViewBreakdown")}</span>
-          <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${breakdownOpen ? "rotate-180" : ""}`} />
+          <ChevronDown className={`h-4 w-4 shrink-0 transition-transform duration-200 ${breakdownOpen ? "rotate-180" : ""}`} />
         </button>
 
         {/* ── ACCORDION BODY ─────────────────────── */}

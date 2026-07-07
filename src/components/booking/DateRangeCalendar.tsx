@@ -305,11 +305,17 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
         onPointerCancel={() => { pointerDownPosRef.current = null; }}
         onClick={open}
         style={{ touchAction: "manipulation" }}
-        className={`w-full flex items-center gap-2.5 bg-white rounded-xl px-3 py-2.5 border transition-colors shadow-sm cursor-pointer text-left ${
-          startDate && endDate ? "border-slate-300 text-slate-800" : "border-slate-200 text-slate-500 hover:border-slate-300"
+        // No dates picked yet: an orange-accented look (same CTA color as
+        // "Doorgaan") so this doesn't read as just another muted field next
+        // to the colorful transport/add-on cards further down the page —
+        // customers were skipping past it and only noticing on validation error.
+        className={`w-full flex items-center gap-2.5 rounded-xl px-3 py-3 border transition-colors shadow-sm cursor-pointer text-left ${
+          startDate && endDate
+            ? "bg-white border-slate-300 text-slate-800"
+            : "bg-orange-50 border-orange-300 text-orange-800 hover:border-orange-400 hover:bg-orange-100 ring-1 ring-orange-100"
         }`}
       >
-        <Calendar className="h-4 w-4 text-slate-400 shrink-0" />
+        <Calendar className={`h-4 w-4 shrink-0 ${startDate && endDate ? "text-slate-400" : "text-orange-500"}`} />
         <span className="text-xs font-bold flex-1">{buttonLabel}</span>
         <span className="text-[10px] text-slate-500 font-bold shrink-0">{startDate && endDate ? t("calChange") : ""}</span>
       </button>

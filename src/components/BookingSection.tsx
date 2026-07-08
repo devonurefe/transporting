@@ -290,7 +290,7 @@ export default function BookingSection({
 
   const getItemAvailability = (machineId: string, start: string, end: string) => {
     const machine = cartItems.find(item => item.machine.id === machineId)?.machine;
-    return checkAvailability(machineId, start, end, allOrders, blockedDaysList, undefined, machine?.bufferDays ?? 0);
+    return checkAvailability(machineId, start, end, allOrders, blockedDaysList, undefined, machine?.bufferDays ?? 0, machine?.stockQuantity ?? 1);
   };
 
   // Re-run checking whenever days or machine swap

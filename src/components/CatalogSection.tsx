@@ -16,7 +16,7 @@ import { Link } from "react-router-dom";
 import { Machine } from "../types";
 import { useLanguageStore } from "../store/languageStore";
 import { useAppStore } from "../store/appStore";
-import { someUnitAvailable } from "../utils/availability";
+import { someUnitAvailable, UnitAvailabilityInput } from "../utils/availability";
 import { withVat, priceNum } from "../utils/format";
 import { computeDiscounts } from "../utils/pricing";
 import VatToggle from "./VatToggle";
@@ -110,15 +110,16 @@ export default function CatalogSection({
   const today = new Date().toISOString().split("T")[0];
   const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
 
-  // Model-aware: a model is "Beschikbaar" if ANY of its physical units is free.
-  // Stock counts stay server-side — the customer only sees available / vol.
-  const isModelAvailableThisWeek = (unitIds: string[]): boolean =>
-    someUnitAvailable(unitIds, today, nextWeek, orders, blockedDates);
+  // Model-aware: a model is "Beschikbaar" if ANY of its physical units still has
+  // remaining stock. Stock counts stay server-side — the customer only sees
+  // available / vol.
+  const isModelAvailableThisWeek = (units: UnitAvailabilityInput[]): boolean =>
+    someUnitAvailable(units, today, nextWeek, orders, blockedDates);
 
-  const getNextAvailableDate = (unitIds: string[]): string | null => {
+  const getNextAvailableDate = (units: UnitAvailabilityInput[]): string | null => {
     for (let i = 1; i <= 90; i++) {
       const d = new Date(Date.now() + i * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
-      if (someUnitAvailable(unitIds, d, d, orders, blockedDates)) return d;
+      if (someUnitAvailable(units, d, d, orders, blockedDates)) return d;
     }
     return null;
   };
@@ -210,13 +211,24 @@ export default function CatalogSection({
   // Only show active machines everywhere in the catalog
   const activeMachines = useMemo(() => machines.filter(m => m.isActive !== false), [machines]);
 
-  // Map base name → all unit IDs (used for model-level availability + auto-assignment)
+  // Map base name → all unit IDs (used for ratings + auto-assignment)
   const unitIdsByBase = useMemo(() => {
     const map: Record<string, string[]> = {};
     activeMachines.forEach(m => {
       const base = getBaseName(m.name);
       if (!map[base]) map[base] = [];
       map[base].push(m.id);
+    });
+    return map;
+  }, [activeMachines]);
+
+  // Map base name → unit id + stock quantity (used for capacity-aware availability)
+  const unitsByBase = useMemo(() => {
+    const map: Record<string, UnitAvailabilityInput[]> = {};
+    activeMachines.forEach(m => {
+      const base = getBaseName(m.name);
+      if (!map[base]) map[base] = [];
+      map[base].push({ id: m.id, stockQuantity: m.stockQuantity ?? 1 });
     });
     return map;
   }, [activeMachines]);
@@ -401,10 +413,10 @@ export default function CatalogSection({
                     >
                       {/* Top-left badge: only shown when NOT available — no "Beschikbaar" label on available units */}
                       {(() => {
-                        const unitIds = unitIdsByBase[getBaseName(machine.name)] ?? [machine.id];
-                        const available = isModelAvailableThisWeek(unitIds);
+                        const units = unitsByBase[getBaseName(machine.name)] ?? [{ id: machine.id, stockQuantity: machine.stockQuantity ?? 1 }];
+                        const available = isModelAvailableThisWeek(units);
                         if (available) return null;
-                        const nextDate = getNextAvailableDate(unitIds);
+                        const nextDate = getNextAvailableDate(units);
                         const availText = nextDate ? `Vrij ${formatShortDate(nextDate)}` : "Vol geboekt";
                         return (
                           <div className="absolute top-3 left-3 z-20 flex items-center gap-1.5 py-1 px-2.5 rounded-md text-[10px] font-bold shadow-sm backdrop-blur-sm bg-white/90 border border-amber-200 text-amber-700">

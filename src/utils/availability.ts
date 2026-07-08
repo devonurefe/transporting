@@ -28,13 +28,14 @@ export function checkAvailability(
   orders: SimpleOrder[],
   blockedDates: SimpleBlockedDate[],
   todayStr?: string,
-  bufferDays: number = 0
+  bufferDays: number = 0,
+  stockQuantity: number = 1
 ) {
   if (!start || !end) return { available: false, blocked: false, overlap: false, reason: "Selecteer een begin- en einddatum." };
 
   const requestedStart = new Date(start).getTime();
   const requestedEnd = new Date(end).getTime();
-  
+
   const resolvedTodayStr = todayStr || new Date().toISOString().split('T')[0];
   const todayTime = new Date(resolvedTodayStr).getTime();
 
@@ -46,10 +47,14 @@ export function checkAvailability(
     return { available: false, blocked: false, overlap: false, reason: "De begindatum kan niet in het verleden liggen." };
   }
 
-  // Check overlaps with active orders (skip cancelled)
-  // bufferDays extends the order's end date to block maintenance/charging time
+  // Capacity check against active orders (skip cancelled). bufferDays extends each
+  // order's end date to block maintenance/charging time. Machines with stock > 1
+  // can have multiple orders active on the same day — only reject once the number
+  // of orders covering a given day reaches stockQuantity (a flat "any overlap"
+  // count would be wrong: two non-cancelled orders can each touch the requested
+  // range without ever being concurrently active on the same day).
   const bufferMs = bufferDays * 86_400_000;
-  const overlaps = orders.filter(o => {
+  const candidateOrders = orders.filter(o => {
     if (o.machineId !== machineId) return false;
     if (o.status === "Geannuleerd") return false;
     const orderStart = new Date(o.startDate).getTime();
@@ -57,8 +62,24 @@ export function checkAvailability(
     return (requestedStart <= orderEnd && requestedEnd >= orderStart);
   });
 
-  if (overlaps.length > 0) {
-    return { available: false, blocked: false, overlap: true, reason: "Niet beschikbaar — al geboekt voor (een deel van) deze periode. Kies andere datums." };
+  if (candidateOrders.length > 0) {
+    const sDay = new Date(start);
+    const eDay = new Date(end);
+    let curr = new Date(sDay);
+    let dayCounter = 0;
+    while (curr <= eDay && dayCounter < 1000) {
+      dayCounter++;
+      const dayTime = curr.getTime();
+      const concurrent = candidateOrders.filter(o => {
+        const orderStart = new Date(o.startDate).getTime();
+        const orderEnd = new Date(o.endDate).getTime() + bufferMs;
+        return dayTime >= orderStart && dayTime <= orderEnd;
+      }).length;
+      if (concurrent >= stockQuantity) {
+        return { available: false, blocked: false, overlap: true, reason: "Niet beschikbaar — al geboekt voor (een deel van) deze periode. Kies andere datums." };
+      }
+      curr.setUTCDate(curr.getUTCDate() + 1);
+    }
   }
 
   // Build a Set for O(1) blocked-date lookups (avoids O(n²) find() inside loop)
@@ -86,14 +107,20 @@ export function checkAvailability(
   return { available: true, blocked: false, overlap: false, reason: "" };
 }
 
+export interface UnitAvailabilityInput {
+  id: string;
+  stockQuantity?: number; // physical units of this exact row available for overlapping bookings; default 1
+}
+
 /**
  * Model-level availability across multiple physical units of the same model.
- * Returns true when AT LEAST ONE unit is free for the entire requested range —
- * a day/period is only "vol" when every unit is booked or blocked. The customer
- * never sees stock counts; the system simply checks if any unit can take the job.
+ * Returns true when AT LEAST ONE unit still has remaining capacity for the
+ * entire requested range — a day/period is only "vol" when every unit is at
+ * its stock limit or blocked. The customer never sees stock counts; the
+ * system simply checks if any unit can take the job.
  */
 export function someUnitAvailable(
-  unitIds: string[],
+  units: UnitAvailabilityInput[],
   start: string,
   end: string,
   orders: SimpleOrder[],
@@ -101,7 +128,7 @@ export function someUnitAvailable(
   todayStr?: string,
   bufferDays: number = 0
 ): boolean {
-  return unitIds.some(
-    (id) => checkAvailability(id, start, end, orders, blockedDates, todayStr, bufferDays).available
+  return units.some(
+    (u) => checkAvailability(u.id, start, end, orders, blockedDates, todayStr, bufferDays, u.stockQuantity ?? 1).available
   );
 }

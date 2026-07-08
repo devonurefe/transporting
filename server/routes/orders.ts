@@ -492,13 +492,15 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
 
     // Serializable transaction: availability check + blocked-date check + create are atomic
     const newOrder = await withSerializableRetry(() => prisma.$transaction(async (tx) => {
-      // Re-fetch bufferDays inside the transaction so we always use the current value
-      // even if an admin changed it between the machine fetch above and now
-      const machineBuffer = await tx.machine.findUnique({
+      // Re-fetch bufferDays/stockQuantity inside the transaction so we always use
+      // the current value even if an admin changed it between the machine fetch
+      // above and now
+      const machineCapacity = await tx.machine.findUnique({
         where: { id: orderData.machineId },
-        select: { bufferDays: true }
+        select: { bufferDays: true, stockQuantity: true }
       });
-      const bufferMs = (machineBuffer?.bufferDays ?? 0) * 24 * 60 * 60 * 1000;
+      const bufferMs = (machineCapacity?.bufferDays ?? 0) * 24 * 60 * 60 * 1000;
+      const stockQuantity = machineCapacity?.stockQuantity ?? 1;
 
       // Fetch orders that could potentially conflict (started before or on the requested end date)
       // Then apply buffer: an existing order blocks startDate..endDate+bufferDays
@@ -509,18 +511,41 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
           startDate: { lte: endDate }
         }
       });
-      const conflictingOrders = potentialConflicts.filter(o => {
+      const candidateOrders = potentialConflicts.filter(o => {
         const bufferedEnd = new Date(o.endDate.getTime() + bufferMs);
         return startDate <= bufferedEnd;
       });
 
-      if (conflictingOrders.length > 0) {
-        throw Object.assign(new Error("CONFLICT_ORDER"), {
-          conflictingDates: conflictingOrders.map(o => ({
-            start: o.startDate.toISOString().split("T")[0],
-            end: o.endDate.toISOString().split("T")[0]
-          }))
-        });
+      // Capacity check: a machine with stock > 1 can have multiple orders active
+      // on the same day. Walk each requested day and reject only once the number
+      // of orders already covering that day (buffer included) reaches stockQuantity
+      // — mirrors src/utils/availability.ts checkAvailability() exactly.
+      if (candidateOrders.length > 0) {
+        let curr = new Date(startDate);
+        let dayCounter = 0;
+        let exhaustedOn: Date | null = null;
+        while (curr <= endDate && dayCounter < 1000) {
+          dayCounter++;
+          const dayTime = curr.getTime();
+          const concurrent = candidateOrders.filter(o => {
+            const bufferedEnd = o.endDate.getTime() + bufferMs;
+            return dayTime >= o.startDate.getTime() && dayTime <= bufferedEnd;
+          }).length;
+          if (concurrent >= stockQuantity) { exhaustedOn = new Date(curr); break; }
+          curr.setUTCDate(curr.getUTCDate() + 1);
+        }
+
+        if (exhaustedOn) {
+          const exhaustedTime = exhaustedOn.getTime();
+          throw Object.assign(new Error("CONFLICT_ORDER"), {
+            conflictingDates: candidateOrders
+              .filter(o => exhaustedTime >= o.startDate.getTime() && exhaustedTime <= (o.endDate.getTime() + bufferMs))
+              .map(o => ({
+                start: o.startDate.toISOString().split("T")[0],
+                end: o.endDate.toISOString().split("T")[0]
+              }))
+          });
+        }
       }
 
       const blocked = await tx.blockedDate.findFirst({

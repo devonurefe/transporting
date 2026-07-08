@@ -40,6 +40,7 @@ export interface Machine {
   minRentalDays?: number; // minimum billable rental length in days (e.g. 7 = 1 week)
   weeklyOnly?: boolean; // bill per started week (weeklyPrice = price/week), ignore daily/2-day/monthly tiers
   pickupOnly?: boolean; // only "Afhalen" logistics offered — no delivery / trailer
+  stockQuantity?: number; // physical units of this exact row available for overlapping bookings; default 1
   crossSellAddons?: CrossSellAddon[]; // product-specific optional extras shown in the cart
 }
 

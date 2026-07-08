@@ -62,6 +62,7 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
   const [packageContents, setPackageContents] = useState("");
   const [newSpecs, setNewSpecs] = useState<{ label: string; value: string }[]>([]);
   const [minRentalDays, setMinRentalDays] = useState("");
+  const [newStockQuantity, setNewStockQuantity] = useState("1");
   const [weeklyOnly, setWeeklyOnly] = useState(false);
   const [pickupOnly, setPickupOnly] = useState(false);
   const [showInWeeklyOffers, setShowInWeeklyOffers] = useState(false);
@@ -239,6 +240,7 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
         : undefined,
       bufferDays: newBufferDays,
       minRentalDays: minRentalDays ? Number(minRentalDays) : undefined,
+      stockQuantity: newStockQuantity ? Number(newStockQuantity) : undefined,
       weeklyOnly,
       pickupOnly,
       showInWeeklyOffers,
@@ -283,6 +285,7 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
       setNewSpecs([]);
       setNewBufferDays(0);
       setMinRentalDays("");
+      setNewStockQuantity("1");
       setWeeklyOnly(false);
       setPickupOnly(false);
       setCrossSell([]);
@@ -865,6 +868,20 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
               placeholder={t("Bijv. 7 (1 week)", "e.g. 7 (1 week)", "örn: 7 (1 hafta)")}
               className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500"
             />
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-xs text-slate-700 block font-bold">{t("Voorraad (aantal beschikbaar)", "Stock (units available)", "Stok (mevcut adet)")}</label>
+            <input
+              type="number"
+              min="1"
+              max="999"
+              value={newStockQuantity}
+              onChange={(e) => setNewStockQuantity(e.target.value)}
+              placeholder={t("Bijv. 3 (3 identieke machines)", "e.g. 3 (3 identical machines)", "örn: 3 (3 aynı makine)")}
+              className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500"
+            />
+            <p className="text-[11px] text-slate-500">{t("Bij meerdere stuks kunnen meerdere klanten dezelfde (overlappende) data boeken, tot de voorraad op is.", "With more than one unit, multiple customers can book the same (overlapping) dates until stock runs out.", "Birden fazla stok varsa, stok bitene kadar farklı müşteriler aynı (çakışan) tarihleri kiralayabilir.")}</p>
           </div>
 
           <div className="space-y-2">

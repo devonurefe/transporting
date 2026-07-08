@@ -128,6 +128,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
   const [editSpecs, setEditSpecs] = useState<{ label: string; value: string }[]>([]);
   const [editBufferDays, setEditBufferDays] = useState(0);
   const [editMinRentalDays, setEditMinRentalDays] = useState("");
+  const [editStockQuantity, setEditStockQuantity] = useState("1");
   const [editWeeklyOnly, setEditWeeklyOnly] = useState(false);
   const [editPickupOnly, setEditPickupOnly] = useState(false);
   const [editShowInWeeklyOffers, setEditShowInWeeklyOffers] = useState(false);
@@ -199,6 +200,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
     setEditSpecs(getSpecsForMachine(m.id, m.specs));
     setEditBufferDays(m.bufferDays ?? 0);
     setEditMinRentalDays(m.minRentalDays ? String(m.minRentalDays) : "");
+    setEditStockQuantity(m.stockQuantity ? String(m.stockQuantity) : "1");
     setEditWeeklyOnly(!!m.weeklyOnly);
     setEditPickupOnly(!!m.pickupOnly);
     setEditShowInWeeklyOffers(!!m.showInWeeklyOffers);
@@ -334,6 +336,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
       specs: editSpecs.filter(s => s.label.trim() && s.value.trim()),
       bufferDays: editBufferDays,
       minRentalDays: editMinRentalDays ? Number(editMinRentalDays) : undefined,
+      stockQuantity: editStockQuantity ? Number(editStockQuantity) : undefined,
       weeklyOnly: editWeeklyOnly,
       pickupOnly: editPickupOnly,
       showInWeeklyOffers: editShowInWeeklyOffers,
@@ -1129,6 +1132,20 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                       placeholder={t("Bijv. 7 (1 week)", "e.g. 7 (1 week)", "örn: 7 (1 hafta)")}
                       className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500"
                     />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs text-slate-700 block font-bold">{t("Voorraad (aantal beschikbaar)", "Stock (units available)", "Stok (mevcut adet)")}</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="999"
+                      value={editStockQuantity}
+                      onChange={(e) => setEditStockQuantity(e.target.value)}
+                      placeholder={t("Bijv. 3 (3 identieke machines)", "e.g. 3 (3 identical machines)", "örn: 3 (3 aynı makine)")}
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500"
+                    />
+                    <p className="text-[11px] text-slate-500">{t("Bij meerdere stuks kunnen meerdere klanten dezelfde (overlappende) data boeken, tot de voorraad op is.", "With more than one unit, multiple customers can book the same (overlapping) dates until stock runs out.", "Birden fazla stok varsa, stok bitene kadar farklı müşteriler aynı (çakışan) tarihleri kiralayabilir.")}</p>
                   </div>
 
                   <div className="space-y-2">

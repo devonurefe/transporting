@@ -358,12 +358,12 @@ export default function HomeSection({
   // applies to every day of the rental.
   const categoryMeta = React.useMemo(() => {
     type Badge = "dag" | "actie" | "tier" | "none";
-    type Meta = { price: number; count: number; badge: Badge; badgePct: number };
+    type Meta = { price: number; count: number; badge: Badge; badgePct: number; image: string };
     const winners: Record<string, { rank: number; sortKey: number; meta: Meta }> = {};
     const counts: Record<string, number> = {};
 
     activeMachines.forEach(m => {
-      const key = m.category;
+      const key = SCHAARLIFT_VARIANTS.has(m.category) ? "schaarlift" : m.category;
       counts[key] = (counts[key] ?? 0) + 1;
 
       let globalPct = 0;
@@ -405,7 +405,8 @@ export default function HomeSection({
 
       const current = winners[key];
       if (!current || rank < current.rank || (rank === current.rank && sortKey < current.sortKey)) {
-        winners[key] = { rank, sortKey, meta: { price: effective, count: counts[key], badge, badgePct } };
+        const image = m.imageUrl || m.additionalImages?.[0] || "";
+        winners[key] = { rank, sortKey, meta: { price: effective, count: counts[key], badge, badgePct, image } };
       }
     });
 
@@ -416,18 +417,6 @@ export default function HomeSection({
     });
     return map;
   }, [activeMachines, campaignRules]);
-
-  // First machine image per category for card thumbnails
-  const imageByCategory = React.useMemo(() => {
-    const map: Record<string, string> = {};
-    activeMachines.forEach(m => {
-      const img = m.imageUrl || m.additionalImages?.[0] || "";
-      if (!img) return;
-      const key = SCHAARLIFT_VARIANTS.has(m.category) ? "schaarlift" : m.category;
-      if (!map[key]) map[key] = img;
-    });
-    return map;
-  }, [activeMachines]);
 
   const HOME_ORDER = ["schaarlift", "spin", "mastlift", "kamersteiger", "ladderlift", "ecolift", "aanhanger"];
 
@@ -618,9 +607,9 @@ export default function HomeSection({
         <div className="max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
           {displayCategories.map((cat, i) => {
             const Icon = CATEGORY_ICONS[cat.id] ?? Truck;
-            const catImage = imageByCategory[cat.id];
-            const fallbackGradient = CAT_GRADIENT[cat.id] ?? "from-slate-100 to-slate-200";
             const meta = categoryMeta[cat.id];
+            const catImage = meta?.image || "";
+            const fallbackGradient = CAT_GRADIENT[cat.id] ?? "from-slate-100 to-slate-200";
 
             return (
               <button

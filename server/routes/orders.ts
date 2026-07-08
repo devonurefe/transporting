@@ -238,7 +238,7 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
   }
 
   // deliveryType enum validation
-  const VALID_DELIVERY_TYPES = ["self_pickup", "delivery_by_us", "trailer_rental", "trailer_drop_return"] as const;
+  const VALID_DELIVERY_TYPES = ["self_pickup", "delivery_by_us", "trailer_rental"] as const;
   if (!VALID_DELIVERY_TYPES.includes(orderData.deliveryType)) {
     return res.status(400).json({ error: "Ongeldig bezorgtype" });
   }
@@ -300,10 +300,9 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
       return res.status(400).json({ error: "Voor dit product is alleen afhalen mogelijk" });
     }
     const authTransport =
-      dt === "self_pickup"           ? 0
-      : dt === "delivery_by_us"      ? 150
-      : dt === "trailer_drop_return" ? 35
-      : /* trailer_rental */           25 * rentalDays;
+      dt === "self_pickup"      ? 0
+      : dt === "delivery_by_us" ? 150
+      : /* trailer_rental */      25 * rentalDays;
     const transportCostClient = Number(orderData.transportCost || 0);
     if (Math.abs(transportCostClient - authTransport) > 0.01) {
       return res.status(400).json({ error: "Ongeldig transportbedrag" });

@@ -53,7 +53,7 @@ export interface CrossSellAddon {
   pricePerTwoDay?: number; // optional flat price for an exactly-2-day rental (non-weekly products only)
 }
 
-export type DeliveryType = "self_pickup" | "delivery_by_us" | "trailer_rental" | "trailer_drop_return";
+export type DeliveryType = "self_pickup" | "delivery_by_us" | "trailer_rental";
 
 export type OrderStatus = "In behandeling" | "Goedgekeurd" | "Onderweg" | "Voltooid" | "Geannuleerd";
 

@@ -194,8 +194,7 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
     : t("priceSummaryDayRate");
 
   const transportFree = sums.transport === 0 && sums.driver === 0;
-  const transportName = sums.deliveryType === "trailer_drop_return" ? t("priceSummaryTrailerDropReturn")
-    : sums.deliveryType === "trailer_rental" ? t("priceSummaryTrailerOnLocation")
+  const transportName = sums.deliveryType === "trailer_rental" ? t("priceSummaryTrailerOnLocation")
     : sums.deliveryType === "delivery_by_us" ? t("priceSummaryDelivery")
     : t("priceSummaryPickup");
   const transportValue = transportFree ? t("priceSummaryPickupFree") : euro(sums.transport + sums.driver);
@@ -408,8 +407,7 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
             <div className="space-y-2.5">
               {sums.transport > 0 || sums.driver > 0 ? (
                 <Row
-                  label={sums.deliveryType === "trailer_drop_return" ? t("priceSummaryTrailerDropReturn")
-                    : sums.deliveryType === "trailer_rental" ? t("priceSummaryTrailer")
+                  label={sums.deliveryType === "trailer_rental" ? t("priceSummaryTrailer")
                     : t("priceSummaryDelivery")}
                   value={euro(sums.transport + sums.driver)}
                 />

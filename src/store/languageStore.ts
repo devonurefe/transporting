@@ -77,7 +77,6 @@ const dictionary: TranslationDictionary = {
   priceSummaryRate: { nl: "Tarief", en: "Rate", tr: "Tarife" },
   priceSummaryWorkWeekRate: { nl: "Werkweektarief", en: "Work-week rate", tr: "Çalışma haftası tarifesi" },
   priceSummaryDayRate: { nl: "Dagtarief", en: "Daily rate", tr: "Günlük tarife" },
-  priceSummaryTrailerDropReturn: { nl: "Aanhanger Drop & Return", en: "Trailer drop & return", tr: "Römork bırak & al" },
   priceSummaryTrailerOnLocation: { nl: "Aanhanger op locatie", en: "Trailer on location", tr: "Yerinde römork" },
   priceSummaryDay: { nl: "dag", en: "day", tr: "gün" },
   priceSummaryDays: { nl: "dagen", en: "days", tr: "gün" },

@@ -293,90 +293,43 @@ export default function BookingStep1({
           </button>
 
           {/* Opt 2 — Aanhanger huren */}
-          {(() => {
-            const trailerSelected = deliveryType === "trailer_rental" || deliveryType === "trailer_drop_return";
-            const selectTrailer = () => {
-              if (!trailerSelected) {
-                setDeliveryType("trailer_rental");
-                setDeliveryAddress("");
-                setDeliveryTimeSlot("");
-              }
-            };
-            return (
-              /* role="button" i.p.v. <button>: bevat geneste sub-optie-knoppen */
-              <div
-                role="button"
-                tabIndex={0}
-                aria-pressed={trailerSelected}
-                onClick={selectTrailer}
-                onKeyDown={e => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    selectTrailer();
-                  }
-                }}
-                className={`p-4 rounded-xl border transition-all ${trailerSelected ? "bg-slate-50 border-slate-400 ring-1 ring-slate-200" : "bg-white border-slate-200 hover:border-slate-300 cursor-pointer"}`}
-              >
-                <div className="flex items-center space-x-2.5 mb-2">
-                  <span className={`h-7 w-7 rounded-lg flex items-center justify-center ${trailerSelected ? "bg-slate-200" : "bg-slate-100"}`}>
-                    <Truck className={`h-4 w-4 ${trailerSelected ? "text-slate-800" : "text-slate-500"}`} />
-                  </span>
-                  <div>
-                    <h4 className="text-xs font-bold text-slate-900">Aanhanger huren</h4>
-                    <span className="text-xs text-slate-400 block">Eigen auto, onze aanhanger</span>
-                  </div>
-                </div>
-                <p className="text-xs text-slate-500 leading-normal">
-                  U rijdt zelf met uw eigen voertuig en onze aanhanger.
-                </p>
-
-                {trailerSelected ? (
-                  /* Sub-options */
-                  <div className="mt-3 pt-3 border-t border-slate-200 space-y-2" onClick={e => e.stopPropagation()}>
-                    {/* Op locatie houden */}
-                    <button
-                      type="button"
-                      onClick={() => setDeliveryType("trailer_rental")}
-                      className={`w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg border text-left transition-all cursor-pointer ${deliveryType === "trailer_rental" ? "bg-white border-slate-400 shadow-sm" : "bg-white border-slate-200 hover:border-slate-300"}`}
-                    >
-                      <div className="min-w-0">
-                        <span className="text-xs font-bold text-slate-900 block">Op locatie houden</span>
-                        <span className="text-xs text-slate-500">Aanhanger blijft op uw locatie</span>
-                      </div>
-                      <div className="text-right shrink-0">
-                        {sums && sums.days > 0 ? (
-                          <>
-                            <span className="text-xs text-slate-400 block font-mono">{sums.days} dgn × €25,-</span>
-                            <span className="text-xs font-black text-emerald-600 font-mono">{euroCompact(sums.days * 25)}</span>
-                          </>
-                        ) : (
-                          <span className="text-xs font-bold text-emerald-600">€25,-/dag</span>
-                        )}
-                      </div>
-                    </button>
-
-                    {/* Drop & Return */}
-                    <button
-                      type="button"
-                      onClick={() => setDeliveryType("trailer_drop_return")}
-                      className={`w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg border text-left transition-all cursor-pointer ${deliveryType === "trailer_drop_return" ? "bg-white border-slate-400 shadow-sm" : "bg-white border-slate-200 hover:border-slate-300"}`}
-                    >
-                      <div className="min-w-0">
-                        <span className="text-xs font-bold text-slate-900 block">Drop &amp; Return</span>
-                        <span className="text-xs text-slate-500">U brengt heen, wij halen terug</span>
-                      </div>
-                      <span className="text-xs font-black text-emerald-600 shrink-0 font-mono">€35,-</span>
-                    </button>
-                  </div>
-                ) : (
-                  <div className="mt-2 flex items-baseline gap-1">
-                    <span className="text-sm font-black text-emerald-600">€25,-/dag</span>
-                    <span className="text-xs text-slate-400 font-semibold">of €35,- vast</span>
-                  </div>
-                )}
+          <button
+            type="button"
+            onClick={() => {
+              setDeliveryType("trailer_rental");
+              setDeliveryAddress("");
+              setDeliveryTimeSlot("");
+            }}
+            aria-pressed={deliveryType === "trailer_rental"}
+            className={`w-full text-left p-4 rounded-xl border transition-all cursor-pointer ${
+              deliveryType === "trailer_rental"
+                ? "bg-slate-50 border-slate-400 ring-1 ring-slate-200"
+                : "bg-white border-slate-200 hover:border-slate-300"
+            }`}
+          >
+            <div className="flex items-center space-x-2.5 mb-2">
+              <span className={`h-7 w-7 rounded-lg flex items-center justify-center ${deliveryType === "trailer_rental" ? "bg-slate-200" : "bg-slate-100"}`}>
+                <Truck className={`h-4 w-4 ${deliveryType === "trailer_rental" ? "text-slate-800" : "text-slate-500"}`} />
+              </span>
+              <div>
+                <h4 className="text-xs font-bold text-slate-900">Aanhanger huren</h4>
+                <span className="text-xs text-slate-400 block">Eigen auto, onze aanhanger</span>
               </div>
-            );
-          })()}
+            </div>
+            <p className="text-xs text-slate-500 leading-normal">
+              U rijdt zelf met uw eigen voertuig en onze aanhanger.
+            </p>
+            {sums && sums.days > 0 ? (
+              <div className="mt-2 flex items-baseline gap-1">
+                <span className="text-sm font-black text-emerald-600 font-mono">{euroCompact(sums.days * 25)}</span>
+                <span className="text-xs text-slate-500 font-semibold font-mono">({sums.days} dgn × €25,-)</span>
+              </div>
+            ) : (
+              <div className="mt-2 flex items-baseline gap-1">
+                <span className="text-sm font-black text-emerald-600">€25,-/dag</span>
+              </div>
+            )}
+          </button>
 
           {/* Opt 3 — Zelf ophalen */}
           <button

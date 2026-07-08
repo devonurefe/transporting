@@ -32,6 +32,7 @@ model Machine {
   threeDayPrice           Float?
   fourDayPrice            Float?
   weeklyPrice             Float?
+  extraDayPrice           Float?
   monthlyPrice            Float?
   sundayBlockFee          Float?
   weekendRulesEnabled     Boolean       @default(false)

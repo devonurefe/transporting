@@ -45,6 +45,7 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
   const [newThreeDayPrice, setNewThreeDayPrice] = useState("");
   const [newFourDayPrice, setNewFourDayPrice] = useState("");
   const [newWeeklyPrice, setNewWeeklyPrice] = useState("");
+  const [newExtraDayPrice, setNewExtraDayPrice] = useState("");
   const [newMonthlyFlatPrice, setNewMonthlyFlatPrice] = useState("");
   const [newSundayBlockFee, setNewSundayBlockFee] = useState("");
   const [newWeekendRulesEnabled, setNewWeekendRulesEnabled] = useState(false);
@@ -227,6 +228,7 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
       threeDayPrice: newThreeDayPrice ? Number(newThreeDayPrice) : undefined,
       fourDayPrice: newFourDayPrice ? Number(newFourDayPrice) : undefined,
       weeklyPrice: newWeeklyPrice ? Number(newWeeklyPrice) : undefined,
+      extraDayPrice: newExtraDayPrice ? Number(newExtraDayPrice) : undefined,
       monthlyPrice: newMonthlyFlatPrice ? Number(newMonthlyFlatPrice) : undefined,
       sundayBlockFee: newSundayBlockFee ? Number(newSundayBlockFee) : undefined,
       weekendRulesEnabled: newWeekendRulesEnabled,
@@ -274,6 +276,7 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
       setNewTwoDayPrice("");
       setNewWeekendPrice("");
       setNewWeeklyPrice("");
+      setNewExtraDayPrice("");
       setNewMonthlyFlatPrice("");
       setCampaignText("");
       setCampaignDiscountPercent("");
@@ -597,6 +600,19 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
                 className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
               />
               <p className="text-[10px] text-slate-400">{t("Bij 5–27 dagen (naar rato)", "For 5–27 days (pro-rata)", "5–27 günde (orantılı)")}</p>
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-slate-700 block font-bold">{t("Extra Dag €", "Extra Day €", "Ekstra Gün €")}</label>
+              <input
+                type="number"
+                min="0"
+                step="any"
+                value={newExtraDayPrice}
+                onChange={(e) => setNewExtraDayPrice(e.target.value)}
+                placeholder="–"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
+              />
+              <p className="text-[10px] text-slate-400">{t("Per dag boven de werkweek (dag 6–27), tot maandtarief", "Per day beyond the work week (day 6–27), up to monthly rate", "İş haftasının ötesinde günlük (6–27. gün), ay tarifesine kadar")}</p>
             </div>
             <div className="space-y-1">
               <label className="text-xs text-slate-700 block font-bold">{t("4 Weken €", "4 Weeks €", "4 Hafta €")}</label>

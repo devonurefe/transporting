@@ -124,6 +124,7 @@ const defaultMachines = [
     threeDayPrice: 260,
     fourDayPrice: 310,
     weeklyPrice: 340,
+    extraDayPrice: 70,
     monthlyPrice: 990
   },
   {
@@ -151,6 +152,7 @@ const defaultMachines = [
     threeDayPrice: 260,
     fourDayPrice: 310,
     weeklyPrice: 340,
+    extraDayPrice: 70,
     monthlyPrice: 990
   },
   {
@@ -178,6 +180,7 @@ const defaultMachines = [
     threeDayPrice: 260,
     fourDayPrice: 310,
     weeklyPrice: 340,
+    extraDayPrice: 70,
     monthlyPrice: 990
   },
   {
@@ -205,6 +208,7 @@ const defaultMachines = [
     threeDayPrice: 320,
     fourDayPrice: 390,
     weeklyPrice: 430,
+    extraDayPrice: 90,
     monthlyPrice: 1250
   },
 
@@ -233,6 +237,7 @@ const defaultMachines = [
     threeDayPrice: 520,
     fourDayPrice: 560,
     weeklyPrice: 590,
+    extraDayPrice: 115,
     monthlyPrice: 1750
   },
   {
@@ -259,6 +264,7 @@ const defaultMachines = [
     threeDayPrice: 630,
     fourDayPrice: 680,
     weeklyPrice: 715,
+    extraDayPrice: 140,
     monthlyPrice: 2100
   },
 
@@ -287,6 +293,7 @@ const defaultMachines = [
     threeDayPrice: 170,
     fourDayPrice: 185,
     weeklyPrice: 195,
+    extraDayPrice: 46,
     monthlyPrice: 540
   },
   {
@@ -313,6 +320,7 @@ const defaultMachines = [
     threeDayPrice: 170,
     fourDayPrice: 185,
     weeklyPrice: 195,
+    extraDayPrice: 46,
     monthlyPrice: 540
   },
   {
@@ -339,6 +347,7 @@ const defaultMachines = [
     threeDayPrice: 170,
     fourDayPrice: 185,
     weeklyPrice: 195,
+    extraDayPrice: 46,
     monthlyPrice: 540
   },
   {
@@ -365,6 +374,7 @@ const defaultMachines = [
     threeDayPrice: 170,
     fourDayPrice: 185,
     weeklyPrice: 195,
+    extraDayPrice: 46,
     monthlyPrice: 540
   },
 
@@ -393,6 +403,7 @@ const defaultMachines = [
     threeDayPrice: 215,
     fourDayPrice: 235,
     weeklyPrice: 250,
+    extraDayPrice: 60,
     monthlyPrice: 680
   },
   {
@@ -419,6 +430,7 @@ const defaultMachines = [
     threeDayPrice: 215,
     fourDayPrice: 235,
     weeklyPrice: 250,
+    extraDayPrice: 60,
     monthlyPrice: 680
   },
 
@@ -447,6 +459,7 @@ const defaultMachines = [
     threeDayPrice: 125,
     fourDayPrice: 135,
     weeklyPrice: 145,
+    extraDayPrice: 34,
     monthlyPrice: 390
   },
 
@@ -509,6 +522,7 @@ const defaultMachines = [
     threeDayPrice: 280,
     fourDayPrice: 360,
     weeklyPrice: 405,
+    extraDayPrice: 80,
     monthlyPrice: 980
   },
   {
@@ -535,6 +549,7 @@ const defaultMachines = [
     threeDayPrice: 115,
     fourDayPrice: 136,
     weeklyPrice: 150,
+    extraDayPrice: 30,
     monthlyPrice: 370
   },
   {
@@ -557,13 +572,14 @@ const defaultMachines = [
     campaignDiscountPercent: null,
     campaignDiscountAmount: null,
     // Tiered pricing + weekend rules (pilot product). 1d €40, 2d €80, 3d €105,
-    // 4d €125, 5d (werkweek) €140, dag 6+ = €140/5 = €28/dag, weekendpakket €69,
+    // 4d €125, 5d (werkweek) €140, dag 6+ = €28/dag (extraDayPrice), weekendpakket €69,
     // zondagblokkade €20. Depot gesloten za/zo → weekendRulesEnabled.
     twoDayPrice: 80,
     threeDayPrice: 105,
     fourDayPrice: 125,
     weekendPrice: 69,
     weeklyPrice: 140,
+    extraDayPrice: 28,
     monthlyPrice: 340,
     sundayBlockFee: 20,
     weekendRulesEnabled: true
@@ -592,6 +608,7 @@ const defaultMachines = [
     threeDayPrice: 105,
     fourDayPrice: 125,
     weeklyPrice: 140,
+    extraDayPrice: 28,
     monthlyPrice: 340
   },
 
@@ -620,6 +637,7 @@ const defaultMachines = [
     threeDayPrice: 280,
     fourDayPrice: 310,
     weeklyPrice: 330,
+    extraDayPrice: 65,
     monthlyPrice: 990
   },
   {
@@ -646,6 +664,7 @@ const defaultMachines = [
     threeDayPrice: 315,
     fourDayPrice: 350,
     weeklyPrice: 375,
+    extraDayPrice: 75,
     monthlyPrice: 1125
   },
   {
@@ -672,6 +691,7 @@ const defaultMachines = [
     threeDayPrice: 315,
     fourDayPrice: 350,
     weeklyPrice: 375,
+    extraDayPrice: 75,
     monthlyPrice: 1125
   },
 
@@ -790,6 +810,7 @@ async function main() {
     const t3p = (mach as any).threeDayPrice ?? null;
     const t4p = (mach as any).fourDayPrice  ?? null;
     const wkp = (mach as any).weeklyPrice  ?? null;
+    const edp = (mach as any).extraDayPrice ?? null;
     const mp  = (mach as any).monthlyPrice ?? null;
     const odp = (mach as any).oneDayPrice  ?? null;
     const sbf = (mach as any).sundayBlockFee ?? null;
@@ -798,6 +819,10 @@ async function main() {
     if (t3p !== null) await prisma.machine.updateMany({ where: { id: mach.id, threeDayPrice: null }, data: { threeDayPrice: t3p } });
     if (t4p !== null) await prisma.machine.updateMany({ where: { id: mach.id, fourDayPrice:  null }, data: { fourDayPrice:  t4p } });
     if (wkp !== null) await prisma.machine.updateMany({ where: { id: mach.id, weeklyPrice:  null }, data: { weeklyPrice:  wkp } });
+    // extraDayPrice: added 2026-07. Back-filled when null (covers both brand-new
+    // rows and existing rows that predate this column) so the day-6+ tier price
+    // uses the real "Ekstra Dag" rate instead of the weeklyPrice/5 fallback.
+    if (edp !== null) await prisma.machine.updateMany({ where: { id: mach.id, extraDayPrice: null }, data: { extraDayPrice: edp } });
     if (mp  !== null) await prisma.machine.updateMany({ where: { id: mach.id, monthlyPrice: null }, data: { monthlyPrice: mp } });
     if (odp !== null) await prisma.machine.updateMany({ where: { id: mach.id, oneDayPrice:  null }, data: { oneDayPrice:  odp } });
     if (sbf !== null) await prisma.machine.updateMany({ where: { id: mach.id, sundayBlockFee: null }, data: { sundayBlockFee: sbf } });

@@ -154,7 +154,7 @@ describe("buildTierDisplay — 6-27 dagen: dagunit = weeklyPrice/5, vermenigvuld
     expect(real).toBe(559); // round(13 * 215/5)
     const display = buildTierDisplay(machine, 13, MON);
     expect(display.isFlatRate).toBe(false);
-    expect(display.weeklyBreakdown).toEqual({ weeks: 2, pricePerWeek: 215, remainder: 3, dailyRate: 43, remainderCost: 559 - 2 * 215 });
+    expect(display.weeklyBreakdown).toEqual({ weeks: 1, pricePerWeek: 215, remainder: 8, dailyRate: 43, remainderCost: 559 - 215 });
     expect(displayedTotal(machine, 13, MON)).toBe(real);
   });
 

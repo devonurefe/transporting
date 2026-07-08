@@ -279,7 +279,7 @@ export default function MachineDetailModal({
                     </div>
                   );
                 })()}
-                {machine.weekendRulesEnabled && !!(machine.threeDayPrice ?? machine.weeklyPrice) && (
+                {!!(machine.threeDayPrice ?? machine.weeklyPrice) && (
                   <div className="flex items-center px-4 py-2.5 bg-white">
                     <div className="flex-1">
                       <p className="text-xs font-bold text-slate-800">3 dagen</p>
@@ -288,7 +288,7 @@ export default function MachineDetailModal({
                     <span className="font-mono font-extrabold text-sm text-slate-900">€{priceNum(vp((machine.threeDayPrice ?? machine.weeklyPrice)!))}</span>
                   </div>
                 )}
-                {machine.weekendRulesEnabled && !!(machine.fourDayPrice ?? machine.weeklyPrice) && (
+                {!!(machine.fourDayPrice ?? machine.weeklyPrice) && (
                   <div className="flex items-center px-4 py-2.5 bg-white">
                     <div className="flex-1">
                       <p className="text-xs font-bold text-slate-800">4 dagen</p>
@@ -300,20 +300,20 @@ export default function MachineDetailModal({
                 {!!machine.weeklyPrice && (
                   <div className="flex items-center px-4 py-2.5 bg-emerald-50">
                     <div className="flex-1">
-                      <p className="text-xs font-bold text-emerald-700">{machine.weekendRulesEnabled ? "5 dagen (werkweek)" : "3–5 dagen (werkweek)"}</p>
+                      <p className="text-xs font-bold text-emerald-700">{(machine.threeDayPrice || machine.fourDayPrice) ? "5 dagen (werkweek)" : "3–5 dagen (werkweek)"}</p>
                       <p className="text-[10px] text-emerald-600">Ma – Vr</p>
                     </div>
                     {d.weekly > 0 && <span className="text-[10px] font-black px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 mr-2">−{d.weekly}%</span>}
                     <span className="font-mono font-extrabold text-sm text-emerald-700">€{priceNum(vp(machine.weeklyPrice))}</span>
                   </div>
                 )}
-                {machine.weekendRulesEnabled && !!machine.weeklyPrice && (
+                {!!machine.weeklyPrice && (
                   <div className="flex items-center px-4 py-2.5 bg-white">
                     <div className="flex-1">
                       <p className="text-xs font-bold text-slate-800">Extra dag</p>
                       <p className="text-[10px] text-slate-400">Vanaf dag 6, per dag</p>
                     </div>
-                    <span className="font-mono font-extrabold text-sm text-slate-900">+ €{priceNum(vp(machine.weeklyPrice / 5))}</span>
+                    <span className="font-mono font-extrabold text-sm text-slate-900">+ €{priceNum(vp(machine.extraDayPrice ?? machine.weeklyPrice / 5))}</span>
                   </div>
                 )}
                 {!!machine.weekendPrice && (

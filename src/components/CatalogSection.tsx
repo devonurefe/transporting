@@ -640,7 +640,10 @@ export default function CatalogSection({
             if (m.threeDayPrice ?? m.weeklyPrice) rows.push({ period: "3 dagen", when: "Doordeweeks", price: (m.threeDayPrice ?? m.weeklyPrice)! });
             if (m.fourDayPrice ?? m.weeklyPrice) rows.push({ period: "4 dagen", when: "Doordeweeks", price: (m.fourDayPrice ?? m.weeklyPrice)! });
             if (m.weeklyPrice) rows.push({ period: "5 dagen (werkweek)", when: "Ma – Vr", price: m.weeklyPrice, badge: d.weekly > 0 ? `−${d.weekly}%` : undefined, highlight: "green" });
-            if (m.weeklyPrice) rows.push({ period: "Extra dag", when: "Vanaf dag 6, per dag", price: m.weeklyPrice / 5, priceText: `+ ${formatPrice(vp(m.weeklyPrice / 5))}` });
+            if (m.weeklyPrice) {
+              const extra = m.extraDayPrice ?? m.weeklyPrice / 5;
+              rows.push({ period: "Extra dag", when: "Vanaf dag 6, per dag", price: extra, priceText: `+ ${formatPrice(vp(extra))}` });
+            }
             if (m.weekendPrice) rows.push({ period: "Weekend", when: "Losse za, zo of za+zo · retour ma 08:00", price: m.weekendPrice, highlight: "violet" });
             if (m.monthlyPrice) rows.push({ period: "4 weken (28 dagen)", when: "Langlopend", price: m.monthlyPrice, badge: d.monthly > 0 ? `−${d.monthly}%` : undefined, highlight: "teal" });
           } else {
@@ -658,8 +661,12 @@ export default function CatalogSection({
             if (m.weekendPrice) {
               rows.push({ period: "Weekend", when: "Za – Zo", price: m.weekendPrice, highlight: "violet" });
             }
+            if (m.threeDayPrice ?? m.weeklyPrice) rows.push({ period: "3 dagen", when: "Doordeweeks", price: (m.threeDayPrice ?? m.weeklyPrice)! });
+            if (m.fourDayPrice ?? m.weeklyPrice) rows.push({ period: "4 dagen", when: "Doordeweeks", price: (m.fourDayPrice ?? m.weeklyPrice)! });
             if (m.weeklyPrice) {
-              rows.push({ period: "3–5 dagen (werkweek)", when: "Ma – Vr", price: m.weeklyPrice, badge: d.weekly > 0 ? `−${d.weekly}%` : undefined, highlight: "green" });
+              rows.push({ period: "5 dagen (werkweek)", when: "Ma – Vr", price: m.weeklyPrice, badge: d.weekly > 0 ? `−${d.weekly}%` : undefined, highlight: "green" });
+              const extra = m.extraDayPrice ?? m.weeklyPrice / 5;
+              rows.push({ period: "Extra dag", when: "Vanaf dag 6, per dag", price: extra, priceText: `+ ${formatPrice(vp(extra))}` });
             }
             if (m.monthlyPrice) {
               rows.push({ period: "4 weken (28 dagen)", when: "Langlopend", price: m.monthlyPrice, badge: d.monthly > 0 ? `−${d.monthly}%` : undefined, highlight: "teal" });

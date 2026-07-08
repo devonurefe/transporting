@@ -115,6 +115,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
   const [editThreeDayPrice, setEditThreeDayPrice] = useState("");
   const [editFourDayPrice, setEditFourDayPrice] = useState("");
   const [editWeeklyPrice, setEditWeeklyPrice] = useState("");
+  const [editExtraDayPrice, setEditExtraDayPrice] = useState("");
   const [editMonthlyFlatPrice, setEditMonthlyFlatPrice] = useState("");
   const [editSundayBlockFee, setEditSundayBlockFee] = useState("");
   const [editWeekendRulesEnabled, setEditWeekendRulesEnabled] = useState(false);
@@ -189,6 +190,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
     setEditThreeDayPrice(m.threeDayPrice ? String(m.threeDayPrice) : "");
     setEditFourDayPrice(m.fourDayPrice ? String(m.fourDayPrice) : "");
     setEditWeeklyPrice(m.weeklyPrice ? String(m.weeklyPrice) : "");
+    setEditExtraDayPrice(m.extraDayPrice ? String(m.extraDayPrice) : "");
     setEditMonthlyFlatPrice(m.monthlyPrice ? String(m.monthlyPrice) : "");
     setEditSundayBlockFee(m.sundayBlockFee ? String(m.sundayBlockFee) : "");
     setEditWeekendRulesEnabled(!!m.weekendRulesEnabled);
@@ -322,6 +324,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
       threeDayPrice: editThreeDayPrice ? Number(editThreeDayPrice) : undefined,
       fourDayPrice: editFourDayPrice ? Number(editFourDayPrice) : undefined,
       weeklyPrice: editWeeklyPrice ? Number(editWeeklyPrice) : undefined,
+      extraDayPrice: editExtraDayPrice ? Number(editExtraDayPrice) : undefined,
       monthlyPrice: editMonthlyFlatPrice ? Number(editMonthlyFlatPrice) : undefined,
       sundayBlockFee: editSundayBlockFee ? Number(editSundayBlockFee) : undefined,
       weekendRulesEnabled: editWeekendRulesEnabled,
@@ -963,6 +966,19 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                           className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
                         />
                         <p className="text-[10px] text-slate-400">{t("Bij 5–27 dagen (naar rato)", "For 5–27 days (pro-rata)", "5–27 günde (orantılı)")}</p>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-xs text-slate-700 block font-bold">{t("Extra Dag €", "Extra Day €", "Ekstra Gün €")}</label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="any"
+                          value={editExtraDayPrice}
+                          onChange={(e) => setEditExtraDayPrice(e.target.value)}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
+                        />
+                        <p className="text-[10px] text-slate-400">{t("Per dag boven de werkweek (dag 6–27), tot maandtarief", "Per day beyond the work week (day 6–27), up to monthly rate", "İş haftasının ötesinde günlük (6–27. gün), ay tarifesine kadar")}</p>
                       </div>
 
                       <div className="space-y-1">

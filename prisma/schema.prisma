@@ -42,6 +42,7 @@ model Machine {
   minRentalDays           Int?
   weeklyOnly              Boolean       @default(false)
   pickupOnly              Boolean       @default(false)
+  stockQuantity           Int           @default(1)
   crossSellAddons         Json?
   isActive                Boolean       @default(true)
   showInWeeklyOffers       Boolean       @default(false)

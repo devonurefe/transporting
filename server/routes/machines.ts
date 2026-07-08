@@ -136,6 +136,12 @@ function validateMachineInput(body: any): { valid: boolean; error?: string } {
     const v = Number(body.minRentalDays);
     if (isNaN(v) || v < 1 || v > 365) return { valid: false, error: "Minimale huurperiode moet tussen 1 en 365 dagen liggen." };
   }
+  if (body.stockQuantity !== undefined && body.stockQuantity !== null && body.stockQuantity !== "") {
+    const v = Number(body.stockQuantity);
+    if (isNaN(v) || !Number.isInteger(v) || v < 1 || v > 999) {
+      return { valid: false, error: "Voorraad moet een geheel getal tussen 1 en 999 zijn." };
+    }
+  }
   if (body.weeklyOnly && (body.weeklyPrice === undefined || body.weeklyPrice === null || body.weeklyPrice === "")) {
     return { valid: false, error: "Weekprijs (€/week) is verplicht wanneer 'alleen per week' is ingeschakeld." };
   }
@@ -255,6 +261,7 @@ machinesRouter.post("/", requireAdmin as any, async (req: AuthenticatedRequest, 
         minRentalDays: req.body.minRentalDays !== undefined && req.body.minRentalDays !== null && req.body.minRentalDays !== "" ? Math.round(Number(req.body.minRentalDays)) : null,
         weeklyOnly: Boolean(req.body.weeklyOnly),
         pickupOnly: Boolean(req.body.pickupOnly),
+        stockQuantity: req.body.stockQuantity !== undefined && req.body.stockQuantity !== null && req.body.stockQuantity !== "" ? Math.min(999, Math.max(1, Math.round(Number(req.body.stockQuantity)))) : 1,
         showInWeeklyOffers: Boolean(req.body.showInWeeklyOffers),
         crossSellAddons: sanitizeCrossSell(req.body.crossSellAddons) ?? Prisma.JsonNull
       }
@@ -355,6 +362,7 @@ machinesRouter.put("/:id", requireAdmin as any, async (req: AuthenticatedRequest
         minRentalDays: req.body.minRentalDays !== undefined && req.body.minRentalDays !== null && req.body.minRentalDays !== "" ? Math.round(Number(req.body.minRentalDays)) : null,
         weeklyOnly: Boolean(req.body.weeklyOnly),
         pickupOnly: Boolean(req.body.pickupOnly),
+        stockQuantity: req.body.stockQuantity !== undefined && req.body.stockQuantity !== null && req.body.stockQuantity !== "" ? Math.min(999, Math.max(1, Math.round(Number(req.body.stockQuantity)))) : undefined,
         showInWeeklyOffers: req.body.showInWeeklyOffers !== undefined ? Boolean(req.body.showInWeeklyOffers) : undefined,
         crossSellAddons: req.body.crossSellAddons !== undefined ? (sanitizeCrossSell(req.body.crossSellAddons) ?? Prisma.JsonNull) : undefined
       }

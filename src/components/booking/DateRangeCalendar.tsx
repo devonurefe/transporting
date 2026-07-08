@@ -51,17 +51,19 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
   const vatDisplay = useAppStore((s) => s.vatDisplay);
   const allMachines = useAppStore((s) => s.machines);
 
-  // All physical units of this model (same base name, "(Unit N)" stripped). A day
-  // is only locked when EVERY unit is busy; one free unit keeps the day open.
-  const unitIds = useMemo(() => {
+  // All physical units of this model (same base name, "(Unit N)" stripped), each
+  // carrying its own stock quantity. A day is only locked when every unit has
+  // exhausted its stock; one unit with remaining capacity keeps the day open.
+  const units = useMemo(() => {
     const baseName = (n: string) => n.replace(/\s*\(Unit\s+\d+\)\s*$/i, "").trim();
     const base = baseName(machine.name);
-    const ids = allMachines
+    const matched = allMachines
       .filter((m) => m.isActive !== false && baseName(m.name) === base)
-      .map((m) => m.id);
-    return ids.length ? ids : [machine.id];
-  }, [allMachines, machine.id, machine.name]);
-  const unitKey = unitIds.join(",");
+      .map((m) => ({ id: m.id, stockQuantity: m.stockQuantity ?? 1 }));
+    return matched.length ? matched : [{ id: machine.id, stockQuantity: machine.stockQuantity ?? 1 }];
+  }, [allMachines, machine.id, machine.name, machine.stockQuantity]);
+  const unitIds = useMemo(() => units.map((u) => u.id), [units]);
+  const unitKey = units.map((u) => `${u.id}:${u.stockQuantity}`).join(",");
 
   const today = todayStr || new Date().toISOString().split("T")[0];
   const todayYear = Number(today.split("-")[0]);
@@ -172,7 +174,7 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
     for (let i = 0; i < 366; i++) {
       const next = addDaysKey(cursor, 1);
       // Require a single unit free for the whole [start..next] span, not just that day
-      if (!someUnitAvailable(unitIds, draftStart, next, orders, blockedDates, today)) { hitBlock = true; break; }
+      if (!someUnitAvailable(units, draftStart, next, orders, blockedDates, today)) { hitBlock = true; break; }
       cap = next; cursor = next;
     }
     return { maxEnd: cap, cappedByRealBlock: hitBlock };
@@ -189,7 +191,7 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
       const key = toKey(viewYear, viewMonth, d);
       let status: "past" | "unavailable" | "available" | "capped";
       if (key < today) status = "past";
-      else if (!someUnitAvailable(unitIds, key, key, orders, blockedDates, today)) status = "unavailable";
+      else if (!someUnitAvailable(units, key, key, orders, blockedDates, today)) status = "unavailable";
       else status = "available";
       const isCapped = status === "available" && !!draftStart && !draftEnd && maxEnd !== "" && key > maxEnd;
       const cellStatus: "past" | "unavailable" | "available" | "capped" = isCapped ? "capped" : status;
@@ -226,7 +228,7 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
     if (key === draftStart) { setDraftStart(""); return; }
     if (key < draftStart) { setDraftStart(key); return; }
     // key > draftStart: set as end
-    if (someUnitAvailable(unitIds, draftStart, key, orders, blockedDates, today)) setDraftEnd(key);
+    if (someUnitAvailable(units, draftStart, key, orders, blockedDates, today)) setDraftEnd(key);
   };
 
   const canPrev = !(viewYear === todayYear && viewMonth === todayMonth);
@@ -241,7 +243,7 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
   // When only start is picked (no end yet), treat it as a 1-day selection so
   // the confirm button enables immediately after the first tap.
   const effectiveEnd = draftEnd || draftStart;
-  const rangeAvail = !!draftStart && someUnitAvailable(unitIds, draftStart, effectiveEnd, orders, blockedDates, today);
+  const rangeAvail = !!draftStart && someUnitAvailable(units, draftStart, effectiveEnd, orders, blockedDates, today);
   const days = rangeAvail ? calculateRentalDays(draftStart, effectiveEnd) : 0;
   const minDays = machine.minRentalDays ?? 1;
   const validRange = rangeAvail && days >= minDays;

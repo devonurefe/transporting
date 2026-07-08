@@ -186,6 +186,7 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
   const [menuHome, setMenuHome] = useState(siteConfig.menuHomeLabel || "");
   const [menuCatalog, setMenuCatalog] = useState(siteConfig.menuCatalogLabel || "");
   const [menuOrders, setMenuOrders] = useState(siteConfig.menuOrdersLabel || "");
+  const [menuAdmin, setMenuAdmin] = useState(siteConfig.menuAdminLabel || "");
   const [contactEmail, setContactEmail] = useState(siteConfig.contactEmail || "");
   const [contactPhone, setContactPhone] = useState(siteConfig.contactPhone || "");
   const [companyAddress, setCompanyAddress] = useState(siteConfig.companyAddress || "");
@@ -216,6 +217,7 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
       setMenuHome(siteConfig.menuHomeLabel || "");
       setMenuCatalog(siteConfig.menuCatalogLabel || "");
       setMenuOrders(siteConfig.menuOrdersLabel || "");
+      setMenuAdmin(siteConfig.menuAdminLabel || "");
       setContactEmail(siteConfig.contactEmail || "");
       setContactPhone(siteConfig.contactPhone || "");
       setCompanyAddress(siteConfig.companyAddress || "");
@@ -270,7 +272,7 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
       menuHomeLabel: menuHome,
       menuCatalogLabel: menuCatalog,
       menuOrdersLabel: menuOrders,
-      menuAdminLabel: siteConfig.menuAdminLabel || "Portaal",
+      menuAdminLabel: menuAdmin.trim() || "Portaal",
       contactEmail,
       contactPhone,
       companyAddress,
@@ -471,6 +473,17 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
                 type="text"
                 value={menuOrders}
                 onChange={(e) => setMenuOrders(e.target.value)}
+                className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs text-slate-700 block font-bold">{t("Labels - Portaal (Admin)", "Labels - Portal (Admin)", "Etiketler - Portal (Yönetici)")}</label>
+              <input
+                type="text"
+                value={menuAdmin}
+                onChange={(e) => setMenuAdmin(e.target.value)}
+                placeholder="Portaal"
                 className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
               />
             </div>

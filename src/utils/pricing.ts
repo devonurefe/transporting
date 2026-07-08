@@ -210,22 +210,28 @@ function tierPrice(machine: Machine, n: number, startDate?: string | Date): numb
   // 3–5 days: flat weekly rate (also the fallback for 3/4 when no per-day rate set)
   if ((n === 3 || n === 4 || n === 5) && machine.weeklyPrice) return machine.weeklyPrice;
 
-  // 6–27 days: linear rate derived from weeklyPrice, capped at the monthly price
-  // (a sub-month rental must never cost more than a full month).
+  // 6–27 days: the 5-day werkweektarief plus each day beyond it at extraDayPrice
+  // (falls back to weeklyPrice/5 when extraDayPrice isn't set), capped at the
+  // monthly price (a sub-month rental must never cost more than a full month).
   if (n >= 6 && n < 28 && machine.weeklyPrice) {
-    let base = Math.round(n * (machine.weeklyPrice / 5));
+    const extra = machine.extraDayPrice ?? machine.weeklyPrice / 5;
+    let base = Math.round(machine.weeklyPrice + (n - 5) * extra);
     if (machine.monthlyPrice) base = Math.min(base, machine.monthlyPrice);
     return base;
   }
 
-  // Monthly flat rate: 28+ days. The pro-rata remainder is likewise capped at the
-  // monthly price so e.g. "1 maand + 25 dagen" never exceeds two months.
+  // Monthly flat rate: 28+ days. The pro-rata remainder is charged at the marginal
+  // extraDayPrice (falls back to weeklyPrice/5) per leftover day — not the flat
+  // 3/4/5-day tier price, which bakes in less discount than a rental that's
+  // already committed to a full month plus a few extra days deserves. Likewise
+  // capped at the monthly price so e.g. "1 maand + 25 dagen" never exceeds two months.
   if (n >= 28 && machine.monthlyPrice) {
     const fullMonths = Math.floor(n / 28);
     const remainder = n % 28;
     let remainderCost: number;
     if (remainder >= 3 && machine.weeklyPrice) {
-      remainderCost = Math.round(remainder * (machine.weeklyPrice / 5));
+      const extra = machine.extraDayPrice ?? machine.weeklyPrice / 5;
+      remainderCost = Math.round(remainder * extra);
     } else {
       remainderCost = remainder * machine.pricePerDay;
     }
@@ -291,23 +297,23 @@ export function buildTierDisplay(machine: Machine, days: number, startDate?: str
   }
 
   if (days >= 6 && days <= 27 && machine.weeklyPrice) {
-    const weeks = Math.floor(days / 5);
-    const remainder = days % 5;
-    const dailyRate = Math.round(machine.weeklyPrice / 5);
-    const wkBase = Math.round(days * (machine.weeklyPrice / 5));
+    const extra = machine.extraDayPrice ?? machine.weeklyPrice / 5;
+    const remainder = days - 5;
+    const dailyRate = Math.round(extra);
+    const wkBase = Math.round(machine.weeklyPrice + remainder * extra);
     if (machine.monthlyPrice && wkBase > machine.monthlyPrice) {
-      // Pro-rata weekly rate would exceed the monthly price — tierPrice() caps the
-      // actual charge at monthlyPrice, so a weeks/remainder breakdown would no
+      // Extra-day pricing would exceed the monthly price — tierPrice() caps the
+      // actual charge at monthlyPrice, so a week/remainder breakdown would no
       // longer sum to what's charged. Show one flat line instead.
       return { tierLabel: "Maandtarief (voordeliger)", isFlatRate: true, weeklyBreakdown: null };
     }
     // remainderCost derived from wkBase (not remainder × dailyRate) so
     // weeks × pricePerWeek + remainderCost always sums to exactly wkBase,
-    // regardless of rounding when weeklyPrice isn't a multiple of 5.
+    // regardless of rounding when extraDayPrice isn't set (weeklyPrice/5 fallback).
     return {
       tierLabel: null,
       isFlatRate: false,
-      weeklyBreakdown: { weeks, pricePerWeek: machine.weeklyPrice, remainder, dailyRate, remainderCost: wkBase - weeks * machine.weeklyPrice }
+      weeklyBreakdown: { weeks: 1, pricePerWeek: machine.weeklyPrice, remainder, dailyRate, remainderCost: wkBase - machine.weeklyPrice }
     };
   }
 

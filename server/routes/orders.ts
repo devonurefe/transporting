@@ -402,7 +402,8 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
       if (n === 4 && m.fourDayPrice) return m.fourDayPrice;
       if ((n === 3 || n === 4 || n === 5) && m.weeklyPrice) return m.weeklyPrice;
       if (n >= 6 && n < 28 && m.weeklyPrice) {
-        let base = Math.round(n * (m.weeklyPrice / 5));
+        const extra = m.extraDayPrice ?? m.weeklyPrice / 5;
+        let base = Math.round(m.weeklyPrice + (n - 5) * extra);
         if (m.monthlyPrice) base = Math.min(base, m.monthlyPrice);
         return base;
       }
@@ -410,8 +411,12 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
         const fullMonths = Math.floor(n / 28);
         const remainder = n % 28;
         let remainderCost: number;
-        if (remainder >= 3 && m.weeklyPrice) remainderCost = Math.round(remainder * (m.weeklyPrice / 5));
-        else remainderCost = remainder * machine.pricePerDay;
+        if (remainder >= 3 && m.weeklyPrice) {
+          const extra = m.extraDayPrice ?? m.weeklyPrice / 5;
+          remainderCost = Math.round(remainder * extra);
+        } else {
+          remainderCost = remainder * machine.pricePerDay;
+        }
         remainderCost = Math.min(remainderCost, m.monthlyPrice);
         return fullMonths * m.monthlyPrice + remainderCost;
       }

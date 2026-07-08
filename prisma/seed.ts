@@ -119,10 +119,13 @@ const defaultMachines = [
     campaignText: null,
     campaignDiscountPercent: null,
     campaignDiscountAmount: null,
-    weekendPrice: 150,
-    twoDayPrice: 190,
-    weeklyPrice: 335,
-    monthlyPrice: 490
+    weekendPrice: 120,
+    twoDayPrice: 170,
+    threeDayPrice: 260,
+    fourDayPrice: 310,
+    weeklyPrice: 340,
+    extraDayPrice: 70,
+    monthlyPrice: 990
   },
   {
     id: "nifty-120-2",
@@ -144,10 +147,13 @@ const defaultMachines = [
     campaignText: null,
     campaignDiscountPercent: null,
     campaignDiscountAmount: null,
-    weekendPrice: 150,
-    twoDayPrice: 190,
-    weeklyPrice: 335,
-    monthlyPrice: 490
+    weekendPrice: 120,
+    twoDayPrice: 170,
+    threeDayPrice: 260,
+    fourDayPrice: 310,
+    weeklyPrice: 340,
+    extraDayPrice: 70,
+    monthlyPrice: 990
   },
   {
     id: "nifty-120-3",
@@ -169,10 +175,13 @@ const defaultMachines = [
     campaignText: null,
     campaignDiscountPercent: null,
     campaignDiscountAmount: null,
-    weekendPrice: 150,
-    twoDayPrice: 190,
-    weeklyPrice: 335,
-    monthlyPrice: 490
+    weekendPrice: 120,
+    twoDayPrice: 170,
+    threeDayPrice: 260,
+    fourDayPrice: 310,
+    weeklyPrice: 340,
+    extraDayPrice: 70,
+    monthlyPrice: 990
   },
   {
     id: "nifty-170",
@@ -194,10 +203,13 @@ const defaultMachines = [
     campaignText: null,
     campaignDiscountPercent: null,
     campaignDiscountAmount: null,
-    weekendPrice: 195,
-    twoDayPrice: 240,
+    weekendPrice: 150,
+    twoDayPrice: 210,
+    threeDayPrice: 320,
+    fourDayPrice: 390,
     weeklyPrice: 430,
-    monthlyPrice: 590
+    extraDayPrice: 90,
+    monthlyPrice: 1250
   },
 
   // CATEGORIE 2: Spinhoogwerkers (Rupshoogwerkers)
@@ -209,7 +221,7 @@ const defaultMachines = [
     height: 15.4,
     reach: 6.6,
     weight: 1400,
-    pricePerDay: 200,
+    pricePerDay: 228,
     powerType: "Hybride",
     imageUrl: "/images/machines/hinowa-15-70.webp",
     imageAlt: "Hinowa 15.70 spinhoogwerker op rupsbanden",
@@ -220,10 +232,13 @@ const defaultMachines = [
     campaignText: null,
     campaignDiscountPercent: null,
     campaignDiscountAmount: null,
-    weekendPrice: 290,
-    twoDayPrice: 360,
-    weeklyPrice: 750,
-    monthlyPrice: 1100
+    weekendPrice: 340,
+    twoDayPrice: 390,
+    threeDayPrice: 520,
+    fourDayPrice: 560,
+    weeklyPrice: 590,
+    extraDayPrice: 115,
+    monthlyPrice: 1750
   },
   {
     id: "hinowa-17-75",
@@ -233,7 +248,7 @@ const defaultMachines = [
     height: 17.06,
     reach: 7.5,
     weight: 2200,
-    pricePerDay: 250,
+    pricePerDay: 275,
     powerType: "Hybride",
     imageUrl: "/images/machines/hinowa-17-75.webp",
     imageAlt: "Hinowa 17.75 zware spinhoogwerker",
@@ -244,10 +259,13 @@ const defaultMachines = [
     campaignText: null,
     campaignDiscountPercent: null,
     campaignDiscountAmount: null,
-    weekendPrice: 360,
-    twoDayPrice: 450,
-    weeklyPrice: 920,
-    monthlyPrice: 1350
+    weekendPrice: 410,
+    twoDayPrice: 470,
+    threeDayPrice: 630,
+    fourDayPrice: 680,
+    weeklyPrice: 715,
+    extraDayPrice: 140,
+    monthlyPrice: 2100
   },
 
   // CATEGORIE 3: Elektrische Schaarliften (8 meter)
@@ -259,7 +277,7 @@ const defaultMachines = [
     height: 7.76,
     reach: 0,
     weight: 1520,
-    pricePerDay: 65,
+    pricePerDay: 75,
     powerType: "Elektrisch",
     imageUrl: "/images/machines/optimum-8-1.webp",
     imageAlt: "Haulotte Optimum 8 scissor lift",
@@ -270,9 +288,13 @@ const defaultMachines = [
     campaignText: null,
     campaignDiscountPercent: null,
     campaignDiscountAmount: null,
-    weekendPrice: 99,
-    weeklyPrice: 159,
-    monthlyPrice: 420
+    weekendPrice: 115,
+    twoDayPrice: 130,
+    threeDayPrice: 170,
+    fourDayPrice: 185,
+    weeklyPrice: 195,
+    extraDayPrice: 46,
+    monthlyPrice: 540
   },
   {
     id: "optimum-8-2",
@@ -282,7 +304,7 @@ const defaultMachines = [
     height: 7.76,
     reach: 0,
     weight: 1520,
-    pricePerDay: 65,
+    pricePerDay: 75,
     powerType: "Elektrisch",
     imageUrl: "/images/machines/optimum-8-2.webp",
     imageAlt: "Haulotte Optimum 8 scissor lift",
@@ -293,9 +315,13 @@ const defaultMachines = [
     campaignText: null,
     campaignDiscountPercent: null,
     campaignDiscountAmount: null,
-    weekendPrice: 99,
-    weeklyPrice: 159,
-    monthlyPrice: 420
+    weekendPrice: 115,
+    twoDayPrice: 130,
+    threeDayPrice: 170,
+    fourDayPrice: 185,
+    weeklyPrice: 195,
+    extraDayPrice: 46,
+    monthlyPrice: 540
   },
   {
     id: "compact-8-1",
@@ -305,7 +331,7 @@ const defaultMachines = [
     height: 8.2,
     reach: 0,
     weight: 1650,
-    pricePerDay: 65,
+    pricePerDay: 78,
     powerType: "Elektrisch",
     imageUrl: "/images/machines/compact-8-1.webp",
     imageAlt: "Haulotte Compact 8 scissor lift",
@@ -316,9 +342,13 @@ const defaultMachines = [
     campaignText: null,
     campaignDiscountPercent: null,
     campaignDiscountAmount: null,
-    weekendPrice: 99,
-    weeklyPrice: 159,
-    monthlyPrice: 420
+    weekendPrice: 115,
+    twoDayPrice: 130,
+    threeDayPrice: 170,
+    fourDayPrice: 185,
+    weeklyPrice: 195,
+    extraDayPrice: 46,
+    monthlyPrice: 540
   },
   {
     id: "compact-8-2",
@@ -328,7 +358,7 @@ const defaultMachines = [
     height: 8.2,
     reach: 0,
     weight: 1650,
-    pricePerDay: 65,
+    pricePerDay: 78,
     powerType: "Elektrisch",
     imageUrl: "/images/machines/compact-8-2.webp",
     imageAlt: "Haulotte Compact 8 scissor lift",
@@ -339,9 +369,13 @@ const defaultMachines = [
     campaignText: null,
     campaignDiscountPercent: null,
     campaignDiscountAmount: null,
-    weekendPrice: 99,
-    weeklyPrice: 159,
-    monthlyPrice: 420
+    weekendPrice: 115,
+    twoDayPrice: 130,
+    threeDayPrice: 170,
+    fourDayPrice: 185,
+    weeklyPrice: 195,
+    extraDayPrice: 46,
+    monthlyPrice: 540
   },
 
   // CATEGORIE 4: Smalle Elektrische Schaarliften (10 meter)
@@ -353,7 +387,7 @@ const defaultMachines = [
     height: 10.0,
     reach: 0,
     weight: 2190,
-    pricePerDay: 89,
+    pricePerDay: 95,
     powerType: "Elektrisch",
     imageUrl: "/images/machines/compact-10n-1.webp",
     imageAlt: "Haulotte Compact 10N smalle schaarlift",
@@ -364,9 +398,13 @@ const defaultMachines = [
     campaignText: null,
     campaignDiscountPercent: null,
     campaignDiscountAmount: null,
-    weekendPrice: 129,
-    weeklyPrice: 215,
-    monthlyPrice: 580
+    weekendPrice: 145,
+    twoDayPrice: 165,
+    threeDayPrice: 215,
+    fourDayPrice: 235,
+    weeklyPrice: 250,
+    extraDayPrice: 60,
+    monthlyPrice: 680
   },
   {
     id: "compact-10n-2",
@@ -376,7 +414,7 @@ const defaultMachines = [
     height: 10.0,
     reach: 0,
     weight: 2190,
-    pricePerDay: 89,
+    pricePerDay: 95,
     powerType: "Elektrisch",
     imageUrl: "/images/machines/compact-10n-2.webp",
     imageAlt: "Haulotte Compact 10N smalle schaarlift",
@@ -387,9 +425,13 @@ const defaultMachines = [
     campaignText: null,
     campaignDiscountPercent: null,
     campaignDiscountAmount: null,
-    weekendPrice: 129,
-    weeklyPrice: 215,
-    monthlyPrice: 580
+    weekendPrice: 145,
+    twoDayPrice: 165,
+    threeDayPrice: 215,
+    fourDayPrice: 235,
+    weeklyPrice: 250,
+    extraDayPrice: 60,
+    monthlyPrice: 680
   },
 
   // CATEGORIE 4b: Compacte Schaarliften (6m) — Dingli JCPT 0607 DC
@@ -401,7 +443,7 @@ const defaultMachines = [
     height: 6.0,
     reach: 0,
     weight: 695,
-    pricePerDay: 49,
+    pricePerDay: 55,
     powerType: "Elektrisch",
     imageUrl: "/images/machines/dingli-6m.webp",
     imageAlt: "Dingli JCPT 0607 DC compact elektrische schaarlift 6 meter",
@@ -412,9 +454,13 @@ const defaultMachines = [
     campaignText: null,
     campaignDiscountPercent: null,
     campaignDiscountAmount: null,
-    weekendPrice: 75,
-    weeklyPrice: 120,
-    monthlyPrice: 340
+    weekendPrice: 85,
+    twoDayPrice: 95,
+    threeDayPrice: 125,
+    fourDayPrice: 135,
+    weeklyPrice: 145,
+    extraDayPrice: 34,
+    monthlyPrice: 390
   },
 
   // CATEGORIE 4c: Kamersteigers — Altrex RS TOWER 44-Power (2-dag minimum, €15/2dgn, €19/week)
@@ -460,7 +506,7 @@ const defaultMachines = [
     height: 10.0,
     reach: 3.0,
     weight: 2677,
-    pricePerDay: 95,
+    pricePerDay: 130,
     powerType: "Elektrisch",
     imageUrl: "/images/machines/star-10.webp",
     imageAlt: "Haulotte Star 10 mastlift met knikarm",
@@ -471,9 +517,13 @@ const defaultMachines = [
     campaignText: null,
     campaignDiscountPercent: null,
     campaignDiscountAmount: null,
-    weekendPrice: 145,
-    weeklyPrice: 260,
-    monthlyPrice: 690
+    weekendPrice: 200,
+    twoDayPrice: 230,
+    threeDayPrice: 280,
+    fourDayPrice: 360,
+    weeklyPrice: 405,
+    extraDayPrice: 80,
+    monthlyPrice: 980
   },
   {
     id: "skyjack-sj16",
@@ -483,7 +533,7 @@ const defaultMachines = [
     height: 6.6,
     reach: 0,
     weight: 966,
-    pricePerDay: 55,
+    pricePerDay: 49,
     powerType: "Elektrisch",
     imageUrl: "/images/machines/skyjack-sj16.webp",
     imageAlt: "Skyjack SJ16 verticale mastlift",
@@ -494,9 +544,13 @@ const defaultMachines = [
     campaignText: null,
     campaignDiscountPercent: null,
     campaignDiscountAmount: null,
-    weekendPrice: 85,
-    weeklyPrice: 140,
-    monthlyPrice: 390
+    weekendPrice: 75,
+    twoDayPrice: 90,
+    threeDayPrice: 115,
+    fourDayPrice: 136,
+    weeklyPrice: 150,
+    extraDayPrice: 30,
+    monthlyPrice: 370
   },
   {
     id: "bravi-mini-hd",
@@ -506,7 +560,7 @@ const defaultMachines = [
     height: 4.9,
     reach: 0,
     weight: 510,
-    pricePerDay: 45,
+    pricePerDay: 40,
     powerType: "Elektrisch",
     imageUrl: "/images/machines/bravi-mini-hd.webp",
     imageAlt: "Bravi Leonardo HD compacte lift",
@@ -517,15 +571,16 @@ const defaultMachines = [
     campaignText: null,
     campaignDiscountPercent: null,
     campaignDiscountAmount: null,
-    // Tiered pricing + weekend rules (pilot product). 1d €45, 2d €80, 3d €105,
-    // 4d €125, 5d (werkweek) €140, dag 6+ = €140/5 = €28/dag, weekendpakket €69,
+    // Tiered pricing + weekend rules (pilot product). 1d €40, 2d €80, 3d €105,
+    // 4d €125, 5d (werkweek) €140, dag 6+ = €28/dag (extraDayPrice), weekendpakket €69,
     // zondagblokkade €20. Depot gesloten za/zo → weekendRulesEnabled.
     twoDayPrice: 80,
     threeDayPrice: 105,
     fourDayPrice: 125,
     weekendPrice: 69,
     weeklyPrice: 140,
-    monthlyPrice: 320,
+    extraDayPrice: 28,
+    monthlyPrice: 340,
     sundayBlockFee: 20,
     weekendRulesEnabled: true
   },
@@ -537,7 +592,7 @@ const defaultMachines = [
     height: 5.5,
     reach: 0,
     weight: 790,
-    pricePerDay: 45,
+    pricePerDay: 40,
     powerType: "Elektrisch",
     imageUrl: "/images/machines/jlg-1230es.webp",
     imageAlt: "JLG 1230ES mastlift",
@@ -549,8 +604,12 @@ const defaultMachines = [
     campaignDiscountPercent: null,
     campaignDiscountAmount: null,
     weekendPrice: 69,
-    weeklyPrice: 110,
-    monthlyPrice: 320
+    twoDayPrice: 80,
+    threeDayPrice: 105,
+    fourDayPrice: 125,
+    weeklyPrice: 140,
+    extraDayPrice: 28,
+    monthlyPrice: 340
   },
 
   // CATEGORIE 6: Verhuisliften / Ladderliften
@@ -562,7 +621,7 @@ const defaultMachines = [
     height: 18.0,
     reach: 0,
     weight: 1200,
-    pricePerDay: 89,
+    pricePerDay: 120,
     powerType: "Elektrisch",
     imageUrl: "/images/machines/ladderlift-18.webp",
     imageAlt: "Ladderlift verhuislift 18m",
@@ -573,10 +632,13 @@ const defaultMachines = [
     campaignText: null,
     campaignDiscountPercent: null,
     campaignDiscountAmount: null,
-    weekendPrice: 129,
-    twoDayPrice: 160,
-    weeklyPrice: 290,
-    monthlyPrice: null
+    weekendPrice: 180,
+    twoDayPrice: 210,
+    threeDayPrice: 280,
+    fourDayPrice: 310,
+    weeklyPrice: 330,
+    extraDayPrice: 65,
+    monthlyPrice: 990
   },
   {
     id: "ladderlift-21-1",
@@ -586,7 +648,7 @@ const defaultMachines = [
     height: 21.0,
     reach: 0,
     weight: 1350,
-    pricePerDay: 110,
+    pricePerDay: 135,
     powerType: "Elektrisch",
     imageUrl: "/images/machines/ladderlift-21-1.webp",
     imageAlt: "Zware verhuislift ladderlift 21m",
@@ -597,10 +659,13 @@ const defaultMachines = [
     campaignText: null,
     campaignDiscountPercent: null,
     campaignDiscountAmount: null,
-    weekendPrice: 159,
-    twoDayPrice: 199,
-    weeklyPrice: 360,
-    monthlyPrice: null
+    weekendPrice: 200,
+    twoDayPrice: 235,
+    threeDayPrice: 315,
+    fourDayPrice: 350,
+    weeklyPrice: 375,
+    extraDayPrice: 75,
+    monthlyPrice: 1125
   },
   {
     id: "ladderlift-21-2",
@@ -610,7 +675,7 @@ const defaultMachines = [
     height: 21.0,
     reach: 0,
     weight: 1350,
-    pricePerDay: 110,
+    pricePerDay: 135,
     powerType: "Elektrisch",
     imageUrl: "/images/machines/ladderlift-21-2.webp",
     imageAlt: "Zware verhuislift ladderlift 21m Unit 2",
@@ -621,10 +686,13 @@ const defaultMachines = [
     campaignText: null,
     campaignDiscountPercent: null,
     campaignDiscountAmount: null,
-    weekendPrice: 159,
-    twoDayPrice: 199,
-    weeklyPrice: 360,
-    monthlyPrice: null
+    weekendPrice: 200,
+    twoDayPrice: 235,
+    threeDayPrice: 315,
+    fourDayPrice: 350,
+    weeklyPrice: 375,
+    extraDayPrice: 75,
+    monthlyPrice: 1125
   },
 
   // Categorie 7: Handmatige Lichtgewicht Klasse (Pecolift)
@@ -742,6 +810,7 @@ async function main() {
     const t3p = (mach as any).threeDayPrice ?? null;
     const t4p = (mach as any).fourDayPrice  ?? null;
     const wkp = (mach as any).weeklyPrice  ?? null;
+    const edp = (mach as any).extraDayPrice ?? null;
     const mp  = (mach as any).monthlyPrice ?? null;
     const odp = (mach as any).oneDayPrice  ?? null;
     const sbf = (mach as any).sundayBlockFee ?? null;
@@ -750,6 +819,10 @@ async function main() {
     if (t3p !== null) await prisma.machine.updateMany({ where: { id: mach.id, threeDayPrice: null }, data: { threeDayPrice: t3p } });
     if (t4p !== null) await prisma.machine.updateMany({ where: { id: mach.id, fourDayPrice:  null }, data: { fourDayPrice:  t4p } });
     if (wkp !== null) await prisma.machine.updateMany({ where: { id: mach.id, weeklyPrice:  null }, data: { weeklyPrice:  wkp } });
+    // extraDayPrice: added 2026-07. Back-filled when null (covers both brand-new
+    // rows and existing rows that predate this column) so the day-6+ tier price
+    // uses the real "Ekstra Dag" rate instead of the weeklyPrice/5 fallback.
+    if (edp !== null) await prisma.machine.updateMany({ where: { id: mach.id, extraDayPrice: null }, data: { extraDayPrice: edp } });
     if (mp  !== null) await prisma.machine.updateMany({ where: { id: mach.id, monthlyPrice: null }, data: { monthlyPrice: mp } });
     if (odp !== null) await prisma.machine.updateMany({ where: { id: mach.id, oneDayPrice:  null }, data: { oneDayPrice:  odp } });
     if (sbf !== null) await prisma.machine.updateMany({ where: { id: mach.id, sundayBlockFee: null }, data: { sundayBlockFee: sbf } });
@@ -835,6 +908,70 @@ async function main() {
         { id: "altrex-rs44-toolbuddy", name: "Altrex Toolbuddy", description: "Praktische ophanghaak zodat uw gereedschap en verfemmer binnen handbereik blijven tijdens het werken.", pricePerWeek: 5 }
       ]
     }
+  });
+
+  // 2026-07 competitive price refresh — full tier ladder (1/2/3/4/5-dag, weekend,
+  // maand) for the Dikey Mast, Makaslı, Hinowa Örümcek, Ladderlift en Nifty groepen,
+  // per het nieuwe prijzenblad. Elke update is guarded op de vorige bekende waarde,
+  // zodat dit een eenmalige correctie is: een latere handmatige admin-wijziging wordt
+  // nooit overschreven, en een fresh install (die de nieuwe prijzen al via `create`
+  // krijgt) slaat deze blokken automatisch over als no-op.
+  console.log("Applying 2026-07 competitive price refresh...");
+  await prisma.machine.updateMany({
+    where: { id: "bravi-mini-hd", pricePerDay: 45, monthlyPrice: 320 },
+    data: { pricePerDay: 40, monthlyPrice: 340 }
+  });
+  await prisma.machine.updateMany({
+    where: { id: "jlg-1230es", pricePerDay: 45, weeklyPrice: 110 },
+    data: { pricePerDay: 40, twoDayPrice: 80, threeDayPrice: 105, fourDayPrice: 125, weeklyPrice: 140, monthlyPrice: 340 }
+  });
+  await prisma.machine.updateMany({
+    where: { id: "skyjack-sj16", pricePerDay: 55, weeklyPrice: 140 },
+    data: { pricePerDay: 49, twoDayPrice: 90, threeDayPrice: 115, fourDayPrice: 136, weeklyPrice: 150, weekendPrice: 75, monthlyPrice: 370 }
+  });
+  await prisma.machine.updateMany({
+    where: { id: "star-10", pricePerDay: 95, weeklyPrice: 260 },
+    data: { pricePerDay: 130, twoDayPrice: 230, threeDayPrice: 280, fourDayPrice: 360, weeklyPrice: 405, weekendPrice: 200, monthlyPrice: 980 }
+  });
+  await prisma.machine.updateMany({
+    where: { id: "dingli-6m", pricePerDay: 49, weeklyPrice: 120 },
+    data: { pricePerDay: 55, twoDayPrice: 95, threeDayPrice: 125, fourDayPrice: 135, weeklyPrice: 145, weekendPrice: 85, monthlyPrice: 390 }
+  });
+  await prisma.machine.updateMany({
+    where: { id: { in: ["optimum-8-1", "optimum-8-2"] }, pricePerDay: 65, weeklyPrice: 159 },
+    data: { pricePerDay: 75, twoDayPrice: 130, threeDayPrice: 170, fourDayPrice: 185, weeklyPrice: 195, weekendPrice: 115, monthlyPrice: 540 }
+  });
+  await prisma.machine.updateMany({
+    where: { id: { in: ["compact-8-1", "compact-8-2"] }, pricePerDay: 65, weeklyPrice: 159 },
+    data: { pricePerDay: 78, twoDayPrice: 130, threeDayPrice: 170, fourDayPrice: 185, weeklyPrice: 195, weekendPrice: 115, monthlyPrice: 540 }
+  });
+  await prisma.machine.updateMany({
+    where: { id: { in: ["compact-10n-1", "compact-10n-2"] }, pricePerDay: 89, weeklyPrice: 215 },
+    data: { pricePerDay: 95, twoDayPrice: 165, threeDayPrice: 215, fourDayPrice: 235, weeklyPrice: 250, weekendPrice: 145, monthlyPrice: 680 }
+  });
+  await prisma.machine.updateMany({
+    where: { id: "hinowa-15-70", pricePerDay: 200, weeklyPrice: 750 },
+    data: { pricePerDay: 228, twoDayPrice: 390, threeDayPrice: 520, fourDayPrice: 560, weeklyPrice: 590, weekendPrice: 340, monthlyPrice: 1750 }
+  });
+  await prisma.machine.updateMany({
+    where: { id: "hinowa-17-75", pricePerDay: 250, weeklyPrice: 920 },
+    data: { pricePerDay: 275, twoDayPrice: 470, threeDayPrice: 630, fourDayPrice: 680, weeklyPrice: 715, weekendPrice: 410, monthlyPrice: 2100 }
+  });
+  await prisma.machine.updateMany({
+    where: { id: "ladderlift-18", pricePerDay: 89, weeklyPrice: 290 },
+    data: { pricePerDay: 120, twoDayPrice: 210, threeDayPrice: 280, fourDayPrice: 310, weeklyPrice: 330, weekendPrice: 180, monthlyPrice: 990 }
+  });
+  await prisma.machine.updateMany({
+    where: { id: { in: ["ladderlift-21-1", "ladderlift-21-2"] }, pricePerDay: 110, weeklyPrice: 360 },
+    data: { pricePerDay: 135, twoDayPrice: 235, threeDayPrice: 315, fourDayPrice: 350, weeklyPrice: 375, weekendPrice: 200, monthlyPrice: 1125 }
+  });
+  await prisma.machine.updateMany({
+    where: { id: { in: ["nifty-120-1", "nifty-120-2", "nifty-120-3"] }, twoDayPrice: 190, weeklyPrice: 335 },
+    data: { twoDayPrice: 170, threeDayPrice: 260, fourDayPrice: 310, weeklyPrice: 340, weekendPrice: 120, monthlyPrice: 990 }
+  });
+  await prisma.machine.updateMany({
+    where: { id: "nifty-170", twoDayPrice: 240, weekendPrice: 195 },
+    data: { twoDayPrice: 210, threeDayPrice: 320, fourDayPrice: 390, weekendPrice: 150, monthlyPrice: 1250 }
   });
 
   console.log("Seeding blocked dates (upsert)...");

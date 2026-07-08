@@ -339,11 +339,13 @@ export default function HomeSection({
   const activeMachines = React.useMemo(() => machines.filter(m => m.isActive !== false), [machines]);
   const weeklyOfferMachines = React.useMemo(() => activeMachines.filter(m => m.showInWeeklyOffers === true), [activeMachines]);
 
-  // Live pricing per category (each schaarlift sub-type keeps its own key). Every
-  // field comes from ONE representative machine — never mixed across different
-  // units — so the price and badge on a card always describe the same real,
-  // bookable product. Picking that representative machine follows a priority so
-  // a genuine deal never gets buried by a merely-cheaper unit:
+  // Live pricing per category (schaarlift/schaarlift-smal/schaarlift-6m share one
+  // "schaarlift" key, since the card represents the whole 6/8/10m family). Every
+  // field — including the card photo — comes from ONE representative machine,
+  // never mixed across different units, so the photo, price and badge on a card
+  // always describe the same real, bookable product. Picking that representative
+  // machine follows a priority so a genuine deal never gets buried by a
+  // merely-cheaper unit:
   //   1. A live "1 dag actie" (oneDayPrice below the normal day rate) — the most
   //      concrete, product-specific promo (e.g. "Slechts 1 dag korting!").
   //   2. A campaign that singles this machine or its category out (its own

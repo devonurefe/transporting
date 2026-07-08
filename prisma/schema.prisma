@@ -188,6 +188,11 @@ model SiteConfig {
   googleReviews     Json?
 }
 
+// UNUSED: no code reads or writes this table. Kept (not dropped) to avoid a
+// destructive `prisma db push` on deploy — same policy as SiteConfig.menuAdvisorLabel.
+// Admin activity is currently tracked via the client-side system log (AdminLogs),
+// and customer email preferences via Customer.emailOptIn — neither uses this model.
+// If a persisted in-app notification feature is ever built, wire it here.
 model Notification {
   id        String   @id @default(uuid())
   title     String

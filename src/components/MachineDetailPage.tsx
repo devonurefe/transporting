@@ -69,12 +69,13 @@ export default function MachineDetailPage({ onSelectMachineForBooking }: Machine
       </Link>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
-        {/* Image */}
-        <div className="rounded-3xl overflow-hidden bg-slate-100 border border-slate-200 aspect-[4/3]">
+        {/* Image — object-contain so the full machine fits (wide ladderliften
+            were cropped by object-cover); white/slate frame absorbs the margins. */}
+        <div className="rounded-3xl overflow-hidden bg-white border border-slate-200 aspect-[4/3] p-3 sm:p-4">
           <img
             src={machine.imageUrl || machine.additionalImages?.[0] || "/placeholder-machine.webp"}
             alt={machine.imageAlt || `${machine.name} huren`}
-            className="h-full w-full object-cover"
+            className="h-full w-full object-contain"
             referrerPolicy="no-referrer"
             onError={(e) => { e.currentTarget.src = "/placeholder-machine.webp"; }}
           />
@@ -135,7 +136,7 @@ export default function MachineDetailPage({ onSelectMachineForBooking }: Machine
               onClick={book}
               className="cta-shine flex-1 py-3 rounded-xl bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white text-sm font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm"
             >
-              <ShoppingCart className="h-4 w-4" /> Beschikbaarheid &amp; reserveren
+              <ShoppingCart className="h-4 w-4" /> Huur Nu
             </button>
             <button
               onClick={() => setShowModal(true)}

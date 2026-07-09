@@ -629,13 +629,6 @@ export default function HomeSection({
       {/* ── DEALS CAROUSEL ── */}
       {weeklyOfferMachines.length > 0 && <DealsCarousel machines={weeklyOfferMachines} onSearch={onSearch} />}
 
-      {/* ── ADVIESTOOL ENTRY ── */}
-      <div className="px-4 sm:px-6 pt-8">
-        <div className="max-w-5xl mx-auto">
-          <AdviesStrip />
-        </div>
-      </div>
-
       {/* ── CATEGORY CARDS ── */}
       <div className="bg-gradient-to-b from-white to-slate-50 px-4 sm:px-6 pt-10 pb-14">
         <div className="max-w-5xl mx-auto flex items-end justify-between gap-3 mb-5">
@@ -740,6 +733,13 @@ export default function HomeSection({
               </button>
             );
           })}
+        </div>
+      </div>
+
+      {/* ── ADVIESTOOL ENTRY ── (net boven de FAQ) */}
+      <div className="px-4 sm:px-6 pt-10">
+        <div className="max-w-2xl mx-auto">
+          <AdviesStrip tall />
         </div>
       </div>
 

@@ -246,14 +246,14 @@ function DealsCarousel({ machines, onSearch }: { machines: Machine[]; onSearch: 
                     )}
                   </div>
                   <div className="p-3.5 flex flex-col gap-2 flex-1">
-                    <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide leading-none">
+                    <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide leading-none">
                       {CAT_LABEL[m.category] ?? m.category}
                     </span>
                     <p className="font-display font-black text-xs text-slate-900 leading-snug line-clamp-2">{baseName}</p>
                     <div className="flex items-baseline gap-1 flex-wrap">
                       <span className="text-sm font-black text-amber-600">{fmt(displayPrice)}</span>
-                      {hasDiscount && <span className="text-[10px] text-slate-400 line-through">{fmt(originalPrice)}</span>}
-                      <span className="text-[10px] text-slate-400">/ dag</span>
+                      {hasDiscount && <span className="text-[10px] text-slate-500 line-through">{fmt(originalPrice)}</span>}
+                      <span className="text-[10px] text-slate-500">/ dag</span>
                     </div>
                     <div className="mt-auto pt-0.5">
                       <div className="w-full text-center bg-amber-500 group-hover:bg-amber-600 text-white text-[10px] font-black py-2 px-2 rounded-lg transition-colors">
@@ -693,7 +693,7 @@ export default function HomeSection({
                       <ChevronRight className="h-4 w-4" />
                     </span>
                     {meta && meta.count > 1 && (
-                      <span className="text-[11px] text-slate-400 font-medium shrink-0">
+                      <span className="text-[11px] text-slate-500 font-medium shrink-0">
                         {t(`${meta.count} modellen`, `${meta.count} models`, `${meta.count} model`)}
                       </span>
                     )}

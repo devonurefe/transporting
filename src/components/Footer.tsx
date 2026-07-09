@@ -31,7 +31,7 @@ function ReviewCard({ r }: { r: GoogleReview }) {
       <p className="text-[13px] text-slate-600 leading-relaxed line-clamp-4">{r.text}</p>
       <div className="flex items-center justify-between gap-3 pt-1.5">
         <span className="text-[11px] font-bold text-slate-900">{r.author || "Google-gebruiker"}</span>
-        {r.date && <span className="text-[10px] text-slate-400 shrink-0">{r.date}</span>}
+        {r.date && <span className="text-[10px] text-slate-500 shrink-0">{r.date}</span>}
       </div>
     </div>
   );

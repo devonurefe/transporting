@@ -12,6 +12,7 @@ import { Machine } from "../types";
 import { computeDiscounts } from "../utils/pricing";
 import { getSpecsForMachine } from "../utils/machineSpecs";
 import { withVat, priceNum } from "../utils/format";
+import { withImageWidth } from "../utils/image";
 import { useLanguageStore } from "../store/languageStore";
 import { useModalA11y } from "../hooks/useModalA11y";
 import VatToggle from "./VatToggle";
@@ -228,7 +229,7 @@ export default function MachineDetailModal({
                   <button key={i} type="button" onClick={() => setActiveImageIndex(i)}
                     className={`relative h-11 w-16 rounded-lg overflow-hidden border-2 shrink-0 transition-all cursor-pointer bg-white ${i === activeImageIndex ? "border-orange-500 ring-2 ring-orange-400/20" : "border-slate-200 hover:border-slate-400"}`}
                   >
-                    <img src={url} alt={`Foto ${i + 1}`} className="w-full h-full object-cover"
+                    <img src={withImageWidth(url, 320) ?? url} alt={`Foto ${i + 1}`} className="w-full h-full object-cover"
                       loading="lazy"
                       referrerPolicy="no-referrer"
                       onError={(e) => { e.currentTarget.src = "/placeholder-machine.webp"; }}

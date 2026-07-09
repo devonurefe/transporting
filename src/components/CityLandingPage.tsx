@@ -18,6 +18,7 @@ import {
 import { Machine } from "../types";
 import { useAppStore } from "../store/appStore";
 import { euroCompact } from "../utils/format";
+import { withImageWidth } from "../utils/image";
 import { getCityBySlug, SERVICE_CITIES } from "../data/serviceCities";
 import { useSeo, SEO_BASE_URL } from "../utils/seo";
 
@@ -170,7 +171,7 @@ export default function CityLandingPage({ onSelectMachineForBooking }: CityLandi
               <div key={m.id} className="group rounded-2xl border border-slate-200 bg-white overflow-hidden flex flex-col transition-all duration-300 hover:border-orange-200 hover:shadow-lg hover:-translate-y-1">
                 <Link to={`/hoogwerker/${m.id}`} className="block aspect-[4/3] bg-slate-50 overflow-hidden">
                   <img
-                    src={m.imageUrl || m.additionalImages?.[0] || "/placeholder-machine.webp"}
+                    src={withImageWidth(m.imageUrl, 640) || m.additionalImages?.[0] || "/placeholder-machine.webp"}
                     alt={m.imageAlt || `${m.name} huren in ${city.name}`}
                     className="h-full w-full object-contain transition-transform duration-500 ease-out group-hover:scale-105"
                     loading="lazy"

@@ -175,6 +175,92 @@ Shared admin widgets (not panels): `AdminStatusBadge.tsx`, `AdminConfirmDialog.t
 
 ---
 
+## Performance & Accessibility — CRITICAL
+
+huurgo.nl went through a PageSpeed/Lighthouse overhaul (2026-07, PRs #215–#220): mobile
+Performance **58 → 81**, Desktop **→ 97**, CLS **0.513 → 0**, LCP **4.3s → ~4.1s mobile /
+0.9s desktop**. The mechanisms below are load-bearing — **breaking any of them silently
+regresses the score**. Lighthouse mobile lab runs (Slow 4G simulation) naturally swing
+±5–10 points between identical-code runs; don't chase single-point fluctuations, but do
+protect these invariants:
+
+### Images — resize server-side, never ship raw base64/full-res
+- Admin-uploaded images are stored as base64 `data:` URLs in Postgres (`Machine.imageUrl`,
+  `Machine.additionalImages`, `SiteConfig.heroImageUrl`) — this is intentional (see Seed
+  Safety pattern), **do not migrate to disk storage** without discussion.
+- The **public** API (`GET /api/machines`, `GET /api/site-config`) never returns raw base64
+  to anonymous clients — `toPublicMachine()` in `server/routes/machines.ts` substitutes
+  `data:` URLs with binary-proxy paths (`/machine-image/:id`, `/machine-image/:id/gallery/:idx`,
+  `/site-hero-image`). Admins fetch `?full=1` (requires `role: "admin"`) to get raw base64 back
+  for editing — `useAppStore.fetchMachines`/`fetchSiteConfig` already do this by checking
+  `hwh_admin_mode`. **Never add a new field that leaks base64 to the public feed.**
+- Those proxies (`serveStoredImage` in `server.ts`) resize + re-encode to WebP via **sharp**
+  (`quality: 78`) when a `defaultWidth` is passed, honoring `?w=` from the whitelist
+  `ALLOWED_IMAGE_WIDTHS = [320,480,640,768,1024,1280,1600]`. sharp is loaded via a memoized
+  **dynamic import with fallback** (`getSharp()`) — if the native binary is missing, images
+  are served unresized rather than crashing the server. Don't switch this to a static
+  top-level `import sharp from "sharp"`.
+- **When adding a new `<img>` for a machine/hero photo, pass `?w=` matching its actual CSS
+  display size** (pick from the whitelist above) — don't rely on a generic default meant for
+  a different context. Example: the deals-carousel thumbnail is a fixed 200×200 box and
+  requests `?w=480`, not the `/machine-image/:id` route's 800px default (sized for the
+  larger detail-modal view).
+- `public/placeholder-machine.webp` must stay small (~600×600, ~14 KiB) — it's shown at
+  ~470px on catalog cards.
+
+### Fonts — self-hosted, never re-add the Google Fonts CDN link
+- Inter/Outfit/JetBrains Mono are self-hosted as variable woff2 (latin + latin-ext) in
+  `public/fonts/`, declared via `@font-face` in `src/index.css`, preloaded in `index.html`.
+  A render-blocking `<link href="https://fonts.googleapis.com/...">` was the #1 cause of the
+  original CLS (0.51) — **do not reintroduce it**. If you need a new weight/family, download
+  the woff2 and add an `@font-face` block; don't link to Google's CDN.
+
+### Hero image — preloaded server-side, no fade
+- The homepage hero is the LCP element. `metaForRequest`/`injectMeta`/`heroPreloadUrl` in
+  `server.ts` inject `<link rel="preload" as="image" fetchpriority="high" imagesrcset ...>`
+  into the served `index.html` for `/` **only**, targeting whichever hero actually renders
+  (default WebP `srcset` vs `/site-hero-image?w=` variants for an admin-uploaded hero) — this
+  removes the site-config-fetch → render → image-fetch waterfall that once pushed LCP to 9s.
+  `index.html` itself must NOT hard-code a hero `<link rel="preload">` (it can't know which
+  hero is active).
+- `HomeSection.tsx`'s hero `<img>` has **no opacity fade-in** — a fade delays measured LCP.
+  Keep `fetchPriority="high"` and `decoding="async"` on it.
+
+### Caching
+- `/assets` (Vite-hashed): 1 year immutable. `/images`, root static, and all image proxies:
+  **30 days minimum** (`max-age=2592000`) — this is what satisfies Lighthouse's "efficient
+  cache lifetime" audit; going back to 1h/7d reopens that finding. `sw.js` must stay
+  `no-cache` (clients need to pick up new service-worker versions).
+- `app.use(compression())` (gzip) must stay registered early in `server.ts` — it's what makes
+  the JSON API payloads (which still carry some text/JSON weight) transfer efficiently.
+
+### JS delivery
+- `vite.config.ts` has a `manualChunks` vendor split (`react-vendor`, `motion`, `icons`,
+  `charts`) — don't remove it without re-checking bundle sizes.
+- The lazy-chunk "warm" effect in `App.tsx` (prefetches Catalog/Booking/FAQ chunks) is gated
+  on the window **`load`** event before scheduling `requestIdleCallback` — warming earlier
+  competes with the LCP hero for bandwidth on slow connections. Don't move it back to firing
+  immediately on mount.
+
+### Accessibility — contrast
+- Small text (≤14px) on a white/light background needs at least `text-slate-500`
+  (`text-slate-400` is ~2.75:1 on white, fails WCAG AA's 4.5:1). This bit us twice: once in
+  homepage cards/footer, once in `Header.tsx`'s "Simpel en snel" tagline where the
+  light/dark color branches were literally inverted (light bg had the lighter gray). **When
+  a component takes a `dark` boolean, verify which literal color pairs with which background
+  — don't assume.**
+
+### Deploy — already automated, no manual step needed
+- `.github/workflows/deploy.yml` auto-deploys on every merge to `main`: `test` (lint + vitest,
+  Postgres service) → `build` (Docker image → ghcr.io) → `deploy` (SSH into the VPS, `git pull`
+  + `docker compose up -d --force-recreate` + nginx reload). Despite the "deploy to VPS
+  manually" note above (kept for the rare case CI is down), **merging a PR is normally
+  sufficient** — no manual `docker compose up -d --build` needed. The `test` job has
+  `timeout-minutes: 10` so a CI hang fails fast instead of blocking `build`/`deploy` for 15+
+  minutes (this happened once, silently skipping a deploy).
+
+---
+
 ## Booking Flow
 
 1. Customer selects machine from catalog → adds to cart
@@ -229,6 +315,20 @@ All builders in `src/utils/whatsapp.ts`. Sign-off emoji: **🦾** (never 🙏).
 `GEMINI_API_KEY` is no longer used — Gemini was fully removed.
 
 ---
+
+## Recent Changes (2026-07)
+
+- **PageSpeed/Lighthouse overhaul** (PRs #215–#220): mobile Performance 58→81, Desktop→97,
+  CLS 0.513→0, LCP 4.3s→~4.1s mobile/0.9s desktop. See "Performance & Accessibility — CRITICAL"
+  above for the full mechanism list and regression guardrails. Summary: gzip compression;
+  public API substitutes base64 images with binary-proxy URLs (admin still gets raw base64 via
+  `?full=1`); server-side sharp resize/WebP re-encode on the image proxies (`?w=` whitelist,
+  30d cache); self-hosted fonts (was render-blocking Google Fonts CDN); hero preloaded
+  server-side per-request with correct `imagesrcset`; hero upload bounds shrunk 2560px/0.92 →
+  1600px/0.80; lazy-chunk warming deferred to `window.load`; Vite vendor `manualChunks`;
+  low-contrast `text-slate-400`→`text-slate-500` fixes (homepage cards, footer, header
+  tagline — the latter had an inverted dark/light color bug); CI `test` job got
+  `timeout-minutes: 10` after a silent 15-minute hang skipped a deploy.
 
 ## Recent Changes (2026-06)
 

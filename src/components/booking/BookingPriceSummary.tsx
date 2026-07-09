@@ -8,6 +8,7 @@ import { ShieldCheck, TrendingDown, Package, ChevronDown, Calendar, Truck, Tag }
 import { Machine } from "../../types";
 import { useLanguageStore } from "../../store/languageStore";
 import { euro, euroCompact } from "../../utils/format";
+import { withImageWidth } from "../../utils/image";
 
 interface BookingPriceSummaryProps {
   selectedMachine: Machine | null;
@@ -206,7 +207,7 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
       <div className="flex items-center gap-4 p-4 bg-slate-50 border-b border-slate-100">
         <div className="h-20 w-20 rounded-2xl overflow-hidden bg-white border border-slate-200 shrink-0 shadow-sm">
           <img
-            src={selectedMachine.imageUrl || selectedMachine.additionalImages?.[0] || "/placeholder-machine.webp"}
+            src={withImageWidth(selectedMachine.imageUrl, 320) || selectedMachine.additionalImages?.[0] || "/placeholder-machine.webp"}
             alt=""
             className="h-full w-full object-contain p-1.5"
             referrerPolicy="no-referrer"

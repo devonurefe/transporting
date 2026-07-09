@@ -3,6 +3,22 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+// Must match ALLOWED_IMAGE_WIDTHS in server.ts — the image proxies (/machine-image,
+// /machine-image/.../gallery, /site-hero-image) only honour these widths, silently
+// falling back to their own default for anything else.
+const ALLOWED_IMAGE_WIDTHS = [320, 480, 640, 768, 1024, 1280, 1600] as const;
+
+/**
+ * Appends a `?w=` (or `&w=` if the URL already has a query string) requesting a
+ * smaller resize from the sharp-backed image proxies, for contexts that display a
+ * machine photo well below the proxy's own default width (e.g. an 80px cart
+ * thumbnail vs. the 800px default meant for the detail modal). No-op for falsy URLs.
+ */
+export function withImageWidth(url: string | null | undefined, width: (typeof ALLOWED_IMAGE_WIDTHS)[number]): string | null | undefined {
+  if (!url) return url;
+  return `${url}${url.includes("?") ? "&" : "?"}w=${width}`;
+}
+
 /**
  * Resizes an image file client-side using HTML5 Canvas.
  * Compresses the resulting image as WebP at the given quality (JPEG fallback).

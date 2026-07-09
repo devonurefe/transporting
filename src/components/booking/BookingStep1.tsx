@@ -8,6 +8,7 @@ import { Calendar, Building2, X, Truck, ShieldAlert, ArrowRight, MessageCircle, 
 import { motion, AnimatePresence } from "motion/react";
 import { CartItem, DeliveryType, Machine } from "../../types";
 import { buildWhatsAppUrl, buildWhatsAppTransportInquiryUrl, buildWhatsAppAlternativeDatesUrl } from "../../utils/whatsapp";
+import { withImageWidth } from "../../utils/image";
 import BookingPriceSummary from "./BookingPriceSummary";
 import DateRangeCalendar from "./DateRangeCalendar";
 import { useLanguageStore } from "../../store/languageStore";
@@ -166,7 +167,7 @@ export default function BookingStep1({
                     title="Bekijk details"
                   >
                     <img
-                      src={item.machine.imageUrl || item.machine.additionalImages?.[0] || "/placeholder-machine.webp"}
+                      src={withImageWidth(item.machine.imageUrl, 320) || item.machine.additionalImages?.[0] || "/placeholder-machine.webp"}
                       alt={item.machine.name}
                       className="object-contain h-full w-full p-1.5 group-hover/thumb:scale-110 transition-transform duration-300"
                       referrerPolicy="no-referrer"

@@ -118,23 +118,34 @@ export default function App() {
     }
   }, [searchQuery, selectedCategory, activeTab, location.search, navigate]);
 
-  // Warm the most-linked lazy chunks (catalog + booking + FAQ) while the browser
-  // is idle, so nav clicks open instantly instead of waiting on a Suspense spinner.
+  // Warm the most-linked lazy chunks (catalog + booking + FAQ) so nav clicks open
+  // instantly instead of waiting on a Suspense spinner. Wait for the window `load`
+  // event first: requestIdleCallback fires as soon as the main thread is idle — which
+  // happens while the LCP hero is still downloading — so warming earlier steals
+  // bandwidth from the hero and hurts LCP on slow connections.
   useEffect(() => {
     const warm = () => {
       import("./components/CatalogSection");
       import("./components/BookingSection");
       import("./components/FaqSection");
     };
-    const ric = (window as unknown as { requestIdleCallback?: (cb: () => void) => number }).requestIdleCallback;
-    const cic = (window as unknown as { cancelIdleCallback?: (id: number) => void }).cancelIdleCallback;
     let cancelFn: (() => void) | null = null;
-    if (ric && cic) {
-      const id = ric(warm);
-      cancelFn = () => cic(id);
+    const schedule = () => {
+      const ric = (window as unknown as { requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number }).requestIdleCallback;
+      const cic = (window as unknown as { cancelIdleCallback?: (id: number) => void }).cancelIdleCallback;
+      if (ric && cic) {
+        const id = ric(warm, { timeout: 3000 });
+        cancelFn = () => cic(id);
+      } else {
+        const id = window.setTimeout(warm, 2000);
+        cancelFn = () => clearTimeout(id);
+      }
+    };
+    if (document.readyState === "complete") {
+      schedule();
     } else {
-      const id = window.setTimeout(warm, 1500);
-      cancelFn = () => clearTimeout(id);
+      window.addEventListener("load", schedule, { once: true });
+      cancelFn = () => window.removeEventListener("load", schedule);
     }
     return () => { cancelFn?.(); };
   }, []);

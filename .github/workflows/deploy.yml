@@ -10,6 +10,9 @@ jobs:
   # Kwaliteitspoort: build/deploy draaien pas na groene lint + tests
   test:
     runs-on: ubuntu-latest
+    # Faalt snel bij een hang (npm ci / db push / vitest) i.p.v. ~6 uur te blijven
+    # hangen; de suite draait normaal in enkele minuten.
+    timeout-minutes: 10
     # PostgreSQL-service voor de API-integratietests (unit-tests draaien ook
     # zonder DB; de integratietests slaan over als DATABASE_URL ontbreekt).
     services:

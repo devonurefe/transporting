@@ -140,7 +140,7 @@ function pickWidth(reqWidth: unknown, defaultWidth: number): number {
 }
 
 // Resolve a stored image URL to an HTTP response: decode base64 data: URLs and,
-// when a defaultWidth is given, resize + re-encode to WebP via sharp (cached 7d)
+// when a defaultWidth is given, resize + re-encode to WebP via sharp (cached 30d)
 // so oversized admin uploads don't ship full-res to every visitor. Redirects
 // file/http paths (already efficient) and falls back to the OG image.
 async function serveStoredImage(
@@ -166,7 +166,7 @@ async function serveStoredImage(
             .webp({ quality: 78 })
             .toBuffer();
           res.setHeader("Content-Type", "image/webp");
-          res.setHeader("Cache-Control", "public, max-age=604800");
+          res.setHeader("Cache-Control", "public, max-age=2592000");
           return res.send(out);
         } catch (e) {
           // Corrupt image or sharp error — fall through to the raw buffer.
@@ -175,7 +175,7 @@ async function serveStoredImage(
       }
     }
     res.setHeader("Content-Type", mimeMatch[1]);
-    res.setHeader("Cache-Control", "public, max-age=604800");
+    res.setHeader("Cache-Control", "public, max-age=2592000");
     return res.send(buf);
   }
   if (url.startsWith("/")) return res.redirect(url);
@@ -482,7 +482,7 @@ async function startServer() {
     // Vite hashes asset filenames, so /assets can be cached forever;
     // index.html must always revalidate to pick up new deploys
     app.use("/assets", express.static(path.join(distPath, "assets"), { maxAge: "1y", immutable: true }));
-    app.use("/images", express.static(path.join(distPath, "images"), { maxAge: "7d" }));
+    app.use("/images", express.static(path.join(distPath, "images"), { maxAge: "30d" }));
     app.use(express.static(distPath, {
       maxAge: "30d",
       index: false,

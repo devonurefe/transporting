@@ -59,6 +59,7 @@ const CityLandingPage = lazy(() => import("./components/CityLandingPage"));
 const FaqSection = lazy(() => import("./components/FaqSection"));
 const AdminSection = lazy(() => import("./components/AdminSection"));
 const MyOrdersSection = lazy(() => import("./components/MyOrdersSection"));
+const AdviesSection = lazy(() => import("./components/AdviesSection"));
 
 // Premium Loading Indicator Component
 function LoadingSpinner() {
@@ -810,6 +811,8 @@ export default function App() {
             } />
 
             <Route path="/veelgestelde-vragen" element={<FaqSection />} />
+
+            <Route path="/adviestool" element={<AdviesSection />} />
 
             <Route path="/booking" element={
               <BookingSection

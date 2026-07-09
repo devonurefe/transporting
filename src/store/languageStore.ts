@@ -24,6 +24,7 @@ const dictionary: TranslationDictionary = {
   menuOrders: { nl: "Contact", en: "Contact", tr: "İletişim" },
   menuAdmin: { nl: "Portaal", en: "Portal", tr: "Yönetim" },
   menuBooking: { nl: "Boeken", en: "Book Now", tr: "Rezervasyon" },
+  menuAdvisor: { nl: "Adviestool", en: "Advisor", tr: "Danışman" },
   menuLogin: { nl: "Inloggen", en: "Login", tr: "Giriş Yap" },
   menuMyArea: { nl: "Mijn Account", en: "My Account", tr: "Hesabım" },
 

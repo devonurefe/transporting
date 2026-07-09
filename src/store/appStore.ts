@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { Machine, Order, OrderStatus, CartItem, CampaignRule } from "../types";
 import { devWarn } from "../utils/log";
+import type { AdvisorConfig } from "../utils/advisor";
 
 interface Category {
   id: string;
@@ -35,6 +36,7 @@ interface SiteConfig {
   googleRating?: number | null;
   googleReviewCount?: number | null;
   googleReviews?: GoogleReview[] | null;
+  advisorConfig?: AdvisorConfig | null;
 }
 
 export interface GoogleReview {
@@ -95,6 +97,9 @@ interface AppState {
 
   campaignRules: CampaignRule[];
   updateCampaignRules: (rules: CampaignRule[]) => void;
+
+  // Adviestool (product-finder) admin copy-overrides
+  updateAdvisorConfig: (config: AdvisorConfig) => Promise<boolean>;
 
   // VAT display preference (display only — never affects calculation)
   vatDisplay: "excl" | "incl";
@@ -580,6 +585,27 @@ export const useAppStore = create<AppState>((set, get) => ({
     }).then((res) => {
       if (res.ok) get().fetchCampaignRules();
     }).catch(() => devWarn("Failed to save campaign rules to DB, localStorage fallback active."));
+  },
+
+  updateAdvisorConfig: async (config) => {
+    // Optimistic: reflect the new copy in the live siteConfig immediately.
+    set(state => ({ siteConfig: { ...state.siteConfig, advisorConfig: config } }));
+    try {
+      const res = await fetch("/api/advisor-config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+        body: JSON.stringify(config)
+      });
+      if (res.ok) {
+        await get().fetchSiteConfig();
+        return true;
+      }
+      const data = await res.json().catch(() => ({}));
+      set({ error: data.error || "Kon adviestool niet opslaan." });
+    } catch (e) {
+      devWarn("Failed to save advisor config to DB.");
+    }
+    return false;
   }
 }));
 

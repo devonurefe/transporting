@@ -209,6 +209,7 @@ export default function Header({
               [
                 { id: "home", label: (language === "nl" && siteConfig.menuHomeLabel) ? siteConfig.menuHomeLabel : t("menuHome"), icon: Home },
                 { id: "catalog", label: (language === "nl" && siteConfig.menuCatalogLabel) ? siteConfig.menuCatalogLabel : t("menuCatalog"), icon: Layers },
+                { id: "adviestool", label: t("menuAdvisor"), icon: Sparkles },
                 { id: "booking", label: t("menuBooking"), icon: ClipboardList },
               ] as { id: string; label: string; icon: any; badge?: string }[]
             ).map((tab) => {
@@ -420,6 +421,7 @@ export default function Header({
           {([
             { id: "home", label: (language === "nl" && siteConfig.menuHomeLabel) ? siteConfig.menuHomeLabel : t("menuHome"), icon: Home },
             { id: "catalog", label: (language === "nl" && siteConfig.menuCatalogLabel) ? siteConfig.menuCatalogLabel : t("menuCatalog"), icon: Layers },
+            { id: "adviestool", label: t("menuAdvisor"), icon: Sparkles },
             { id: "booking", label: t("menuBooking"), icon: ClipboardList },
             ...(currentUser ? [{ id: "orders", label: (language === "nl" && siteConfig.menuOrdersLabel) ? siteConfig.menuOrdersLabel : t("menuMyArea"), icon: User }] : []),
           ] as { id: string; label: string; icon: any }[]).map((tab) => {

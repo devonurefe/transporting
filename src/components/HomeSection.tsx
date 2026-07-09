@@ -205,7 +205,13 @@ function DealsCarousel({ machines, onSearch }: { machines: Machine[]; onSearch: 
         <div className="flex gap-4 px-4" style={{ width: "max-content" }}>
           {allCards.map((m, i) => {
             const baseName = m.name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "").trim();
-            const machineImage = m.imageUrl || (m.additionalImages as string[])?.[0];
+            const machineImageFull = m.imageUrl || (m.additionalImages as string[])?.[0];
+            // This card is a fixed 200x200 thumbnail — request a smaller width than the
+            // 800px server default (meant for larger contexts like the detail modal) so
+            // we don't ship 2x more image data than this thumbnail can ever show.
+            const machineImage = machineImageFull
+              ? `${machineImageFull}${machineImageFull.includes("?") ? "&" : "?"}w=480`
+              : machineImageFull;
             const campaignPct = m.campaignDiscountPercent ?? 0;
             const basePrice = m.oneDayPrice && m.oneDayPrice < m.pricePerDay ? m.oneDayPrice : m.pricePerDay;
             const effectivePrice = campaignPct > 0 ? basePrice * (1 - campaignPct / 100) : basePrice;

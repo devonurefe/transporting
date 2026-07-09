@@ -48,7 +48,9 @@ export function HuurGoLogo({ className = "h-8", dark = false }: { className?: st
           <span className="font-display font-black tracking-tight text-orange-600 text-[1.25em]" style={{ letterSpacing: '-0.03em' }}>go</span>
           <span className="font-display font-black text-emerald-500 text-[1.25em]">.</span>
         </div>
-        <span className={`font-semibold hidden sm:block text-[0.48em] uppercase tracking-[0.18em] mt-[2px] ${dark ? 'text-slate-500' : 'text-slate-400'}`}>Simpel en snel</span>
+        {/* dark=false (light header bg) needs a darker gray for contrast; dark=true
+            (dark header bg) needs a lighter gray — the reverse of what's intuitive. */}
+        <span className={`font-semibold hidden sm:block text-[0.48em] uppercase tracking-[0.18em] mt-[2px] ${dark ? 'text-slate-400' : 'text-slate-500'}`}>Simpel en snel</span>
       </div>
     </div>
   );

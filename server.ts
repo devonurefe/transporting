@@ -115,10 +115,39 @@ app.use("/api", apiRouter);
 // Global Error Handler Middleware
 app.use(errorHandler);
 
-// Resolve a stored image URL to an HTTP response: decode base64 data: URLs to
-// real binary (cacheable, ~25% smaller than base64 text), redirect file/http
-// paths, and fall back to the OG image. Shared by the main + gallery proxies.
-function serveStoredImage(res: express.Response, url: string | null | undefined) {
+// sharp is loaded lazily so a missing/incompatible native binary degrades to
+// serving images unresized instead of crashing the server on boot. undefined =
+// not tried yet, null = load failed.
+let sharpMod: any | null | undefined;
+async function getSharp(): Promise<any | null> {
+  if (sharpMod !== undefined) return sharpMod;
+  try {
+    sharpMod = (await import("sharp")).default;
+  } catch (e) {
+    sharpMod = null;
+    console.warn("sharp unavailable — serving stored images unresized:", (e as Error)?.message);
+  }
+  return sharpMod;
+}
+
+// Only serve a fixed set of widths so ?w= can't be used to spray arbitrary
+// resize work at the server. Requests outside the list fall back to the
+// endpoint's default width.
+const ALLOWED_IMAGE_WIDTHS = [320, 480, 640, 768, 1024, 1280, 1600];
+function pickWidth(reqWidth: unknown, defaultWidth: number): number {
+  const n = Number(reqWidth);
+  return Number.isFinite(n) && ALLOWED_IMAGE_WIDTHS.includes(n) ? n : defaultWidth;
+}
+
+// Resolve a stored image URL to an HTTP response: decode base64 data: URLs and,
+// when a defaultWidth is given, resize + re-encode to WebP via sharp (cached 7d)
+// so oversized admin uploads don't ship full-res to every visitor. Redirects
+// file/http paths (already efficient) and falls back to the OG image.
+async function serveStoredImage(
+  res: express.Response,
+  url: string | null | undefined,
+  opts?: { defaultWidth?: number; reqWidth?: unknown }
+) {
   if (!url) return res.redirect(DEFAULT_OG_IMAGE);
   if (url.startsWith("data:image/")) {
     const commaIdx = url.indexOf(",");
@@ -126,8 +155,27 @@ function serveStoredImage(res: express.Response, url: string | null | undefined)
     const mimeMatch = url.slice(0, commaIdx).match(/data:([^;]+);base64/);
     if (!mimeMatch) return res.redirect(DEFAULT_OG_IMAGE);
     const buf = Buffer.from(url.slice(commaIdx + 1), "base64");
+    if (opts?.defaultWidth) {
+      const sharp = await getSharp();
+      if (sharp) {
+        try {
+          const width = pickWidth(opts.reqWidth, opts.defaultWidth);
+          const out = await sharp(buf)
+            .rotate() // honour EXIF orientation
+            .resize({ width, withoutEnlargement: true })
+            .webp({ quality: 78 })
+            .toBuffer();
+          res.setHeader("Content-Type", "image/webp");
+          res.setHeader("Cache-Control", "public, max-age=604800");
+          return res.send(out);
+        } catch (e) {
+          // Corrupt image or sharp error — fall through to the raw buffer.
+          console.warn("sharp resize failed, serving raw image:", (e as Error)?.message);
+        }
+      }
+    }
     res.setHeader("Content-Type", mimeMatch[1]);
-    res.setHeader("Cache-Control", "public, max-age=86400");
+    res.setHeader("Cache-Control", "public, max-age=604800");
     return res.send(buf);
   }
   if (url.startsWith("/")) return res.redirect(url);
@@ -141,7 +189,7 @@ function serveStoredImage(res: express.Response, url: string | null | undefined)
 app.get("/machine-image/:id", async (req, res) => {
   try {
     const m = await prisma.machine.findUnique({ where: { id: req.params.id }, select: { imageUrl: true } });
-    return serveStoredImage(res, m?.imageUrl);
+    return await serveStoredImage(res, m?.imageUrl, { defaultWidth: 800, reqWidth: req.query.w });
   } catch {
     return res.redirect(DEFAULT_OG_IMAGE);
   }
@@ -156,7 +204,7 @@ app.get("/machine-image/:id/gallery/:idx", async (req, res) => {
     const m = await prisma.machine.findUnique({ where: { id: req.params.id }, select: { additionalImages: true } });
     const gallery = Array.isArray(m?.additionalImages) ? (m!.additionalImages as unknown[]) : [];
     const url = typeof gallery[idx] === "string" ? (gallery[idx] as string) : null;
-    return serveStoredImage(res, url);
+    return await serveStoredImage(res, url, { defaultWidth: 1000, reqWidth: req.query.w });
   } catch {
     return res.redirect(DEFAULT_OG_IMAGE);
   }
@@ -165,10 +213,10 @@ app.get("/machine-image/:id/gallery/:idx", async (req, res) => {
 // Serve the admin-configured hero image (SiteConfig.heroImageUrl) as binary, so
 // the public site-config feed stays small and the LCP hero loads as a cacheable
 // image instead of a ~500 KB base64 string embedded in the JSON.
-app.get("/site-hero-image", async (_req, res) => {
+app.get("/site-hero-image", async (req, res) => {
   try {
     const cfg = await prisma.siteConfig.findUnique({ where: { id: "default" }, select: { heroImageUrl: true } });
-    return serveStoredImage(res, cfg?.heroImageUrl);
+    return await serveStoredImage(res, cfg?.heroImageUrl, { defaultWidth: 1600, reqWidth: req.query.w });
   } catch {
     return res.redirect(DEFAULT_OG_IMAGE);
   }
@@ -234,7 +282,7 @@ function escapeHtml(s: string): string {
   return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
-type RouteMeta = { title: string; description: string; canonical: string; ogImage: string; noindex?: boolean; jsonLd?: string; heroPreload?: string };
+type RouteMeta = { title: string; description: string; canonical: string; ogImage: string; noindex?: boolean; jsonLd?: string; heroPreload?: { href: string; srcset?: string; sizes?: string } };
 
 function absoluteImage(url: string | null | undefined, machineId?: string): string {
   if (!url) return DEFAULT_OG_IMAGE;
@@ -361,7 +409,11 @@ function injectMeta(html: string, meta: RouteMeta): string {
   if (meta.heroPreload) {
     // Preload the actual LCP hero (admin /site-hero-image or the default WebP) at
     // HTML parse — removes the site-config-fetch -> render -> image-fetch chain.
-    out = out.replace("</head>", `    <link rel="preload" as="image" fetchpriority="high" href="${escapeHtml(meta.heroPreload)}" />\n  </head>`);
+    // imagesrcset/imagesizes let the browser preload the right responsive width
+    // (e.g. the 768w variant on mobile instead of the full 1600w).
+    const hp = meta.heroPreload;
+    const srcsetAttr = hp.srcset ? ` imagesrcset="${escapeHtml(hp.srcset)}" imagesizes="${escapeHtml(hp.sizes || "100vw")}"` : "";
+    out = out.replace("</head>", `    <link rel="preload" as="image" fetchpriority="high" href="${escapeHtml(hp.href)}"${srcsetAttr} />\n  </head>`);
   }
   return out;
 }
@@ -369,15 +421,29 @@ function injectMeta(html: string, meta: RouteMeta): string {
 // The homepage LCP is the hero image. Resolve which URL will actually render so we
 // can preload it — mirrors the /site-hero-image substitution in siteConfig.ts and
 // the fallback in HomeSection.tsx. Cheap single-column read; falls back on error.
-async function heroPreloadUrl(): Promise<string> {
+async function heroPreloadUrl(): Promise<{ href: string; srcset?: string; sizes?: string }> {
+  // Default hero: pre-generated WebP variants (640w + full). Keep in sync with HomeSection.
+  const DEFAULT_HERO = {
+    href: "/hero-huurgo-v2.webp",
+    srcset: "/hero-huurgo-v2-640.webp 640w, /hero-huurgo-v2.webp 1024w",
+    sizes: "100vw",
+  };
   try {
     const cfg = await prisma.siteConfig.findUnique({ where: { id: "default" }, select: { heroImageUrl: true } });
     const h = cfg?.heroImageUrl;
-    if (!h) return "/hero-huurgo-v2.webp";
-    if (h.startsWith("data:image/")) return "/site-hero-image";
-    return h; // external URL or local /path already efficient
+    if (!h) return DEFAULT_HERO;
+    if (h.startsWith("data:image/")) {
+      // Admin hero: sharp serves responsive widths from /site-hero-image?w=. Mirror
+      // the srcset in HomeSection so mobile preloads the small variant.
+      return {
+        href: "/site-hero-image?w=1600",
+        srcset: "/site-hero-image?w=768 768w, /site-hero-image?w=1280 1280w, /site-hero-image?w=1600 1600w",
+        sizes: "100vw",
+      };
+    }
+    return { href: h }; // external URL or local /path already efficient — href only
   } catch {
-    return "/hero-huurgo-v2.webp";
+    return DEFAULT_HERO;
   }
 }
 

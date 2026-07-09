@@ -450,13 +450,28 @@ export default function HomeSection({
               is served as a preloaded WebP <picture>; an admin-configured hero comes
               from /site-hero-image (base64) or an external URL. */}
           {(siteConfigLoaded && siteConfig.heroImageUrl) ? (
-            <img
-              src={siteConfig.heroImageUrl}
-              alt=""
-              fetchPriority="high"
-              decoding="async"
-              className="w-full h-full block object-cover animate-kenburns [object-position:80%_center] sm:[object-position:85%_center] [transform-origin:80%_center] sm:[transform-origin:85%_center]"
-            />
+            siteConfig.heroImageUrl === "/site-hero-image" ? (
+              // Admin hero via the sharp proxy — request responsive widths so mobile
+              // gets ~768w (~70 KB) instead of the full-width image. Matches the
+              // server-injected preload's imagesrcset.
+              <img
+                src="/site-hero-image?w=1600"
+                srcSet="/site-hero-image?w=768 768w, /site-hero-image?w=1280 1280w, /site-hero-image?w=1600 1600w"
+                sizes="100vw"
+                alt=""
+                fetchPriority="high"
+                decoding="async"
+                className="w-full h-full block object-cover animate-kenburns [object-position:80%_center] sm:[object-position:85%_center] [transform-origin:80%_center] sm:[transform-origin:85%_center]"
+              />
+            ) : (
+              <img
+                src={siteConfig.heroImageUrl}
+                alt=""
+                fetchPriority="high"
+                decoding="async"
+                className="w-full h-full block object-cover animate-kenburns [object-position:80%_center] sm:[object-position:85%_center] [transform-origin:80%_center] sm:[transform-origin:85%_center]"
+              />
+            )
           ) : (
             <picture>
               <source type="image/webp" srcSet="/hero-huurgo-v2-640.webp 640w, /hero-huurgo-v2.webp 1024w" sizes="100vw" />

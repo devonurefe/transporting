@@ -63,7 +63,7 @@ const MyOrdersSection = lazy(() => import("./components/MyOrdersSection"));
 // Premium Loading Indicator Component
 function LoadingSpinner() {
   return (
-    <div className="min-h-[60vh] flex flex-col items-center justify-center space-y-3">
+    <div className="min-h-screen flex flex-col items-center justify-center space-y-3">
       <Loader2 className="h-8 w-8 text-slate-400 animate-spin" />
       <span className="text-sm text-slate-400 font-medium">Laden...</span>
     </div>

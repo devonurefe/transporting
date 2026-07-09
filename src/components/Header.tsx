@@ -45,7 +45,7 @@ export function HuurGoLogo({ className = "h-8", dark = false }: { className?: st
       <div className="flex flex-col leading-none select-none">
         <div className="flex items-baseline gap-0">
           <span className={`font-display font-black tracking-tight text-[1.25em]`} style={{ letterSpacing: '-0.03em', color: dark ? '#fff' : '#0f172a' }}>huur</span>
-          <span className="font-display font-black tracking-tight text-orange-500 text-[1.25em]" style={{ letterSpacing: '-0.03em' }}>go</span>
+          <span className="font-display font-black tracking-tight text-orange-600 text-[1.25em]" style={{ letterSpacing: '-0.03em' }}>go</span>
           <span className="font-display font-black text-emerald-500 text-[1.25em]">.</span>
         </div>
         <span className={`font-semibold hidden sm:block text-[0.48em] uppercase tracking-[0.18em] mt-[2px] ${dark ? 'text-slate-500' : 'text-slate-400'}`}>Simpel en snel</span>
@@ -64,7 +64,7 @@ export function HuurGoText({ dark = false }: { dark?: boolean }) {
   return (
     <span className="font-display font-black tracking-tight whitespace-nowrap" style={{ letterSpacing: "-0.03em" }}>
       <span style={{ color: dark ? "#ffffff" : "#0f172a" }}>huur</span>
-      <span className="text-orange-500">go</span>
+      <span className="text-orange-600">go</span>
       <span className="text-emerald-500">.</span>
     </span>
   );

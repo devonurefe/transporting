@@ -30,6 +30,17 @@ const defaultSiteConfig = {
 siteConfigRouter.get("/site-config", publicReadLimiter, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const config = await prisma.siteConfig.findUnique({ where: { id: "default" } });
+    // Admins editing the site need the raw base64 hero back; the public feed
+    // replaces it with the binary-proxy URL so the JSON stays small.
+    const wantsFull = req.query.full === "1" && req.user?.role === "admin";
+    if (wantsFull) {
+      res.setHeader("Cache-Control", "no-store");
+      return res.json(config || defaultSiteConfig);
+    }
+    res.setHeader("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
+    if (config && typeof config.heroImageUrl === "string" && config.heroImageUrl.startsWith("data:image/")) {
+      return res.json({ ...config, heroImageUrl: "/site-hero-image" });
+    }
     res.json(config || defaultSiteConfig);
   } catch (error) {
     console.error("Error fetching site config:", error);
@@ -67,6 +78,10 @@ function pickSiteConfigFields(body: any): Record<string, string | number | null 
   for (const field of SITE_CONFIG_FIELDS) {
     // heroImageUrl stores a base64 data URL — allow up to 5 MB; all other fields max 1 KB
     const maxLen = field === "heroImageUrl" ? 5_000_000 : 1000;
+    // Never persist the binary-proxy placeholder: the public feed returns
+    // heroImageUrl="/site-hero-image", so if a stale client echoes it back we must
+    // ignore it rather than overwrite the real stored base64 image with the path.
+    if (field === "heroImageUrl" && body?.[field] === "/site-hero-image") continue;
     if (typeof body?.[field] === "string" && body[field].length <= maxLen) {
       data[field] = body[field];
     }
@@ -127,6 +142,7 @@ siteConfigRouter.post("/site-config", requireAdmin as any, async (req: Authentic
 siteConfigRouter.get("/categories", publicReadLimiter, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const categories = await prisma.category.findMany();
+    res.setHeader("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
     res.json(categories);
   } catch (error) {
     console.error("Error fetching categories:", error);

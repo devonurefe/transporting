@@ -444,17 +444,31 @@ export default function HomeSection({
       <div className="relative bg-slate-900 h-[240px] sm:h-[480px] lg:h-[540px]">
         {/* Image + decorative layers clipped so Ken Burns / glows don't escape */}
         <div className="absolute inset-0 overflow-hidden">
-          {/* Show fallback image immediately — eliminates the skeleton flash on first visit.
-              Key changes when a custom admin URL loads so the image cross-fades smoothly. */}
-          <motion.img
-            key={(siteConfigLoaded && siteConfig.heroImageUrl) ? siteConfig.heroImageUrl : 'default'}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5 }}
-            src={(siteConfigLoaded && siteConfig.heroImageUrl) ? siteConfig.heroImageUrl : '/hero-huurgo-v2.jpg'}
-            alt=""
-            className="w-full h-full block object-cover animate-kenburns [object-position:80%_center] sm:[object-position:85%_center] [transform-origin:80%_center] sm:[transform-origin:85%_center]"
-          />
+          {/* Show fallback image immediately — eliminates the skeleton flash on first
+              visit. This is the LCP element, so it renders at full opacity (no fade —
+              a fade-in delays measured LCP) with fetchpriority=high. The default hero
+              is served as a preloaded WebP <picture>; an admin-configured hero comes
+              from /site-hero-image (base64) or an external URL. */}
+          {(siteConfigLoaded && siteConfig.heroImageUrl) ? (
+            <img
+              src={siteConfig.heroImageUrl}
+              alt=""
+              fetchPriority="high"
+              decoding="async"
+              className="w-full h-full block object-cover animate-kenburns [object-position:80%_center] sm:[object-position:85%_center] [transform-origin:80%_center] sm:[transform-origin:85%_center]"
+            />
+          ) : (
+            <picture>
+              <source type="image/webp" srcSet="/hero-huurgo-v2-640.webp 640w, /hero-huurgo-v2.webp 1024w" sizes="100vw" />
+              <img
+                src="/hero-huurgo-v2.jpg"
+                alt=""
+                fetchPriority="high"
+                decoding="async"
+                className="w-full h-full block object-cover animate-kenburns [object-position:80%_center] sm:[object-position:85%_center] [transform-origin:80%_center] sm:[transform-origin:85%_center]"
+              />
+            </picture>
+          )}
 
           {/* Readability scrim — darker toward the bottom-left where the text sits */}
           <div className="absolute inset-0 bg-gradient-to-tr from-black/85 via-black/45 to-black/10 pointer-events-none" />

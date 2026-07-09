@@ -38,6 +38,25 @@ function sanitizeImageUrl(url: unknown): string {
   return ""; // reject javascript:, file:, and other executable schemes
 }
 
+// Replace inline base64 (data:) image URLs with lightweight binary-proxy URLs so
+// the public catalog feed stays small (base64 images can balloon /api/machines to
+// >1 MB). File paths (/images/...) and http(s) URLs are already efficient — kept
+// as-is. The proxies (/machine-image/:id[/gallery/:idx]) serve the real bytes,
+// cached 24h. Admins fetch with ?full=1 to get the raw data URLs back for editing.
+function toPublicMachine(m: any) {
+  const mainIsData = typeof m.imageUrl === "string" && m.imageUrl.startsWith("data:image/");
+  const gallery: string[] = Array.isArray(m.additionalImages) ? m.additionalImages : [];
+  return {
+    ...m,
+    imageUrl: mainIsData ? `/machine-image/${m.id}` : m.imageUrl,
+    additionalImages: gallery.map((url, idx) =>
+      typeof url === "string" && url.startsWith("data:image/")
+        ? `/machine-image/${m.id}/gallery/${idx}`
+        : url
+    ),
+  };
+}
+
 async function getCategoryLabel(categoryId: string) {
   const category = await prisma.category.findUnique({
     where: { id: categoryId }
@@ -51,6 +70,26 @@ machinesRouter.get("/", publicReadLimiter, softOriginGuard, async (req: Authenti
   try {
     const pageQuery = req.query.page;
     const limitQuery = req.query.limit;
+
+    // Admins editing machines need the raw base64 image data back; everyone else
+    // gets the lightweight feed (base64 images replaced by binary-proxy URLs).
+    const wantsFull = req.query.full === "1" && req.user?.role === "admin";
+    const shape = (m: any) => {
+      const base = {
+        ...m,
+        suitableFor: Array.isArray(m.suitableFor) ? m.suitableFor : [],
+        additionalImages: Array.isArray(m.additionalImages) ? m.additionalImages : []
+      };
+      return wantsFull ? base : toPublicMachine(base);
+    };
+
+    // Public feed is safe to cache briefly (short max-age + SWR); ETag lets
+    // repeat visits 304. Admin (full) data must never be cached by intermediaries.
+    if (wantsFull) {
+      res.setHeader("Cache-Control", "no-store");
+    } else {
+      res.setHeader("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
+    }
 
     if (pageQuery || limitQuery) {
       const page = Number(pageQuery) || 1;
@@ -68,20 +107,10 @@ machinesRouter.get("/", publicReadLimiter, softOriginGuard, async (req: Authenti
         skip,
         take: limit
       });
-      const formatted = dbMachines.map(m => ({
-        ...m,
-        suitableFor: Array.isArray(m.suitableFor) ? m.suitableFor : [],
-        additionalImages: Array.isArray(m.additionalImages) ? m.additionalImages : []
-      }));
-      return res.json(formatted);
+      return res.json(dbMachines.map(shape));
     } else {
       const dbMachines = await prisma.machine.findMany({ where: { deletedAt: null } });
-      const formatted = dbMachines.map(m => ({
-        ...m,
-        suitableFor: Array.isArray(m.suitableFor) ? m.suitableFor : [],
-        additionalImages: Array.isArray(m.additionalImages) ? m.additionalImages : []
-      }));
-      return res.json(formatted);
+      return res.json(dbMachines.map(shape));
     }
   } catch (error) {
     console.error("Error fetching machines:", error);

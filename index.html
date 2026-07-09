@@ -32,9 +32,9 @@
          latin subsets so above-the-fold text renders without a swap/reflow. -->
     <link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/fonts/outfit-latin.woff2" as="font" type="font/woff2" crossorigin />
-    <!-- Preload the default LCP hero image so it starts downloading immediately.
-         (An admin-configured hero is served from /site-hero-image instead.) -->
-    <link rel="preload" href="/hero-huurgo-v2.webp" as="image" type="image/webp" fetchpriority="high" />
+    <!-- The LCP hero preload is injected server-side per request (see injectMeta in
+         server.ts): it targets whichever hero actually renders — the admin hero
+         (/site-hero-image) or the default WebP — so we never preload the wrong image. -->
 
     <!-- Favicon & PWA Links -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />

@@ -186,6 +186,10 @@ model SiteConfig {
   // { author, rating, text, date }. De eigenaar plaatst hier echte reviews van
   // het Google-bedrijfsprofiel; niets verzonnen.
   googleReviews     Json?
+  // Adviestool (product-finder) admin overrides: { enabled, waFallback, overrides }.
+  // Question STRUCTURE + matching logic stay in code (src/utils/advisor.ts); only
+  // copy, the on/off toggle and the WhatsApp fallback text are stored here.
+  advisorConfig     Json?
 }
 
 // UNUSED: no code reads or writes this table. Kept (not dropped) to avoid a

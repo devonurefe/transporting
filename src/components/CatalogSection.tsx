@@ -22,6 +22,7 @@ import { computeDiscounts } from "../utils/pricing";
 import VatToggle from "./VatToggle";
 import MachineDetailModal from "./MachineDetailModal";
 import { CardBrandWatermark } from "./Header";
+import AdviesStrip from "./AdviesStrip";
 
 
 interface CatalogSectionProps {
@@ -302,6 +303,11 @@ export default function CatalogSection({
           <p className="text-xs text-slate-500 mt-1 leading-relaxed">
             {t("catalogSubtitle")}
           </p>
+        </div>
+
+        {/* Adviestool entry — helps undecided visitors find the right machine */}
+        <div className="mb-6">
+          <AdviesStrip />
         </div>
 
         {/* Clean Unified Control Bar */}

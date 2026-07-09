@@ -28,6 +28,7 @@ import { computeDiscounts } from "../utils/pricing";
 import VatToggle from "./VatToggle";
 import { BrandedText, HuurGoText, CardBrandWatermark } from "./Header";
 import { Machine } from "../types";
+import AdviesStrip from "./AdviesStrip";
 
 type IconComponent = React.FC<LucideProps>;
 
@@ -627,6 +628,13 @@ export default function HomeSection({
 
       {/* ── DEALS CAROUSEL ── */}
       {weeklyOfferMachines.length > 0 && <DealsCarousel machines={weeklyOfferMachines} onSearch={onSearch} />}
+
+      {/* ── ADVIESTOOL ENTRY ── */}
+      <div className="px-4 sm:px-6 pt-8">
+        <div className="max-w-5xl mx-auto">
+          <AdviesStrip />
+        </div>
+      </div>
 
       {/* ── CATEGORY CARDS ── */}
       <div className="bg-gradient-to-b from-white to-slate-50 px-4 sm:px-6 pt-10 pb-14">

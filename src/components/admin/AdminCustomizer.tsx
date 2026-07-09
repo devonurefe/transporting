@@ -12,6 +12,7 @@ import { useAuthStore } from "../../store/authStore";
 import { CampaignRule } from "../../types";
 import AdminConfirmDialog from "./AdminConfirmDialog";
 import { showAdminToast } from "./AdminToast";
+import AdviesConfigEditor from "./AdviesConfigEditor";
 
 interface AdminCustomizerProps {
   onAddSystemLog: (type: "login" | "logout" | "signup" | "booking" | "fleet" | "status" | "system", user: string, description: string) => void;
@@ -737,6 +738,9 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
           <AddCategoryForm onAddSystemLog={onAddSystemLog} adminLanguage={adminLanguage} />
 
         </div>
+
+        {/* Adviestool (product-finder) copy editor */}
+        <AdviesConfigEditor onAddSystemLog={onAddSystemLog} adminLanguage={adminLanguage} />
 
         {/* Campaign Rules Manager */}
         <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200/80 shadow-sm space-y-4">

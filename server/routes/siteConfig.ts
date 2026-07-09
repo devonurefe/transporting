@@ -220,6 +220,66 @@ siteConfigRouter.post("/campaign-rules", requireAdmin as any, async (req: Authen
   }
 });
 
+// ── Adviestool (product-finder) config ──────────────────────────────────────
+// Only copy is stored: question texts, option labels, the on/off toggle and the
+// WhatsApp fallback text. The question STRUCTURE and matching logic live in code
+// (src/utils/advisor.ts), so an admin can never break scoring by editing here.
+// Everything is length-capped and unknown shapes are dropped rather than stored.
+function sanitizeAdvisorConfig(body: any): { enabled: boolean; waFallback: string; overrides: Record<string, { q?: string; options?: Record<string, string> }> } | null {
+  if (!body || typeof body !== "object") return null;
+  const str = (v: any, max: number): string | undefined =>
+    typeof v === "string" && v.trim() ? v.slice(0, max) : undefined;
+
+  const overrides: Record<string, { q?: string; options?: Record<string, string> }> = {};
+  const rawOverrides = body.overrides;
+  if (rawOverrides && typeof rawOverrides === "object") {
+    // Cap the number of questions we accept overrides for.
+    for (const key of Object.keys(rawOverrides).slice(0, 20)) {
+      if (!/^[a-z0-9_-]{1,40}$/i.test(key)) continue;
+      const entry = rawOverrides[key];
+      if (!entry || typeof entry !== "object") continue;
+      const cleaned: { q?: string; options?: Record<string, string> } = {};
+      const q = str(entry.q, 200);
+      if (q) cleaned.q = q;
+      if (entry.options && typeof entry.options === "object") {
+        const opts: Record<string, string> = {};
+        for (const ov of Object.keys(entry.options).slice(0, 20)) {
+          if (!/^[a-z0-9_-]{1,40}$/i.test(ov)) continue;
+          const label = str(entry.options[ov], 120);
+          if (label) opts[ov] = label;
+        }
+        if (Object.keys(opts).length) cleaned.options = opts;
+      }
+      if (cleaned.q || cleaned.options) overrides[key] = cleaned;
+    }
+  }
+
+  return {
+    enabled: body.enabled !== false, // default on unless explicitly disabled
+    waFallback: str(body.waFallback, 500) ?? "",
+    overrides,
+  };
+}
+
+// POST advisor config (admin only)
+siteConfigRouter.post("/advisor-config", requireAdmin as any, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const advisorConfig = sanitizeAdvisorConfig(req.body);
+    if (!advisorConfig) {
+      return res.status(400).json({ error: "Ongeldige adviestool-configuratie" });
+    }
+    await prisma.siteConfig.upsert({
+      where: { id: "default" },
+      update: { advisorConfig } as any,
+      create: { ...defaultSiteConfig, advisorConfig, id: "default" } as any,
+    });
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Error saving advisor config:", error);
+    res.status(500).json({ error: "Kon adviestool-configuratie niet opslaan" });
+  }
+});
+
 // POST categories
 function sanitizeCategory(cat: any): { id: string; label: string; listLabel: string; desc: string; heights: string; price: string; infoContent?: any } | null {
   if (!cat || typeof cat.id !== "string" || !/^[a-z0-9-]{1,50}$/.test(cat.id)) return null;

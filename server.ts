@@ -238,6 +238,7 @@ app.get("/sitemap.xml", async (_req, res) => {
     { loc: `${base}/`, priority: "1.0", changefreq: "weekly" },
     { loc: `${base}/catalog`, priority: "0.9", changefreq: "daily" },
     { loc: `${base}/booking`, priority: "0.8", changefreq: "weekly" },
+    { loc: `${base}/adviestool`, priority: "0.8", changefreq: "monthly" },
     { loc: `${base}/veelgestelde-vragen`, priority: "0.7", changefreq: "monthly" },
     { loc: `${base}/catalog?category=schaarlift`, priority: "0.85", changefreq: "daily" },
     { loc: `${base}/catalog?category=spin`, priority: "0.85", changefreq: "daily" },
@@ -299,6 +300,7 @@ function staticMeta(pathname: string): RouteMeta {
     "/catalog": { title: "Catalogus — Hoogwerkers & Schaarliften Huren | huurgo", description: "Bekijk ons aanbod hoogwerkers, schaarliften, spinhoogwerkers, mastliften en ladderliften. Direct online reserveren, zonder borg." },
     "/booking": { title: "Online Reserveren — Snel & Eenvoudig | huurgo", description: "Reserveer uw hoogwerker in 3 stappen. Kies uw data, ontvang direct de prijs en bevestig via WhatsApp met iDEAL betaallink." },
     "/veelgestelde-vragen": { title: "Veelgestelde vragen — Hoogwerker huren | huurgo", description: "Antwoorden op veelgestelde vragen over hoogwerker huren: kosten, bezorging, borg, certificaten en betaling. Persoonlijk advies via WhatsApp." },
+    "/adviestool": { title: "Welke hoogwerker heb ik nodig? · Keuzehulp | huurgo", description: "Twijfelt u tussen een schaarlift, mastlift of spinhoogwerker? Beantwoord een paar korte vragen en zie direct welke machine uit ons verhuurpark bij uw klus past." },
     "/orders": { title: "Mijn Reserveringen | huurgo", description: "Beheer uw huurcontracten, volg de status en download facturen.", noindex: true },
     "/admin": { title: "Beheer | huurgo", description: "Beheeromgeving.", noindex: true },
   };
@@ -313,6 +315,19 @@ function staticMeta(pathname: string): RouteMeta {
         "name": item.q,
         "acceptedAnswer": { "@type": "Answer", "text": item.a },
       })),
+    });
+  }
+  if (pathname === "/adviestool") {
+    meta.jsonLd = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "HowTo",
+      "name": "Welke hoogwerker heb ik nodig?",
+      "description": "Vind in een paar korte vragen de juiste hoogwerker, verhuislift of steiger uit het verhuurpark van huurgo.",
+      "step": [
+        { "@type": "HowToStep", "name": "Vertel wat u gaat doen", "text": "Op hoogte werken, spullen omhoog of een kleine klus." },
+        { "@type": "HowToStep", "name": "Beantwoord een paar korte vragen", "text": "Werkhoogte, ondergrond en type werk." },
+        { "@type": "HowToStep", "name": "Bekijk de beste match", "text": "Wij tonen de machines uit ons park die bij uw klus passen." },
+      ],
     });
   }
   return meta;

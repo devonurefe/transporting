@@ -28,10 +28,13 @@
     <!-- Canonical -->
     <link rel="canonical" href="https://huurgo.nl/" />
 
-    <!-- Google Fonts — preconnect first so DNS/TLS is resolved before CSS fires -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" />
+    <!-- Self-hosted fonts (see @font-face in src/index.css). Preload the critical
+         latin subsets so above-the-fold text renders without a swap/reflow. -->
+    <link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/outfit-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <!-- Preload the default LCP hero image so it starts downloading immediately.
+         (An admin-configured hero is served from /site-hero-image instead.) -->
+    <link rel="preload" href="/hero-huurgo-v2.webp" as="image" type="image/webp" fetchpriority="high" />
 
     <!-- Favicon & PWA Links -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />

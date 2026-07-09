@@ -183,7 +183,11 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   fetchMachines: async () => {
     try {
-      const res = await fetch("/api/machines");
+      // Admins need the raw base64 image data (for editing); the public feed
+      // returns lightweight binary-proxy image URLs instead. See toPublicMachine.
+      const isAdminMode = localStorage.getItem("hwh_admin_mode") === "true";
+      const url = isAdminMode ? "/api/machines?full=1" : "/api/machines";
+      const res = await fetch(url, { headers: getAuthHeaders() });
       if (res.ok) {
         set({ machines: await res.json(), error: null });
       } else {
@@ -269,7 +273,11 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   fetchSiteConfig: async () => {
     try {
-      const res = await fetch("/api/site-config");
+      // Admins need the raw base64 hero (for editing); the public feed returns
+      // the binary-proxy hero URL instead. See the /site-hero-image endpoint.
+      const isAdminMode = localStorage.getItem("hwh_admin_mode") === "true";
+      const url = isAdminMode ? "/api/site-config?full=1" : "/api/site-config";
+      const res = await fetch(url, { headers: getAuthHeaders() });
       if (res.ok) {
         const data = await res.json();
         set({ siteConfig: data, siteConfigLoaded: true, error: null });

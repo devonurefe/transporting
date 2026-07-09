@@ -6,6 +6,7 @@ import { fileURLToPath } from "url";
 import dotenv from "dotenv";
 import { createServer as createViteServer } from "vite";
 import helmet from "helmet";
+import compression from "compression";
 import cors from "cors";
 import rateLimit from "express-rate-limit";
 import { apiRouter } from "./server/routes/api.js";
@@ -41,8 +42,8 @@ app.use(helmet({
     directives: {
       defaultSrc: ["'self'"],
       scriptSrc: ["'self'", "https://www.clarity.ms", "https://*.clarity.ms"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      fontSrc: ["'self'"],
       imgSrc: ["'self'", "data:", "https:", "blob:"],
       connectSrc: ["'self'", "https:"],
       frameSrc: ["'none'"],
@@ -55,6 +56,10 @@ app.use(helmet({
   noSniff: true,
   referrerPolicy: { policy: "strict-origin-when-cross-origin" },
 }));
+// Gzip/deflate responses. Nginx also gzips in prod, but compressing at the app
+// layer guarantees it for direct :3000 access and dev, and shrinks the JSON API
+// payloads (machines/site-config) that carry base64 image + text data.
+app.use(compression());
 // Environment-aware CORS: restrict origins in production
 // APP_URL env var drives the allowed origin (e.g. "https://mybooking.nl")
 const prodOrigins = (() => {
@@ -110,26 +115,60 @@ app.use("/api", apiRouter);
 // Global Error Handler Middleware
 app.use(errorHandler);
 
+// Resolve a stored image URL to an HTTP response: decode base64 data: URLs to
+// real binary (cacheable, ~25% smaller than base64 text), redirect file/http
+// paths, and fall back to the OG image. Shared by the main + gallery proxies.
+function serveStoredImage(res: express.Response, url: string | null | undefined) {
+  if (!url) return res.redirect(DEFAULT_OG_IMAGE);
+  if (url.startsWith("data:image/")) {
+    const commaIdx = url.indexOf(",");
+    if (commaIdx < 0) return res.redirect(DEFAULT_OG_IMAGE);
+    const mimeMatch = url.slice(0, commaIdx).match(/data:([^;]+);base64/);
+    if (!mimeMatch) return res.redirect(DEFAULT_OG_IMAGE);
+    const buf = Buffer.from(url.slice(commaIdx + 1), "base64");
+    res.setHeader("Content-Type", mimeMatch[1]);
+    res.setHeader("Cache-Control", "public, max-age=86400");
+    return res.send(buf);
+  }
+  if (url.startsWith("/")) return res.redirect(url);
+  if (/^https?:\/\//.test(url)) return res.redirect(url);
+  return res.redirect(DEFAULT_OG_IMAGE);
+}
+
 // Serve machine main image by ID — needed so base64-stored photos can appear
-// in og:image meta tags (social crawlers require a real URL, not a data: URI).
+// in og:image meta tags (social crawlers require a real URL, not a data: URI),
+// and so the public catalog can load images as binary instead of inline base64.
 app.get("/machine-image/:id", async (req, res) => {
   try {
     const m = await prisma.machine.findUnique({ where: { id: req.params.id }, select: { imageUrl: true } });
-    const url = m?.imageUrl;
-    if (!url) return res.redirect(DEFAULT_OG_IMAGE);
-    if (url.startsWith("data:image/")) {
-      const commaIdx = url.indexOf(",");
-      if (commaIdx < 0) return res.redirect(DEFAULT_OG_IMAGE);
-      const mimeMatch = url.slice(0, commaIdx).match(/data:([^;]+);base64/);
-      if (!mimeMatch) return res.redirect(DEFAULT_OG_IMAGE);
-      const buf = Buffer.from(url.slice(commaIdx + 1), "base64");
-      res.setHeader("Content-Type", mimeMatch[1]);
-      res.setHeader("Cache-Control", "public, max-age=86400");
-      return res.send(buf);
-    }
-    if (url.startsWith("/")) return res.redirect(url);
-    if (/^https?:\/\//.test(url)) return res.redirect(url);
+    return serveStoredImage(res, m?.imageUrl);
+  } catch {
     return res.redirect(DEFAULT_OG_IMAGE);
+  }
+});
+
+// Serve a machine gallery (additionalImages) photo by index, so the public
+// catalog/detail modal loads gallery images as binary instead of inline base64.
+app.get("/machine-image/:id/gallery/:idx", async (req, res) => {
+  try {
+    const idx = Number(req.params.idx);
+    if (!Number.isInteger(idx) || idx < 0) return res.redirect(DEFAULT_OG_IMAGE);
+    const m = await prisma.machine.findUnique({ where: { id: req.params.id }, select: { additionalImages: true } });
+    const gallery = Array.isArray(m?.additionalImages) ? (m!.additionalImages as unknown[]) : [];
+    const url = typeof gallery[idx] === "string" ? (gallery[idx] as string) : null;
+    return serveStoredImage(res, url);
+  } catch {
+    return res.redirect(DEFAULT_OG_IMAGE);
+  }
+});
+
+// Serve the admin-configured hero image (SiteConfig.heroImageUrl) as binary, so
+// the public site-config feed stays small and the LCP hero loads as a cacheable
+// image instead of a ~500 KB base64 string embedded in the JSON.
+app.get("/site-hero-image", async (_req, res) => {
+  try {
+    const cfg = await prisma.siteConfig.findUnique({ where: { id: "default" }, select: { heroImageUrl: true } });
+    return serveStoredImage(res, cfg?.heroImageUrl);
   } catch {
     return res.redirect(DEFAULT_OG_IMAGE);
   }
@@ -354,7 +393,17 @@ async function startServer() {
     // index.html must always revalidate to pick up new deploys
     app.use("/assets", express.static(path.join(distPath, "assets"), { maxAge: "1y", immutable: true }));
     app.use("/images", express.static(path.join(distPath, "images"), { maxAge: "7d" }));
-    app.use(express.static(distPath, { maxAge: "1h", index: false }));
+    app.use(express.static(distPath, {
+      maxAge: "30d",
+      index: false,
+      // Root static (hero image, og-image, favicons, fonts) can cache for weeks.
+      // The service worker must always revalidate so clients pick up new deploys.
+      setHeaders: (res, filePath) => {
+        if (filePath.endsWith("sw.js") || filePath.endsWith("service-worker.js")) {
+          res.setHeader("Cache-Control", "no-cache");
+        }
+      }
+    }));
     const indexPath = path.join(distPath, "index.html");
     let INDEX_HTML = "";
     try { INDEX_HTML = fs.readFileSync(indexPath, "utf-8"); } catch { /* fall back to sendFile */ }

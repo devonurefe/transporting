@@ -234,7 +234,7 @@ function escapeHtml(s: string): string {
   return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
-type RouteMeta = { title: string; description: string; canonical: string; ogImage: string; noindex?: boolean; jsonLd?: string };
+type RouteMeta = { title: string; description: string; canonical: string; ogImage: string; noindex?: boolean; jsonLd?: string; heroPreload?: string };
 
 function absoluteImage(url: string | null | undefined, machineId?: string): string {
   if (!url) return DEFAULT_OG_IMAGE;
@@ -358,7 +358,27 @@ function injectMeta(html: string, meta: RouteMeta): string {
   if (meta.jsonLd) {
     out = out.replace("</head>", `    <script type="application/ld+json">${meta.jsonLd}</script>\n  </head>`);
   }
+  if (meta.heroPreload) {
+    // Preload the actual LCP hero (admin /site-hero-image or the default WebP) at
+    // HTML parse — removes the site-config-fetch -> render -> image-fetch chain.
+    out = out.replace("</head>", `    <link rel="preload" as="image" fetchpriority="high" href="${escapeHtml(meta.heroPreload)}" />\n  </head>`);
+  }
   return out;
+}
+
+// The homepage LCP is the hero image. Resolve which URL will actually render so we
+// can preload it — mirrors the /site-hero-image substitution in siteConfig.ts and
+// the fallback in HomeSection.tsx. Cheap single-column read; falls back on error.
+async function heroPreloadUrl(): Promise<string> {
+  try {
+    const cfg = await prisma.siteConfig.findUnique({ where: { id: "default" }, select: { heroImageUrl: true } });
+    const h = cfg?.heroImageUrl;
+    if (!h) return "/hero-huurgo-v2.webp";
+    if (h.startsWith("data:image/")) return "/site-hero-image";
+    return h; // external URL or local /path already efficient
+  } catch {
+    return "/hero-huurgo-v2.webp";
+  }
 }
 
 async function metaForRequest(pathname: string): Promise<RouteMeta> {
@@ -374,7 +394,11 @@ async function metaForRequest(pathname: string): Promise<RouteMeta> {
     if (meta) return meta;
     return { title: "Plaats niet gevonden | huurgo", description: "Wij bezorgen in heel Zuid-Holland.", canonical: `${SEO_BASE}${pathname}`, ogImage: DEFAULT_OG_IMAGE, noindex: true };
   }
-  return staticMeta(pathname);
+  const meta = staticMeta(pathname);
+  if (pathname === "/") {
+    meta.heroPreload = await heroPreloadUrl();
+  }
+  return meta;
 }
 
 // Configure Vite integration for SPA fallback

@@ -235,10 +235,11 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
     if (!file) return;
     setIsUploadingHero(true);
     try {
-      // Hero spans the full viewport width on desktop/retina, so keep it large
-      // and high-quality (2560px, 92%). enhance=false preserves the original
-      // photo colours — AI-generated images shouldn't get the product colour boost.
-      const base64 = await resizeImage(file, 2560, 1200, 0.92, false);
+      // Hero is the LCP image, so keep the upload lean: 1600px / 80% WebP is sharp
+      // full-width yet ~5x smaller than the old 2560px/92% (which produced ~1 MB and
+      // tanked LCP on mobile). enhance=false preserves the original photo colours —
+      // AI-generated images shouldn't get the product colour boost.
+      const base64 = await resizeImage(file, 1600, 900, 0.80, false);
       // resizeImage always outputs WebP or JPEG — derive extension from actual output, never from original filename
       const uploadName = base64.startsWith("data:image/webp") ? "hero.webp" : "hero.jpg";
       const token = localStorage.getItem("hwh_admin_token") || localStorage.getItem("hwh_token");

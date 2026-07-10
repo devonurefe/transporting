@@ -415,37 +415,51 @@ export default function Header({
       </div>
     </header>
 
-      {/* Dynamic Mobile Bottom Bar switcher */}
+      {/* Dynamic Mobile Bottom Bar switcher — icon row keeps a fixed height (h-16)
+          so each tab button's h-full resolves against a definite value; the
+          safe-area inset is a separate spacer strip below it. iOS Safari can
+          transiently report a much larger env(safe-area-inset-bottom) while its
+          toolbar is animating away during a scroll gesture — if that padding
+          lived on the same box as the icon row (no fixed height, just min-h),
+          the whole bar would grow and visibly shove the icons down. Isolating
+          it in its own strip means only empty bar background can grow, never
+          the icon row itself. */}
       {!isAdminMode && (
-        <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex min-h-16 border-t border-slate-200/80 bg-white/95 backdrop-blur-lg justify-around items-center px-1 pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_12px_rgba(0,0,0,0.06)]">
-          {([
-            { id: "home", label: (language === "nl" && siteConfig.menuHomeLabel) ? siteConfig.menuHomeLabel : t("menuHome"), icon: Home },
-            { id: "catalog", label: (language === "nl" && siteConfig.menuCatalogLabel) ? siteConfig.menuCatalogLabel : t("menuCatalog"), icon: Layers },
-            { id: "adviestool", label: t("menuAdvisor"), icon: Sparkles },
-            { id: "booking", label: t("menuBooking"), icon: ClipboardList },
-            ...(currentUser ? [{ id: "orders", label: (language === "nl" && siteConfig.menuOrdersLabel) ? siteConfig.menuOrdersLabel : t("menuMyArea"), icon: User }] : []),
-          ] as { id: string; label: string; icon: any }[]).map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`relative flex flex-col items-center justify-center flex-grow h-full text-center transition-all ${
-                  isActive ? "text-slate-900 font-semibold" : "text-slate-500"
-                }`}
-              >
-                <Icon className={`h-4.5 w-4.5 ${isActive ? "text-slate-900" : "text-slate-400"}`} />
-                <span className="text-[10px] mt-0.5 font-medium leading-none">{tab.label}</span>
-                
-                {tab.id === "booking" && cartItems.length > 0 && (
-                  <span className="absolute top-1.5 right-1/2 translate-x-5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-emerald-500 px-1 text-[8px] font-black text-slate-950 shadow-[0_0_8px_rgba(16,185,129,0.4)]">
-                    {cartItems.length}
-                  </span>
-                )}
-              </button>
-            );
-          })}
+        <div
+          className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-slate-200/80 bg-white/95 backdrop-blur-lg shadow-[0_-4px_12px_rgba(0,0,0,0.06)]"
+          style={{ transform: "translateZ(0)" }}
+        >
+          <div className="flex h-16 justify-around items-center px-1">
+            {([
+              { id: "home", label: (language === "nl" && siteConfig.menuHomeLabel) ? siteConfig.menuHomeLabel : t("menuHome"), icon: Home },
+              { id: "catalog", label: (language === "nl" && siteConfig.menuCatalogLabel) ? siteConfig.menuCatalogLabel : t("menuCatalog"), icon: Layers },
+              { id: "adviestool", label: t("menuAdvisor"), icon: Sparkles },
+              { id: "booking", label: t("menuBooking"), icon: ClipboardList },
+              ...(currentUser ? [{ id: "orders", label: (language === "nl" && siteConfig.menuOrdersLabel) ? siteConfig.menuOrdersLabel : t("menuMyArea"), icon: User }] : []),
+            ] as { id: string; label: string; icon: any }[]).map((tab) => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`relative flex flex-col items-center justify-center flex-grow h-full text-center transition-all ${
+                    isActive ? "text-slate-900 font-semibold" : "text-slate-500"
+                  }`}
+                >
+                  <Icon className={`h-4.5 w-4.5 ${isActive ? "text-slate-900" : "text-slate-400"}`} />
+                  <span className="text-[10px] mt-0.5 font-medium leading-none">{tab.label}</span>
+
+                  {tab.id === "booking" && cartItems.length > 0 && (
+                    <span className="absolute top-1.5 right-1/2 translate-x-5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-emerald-500 px-1 text-[8px] font-black text-slate-950 shadow-[0_0_8px_rgba(16,185,129,0.4)]">
+                      {cartItems.length}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+          <div style={{ height: "env(safe-area-inset-bottom)" }} aria-hidden="true" />
         </div>
       )}
     </>

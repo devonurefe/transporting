@@ -10,6 +10,7 @@ import { Machine } from "../types";
 import { useAppStore } from "../store/appStore";
 import { euro, euroCompact } from "../utils/format";
 import { computeDiscounts } from "../utils/pricing";
+import { useSeo, SEO_BASE_URL } from "../utils/seo";
 import MachineDetailModal from "./MachineDetailModal";
 
 interface MachineDetailPageProps {
@@ -30,11 +31,30 @@ export default function MachineDetailPage({ onSelectMachineForBooking }: Machine
 
   const machine = useMemo(() => machines.find((m) => m.id === id), [machines, id]);
 
-  // Client-side title for SPA navigation (server already injects for crawlers)
+  // Client-side title/canonical/OG + BreadcrumbList for SPA navigation (server
+  // already injects Product JSON-LD + meta for crawlers on direct/shared links).
+  useSeo(
+    machine
+      ? {
+          title: `${machine.name} huren — ${euroCompact(machine.pricePerDay)}/dag | huurgo`,
+          description: machine.description
+            ? machine.description.replace(/\s+/g, " ").trim().slice(0, 155)
+            : `${machine.name} huren bij huurgo. Werkhoogte ${machine.height}m. Direct online reserveren, zonder borg.`,
+          path: `/hoogwerker/${machine.id}`,
+          jsonLd: {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            itemListElement: [
+              { "@type": "ListItem", position: 1, name: "Home", item: SEO_BASE_URL },
+              { "@type": "ListItem", position: 2, name: "Catalogus", item: `${SEO_BASE_URL}/catalog` },
+              { "@type": "ListItem", position: 3, name: machine.name, item: `${SEO_BASE_URL}/hoogwerker/${machine.id}` },
+            ],
+          },
+        }
+      : { title: "Machine niet gevonden | huurgo", path: "/catalog" }
+  );
+
   useEffect(() => {
-    if (machine) {
-      document.title = `${machine.name} huren — ${euroCompact(machine.pricePerDay)}/dag | huurgo`;
-    }
     window.scrollTo(0, 0);
   }, [machine]);
 

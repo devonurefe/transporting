@@ -45,25 +45,37 @@ export default function CityLandingPage({ onSelectMachineForBooking }: CityLandi
           path: `/hoogwerker-huren/${city.slug}`,
           jsonLd: {
             "@context": "https://schema.org",
-            "@type": "Service",
-            serviceType: "Hoogwerker verhuur",
-            name: `Hoogwerker huren in ${city.name}`,
-            description: city.intro,
-            url: `${SEO_BASE_URL}/hoogwerker-huren/${city.slug}`,
-            areaServed: [city.name, ...city.nearby].map((n) => ({ "@type": "City", name: n })),
-            provider: {
-              "@type": "LocalBusiness",
-              name: "huurgo — MB Hoogwerkers B.V.",
-              url: SEO_BASE_URL,
-              image: `${SEO_BASE_URL}/og-image.jpg`,
-              address: {
-                "@type": "PostalAddress",
-                addressLocality: "Zoeterwoude",
-                addressRegion: "Zuid-Holland",
-                addressCountry: "NL",
+            "@graph": [
+              {
+                "@type": "Service",
+                serviceType: "Hoogwerker verhuur",
+                name: `Hoogwerker huren in ${city.name}`,
+                description: city.intro,
+                url: `${SEO_BASE_URL}/hoogwerker-huren/${city.slug}`,
+                areaServed: [city.name, ...city.nearby].map((n) => ({ "@type": "City", name: n })),
+                provider: {
+                  "@type": "LocalBusiness",
+                  name: "huurgo — MB Hoogwerkers B.V.",
+                  url: SEO_BASE_URL,
+                  image: `${SEO_BASE_URL}/og-image.jpg`,
+                  address: {
+                    "@type": "PostalAddress",
+                    addressLocality: "Zoeterwoude",
+                    addressRegion: "Zuid-Holland",
+                    addressCountry: "NL",
+                  },
+                  areaServed: "Zuid-Holland",
+                },
               },
-              areaServed: "Zuid-Holland",
-            },
+              {
+                "@type": "BreadcrumbList",
+                itemListElement: [
+                  { "@type": "ListItem", position: 1, name: "Home", item: SEO_BASE_URL },
+                  { "@type": "ListItem", position: 2, name: "Catalogus", item: `${SEO_BASE_URL}/catalog` },
+                  { "@type": "ListItem", position: 3, name: city.name, item: `${SEO_BASE_URL}/hoogwerker-huren/${city.slug}` },
+                ],
+              },
+            ],
           },
         }
       : { title: "Plaats niet gevonden | huurgo", path: "/hoogwerker-huren" }

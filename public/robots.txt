@@ -1,9 +1,0 @@
-User-agent: *
-Allow: /
-
-# Keep transactional / private areas out of the index
-Disallow: /admin
-Disallow: /booking
-Disallow: /orders
-
-Sitemap: https://huurgo.nl/sitemap.xml

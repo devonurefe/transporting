@@ -158,6 +158,26 @@ model OrderRating {
   createdAt DateTime @default(now())
 }
 
+// Kenniscentrum content: SEO blog articles ("artikel") and shareable product
+// guides / how-it-works ("handleiding"). Admin-managed via AdminBlog; the public
+// /kenniscentrum pages and the server-side Article JSON-LD read from this table.
+// Only published=true rows are shown publicly or listed in the sitemap.
+model BlogPost {
+  id        String   @id
+  slug      String   @unique
+  type      String   @default("artikel") // "artikel" | "handleiding"
+  title     String
+  excerpt   String
+  category  String
+  content   String
+  published Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt @default(now())
+
+  @@index([published])
+  @@index([type])
+}
+
 model SiteConfig {
   id               String @id @default("default")
   siteName         String

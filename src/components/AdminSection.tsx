@@ -19,7 +19,8 @@ import {
   Calendar,
   CalendarDays,
   Database,
-  Users
+  Users,
+  BookOpen
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { UserProfile } from "../types";
@@ -42,6 +43,7 @@ const AdminDiagnostics = React.lazy(() => import("./admin/AdminDiagnostics"));
 const AdminAccounting = React.lazy(() => import("./admin/AdminAccounting"));
 const AdminPlanning = React.lazy(() => import("./admin/AdminPlanning"));
 const AdminCustomers = React.lazy(() => import("./admin/AdminCustomers"));
+const AdminBlog = React.lazy(() => import("./admin/AdminBlog"));
 
 function AdminLoadingSpinner() {
   return (
@@ -58,9 +60,9 @@ function AdminLoadingSpinner() {
 // type zodat de unions niet uit elkaar lopen.
 export type AdminSubTab =
   | "dashboard" | "orders" | "machines" | "calendar" | "planning" | "customers"
-  | "add" | "logs" | "customizer" | "diagnostics" | "accounting";
+  | "add" | "blog" | "logs" | "customizer" | "diagnostics" | "accounting";
 
-const ADVANCED_TAB_IDS: AdminSubTab[] = ["add", "customizer", "accounting", "diagnostics", "logs"];
+const ADVANCED_TAB_IDS: AdminSubTab[] = ["add", "blog", "customizer", "accounting", "diagnostics", "logs"];
 
 interface AdminSectionProps {
   isAdminMode: boolean;
@@ -130,6 +132,7 @@ export default function AdminSection({
   ];
   const advancedTabs: { id: AdminSubTab; label: string; icon: typeof Settings; count?: number }[] = [
     { id: "add", label: tAdmin("adminTabAdd"), icon: PlusCircle },
+    { id: "blog", label: al("Kenniscentrum", "Knowledge base", "Bilgi Merkezi"), icon: BookOpen },
     { id: "customizer", label: tAdmin("adminTabCustomizer"), icon: Settings },
     { id: "accounting", label: al("Omzet & Export", "Revenue & Export", "Ciro ve Dışa Aktarma"), icon: Database },
     { id: "diagnostics", label: al("Systeemdiagnose", "System Diagnostics", "Sistem Teşhisi"), icon: ShieldAlert },
@@ -505,6 +508,9 @@ export default function AdminSection({
                 )}
                 {subTab === "add" && (
                   <AdminAddMachine key="add" setSubTab={setSubTab} onAddSystemLog={onAddSystemLog} adminLanguage={adminLanguage} />
+                )}
+                {subTab === "blog" && (
+                  <AdminBlog key="blog" adminLanguage={adminLanguage} onAddSystemLog={onAddSystemLog} />
                 )}
                 {subTab === "customizer" && (
                   <AdminCustomizer key="customizer" onAddSystemLog={onAddSystemLog} adminLanguage={adminLanguage} />

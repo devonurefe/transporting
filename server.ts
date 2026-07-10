@@ -239,6 +239,7 @@ app.get("/sitemap.xml", async (_req, res) => {
     { loc: `${base}/catalog`, priority: "0.9", changefreq: "daily" },
     { loc: `${base}/booking`, priority: "0.8", changefreq: "weekly" },
     { loc: `${base}/adviestool`, priority: "0.8", changefreq: "monthly" },
+    { loc: `${base}/kenniscentrum`, priority: "0.7", changefreq: "weekly" },
     { loc: `${base}/veelgestelde-vragen`, priority: "0.7", changefreq: "monthly" },
     { loc: `${base}/catalog?category=schaarlift`, priority: "0.85", changefreq: "daily" },
     { loc: `${base}/catalog?category=spin`, priority: "0.85", changefreq: "daily" },
@@ -259,6 +260,15 @@ app.get("/sitemap.xml", async (_req, res) => {
     }
   } catch (e) {
     console.error("Sitemap machine fetch failed:", e);
+  }
+  // Kenniscentrum: one indexable URL per published article/guide
+  try {
+    const posts = await prisma.blogPost.findMany({ where: { published: true }, select: { slug: true } });
+    for (const p of posts) {
+      urls.push({ loc: `${base}/kenniscentrum/${encodeURIComponent(p.slug)}`, priority: "0.6", changefreq: "monthly" });
+    }
+  } catch (e) {
+    console.error("Sitemap blog fetch failed:", e);
   }
   const urlset = urls
     .map(
@@ -301,6 +311,7 @@ function staticMeta(pathname: string): RouteMeta {
     "/booking": { title: "Online Reserveren — Snel & Eenvoudig | huurgo", description: "Reserveer uw hoogwerker in 3 stappen. Kies uw data, ontvang direct de prijs en bevestig via WhatsApp met iDEAL betaallink." },
     "/veelgestelde-vragen": { title: "Veelgestelde vragen — Hoogwerker huren | huurgo", description: "Antwoorden op veelgestelde vragen over hoogwerker huren: kosten, bezorging, borg, certificaten en betaling. Persoonlijk advies via WhatsApp." },
     "/adviestool": { title: "Welke hoogwerker heb ik nodig? · Keuzehulp | huurgo", description: "Twijfelt u tussen een schaarlift, mastlift of spinhoogwerker? Beantwoord een paar korte vragen en zie direct welke machine uit ons verhuurpark bij uw klus past." },
+    "/kenniscentrum": { title: "Kenniscentrum — Tips, gidsen & handleidingen | huurgo", description: "Alles over hoogwerkers huren: keuzehulp, kosten, veilig werken op hoogte en praktische handleidingen. Deskundige tips van huurgo (MB Hoogwerkers)." },
     "/orders": { title: "Mijn Reserveringen | huurgo", description: "Beheer uw huurcontracten, volg de status en download facturen.", noindex: true },
     "/admin": { title: "Beheer | huurgo", description: "Beheeromgeving.", noindex: true },
   };
@@ -362,6 +373,46 @@ function cityMeta(slug: string): RouteMeta | null {
     "url": url,
   });
   return { title, description, canonical: url, ogImage: DEFAULT_OG_IMAGE, jsonLd };
+}
+
+// Kenniscentrum article/guide (/kenniscentrum/:slug). Injects the per-post
+// <title>/description + Article JSON-LD so Google indexes each guide with rich,
+// crawlable HTML even though the body renders client-side. Only published posts
+// resolve; drafts fall through to a noindex "not found".
+async function blogMeta(slug: string): Promise<RouteMeta | null> {
+  try {
+    const post: any = await prisma.blogPost.findUnique({ where: { slug } });
+    if (!post || !post.published) return null;
+    const url = `${SEO_BASE}/kenniscentrum/${encodeURIComponent(post.slug)}`;
+    const title = `${post.title} | huurgo`;
+    const description = String(post.excerpt || post.title).replace(/\s+/g, " ").trim().slice(0, 160);
+    const published = (post.createdAt instanceof Date ? post.createdAt : new Date(post.createdAt)).toISOString();
+    const modified = (post.updatedAt instanceof Date ? post.updatedAt : new Date(post.updatedAt)).toISOString();
+    const jsonLd = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": String(post.title).slice(0, 110),
+      "description": description,
+      "image": DEFAULT_OG_IMAGE,
+      "datePublished": published,
+      "dateModified": modified,
+      "articleSection": post.category,
+      "inLanguage": "nl-NL",
+      "mainEntityOfPage": { "@type": "WebPage", "@id": url },
+      "author": { "@type": "Organization", "name": "huurgo — MB Hoogwerkers B.V.", "url": SEO_BASE },
+      "publisher": {
+        "@type": "Organization",
+        "name": "huurgo — MB Hoogwerkers B.V.",
+        "url": SEO_BASE,
+        "logo": { "@type": "ImageObject", "url": DEFAULT_OG_IMAGE },
+      },
+      "url": url,
+    });
+    return { title, description, canonical: url, ogImage: DEFAULT_OG_IMAGE, jsonLd };
+  } catch (e) {
+    console.error("blogMeta failed:", e);
+    return null;
+  }
 }
 
 async function machineMeta(id: string): Promise<RouteMeta | null> {
@@ -474,6 +525,12 @@ async function metaForRequest(pathname: string): Promise<RouteMeta> {
     const meta = cityMeta(decodeURIComponent(cityMatch[1]));
     if (meta) return meta;
     return { title: "Plaats niet gevonden | huurgo", description: "Wij bezorgen in heel Zuid-Holland.", canonical: `${SEO_BASE}${pathname}`, ogImage: DEFAULT_OG_IMAGE, noindex: true };
+  }
+  const blogMatch = pathname.match(/^\/kenniscentrum\/([^/]+)\/?$/);
+  if (blogMatch) {
+    const meta = await blogMeta(decodeURIComponent(blogMatch[1]));
+    if (meta) return meta;
+    return { title: "Artikel niet gevonden | huurgo", description: "Dit artikel bestaat niet of is niet meer beschikbaar.", canonical: `${SEO_BASE}${pathname}`, ogImage: DEFAULT_OG_IMAGE, noindex: true };
   }
   const meta = staticMeta(pathname);
   if (pathname === "/") {

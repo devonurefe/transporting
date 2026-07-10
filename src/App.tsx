@@ -667,7 +667,7 @@ export default function App() {
   };
 
   return (
-    <div className="relative min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans antialiased pb-16 md:pb-0">
+    <div className="relative min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans antialiased pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0">
 
       {/* JSON-LD Structured Data for Google */}
       <script

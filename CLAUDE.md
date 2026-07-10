@@ -72,7 +72,7 @@ Single-package full-stack monorepo — one `package.json` for both React fronten
 - **Gemini/AI advisor**: completely removed. No `server/routes/gemini.ts`, no `AdvisorSection.tsx`, no `geminiEnabled` state in App.tsx.
 - **Auth** (`server/middleware/auth.ts`): JWT validation, `requireAdmin` guard.
 - **Rate limits**: 300 req/min global on `/api/`; 10 attempts/15 min on auth endpoints.
-- **Email** (`server/services/emailService.ts`): Resend with `sendWithRetry(payload, retries=3)` exponential backoff. Falls back to mock/log if `RESEND_API_KEY` absent. Six email flows: order confirmation, status update, borgsom refund, daily reminder (cron 07:00), password reset.
+- **Email** (`server/services/emailService.ts`): Resend with `sendWithRetry(payload, retries=3)` exponential backoff. Falls back to mock/log if `RESEND_API_KEY` absent. Flows: order confirmation, status update, verification, daily reminder (cron 07:00), password reset. No deposit/borg is charged anywhere in the app — there is no deposit refund flow.
 - **Security** (`server.ts`): Helmet with HSTS (prod), frameguard deny, noSniff, CSP, referrer policy. Serializable transactions on order creation (prevents double-booking race condition). Crypto order IDs: `HWH-${crypto.randomBytes(4).toString("hex").toUpperCase()}`.
 
 ### Database (`prisma/`)
@@ -149,7 +149,7 @@ Eleven lazy-loaded panels inside `src/components/admin/`:
 | Panel | File | Purpose |
 |-------|------|---------|
 | Dashboard | `AdminDashboard.tsx` | KPI cards, revenue chart, fleet composition |
-| Orders | `AdminOrders.tsx` | Order list, status changes, invoice print, borgsom buttons |
+| Orders | `AdminOrders.tsx` | Order list, status changes, invoice print |
 | Machines | `AdminMachines.tsx` | Edit existing machines — prices, images, flat rates, gallery |
 | Add Machine | `AdminAddMachine.tsx` | Add new machine — includes Weekend/Werkweek/4W price inputs |
 | Calendar | `AdminCalendar.tsx` | Block/unblock dates per machine with reason dropdown |

@@ -325,7 +325,7 @@ export default function CatalogSection({
                     onAddSystemLog?.(
                       "system",
                       currentUser ? currentUser.name : "Gast",
-                      `Filtert catalogus op categorie: "${tab.label}"`
+                      `Filtert assortiment op categorie: "${tab.label}"`
                     );
                   }}
                   className={`px-3.5 py-1.5 text-xs font-bold rounded-lg whitespace-nowrap transition-all border cursor-pointer ${
@@ -542,13 +542,17 @@ export default function CatalogSection({
                               <span className="flex items-center gap-1.5 relative z-10 min-w-0">
                                 <Tag className={`h-3 w-3 shrink-0 ${hasAnyDiscount ? "text-white/90" : "text-slate-400"}`} />
                                 <span className="truncate">Alle tarieven &amp; kortingen</span>
+                              </span>
+                              {/* Badge rechts naast de chevron i.p.v. achter het label —
+                                  op smalle schermen schoof hij over de tekst heen */}
+                              <span className="flex items-center gap-1.5 shrink-0 relative z-10">
                                 {badgeLabel && (
-                                  <span className="shrink-0 ml-2 bg-white text-slate-900 text-[10.5px] font-black px-2 py-0.5 rounded leading-none whitespace-nowrap shadow-sm">
+                                  <span className="bg-white text-slate-900 text-[10.5px] font-black px-2 py-0.5 rounded leading-none whitespace-nowrap shadow-sm">
                                     {badgeLabel}
                                   </span>
                                 )}
+                                <ChevronRight className={`h-3.5 w-3.5 shrink-0 group-hover:translate-x-0.5 transition-all ${hasAnyDiscount ? "text-white/80" : "text-slate-400 group-hover:text-slate-600"}`} />
                               </span>
-                              <ChevronRight className={`h-3.5 w-3.5 shrink-0 ml-1 group-hover:translate-x-0.5 transition-all relative z-10 ${hasAnyDiscount ? "text-white/80" : "text-slate-400 group-hover:text-slate-600"}`} />
                             </button>
                           );
                         })()}

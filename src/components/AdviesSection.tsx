@@ -84,9 +84,9 @@ export default function AdviesSection() {
       {/* Fallback note + secondary CTA */}
       <div className="text-center mt-10">
         <p className="text-sm text-slate-500">
-          Liever meteen persoonlijk advies? Bekijk de{" "}
+          Liever meteen persoonlijk advies? Bekijk het{" "}
           <Link to="/catalog" className="font-semibold text-indigo-600 hover:underline">
-            volledige catalogus
+            volledige assortiment
           </Link>{" "}
           of neem contact op.
         </p>

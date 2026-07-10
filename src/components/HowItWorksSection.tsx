@@ -20,8 +20,8 @@ export default function HowItWorksSection() {
       Icon: Search,
       title: t("Kies een machine", "Choose a machine", "Bir makine seçin"),
       body: t(
-        "Vind de juiste hoogwerker in de catalogus, of laat de Adviestool meedenken.",
-        "Find the right lift in the catalogue, or let the advice tool help you choose.",
+        "Vind de juiste hoogwerker in het assortiment, of laat de Adviestool meedenken.",
+        "Find the right lift in the assortment, or let the advice tool help you choose.",
         "Katalogdan doğru platformu bulun veya tavsiye aracını kullanın."
       ),
     },

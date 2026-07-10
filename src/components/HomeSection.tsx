@@ -331,8 +331,8 @@ export default function HomeSection({
     },
     {
       q: t("Zijn de prijzen inclusief BTW?", "Are prices including VAT?", "Fiyatlar KDV dahil mi?"),
-      a: t("Onze tarieven zijn standaard exclusief 21% BTW. Via de BTW-knop bovenaan de catalogus schakelt u eenvoudig naar inclusief BTW om het werkelijke bedrag te zien.",
-          "Our rates are standard excluding 21% VAT. Use the VAT toggle at the top of the catalogue to switch to including VAT.",
+      a: t("Onze tarieven zijn standaard exclusief 21% BTW. Via de BTW-knop bovenaan het assortiment schakelt u eenvoudig naar inclusief BTW om het werkelijke bedrag te zien.",
+          "Our rates are standard excluding 21% VAT. Use the VAT toggle at the top of the assortment to switch to including VAT.",
           "Fiyatlarımız standart olarak %21 KDV hariçtir. Katalog sayfasının üstündeki KDV düğmesiyle KDV dahil fiyatı görebilirsiniz.")
     },
     {

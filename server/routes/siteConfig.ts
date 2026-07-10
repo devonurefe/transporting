@@ -15,7 +15,7 @@ const defaultSiteConfig = {
   heroTitle: "De juiste machine, snel en veilig geregeld.",
   heroSubtitle: CORRECT_SUBTITLE,
   menuHomeLabel: "Home",
-  menuCatalogLabel: "Catalogus",
+  menuCatalogLabel: "Assortiment",
   menuOrdersLabel: "Mijn Account",
   menuAdminLabel: "Portaal",
   contactEmail: "info@mbhoogwerkers.com",
@@ -207,7 +207,7 @@ siteConfigRouter.post("/campaign-rules", requireAdmin as any, async (req: Authen
         heroTitle: "De juiste machine, snel en veilig geregeld.",
         heroSubtitle: CORRECT_SUBTITLE,
         menuHomeLabel: "Home",
-        menuCatalogLabel: "Catalogus",
+        menuCatalogLabel: "Assortiment",
         menuOrdersLabel: "Mijn Account",
         menuAdminLabel: "Portaal",
         campaignRules: rules

@@ -240,7 +240,7 @@ export default function AdviesModal({ open, onClose }: AdviesModalProps) {
                   onClick={() => { onClose(); navigate("/catalog"); }}
                   className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm py-2.5 rounded-xl transition-colors cursor-pointer"
                 >
-                  Naar de catalogus
+                  Naar het assortiment
                 </button>
               </div>
             )}

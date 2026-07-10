@@ -115,7 +115,7 @@ export default function BookingStep1({
             className="flex items-center gap-1 text-xs text-slate-400 hover:text-slate-700 transition-colors cursor-pointer bg-transparent border-none p-0 font-medium"
           >
             <ChevronLeft className="h-3.5 w-3.5" />
-            Terug naar catalogus
+            Terug naar het assortiment
           </button>
         </div>
         <h3 className="font-display font-black text-base text-slate-900 flex items-center space-x-2">

@@ -460,7 +460,7 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs text-slate-700 block font-bold">{t("Labels - Catalogus", "Labels - Catalog", "Etiketler - Katalog")}</label>
+              <label className="text-xs text-slate-700 block font-bold">{t("Labels - Assortiment", "Labels - Assortment", "Etiketler - Ürün Gamı")}</label>
               <input
                 type="text"
                 value={menuCatalog}

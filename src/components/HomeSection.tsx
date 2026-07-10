@@ -329,9 +329,15 @@ export default function HomeSection({
     },
     {
       q: t("Wat zijn de bezorg- en transportkosten?", "What are delivery and transport costs?", "Teslimat ve nakliye ücretleri nelerdir?"),
-      a: t("Bezorging door ons: €150 all-in (heen en retour). Aanhanger huren: €25 per dag. Zelf ophalen in Zoeterwoude is gratis. Borg: €150 (wordt teruggestort na de huurperiode).",
-          "Delivery by us: €150 all-in (incl. return). Trailer rental: €25/day. Self pickup in Zoeterwoude is free. Deposit: €150 (refunded after the rental period).",
-          "Bizim tarafımızdan teslimat: €150 (gidiş-dönüş dahil). Römork kiralama: günlük €25. Zoeterwoude'dan kendi teslim alma ücretsizdir. Depozito: €150 (iade edilir).")
+      a: t("Bezorging door ons: €150 all-in (heen en retour). Aanhanger huren: €25 per dag. Zelf ophalen in Zoeterwoude is gratis.",
+          "Delivery by us: €150 all-in (incl. return). Trailer rental: €25/day. Self pickup in Zoeterwoude is free.",
+          "Bizim tarafımızdan teslimat: €150 (gidiş-dönüş dahil). Römork kiralama: günlük €25. Zoeterwoude'dan kendi teslim alma ücretsizdir.")
+    },
+    {
+      q: t("Is er een borg of aanbetaling vereist?", "Is a deposit required?", "Depozito gerekli mi?"),
+      a: t("Nee, wij werken volledig zonder borg. U betaalt alleen de huursom via iDEAL of Tikkie na bevestiging van uw boeking via WhatsApp.",
+          "No, we work entirely without a deposit. You only pay the rental amount via iDEAL or Tikkie after confirming your booking via WhatsApp.",
+          "Hayır, tamamen depozitosuz çalışıyoruz. WhatsApp üzerinden rezervasyonunuz onaylandıktan sonra sadece kira tutarını iDEAL veya Tikkie ile ödersiniz.")
     },
     {
       q: t("Hoe werkt de betaling?", "How does payment work?", "Ödeme nasıl çalışır?"),
@@ -636,7 +642,7 @@ export default function HomeSection({
             <h2 className="font-display font-black text-lg sm:text-xl text-slate-900 leading-tight">
               {t("Kies uw machine", "Choose your machine", "Makinenizi seçin")}
             </h2>
-            <p className="hidden sm:block text-xs text-slate-500 mt-0.5">
+            <p className="text-xs text-slate-500 mt-0.5">
               {t("Alle categorieën in één overzicht", "All categories at a glance", "Tüm kategoriler bir bakışta")}
             </p>
           </div>
@@ -784,14 +790,6 @@ export default function HomeSection({
               </div>
             ))}
           </div>
-        </div>
-
-        {/* Seam marker — light but crisp break before the footer's trust/reviews
-            band below, so the FAQ list doesn't visually run straight into it. */}
-        <div className="max-w-[140px] mx-auto mt-10 flex items-center gap-3" aria-hidden="true">
-          <span className="h-px flex-1 bg-gradient-to-r from-transparent to-orange-300" />
-          <span className="h-1.5 w-1.5 rounded-full bg-orange-400 shrink-0" />
-          <span className="h-px flex-1 bg-gradient-to-l from-transparent to-orange-300" />
         </div>
       </div>
 

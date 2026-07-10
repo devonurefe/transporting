@@ -417,7 +417,7 @@ export default function Header({
 
       {/* Dynamic Mobile Bottom Bar switcher */}
       {!isAdminMode && (
-        <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex h-14 border-t border-slate-200/80 bg-white/95 backdrop-blur-lg justify-around items-center px-1 pb-safe shadow-[0_-4px_12px_rgba(0,0,0,0.06)]">
+        <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex min-h-16 border-t border-slate-200/80 bg-white/95 backdrop-blur-lg justify-around items-center px-1 pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_12px_rgba(0,0,0,0.06)]">
           {([
             { id: "home", label: (language === "nl" && siteConfig.menuHomeLabel) ? siteConfig.menuHomeLabel : t("menuHome"), icon: Home },
             { id: "catalog", label: (language === "nl" && siteConfig.menuCatalogLabel) ? siteConfig.menuCatalogLabel : t("menuCatalog"), icon: Layers },

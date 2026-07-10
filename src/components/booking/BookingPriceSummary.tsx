@@ -4,7 +4,7 @@
  */
 
 import React from "react";
-import { ShieldCheck, TrendingDown, Package, ChevronDown, Calendar, Truck, Tag } from "lucide-react";
+import { ShieldCheck, TrendingDown, Package, ChevronDown, Calendar, Truck, Tag, MessageCircle, BadgeCheck } from "lucide-react";
 import { Machine } from "../../types";
 import { useLanguageStore } from "../../store/languageStore";
 import { euro, euroCompact } from "../../utils/format";
@@ -435,11 +435,22 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
 
       </div>
 
-      {/* Trust footer */}
+      {/* Trust footer — korte geruststellingen vlak bij het totaalbedrag,
+          precies waar de twijfel ontstaat */}
       <div className="px-4 pb-4">
-        <div className="flex items-center justify-center gap-1.5 text-[10px] text-slate-400 pt-2 border-t border-slate-100">
-          <ShieldCheck className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
-          <span>{t("priceSummaryNoHidden")}</span>
+        <div className="space-y-1.5 pt-2.5 border-t border-slate-100">
+          <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
+            <ShieldCheck className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+            <span>{t("priceSummaryNoHidden")}</span>
+          </div>
+          <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
+            <MessageCircle className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+            <span>{t("priceSummaryWhatsAppSupport")}</span>
+          </div>
+          <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
+            <BadgeCheck className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+            <span>{t("priceSummaryCertified")}</span>
+          </div>
         </div>
       </div>
 

@@ -215,6 +215,9 @@ export default function Header({
             ).map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
+              // "Boeken" is de conversie-CTA en krijgt een gevulde oranje pill
+              // zodat hij altijd het meest opvallende element in de nav is.
+              const isBookingCta = tab.id === "booking";
               return (
                 <button
                   key={tab.id}
@@ -222,13 +225,21 @@ export default function Header({
                     setActiveTab(tab.id);
                     setShowNotifDropdown(false);
                   }}
-                  className={`relative flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs lg:text-sm font-semibold tracking-wide transition-all duration-350 ${
-                    isActive 
-                      ? "text-slate-900 bg-slate-100/70 shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
-                      : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                  className={`relative flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs lg:text-sm tracking-wide transition-all duration-350 ${
+                    isBookingCta
+                      ? `ml-1 lg:ml-2 font-bold text-white shadow-md shadow-orange-500/25 ${
+                          isActive
+                            ? "bg-orange-600"
+                            : "bg-orange-500 hover:bg-orange-600 hover:shadow-lg hover:-translate-y-0.5"
+                        }`
+                      : `font-semibold ${
+                          isActive
+                            ? "text-slate-900 bg-slate-100/70 shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
+                            : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                        }`
                   }`}
                 >
-                  <Icon className={`h-4 w-4 ${isActive ? "text-slate-900" : "text-slate-400"}`} />
+                  <Icon className={`h-4 w-4 ${isBookingCta ? "text-white" : isActive ? "text-slate-900" : "text-slate-400"}`} />
                   <span>{tab.label}</span>
                   
                   {tab.badge && (
@@ -243,7 +254,7 @@ export default function Header({
                     </span>
                   )}
                   
-                  {isActive && (
+                  {isActive && !isBookingCta && (
                     <motion.div
                       layoutId="activeTabUnderline"
                       className="absolute bottom-0 left-3 right-3 h-[2px] bg-gradient-to-r from-orange-400 to-amber-300 rounded-full"

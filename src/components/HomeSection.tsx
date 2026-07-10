@@ -30,6 +30,13 @@ import VatToggle from "./VatToggle";
 import { BrandedText, HuurGoText, CardBrandWatermark } from "./Header";
 import { Machine } from "../types";
 import AdviesStrip from "./AdviesStrip";
+import TrustBadges from "./TrustBadges";
+import HowItWorksSection from "./HowItWorksSection";
+import WhyHuurGoBand from "./WhyHuurGoBand";
+
+// Merken die daadwerkelijk in de vloot zitten (zie seed) — als muted
+// wordmark-strip onder de categoriekaarten. Tekst, geen logo-assets.
+const FLEET_BRANDS = ["Haulotte", "JLG", "Niftylift", "Hinowa", "Bravi", "Skyjack", "Dingli", "Altrex"];
 
 type IconComponent = React.FC<LucideProps>;
 
@@ -614,21 +621,41 @@ export default function HomeSection({
           >
             <BrandedText text={language === "nl" && siteConfig.heroSubtitle ? siteConfig.heroSubtitle : t("heroSubtitle")} />
           </motion.p>
+          {/* Primaire CTA naar de catalogus + secundaire WhatsApp-knop. De
+              catalogus-knop is bewust de meest opvallende: boeken is het doel,
+              WhatsApp het vangnet voor twijfelaars. */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.18 }}
-            className="pt-1"
+            className="pt-1 flex flex-col sm:flex-row items-center justify-center gap-2.5"
           >
+            <button
+              onClick={() => onSearch("", "")}
+              className="cta-shine inline-flex items-center justify-center gap-2 w-full sm:w-auto py-3.5 px-7 rounded-2xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-sm transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer"
+            >
+              <span>{t("Bekijk alle machines", "View all machines", "Tüm makineleri görüntüle")}</span>
+              <ChevronRight className="h-4 w-4 shrink-0" />
+            </button>
             <a
               href={buildWhatsAppGeneralUrl()}
               target="_blank"
               rel="noopener noreferrer"
-              className="cta-shine inline-flex items-center justify-center space-x-3 w-full max-w-sm mx-auto py-3.5 px-6 rounded-2xl bg-[#25D366] hover:bg-[#1da851] text-white font-bold text-sm transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] no-underline"
+              className="inline-flex items-center justify-center gap-2 w-full sm:w-auto py-3.5 px-6 rounded-2xl bg-white border border-slate-200 hover:border-[#25D366] text-slate-700 font-bold text-sm transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] no-underline"
             >
-              <MessageCircle className="h-5 w-5 shrink-0" />
-              <span>Direct advies? WhatsApp ons!</span>
+              <MessageCircle className="h-5 w-5 shrink-0 text-[#25D366]" />
+              <span>{t("Direct advies via WhatsApp", "Direct advice via WhatsApp", "WhatsApp'tan hemen danışın")}</span>
             </a>
+          </motion.div>
+
+          {/* Trust badges direct onder de CTA's — echte score/cijfers only */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.24 }}
+            className="pt-3"
+          >
+            <TrustBadges />
           </motion.div>
         </div>
       </div>
@@ -741,14 +768,34 @@ export default function HomeSection({
             );
           })}
         </div>
+
+        {/* ── MERKEN-STRIP — muted wordmarks van de echte vloot ── */}
+        <div className="max-w-5xl mx-auto mt-12">
+          <p className="text-center text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500 mb-3.5">
+            {t("Onze merken", "Our brands", "Markalarımız")}
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-x-7 gap-y-2.5">
+            {FLEET_BRANDS.map((brand) => (
+              <span key={brand} className="font-display font-black text-base sm:text-lg uppercase tracking-wider text-slate-500 select-none">
+                {brand}
+              </span>
+            ))}
+          </div>
+        </div>
       </div>
 
-      {/* ── ADVIESTOOL ENTRY ── (net boven de FAQ) */}
-      <div className="px-4 sm:px-6 pt-10">
+      {/* ── HOE WERKT HUREN? — vier stappen ── */}
+      <HowItWorksSection />
+
+      {/* ── ADVIESTOOL ENTRY ── */}
+      <div className="px-4 sm:px-6 pt-2 pb-12">
         <div className="max-w-2xl mx-auto">
           <AdviesStrip tall />
         </div>
       </div>
+
+      {/* ── WAAROM HUURGO — trustband (verhuisd uit de footer) ── */}
+      <WhyHuurGoBand />
 
       {/* ── FAQ SECTION ── */}
       <div className="bg-slate-50 border-t border-slate-100 px-4 sm:px-6 py-12">

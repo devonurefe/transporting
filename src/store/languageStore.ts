@@ -67,6 +67,8 @@ const dictionary: TranslationDictionary = {
   priceSummaryInclVAT: { nl: "incl. BTW", en: "incl. VAT", tr: "KDV dahil" },
   priceSummaryChooseMachine: { nl: "Kies een machine", en: "Choose a machine", tr: "Makine seçin" },
   priceSummaryNoHidden: { nl: "Geen verborgen kosten · Veilige betaling", en: "No hidden costs · Secure payment", tr: "Gizli maliyet yok · Güvenli ödeme" },
+  priceSummaryWhatsAppSupport: { nl: "WhatsApp-ondersteuning tijdens uw huurperiode", en: "WhatsApp support during your rental", tr: "Kiralama süresince WhatsApp desteği" },
+  priceSummaryCertified: { nl: "TÜV-gekeurde machines (cat. 1-3B)", en: "TÜV-certified machines (cat. 1-3B)", tr: "TÜV sertifikalı makineler (kat. 1-3B)" },
   priceSummaryChooseMachineHint: { nl: "Selecteer een hoogwerker uit de catalogus om uw prijs te zien.", en: "Select an aerial lift from the catalog to see your price.", tr: "Fiyatınızı görmek için katalogdan bir platform seçin." },
   priceSummaryChooseDates: { nl: "Kies uw huurperiode", en: "Choose your rental period", tr: "Kiralama döneminizi seçin" },
   priceSummaryChooseDatesHint: { nl: "Selecteer een begin- en einddatum in de kalender om de prijs te zien.", en: "Select a start and end date in the calendar to see the price.", tr: "Fiyatı görmek için takvimde bir başlangıç ve bitiş tarihi seçin." },

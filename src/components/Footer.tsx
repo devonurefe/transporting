@@ -257,7 +257,7 @@ export default function Footer({ siteName, setActiveTab, setShowContactModal }: 
           {/* Col 1 — Brand */}
           <div className="space-y-4 flex flex-col items-start">
             <HuurGoLogo className="h-9" dark />
-            <p className="text-[10px] text-slate-500 -mt-1"><BrandedText text="HuurGo is een initiatief van MB Hoogwerkers" dark /></p>
+            <p className="text-[10px] text-slate-400 -mt-1"><BrandedText text="HuurGo is een initiatief van MB Hoogwerkers" dark /></p>
             <p className="text-xs text-slate-400 leading-relaxed max-w-xs">
               Professionele verhuur van gecertificeerde hoogwerkers, schaarliften en mastliften voor ZZP'ers, aannemers en particulieren.
             </p>
@@ -271,7 +271,7 @@ export default function Footer({ siteName, setActiveTab, setShowContactModal }: 
 
           {/* Col 2 — Hours & Location */}
           <div className="space-y-4">
-            <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500">{t("footerHours")}</h4>
+            <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400">{t("footerHours")}</h4>
             <div className="flex flex-col gap-3.5 text-xs text-slate-400">
               <div className="flex items-center gap-3">
                 <span className="h-7 w-7 rounded-lg bg-slate-800 flex items-center justify-center shrink-0">
@@ -279,7 +279,7 @@ export default function Footer({ siteName, setActiveTab, setShowContactModal }: 
                 </span>
                 <div className="leading-snug">
                   <span className="font-semibold text-slate-200 block">{t("footerHoursLine")}</span>
-                  <span className="text-slate-500 text-[11px]">{t("footerClosed")}</span>
+                  <span className="text-slate-400 text-[11px]">{t("footerClosed")}</span>
                 </div>
               </div>
               <a
@@ -300,7 +300,7 @@ export default function Footer({ siteName, setActiveTab, setShowContactModal }: 
                 </span>
                 <div className="leading-snug">
                   <span className="font-semibold text-slate-200 block group-hover:text-white transition-colors">Zoeterwoude (HQ)</span>
-                  <span className="text-slate-500 text-[11px] group-hover:text-slate-400 transition-colors">Produktieweg 20, 2382 PB</span>
+                  <span className="text-slate-400 text-[11px] group-hover:text-slate-200 transition-colors">Produktieweg 20, 2382 PB</span>
                 </div>
               </a>
             </div>
@@ -308,7 +308,7 @@ export default function Footer({ siteName, setActiveTab, setShowContactModal }: 
 
           {/* Col 3 — Links */}
           <div className="space-y-4">
-            <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500">Informatie</h4>
+            <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Informatie</h4>
             <div className="flex flex-col gap-0.5">
               <Link
                 to="/veelgestelde-vragen"
@@ -348,14 +348,14 @@ export default function Footer({ siteName, setActiveTab, setShowContactModal }: 
 
         {/* Service cities — full width below the 3 columns */}
         <div className="py-8 border-b border-slate-800">
-          <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-3">Werkgebied — hoogwerker huren</h4>
+          <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Werkgebied — hoogwerker huren</h4>
           <div className="flex flex-wrap gap-x-4 gap-y-0.5">
             {SERVICE_CITIES.map((c) => (
               <Link
                 key={c.slug}
                 to={`/hoogwerker-huren/${c.slug}`}
                 onClick={(e) => { e.preventDefault(); setActiveTab(`hoogwerker-huren/${c.slug}`); }}
-                className="inline-block py-1.5 text-xs text-slate-500 hover:text-slate-200 transition-colors no-underline"
+                className="inline-block py-1.5 text-xs text-slate-400 hover:text-slate-200 transition-colors no-underline"
               >
                 {c.name}
               </Link>
@@ -364,11 +364,11 @@ export default function Footer({ siteName, setActiveTab, setShowContactModal }: 
         </div>
 
         {/* Bottom row — copyright + badges */}
-        <div className="pt-7 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs text-slate-600">
+        <div className="pt-7 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs text-slate-400">
           <span><BrandedText text="© 2026 HuurGo / MB Hoogwerkers B.V. · KvK 67438237 · BTW NL856990656B01" dark /></span>
           <div className="flex gap-2">
-            <span className="text-[10px] font-bold bg-slate-800/60 border border-slate-700/60 text-slate-500 px-2.5 py-1 rounded-lg">TÜV Gecertificeerd</span>
-            <span className="text-[10px] font-bold bg-slate-800/60 border border-slate-700/60 text-slate-500 px-2.5 py-1 rounded-lg">Cat. 1-3B</span>
+            <span className="text-[10px] font-bold bg-slate-800/60 border border-slate-700/60 text-slate-400 px-2.5 py-1 rounded-lg">TÜV Gecertificeerd</span>
+            <span className="text-[10px] font-bold bg-slate-800/60 border border-slate-700/60 text-slate-400 px-2.5 py-1 rounded-lg">Cat. 1-3B</span>
           </div>
         </div>
 

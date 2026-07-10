@@ -243,7 +243,7 @@ function DealsCarousel({ machines, onSearch }: { machines: Machine[]; onSearch: 
                       </div>
                     )}
                     {hasDiscount && (
-                      <div className="absolute top-0 right-0 bg-amber-500 text-white text-[10px] font-black px-2.5 py-1 rounded-bl-xl shadow-sm">
+                      <div className="absolute top-0 right-0 bg-amber-500 text-slate-900 text-[10px] font-black px-2.5 py-1 rounded-bl-xl shadow-sm">
                         {campaignPct ? `−${campaignPct}%` : "Dagactie"}
                       </div>
                     )}
@@ -259,12 +259,12 @@ function DealsCarousel({ machines, onSearch }: { machines: Machine[]; onSearch: 
                     </span>
                     <p className="font-display font-black text-xs text-slate-900 leading-snug line-clamp-2">{baseName}</p>
                     <div className="flex items-baseline gap-1 flex-wrap">
-                      <span className="text-sm font-black text-amber-600">{fmt(displayPrice)}</span>
+                      <span className="text-sm font-black text-amber-700">{fmt(displayPrice)}</span>
                       {hasDiscount && <span className="text-[10px] text-slate-500 line-through">{fmt(originalPrice)}</span>}
                       <span className="text-[10px] text-slate-500">/ dag</span>
                     </div>
                     <div className="mt-auto pt-0.5">
-                      <div className="w-full text-center bg-amber-500 group-hover:bg-amber-600 text-white text-[10px] font-black py-2 px-2 rounded-lg transition-colors">
+                      <div className="w-full text-center bg-amber-500 group-hover:bg-amber-600 text-slate-900 text-[10px] font-black py-2 px-2 rounded-lg transition-colors">
                         {t("Direct boeken →", "Book now →", "Hemen rezervasyon →")}
                       </div>
                     </div>
@@ -594,7 +594,7 @@ export default function HomeSection({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
-            className="text-xs font-bold uppercase tracking-[0.12em] text-emerald-600"
+            className="text-xs font-bold uppercase tracking-[0.12em] text-emerald-700"
           >
             {t("heroTagline")}
           </motion.p>
@@ -674,7 +674,7 @@ export default function HomeSection({
                     <div className="flex items-center gap-2 text-sm shrink-0 whitespace-nowrap">
                       <span className="font-semibold text-slate-600">{cat.heights}</span>
                       <span className="text-slate-300 select-none">•</span>
-                      <span className="font-black text-emerald-600 text-base leading-tight">
+                      <span className="font-black text-emerald-700 text-base leading-tight">
                         {(() => {
                           if (!meta) return "Prijs op aanvraag";
                           const v = withVat(meta.price, vatDisplay);
@@ -702,7 +702,7 @@ export default function HomeSection({
                     )}
                   </div>
                   <div className="flex items-center justify-between gap-2">
-                    <span className="inline-flex items-center gap-1 text-sm font-bold text-orange-600 group-hover:text-orange-700 group-hover:gap-1.5 transition-all duration-300">
+                    <span className="inline-flex items-center gap-1 text-sm font-bold text-orange-700 group-hover:text-orange-800 group-hover:gap-1.5 transition-all duration-300">
                       {t("Bekijk", "View", "Görüntüle")} {CAT_CTA_LABEL[cat.id] ?? cat.label}
                       <ChevronRight className="h-4 w-4" />
                     </span>

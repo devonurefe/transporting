@@ -18,7 +18,7 @@ type Block =
   | { kind: "ul"; items: string[] };
 
 // Parse the lightweight Markdown body (## headings, blank-line paragraphs,
-// `- ` bullets). Kept intentionally minimal — see src/data/blog.ts for the format.
+// `- ` bullets). Kept intentionally minimal — see prisma/blogSeed.ts for the format.
 function parseBlocks(content: string): Block[] {
   const lines = content.replace(/\r\n/g, "\n").split("\n");
   const blocks: Block[] = [];

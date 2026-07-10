@@ -1,7 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
-import { BLOG_SEED } from "../src/data/blog";
+import { BLOG_SEED } from "./blogSeed";
 
 const prisma = new PrismaClient();
 

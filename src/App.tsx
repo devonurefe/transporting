@@ -675,10 +675,12 @@ export default function App() {
         dangerouslySetInnerHTML={{
           __html: safeJsonLd({
             "@context": "https://schema.org",
-            "@type": ["LocalBusiness", "RentalService"],
+            "@type": ["LocalBusiness", "RentalService", "Organization"],
             "name": `${siteConfig.siteName || "huurgo"} — Hoogwerkers Verhuur`,
+            "legalName": "MB Hoogwerkers B.V.",
             "description": "Snel en eenvoudig hoogwerkers huren bij huurgo. Schaarlift, spinhoogwerker en aanhangerhoogwerker voor ZZP'ers en particulieren.",
             "url": window.location.origin,
+            "logo": `${window.location.origin}/og-image.png`,
             "telephone": siteConfig.contactPhone || "+31715428114",
             "email": siteConfig.contactEmail || "info@mbhoogwerkers.com",
             "address": {

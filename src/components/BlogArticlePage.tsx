@@ -139,17 +139,29 @@ export default function BlogArticlePage({ setActiveTab }: BlogArticlePageProps) 
           path: `/kenniscentrum/${post.slug}`,
           jsonLd: {
             "@context": "https://schema.org",
-            "@type": "Article",
-            headline: post.title.slice(0, 110),
-            description: post.excerpt,
-            articleSection: post.category,
-            inLanguage: "nl-NL",
-            datePublished: post.createdAt,
-            dateModified: post.updatedAt,
-            mainEntityOfPage: { "@type": "WebPage", "@id": `${SEO_BASE_URL}/kenniscentrum/${post.slug}` },
-            author: { "@type": "Organization", name: "huurgo — MB Hoogwerkers B.V.", url: SEO_BASE_URL },
-            publisher: { "@type": "Organization", name: "huurgo — MB Hoogwerkers B.V.", url: SEO_BASE_URL },
-            url: `${SEO_BASE_URL}/kenniscentrum/${post.slug}`,
+            "@graph": [
+              {
+                "@type": "Article",
+                headline: post.title.slice(0, 110),
+                description: post.excerpt,
+                articleSection: post.category,
+                inLanguage: "nl-NL",
+                datePublished: post.createdAt,
+                dateModified: post.updatedAt,
+                mainEntityOfPage: { "@type": "WebPage", "@id": `${SEO_BASE_URL}/kenniscentrum/${post.slug}` },
+                author: { "@type": "Organization", name: "huurgo — MB Hoogwerkers B.V.", url: SEO_BASE_URL },
+                publisher: { "@type": "Organization", name: "huurgo — MB Hoogwerkers B.V.", url: SEO_BASE_URL },
+                url: `${SEO_BASE_URL}/kenniscentrum/${post.slug}`,
+              },
+              {
+                "@type": "BreadcrumbList",
+                itemListElement: [
+                  { "@type": "ListItem", position: 1, name: "Home", item: SEO_BASE_URL },
+                  { "@type": "ListItem", position: 2, name: "Kenniscentrum", item: `${SEO_BASE_URL}/kenniscentrum` },
+                  { "@type": "ListItem", position: 3, name: post.title, item: `${SEO_BASE_URL}/kenniscentrum/${post.slug}` },
+                ],
+              },
+            ],
           },
         }
       : { title: "Kenniscentrum | huurgo", path: "/kenniscentrum" }

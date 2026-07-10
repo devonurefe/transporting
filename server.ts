@@ -352,25 +352,37 @@ function cityMeta(slug: string): RouteMeta | null {
   const description = city.intro.replace(/\s+/g, " ").trim().slice(0, 160);
   const jsonLd = JSON.stringify({
     "@context": "https://schema.org",
-    "@type": "Service",
-    "serviceType": "Hoogwerker verhuur",
-    "name": `Hoogwerker huren in ${city.name}`,
-    "description": description,
-    "areaServed": { "@type": "City", "name": city.name },
-    "provider": {
-      "@type": "LocalBusiness",
-      "name": "huurgo — MB Hoogwerkers B.V.",
-      "telephone": "+31715428114",
-      "address": {
-        "@type": "PostalAddress",
-        "streetAddress": "Produktieweg 20",
-        "postalCode": "2382 PB",
-        "addressLocality": "Zoeterwoude",
-        "addressCountry": "NL",
+    "@graph": [
+      {
+        "@type": "Service",
+        "serviceType": "Hoogwerker verhuur",
+        "name": `Hoogwerker huren in ${city.name}`,
+        "description": description,
+        "areaServed": { "@type": "City", "name": city.name },
+        "provider": {
+          "@type": "LocalBusiness",
+          "name": "huurgo — MB Hoogwerkers B.V.",
+          "telephone": "+31715428114",
+          "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "Produktieweg 20",
+            "postalCode": "2382 PB",
+            "addressLocality": "Zoeterwoude",
+            "addressCountry": "NL",
+          },
+          "url": SEO_BASE,
+        },
+        "url": url,
       },
-      "url": SEO_BASE,
-    },
-    "url": url,
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "Home", "item": SEO_BASE },
+          { "@type": "ListItem", "position": 2, "name": "Catalogus", "item": `${SEO_BASE}/catalog` },
+          { "@type": "ListItem", "position": 3, "name": city.name, "item": url },
+        ],
+      },
+    ],
   });
   return { title, description, canonical: url, ogImage: DEFAULT_OG_IMAGE, jsonLd };
 }
@@ -390,23 +402,35 @@ async function blogMeta(slug: string): Promise<RouteMeta | null> {
     const modified = (post.updatedAt instanceof Date ? post.updatedAt : new Date(post.updatedAt)).toISOString();
     const jsonLd = JSON.stringify({
       "@context": "https://schema.org",
-      "@type": "Article",
-      "headline": String(post.title).slice(0, 110),
-      "description": description,
-      "image": DEFAULT_OG_IMAGE,
-      "datePublished": published,
-      "dateModified": modified,
-      "articleSection": post.category,
-      "inLanguage": "nl-NL",
-      "mainEntityOfPage": { "@type": "WebPage", "@id": url },
-      "author": { "@type": "Organization", "name": "huurgo — MB Hoogwerkers B.V.", "url": SEO_BASE },
-      "publisher": {
-        "@type": "Organization",
-        "name": "huurgo — MB Hoogwerkers B.V.",
-        "url": SEO_BASE,
-        "logo": { "@type": "ImageObject", "url": DEFAULT_OG_IMAGE },
-      },
-      "url": url,
+      "@graph": [
+        {
+          "@type": "Article",
+          "headline": String(post.title).slice(0, 110),
+          "description": description,
+          "image": DEFAULT_OG_IMAGE,
+          "datePublished": published,
+          "dateModified": modified,
+          "articleSection": post.category,
+          "inLanguage": "nl-NL",
+          "mainEntityOfPage": { "@type": "WebPage", "@id": url },
+          "author": { "@type": "Organization", "name": "huurgo — MB Hoogwerkers B.V.", "url": SEO_BASE },
+          "publisher": {
+            "@type": "Organization",
+            "name": "huurgo — MB Hoogwerkers B.V.",
+            "url": SEO_BASE,
+            "logo": { "@type": "ImageObject", "url": DEFAULT_OG_IMAGE },
+          },
+          "url": url,
+        },
+        {
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            { "@type": "ListItem", "position": 1, "name": "Home", "item": SEO_BASE },
+            { "@type": "ListItem", "position": 2, "name": "Kenniscentrum", "item": `${SEO_BASE}/kenniscentrum` },
+            { "@type": "ListItem", "position": 3, "name": String(post.title), "item": url },
+          ],
+        },
+      ],
     });
     return { title, description, canonical: url, ogImage: DEFAULT_OG_IMAGE, jsonLd };
   } catch (e) {
@@ -427,20 +451,32 @@ async function machineMeta(id: string): Promise<RouteMeta | null> {
     const ogImage = absoluteImage(m.imageUrl, id);
     const jsonLd = JSON.stringify({
       "@context": "https://schema.org",
-      "@type": "Product",
-      "name": m.name,
-      "description": description,
-      "image": ogImage,
-      "category": m.categoryLabel || m.category,
-      "brand": { "@type": "Brand", "name": "huurgo" },
-      "offers": {
-        "@type": "Offer",
-        "priceCurrency": "EUR",
-        "price": String(Math.round(m.pricePerDay || 0)),
-        "availability": "https://schema.org/InStock",
-        "url": url,
-        "priceValidUntil": new Date(Date.now() + 1000 * 60 * 60 * 24 * 180).toISOString().split("T")[0],
-      },
+      "@graph": [
+        {
+          "@type": "Product",
+          "name": m.name,
+          "description": description,
+          "image": ogImage,
+          "category": m.categoryLabel || m.category,
+          "brand": { "@type": "Brand", "name": "huurgo" },
+          "offers": {
+            "@type": "Offer",
+            "priceCurrency": "EUR",
+            "price": String(Math.round(m.pricePerDay || 0)),
+            "availability": "https://schema.org/InStock",
+            "url": url,
+            "priceValidUntil": new Date(Date.now() + 1000 * 60 * 60 * 24 * 180).toISOString().split("T")[0],
+          },
+        },
+        {
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            { "@type": "ListItem", "position": 1, "name": "Home", "item": SEO_BASE },
+            { "@type": "ListItem", "position": 2, "name": "Catalogus", "item": `${SEO_BASE}/catalog` },
+            { "@type": "ListItem", "position": 3, "name": m.name, "item": url },
+          ],
+        },
+      ],
     });
     return { title, description, canonical: url, ogImage, jsonLd };
   } catch (e) {

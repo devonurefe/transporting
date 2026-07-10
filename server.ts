@@ -41,7 +41,7 @@ app.use(helmet({
   contentSecurityPolicy: isProd ? {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "https://www.clarity.ms", "https://*.clarity.ms"],
+      scriptSrc: ["'self'", "https://www.clarity.ms", "https://*.clarity.ms", "https://www.googletagmanager.com"],
       styleSrc: ["'self'", "'unsafe-inline'"],
       fontSrc: ["'self'"],
       imgSrc: ["'self'", "data:", "https:", "blob:"],
@@ -362,7 +362,7 @@ function cityMeta(slug: string): RouteMeta | null {
         "provider": {
           "@type": "LocalBusiness",
           "name": "huurgo — MB Hoogwerkers B.V.",
-          "telephone": "+31715428114",
+          "telephone": "+31611848899",
           "address": {
             "@type": "PostalAddress",
             "streetAddress": "Produktieweg 20",

@@ -141,7 +141,7 @@ export default function CityLandingPage({ onSelectMachineForBooking }: CityLandi
             Bekijk beschikbaarheid <ArrowRight className="h-4 w-4" />
           </button>
           <a
-            href="tel:+31715428114"
+            href="tel:+31611848899"
             className="inline-flex items-center gap-1.5 py-2.5 px-5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-sm font-semibold transition-all"
           >
             <Phone className="h-4 w-4 text-emerald-500" /> Bel voor advies

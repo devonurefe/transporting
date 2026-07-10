@@ -7,7 +7,7 @@ import React, { useState } from "react";
 import { motion } from "motion/react";
 import { Cookie } from "lucide-react";
 import { useLanguageStore } from "../store/languageStore";
-import { loadClarity } from "../utils/analytics";
+import { loadClarity, loadGoogleAnalytics } from "../utils/analytics";
 
 // New key (was "hwh_cookie_accepted"). Renaming intentionally re-prompts visitors
 // who only ever saw the old accept-only banner, so they can now also decline.
@@ -37,6 +37,7 @@ export default function CookieBanner() {
   const handleAccept = () => {
     persist("accepted");
     loadClarity(); // only now do analytics cookies load
+    loadGoogleAnalytics();
   };
 
   const handleReject = () => persist("rejected");

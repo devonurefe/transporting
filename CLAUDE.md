@@ -308,6 +308,7 @@ All builders in `src/utils/whatsapp.ts`. Sign-off emoji: **🦾** (never 🙏).
 | `ADMIN_EMAIL` | Admin alert recipient (e.g. `info@mbhoogwerkers.com`) |
 | `VITE_WHATSAPP_NUMBER` | WA number without `+` (e.g. `31611848899`) |
 | `VITE_CLARITY_ID` | Microsoft Clarity project ID (optional). Empty = no tracking. Requires cookie consent (KVKK/GDPR) before enabling for EU visitors. |
+| `VITE_GA_MEASUREMENT_ID` | Google Analytics 4 Measurement ID, e.g. `G-XXXXXXXXXX` (optional). Empty = no tracking. Same consent-gated loading as Clarity (`src/utils/analytics.ts` → `loadGoogleAnalytics()`), fired from `CookieBanner.tsx`/`main.tsx`. CSP (`server.ts` Helmet + `nginx.conf`) allowlists `googletagmanager.com` in `script-src`. |
 | `APP_URL` | Production base URL (used in email links) |
 | `REMINDER_SECRET` | Secret for cron reminder endpoint |
 | `CALENDAR_FEED_TOKEN` | Secret gating the read-only iCal feed at `/api/calendar/<token>/huurgo.ics` (blocked dates + bookings, for Google/iPhone calendar subscription). Empty = feature disabled. |

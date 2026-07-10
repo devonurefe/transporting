@@ -38,10 +38,13 @@ import ErrorBoundary from './components/ErrorBoundary.tsx';
 // visitor has already accepted analytics cookies in a previous visit. First-time
 // visitors get the consent banner (CookieBanner.tsx), which calls loadClarity()
 // itself on accept. The loader is a no-op unless VITE_CLARITY_ID is configured.
-import { loadClarity } from "./utils/analytics";
+import { loadClarity, loadGoogleAnalytics } from "./utils/analytics";
 if (typeof window !== "undefined") {
   try {
-    if (localStorage.getItem("hwh_cookie_consent") === "accepted") loadClarity();
+    if (localStorage.getItem("hwh_cookie_consent") === "accepted") {
+      loadClarity();
+      loadGoogleAnalytics();
+    }
   } catch {
     // ignore storage access errors
   }

@@ -681,7 +681,7 @@ export default function App() {
             "description": "Snel en eenvoudig hoogwerkers huren bij huurgo. Schaarlift, spinhoogwerker en aanhangerhoogwerker voor ZZP'ers en particulieren.",
             "url": window.location.origin,
             "logo": `${window.location.origin}/og-image.png`,
-            "telephone": siteConfig.contactPhone || "+31715428114",
+            "telephone": siteConfig.contactPhone || "+31611848899",
             "email": siteConfig.contactEmail || "info@mbhoogwerkers.com",
             "address": {
               "@type": "PostalAddress",

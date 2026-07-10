@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
+import { BLOG_SEED } from "../src/data/blog";
 
 const prisma = new PrismaClient();
 
@@ -1108,6 +1109,26 @@ async function main() {
         customerId: createdCustomers["sven@meer-groen.nl"],
         addons: JSON.stringify([])
       }
+    });
+  }
+
+  // Kenniscentrum starter content. Same safe pattern as machines/categories:
+  // upsert with an empty update block so `prisma db seed` never overwrites posts
+  // an admin has edited. New posts are created; existing slugs are left untouched.
+  for (const post of BLOG_SEED) {
+    await prisma.blogPost.upsert({
+      where: { slug: post.slug },
+      update: {}, // Never overwrite admin-edited content
+      create: {
+        id: `post-${post.slug}`,
+        slug: post.slug,
+        type: post.type,
+        title: post.title,
+        excerpt: post.excerpt,
+        category: post.category,
+        content: post.content,
+        published: true,
+      },
     });
   }
 

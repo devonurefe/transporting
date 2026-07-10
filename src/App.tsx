@@ -60,6 +60,8 @@ const FaqSection = lazy(() => import("./components/FaqSection"));
 const AdminSection = lazy(() => import("./components/AdminSection"));
 const MyOrdersSection = lazy(() => import("./components/MyOrdersSection"));
 const AdviesSection = lazy(() => import("./components/AdviesSection"));
+const KenniscentrumSection = lazy(() => import("./components/KenniscentrumSection"));
+const BlogArticlePage = lazy(() => import("./components/BlogArticlePage"));
 
 // Premium Loading Indicator Component
 function LoadingSpinner() {
@@ -156,7 +158,7 @@ export default function App() {
     // Machine pages (/hoogwerker/:id) and city pages (/hoogwerker-huren/:stad) set
     // their own title from data; let those components own the head so this generic
     // map doesn't overwrite it.
-    if (location.pathname.startsWith("/hoogwerker/") || location.pathname.startsWith("/hoogwerker-huren/")) return;
+    if (location.pathname.startsWith("/hoogwerker/") || location.pathname.startsWith("/hoogwerker-huren/") || location.pathname.startsWith("/kenniscentrum")) return;
     const seo: Record<string, { title: string; desc: string; noindex?: boolean }> = {
       "/": {
         title: "huurgo — Hoogwerkers Huren | Leiden, Den Haag, Alphen a/d Rijn",
@@ -811,6 +813,10 @@ export default function App() {
             } />
 
             <Route path="/veelgestelde-vragen" element={<FaqSection />} />
+
+            <Route path="/kenniscentrum" element={<KenniscentrumSection setActiveTab={setActiveTab} />} />
+
+            <Route path="/kenniscentrum/:slug" element={<BlogArticlePage setActiveTab={setActiveTab} />} />
 
             <Route path="/adviestool" element={<AdviesSection />} />
 

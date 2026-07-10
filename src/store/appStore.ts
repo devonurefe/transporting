@@ -46,6 +46,19 @@ export interface GoogleReview {
   date: string;
 }
 
+export interface BlogPost {
+  id: string;
+  slug: string;
+  type: "artikel" | "handleiding";
+  title: string;
+  excerpt: string;
+  category: string;
+  content: string;
+  published: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 interface BlockedDate {
   id: string;
   machineId: string;
@@ -63,6 +76,7 @@ interface AppState {
   siteConfig: SiteConfig;
   siteConfigLoaded: boolean;
   blockedDates: BlockedDate[];
+  blogPosts: BlogPost[];
   cartItems: CartItem[];
   isLoading: boolean;
   error: string | null;
@@ -87,6 +101,13 @@ interface AppState {
   unblockDate: (machineId: string, date: string) => Promise<boolean>;
   updateCategories: (categories: Category[]) => Promise<boolean>;
   updateSiteConfig: (config: Partial<SiteConfig>) => Promise<boolean>;
+
+  // Kenniscentrum (blog / guides) actions
+  fetchBlogPosts: () => Promise<void>;
+  addBlogPost: (data: Partial<BlogPost>) => Promise<boolean>;
+  updateBlogPost: (id: string, data: Partial<BlogPost>) => Promise<boolean>;
+  deleteBlogPost: (id: string) => Promise<boolean>;
+  toggleBlogPostPublished: (id: string) => Promise<boolean>;
 
   // Cart actions
   addToCart: (machine: Machine, startDate: string, endDate: string) => void;
@@ -159,6 +180,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     };
   })(),
   blockedDates: [],
+  blogPosts: [],
   cartItems: (() => {
     try {
       const stored = localStorage.getItem("hwh_cart");
@@ -521,6 +543,97 @@ export const useAppStore = create<AppState>((set, get) => ({
       });
       if (res.ok) {
         await get().fetchSiteConfig();
+        return true;
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    return false;
+  },
+
+  // Kenniscentrum (blog / guides) — admins get all posts (incl. drafts) via
+  // ?all=1; the public feed returns only published posts.
+  fetchBlogPosts: async () => {
+    try {
+      const isAdminMode = localStorage.getItem("hwh_admin_mode") === "true";
+      const url = isAdminMode ? "/api/blog-posts?all=1" : "/api/blog-posts";
+      const res = await fetch(url, { headers: getAuthHeaders() });
+      if (res.ok) {
+        set({ blogPosts: await res.json(), error: null });
+      } else {
+        const data = await res.json().catch(() => ({}));
+        set({ error: data.error || "Fout bij ophalen artikelen." });
+      }
+    } catch (e: any) {
+      devWarn("Blog posts fetch failed.");
+      set({ error: e.message || "Netwerkfout bij ophalen artikelen." });
+    }
+  },
+
+  addBlogPost: async (data) => {
+    try {
+      const res = await fetch("/api/blog-posts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+        body: JSON.stringify(data)
+      });
+      if (res.ok) {
+        await get().fetchBlogPosts();
+        return true;
+      }
+      const err = await res.json().catch(() => ({}));
+      set({ error: err.error || "Fout bij toevoegen artikel." });
+    } catch (e: any) {
+      set({ error: e.message || "Netwerkfout bij toevoegen artikel." });
+    }
+    return false;
+  },
+
+  updateBlogPost: async (id, data) => {
+    try {
+      const res = await fetch(`/api/blog-posts/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+        body: JSON.stringify(data)
+      });
+      if (res.ok) {
+        await get().fetchBlogPosts();
+        return true;
+      }
+      const err = await res.json().catch(() => ({}));
+      set({ error: err.error || "Fout bij bijwerken artikel." });
+    } catch (e: any) {
+      set({ error: e.message || "Netwerkfout bij bijwerken artikel." });
+    }
+    return false;
+  },
+
+  deleteBlogPost: async (id) => {
+    try {
+      const res = await fetch(`/api/blog-posts/${id}`, {
+        method: "DELETE",
+        headers: getAuthHeaders()
+      });
+      if (res.ok) {
+        await get().fetchBlogPosts();
+        return true;
+      }
+      const err = await res.json().catch(() => ({}));
+      set({ error: err.error || "Fout bij verwijderen artikel." });
+    } catch (e: any) {
+      set({ error: e.message || "Netwerkfout bij verwijderen artikel." });
+    }
+    return false;
+  },
+
+  toggleBlogPostPublished: async (id) => {
+    try {
+      const res = await fetch(`/api/blog-posts/${id}/toggle-publish`, {
+        method: "PATCH",
+        headers: getAuthHeaders()
+      });
+      if (res.ok) {
+        await get().fetchBlogPosts();
         return true;
       }
     } catch (e) {

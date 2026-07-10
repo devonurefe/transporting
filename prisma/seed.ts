@@ -1012,6 +1012,30 @@ async function main() {
     }
   });
 
+  // Kenniscentrum starter content. Same safe pattern as machines/categories:
+  // upsert with an empty update block so `prisma db seed` never overwrites posts
+  // an admin has edited. New posts are created; existing slugs are left untouched.
+  // Real content, not demo data — must run in production too, so this sits
+  // BEFORE the demo-data early-return below (that early return previously made
+  // this block unreachable in production, leaving BlogPost empty on the VPS).
+  console.log("Seeding Kenniscentrum posts (upsert)...");
+  for (const post of BLOG_SEED) {
+    await prisma.blogPost.upsert({
+      where: { slug: post.slug },
+      update: {}, // Never overwrite admin-edited content
+      create: {
+        id: `post-${post.slug}`,
+        slug: post.slug,
+        type: post.type,
+        title: post.title,
+        excerpt: post.excerpt,
+        category: post.category,
+        content: post.content,
+        published: true,
+      },
+    });
+  }
+
   // Demo-klanten en demo-orders horen niet in productie thuis (voorheen
   // moest scripts/cleanup-demo-data.sh ze achteraf verwijderen). Alleen
   // seeden buiten productie, of wanneer expliciet gevraagd.
@@ -1109,26 +1133,6 @@ async function main() {
         customerId: createdCustomers["sven@meer-groen.nl"],
         addons: JSON.stringify([])
       }
-    });
-  }
-
-  // Kenniscentrum starter content. Same safe pattern as machines/categories:
-  // upsert with an empty update block so `prisma db seed` never overwrites posts
-  // an admin has edited. New posts are created; existing slugs are left untouched.
-  for (const post of BLOG_SEED) {
-    await prisma.blogPost.upsert({
-      where: { slug: post.slug },
-      update: {}, // Never overwrite admin-edited content
-      create: {
-        id: `post-${post.slug}`,
-        slug: post.slug,
-        type: post.type,
-        title: post.title,
-        excerpt: post.excerpt,
-        category: post.category,
-        content: post.content,
-        published: true,
-      },
     });
   }
 

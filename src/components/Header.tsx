@@ -442,7 +442,7 @@ export default function Header({
       {!isAdminMode && (
         <div
           className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-slate-200/80 bg-white/95 backdrop-blur-lg shadow-[0_-4px_12px_rgba(0,0,0,0.06)]"
-          style={{ transform: "translateZ(0)" }}
+          style={{ transform: "translateZ(0)", WebkitTransform: "translateZ(0)", willChange: "transform" }}
         >
           <div className="flex h-16 justify-around items-center px-1">
             {([

@@ -224,4 +224,117 @@ Voor particulier gebruik is meestal geen certificaat nodig; wij geven een korte 
 **Bij welke windkracht mag ik niet meer werken?**
 Houd de grens van de fabrikant aan, vaak rond 12,5 m/s (windkracht 6). Bij twijfel of toenemende wind gaat u naar beneden.`,
   },
+  {
+    slug: "hoe-werkt-een-schaarlift",
+    type: "handleiding",
+    title: "Hoe werkt een schaarlift? Bediening in 6 stappen",
+    excerpt:
+      "Hoe bedien je een schaarlift? Praktische stap-voor-stap handleiding: opstarten, rijden, heffen en veilig afsluiten — plus antwoorden op de meest gestelde vragen.",
+    category: "Handleiding",
+    content: `Een schaarlift is een van de makkelijkste hoogwerkers om te bedienen: recht omhoog, een ruim platform en een overzichtelijk bedieningspaneel. Deze handleiding neemt u stap voor stap mee — stuur hem gerust door naar iedereen die de machine gaat gebruiken.
+
+## Stap voor stap bedienen
+
+- **1. Controleer de ondergrond.** Zet de schaarlift alleen op een vlakke, harde en draagkrachtige vloer. Let op putdeksels, hellingen en de maximale vloerbelasting bij binnenwerk.
+- **2. Start de machine** met de hoofdschakelaar en ontgrendel de noodstop. Elektrische modellen zijn nagenoeg geruisloos — controleer het accuniveau op het display voordat u begint.
+- **3. Kies de bedieningsplek.** De meeste schaarliften hebben een bedieningspaneel onderaan (voor rijden en verplaatsen) en een paneel in de bak (voor heffen en fijnpositionering).
+- **4. Rijd naar de werkplek** met de onderste bediening, op lage snelheid en met zicht op obstakels. Rijd nooit met een uitgeklapt platform bij volle hoogte, tenzij de machine dit expliciet toestaat (zie het typeplaatje).
+- **5. Hef het platform** vanuit de bak, geleidelijk en met beide voeten stevig op de vloer. Stop zodra u de gewenste werkhoogte heeft — een schaarlift kantelt niet, maar blijft altijd binnen de eigen sporen.
+- **6. Sluit veilig af.** Laat het platform volledig zakken, schakel de motor uit en activeer de noodstop voordat u de bak verlaat.
+
+## Wat u nodig heeft
+
+Voor de meeste elektrische schaarliften is geen certificaat verplicht bij particulier gebruik — wij geven een korte, praktische instructie bij levering. Draag stevig schoeisel en houd de bak vrij van rommel zodat u nooit over gereedschap struikelt.
+
+## Veelgestelde vragen
+
+**Kan ik met een schaarlift over een oneffen ondergrond rijden?**
+Nee, schaarliften zijn gebouwd voor een vlakke, verharde ondergrond. Voor gras, grind of hellingen kiest u een rups- of spinhoogwerker.
+
+**Hoeveel personen mogen er tegelijk in de bak?**
+Dat staat op het typeplaatje in de bak en hangt af van het model — meestal 1 tot 2 personen, met een maximaal totaalgewicht inclusief gereedschap. Overschrijd dit nooit.
+
+**Wat doe ik als de accu leeg raakt tijdens het werk?**
+Laat het platform rustig zakken via de handmatige noodneerlaatklep (aangegeven met een pictogram bij het bedieningspaneel) en neem contact met ons op — wij regelen snel een oplossing.
+
+**Mag ik de schaarlift verrijden terwijl het platform omhoog staat?**
+Dat verschilt per model: sommige schaarliften staan dit toe op lage snelheid en beperkte hoogte, andere niet. Controleer het pictogram op het bedieningspaneel of vraag het bij levering na.`,
+  },
+  {
+    slug: "hoe-werkt-een-rupshoogwerker",
+    type: "handleiding",
+    title: "Hoe werkt een rups- of spinhoogwerker? Bediening en tips",
+    excerpt:
+      "Hoe bedien je een rups- of spinhoogwerker? Handleiding voor opstellen op steunpoten, rijden op rupsbanden en veilig werken in tuinen en op kwetsbare ondergrond.",
+    category: "Handleiding",
+    content: `Een rups- of spinhoogwerker is gebouwd voor plekken waar een schaarlift niet kan komen: gras, grind, smalle poorten en hellingen. Het opstellen op steunpoten is de belangrijkste stap — deze handleiding legt uit hoe dat veilig gaat.
+
+## Stap voor stap bedienen
+
+- **1. Rijd de machine naar de werkplek** op de rupsbanden, met de afstandsbediening of het onderste paneel. Rupsbanden geven een lage bodemdruk, dus gras en klinkers blijven vrijwel ongeschonden.
+- **2. Zet de machine waterpas op de steunpoten.** Klap alle steunpoten (stempels) uit tot het display of de libel aangeeft dat de machine volledig waterpas staat — de machine hijst zichzelf hierbij automatisch omhoog van de rupsbanden.
+- **3. Controleer de ondergrond onder elke steunpoot.** Gebruik bij zachte grond de meegeleverde steunplaten zodat een poot niet wegzakt tijdens het werk.
+- **4. Stap in de bak en hef de giek.** Bedien voorzichtig: eerst de hoofdgiek omhoog, daarna de knikarm richting het werkpunt. Blijf met beide voeten op de vloer van de bak.
+- **5. Werk binnen het bereik van het display.** De meeste machines tonen een belastingsindicator (groen/geel/rood) die aangeeft hoe dicht u bij de maximale reikwijdte zit.
+- **6. Laat de giek volledig zakken** voordat u de steunpoten weer intrekt en de machine terugrijdt naar de rupsbanden.
+
+## Wat u nodig heeft
+
+Draag altijd een goedgekeurd harnas met korte vanglijn, aangelijnd in de bak — dit is bij een gieklift geen advies maar een vereiste. Meet vooraf de smalste doorgang naar de werkplek: onze modellen passen vanaf circa 80 cm.
+
+## Veelgestelde vragen
+
+**Kan een rupshoogwerker over gras rijden zonder schade?**
+Ja, de brede rupsbanden verdelen het gewicht en laten nauwelijks sporen na — geschikt voor de meeste gazons, mits niet extreem drassig.
+
+**Waarom hijst de machine zichzelf omhoog bij het opstellen?**
+Dat is normaal: door de steunpoten uit te klappen tilt de machine zichzelf van de rupsbanden om volledig stabiel en waterpas te staan, onafhankelijk van een oneffen ondergrond.
+
+**Wat als één steunpoot geen grond raakt door een hoogteverschil?**
+Gebruik de meegeleverde steunblokken om het hoogteverschil op te vangen. Ga nooit de bak in als niet alle vier de steunpoten stevig en waterpas staan.
+
+**Mag ik met de giek over een schutting of auto heen reiken?**
+Ja, dat is juist de kracht van dit type machine — blijf wel binnen de reikwijdte die het display aangeeft en houd rekening met de wind op grotere hoogte.`,
+  },
+  {
+    slug: "hoe-werkt-een-aanhangerhoogwerker",
+    type: "handleiding",
+    title: "Hoe werkt een aanhangerhoogwerker? Aankoppelen en opstellen",
+    excerpt:
+      "Hoe koppel en bedien je een aanhangerhoogwerker? Handleiding voor aankoppelen achter de auto, stabiel opstellen op steunpoten en veilig gebruik op locatie.",
+    category: "Handleiding",
+    content: `Een aanhangerhoogwerker geeft u volledige vrijheid: u trekt hem zelf achter de auto naar de werkplek. Het aankoppelen en stabiel opstellen zijn de twee momenten waar het om gaat — deze handleiding zet ze op een rij.
+
+## Aankoppelen en vervoeren
+
+- **1. Koppel de trekhaak aan** en zorg dat de veiligheidskabel en de verlichtingsstekker zijn aangesloten. Controleer of de bandenspanning en de verlichting van de aanhanger in orde zijn.
+- **2. Klap de steunwielen en het platform in** de transportstand, zoals aangegeven met de gele markeringen op de machine, voordat u wegrijdt.
+- **3. Rijd rustig naar de werkplek.** Een aanhangerhoogwerker is te trekken met een gewoon rijbewijs B (let op het gewicht van uw voertuig en trekgewicht).
+
+## Opstellen en bedienen
+
+- **1. Koppel de aanhanger los** en zet de machine op een vlakke, stevige ondergrond — asfalt, klinkers of verdichte grond.
+- **2. Klap de steunpoten uit** tot de machine volledig waterpas en stabiel staat. Gebruik bij twijfel de meegeleverde steunplaten.
+- **3. Stap in de bak en hef de giek** rustig omhoog, met beide voeten op de vloer van het platform.
+- **4. Werk binnen het aangegeven bereik.** Net als bij een rupshoogwerker toont het display hoe dicht u bij de maximale reikwijdte zit.
+- **5. Laat de giek zakken en klap de steunpoten in** voordat u de machine weer aankoppelt en terugrijdt.
+
+## Wat u nodig heeft
+
+Draag een goedgekeurd harnas met korte vanglijn, aangelijnd aan het bevestigingspunt in de bak. Zorg voor voldoende ruimte om de steunpoten volledig uit te klappen — reken op enkele meters aan weerszijden van de machine.
+
+## Veelgestelde vragen
+
+**Welk rijbewijs heb ik nodig om de aanhanger te trekken?**
+Voor de meeste van onze aanhangerhoogwerkers volstaat een regulier rijbewijs B, zolang het totaalgewicht van auto en aanhanger binnen uw toegestane trekgewicht blijft. Twijfelt u? Wij controleren dit graag vooraf met u.
+
+**Kan ik de aanhangerhoogwerker op elke ondergrond opstellen?**
+De machine heeft een vlakke, stevige ondergrond nodig — asfalt, klinkers of verdichte grond. Voor gras of zachte grond is een rups- of spinhoogwerker een betere keuze.
+
+**Hoeveel ruimte heb ik nodig om de steunpoten uit te klappen?**
+Reken op enkele meters vrije ruimte aan weerszijden van de machine. Is de ruimte beperkt, stuur ons vooraf de maten dan denken we mee over de juiste opstelling.
+
+**Mag ik zelf de aanhangerhoogwerker ophalen en terugbrengen?**
+Ja, dat is juist het voordeel van dit type machine — zelf ophalen op ons depot in Zoeterwoude is gratis, u regelt zelf het transport heen en terug.`,
+  },
 ];

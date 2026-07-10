@@ -145,6 +145,18 @@ const getAuthHeaders = (): Record<string, string> => {
   return token ? { "Authorization": `Bearer ${token}` } : {};
 };
 
+// De navigatie heette jarenlang "Catalogus"; die string staat daardoor als
+// menuCatalogLabel in bestaande databases/sessiecaches. Sinds de hernoeming
+// naar de sectorterm "Assortiment" behandelen we dat oude default als
+// "niet ingesteld", zodat de vertaling uit languageStore wint. Een bewust
+// afwijkend admin-label (Customizer) blijft gewoon staan.
+function normalizeSiteConfig<T extends { menuCatalogLabel?: string }>(config: T): T {
+  if (config && (config.menuCatalogLabel === "Catalogus" || config.menuCatalogLabel === "Catalog")) {
+    return { ...config, menuCatalogLabel: "" };
+  }
+  return config;
+}
+
 export const useAppStore = create<AppState>((set, get) => ({
   machines: [],
   orders: [],
@@ -165,7 +177,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   siteConfig: (() => {
     try {
       const cached = sessionStorage.getItem("hwh_site_config");
-      if (cached) return JSON.parse(cached);
+      if (cached) return normalizeSiteConfig(JSON.parse(cached));
     } catch { /* ignore */ }
     return {
       siteName: "huurgo",
@@ -174,7 +186,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       heroSubtitle: "MB Hoogwerkers verhuurt hoogwerkers, schaarliften en ladderliften aan ZZP'ers en particulieren. Geen gedoe, direct online geregeld.",
       heroImageUrl: "",
       menuHomeLabel: "Home",
-      menuCatalogLabel: "Catalogus",
+      menuCatalogLabel: "Assortiment",
       menuOrdersLabel: "Mijn Account",
       menuAdminLabel: "Portaal"
     };
@@ -306,7 +318,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       const url = isAdminMode ? "/api/site-config?full=1" : "/api/site-config";
       const res = await fetch(url, { headers: getAuthHeaders() });
       if (res.ok) {
-        const data = await res.json();
+        const data = normalizeSiteConfig(await res.json());
         set({ siteConfig: data, siteConfigLoaded: true, error: null });
         try { sessionStorage.setItem("hwh_site_config", JSON.stringify(data)); } catch { /* quota exceeded — ignore */ }
       } else {

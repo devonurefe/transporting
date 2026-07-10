@@ -53,7 +53,7 @@ export default function MachineDetailPage({ onSelectMachineForBooking }: Machine
         <h1 className="text-lg font-black text-slate-900">Machine niet gevonden</h1>
         <p className="text-sm text-slate-500">Deze machine bestaat niet (meer). Bekijk ons volledige aanbod.</p>
         <Link to="/catalog" className="inline-block bg-slate-800 hover:bg-slate-900 text-white text-sm font-bold px-5 py-2.5 rounded-xl transition-colors">
-          Naar de catalogus
+          Naar het assortiment
         </Link>
       </div>
     );
@@ -65,7 +65,7 @@ export default function MachineDetailPage({ onSelectMachineForBooking }: Machine
   return (
     <div className="max-w-5xl mx-auto px-4 py-6 sm:py-8">
       <Link to="/catalog" className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors mb-4">
-        <ArrowLeft className="h-3.5 w-3.5" /> Terug naar catalogus
+        <ArrowLeft className="h-3.5 w-3.5" /> Terug naar het assortiment
       </Link>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">

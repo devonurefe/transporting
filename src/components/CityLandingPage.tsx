@@ -95,7 +95,7 @@ export default function CityLandingPage({ onSelectMachineForBooking }: CityLandi
           ))}
         </div>
         <Link to="/catalog" className="inline-block bg-slate-800 hover:bg-slate-900 text-white text-sm font-bold px-5 py-2.5 rounded-xl transition-colors">
-          Naar de catalogus
+          Naar het assortiment
         </Link>
       </div>
     );

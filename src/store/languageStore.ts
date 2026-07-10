@@ -20,7 +20,8 @@ interface TranslationDictionary {
 const dictionary: TranslationDictionary = {
   // Menu navigation
   menuHome: { nl: "Home", en: "Home", tr: "Ana Sayfa" },
-  menuCatalog: { nl: "Catalogus", en: "Catalog", tr: "Katalog" },
+  // "Assortiment" is de sectorterm (verhuurbranche) — bewust geen "Catalogus".
+  menuCatalog: { nl: "Assortiment", en: "Assortment", tr: "Ürün Gamı" },
   menuOrders: { nl: "Contact", en: "Contact", tr: "İletişim" },
   menuAdmin: { nl: "Portaal", en: "Portal", tr: "Yönetim" },
   menuBooking: { nl: "Boeken", en: "Book Now", tr: "Rezervasyon" },
@@ -69,7 +70,7 @@ const dictionary: TranslationDictionary = {
   priceSummaryNoHidden: { nl: "Geen verborgen kosten · Veilige betaling", en: "No hidden costs · Secure payment", tr: "Gizli maliyet yok · Güvenli ödeme" },
   priceSummaryWhatsAppSupport: { nl: "WhatsApp-ondersteuning tijdens uw huurperiode", en: "WhatsApp support during your rental", tr: "Kiralama süresince WhatsApp desteği" },
   priceSummaryCertified: { nl: "TÜV-gekeurde machines (cat. 1-3B)", en: "TÜV-certified machines (cat. 1-3B)", tr: "TÜV sertifikalı makineler (kat. 1-3B)" },
-  priceSummaryChooseMachineHint: { nl: "Selecteer een hoogwerker uit de catalogus om uw prijs te zien.", en: "Select an aerial lift from the catalog to see your price.", tr: "Fiyatınızı görmek için katalogdan bir platform seçin." },
+  priceSummaryChooseMachineHint: { nl: "Selecteer een hoogwerker uit het assortiment om uw prijs te zien.", en: "Select an aerial lift from the assortment to see your price.", tr: "Fiyatınızı görmek için ürün gamından bir platform seçin." },
   priceSummaryChooseDates: { nl: "Kies uw huurperiode", en: "Choose your rental period", tr: "Kiralama döneminizi seçin" },
   priceSummaryChooseDatesHint: { nl: "Selecteer een begin- en einddatum in de kalender om de prijs te zien.", en: "Select a start and end date in the calendar to see the price.", tr: "Fiyatı görmek için takvimde bir başlangıç ve bitiş tarihi seçin." },
   priceSummaryMultiplePeriods: { nl: "Meerdere periodes", en: "Multiple periods", tr: "Birden fazla dönem" },
@@ -111,8 +112,8 @@ const dictionary: TranslationDictionary = {
   step1Title: { nl: "Huurperiode & Bezorging", en: "Rental Period & Delivery", tr: "Kiralama Dönemi & Teslimat" },
   step1Subtitle: { nl: "Kies uw datums en hoe u de machine wilt ontvangen.", en: "Choose your dates and how you'd like to receive the machine.", tr: "Tarihlerinizi ve makineyi nasıl almak istediğinizi seçin." },
   step1EmptyCart: { nl: "Uw winkelwagen is leeg", en: "Your cart is empty", tr: "Sepetiniz boş" },
-  step1EmptyCartSub: { nl: "Selecteer een of meer machines uit onze catalogus om uw boeking te starten.", en: "Select one or more machines from our catalog to start your booking.", tr: "Rezervasyonunuzu başlatmak için katalogumuzdan bir veya daha fazla makine seçin." },
-  step1BrowseCatalog: { nl: "Catalogus Bekijken", en: "Browse Catalog", tr: "Kataloğa Göz At" },
+  step1EmptyCartSub: { nl: "Selecteer een of meer machines uit ons assortiment om uw boeking te starten.", en: "Select one or more machines from our assortment to start your booking.", tr: "Rezervasyonunuzu başlatmak için ürün gamımızdan bir veya daha fazla makine seçin." },
+  step1BrowseCatalog: { nl: "Assortiment Bekijken", en: "Browse Assortment", tr: "Ürün Gamına Göz At" },
   step1StartDate: { nl: "Begindatum", en: "Start Date", tr: "Başlangıç Tarihi" },
   step1EndDate: { nl: "Einddatum (Retour)", en: "End Date (Return)", tr: "Bitiş Tarihi (İade)" },
   step1TransportOpts: { nl: "Transport Opties", en: "Transport Options", tr: "Nakliye Seçenekleri" },

@@ -85,7 +85,7 @@ export default function FaqSection() {
             to="/catalog"
             className="inline-flex items-center gap-1.5 py-2.5 px-5 rounded-xl border border-slate-700 hover:bg-slate-800 text-slate-200 text-sm font-semibold transition-colors"
           >
-            Bekijk de catalogus <ArrowRight className="h-4 w-4" />
+            Bekijk het assortiment <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
       </div>

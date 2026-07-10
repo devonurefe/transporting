@@ -79,10 +79,13 @@ export function HuurGoText({ dark = false }: { dark?: boolean }) {
  * size="lg" on larger photo surfaces (e.g. the detail modal hero image).
  */
 export function CardBrandWatermark({ size = "sm" }: { size?: "sm" | "lg" }) {
+  // Verticaal gecentreerd aan de rechterrand: de productfoto's (object-contain,
+  // machine in het midden) laten daar de meeste witruimte over — in de hoek
+  // "plakte" het merkje tegen de rand.
   return (
     <div
-      className={`absolute z-10 pointer-events-none bg-white/90 backdrop-blur-sm rounded-md shadow-sm ring-1 ring-black/5 ${
-        size === "lg" ? "top-3 right-3 px-2.5 py-1.5" : "top-2 right-2 px-2 py-1.5"
+      className={`absolute z-10 pointer-events-none top-1/2 -translate-y-1/2 bg-white/90 backdrop-blur-sm rounded-md shadow-sm ring-1 ring-black/5 ${
+        size === "lg" ? "right-3 px-2.5 py-1.5" : "right-2 px-2 py-1.5"
       }`}
     >
       <span className={`leading-none ${size === "lg" ? "text-sm" : "text-xs"}`}>

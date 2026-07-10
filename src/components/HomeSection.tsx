@@ -25,6 +25,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { buildWhatsAppGeneralUrl } from "../utils/whatsapp";
 import { withVat } from "../utils/format";
 import { computeDiscounts } from "../utils/pricing";
+import { withImageWidth } from "../utils/image";
 import VatToggle from "./VatToggle";
 import { BrandedText, HuurGoText, CardBrandWatermark } from "./Header";
 import { Machine } from "../types";
@@ -719,7 +720,7 @@ export default function HomeSection({
                   <CardBrandWatermark />
                   {catImage ? (
                     <img
-                      src={catImage}
+                      src={withImageWidth(catImage, 640) ?? catImage}
                       alt={cat.label}
                       className="w-full h-full object-contain p-1.5 sm:p-3 transition-transform duration-500 ease-out group-hover:scale-105"
                       referrerPolicy="no-referrer"

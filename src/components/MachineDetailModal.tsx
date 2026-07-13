@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Machine } from "../types";
-import { computeDiscounts } from "../utils/pricing";
+import { buildPricingTierRows } from "../utils/pricing";
 import { getSpecsForMachine } from "../utils/machineSpecs";
 import { withVat, priceNum } from "../utils/format";
 import { withImageWidth } from "../utils/image";
@@ -122,7 +122,11 @@ export default function MachineDetailModal({
 
   const vp = (p: number) => withVat(p, vatDisplay);
   const vatLabel = vatDisplay === "incl" ? "incl. btw" : "excl. btw";
-  const d = computeDiscounts(machine);
+  // Same row-builder as CatalogSection's "Alle tarieven & kortingen" preview —
+  // keeps the two tariff tables for a product identical (they used to be
+  // separately hand-rolled here and drifted, e.g. always showing "1 dag" even
+  // for machines with a minRentalDays of 2).
+  const pricingRows = buildPricingTierRows(machine);
   const catInfo = customCategories.find(c => c.id === machine.category)?.infoContent ?? null;
   const allImages = [machine.imageUrl, ...(machine.additionalImages ?? [])].filter((url): url is string => typeof url === "string" && url.trim().length > 0);
   const packageItems = machine.packageContents?.trim()
@@ -254,88 +258,34 @@ export default function MachineDetailModal({
                 <VatToggle size="xs" />
               </div>
               <div className="divide-y divide-slate-100">
-                {(() => {
-                  const hasActie = !!(machine.oneDayPrice && machine.oneDayPrice < machine.pricePerDay);
-                  const oneP = hasActie ? machine.oneDayPrice! : machine.pricePerDay;
+                {pricingRows.map((row, i) => {
+                  const bg = row.highlight === "fire" ? "bg-amber-50"
+                    : row.highlight === "green" ? "bg-emerald-50"
+                    : row.highlight === "teal" ? "bg-teal-50"
+                    : row.highlight === "violet" ? "bg-amber-50" : "bg-white";
+                  const text = row.highlight === "fire" ? "text-amber-700"
+                    : row.highlight === "green" ? "text-emerald-700"
+                    : row.highlight === "teal" ? "text-teal-700"
+                    : row.highlight === "violet" ? "text-amber-700" : "text-slate-800";
+                  const subtext = row.highlight === "fire" ? "text-amber-500"
+                    : row.highlight === "green" ? "text-emerald-600"
+                    : row.highlight === "teal" ? "text-teal-600"
+                    : row.highlight === "violet" ? "text-amber-600" : "text-slate-400";
+                  const badgeCls = row.highlight === "teal" ? "bg-teal-100 text-teal-700" : "bg-emerald-100 text-emerald-700";
                   return (
-                    <div className={`flex items-center px-4 py-2.5 ${hasActie ? "bg-amber-50" : "bg-white"}`}>
-                      <div className="flex-1">
-                        <p className={`text-xs font-bold ${hasActie ? "text-amber-700" : "text-slate-800"}`}>{hasActie ? "Dagactie" : "1 dag"}</p>
-                        <p className={`text-[10px] ${hasActie ? "text-amber-500" : "text-slate-400"}`}>Ma – Vr</p>
+                    <div key={i} className={`flex items-center px-4 py-2.5 ${bg}`}>
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-xs font-bold ${text}`}>{row.period}</p>
+                        <p className={`text-[10px] leading-snug ${subtext}`}>{row.when}</p>
                       </div>
-                      {hasActie && <span className="text-[10px] font-black px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 mr-2">Actie</span>}
-                      <span className={`font-mono font-extrabold text-sm ${hasActie ? "text-amber-700" : "text-slate-900"}`}>€{priceNum(vp(oneP))}</span>
+                      {row.badge && <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-full mr-2 ${badgeCls}`}>{row.badge}</span>}
+                      {row.highlight === "fire" && <span className="text-[10px] font-black px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 mr-2">Actie</span>}
+                      <span className={`font-mono font-extrabold text-sm shrink-0 whitespace-nowrap ${text}`}>
+                        {row.pricePrefix ?? ""}€{priceNum(vp(row.price))}
+                      </span>
                     </div>
                   );
-                })()}
-                {(() => {
-                  const twoDay = machine.twoDayPrice ?? (machine.pricePerDay * 2);
-                  return (
-                    <div className="flex items-center px-4 py-2.5 bg-white">
-                      <div className="flex-1">
-                        <p className="text-xs font-bold text-slate-800">2 dagen (doordeweeks)</p>
-                        <p className="text-[10px] text-slate-400">Ma – Do</p>
-                      </div>
-                      <span className="font-mono font-extrabold text-sm text-slate-900">€{priceNum(vp(twoDay))}</span>
-                    </div>
-                  );
-                })()}
-                {!!(machine.threeDayPrice ?? machine.weeklyPrice) && (
-                  <div className="flex items-center px-4 py-2.5 bg-white">
-                    <div className="flex-1">
-                      <p className="text-xs font-bold text-slate-800">3 dagen</p>
-                      <p className="text-[10px] text-slate-400">Doordeweeks</p>
-                    </div>
-                    <span className="font-mono font-extrabold text-sm text-slate-900">€{priceNum(vp((machine.threeDayPrice ?? machine.weeklyPrice)!))}</span>
-                  </div>
-                )}
-                {!!(machine.fourDayPrice ?? machine.weeklyPrice) && (
-                  <div className="flex items-center px-4 py-2.5 bg-white">
-                    <div className="flex-1">
-                      <p className="text-xs font-bold text-slate-800">4 dagen</p>
-                      <p className="text-[10px] text-slate-400">Doordeweeks</p>
-                    </div>
-                    <span className="font-mono font-extrabold text-sm text-slate-900">€{priceNum(vp((machine.fourDayPrice ?? machine.weeklyPrice)!))}</span>
-                  </div>
-                )}
-                {!!machine.weeklyPrice && (
-                  <div className="flex items-center px-4 py-2.5 bg-emerald-50">
-                    <div className="flex-1">
-                      <p className="text-xs font-bold text-emerald-700">{(machine.threeDayPrice || machine.fourDayPrice) ? "5 dagen (werkweek)" : "3–5 dagen (werkweek)"}</p>
-                      <p className="text-[10px] text-emerald-600">Ma – Vr</p>
-                    </div>
-                    {d.weekly > 0 && <span className="text-[10px] font-black px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 mr-2">−{d.weekly}%</span>}
-                    <span className="font-mono font-extrabold text-sm text-emerald-700">€{priceNum(vp(machine.weeklyPrice))}</span>
-                  </div>
-                )}
-                {!!machine.weeklyPrice && (
-                  <div className="flex items-center px-4 py-2.5 bg-white">
-                    <div className="flex-1">
-                      <p className="text-xs font-bold text-slate-800">Extra dag</p>
-                      <p className="text-[10px] text-slate-400">Vanaf dag 6, per dag</p>
-                    </div>
-                    <span className="font-mono font-extrabold text-sm text-slate-900">+ €{priceNum(vp(machine.extraDayPrice ?? machine.weeklyPrice / 5))}</span>
-                  </div>
-                )}
-                {!!machine.weekendPrice && (
-                  <div className="flex items-start gap-3 px-4 py-2.5 bg-amber-50">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-bold text-amber-700">Weekend</p>
-                      <p className="text-[10px] text-amber-600 leading-snug">{machine.weekendRulesEnabled ? "Losse za, zo of za+zo · retour ma 08:00" : "Za – Zo"}</p>
-                    </div>
-                    <span className="font-mono font-extrabold text-sm text-amber-700 shrink-0 whitespace-nowrap">€{priceNum(vp(machine.weekendPrice))}</span>
-                  </div>
-                )}
-                {!!machine.monthlyPrice && (
-                  <div className="flex items-center px-4 py-2.5 bg-teal-50">
-                    <div className="flex-1">
-                      <p className="text-xs font-bold text-teal-700">4 weken (28 dagen)</p>
-                      <p className="text-[10px] text-teal-600">Langlopend</p>
-                    </div>
-                    {d.monthly > 0 && <span className="text-[10px] font-black px-1.5 py-0.5 rounded-full bg-teal-100 text-teal-700 mr-2">−{d.monthly}%</span>}
-                    <span className="font-mono font-extrabold text-sm text-teal-700">€{priceNum(vp(machine.monthlyPrice))}</span>
-                  </div>
-                )}
+                })}
                 {machine.campaignText && (
                   <div className="flex items-center gap-1.5 px-4 py-2.5 bg-amber-50">
                     <Zap className="h-3 w-3 text-amber-500 shrink-0" />

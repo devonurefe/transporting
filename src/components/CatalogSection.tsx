@@ -18,7 +18,7 @@ import { useLanguageStore } from "../store/languageStore";
 import { useAppStore } from "../store/appStore";
 import { someUnitAvailable, UnitAvailabilityInput } from "../utils/availability";
 import { withVat, priceNum } from "../utils/format";
-import { computeDiscounts } from "../utils/pricing";
+import { computeDiscounts, buildPricingTierRows } from "../utils/pricing";
 import VatToggle from "./VatToggle";
 import MachineDetailModal from "./MachineDetailModal";
 import { CardBrandWatermark } from "./Header";
@@ -631,57 +631,11 @@ export default function CatalogSection({
       <AnimatePresence>
         {pricingPreviewMachine && (() => {
           const m = pricingPreviewMachine;
-          const d = computeDiscounts(m);
           const vp = (n: number) => withVat(n, vatDisplay);
-          const rows: { period: string; when: string; price: number; priceText?: string; badge?: string; highlight?: "fire" | "green" | "teal" | "violet" }[] = [];
-          const minRental = m.minRentalDays ?? 1;
-
-          if (m.weekendRulesEnabled) {
-            // Tiered pricing model: distinct 1–5 day rates + per-day extra from day 6.
-            // A rental that stays entirely within the closed weekend (single Sat, single
-            // Sun, or Sat+Sun) gets the flat weekend package instead; every other
-            // combination (incl. a Friday start or a longer Sat/Sun-start rental) is
-            // priced by day count — the automatic Sunday block is explained below.
-            if (minRental < 2) {
-              const oneDayHasActie = !!(m.oneDayPrice && m.oneDayPrice < m.pricePerDay);
-              rows.push({ period: oneDayHasActie ? "Dagactie" : "1 dag", when: "Ma – Vr", price: oneDayHasActie ? m.oneDayPrice! : m.pricePerDay, highlight: oneDayHasActie ? "fire" : undefined });
-            }
-            rows.push({ period: "2 dagen", when: "Doordeweeks", price: m.twoDayPrice ?? (m.pricePerDay * 2) });
-            if (m.threeDayPrice ?? m.weeklyPrice) rows.push({ period: "3 dagen", when: "Doordeweeks", price: (m.threeDayPrice ?? m.weeklyPrice)! });
-            if (m.fourDayPrice ?? m.weeklyPrice) rows.push({ period: "4 dagen", when: "Doordeweeks", price: (m.fourDayPrice ?? m.weeklyPrice)! });
-            if (m.weeklyPrice) rows.push({ period: "5 dagen (werkweek)", when: "Ma – Vr", price: m.weeklyPrice, badge: d.weekly > 0 ? `−${d.weekly}%` : undefined, highlight: "green" });
-            if (m.weeklyPrice) {
-              const extra = m.extraDayPrice ?? m.weeklyPrice / 5;
-              rows.push({ period: "Extra dag", when: "Vanaf dag 6, per dag", price: extra, priceText: `+ ${formatPrice(vp(extra))}` });
-            }
-            if (m.weekendPrice) rows.push({ period: "Weekend", when: "Losse za, zo of za+zo · retour ma 08:00", price: m.weekendPrice, highlight: "violet" });
-            if (m.monthlyPrice) rows.push({ period: "4 weken (28 dagen)", when: "Langlopend", price: m.monthlyPrice, badge: d.monthly > 0 ? `−${d.monthly}%` : undefined, highlight: "teal" });
-          } else {
-            // Legacy pricing display (non weekend-rules machines).
-            if (minRental < 2) {
-              const oneDayHasActie = !!(m.oneDayPrice && m.oneDayPrice < m.pricePerDay);
-              rows.push({
-                period: oneDayHasActie ? "Dagactie" : "1 dag",
-                when: "Ma – Vr",
-                price: oneDayHasActie ? m.oneDayPrice! : m.pricePerDay,
-                highlight: oneDayHasActie ? "fire" : undefined,
-              });
-            }
-            rows.push({ period: minRental >= 2 ? "2 dagen (min.)" : "2 dagen (doordeweeks)", when: "Ma – Do", price: m.twoDayPrice ?? (m.pricePerDay * 2) });
-            if (m.weekendPrice) {
-              rows.push({ period: "Weekend", when: "Za – Zo", price: m.weekendPrice, highlight: "violet" });
-            }
-            if (m.threeDayPrice ?? m.weeklyPrice) rows.push({ period: "3 dagen", when: "Doordeweeks", price: (m.threeDayPrice ?? m.weeklyPrice)! });
-            if (m.fourDayPrice ?? m.weeklyPrice) rows.push({ period: "4 dagen", when: "Doordeweeks", price: (m.fourDayPrice ?? m.weeklyPrice)! });
-            if (m.weeklyPrice) {
-              rows.push({ period: "5 dagen (werkweek)", when: "Ma – Vr", price: m.weeklyPrice, badge: d.weekly > 0 ? `−${d.weekly}%` : undefined, highlight: "green" });
-              const extra = m.extraDayPrice ?? m.weeklyPrice / 5;
-              rows.push({ period: "Extra dag", when: "Vanaf dag 6, per dag", price: extra, priceText: `+ ${formatPrice(vp(extra))}` });
-            }
-            if (m.monthlyPrice) {
-              rows.push({ period: "4 weken (28 dagen)", when: "Langlopend", price: m.monthlyPrice, badge: d.monthly > 0 ? `−${d.monthly}%` : undefined, highlight: "teal" });
-            }
-          }
+          const rows = buildPricingTierRows(m).map(row => ({
+            ...row,
+            priceText: row.pricePrefix ? `${row.pricePrefix}${formatPrice(vp(row.price))}` : undefined,
+          }));
 
           return (
             <motion.div

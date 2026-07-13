@@ -348,6 +348,76 @@ export function countWeekendDays(startDate: string | Date, endDate: string | Dat
   return count;
 }
 
+export interface PricingTierRow {
+  period: string;
+  when: string;
+  price: number;         // raw price, excl. VAT — caller applies VAT + formatting
+  pricePrefix?: string;  // e.g. "+ " for the per-extra-day row
+  badge?: string;
+  highlight?: "fire" | "green" | "teal" | "violet";
+}
+
+// Single source of truth for the customer-facing tariff table shown in both
+// CatalogSection's "Alle tarieven & kortingen" preview and MachineDetailModal's
+// tariff table. They used to duplicate this row-building logic and drifted apart
+// (MachineDetailModal always showed "1 dag" and never respected minRentalDays,
+// so a minimum-2-days product like the Altrex Kamersteiger showed conflicting
+// tables in the two places) — keep it here so both stay identical by construction.
+export function buildPricingTierRows(machine: Machine): PricingTierRow[] {
+  const rows: PricingTierRow[] = [];
+  const d = computeDiscounts(machine);
+  const minRental = machine.minRentalDays ?? 1;
+
+  if (machine.weekendRulesEnabled) {
+    // Tiered pricing model: distinct 1–5 day rates + per-day extra from day 6.
+    // A rental that stays entirely within the closed weekend (single Sat, single
+    // Sun, or Sat+Sun) gets the flat weekend package instead; every other
+    // combination (incl. a Friday start or a longer Sat/Sun-start rental) is
+    // priced by day count — the automatic Sunday block is explained separately.
+    if (minRental < 2) {
+      const oneDayHasActie = !!(machine.oneDayPrice && machine.oneDayPrice < machine.pricePerDay);
+      rows.push({ period: oneDayHasActie ? "Dagactie" : "1 dag", when: "Ma – Vr", price: oneDayHasActie ? machine.oneDayPrice! : machine.pricePerDay, highlight: oneDayHasActie ? "fire" : undefined });
+    }
+    rows.push({ period: "2 dagen", when: "Doordeweeks", price: machine.twoDayPrice ?? (machine.pricePerDay * 2) });
+    if (machine.threeDayPrice ?? machine.weeklyPrice) rows.push({ period: "3 dagen", when: "Doordeweeks", price: (machine.threeDayPrice ?? machine.weeklyPrice)! });
+    if (machine.fourDayPrice ?? machine.weeklyPrice) rows.push({ period: "4 dagen", when: "Doordeweeks", price: (machine.fourDayPrice ?? machine.weeklyPrice)! });
+    if (machine.weeklyPrice) rows.push({ period: "5 dagen (werkweek)", when: "Ma – Vr", price: machine.weeklyPrice, badge: d.weekly > 0 ? `−${d.weekly}%` : undefined, highlight: "green" });
+    if (machine.weeklyPrice) {
+      const extra = machine.extraDayPrice ?? machine.weeklyPrice / 5;
+      rows.push({ period: "Extra dag", when: "Vanaf dag 6, per dag", price: extra, pricePrefix: "+ " });
+    }
+    if (machine.weekendPrice) rows.push({ period: "Weekend", when: "Losse za, zo of za+zo · retour ma 08:00", price: machine.weekendPrice, highlight: "violet" });
+    if (machine.monthlyPrice) rows.push({ period: "4 weken (28 dagen)", when: "Langlopend", price: machine.monthlyPrice, badge: d.monthly > 0 ? `−${d.monthly}%` : undefined, highlight: "teal" });
+  } else {
+    // Legacy pricing display (non weekend-rules machines).
+    if (minRental < 2) {
+      const oneDayHasActie = !!(machine.oneDayPrice && machine.oneDayPrice < machine.pricePerDay);
+      rows.push({
+        period: oneDayHasActie ? "Dagactie" : "1 dag",
+        when: "Ma – Vr",
+        price: oneDayHasActie ? machine.oneDayPrice! : machine.pricePerDay,
+        highlight: oneDayHasActie ? "fire" : undefined,
+      });
+    }
+    rows.push({ period: minRental >= 2 ? "2 dagen (min.)" : "2 dagen (doordeweeks)", when: "Ma – Do", price: machine.twoDayPrice ?? (machine.pricePerDay * 2) });
+    if (machine.weekendPrice) {
+      rows.push({ period: "Weekend", when: "Za – Zo", price: machine.weekendPrice, highlight: "violet" });
+    }
+    if (machine.threeDayPrice ?? machine.weeklyPrice) rows.push({ period: "3 dagen", when: "Doordeweeks", price: (machine.threeDayPrice ?? machine.weeklyPrice)! });
+    if (machine.fourDayPrice ?? machine.weeklyPrice) rows.push({ period: "4 dagen", when: "Doordeweeks", price: (machine.fourDayPrice ?? machine.weeklyPrice)! });
+    if (machine.weeklyPrice) {
+      rows.push({ period: "5 dagen (werkweek)", when: "Ma – Vr", price: machine.weeklyPrice, badge: d.weekly > 0 ? `−${d.weekly}%` : undefined, highlight: "green" });
+      const extra = machine.extraDayPrice ?? machine.weeklyPrice / 5;
+      rows.push({ period: "Extra dag", when: "Vanaf dag 6, per dag", price: extra, pricePrefix: "+ " });
+    }
+    if (machine.monthlyPrice) {
+      rows.push({ period: "4 weken (28 dagen)", when: "Langlopend", price: machine.monthlyPrice, badge: d.monthly > 0 ? `−${d.monthly}%` : undefined, highlight: "teal" });
+    }
+  }
+
+  return rows;
+}
+
 // Derives discount percentages for badge display from flat-rate fields.
 // Used by CatalogSection cards and MachineDetailModal.
 export function computeDiscounts(m: Machine): { weekly: number; monthly: number } {

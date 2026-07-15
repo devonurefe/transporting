@@ -129,6 +129,15 @@ function DealsCarousel({ machines, onSearch }: { machines: Machine[]; onSearch: 
   const dragScrollLeft = useRef(0);
   const rafRef = useRef(0);
   const lastTimeRef = useRef(0);
+  // Auto-scroll must yield to the user, not just during a touch/mouse drag.
+  // On desktop, wheel/trackpad scrolling never touches isDragging at all, so
+  // without this the rAF tick fights every wheel tick on the very next
+  // frame — the row visibly jerks back toward the auto-scroll direction,
+  // which reads as "sticky"/sliding on its own. Track the last real user
+  // interaction and pause auto-scroll for a bit after it, and pause outright
+  // while hovered (standard carousel UX, costs nothing on touch devices).
+  const lastInteractionRef = useRef(0);
+  const isHoveredRef = useRef(false);
 
   const seen = new Set<string>();
   const deduped = machines.filter(m => {
@@ -145,7 +154,8 @@ function DealsCarousel({ machines, onSearch }: { machines: Machine[]; onSearch: 
     const dt = Math.min(now - lastTimeRef.current, 64);
     lastTimeRef.current = now;
     const el = ref.current;
-    if (el && !isDragging.current) {
+    const recentlyInteracted = now - lastInteractionRef.current < 1200;
+    if (el && !isDragging.current && !isHoveredRef.current && !recentlyInteracted) {
       el.scrollLeft += (42 * dt) / 1000;
       if (el.scrollLeft >= el.scrollWidth / 2) el.scrollLeft -= el.scrollWidth / 2;
     }
@@ -177,6 +187,20 @@ function DealsCarousel({ machines, onSearch }: { machines: Machine[]; onSearch: 
   const onPointerUp = () => {
     isDragging.current = false;
     lastTimeRef.current = 0;
+    lastInteractionRef.current = performance.now();
+  };
+
+  const onWheel = () => {
+    lastInteractionRef.current = performance.now();
+  };
+
+  const onMouseEnter = () => {
+    isHoveredRef.current = true;
+  };
+
+  const onMouseLeave = () => {
+    isHoveredRef.current = false;
+    lastInteractionRef.current = performance.now();
   };
 
   const fmt = (p: number) => p % 1 === 0 ? `€${Math.round(p)}` : `€${p.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -210,6 +234,9 @@ function DealsCarousel({ machines, onSearch }: { machines: Machine[]; onSearch: 
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
+        onWheel={onWheel}
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
       >
         <div className="flex gap-4 px-4" style={{ width: "max-content" }}>
           {allCards.map((m, i) => {
@@ -250,7 +277,7 @@ function DealsCarousel({ machines, onSearch }: { machines: Machine[]; onSearch: 
                       </div>
                     )}
                     {hasDiscount && (
-                      <div className="absolute top-0 right-0 bg-amber-500 text-slate-900 text-[10px] font-black px-2.5 py-1 rounded-bl-xl shadow-sm">
+                      <div className="absolute top-0 right-0 bg-gradient-to-r from-red-600 to-orange-600 text-white text-[10px] font-black px-2.5 py-1 rounded-bl-xl shadow-sm">
                         {campaignPct ? `−${campaignPct}%` : "Dagactie"}
                       </div>
                     )}

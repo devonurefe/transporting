@@ -20,7 +20,8 @@ import {
   Briefcase,
   Printer,
   Truck,
-  Loader2
+  Loader2,
+  Bell
 } from "lucide-react";
 import { useAppStore } from "../../store/appStore";
 import { useAuthStore } from "../../store/authStore";
@@ -182,6 +183,38 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
     setTimeout(() => document.body.removeChild(a), 200);
   };
 
+  // Kant-en-klaar sjabloon om een klant te herinneren aan een nog openstaande
+  // betaling — gebruikt dezelfde 48-uurstermijn die de "stale pending"-check
+  // hierboven al hanteert, zodat de belofte in het bericht klopt met wat er
+  // daadwerkelijk gebeurt als er niet op tijd wordt betaald.
+  const sendPaymentReminder = (order: any) => {
+    if (!order?.customerPhone) return;
+    const machine = getBaseName(order.machineName);
+    const lines = [
+      "Vriendelijke herinnering ⏰",
+      "",
+      `We hebben nog geen betaling ontvangen voor uw boeking *${order.id}* (*${machine}*).`,
+      "",
+      "U kunt de betaling alsnog voldoen via de eerder verzonden betaallink.",
+      "",
+      `Let op: als de betaling niet binnen ${STALE_PENDING_HOURS} uur is ontvangen, wordt de boeking helaas automatisch geannuleerd.`,
+      "",
+      "Loopt er iets mis met de betaallink of heeft u een vraag? Neem gerust contact met ons op.",
+      "",
+      "Met vriendelijke groet,",
+      "*huurgo*"
+    ];
+    const phone = formatPhoneForWA(order.customerPhone);
+    const url = `https://wa.me/${phone}?text=${encodeURIComponent(lines.join("\n"))}`;
+    const a = document.createElement("a");
+    a.href = url; a.target = "_blank"; a.rel = "noopener noreferrer";
+    a.style.display = "none";
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => document.body.removeChild(a), 200);
+    onAddSystemLog("system", adminUser?.name ?? "Admin", `Betalingsherinnering via WhatsApp gestuurd voor order ${order.id} (${order.customerName}).`);
+  };
+
   // Modal and custom date proposal state
   const [selectedDetailOrder, setSelectedDetailOrder] = useState<any | null>(null);
   const [isProposingDate, setIsProposingDate] = useState<boolean>(false);
@@ -218,7 +251,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
       setStatusError(t(
         "Markeer eerst de betaling als ontvangen (knop 'Betaling Ontvangen ✓') voordat u de bestelling kunt goedkeuren.",
         "Mark payment as received ('Payment Received ✓') before approving the order.",
-        "'Ödeme Alındı ✓' butonuna basarak ödemeyi onayladıktan sonra siparişi onaylayabilirsiniz."
+        "'Ödeme Alındı Onay Ver' butonuna basarak ödemeyi onayladıktan sonra siparişi onaylayabilirsiniz."
       ));
       setTimeout(() => setStatusError(null), 6000);
       return;
@@ -1018,7 +1051,17 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                       className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1 disabled:opacity-50"
                     >
                       <DollarSign className="h-3 w-3 shrink-0" />
-                      <span>{t("Betaling Ontvangen ✓", "Payment Received ✓", "Ödeme Alındı Onayı")}</span>
+                      <span>{t("Betaling Ontvangen ✓", "Payment Received ✓", "Ödeme Alındı Onay Ver")}</span>
+                    </button>
+                  )}
+                  {selectedDetailOrder.paymentStatus !== "paid" && selectedDetailOrder.customerPhone && (
+                    <button
+                      type="button"
+                      onClick={() => sendPaymentReminder(selectedDetailOrder)}
+                      className="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1"
+                    >
+                      <Bell className="h-3 w-3 shrink-0" />
+                      <span>{t("Betalingsherinnering Sturen", "Send Payment Reminder", "Ödeme Hatırlatma Gönder")}</span>
                     </button>
                   )}
                 </div>

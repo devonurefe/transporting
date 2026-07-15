@@ -143,11 +143,14 @@ describe.skipIf(!HAS_DB)("API integration", () => {
   it("POST /api/orders met rijplaten × aantal → prijs = aantal × €6 × week", async () => {
     // 1 dag → addonWeeks = 1. 4 platen × €6 × 1 = €24 add-on.
     // serverTotal = (100 subtotaal + 24 add-on) × 1.21 = 150,04.
+    // Andere datum dan de vorige test (isoDay(1) is al geboekt) → geen 409-conflict.
     const res = await request(app)
       .post("/api/orders")
       .set("idempotency-key", `itest-rij-${Date.now()}`)
       .send({
         ...validOrder(),
+        startDate: isoDay(5),
+        endDate: isoDay(5),
         totalAmount: 150.04,
         addons: [{ id: "rijplaten", name: "Rijplaten", price: 24, billing: "weekly", quantity: 4 }],
       });

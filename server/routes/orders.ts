@@ -1118,8 +1118,37 @@ ordersRouter.post("/send-reminders", async (req: AuthenticatedRequest, res: Resp
       if (ok) sent++;
     }
 
-    console.log(`[Reminders] Sent ${sent}/${orders.length} reminders for ${tomorrowStr}`);
-    res.json({ sent, total: orders.length, date: tomorrowStr, autoCancelled });
+    // Payment reminders: unpaid "In behandeling" orders placed 24h+ ago that
+    // haven't already gotten one. Skipped entirely once paid or reminded --
+    // never re-sent on every daily cron run.
+    const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const unpaidOrders = await prisma.order.findMany({
+      where: {
+        status: "In behandeling",
+        paymentStatus: "awaiting",
+        createdAt: { lte: dayAgo },
+        paymentReminderSentAt: null
+      }
+    });
+
+    let paymentRemindersSent = 0;
+    for (const order of unpaidOrders) {
+      if (!(await customerWantsEmail(order.customerId))) continue;
+      const emailData = {
+        ...order,
+        startDate: order.startDate.toISOString().split("T")[0],
+        endDate: order.endDate.toISOString().split("T")[0],
+        customerPhone: order.customerPhone || ""
+      };
+      const ok = await emailService.sendPaymentReminder(emailData);
+      if (ok) {
+        paymentRemindersSent++;
+        await prisma.order.update({ where: { id: order.id }, data: { paymentReminderSentAt: new Date() } });
+      }
+    }
+
+    console.log(`[Reminders] Sent ${sent}/${orders.length} rental reminders for ${tomorrowStr}, ${paymentRemindersSent}/${unpaidOrders.length} payment reminders`);
+    res.json({ sent, total: orders.length, date: tomorrowStr, autoCancelled, paymentRemindersSent, paymentRemindersTotal: unpaidOrders.length });
   } catch (error) {
     console.error("Error sending reminders:", error);
     res.status(500).json({ error: "Kon herinneringen niet verzenden" });

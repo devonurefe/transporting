@@ -1040,31 +1040,38 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                   </div>
                 )}
 
-                {/* Row 1: Status badge + payment confirmation */}
-                <div className="flex items-center gap-2 flex-wrap">
+                {/* Row 1: Status badge on its own line, then payment actions as
+                    equally-sized full-width buttons below — stacked on mobile,
+                    side by side from sm: up. Crowding these into one flex-wrap
+                    row with the status pill made the wrap point unpredictable
+                    on narrow phones (one button dropping alone, left-aligned,
+                    a different width than everything else). */}
+                <div className="flex items-center gap-2">
                   <AdminStatusBadge status={selectedDetailOrder.status} adminLanguage={adminLanguage} />
-                  {selectedDetailOrder.paymentStatus !== "paid" && (
+                </div>
+                {selectedDetailOrder.paymentStatus !== "paid" && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <button
                       type="button"
                       disabled={isUpdatingPayment}
                       onClick={() => handleUpdatePaymentStatus(selectedDetailOrder.id, "paid")}
-                      className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1 disabled:opacity-50"
+                      className={`bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-bold py-2.5 px-3 transition-all cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50 ${!selectedDetailOrder.customerPhone ? "sm:col-span-2" : ""}`}
                     >
-                      <DollarSign className="h-3 w-3 shrink-0" />
+                      <DollarSign className="h-3.5 w-3.5 shrink-0" />
                       <span>{t("Betaling Ontvangen ✓", "Payment Received ✓", "Ödeme Alındı Onay Ver")}</span>
                     </button>
-                  )}
-                  {selectedDetailOrder.paymentStatus !== "paid" && selectedDetailOrder.customerPhone && (
-                    <button
-                      type="button"
-                      onClick={() => sendPaymentReminder(selectedDetailOrder)}
-                      className="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1"
-                    >
-                      <Bell className="h-3 w-3 shrink-0" />
-                      <span>{t("Betalingsherinnering Sturen", "Send Payment Reminder", "Ödeme Hatırlatma Gönder")}</span>
-                    </button>
-                  )}
-                </div>
+                    {selectedDetailOrder.customerPhone && (
+                      <button
+                        type="button"
+                        onClick={() => sendPaymentReminder(selectedDetailOrder)}
+                        className="bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 rounded-xl text-xs font-bold py-2.5 px-3 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                      >
+                        <Bell className="h-3.5 w-3.5 shrink-0" />
+                        <span>{t("Betalingsherinnering Sturen", "Send Payment Reminder", "Ödeme Hatırlatma Gönder")}</span>
+                      </button>
+                    )}
+                  </div>
+                )}
 
                 {/* Row 2: Primary action (forward status) — full width, dominant */}
                 {selectedDetailOrder.status !== "Geannuleerd" && selectedDetailOrder.status !== "Voltooid" && (

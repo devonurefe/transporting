@@ -550,6 +550,74 @@ export const emailService = {
   },
 
   /**
+   * Send a reminder email to a customer whose booking is still unpaid a day
+   * after placing it. Mirrors sendRentalReminder's structure/styling.
+   */
+  sendPaymentReminder: async (order: EmailOrderData) => {
+    const paymentWaLink = waLink(
+      `Hallo huurgo! 👋\n\nIk heb zojuist een betaalherinnering ontvangen voor boeking ${order.id}.\n\nKunt u mij de betaallink nogmaals sturen?\n\nBedankt! 🦾`
+    );
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Herinnering: betaling nog niet ontvangen</title>
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f8fafc; color: #1e293b; margin: 0; padding: 20px; }
+          .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 24px; border: 1px solid #e2e8f0; overflow: hidden; }
+          .header { background: linear-gradient(135deg, #d97706, #ea580c); padding: 40px 30px; text-align: center; color: #ffffff; }
+          .header h1 { margin: 0; font-size: 22px; font-weight: 800; }
+          .content { padding: 40px 30px; }
+          .details-grid { display: grid; gap: 14px; margin: 24px 0; background: #f8fafc; padding: 20px; border-radius: 16px; }
+          .details-item { border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; }
+          .details-item:last-child { border-bottom: none; padding-bottom: 0; }
+          .label { font-size: 10px; text-transform: uppercase; color: #64748b; font-weight: bold; }
+          .value { font-size: 13px; font-weight: 600; color: #0f172a; margin-top: 2px; }
+          .btn { display: inline-block; background: #25D366; color: #ffffff !important; text-decoration: none; padding: 14px 30px; border-radius: 12px; font-weight: bold; font-size: 14px; margin: 20px 0; }
+          .footer { background: #f1f5f9; padding: 20px 30px; text-align: center; font-size: 11px; color: #64748b; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>⏰ We wachten nog op uw betaling</h1>
+          </div>
+          <div class="content">
+            <p>Beste <strong>${esc(order.customerName)}</strong>,</p>
+            <p>We hebben nog geen betaling ontvangen voor onderstaande boeking. U kunt de betaling alsnog voldoen via de eerder verzonden iDEAL-link.</p>
+            <div class="details-grid">
+              <div class="details-item"><div class="label">Reservering</div><div class="value">${order.id}</div></div>
+              <div class="details-item"><div class="label">Machine</div><div class="value">${esc(order.machineName)}</div></div>
+              <div class="details-item"><div class="label">Startdatum</div><div class="value">${order.startDate}</div></div>
+            </div>
+            <p style="font-size: 13px; color: #475569;"><strong>Let op:</strong> als de betaling niet binnen 48 uur is ontvangen, wordt de boeking helaas automatisch geannuleerd.</p>
+            ${WHATSAPP_NUMBER ? `<p style="text-align:center;"><a href="${paymentWaLink}" class="btn">💬 Betaallink opnieuw aanvragen</a></p>` : ""}
+            <p style="font-size: 13px; color: #475569;">Loopt er iets mis of heeft u een vraag? Neem gerust contact met ons op via WhatsApp.</p>
+          </div>
+          <div class="footer">© ${new Date().getFullYear()} huurgo / MB Hoogwerkers B.V. • BMWT-gecertificeerd verhuurnetwerk</div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    console.log(`[EmailService] Sending payment reminder for ${order.id} to ${order.customerEmail}`);
+
+    if (!resend) {
+      console.log(`[EmailService] [MOCK] Payment reminder simulated.`);
+      return true;
+    }
+
+    return sendWithRetry({
+      from: SENDER_EMAIL,
+      to: order.customerEmail,
+      subject: `Herinnering: betaling voor ${order.machineName} nog niet ontvangen — ${order.id}`,
+      html: htmlContent
+    });
+  },
+
+  /**
    * Send password reset link to customer
    */
   sendPasswordResetEmail: async (email: string, name: string, token: string, appUrl: string) => {

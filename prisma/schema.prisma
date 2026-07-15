@@ -140,6 +140,7 @@ model Order {
   weekendWork     String?
   invoiceNumber   String?   @unique
   paymentStatus   String    @default("awaiting")
+  paymentReminderSentAt DateTime?
 
   customer        Customer? @relation(fields: [customerId], references: [id])
 

@@ -32,22 +32,28 @@ export default function AdviesStrip({ tall = false }: AdviesStripProps) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className={`group w-full flex items-center gap-4 text-left rounded-2xl border border-indigo-200 bg-gradient-to-r from-indigo-50 to-white hover:from-indigo-100 transition-colors cursor-pointer ${
+        className={`group w-full flex flex-col sm:flex-row sm:items-center gap-4 text-left rounded-2xl border border-indigo-200 bg-gradient-to-r from-indigo-50 to-white hover:from-indigo-100 transition-colors cursor-pointer ${
           tall ? "px-5 sm:px-7 py-6 sm:py-7" : "px-4 sm:px-5 py-4"
         }`}
       >
-        <span className={`grid place-items-center rounded-xl bg-indigo-600 text-white shrink-0 ${tall ? "h-12 w-12 sm:h-14 sm:w-14" : "h-11 w-11"}`}>
-          <Sparkles className={tall ? "h-6 w-6 sm:h-7 sm:w-7" : "h-5 w-5"} />
-        </span>
-        <span className="flex-1 min-w-0">
-          <span className={`block font-bold text-slate-900 ${tall ? "text-base sm:text-lg" : "text-sm sm:text-base"}`}>
-            Niet zeker welke machine u nodig heeft?
+        <div className="flex items-center gap-4 flex-1 min-w-0">
+          <span className={`grid place-items-center rounded-xl bg-indigo-600 text-white shrink-0 ${tall ? "h-12 w-12 sm:h-14 sm:w-14" : "h-11 w-11"}`}>
+            <Sparkles className={tall ? "h-6 w-6 sm:h-7 sm:w-7" : "h-5 w-5"} />
           </span>
-          <span className={`block text-slate-500 ${tall ? "text-sm sm:text-base mt-0.5" : "text-xs sm:text-sm"}`}>
-            Beantwoord een paar korte vragen — wij zoeken de beste match uit ons park.
+          <span className="flex-1 min-w-0">
+            <span className={`block font-bold text-slate-900 ${tall ? "text-base sm:text-lg" : "text-sm sm:text-base"}`}>
+              Niet zeker welke machine u nodig heeft?
+            </span>
+            <span className={`block text-slate-500 ${tall ? "text-sm sm:text-base mt-0.5" : "text-xs sm:text-sm"}`}>
+              Beantwoord een paar korte vragen — wij zoeken de beste match uit ons park.
+            </span>
           </span>
-        </span>
-        <span className={`hidden sm:inline-flex items-center gap-1.5 bg-indigo-600 group-hover:bg-indigo-700 text-white font-bold rounded-xl transition-colors shrink-0 ${tall ? "text-sm px-5 py-3" : "text-sm px-4 py-2.5"}`}>
+        </div>
+        {/* On mobile this was `hidden`, so the whole strip had no visible
+            call-to-action at all — it just read as a passive info card
+            instead of something to tap. Now it's always shown: a full-width
+            pill below the text on mobile, the original inline pill on sm:+. */}
+        <span className={`flex items-center justify-center gap-1.5 w-full sm:w-auto bg-indigo-600 group-hover:bg-indigo-700 text-white font-bold rounded-xl transition-colors shrink-0 ${tall ? "text-sm px-5 py-3" : "text-sm px-4 py-2.5"}`}>
           Start de keuzehulp <ArrowRight className="h-4 w-4" />
         </span>
       </button>

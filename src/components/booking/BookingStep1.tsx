@@ -91,6 +91,10 @@ export default function BookingStep1({
   // Expandable long-form explanation for the Rijplaten add-on (kept collapsed by
   // default so the compact add-on card stays readable).
   const [rijplatenInfoOpen, setRijplatenInfoOpen] = useState(false);
+  // Local draft text for the free-entry plate-count field. Kept as a string so the
+  // customer can clear it and type any number without the value snapping back on
+  // every keystroke; it's normalised (min 1, default 4) on blur.
+  const [rijplatenQtyText, setRijplatenQtyText] = useState(String(rijplatenQty || 4));
   // Set once the customer tries to proceed — gates the red "missing field"
   // highlights below so they never show before the first attempt.
   const [attempted, setAttempted] = useState(false);
@@ -505,7 +509,8 @@ export default function BookingStep1({
                 setSelectedAddons(selectedAddons.filter(x => x !== "rijplaten"));
               } else {
                 setSelectedAddons([...selectedAddons, "rijplaten"]);
-                if (!rijplatenQty || rijplatenQty < 1) setRijplatenQty(4);
+                setRijplatenQty(4);
+                setRijplatenQtyText("4");
               }
             }}
             className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between ${
@@ -533,21 +538,54 @@ export default function BookingStep1({
                   must not bubble up to the card's toggle handler. */}
               {selectedAddons.includes("rijplaten") && (
                 <div className="mt-3 pt-3 border-t border-slate-200" onClick={(e) => e.stopPropagation()}>
-                  <label className="flex items-center justify-between gap-2">
+                  <div className="flex items-center justify-between gap-2">
                     <span className="text-xs font-bold text-slate-800">Aantal platen</span>
-                    <input
-                      type="number"
-                      inputMode="numeric"
-                      min={1}
-                      max={999}
-                      value={rijplatenQty}
-                      onChange={(e) => {
-                        const n = parseInt(e.target.value, 10);
-                        setRijplatenQty(Number.isNaN(n) ? 1 : Math.min(999, Math.max(1, n)));
-                      }}
-                      className="w-20 text-center text-sm font-bold text-slate-900 border border-slate-300 rounded-lg py-1.5 px-2 focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white"
-                    />
-                  </label>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        aria-label="Eén minder"
+                        onClick={() => {
+                          const n = Math.max(1, (parseInt(rijplatenQtyText, 10) || 4) - 1);
+                          setRijplatenQty(n);
+                          setRijplatenQtyText(String(n));
+                        }}
+                        className="h-8 w-8 inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-700 font-bold text-base leading-none hover:bg-slate-100 cursor-pointer"
+                      >
+                        −
+                      </button>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        value={rijplatenQtyText}
+                        onChange={(e) => {
+                          const raw = e.target.value.replace(/[^0-9]/g, "").slice(0, 3);
+                          setRijplatenQtyText(raw);
+                          if (raw !== "") setRijplatenQty(Math.min(999, parseInt(raw, 10)));
+                        }}
+                        onBlur={() => {
+                          let n = parseInt(rijplatenQtyText, 10);
+                          if (Number.isNaN(n) || n < 1) n = 4;
+                          n = Math.min(999, n);
+                          setRijplatenQty(n);
+                          setRijplatenQtyText(String(n));
+                        }}
+                        className="w-16 text-center text-sm font-bold text-slate-900 border border-slate-300 rounded-lg py-1.5 px-2 focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white"
+                      />
+                      <button
+                        type="button"
+                        aria-label="Eén meer"
+                        onClick={() => {
+                          const n = Math.min(999, (parseInt(rijplatenQtyText, 10) || 4) + 1);
+                          setRijplatenQty(n);
+                          setRijplatenQtyText(String(n));
+                        }}
+                        className="h-8 w-8 inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-700 font-bold text-base leading-none hover:bg-slate-100 cursor-pointer"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
                   <p className="text-xs text-slate-500 mt-1.5 font-mono">
                     {rijplatenQty} × €6,- = <span className="font-bold text-slate-700">€{rijplatenQty * 6},- per week</span>
                   </p>

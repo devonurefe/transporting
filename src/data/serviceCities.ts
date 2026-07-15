@@ -33,7 +33,7 @@ export const SERVICE_CITIES: ServiceCity[] = [
     intro:
       "Hoogwerker huren in Leiden? Wij bezorgen dezelfde of volgende werkdag in heel Leiden en omgeving — zonder borg, all-in geprijsd.",
     body:
-      "Of u nu de gevel van een grachtenpand in de binnenstad schildert, dakgoten reinigt in de Merenwijk of een verbouwing doet in Leiden-Zuidwest: wij hebben de juiste machine. Voor smalle straten en poorten in het historische centrum zijn onze rups- en spinhoogwerkers ideaal, omdat ze door een doorgang van 80 cm passen. Onze depot in Zoeterwoude ligt op een steenworp afstand, dus bezorging is snel en goedkoop.",
+      "Of u nu de gevel van een grachtenpand in de binnenstad schildert, dakgoten reinigt in de Merenwijk of een verbouwing doet in Leiden-Zuidwest: wij hebben de juiste machine. Voor smalle straten en poorten in het historische centrum zijn onze rups- en spinhoogwerkers ideaal, omdat ze door een doorgang van 80 cm passen. Ons depot in Zoeterwoude ligt op een steenworp afstand, dus bezorging is snel en goedkoop.",
     nearby: ["Leiderdorp", "Oegstgeest", "Voorschoten", "Zoeterwoude"],
     driveMinutes: 10,
   },
@@ -71,7 +71,7 @@ export const SERVICE_CITIES: ServiceCity[] = [
     slug: "leiderdorp",
     name: "Leiderdorp",
     intro:
-      "Hoogwerker huren in Leiderdorp? Onze depot ligt om de hoek — dezelfde dag geleverd, zonder borg en all-in geprijsd.",
+      "Hoogwerker huren in Leiderdorp? Ons depot ligt om de hoek — dezelfde dag geleverd, zonder borg en all-in geprijsd.",
     body:
       "Leiderdorp ligt direct naast ons depot in Zoeterwoude, dus u bent verzekerd van de snelste bezorging en de laagste transportkosten. Voor onderhoud aan woningen in de Vogelwijk of bedrijfspanden langs de A4 hebben wij schaarliften, mastliften en aanhangerhoogwerkers direct beschikbaar.",
     nearby: ["Leiden", "Zoeterwoude", "Hoogmade", "Koudekerk aan den Rijn"],

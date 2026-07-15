@@ -54,7 +54,7 @@ function getDefaultPackageItems(id: string): string[] {
       "4x Heavy-duty kunststof rijplaten (voorkomt sporen in gazons)",
       "1x Gecertificeerde bosbouwer snoeihelm met vizier en oorkappen",
       "1x Magnetische relingtray voor snoeigereedschappen",
-      "1x Biologische kettingzaag olie (1 Liter)",
+      "1x Biologische kettingzaagolie (1 Liter)",
       "1x Spanbandenset voor extra stempelfixatie op hellingen",
     ];
     case "set-gutter-fast": return [
@@ -62,7 +62,7 @@ function getDefaultPackageItems(id: string): string[] {
       "1x Telescopische dakgootschep & telescopische trekker/bezem set",
       "1x Geïntegreerde 230V stroomaansluiting in de korf",
       "1x Geperforeerde aluminium werkbak voor emmers en afval",
-      "1x Set van 4 wegafzetting pionnen met reflecterende strips",
+      "1x Set van 4 wegafzettingspionnen met reflecterende strips",
       "1x Veiligheidshesje en handschoenen (maat L)",
     ];
     case "set-facade-heavy": return [

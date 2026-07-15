@@ -7,7 +7,7 @@ const prisma = new PrismaClient();
 
 const defaultCategories = [
   {
-    id: "aanhanger", label: "\"Toe & Go\" Aanhangerhoogwerker", listLabel: "\"Toe & Go\" Aanhangerhoogwerkers",
+    id: "aanhanger", label: "\"Tow & Go\" Aanhangerhoogwerker", listLabel: "\"Tow & Go\" Aanhangerhoogwerkers",
     desc: "De meest flexibele oplossing die transportkosten elimineert, ideaal voor elke ZZP'er met een trekhaak.",
     heights: "12m - 17m", price: "v.a. €80/dag",
     infoContent: {
@@ -102,9 +102,9 @@ const defaultMachines = [
   // CATEGORIE 1: "Tow & Go" Aanhangerhoogwerkers
   {
     id: "nifty-120-1",
-    name: "Nifty 120 \"Toe & Go\" Aanhangerhoogwerker",
+    name: "Nifty 120 \"Tow & Go\" Aanhangerhoogwerker",
     category: "aanhanger",
-    categoryLabel: "\"Toe & Go\" Aanhangerhoogwerker",
+    categoryLabel: "\"Tow & Go\" Aanhangerhoogwerker",
     height: 12.2,
     reach: 6.1,
     weight: 1400,
@@ -130,9 +130,9 @@ const defaultMachines = [
   },
   {
     id: "nifty-120-2",
-    name: "Nifty 120 \"Toe & Go\" Aanhangerhoogwerker (Unit 2)",
+    name: "Nifty 120 \"Tow & Go\" Aanhangerhoogwerker (Unit 2)",
     category: "aanhanger",
-    categoryLabel: "\"Toe & Go\" Aanhangerhoogwerker",
+    categoryLabel: "\"Tow & Go\" Aanhangerhoogwerker",
     height: 12.2,
     reach: 6.1,
     weight: 1400,
@@ -158,9 +158,9 @@ const defaultMachines = [
   },
   {
     id: "nifty-120-3",
-    name: "Nifty 120 \"Toe & Go\" Aanhangerhoogwerker (Unit 3)",
+    name: "Nifty 120 \"Tow & Go\" Aanhangerhoogwerker (Unit 3)",
     category: "aanhanger",
-    categoryLabel: "\"Toe & Go\" Aanhangerhoogwerker",
+    categoryLabel: "\"Tow & Go\" Aanhangerhoogwerker",
     height: 12.2,
     reach: 6.1,
     weight: 1400,
@@ -186,9 +186,9 @@ const defaultMachines = [
   },
   {
     id: "nifty-170",
-    name: "Nifty 170 \"Toe & Go\" Aanhangerhoogwerker",
+    name: "Nifty 170 \"Tow & Go\" Aanhangerhoogwerker",
     category: "aanhanger",
-    categoryLabel: "\"Toe & Go\" Aanhangerhoogwerker",
+    categoryLabel: "\"Tow & Go\" Aanhangerhoogwerker",
     height: 17.1,
     reach: 8.7,
     weight: 2160,

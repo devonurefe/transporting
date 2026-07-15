@@ -125,6 +125,12 @@ function DealsCarousel({ machines, onSearch }: { machines: Machine[]; onSearch: 
   const vatDisplay = useAppStore((state) => state.vatDisplay);
   const ref = useRef<HTMLDivElement>(null);
   const isDragging = useRef(false);
+  // Set once real drag movement crosses DRAG_THRESHOLD; stays true through
+  // the click that follows pointerup so a genuine drag never also fires
+  // onSearch. Left false for a plain tap (no movement), so the card's click
+  // reaches it normally.
+  const didDragRef = useRef(false);
+  const activePointerIdRef = useRef<number | null>(null);
   const dragStartX = useRef(0);
   const dragScrollLeft = useRef(0);
   const rafRef = useRef(0);
@@ -167,16 +173,30 @@ function DealsCarousel({ machines, onSearch }: { machines: Machine[]; onSearch: 
     return () => cancelAnimationFrame(rafRef.current);
   }, [tick]);
 
+  // Drag distance (px) before a pointerdown counts as an intentional drag
+  // rather than a tap. Below this, we never call setPointerCapture — doing
+  // so unconditionally on every pointerdown (the previous approach) captured
+  // even plain taps, which made browsers redirect the whole event stream
+  // (including the synthesized click) to this row instead of the card
+  // button underneath, so cards silently stopped being clickable.
+  const DRAG_THRESHOLD = 6;
+
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    isDragging.current = true;
+    activePointerIdRef.current = e.pointerId;
     dragStartX.current = e.clientX;
     dragScrollLeft.current = ref.current?.scrollLeft ?? 0;
-    (e.currentTarget as HTMLDivElement).setPointerCapture(e.pointerId);
+    didDragRef.current = false;
   };
 
   const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!isDragging.current || !ref.current) return;
+    if (activePointerIdRef.current !== e.pointerId || !ref.current) return;
     const dx = dragStartX.current - e.clientX;
+    if (!isDragging.current) {
+      if (Math.abs(dx) < DRAG_THRESHOLD) return;
+      isDragging.current = true;
+      didDragRef.current = true;
+      (e.currentTarget as HTMLDivElement).setPointerCapture(e.pointerId);
+    }
     let next = dragScrollLeft.current + dx;
     const half = ref.current.scrollWidth / 2;
     if (next < 0) next += half;
@@ -185,14 +205,34 @@ function DealsCarousel({ machines, onSearch }: { machines: Machine[]; onSearch: 
   };
 
   const onPointerUp = () => {
+    activePointerIdRef.current = null;
     isDragging.current = false;
     lastTimeRef.current = 0;
     lastInteractionRef.current = performance.now();
   };
 
-  const onWheel = () => {
-    lastInteractionRef.current = performance.now();
-  };
+  // Desktop mice send vertical wheel deltas; a plain overflow-x-scroll row
+  // relies on the browser to redirect that to horizontal scroll, which many
+  // browsers only do when nothing else can consume the event — here the
+  // page itself still scrolls vertically, so the wheel just scrolls the
+  // page and the row never moves. Convert the dominant delta axis to
+  // scrollLeft explicitly so wheel/trackpad reliably scrolls the row.
+  // Must be a native, non-passive listener: React attaches its synthetic
+  // wheel handler as passive by default, so e.preventDefault() there is a
+  // silent no-op.
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const handleWheel = (e: WheelEvent) => {
+      lastInteractionRef.current = performance.now();
+      const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+      if (delta === 0) return;
+      e.preventDefault();
+      el.scrollLeft += delta;
+    };
+    el.addEventListener("wheel", handleWheel, { passive: false });
+    return () => el.removeEventListener("wheel", handleWheel);
+  }, []);
 
   const onMouseEnter = () => {
     isHoveredRef.current = true;
@@ -234,7 +274,6 @@ function DealsCarousel({ machines, onSearch }: { machines: Machine[]; onSearch: 
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
-        onWheel={onWheel}
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
       >
@@ -264,7 +303,7 @@ function DealsCarousel({ machines, onSearch }: { machines: Machine[]; onSearch: 
                 type="button"
                 aria-hidden={isClone || undefined}
                 tabIndex={isClone ? -1 : undefined}
-                onClick={() => !isDragging.current && onSearch(baseName, m.category)}
+                onClick={() => { if (didDragRef.current) return; onSearch(baseName, m.category); }}
                 className="shrink-0 w-[200px] rounded-2xl shadow-sm hover:shadow-lg hover:-translate-y-1 active:scale-[0.98] transition-all text-left group"
               >
                 <div className="overflow-hidden rounded-2xl border border-amber-100 bg-white flex flex-col h-full">
@@ -320,7 +359,7 @@ export default function HomeSection({
   // ontbreekt); de kaart zelf toont altijd de live "vanaf"-prijs. Consistent
   // "v.a."-formaat en één schaarlift-vanafprijs (€49, ook in SEO/marketing).
   customCategories = [
-    { id: "aanhanger", label: "\"Toe & Go\" Aanhangerhoogwerker", listLabel: "\"Toe & Go\" Aanhangerhoogwerkers", desc: "", heights: "12m - 17m", price: "v.a. €80/dag" },
+    { id: "aanhanger", label: "\"Tow & Go\" Aanhangerhoogwerker", listLabel: "\"Tow & Go\" Aanhangerhoogwerkers", desc: "", heights: "12m - 17m", price: "v.a. €80/dag" },
     { id: "spin", label: "Rupshoogwerker", listLabel: "Rupshoogwerkers", desc: "", heights: "15m - 17m", price: "v.a. €160/dag" },
     { id: "schaarlift", label: "Schaarlift", listLabel: "Schaarliften", desc: "", heights: "6m - 10m", price: "v.a. €49/dag" },
     { id: "mastlift", label: "Mastlift", listLabel: "Mastliften", desc: "", heights: "5m - 10m", price: "v.a. €75/dag" },
@@ -703,65 +742,70 @@ export default function HomeSection({
           </div>
           <VatToggle />
         </div>
-        <div className="max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
+        <div className="max-w-5xl mx-auto grid grid-cols-3 sm:grid-cols-2 gap-2 sm:gap-6">
           {displayCategories.map((cat, i) => {
             const Icon = CATEGORY_ICONS[cat.id] ?? Truck;
             const meta = categoryMeta[cat.id];
             const catImage = meta?.image || "";
             const fallbackGradient = CAT_GRADIENT[cat.id] ?? "from-slate-100 to-slate-200";
+            const hasBadge = !!(meta && meta.badge !== "none");
 
             return (
               <button
                 key={cat.id}
                 onClick={() => onSearch("", cat.id)}
-                className="group bg-white border border-slate-200 rounded-2xl overflow-hidden text-left cursor-pointer hover:border-orange-300 hover:shadow-xl hover:shadow-orange-500/5 hover:-translate-y-1.5 active:scale-[0.98] transition-all duration-300 flex flex-col"
+                className="group relative bg-white border border-slate-200 rounded-xl sm:rounded-2xl overflow-hidden text-left cursor-pointer hover:border-orange-300 hover:shadow-xl hover:shadow-orange-500/5 hover:-translate-y-1.5 active:scale-[0.98] transition-all duration-300 flex flex-col"
               >
-                {/* Top — text info: name gets its own breathing room, then height •
-                    price with the discount badge vertically aligned to it on the
-                    right (not floating between rows), then a category-focused CTA
-                    ("Bekijk Schaarliften →") with the model count trailing it. */}
-                <div className="p-4 sm:p-5 flex flex-col min-w-0">
-                  <p className="font-display font-black text-base sm:text-lg text-slate-900 leading-snug line-clamp-2 mb-2.5">
+                {/* Discount badge — pinned to the card's own top-right corner
+                    instead of sharing a row with the price. The title below
+                    reserves right-padding so a short name never runs under it;
+                    a long name (line-clamp-2) simply wraps to its own second
+                    line, which has full width since the badge only occupies
+                    the first line's corner. */}
+                {meta && meta.badge !== "none" && (
+                  <span
+                    className={`absolute top-1.5 right-1.5 sm:top-2.5 sm:right-2.5 z-10 inline-flex items-center gap-0.5 sm:gap-1 rounded-full pl-1.5 pr-2 sm:pl-2.5 sm:pr-3 py-0.5 sm:py-1.5 text-[9px] sm:text-[11px] font-black text-white shadow-md ring-1 ring-white/40 ${
+                      meta.badge === "tier"
+                        ? "bg-gradient-to-r from-indigo-600 to-violet-600 shadow-indigo-500/25"
+                        : "bg-gradient-to-r from-rose-600 to-red-500 shadow-rose-500/25"
+                    }`}
+                  >
+                    <Zap className="h-2 w-2 sm:h-3 sm:w-3 shrink-0 fill-current" />
+                    <span className="sm:hidden">{`−${meta.badgePct}%`}</span>
+                    <span className="hidden sm:inline">
+                      {meta.badge === "dag"
+                        ? t(`Dagactie −${meta.badgePct}%`, `Day deal −${meta.badgePct}%`, `Gün fırsatı −%${meta.badgePct}`)
+                        : meta.badge === "actie"
+                        ? t(`Actie −${meta.badgePct}%`, `Deal −${meta.badgePct}%`, `Kampanya −%${meta.badgePct}`)
+                        : t(`−${meta.badgePct}% per week`, `−${meta.badgePct}%/week`, `Haftada −%${meta.badgePct}`)}
+                    </span>
+                  </span>
+                )}
+                <div className="p-2 sm:p-5 flex flex-col min-w-0">
+                  <p className={`font-display font-black text-[11px] sm:text-lg text-slate-900 leading-snug line-clamp-2 mb-1 sm:mb-2.5 ${hasBadge ? "pr-9 sm:pr-24" : ""}`}>
                     {cat.listLabel || cat.label}
                   </p>
-                  <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5 mb-3">
-                    <div className="flex items-center gap-2 text-sm shrink-0 whitespace-nowrap">
-                      <span className="font-semibold text-slate-600">{cat.heights}</span>
-                      <span className="text-slate-300 select-none">•</span>
-                      <span className="font-black text-emerald-700 text-base leading-tight">
-                        {(() => {
-                          if (!meta) return "Prijs op aanvraag";
-                          const v = withVat(meta.price, vatDisplay);
-                          const fmt = v % 1 === 0 ? Math.round(v).toLocaleString("nl-NL") : v.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                          const unit = WEEKLY_PRICED_CATEGORIES.has(cat.id) ? "week" : "dag";
-                          return `€${fmt}/${unit}`;
-                        })()}
-                      </span>
-                    </div>
-                    {meta && meta.badge !== "none" && (
-                      <span
-                        className={`inline-flex items-center gap-1 shrink-0 rounded-full pl-2.5 pr-3 py-1.5 text-[11px] font-black text-white shadow-md ring-1 ring-white/40 ${
-                          meta.badge === "tier"
-                            ? "bg-gradient-to-r from-indigo-600 to-violet-600 shadow-indigo-500/25"
-                            : "bg-gradient-to-r from-rose-600 to-red-500 shadow-rose-500/25"
-                        }`}
-                      >
-                        <Zap className="h-3 w-3 shrink-0 fill-current" />
-                        {meta.badge === "dag"
-                          ? t(`Dagactie −${meta.badgePct}%`, `Day deal −${meta.badgePct}%`, `Gün fırsatı −%${meta.badgePct}`)
-                          : meta.badge === "actie"
-                          ? t(`Actie −${meta.badgePct}%`, `Deal −${meta.badgePct}%`, `Kampanya −%${meta.badgePct}`)
-                          : t(`−${meta.badgePct}% per week`, `−${meta.badgePct}%/week`, `Haftada −%${meta.badgePct}`)}
-                      </span>
-                    )}
+                  <div className="flex flex-wrap items-center gap-x-1.5 sm:gap-x-2 gap-y-1 sm:gap-y-1.5 mb-1.5 sm:mb-3">
+                    <span className="font-semibold text-slate-600 text-sm hidden sm:inline">{cat.heights}</span>
+                    <span className="text-slate-300 select-none hidden sm:inline">•</span>
+                    <span className="font-black text-emerald-700 text-[10px] sm:text-base leading-tight">
+                      {(() => {
+                        if (!meta) return "Prijs op aanvraag";
+                        const v = withVat(meta.price, vatDisplay);
+                        const fmt = v % 1 === 0 ? Math.round(v).toLocaleString("nl-NL") : v.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                        const unit = WEEKLY_PRICED_CATEGORIES.has(cat.id) ? "week" : "dag";
+                        return `€${fmt}/${unit}`;
+                      })()}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between gap-2">
-                    <span className="inline-flex items-center gap-1 text-sm font-bold text-orange-700 group-hover:text-orange-800 group-hover:gap-1.5 transition-all duration-300">
-                      {t("Bekijk", "View", "Görüntüle")} {CAT_CTA_LABEL[cat.id] ?? cat.label}
-                      <ChevronRight className="h-4 w-4" />
+                    <span className="inline-flex items-center gap-0.5 sm:gap-1 text-[9px] sm:text-sm font-bold text-orange-700 group-hover:text-orange-800 group-hover:gap-1.5 transition-all duration-300">
+                      <span className="hidden sm:inline">{t("Bekijk", "View", "Görüntüle")} {CAT_CTA_LABEL[cat.id] ?? cat.label}</span>
+                      <span className="sm:hidden">{t("Bekijk", "View", "Görüntüle")}</span>
+                      <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
                     </span>
                     {meta && meta.count > 1 && (
-                      <span className="text-[11px] text-slate-500 font-medium shrink-0">
+                      <span className="hidden sm:inline text-[11px] text-slate-500 font-medium shrink-0">
                         {t(`${meta.count} modellen`, `${meta.count} models`, `${meta.count} model`)}
                       </span>
                     )}
@@ -776,7 +820,7 @@ export default function HomeSection({
                     <img
                       src={withImageWidth(catImage, 640) ?? catImage}
                       alt={cat.label}
-                      className="w-full h-full object-contain p-1.5 sm:p-3 transition-transform duration-500 ease-out group-hover:scale-105"
+                      className="w-full h-full object-contain p-1 sm:p-3 transition-transform duration-500 ease-out group-hover:scale-105"
                       referrerPolicy="no-referrer"
                       onError={(e) => {
                         e.currentTarget.style.display = "none";
@@ -788,7 +832,7 @@ export default function HomeSection({
                   <div
                     className={`absolute inset-0 bg-white flex items-center justify-center ${catImage ? "hidden" : "flex"}`}
                   >
-                    <Icon className="h-10 w-10 text-slate-300" />
+                    <Icon className="h-6 w-6 sm:h-10 sm:w-10 text-slate-300" />
                   </div>
                 </div>
               </button>

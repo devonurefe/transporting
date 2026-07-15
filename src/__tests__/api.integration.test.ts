@@ -143,11 +143,16 @@ describe.skipIf(!HAS_DB)("API integration", () => {
   it("POST /api/orders met rijplaten × aantal → prijs = aantal × €6 × week", async () => {
     // 1 dag → addonWeeks = 1. 4 platen × €6 × 1 = €24 add-on.
     // serverTotal = (100 subtotaal + 24 add-on) × 1.21 = 150,04.
+    // Eigen datum (dag 2) nodig: dag 1 is al geboekt door de "correcte prijs"
+    // test hierboven op dezelfde TEST_MACHINE_ID, anders botst dit met de
+    // server's eigen dubbele-boeking-check (409 CONFLICT_ORDER).
     const res = await request(app)
       .post("/api/orders")
       .set("idempotency-key", `itest-rij-${Date.now()}`)
       .send({
         ...validOrder(),
+        startDate: isoDay(2),
+        endDate: isoDay(2),
         totalAmount: 150.04,
         addons: [{ id: "rijplaten", name: "Rijplaten", price: 24, billing: "weekly", quantity: 4 }],
       });

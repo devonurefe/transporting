@@ -333,8 +333,8 @@ export default function BookingStep1({
             </p>
             {sums && sums.days > 0 ? (
               <div className="mt-2 flex items-baseline gap-1">
-                <span className="text-sm font-black text-emerald-600 font-mono">{euroCompact(sums.days * 25)}</span>
-                <span className="text-xs text-slate-500 font-semibold font-mono">({sums.days} dgn × €25,-)</span>
+                <span className="text-sm font-black text-emerald-600">{euroCompact(sums.days * 25)}</span>
+                <span className="text-xs text-slate-500 font-semibold">({sums.days} dgn × €25,-)</span>
               </div>
             ) : (
               <div className="mt-2 flex items-baseline gap-1">
@@ -496,7 +496,7 @@ export default function BookingStep1({
                 Luxe veiligheidsharnas combi, lijn met valdemper en TÜV goedgekeurde bouwhelm met gehoorbescherming.
               </p>
             </div>
-            <span className="text-xs font-mono font-bold text-slate-700 mt-3 block">€15,- / week (elke 7 dagen +€15)</span>
+            <span className="text-xs font-bold text-slate-700 mt-3 block">€15,- / week (elke 7 dagen +€15)</span>
           </div>
           )}
 
@@ -586,7 +586,7 @@ export default function BookingStep1({
                       </button>
                     </div>
                   </div>
-                  <p className="text-xs text-slate-500 mt-1.5 font-mono">
+                  <p className="text-xs text-slate-500 mt-1.5">
                     {rijplatenQty} × €6,- = <span className="font-bold text-slate-700">€{rijplatenQty * 6},- per week</span>
                   </p>
 
@@ -625,7 +625,7 @@ export default function BookingStep1({
                 </div>
               )}
             </div>
-            <span className="text-xs font-mono font-bold text-slate-700 mt-3 block">€6,- per week per stuk (elke 7 dagen +€6)</span>
+            <span className="text-xs font-bold text-slate-700 mt-3 block">€6,- per week per stuk (elke 7 dagen +€6)</span>
           </div>
           )}
 
@@ -660,7 +660,7 @@ export default function BookingStep1({
                   <p className="text-xs text-slate-600 leading-normal">{addon.description}</p>
                 )}
               </div>
-              <span className="text-xs font-mono font-bold text-slate-700 mt-3 block">
+              <span className="text-xs font-bold text-slate-700 mt-3 block">
                 +€{addon.pricePerWeek},- / per week
                 {!selectedMachine?.weeklyOnly && addon.pricePerTwoDay ? <span className="text-slate-500 font-normal"> · €{addon.pricePerTwoDay},- / 2 dgn</span> : null}
                 {!selectedMachine?.weeklyOnly && addon.pricePerDay ? <span className="text-slate-500 font-normal"> · €{addon.pricePerDay},- / dag</span> : null}

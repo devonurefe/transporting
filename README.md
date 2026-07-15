@@ -351,7 +351,7 @@ Required repository secrets:
 | **Email Retries** | Resend with 3x exponential backoff (1s, 2s, 4s); mock fallback if key absent |
 | **Rate Limiting** | 300 req/min global on `/api/*`, 10 auth attempts per 15 min |
 | **Nginx Tuning** | Gzip enabled, keepalive 65s, worker connections 1024, security headers |
-| **Cron Jobs** | Daily reminder email (07:00 CET, via `REMINDER_SECRET` endpoint) |
+| **Cron Jobs** | Daily reminder email (07:00 CET, via `REMINDER_SECRET` endpoint) — also sends a payment reminder to orders still unpaid 24h+ after booking |
 
 ### Troubleshooting Deployment
 
@@ -904,7 +904,7 @@ model SiteConfig {
 | `/api/orders/ratings/summary` | GET | — | Aggregate rating for the storefront |
 | `/api/orders/ratings/by-machine` | GET | — | Ratings per machine |
 | `/api/orders/export` | GET | JWT (admin) | CSV export (accounting) |
-| `/api/orders/send-reminders` | POST | `REMINDER_SECRET` | Trigger rental reminder emails (cron) |
+| `/api/orders/send-reminders` | POST | `REMINDER_SECRET` | Trigger rental + payment reminder emails (cron) |
 
 ### Blocked Dates (`/api/blocked-dates`)
 

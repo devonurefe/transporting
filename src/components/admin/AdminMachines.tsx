@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useMemo } from "react";
-import { Plus, Trash2, Wrench, X, Sparkles, Image as ImageIcon } from "lucide-react";
+import { Plus, Trash2, Wrench, X, Sparkles, Image as ImageIcon, Copy } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useAppStore } from "../../store/appStore";
 import { useAuthStore } from "../../store/authStore";
@@ -26,6 +26,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
   const customCategories = useAppStore((state) => state.customCategories);
   const deleteMachine = useAppStore((state) => state.deleteMachine);
   const updateMachine = useAppStore((state) => state.updateMachine);
+  const addMachine = useAppStore((state) => state.addMachine);
   const adminUser = useAuthStore((state) => state.user);
 
   const t = (nl: string, en: string, tr: string) => {
@@ -79,6 +80,27 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
       showAdminToast(t("Netwerkfout bij het wijzigen van de machinestatus.", "Network error toggling machine status.", "Makine durumu değiştirilirken ağ hatası."), "error");
     }
     setTogglingId(null);
+  };
+
+  // Duplicate a machine: clones every field (price tiers, image, gallery, specs,
+  // cross-sell extras, package contents) into a new row via the same POST the
+  // "Toevoegen" form uses — the server assigns a fresh id, so this never collides
+  // with the source machine. Admin only has to tweak the copy's name/height/price.
+  const [duplicatingId, setDuplicatingId] = useState<string | null>(null);
+  const handleDuplicate = async (m: Machine) => {
+    setDuplicatingId(m.id);
+    const { id: _id, isActive: _isActive, ...rest } = m;
+    const success = await addMachine({
+      ...rest,
+      name: `${m.name} (kopie)`,
+    });
+    setDuplicatingId(null);
+    if (success) {
+      onAddSystemLog("fleet", adminUser?.name ?? "Admin", `Machine gedupliceerd: ${m.name} → ${m.name} (kopie)`);
+      showAdminToast(t("Machine gedupliceerd! Pas de kopie aan via 'Aanpassen'.", "Machine duplicated! Edit the copy via 'Modify'.", "Makine kopyalandı! Kopyayı 'Düzenle' ile güncelleyin."), "success");
+    } else {
+      showAdminToast(t("Fout bij dupliceren.", "Error duplicating.", "Kopyalama sırasında hata oluştu."), "error");
+    }
   };
 
   const handleConfirmDelete = async () => {
@@ -493,6 +515,18 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                             ? <span className="h-3 w-3 rounded-full border-2 border-indigo-400 border-t-transparent animate-spin shrink-0" />
                             : <Wrench className="h-3 w-3 shrink-0" />}
                           <span>{pendingEditId === m.id ? "..." : t("Aanpassen", "Modify", "Düzenle")}</span>
+                        </button>
+
+                        <button
+                          onClick={() => handleDuplicate(m)}
+                          disabled={!!duplicatingId}
+                          title={t("Dupliceer machine (incl. afbeelding en prijzen)", "Duplicate machine (incl. image and pricing)", "Makineyi çoğalt (resim ve fiyatlar dahil)")}
+                          className="text-sky-600 hover:text-sky-800 font-bold text-xs bg-sky-50 hover:bg-sky-100 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer border-none shadow-sm flex items-center justify-center space-x-1 disabled:opacity-60 disabled:cursor-not-allowed"
+                        >
+                          {duplicatingId === m.id
+                            ? <span className="h-3 w-3 rounded-full border-2 border-sky-400 border-t-transparent animate-spin shrink-0" />
+                            : <Copy className="h-3 w-3 shrink-0" />}
+                          <span>{duplicatingId === m.id ? "..." : t("Dupliceren", "Duplicate", "Çoğalt")}</span>
                         </button>
 
                         <button

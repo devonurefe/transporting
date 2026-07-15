@@ -115,7 +115,7 @@ export default function Footer({ siteName, setActiveTab, setShowContactModal }: 
               </div>
             </div>
             <a
-              href="https://www.google.com/maps/place/MB+Hoogwerkers+bv/@52.1398936,4.5166788,18z"
+              href="https://www.google.com/maps/search/?api=1&query=MB+Hoogwerkers+bv+Zoeterwoude"
               target="_blank"
               rel="noopener noreferrer"
               className="text-xs text-slate-500 hover:text-slate-900 transition-colors no-underline sm:ml-auto"

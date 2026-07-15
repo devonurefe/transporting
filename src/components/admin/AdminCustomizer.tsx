@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from "react";
-import { Settings, Check, Trash2, Tag, Plus, ChevronDown, Upload } from "lucide-react";
+import { Settings, Check, Trash2, Tag, Plus, ChevronDown, Upload, Coffee } from "lucide-react";
 import { resizeImage } from "../../utils/image";
 import { motion, AnimatePresence } from "motion/react";
 import { useAppStore, type GoogleReview } from "../../store/appStore";
@@ -194,6 +194,14 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
   const [kvkNumber, setKvkNumber] = useState(siteConfig.kvkNumber || "");
   const [btwNumber, setBtwNumber] = useState(siteConfig.btwNumber || "");
   const [companyLegalName, setCompanyLegalName] = useState(siteConfig.companyLegalName || "");
+  // Coffee Corner homepage-blok — uit tot een admin titel + omschrijving invult en aanzet
+  const [coffeeCornerEnabled, setCoffeeCornerEnabled] = useState(siteConfig.coffeeCornerEnabled ?? false);
+  const [coffeeCornerTitle, setCoffeeCornerTitle] = useState(siteConfig.coffeeCornerTitle || "");
+  const [coffeeCornerDescription, setCoffeeCornerDescription] = useState(siteConfig.coffeeCornerDescription || "");
+  const [coffeeCornerImageUrl, setCoffeeCornerImageUrl] = useState(siteConfig.coffeeCornerImageUrl || "");
+  const [coffeeCornerCtaLabel, setCoffeeCornerCtaLabel] = useState(siteConfig.coffeeCornerCtaLabel || "");
+  const [coffeeCornerCtaHref, setCoffeeCornerCtaHref] = useState(siteConfig.coffeeCornerCtaHref || "");
+  const [isUploadingCoffeeCorner, setIsUploadingCoffeeCorner] = useState(false);
   // Echte Google-score — leeg = niets tonen in de footer
   const [googleRating, setGoogleRating] = useState(siteConfig.googleRating != null ? String(siteConfig.googleRating) : "");
   const [googleReviewCount, setGoogleReviewCount] = useState(siteConfig.googleReviewCount != null ? String(siteConfig.googleReviewCount) : "");
@@ -225,6 +233,12 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
       setKvkNumber(siteConfig.kvkNumber || "");
       setBtwNumber(siteConfig.btwNumber || "");
       setCompanyLegalName(siteConfig.companyLegalName || "");
+      setCoffeeCornerEnabled(siteConfig.coffeeCornerEnabled ?? false);
+      setCoffeeCornerTitle(siteConfig.coffeeCornerTitle || "");
+      setCoffeeCornerDescription(siteConfig.coffeeCornerDescription || "");
+      setCoffeeCornerImageUrl(siteConfig.coffeeCornerImageUrl || "");
+      setCoffeeCornerCtaLabel(siteConfig.coffeeCornerCtaLabel || "");
+      setCoffeeCornerCtaHref(siteConfig.coffeeCornerCtaHref || "");
       setGoogleRating(siteConfig.googleRating != null ? String(siteConfig.googleRating) : "");
       setGoogleReviewCount(siteConfig.googleReviewCount != null ? String(siteConfig.googleReviewCount) : "");
       setGoogleReviews(siteConfig.googleReviews ?? []);
@@ -263,6 +277,34 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
     }
   };
 
+  const handleCoffeeCornerImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploadingCoffeeCorner(true);
+    try {
+      // Below-the-fold photo, not the LCP hero — a smaller size is plenty.
+      const base64 = await resizeImage(file, 900, 900, 0.80, false);
+      const uploadName = base64.startsWith("data:image/webp") ? "coffee-corner.webp" : "coffee-corner.jpg";
+      const token = localStorage.getItem("hwh_admin_token") || localStorage.getItem("hwh_token");
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify({ fileName: uploadName, base64Data: base64 })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setCoffeeCornerImageUrl(data.url);
+      } else {
+        showAdminToast(t("Uploaden mislukt.", "Upload failed.", "Yükleme başarısız."), "error");
+      }
+    } catch {
+      showAdminToast(t("Fout bij uploaden afbeelding.", "Error uploading image.", "Resim yükleme hatası."), "error");
+    } finally {
+      setIsUploadingCoffeeCorner(false);
+      e.target.value = "";
+    }
+  };
+
   const handleSaveSiteConfig = async () => {
     setIsSavingConfig(true);
     const success = await updateSiteConfig({
@@ -281,6 +323,12 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
       kvkNumber,
       btwNumber,
       companyLegalName,
+      coffeeCornerEnabled,
+      coffeeCornerTitle,
+      coffeeCornerDescription,
+      coffeeCornerImageUrl,
+      coffeeCornerCtaLabel,
+      coffeeCornerCtaHref,
       // Lege string wist de score (server zet dan null); anders het getal
       googleRating: googleRating.trim() === "" ? null : Number(googleRating),
       googleReviewCount: googleReviewCount.trim() === "" ? null : Number(googleReviewCount),
@@ -611,6 +659,112 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
                   </div>
                 )}
               </div>
+            </div>
+          </div>
+
+          {/* Coffee Corner Form */}
+          <div className="space-y-4 p-5 rounded-2xl bg-slate-50 border border-slate-200/80 shadow-sm col-span-1 md:col-span-2">
+            <div className="flex items-center justify-between gap-3">
+              <h4 className="text-xs font-bold text-amber-600 uppercase tracking-wider flex items-center gap-1.5">
+                <Coffee className="h-3.5 w-3.5" /> Coffee Corner
+              </h4>
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <span className="text-xs font-bold text-slate-600">{t("Tonen op homepage", "Show on homepage", "Ana sayfada göster")}</span>
+                <input
+                  type="checkbox"
+                  checked={coffeeCornerEnabled}
+                  onChange={(e) => setCoffeeCornerEnabled(e.target.checked)}
+                  className="h-4 w-4 accent-amber-500 cursor-pointer"
+                />
+              </label>
+            </div>
+            <p className="text-[10px] text-slate-500">{t("Dit blok verschijnt vlak boven de footer op de homepage, met een foto en uitnodigende tekst. Vul titel en omschrijving in en zet 'Tonen' aan.", "This block appears just above the footer on the homepage, with a photo and inviting copy. Fill in a title and description and turn on 'Show'.", "Bu blok ana sayfada footer'ın hemen üstünde görünür. Başlık ve açıklama girip 'Göster' seçeneğini açın.")}</p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-xs text-slate-700 block font-bold">{t("Titel", "Title", "Başlık")}</label>
+                <input
+                  type="text"
+                  value={coffeeCornerTitle}
+                  onChange={(e) => setCoffeeCornerTitle(e.target.value)}
+                  placeholder={t("Welkom in onze Coffee Corner", "Welcome to our Coffee Corner", "Coffee Corner'ımıza hoş geldiniz")}
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs text-slate-700 block font-bold">{t("Knoptekst (optioneel)", "Button text (optional)", "Buton metni (opsiyonel)")}</label>
+                <input
+                  type="text"
+                  value={coffeeCornerCtaLabel}
+                  onChange={(e) => setCoffeeCornerCtaLabel(e.target.value)}
+                  placeholder={t("Plan uw bezoek", "Plan your visit", "Ziyaretinizi planlayın")}
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs text-slate-700 block font-bold">{t("Omschrijving", "Description", "Açıklama")}</label>
+              <textarea
+                rows={4}
+                value={coffeeCornerDescription}
+                onChange={(e) => setCoffeeCornerDescription(e.target.value)}
+                className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 resize-none font-sans"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs text-slate-700 block font-bold">{t("Knop-link (optioneel)", "Button link (optional)", "Buton linki (opsiyonel)")}</label>
+              <input
+                type="text"
+                value={coffeeCornerCtaHref}
+                onChange={(e) => setCoffeeCornerCtaHref(e.target.value)}
+                placeholder="/#contact"
+                className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 font-mono"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs text-slate-700 block font-bold">{t("Afbeelding (bedrijfsfoto)", "Image (company photo)", "Görsel (şirket fotoğrafı)")}</label>
+              <label className={`flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border-2 border-dashed cursor-pointer transition-colors ${isUploadingCoffeeCorner ? "border-amber-300 bg-amber-50 text-amber-600" : "border-slate-200 bg-white hover:border-amber-400 hover:bg-amber-50 text-slate-600 hover:text-amber-700"}`}>
+                {isUploadingCoffeeCorner ? (
+                  <>
+                    <span className="h-3.5 w-3.5 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+                    <span className="text-xs font-bold">{t("Uploaden...", "Uploading...", "Yükleniyor...")}</span>
+                  </>
+                ) : (
+                  <>
+                    <Upload className="h-4 w-4 shrink-0" />
+                    <span className="text-xs font-bold">{t("Afbeelding uploaden", "Upload image", "Resim yükle")}</span>
+                  </>
+                )}
+                <input type="file" accept="image/*" className="sr-only" disabled={isUploadingCoffeeCorner} onChange={handleCoffeeCornerImageUpload} />
+              </label>
+              {coffeeCornerImageUrl && coffeeCornerImageUrl !== "/site-coffee-image" && (
+                <div className="rounded-xl overflow-hidden border border-slate-200 bg-slate-100 h-24">
+                  <img
+                    src={coffeeCornerImageUrl}
+                    alt="Coffee Corner preview"
+                    className="w-full h-full object-cover"
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                  />
+                </div>
+              )}
+              {coffeeCornerImageUrl === "/site-coffee-image" && (
+                <div className="rounded-xl overflow-hidden border border-slate-200 bg-slate-100 h-24">
+                  <img src="/site-coffee-image?w=320" alt="Coffee Corner preview" className="w-full h-full object-cover" />
+                </div>
+              )}
+              {coffeeCornerImageUrl && (
+                <button
+                  type="button"
+                  onClick={() => setCoffeeCornerImageUrl("")}
+                  className="text-[11px] font-bold text-rose-600 hover:text-rose-700 cursor-pointer bg-transparent border-none"
+                >
+                  {t("Afbeelding verwijderen", "Remove image", "Görseli kaldır")}
+                </button>
+              )}
+              <p className="text-[10px] text-slate-400">{t("Leeg = placeholder-icoon getoond in het blok.", "Empty = placeholder icon shown in the block.", "Boş = blokta yer tutucu ikon gösterilir.")}</p>
             </div>
           </div>
 

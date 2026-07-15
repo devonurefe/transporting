@@ -33,6 +33,7 @@ import AdviesStrip from "./AdviesStrip";
 import TrustBadges from "./TrustBadges";
 import HowItWorksSection from "./HowItWorksSection";
 import WhyHuurGoBand from "./WhyHuurGoBand";
+import CoffeeCornerSection from "./CoffeeCornerSection";
 
 // Merken die daadwerkelijk in de vloot zitten (zie seed) — als muted
 // wordmark-strip onder de categoriekaarten. Tekst, geen logo-assets.
@@ -911,6 +912,9 @@ export default function HomeSection({
           </div>
         </div>
       </div>
+
+      {/* ── COFFEE CORNER — admin-editable, hidden until enabled in Customizer ── */}
+      <CoffeeCornerSection />
 
     </div>
   );

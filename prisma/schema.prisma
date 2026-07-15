@@ -210,6 +210,15 @@ model SiteConfig {
   // Question STRUCTURE + matching logic stay in code (src/utils/advisor.ts); only
   // copy, the on/off toggle and the WhatsApp fallback text are stored here.
   advisorConfig     Json?
+  // Coffee Corner: admin-editable homepage block (image + copy + optional CTA)
+  // shown just above the footer. Off by default until an admin fills it in and
+  // enables it — mirrors the heroImageUrl base64-storage pattern.
+  coffeeCornerEnabled     Boolean?
+  coffeeCornerTitle       String?
+  coffeeCornerDescription String?
+  coffeeCornerImageUrl    String?
+  coffeeCornerCtaLabel    String?
+  coffeeCornerCtaHref     String?
 }
 
 // UNUSED: no code reads or writes this table. Kept (not dropped) to avoid a

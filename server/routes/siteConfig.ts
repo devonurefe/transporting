@@ -38,10 +38,15 @@ siteConfigRouter.get("/site-config", publicReadLimiter, async (req: Authenticate
       return res.json(config || defaultSiteConfig);
     }
     res.setHeader("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
-    if (config && typeof config.heroImageUrl === "string" && config.heroImageUrl.startsWith("data:image/")) {
-      return res.json({ ...config, heroImageUrl: "/site-hero-image" });
+    const publicConfig: any = config || defaultSiteConfig;
+    const patch: Record<string, string> = {};
+    if (typeof publicConfig.heroImageUrl === "string" && publicConfig.heroImageUrl.startsWith("data:image/")) {
+      patch.heroImageUrl = "/site-hero-image";
     }
-    res.json(config || defaultSiteConfig);
+    if (typeof publicConfig.coffeeCornerImageUrl === "string" && publicConfig.coffeeCornerImageUrl.startsWith("data:image/")) {
+      patch.coffeeCornerImageUrl = "/site-coffee-image";
+    }
+    res.json(Object.keys(patch).length ? { ...publicConfig, ...patch } : publicConfig);
   } catch (error) {
     console.error("Error fetching site config:", error);
     res.status(500).json({ error: "Kon siteconfiguratie niet ophalen" });
@@ -54,7 +59,8 @@ const SITE_CONFIG_FIELDS = [
   // menuAdvisorLabel is a legacy AI-advisor column: kept in the schema to avoid a
   // destructive db push, but no longer editable — the advisor feature is gone.
   "menuHomeLabel", "menuCatalogLabel", "menuOrdersLabel", "menuAdminLabel",
-  "contactEmail", "contactPhone", "companyAddress", "kvkNumber", "btwNumber", "companyLegalName"
+  "contactEmail", "contactPhone", "companyAddress", "kvkNumber", "btwNumber", "companyLegalName",
+  "coffeeCornerTitle", "coffeeCornerDescription", "coffeeCornerImageUrl", "coffeeCornerCtaLabel", "coffeeCornerCtaHref"
 ] as const;
 
 // Sanitize one admin-curated Google review. Everything is length-capped and the
@@ -73,18 +79,28 @@ function sanitizeGoogleReview(r: any): { author: string; rating: number; text: s
   };
 }
 
-function pickSiteConfigFields(body: any): Record<string, string | number | null | unknown[]> {
-  const data: Record<string, string | number | null | unknown[]> = {};
+function pickSiteConfigFields(body: any): Record<string, string | number | boolean | null | unknown[]> {
+  const data: Record<string, string | number | boolean | null | unknown[]> = {};
   for (const field of SITE_CONFIG_FIELDS) {
-    // heroImageUrl stores a base64 data URL — allow up to 5 MB; all other fields max 1 KB
-    const maxLen = field === "heroImageUrl" ? 5_000_000 : 1000;
+    // heroImageUrl/coffeeCornerImageUrl store a base64 data URL — allow up to 5 MB;
+    // all other fields max 1 KB (coffeeCornerDescription gets a bit more room).
+    const maxLen = field === "heroImageUrl" || field === "coffeeCornerImageUrl"
+      ? 5_000_000
+      : field === "coffeeCornerDescription" ? 2000 : 1000;
     // Never persist the binary-proxy placeholder: the public feed returns
-    // heroImageUrl="/site-hero-image", so if a stale client echoes it back we must
-    // ignore it rather than overwrite the real stored base64 image with the path.
+    // heroImageUrl="/site-hero-image" / coffeeCornerImageUrl="/site-coffee-image", so
+    // if a stale client echoes it back we must ignore it rather than overwrite the
+    // real stored base64 image with the path.
     if (field === "heroImageUrl" && body?.[field] === "/site-hero-image") continue;
+    if (field === "coffeeCornerImageUrl" && body?.[field] === "/site-coffee-image") continue;
     if (typeof body?.[field] === "string" && body[field].length <= maxLen) {
       data[field] = body[field];
     }
+  }
+
+  // Coffee Corner on/off toggle — plain boolean, defaults off.
+  if ("coffeeCornerEnabled" in (body ?? {})) {
+    data.coffeeCornerEnabled = body.coffeeCornerEnabled === true;
   }
 
   // Google rating: real external number, admin-entered. Accept a value in [0,5]

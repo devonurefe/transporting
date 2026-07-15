@@ -222,6 +222,18 @@ app.get("/site-hero-image", async (req, res) => {
   }
 });
 
+// Serve the admin-configured Coffee Corner image (SiteConfig.coffeeCornerImageUrl)
+// as binary, same reasoning as /site-hero-image — keeps the public site-config
+// feed small and lets this below-the-fold photo be cached/resized.
+app.get("/site-coffee-image", async (req, res) => {
+  try {
+    const cfg = await prisma.siteConfig.findUnique({ where: { id: "default" }, select: { coffeeCornerImageUrl: true } });
+    return await serveStoredImage(res, cfg?.coffeeCornerImageUrl, { defaultWidth: 768, reqWidth: req.query.w });
+  } catch {
+    return res.redirect(DEFAULT_OG_IMAGE);
+  }
+});
+
 // SEO: robots.txt
 app.get("/robots.txt", (_req, res) => {
   const base = (process.env.APP_URL || "https://huurgo.nl").replace(/\/$/, "");

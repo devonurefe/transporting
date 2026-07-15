@@ -37,6 +37,12 @@ interface SiteConfig {
   googleReviewCount?: number | null;
   googleReviews?: GoogleReview[] | null;
   advisorConfig?: AdvisorConfig | null;
+  coffeeCornerEnabled?: boolean;
+  coffeeCornerTitle?: string;
+  coffeeCornerDescription?: string;
+  coffeeCornerImageUrl?: string;
+  coffeeCornerCtaLabel?: string;
+  coffeeCornerCtaHref?: string;
 }
 
 export interface GoogleReview {

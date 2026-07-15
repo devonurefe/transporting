@@ -6,6 +6,7 @@ import { prisma } from "../../prisma/client.js";
 import { AuthenticatedRequest, requireAdmin, requireAuth } from "../middleware/auth.js";
 import { publicReadLimiter } from "../middleware/publicGuard.js";
 import { emailService } from "../services/emailService.js";
+import { audit } from "../utils/audit.js";
 
 export const ordersRouter = Router();
 
@@ -695,6 +696,7 @@ ordersRouter.put("/:id/payment", requireAdmin as any, async (req: AuthenticatedR
       where: { id },
       data: { paymentStatus }
     });
+    audit(req, "order.payment", { entity: "Order", entityId: id, meta: { to: paymentStatus } });
     res.json({
       ...updatedOrder,
       startDate: updatedOrder.startDate.toISOString().split("T")[0],
@@ -1024,6 +1026,7 @@ ordersRouter.put("/:id/status", requireAdmin as any, async (req: AuthenticatedRe
       where: { id },
       data: { status }
     });
+    audit(req, "order.status", { entity: "Order", entityId: id, meta: { from: order.status, to: status } });
 
     // Trigger status update email asynchronously — respects the customer's live-update preference
     if (await customerWantsEmail(updatedOrder.customerId)) {

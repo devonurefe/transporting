@@ -2,41 +2,46 @@ import { Router, Request, Response } from "express";
 import { z } from "zod";
 import crypto from "crypto";
 import { prisma } from "../../prisma/client.js";
-import { hashPassword, comparePassword, generateToken, revokeUserTokens } from "../utils/auth.js";
+import { hashPassword, comparePassword, generateToken, hashToken, invalidateAuthCache } from "../utils/auth.js";
 import { AuthenticatedRequest, authenticateToken, requireAuth, requireAdmin } from "../middleware/auth.js";
 import { emailService } from "../services/emailService.js";
+import { audit } from "../utils/audit.js";
 
 export const authRouter = Router();
 
-// In-memory per-email brute-force throttle (single-process deployment on Render)
-const loginAttempts = new Map<string, { count: number; lockedUntil: number }>();
+// Account-lockout leeft in de DB (Admin/Customer.failedLoginCount + lockedUntil)
+// en overleeft dus restarts. Alleen voor ONBEKENDE e-mailadressen — waar geen
+// rij bestaat om op te tellen — blijft een kleine in-memory throttle nodig.
 const MAX_LOGIN_ATTEMPTS = 5;
 const LOGIN_LOCK_MS = 15 * 60 * 1000; // 15 minutes
 
-function checkLoginThrottle(email: string): boolean {
-  const entry = loginAttempts.get(email);
+const unknownEmailAttempts = new Map<string, { count: number; lockedUntil: number }>();
+
+function checkUnknownEmailThrottle(email: string): boolean {
+  const entry = unknownEmailAttempts.get(email);
   if (!entry) return false;
   if (entry.lockedUntil > Date.now()) return true;
   if (entry.lockedUntil > 0 && entry.lockedUntil <= Date.now()) {
-    loginAttempts.delete(email); // lock expired — reset
+    unknownEmailAttempts.delete(email); // lock expired — reset
   }
   return false;
 }
 
-function recordFailedLogin(email: string): void {
-  const entry = loginAttempts.get(email) ?? { count: 0, lockedUntil: 0 };
+function recordUnknownEmailAttempt(email: string): void {
+  const entry = unknownEmailAttempts.get(email) ?? { count: 0, lockedUntil: 0 };
   entry.count += 1;
   if (entry.count >= MAX_LOGIN_ATTEMPTS) entry.lockedUntil = Date.now() + LOGIN_LOCK_MS;
-  loginAttempts.set(email, entry);
+  unknownEmailAttempts.set(email, entry);
 }
 
-function clearLoginThrottle(email: string): void {
-  loginAttempts.delete(email);
-}
+const LOCKED_MSG = (lockedUntil: Date) => {
+  const minutes = Math.max(1, Math.ceil((lockedUntil.getTime() - Date.now()) / 60000));
+  return `Te veel mislukte pogingen. Probeer het over ${minutes} ${minutes === 1 ? "minuut" : "minuten"} opnieuw.`;
+};
 
-const PASSWORD_POLICY = z
+export const PASSWORD_POLICY = z
   .string()
-  .min(8, "Wachtwoord moet minimaal 8 tekens bevatten")
+  .min(10, "Wachtwoord moet minimaal 10 tekens bevatten")
   .regex(/[a-zA-Z]/, "Wachtwoord moet minimaal één letter bevatten")
   .regex(/[0-9]/, "Wachtwoord moet minimaal één cijfer bevatten");
 
@@ -95,7 +100,7 @@ authRouter.post("/register", async (req: AuthenticatedRequest, res: Response) =>
         avatarUrl: validated.avatarUrl || null,
         marketingConsent: validated.marketingConsent ?? false,
         isEmailVerified: autoVerify,
-        verificationToken: autoVerify ? null : verificationToken,
+        verificationToken: autoVerify ? null : hashToken(verificationToken),
         verificationExpiry: autoVerify ? null : new Date(Date.now() + 24 * 60 * 60 * 1000)
       }
     });
@@ -138,11 +143,7 @@ authRouter.post("/login", async (req: AuthenticatedRequest, res: Response) => {
   try {
     const validated = loginSchema.parse(req.body);
     const emailKey = validated.email.toLowerCase();
-
-    // Per-email brute-force gate
-    if (checkLoginThrottle(emailKey)) {
-      return res.status(429).json({ error: "Te veel mislukte pogingen. Probeer het na 15 minuten opnieuw." });
-    }
+    const now = new Date();
 
     // Try finding admin first
     const admin = await prisma.admin.findUnique({
@@ -150,17 +151,40 @@ authRouter.post("/login", async (req: AuthenticatedRequest, res: Response) => {
     });
 
     if (admin) {
+      const adminActor = { id: admin.id, email: admin.email, role: "admin" };
+
+      if (admin.lockedUntil && admin.lockedUntil > now) {
+        return res.status(429).json({ error: LOCKED_MSG(admin.lockedUntil) });
+      }
+
       const isMatch = await comparePassword(validated.password, admin.passwordHash);
-      if (!isMatch) {
-        recordFailedLogin(emailKey);
+      if (!isMatch || !admin.isActive) {
+        // Gedeactiveerd account krijgt hetzelfde generieke antwoord (geen enumeratie)
+        const newCount = admin.failedLoginCount + 1;
+        const locks = isMatch ? false : newCount >= MAX_LOGIN_ATTEMPTS;
+        if (!isMatch) {
+          await prisma.admin.update({
+            where: { id: admin.id },
+            data: {
+              failedLoginCount: newCount,
+              lockedUntil: locks ? new Date(Date.now() + LOGIN_LOCK_MS) : admin.lockedUntil
+            }
+          });
+        }
+        audit(req, locks ? "login.locked" : "login.failed", { actor: adminActor, meta: !admin.isActive && isMatch ? { reason: "inactive" } : undefined });
         return res.status(400).json({ error: "Ongeldige inloggegevens" });
       }
 
-      clearLoginThrottle(emailKey);
+      await prisma.admin.update({
+        where: { id: admin.id },
+        data: { failedLoginCount: 0, lockedUntil: null, lastLoginAt: now }
+      });
+      audit(req, "login.success", { actor: adminActor });
       const token = generateToken({
         id: admin.id,
         email: admin.email,
-        role: admin.role
+        role: admin.role,
+        v: admin.tokenVersion
       });
 
       return res.json({
@@ -180,9 +204,20 @@ authRouter.post("/login", async (req: AuthenticatedRequest, res: Response) => {
     });
 
     if (customer) {
+      if (customer.lockedUntil && customer.lockedUntil > now) {
+        return res.status(429).json({ error: LOCKED_MSG(customer.lockedUntil) });
+      }
+
       const isMatch = await comparePassword(validated.password, customer.passwordHash);
       if (!isMatch) {
-        recordFailedLogin(emailKey);
+        const newCount = customer.failedLoginCount + 1;
+        await prisma.customer.update({
+          where: { id: customer.id },
+          data: {
+            failedLoginCount: newCount,
+            lockedUntil: newCount >= MAX_LOGIN_ATTEMPTS ? new Date(Date.now() + LOGIN_LOCK_MS) : customer.lockedUntil
+          }
+        });
         return res.status(400).json({ error: "Ongeldige inloggegevens" });
       }
 
@@ -193,11 +228,15 @@ authRouter.post("/login", async (req: AuthenticatedRequest, res: Response) => {
         });
       }
 
-      clearLoginThrottle(emailKey);
+      await prisma.customer.update({
+        where: { id: customer.id },
+        data: { failedLoginCount: 0, lockedUntil: null }
+      });
       const token = generateToken({
         id: customer.id,
         email: customer.email,
-        role: "customer"
+        role: "customer",
+        v: customer.tokenVersion
       });
 
       return res.json({
@@ -217,7 +256,11 @@ authRouter.post("/login", async (req: AuthenticatedRequest, res: Response) => {
       });
     }
 
-    recordFailedLogin(emailKey);
+    // Onbekend e-mailadres: geen DB-rij om op te tellen → in-memory throttle
+    if (checkUnknownEmailThrottle(emailKey)) {
+      return res.status(429).json({ error: "Te veel mislukte pogingen. Probeer het na 15 minuten opnieuw." });
+    }
+    recordUnknownEmailAttempt(emailKey);
     return res.status(400).json({ error: "Ongeldige inloggegevens" });
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -357,7 +400,7 @@ authRouter.get("/verify", async (req: Request, res: Response) => {
 
   try {
     const customer = await prisma.customer.findFirst({
-      where: { verificationToken: token }
+      where: { verificationToken: hashToken(token) }
     });
 
     if (!customer || (customer.verificationExpiry && customer.verificationExpiry < new Date())) {
@@ -405,8 +448,9 @@ authRouter.post("/forgot-password", async (req: Request, res: Response) => {
     if (admin) {
       await prisma.admin.update({
         where: { id: admin.id },
-        data: { passwordResetToken: resetToken, passwordResetExpiry: resetExpiry }
+        data: { passwordResetToken: hashToken(resetToken), passwordResetExpiry: resetExpiry }
       });
+      audit(req, "password.reset_requested", { actor: { id: admin.id, email: admin.email, role: "admin" } });
       await emailService.sendPasswordResetEmail(admin.email, admin.name, resetToken, appUrl);
       return res.json(SUCCESS_MSG);
     }
@@ -414,7 +458,7 @@ authRouter.post("/forgot-password", async (req: Request, res: Response) => {
     if (customer) {
       await prisma.customer.update({
         where: { id: customer.id },
-        data: { passwordResetToken: resetToken, passwordResetExpiry: resetExpiry }
+        data: { passwordResetToken: hashToken(resetToken), passwordResetExpiry: resetExpiry }
       });
       await emailService.sendPasswordResetEmail(customer.email, customer.name, resetToken, appUrl);
     }
@@ -440,21 +484,32 @@ authRouter.post("/reset-password", async (req: Request, res: Response) => {
   try {
     const now = new Date();
 
+    const tokenHash = hashToken(token);
+
     // Check admin reset token first
     const admin = await prisma.admin.findFirst({
-      where: { passwordResetToken: token, passwordResetExpiry: { gt: now } }
+      where: { passwordResetToken: tokenHash, passwordResetExpiry: { gt: now } }
     });
     if (admin) {
       await prisma.admin.update({
         where: { id: admin.id },
-        data: { passwordHash: await hashPassword(newPassword), passwordResetToken: null, passwordResetExpiry: null }
+        data: {
+          passwordHash: await hashPassword(newPassword),
+          passwordResetToken: null,
+          passwordResetExpiry: null,
+          failedLoginCount: 0,
+          lockedUntil: null,
+          tokenVersion: { increment: 1 } // bestaande sessies ongeldig na reset
+        }
       });
+      invalidateAuthCache(admin.id);
+      audit(req, "password.reset_completed", { actor: { id: admin.id, email: admin.email, role: "admin" } });
       return res.json({ success: true, message: "Wachtwoord succesvol gewijzigd. U kunt nu inloggen." });
     }
 
     // Check customer reset token
     const customer = await prisma.customer.findFirst({
-      where: { passwordResetToken: token, passwordResetExpiry: { gt: now } }
+      where: { passwordResetToken: tokenHash, passwordResetExpiry: { gt: now } }
     });
     if (!customer) {
       return res.status(400).json({ error: "Resetlink is ongeldig of verlopen. Vraag een nieuwe aan." });
@@ -462,8 +517,17 @@ authRouter.post("/reset-password", async (req: Request, res: Response) => {
 
     await prisma.customer.update({
       where: { id: customer.id },
-      data: { passwordHash: await hashPassword(newPassword), passwordResetToken: null, passwordResetExpiry: null }
+      data: {
+        passwordHash: await hashPassword(newPassword),
+        passwordResetToken: null,
+        passwordResetExpiry: null,
+        failedLoginCount: 0,
+        lockedUntil: null,
+        tokenVersion: { increment: 1 }
+      }
     });
+    invalidateAuthCache(customer.id);
+    audit(req, "password.reset_completed", { actor: { id: customer.id, email: customer.email, role: "customer" } });
 
     return res.json({ success: true, message: "Wachtwoord succesvol gewijzigd. U kunt nu inloggen." });
   } catch (error) {
@@ -491,7 +555,7 @@ authRouter.post("/change-password", authenticateToken, requireAuth, async (req: 
       }
       await prisma.admin.update({
         where: { id: admin.id },
-        data: { passwordHash: await hashPassword(newPassword) }
+        data: { passwordHash: await hashPassword(newPassword), tokenVersion: { increment: 1 } }
       });
     } else {
       const customer = await prisma.customer.findUnique({ where: { id: req.user!.id } });
@@ -500,10 +564,11 @@ authRouter.post("/change-password", authenticateToken, requireAuth, async (req: 
       }
       await prisma.customer.update({
         where: { id: customer.id },
-        data: { passwordHash: await hashPassword(newPassword) }
+        data: { passwordHash: await hashPassword(newPassword), tokenVersion: { increment: 1 } }
       });
     }
-    revokeUserTokens(req.user!.id);
+    invalidateAuthCache(req.user!.id);
+    audit(req, "password.changed");
     return res.json({ success: true, message: "Wachtwoord succesvol gewijzigd." });
   } catch (error) {
     console.error("Change password error:", error);
@@ -535,7 +600,7 @@ authRouter.post("/resend-verification", async (req: Request, res: Response) => {
     const newToken = crypto.randomBytes(32).toString("hex");
     await prisma.customer.update({
       where: { id: customer.id },
-      data: { verificationToken: newToken, verificationExpiry: new Date(Date.now() + 24 * 60 * 60 * 1000) }
+      data: { verificationToken: hashToken(newToken), verificationExpiry: new Date(Date.now() + 24 * 60 * 60 * 1000) }
     });
 
     const protocol = req.secure || req.headers["x-forwarded-proto"] === "https" ? "https" : "http";

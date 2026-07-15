@@ -329,10 +329,6 @@ export default function App() {
     setSystemLogs(prev => [newLog, ...prev]);
   }, []);
 
-  const handleClearSystemLogs = useCallback(() => {
-    setSystemLogs([]);
-  }, []);
-
   // Auto-log page visits for visitors live activity tracking
   useEffect(() => {
     const tabName = location.pathname === "/" ? "home" : location.pathname.substring(1);
@@ -856,7 +852,6 @@ export default function App() {
                   setIsAdminMode={setIsAdminMode}
                   systemLogs={systemLogs}
                   onAddSystemLog={handleAddSystemLog}
-                  onClearSystemLogs={handleClearSystemLogs}
                 />
               </ErrorBoundary>
             } />

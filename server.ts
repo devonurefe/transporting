@@ -14,6 +14,7 @@ import { authRouter } from "./server/routes/auth.js";
 import { prisma } from "./prisma/client.js";
 import { emailService } from "./server/services/emailService.js";
 import { authenticateToken } from "./server/middleware/auth.js";
+import { pruneAuditLogs } from "./server/utils/audit.js";
 import { requestLogger } from "./server/middleware/logger.js";
 import { errorHandler } from "./server/middleware/errorHandler.js";
 import { validateEnvironment } from "./server/utils/env.js";
@@ -759,6 +760,8 @@ function scheduleDailyReminders() {
 
   const fireReminders = async () => {
     await sendBatch();
+    // Piggyback op de dagelijkse cron: audittrail-retentie (180 dagen)
+    pruneAuditLogs().catch(() => {});
     // Schedule next run at the next 07:00 Amsterdam time
     setTimeout(fireReminders, msUntilAmsterdam7am() + 60_000); // +60s buffer past the hour
   };

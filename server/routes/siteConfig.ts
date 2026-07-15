@@ -3,6 +3,7 @@ import { prisma } from "../../prisma/client.js";
 import { requireAdmin } from "../middleware/auth.js";
 import { AuthenticatedRequest } from "../middleware/auth.js";
 import { publicReadLimiter } from "../middleware/publicGuard.js";
+import { audit } from "../utils/audit.js";
 
 export const siteConfigRouter = Router();
 
@@ -147,6 +148,8 @@ siteConfigRouter.post("/site-config", requireAdmin as any, async (req: Authentic
       update: data,
       create: { ...defaultSiteConfig, ...data, id: "default" }
     });
+    // Veldnamen volstaan — waarden kunnen base64-afbeeldingen (hero) bevatten
+    audit(req, "siteconfig.updated", { entity: "SiteConfig", entityId: "default", meta: { fields: Object.keys(data).slice(0, 40) } });
     res.json({ success: true, siteConfig: updated });
   } catch (error) {
     console.error("Error updating site config:", error);
@@ -229,6 +232,7 @@ siteConfigRouter.post("/campaign-rules", requireAdmin as any, async (req: Authen
         campaignRules: rules
       }
     });
+    audit(req, "campaignrules.updated", { entity: "SiteConfig", entityId: "default" });
     res.json({ success: true });
   } catch (error) {
     console.error("Error saving campaign rules:", error);
@@ -289,6 +293,7 @@ siteConfigRouter.post("/advisor-config", requireAdmin as any, async (req: Authen
       update: { advisorConfig } as any,
       create: { ...defaultSiteConfig, advisorConfig, id: "default" } as any,
     });
+    audit(req, "advisorconfig.updated", { entity: "SiteConfig", entityId: "default" });
     res.json({ success: true });
   } catch (error) {
     console.error("Error saving advisor config:", error);
@@ -338,6 +343,7 @@ siteConfigRouter.post("/categories", requireAdmin as any, async (req: Authentica
       });
     }
     const categories = await prisma.category.findMany();
+    audit(req, "categories.updated", { entity: "Category", meta: { count: categories.length } });
     res.json({ success: true, customCategories: categories });
   } catch (error) {
     console.error("Error updating categories:", error);

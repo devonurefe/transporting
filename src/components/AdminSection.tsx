@@ -70,7 +70,6 @@ interface AdminSectionProps {
   userProfiles?: UserProfile[];
   systemLogs: any[];
   onAddSystemLog: (type: "login" | "logout" | "signup" | "booking" | "fleet" | "status" | "system", user: string, description: string) => void;
-  onClearSystemLogs: () => void;
 }
 
 export default function AdminSection({
@@ -79,7 +78,6 @@ export default function AdminSection({
   userProfiles,
   systemLogs,
   onAddSystemLog,
-  onClearSystemLogs,
 }: AdminSectionProps) {
   const [subTab, setSubTab] = useState<AdminSubTab>("dashboard");
   const [ordersFilter, setOrdersFilter] = useState<string[]>([]);
@@ -136,7 +134,7 @@ export default function AdminSection({
     { id: "customizer", label: tAdmin("adminTabCustomizer"), icon: Settings },
     { id: "accounting", label: al("Omzet & Export", "Revenue & Export", "Ciro ve Dışa Aktarma"), icon: Database },
     { id: "diagnostics", label: al("Systeemdiagnose", "System Diagnostics", "Sistem Teşhisi"), icon: ShieldAlert },
-    { id: "logs", label: tAdmin("adminTabLogs"), icon: Terminal, count: systemLogs.length },
+    { id: "logs", label: tAdmin("adminTabLogs"), icon: Terminal },
   ];
 
   // Admin login credentials
@@ -528,14 +526,7 @@ export default function AdminSection({
                   />
                 )}
                 {subTab === "logs" && (
-                  <AdminLogs 
-                    key="logs" 
-                    systemLogs={systemLogs} 
-                    onClearSystemLogs={onClearSystemLogs} 
-                    userProfiles={userProfiles || []} 
-                    onAddSystemLog={onAddSystemLog} 
-                    adminLanguage={adminLanguage}
-                  />
+                  <AdminLogs key="logs" adminLanguage={adminLanguage} />
                 )}
               </AnimatePresence>
             </React.Suspense>

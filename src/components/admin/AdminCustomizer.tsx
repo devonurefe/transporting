@@ -788,31 +788,24 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
                 )}
                 <input type="file" accept="image/*" className="sr-only" disabled={isUploadingCoffeeCorner} onChange={handleCoffeeCornerImageUpload} />
               </label>
-              {coffeeCornerImageUrl && coffeeCornerImageUrl !== "/site-coffee-image" && (
+              <input
+                type="url"
+                value={coffeeCornerImageUrl === "/site-coffee-image" ? "" : coffeeCornerImageUrl}
+                onChange={(e) => setCoffeeCornerImageUrl(e.target.value)}
+                placeholder={t("of URL plakken... (leeg = placeholder-icoon)", "or paste URL... (empty = placeholder icon)", "veya URL yapıştır... (boş = yer tutucu ikon)")}
+                className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white font-mono"
+              />
+              {coffeeCornerImageUrl && (
                 <div className="rounded-xl overflow-hidden border border-slate-200 bg-slate-100 h-24">
                   <img
-                    src={coffeeCornerImageUrl}
+                    src={coffeeCornerImageUrl === "/site-coffee-image" ? "/site-coffee-image?w=320" : coffeeCornerImageUrl}
                     alt="Coffee Corner preview"
                     className="w-full h-full object-cover"
                     onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                   />
                 </div>
               )}
-              {coffeeCornerImageUrl === "/site-coffee-image" && (
-                <div className="rounded-xl overflow-hidden border border-slate-200 bg-slate-100 h-24">
-                  <img src="/site-coffee-image?w=320" alt="Coffee Corner preview" className="w-full h-full object-cover" />
-                </div>
-              )}
-              {coffeeCornerImageUrl && (
-                <button
-                  type="button"
-                  onClick={() => setCoffeeCornerImageUrl("")}
-                  className="text-[11px] font-bold text-rose-600 hover:text-rose-700 cursor-pointer bg-transparent border-none"
-                >
-                  {t("Afbeelding verwijderen", "Remove image", "Görseli kaldır")}
-                </button>
-              )}
-              <p className="text-[10px] text-slate-400">{t("Leeg = placeholder-icoon getoond in het blok.", "Empty = placeholder icon shown in the block.", "Boş = blokta yer tutucu ikon gösterilir.")}</p>
+              <p className="text-[10px] text-slate-400">{t("PNG, JPG en WebP worden geaccepteerd. Aanbevolen: liggende foto (bijv. 1200×800px), scherp en zonder ingebakken tekst — hij wordt uitgesneden (bijgesneden) om de kaart te vullen. Leeg laten = placeholder-icoon.", "PNG, JPG and WebP accepted. Recommended: landscape photo (e.g. 1200×800px), sharp and without baked-in text — it gets cropped to fill the card. Leave empty = placeholder icon.", "PNG, JPG ve WebP kabul edilir. Önerilen: yatay fotoğraf (örn. 1200×800px), net ve içine yazı gömülmemiş — kartı doldurmak için kırpılır. Boş bırak = yer tutucu ikon.")}</p>
             </div>
           </div>
 

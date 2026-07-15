@@ -492,10 +492,7 @@ const defaultMachines = [
     weeklyOnly: false,
     pickupOnly: true,
     packageContents: "Inklapbaar hoofdframe (Module A); Werkplatform; Zwenkwielenset met rem; **Wettelijk verplichte driehoekstabilisatoren (inbegrepen)**",
-    crossSellAddons: [
-      { id: "altrex-rs44-uitbreiding", name: "Uitbreidingsset (Module B)", description: "Extra originele Altrex bovenbuizenset om uw werkhoogte van 2,75 m naar 4 m te verhogen.", pricePerWeek: 19 },
-      { id: "altrex-rs44-toolbuddy", name: "Altrex Toolbuddy", description: "Praktische ophanghaak zodat uw gereedschap en verfemmer binnen handbereik blijven tijdens het werken.", pricePerWeek: 5 }
-    ]
+    crossSellAddons: []
   },
 
   // CATEGORIE 5: Verticale Mastliften

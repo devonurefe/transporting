@@ -341,6 +341,15 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
       safety: ["ladderlift"],
       rijplaten: ["aanhanger", "kamersteiger", "ecolift", "ladderlift"],
     };
+    // Validated customer-entered amount for a global add-on. Only "rijplaten" is
+    // quantity-based (1–999, integer); all others are a single unit. Returns null
+    // when the client sent an invalid amount so the caller can reject the order.
+    const globalAddonQty = (id: string, a: any): number | null => {
+      if (id !== "rijplaten") return 1;
+      const q = Number(a?.quantity);
+      if (!Number.isInteger(q) || q < 1 || q > 999) return null;
+      return q;
+    };
     const machineCategory = String((machine as any).category ?? "");
     const rawAddons = Array.isArray(orderData.addons) ? orderData.addons : [];
     let addonsTotal = 0;
@@ -353,7 +362,14 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
         if (GLOBAL_ADDON_EXCLUDED_CATEGORIES[id].includes(machineCategory)) {
           return res.status(400).json({ error: "Ongeldige toevoeging in bestelling" });
         }
-        addonsTotal += GLOBAL_ADDON_RATES[id] * addonWeeks;
+        // Rijplaten is quantity-based (customer types how many plates they need);
+        // every other global add-on is a single unit. Never trust the client price —
+        // validate the amount and recompute here.
+        const qty = globalAddonQty(id, a);
+        if (qty === null) {
+          return res.status(400).json({ error: "Ongeldig aantal rijplaten" });
+        }
+        addonsTotal += GLOBAL_ADDON_RATES[id] * addonWeeks * qty;
       } else if (crossSellMap.has(id)) {
         addonsTotal += addonPrice(crossSellMap.get(id)!);
       } else {
@@ -603,7 +619,10 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
           addons: JSON.stringify(rawAddons.map((a: any) => {
             const id = String(a.id ?? "");
             if (id === "safety") return { id: "safety", name: "Veiligheidsset Pro", price: 15 * addonWeeks };
-            if (id === "rijplaten") return { id: "rijplaten", name: "Rijplaten", price: 6 * addonWeeks };
+            if (id === "rijplaten") {
+              const qty = globalAddonQty("rijplaten", a) ?? 1;
+              return { id: "rijplaten", name: `Rijplaten (${qty} ${qty === 1 ? "stuk" : "stuks"})`, price: 6 * addonWeeks * qty, quantity: qty };
+            }
             const sa = crossSellMap.get(id);
             return { id, name: sa?.name ?? id, price: sa ? addonPrice(sa) : 0 };
           })),

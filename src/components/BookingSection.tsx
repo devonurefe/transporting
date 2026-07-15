@@ -19,11 +19,16 @@ const GLOBAL_ADDONS: Record<string, { name: string; pricePerWeek: number }> = {
   safety: { name: "Veiligheidsset Pro", pricePerWeek: 15 },
   rijplaten: { name: "Rijplaten", pricePerWeek: 6 },
 };
-function globalAddonLine(id: string, days: number): { id: string; name: string; price: number } {
+// qty is the customer-chosen amount (currently only Rijplaten is quantity-based —
+// the customer types how many plates they need). Every other global add-on uses qty 1.
+function globalAddonLine(id: string, days: number, qty = 1): { id: string; name: string; price: number } {
   const def = GLOBAL_ADDONS[id];
   const weeks = billableWeeks(days);
-  const price = def.pricePerWeek * weeks;
-  const name = weeks > 1 ? `${def.name} (${weeks}× €${def.pricePerWeek})` : def.name;
+  const price = def.pricePerWeek * weeks * qty;
+  const weekSuffix = weeks > 1 ? ` (${weeks}× €${def.pricePerWeek})` : "";
+  const name = id === "rijplaten"
+    ? `${def.name} (${qty} ${qty === 1 ? "stuk" : "stuks"})${weekSuffix}`
+    : `${def.name}${weekSuffix}`;
   return { id, name, price };
 }
 
@@ -152,6 +157,9 @@ export default function BookingSection({
 
   // Addon / Shopping Cart Options state
   const [selectedAddons, setSelectedAddons] = useState<string[]>([]);
+  // Rijplaten is quantity-based — the customer types how many plates they need.
+  // Default 4 (one under each wheel); clamped/validated again on the server.
+  const [rijplatenQty, setRijplatenQty] = useState<number>(4);
 
   // Delivery distance & time slot
   const [deliveryDistanceKm, setDeliveryDistanceKm] = useState<number | null>(null);
@@ -392,7 +400,7 @@ export default function BookingSection({
 
       for (const id of Object.keys(GLOBAL_ADDONS)) {
         if (!selectedAddons.includes(id)) continue;
-        const line = globalAddonLine(id, totalDays);
+        const line = globalAddonLine(id, totalDays, id === "rijplaten" ? rijplatenQty : 1);
         addonCost += line.price;
         addonDetails.push(line);
       }
@@ -507,7 +515,7 @@ export default function BookingSection({
 
     for (const id of Object.keys(GLOBAL_ADDONS)) {
       if (!selectedAddons.includes(id)) continue;
-      const line = globalAddonLine(id, days);
+      const line = globalAddonLine(id, days, id === "rijplaten" ? rijplatenQty : 1);
       addonCost += line.price;
       addonDetails.push(line);
     }
@@ -720,12 +728,13 @@ export default function BookingSection({
             const driver = 0;
 
             let addonCost = 0;
-            const addonsList: { id: string; name: string; price: number; billing: "daily" | "flat" | "weekly" }[] = [];
+            const addonsList: { id: string; name: string; price: number; billing: "daily" | "flat" | "weekly"; quantity?: number }[] = [];
             for (const id of Object.keys(GLOBAL_ADDONS)) {
               if (!selectedAddons.includes(id)) continue;
-              const line = globalAddonLine(id, days);
+              const qty = id === "rijplaten" ? rijplatenQty : 1;
+              const line = globalAddonLine(id, days, qty);
               addonCost += line.price;
-              addonsList.push({ ...line, billing: "weekly" });
+              addonsList.push({ ...line, billing: "weekly", quantity: qty });
             }
             // Product-specific cross-sell extras (per started week, server recomputes authoritatively)
             for (const a of (item.machine.crossSellAddons ?? [])) {
@@ -841,7 +850,7 @@ export default function BookingSection({
     () => calculationSummary(),
     // calculationSummary closes over these values — re-run only when they change
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [cartItems, selectedAddons, deliveryType, customerProfile, campaignRules, startDate, endDate]
+    [cartItems, selectedAddons, rijplatenQty, deliveryType, customerProfile, campaignRules, startDate, endDate]
   );
 
   // Reservation period for the price summary box — neutral copy when the cart
@@ -944,6 +953,8 @@ export default function BookingSection({
                     setDeliveryAddress={setDeliveryAddress}
                     selectedAddons={selectedAddons}
                     setSelectedAddons={setSelectedAddons}
+                    rijplatenQty={rijplatenQty}
+                    setRijplatenQty={setRijplatenQty}
                     validationError={validationError}
                     setValidationError={setValidationError}
                     isAvailable={cartItems.length > 0 && cartItems.every(item => {

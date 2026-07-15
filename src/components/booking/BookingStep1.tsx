@@ -36,6 +36,8 @@ interface BookingStep1Props {
   setDeliveryAddress: (address: string) => void;
   selectedAddons: string[];
   setSelectedAddons: (addons: string[]) => void;
+  rijplatenQty: number;
+  setRijplatenQty: (qty: number) => void;
   validationError: string | null;
   setValidationError: (err: string | null) => void;
   isAvailable: boolean;
@@ -68,6 +70,8 @@ export default function BookingStep1({
   setDeliveryAddress,
   selectedAddons,
   setSelectedAddons,
+  rijplatenQty,
+  setRijplatenQty,
   validationError,
   setValidationError,
   isAvailable,
@@ -84,6 +88,9 @@ export default function BookingStep1({
   const t = useLanguageStore((state) => state.t);
   const vatDisplay = useAppStore((state) => state.vatDisplay);
   const [previewMachine, setPreviewMachine] = useState<Machine | null>(null);
+  // Expandable long-form explanation for the Rijplaten add-on (kept collapsed by
+  // default so the compact add-on card stays readable).
+  const [rijplatenInfoOpen, setRijplatenInfoOpen] = useState(false);
   // Set once the customer tries to proceed — gates the red "missing field"
   // highlights below so they never show before the first attempt.
   const [attempted, setAttempted] = useState(false);
@@ -498,6 +505,7 @@ export default function BookingStep1({
                 setSelectedAddons(selectedAddons.filter(x => x !== "rijplaten"));
               } else {
                 setSelectedAddons([...selectedAddons, "rijplaten"]);
+                if (!rijplatenQty || rijplatenQty < 1) setRijplatenQty(4);
               }
             }}
             className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between ${
@@ -508,7 +516,7 @@ export default function BookingStep1({
           >
             <div>
               <div className="flex items-center justify-between mb-2">
-                <h4 className="text-xs font-bold text-slate-900">Rijplaten</h4>
+                <h4 className="text-xs font-bold text-slate-900">Rijplaten <span className="font-semibold text-slate-500">(aantal naar keuze)</span></h4>
                 <input
                   type="checkbox"
                   checked={selectedAddons.includes("rijplaten")}
@@ -520,8 +528,66 @@ export default function BookingStep1({
                 Bij een helling, drempel of oneffen terrein, op zachte ondergrond (zoals gras), of als u de
                 ondergrond niet wilt beschadigen is het gebruik van rijplaten noodzakelijk.
               </p>
+
+              {/* Quantity picker + info — only when the add-on is selected. Clicks here
+                  must not bubble up to the card's toggle handler. */}
+              {selectedAddons.includes("rijplaten") && (
+                <div className="mt-3 pt-3 border-t border-slate-200" onClick={(e) => e.stopPropagation()}>
+                  <label className="flex items-center justify-between gap-2">
+                    <span className="text-xs font-bold text-slate-800">Aantal platen</span>
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      min={1}
+                      max={999}
+                      value={rijplatenQty}
+                      onChange={(e) => {
+                        const n = parseInt(e.target.value, 10);
+                        setRijplatenQty(Number.isNaN(n) ? 1 : Math.min(999, Math.max(1, n)));
+                      }}
+                      className="w-20 text-center text-sm font-bold text-slate-900 border border-slate-300 rounded-lg py-1.5 px-2 focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white"
+                    />
+                  </label>
+                  <p className="text-xs text-slate-500 mt-1.5 font-mono">
+                    {rijplatenQty} × €6,- = <span className="font-bold text-slate-700">€{rijplatenQty * 6},- per week</span>
+                  </p>
+
+                  <button
+                    type="button"
+                    onClick={() => setRijplatenInfoOpen((v) => !v)}
+                    className="mt-2.5 inline-flex items-center gap-1 text-xs font-bold text-orange-600 hover:text-orange-700 bg-transparent border-none p-0 cursor-pointer"
+                  >
+                    <Info className="h-3.5 w-3.5" />
+                    {rijplatenInfoOpen ? "Minder info" : "Meer info — hoeveel platen heb ik nodig?"}
+                  </button>
+
+                  {rijplatenInfoOpen && (
+                    <div className="mt-2 space-y-2 text-xs text-slate-600 leading-relaxed">
+                      <p>
+                        Het gebruik van rijplaten is essentieel voor een veilige, stabiele en efficiënte
+                        werkomgeving. Eén enkele rijplaat is in de praktijk zelden voldoende. Kies het juiste
+                        aantal op basis van uw situatie:
+                      </p>
+                      <ul className="list-disc pl-4 space-y-1">
+                        <li><span className="font-semibold text-slate-700">Bescherming van de ondergrond:</span> voorkom krassen, spoorvorming of verzakkingen aan beton, asfalt, bestrating of vloeren door de druk te verdelen.</li>
+                        <li><span className="font-semibold text-slate-700">Zachte ondergrond &amp; wegzakken:</span> op onverhard terrein, modderige bodems of zandwegen creëren rijplaten een stabiele rijbaan naar de werkplek.</li>
+                        <li><span className="font-semibold text-slate-700">Gazon en beplanting:</span> bescherm gras en tuinen tegen diepe sporen, zodat het terrein onbeschadigd achterblijft.</li>
+                        <li><span className="font-semibold text-slate-700">Hellingscorrectie &amp; waterpas stellen:</span> op ongelijk terrein weigert de machine om veiligheidsredenen te stijgen — met (gestapelde) rijplaten onder de wielen stelt u de machine waterpas.</li>
+                      </ul>
+                      <div className="rounded-lg bg-sky-50 border border-sky-200 p-2.5 text-sky-800">
+                        <span className="font-bold">Advies voor het aantal:</span>
+                        <ul className="mt-1 space-y-0.5">
+                          <li><span className="font-semibold">4 stuks</span> — vaste standplaats (onder elke band één plaat)</li>
+                          <li><span className="font-semibold">6–10 stuks</span> — kort verplaatsbaar rijpad naar de werkplek</li>
+                          <li><span className="font-semibold">12+ stuks</span> — complete rijbaan of volledige bescherming van gazon/zachte grond</li>
+                        </ul>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
-            <span className="text-xs font-mono font-bold text-slate-700 mt-3 block">€6,- / week (elke 7 dagen +€6)</span>
+            <span className="text-xs font-mono font-bold text-slate-700 mt-3 block">€6,- per week per stuk (elke 7 dagen +€6)</span>
           </div>
           )}
 

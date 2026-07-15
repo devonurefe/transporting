@@ -350,6 +350,54 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
   const [infoAdvantages, setInfoAdvantages] = useState("");
   const [infoNotFor, setInfoNotFor] = useState("");
 
+  // Basisvelden (naam, meervoud, hoogte, prijs, omschrijving) — los van de
+  // info-editor hierboven. Dit was voorheen alleen via een directe
+  // database-wijziging te herstellen (bijv. de "Toe & Go" typefout), zonder
+  // enig scherm om het zelf recht te zetten.
+  const [editingBasicCatId, setEditingBasicCatId] = useState<string | null>(null);
+  const [basicLabel, setBasicLabel] = useState("");
+  const [basicListLabel, setBasicListLabel] = useState("");
+  const [basicDesc, setBasicDesc] = useState("");
+  const [basicHeights, setBasicHeights] = useState("");
+  const [basicPrice, setBasicPrice] = useState("");
+  const [isSavingBasic, setIsSavingBasic] = useState(false);
+
+  const handleOpenBasicEditor = (cat: typeof customCategories[0]) => {
+    if (editingBasicCatId === cat.id) { setEditingBasicCatId(null); return; }
+    setBasicLabel(cat.label);
+    setBasicListLabel(cat.listLabel || "");
+    setBasicDesc(cat.desc);
+    setBasicHeights(cat.heights);
+    setBasicPrice(cat.price);
+    setEditingBasicCatId(cat.id);
+  };
+
+  const handleSaveBasicFields = async (catId: string) => {
+    if (!basicLabel.trim()) {
+      showAdminToast(t("Groep Label mag niet leeg zijn.", "Group Label cannot be empty.", "Grup Etiketi boş olamaz."), "error");
+      return;
+    }
+    setIsSavingBasic(true);
+    const updated = customCategories.map(c =>
+      c.id === catId ? {
+        ...c,
+        label: basicLabel.trim(),
+        listLabel: basicListLabel.trim() || basicLabel.trim(),
+        desc: basicDesc.trim(),
+        heights: basicHeights.trim(),
+        price: basicPrice.trim()
+      } : c
+    );
+    const success = await updateCategories(updated);
+    setIsSavingBasic(false);
+    if (success) {
+      setEditingBasicCatId(null);
+      onAddSystemLog("system", adminUser?.name ?? "Admin", t(`Categorienaam bijgewerkt: ${catId}`, `Category name updated: ${catId}`, `Kategori adı güncellendi: ${catId}`));
+    } else {
+      showAdminToast(t("Fout bij opslaan van categorie.", "Error saving category.", "Kategori kaydedilirken hata oluştu."), "error");
+    }
+  };
+
   const handleOpenInfoEditor = (cat: typeof customCategories[0]) => {
     if (editingInfoCatId === cat.id) { setEditingInfoCatId(null); return; }
     const info = (cat as any).infoContent;
@@ -825,6 +873,83 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
                     <span>{t("Prijzen: ", "Prices: ", "Ücretler: ")}{cat.price}</span>
                   </div>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => handleOpenBasicEditor(cat)}
+                  className="w-full flex items-center justify-between px-3.5 py-2 border-t border-slate-100 text-[10px] font-bold text-amber-700 hover:bg-amber-50 transition-colors cursor-pointer bg-transparent"
+                >
+                  <span>{t("Naam & prijs bewerken", "Edit name & price", "Ad ve fiyatı düzenle")}</span>
+                  <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${editingBasicCatId === cat.id ? "rotate-180" : ""}`} />
+                </button>
+                {editingBasicCatId === cat.id && (
+                  <div className="p-3.5 border-t border-amber-100 bg-amber-50/40 space-y-2.5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-slate-700 block">{t("Groep Label (enkelvoud)", "Group Label (singular)", "Grup Etiketi (tekil)")}</label>
+                        <input
+                          type="text"
+                          value={basicLabel}
+                          onChange={(e) => setBasicLabel(e.target.value)}
+                          className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-2 text-[10.5px] text-slate-800 outline-none focus:border-amber-500"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-slate-700 block">{t("Meervoud", "Plural", "Çoğul")}</label>
+                        <input
+                          type="text"
+                          value={basicListLabel}
+                          onChange={(e) => setBasicListLabel(e.target.value)}
+                          className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-2 text-[10.5px] text-slate-800 outline-none focus:border-amber-500"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-slate-700 block">{t("Hoogte bereik", "Height range", "Yükseklik aralığı")}</label>
+                        <input
+                          type="text"
+                          value={basicHeights}
+                          onChange={(e) => setBasicHeights(e.target.value)}
+                          className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-2 text-[10.5px] text-slate-800 outline-none focus:border-amber-500"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-slate-700 block">{t("Vanaf-prijs", "Starting price", "Başlangıç fiyatı")}</label>
+                        <input
+                          type="text"
+                          value={basicPrice}
+                          onChange={(e) => setBasicPrice(e.target.value)}
+                          className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-2 text-[10.5px] text-slate-800 outline-none focus:border-amber-500"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-700 block">{t("Omschrijving", "Description", "Açıklama")}</label>
+                      <textarea
+                        rows={2}
+                        value={basicDesc}
+                        onChange={(e) => setBasicDesc(e.target.value)}
+                        className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-2 text-[10px] text-slate-800 outline-none focus:border-amber-500 resize-none font-sans"
+                      />
+                    </div>
+                    <div className="flex justify-end gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => setEditingBasicCatId(null)}
+                        className="px-3 py-1.5 text-[10px] font-bold text-slate-600 bg-white border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors"
+                      >
+                        {t("Annuleren", "Cancel", "Vazgeç")}
+                      </button>
+                      <button
+                        type="button"
+                        disabled={isSavingBasic}
+                        onClick={() => handleSaveBasicFields(cat.id)}
+                        className="px-3 py-1.5 text-[10px] font-bold text-white bg-amber-600 hover:bg-amber-700 disabled:opacity-50 rounded-lg cursor-pointer transition-colors flex items-center gap-1"
+                      >
+                        <Check className="h-3 w-3" />
+                        {t("Opslaan", "Save", "Kaydet")}
+                      </button>
+                    </div>
+                  </div>
+                )}
                 <button
                   type="button"
                   onClick={() => handleOpenInfoEditor(cat)}

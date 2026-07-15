@@ -470,7 +470,7 @@ export default function BookingStep2({
                 <span>Verwerken...</span>
               </>
             ) : (
-              <span>Boeking Afronden via WhatsApp 💬</span>
+              <span>Aanvraag versturen via WhatsApp 💬</span>
             )}
           </button>
         </div>

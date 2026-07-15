@@ -81,7 +81,7 @@ export interface Order {
   totalAmount: number;
   status: OrderStatus;
   createdAt: string;
-  addons?: { id: string; name: string; price: number; billing: "daily" | "flat" | "weekly" }[];
+  addons?: { id: string; name: string; price: number; billing: "daily" | "flat" | "weekly"; quantity?: number }[];
   weekendWork?: "ja" | "nee" | null;
   invoiceNumber?: string;
   paymentStatus?: string;

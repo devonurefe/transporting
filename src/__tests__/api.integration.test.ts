@@ -139,4 +139,35 @@ describe.skipIf(!HAS_DB)("API integration", () => {
     // De server bewaart zijn eigen berekende totaal (nooit de clientwaarde).
     expect(Number(res.body?.totalAmount)).toBeCloseTo(121, 2);
   });
+
+  it("POST /api/orders met rijplaten × aantal → prijs = aantal × €6 × week", async () => {
+    // 1 dag → addonWeeks = 1. 4 platen × €6 × 1 = €24 add-on.
+    // serverTotal = (100 subtotaal + 24 add-on) × 1.21 = 150,04.
+    const res = await request(app)
+      .post("/api/orders")
+      .set("idempotency-key", `itest-rij-${Date.now()}`)
+      .send({
+        ...validOrder(),
+        totalAmount: 150.04,
+        addons: [{ id: "rijplaten", name: "Rijplaten", price: 24, billing: "weekly", quantity: 4 }],
+      });
+    expect([200, 201]).toContain(res.status);
+    expect(Number(res.body?.totalAmount)).toBeCloseTo(150.04, 2);
+    // De server herbouwt naam + prijs uit het gevalideerde aantal.
+    const rij = (res.body?.addons ?? []).find((a: any) => a.id === "rijplaten");
+    expect(rij?.price).toBeCloseTo(24, 2);
+    expect(rij?.name).toMatch(/4 stuks/);
+  });
+
+  it("POST /api/orders met ongeldig rijplaten-aantal → 400", async () => {
+    const res = await request(app)
+      .post("/api/orders")
+      .send({
+        ...validOrder(),
+        totalAmount: 150.04,
+        addons: [{ id: "rijplaten", name: "Rijplaten", price: 24, billing: "weekly", quantity: 0 }],
+      });
+    expect(res.status).toBe(400);
+    expect(res.body?.error).toMatch(/aantal rijplaten/i);
+  });
 });

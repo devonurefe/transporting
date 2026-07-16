@@ -173,12 +173,15 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
     let hitBlock = false;
     for (let i = 0; i < 366; i++) {
       const next = addDaysKey(cursor, 1);
-      // Require a single unit free for the whole [start..next] span, not just that day
-      if (!someUnitAvailable(units, draftStart, next, orders, blockedDates, today)) { hitBlock = true; break; }
+      // Require a single unit free for the whole [start..next] span, not just that day.
+      // bufferDays MUST be passed here — omitting it (defaults to 0) is what let the
+      // calendar mark a day "available" while checkAvailability (BookingSection.tsx,
+      // which does pass bufferDays) rejected the exact same range as booked.
+      if (!someUnitAvailable(units, draftStart, next, orders, blockedDates, today, machine.bufferDays ?? 0)) { hitBlock = true; break; }
       cap = next; cursor = next;
     }
     return { maxEnd: cap, cappedByRealBlock: hitBlock };
-  }, [draftStart, draftEnd, orders, blockedDates, unitKey, today]);
+  }, [draftStart, draftEnd, orders, blockedDates, unitKey, today, machine.bufferDays]);
 
   const grid = useMemo(() => {
     const firstDow = new Date(Date.UTC(viewYear, viewMonth, 1)).getUTCDay();
@@ -191,7 +194,9 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
       const key = toKey(viewYear, viewMonth, d);
       let status: "past" | "unavailable" | "available" | "capped";
       if (key < today) status = "past";
-      else if (!someUnitAvailable(units, key, key, orders, blockedDates, today)) status = "unavailable";
+      // Same bufferDays fix as maxEnd above — a single day's own coloring must also
+      // respect the machine's prep/maintenance buffer around adjacent bookings.
+      else if (!someUnitAvailable(units, key, key, orders, blockedDates, today, machine.bufferDays ?? 0)) status = "unavailable";
       else status = "available";
       const isCapped = status === "available" && !!draftStart && !draftEnd && maxEnd !== "" && key > maxEnd;
       const cellStatus: "past" | "unavailable" | "available" | "capped" = isCapped ? "capped" : status;
@@ -212,7 +217,7 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
     }
     while (cells.length % 7 !== 0) cells.push(null);
     return cells;
-  }, [viewYear, viewMonth, orders, blockedDates, draftStart, draftEnd, maxEnd, unitKey, today]);
+  }, [viewYear, viewMonth, orders, blockedDates, draftStart, draftEnd, maxEnd, unitKey, today, machine.bufferDays]);
 
   const onDayClick = (key: string, selectable: boolean) => {
     if (!selectable) return;
@@ -227,8 +232,8 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
     // Start set, no end: re-clicking the start day deselects; clicking elsewhere sets end
     if (key === draftStart) { setDraftStart(""); return; }
     if (key < draftStart) { setDraftStart(key); return; }
-    // key > draftStart: set as end
-    if (someUnitAvailable(units, draftStart, key, orders, blockedDates, today)) setDraftEnd(key);
+    // key > draftStart: set as end (bufferDays required — same reason as maxEnd/grid above)
+    if (someUnitAvailable(units, draftStart, key, orders, blockedDates, today, machine.bufferDays ?? 0)) setDraftEnd(key);
   };
 
   const canPrev = !(viewYear === todayYear && viewMonth === todayMonth);
@@ -243,7 +248,10 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
   // When only start is picked (no end yet), treat it as a 1-day selection so
   // the confirm button enables immediately after the first tap.
   const effectiveEnd = draftEnd || draftStart;
-  const rangeAvail = !!draftStart && someUnitAvailable(units, draftStart, effectiveEnd, orders, blockedDates, today);
+  // bufferDays required — without it "Bevestigen" could confirm a range that
+  // BookingSection.tsx's checkAvailability (which does pass bufferDays) then
+  // rejects as booked, exactly the calendar/booking mismatch this fixes.
+  const rangeAvail = !!draftStart && someUnitAvailable(units, draftStart, effectiveEnd, orders, blockedDates, today, machine.bufferDays ?? 0);
   const days = rangeAvail ? calculateRentalDays(draftStart, effectiveEnd) : 0;
   const minDays = machine.minRentalDays ?? 1;
   const validRange = rangeAvail && days >= minDays;

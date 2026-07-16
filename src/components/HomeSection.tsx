@@ -432,25 +432,21 @@ export default function HomeSection({
   // "schaarlift" key, since the card represents the whole 6/8/10m family). Every
   // field — including the card photo — comes from ONE representative machine,
   // never mixed across different units, so the photo, price and badge on a card
-  // always describe the same real, bookable product. Picking that representative
-  // machine follows a priority so a genuine deal never gets buried by a
-  // merely-cheaper unit:
-  //   1. A live "1 dag actie" (oneDayPrice below the normal day rate) — the most
-  //      concrete, product-specific promo (e.g. "Slechts 1 dag korting!").
-  //   2. A campaign that singles this machine or its category out (its own
-  //      campaignDiscountPercent/Amount, or a category/product-scoped campaign
-  //      rule). A sitewide "global" campaign rule doesn't count here — if every
-  //      product already gets the same cut, flagging it as a per-card "Actie"
-  //      badge on every single card isn't special, it's noise.
-  //   3. Otherwise, whichever active machine is currently cheapest per day
-  //      (global campaigns included), so the number shown is still accurate.
-  // The headline €/day figure always stays the day rate (never the 1-day-only
-  // price) — the badge explains the deal without the bold number implying it
-  // applies to every day of the rental.
+  // always describe the same real, bookable product.
+  //
+  // Rule: the CHEAPEST active machine in the category always wins the card
+  // (by effective day price, i.e. after any sitewide/category campaign discount
+  // — the real payable amount). A pricier unit's own promo (1-day actie, its
+  // own campaign) never bumps it ahead of a genuinely cheaper unit — a "v.a."
+  // (starting from) price that isn't actually the lowest in the category would
+  // mislead. The winner's OWN badge (if it happens to have a 1-day actie,
+  // product/category campaign, or ≥5% weekly-tier discount) is still shown —
+  // deals aren't hidden, they just never override which unit represents the card.
   const categoryMeta = React.useMemo(() => {
     type Badge = "dag" | "actie" | "tier" | "none";
     type Meta = { price: number; count: number; badge: Badge; badgePct: number; image: string };
-    const winners: Record<string, { rank: number; sortKey: number; meta: Meta }> = {};
+    type Candidate = { effective: number; badge: Badge; badgePct: number; image: string };
+    const winners: Record<string, Candidate> = {};
     const counts: Record<string, number> = {};
 
     activeMachines.forEach(m => {
@@ -478,33 +474,30 @@ export default function HomeSection({
         ? Math.round((1 - m.oneDayPrice / m.pricePerDay) * 100)
         : 0;
 
-      let rank: number;
-      let sortKey: number;
       let badge: Badge;
       let badgePct: number;
       if (dagActiePct > 0) {
-        rank = 0; sortKey = -dagActiePct; badge = "dag"; badgePct = dagActiePct;
+        badge = "dag"; badgePct = dagActiePct;
       } else if (specialDiscountPct > 0 || m.campaignDiscountAmount) {
-        rank = 1; sortKey = -specialDiscountPct; badge = "actie"; badgePct = specialDiscountPct;
+        badge = "actie"; badgePct = specialDiscountPct;
       } else {
         // kamersteiger's "day" price field is really its flat week rate (see
         // WEEKLY_PRICED_CATEGORIES), so a day-vs-week comparison there would be
         // comparing the same number to itself — skip the tier badge for it.
         const weekly = WEEKLY_PRICED_CATEGORIES.has(m.category) ? 0 : computeDiscounts(m).weekly;
-        rank = 2; sortKey = effective; badge = weekly >= 5 ? "tier" : "none"; badgePct = weekly;
+        badge = weekly >= 5 ? "tier" : "none"; badgePct = weekly;
       }
 
       const current = winners[key];
-      if (!current || rank < current.rank || (rank === current.rank && sortKey < current.sortKey)) {
+      if (!current || effective < current.effective) {
         const image = m.imageUrl || m.additionalImages?.[0] || "";
-        winners[key] = { rank, sortKey, meta: { price: effective, count: counts[key], badge, badgePct, image } };
+        winners[key] = { effective, badge, badgePct, image };
       }
     });
 
     const map: Record<string, Meta> = {};
     Object.entries(winners).forEach(([key, w]) => {
-      w.meta.count = counts[key];
-      map[key] = w.meta;
+      map[key] = { price: w.effective, count: counts[key], badge: w.badge, badgePct: w.badgePct, image: w.image };
     });
     return map;
   }, [activeMachines, campaignRules]);

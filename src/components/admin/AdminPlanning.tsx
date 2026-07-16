@@ -483,17 +483,23 @@ export default function AdminPlanning({ adminLanguage }: AdminPlanningProps) {
             </button>
           </div>
 
-          <div className="overflow-x-auto -mx-2 px-2 sm:mx-0 sm:px-0 pb-1">
-            <WeekGrid
-              weekDays={weekDays}
-              activeOrders={activeOrders}
-              blockedDates={blockedDates}
-              todayStr={todayStr}
-              machineMap={machineMap}
-              locale={locale}
-              adminLanguage={adminLanguage}
-              onSelectOrder={handleSelectOrder}
-            />
+          <div className="relative">
+            <div className="overflow-x-auto -mx-2 px-2 sm:mx-0 sm:px-0 pb-1">
+              <WeekGrid
+                weekDays={weekDays}
+                activeOrders={activeOrders}
+                blockedDates={blockedDates}
+                todayStr={todayStr}
+                machineMap={machineMap}
+                locale={locale}
+                adminLanguage={adminLanguage}
+                onSelectOrder={handleSelectOrder}
+              />
+            </div>
+            {/* Rechterrand-fade als scroll-hint op mobiel — de 7-koloms grid is breder
+                dan het viewport (min-w-[700px]) en zonder deze hint lijkt de afgesneden
+                laatste dag-kaart een layoutfout in plaats van "swipe voor meer". */}
+            <div className="sm:hidden pointer-events-none absolute top-0 right-0 bottom-1 w-8 bg-gradient-to-l from-white to-transparent" />
           </div>
 
           <div className="flex items-center gap-5 text-[10px] text-slate-500 pt-1">

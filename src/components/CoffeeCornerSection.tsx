@@ -6,6 +6,7 @@
 import React from "react";
 import { Coffee } from "lucide-react";
 import { motion } from "motion/react";
+import { Link } from "react-router-dom";
 import { useAppStore } from "../store/appStore";
 
 // Admin-editable homepage block (Admin → Customizer) shown just above the
@@ -22,6 +23,13 @@ export default function CoffeeCornerSection() {
   const imageUrl = siteConfig.coffeeCornerImageUrl === "/site-coffee-image"
     ? "/site-coffee-image?w=768"
     : siteConfig.coffeeCornerImageUrl;
+
+  // Admin kan de CTA overschrijven (bv. een WhatsApp-link); zonder eigen tekst/
+  // link wijst de knop naar de nieuwe "Over ons"-pagina (bedrijf, adres,
+  // assortiment, missie — dezelfde al-bestaande content, geen nieuwe velden).
+  const ctaLabel = siteConfig.coffeeCornerCtaLabel?.trim() || "Maak kennis met HuurGo";
+  const ctaHref = siteConfig.coffeeCornerCtaHref?.trim() || "/over-ons";
+  const isInternalCta = ctaHref.startsWith("/");
 
   return (
     <div className="bg-white border-t border-slate-100 px-4 sm:px-6 py-12">
@@ -60,12 +68,21 @@ export default function CoffeeCornerSection() {
             <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line mb-5">
               {siteConfig.coffeeCornerDescription}
             </p>
-            {siteConfig.coffeeCornerCtaLabel?.trim() && siteConfig.coffeeCornerCtaHref?.trim() && (
-              <a
-                href={siteConfig.coffeeCornerCtaHref}
-                className="self-start inline-flex items-center px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-xs rounded-xl shadow-sm hover:shadow-md transition-all"
+            {isInternalCta ? (
+              <Link
+                to={ctaHref}
+                className="self-start inline-flex items-center px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-xs rounded-xl shadow-sm hover:shadow-md transition-all no-underline"
               >
-                {siteConfig.coffeeCornerCtaLabel}
+                {ctaLabel}
+              </Link>
+            ) : (
+              <a
+                href={ctaHref}
+                target={ctaHref.startsWith("http") ? "_blank" : undefined}
+                rel={ctaHref.startsWith("http") ? "noopener noreferrer" : undefined}
+                className="self-start inline-flex items-center px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-xs rounded-xl shadow-sm hover:shadow-md transition-all no-underline"
+              >
+                {ctaLabel}
               </a>
             )}
           </div>

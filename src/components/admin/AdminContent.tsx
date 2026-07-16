@@ -135,7 +135,7 @@ export default function AdminContent({ adminLanguage }: AdminContentProps) {
                     onChange={(e) => setFaqItems((prev) => prev.map((it, j) => j === i ? { ...it, q: e.target.value } : it))}
                     placeholder={t("Vraag", "Question", "Soru")}
                     maxLength={200}
-                    className={`${inputCls} flex-1 font-bold`}
+                    className={`${inputCls} flex-1 font-bold min-w-0`}
                   />
                   <button
                     onClick={() => setFaqItems((prev) => prev.filter((_, j) => j !== i))}
@@ -149,8 +149,8 @@ export default function AdminContent({ adminLanguage }: AdminContentProps) {
                   onChange={(e) => setFaqItems((prev) => prev.map((it, j) => j === i ? { ...it, a: e.target.value } : it))}
                   placeholder={t("Antwoord", "Answer", "Cevap")}
                   maxLength={2000}
-                  rows={2}
-                  className={`${inputCls} resize-y`}
+                  rows={3}
+                  className={`${inputCls} resize-y leading-relaxed`}
                 />
               </div>
             ))}
@@ -179,34 +179,36 @@ export default function AdminContent({ adminLanguage }: AdminContentProps) {
             {uspItems.map((item, i) => {
               const Icon = USP_ICON_MAP[item.icon] ?? ShieldCheck;
               return (
-                <div key={i} className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+                <div key={i} className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2.5">
+                  {/* Icoonkeuze op eigen regel — 6 knoppen + titel + verwijderen paste
+                      nooit op één regel op mobiel, dus altijd gestapeld (niet alleen sm:). */}
+                  <div className="flex flex-wrap gap-1.5">
+                    {USP_ICON_OPTIONS.map((ic) => {
+                      const OptIcon = USP_ICON_MAP[ic];
+                      return (
+                        <button
+                          key={ic}
+                          onClick={() => setUspItems((prev) => prev.map((it, j) => j === i ? { ...it, icon: ic } : it))}
+                          className={`h-8 w-8 shrink-0 rounded-lg flex items-center justify-center border cursor-pointer transition-colors ${
+                            item.icon === ic ? "bg-indigo-600 border-indigo-600 text-white" : "bg-white border-slate-200 text-slate-500 hover:border-slate-300"
+                          }`}
+                        >
+                          <OptIcon className="h-3.5 w-3.5" />
+                        </button>
+                      );
+                    })}
+                  </div>
                   <div className="flex items-center gap-2">
-                    <div className="flex gap-1 shrink-0">
-                      {USP_ICON_OPTIONS.map((ic) => {
-                        const OptIcon = USP_ICON_MAP[ic];
-                        return (
-                          <button
-                            key={ic}
-                            onClick={() => setUspItems((prev) => prev.map((it, j) => j === i ? { ...it, icon: ic } : it))}
-                            className={`h-7 w-7 rounded-lg flex items-center justify-center border cursor-pointer transition-colors ${
-                              item.icon === ic ? "bg-indigo-600 border-indigo-600 text-white" : "bg-white border-slate-200 text-slate-500 hover:border-slate-300"
-                            }`}
-                          >
-                            <OptIcon className="h-3.5 w-3.5" />
-                          </button>
-                        );
-                      })}
-                    </div>
                     <input
                       value={item.title}
                       onChange={(e) => setUspItems((prev) => prev.map((it, j) => j === i ? { ...it, title: e.target.value } : it))}
                       placeholder={t("Titel", "Title", "Başlık")}
                       maxLength={100}
-                      className={`${inputCls} flex-1 font-bold`}
+                      className={`${inputCls} flex-1 font-bold min-w-0`}
                     />
                     <button
                       onClick={() => setUspItems((prev) => prev.filter((_, j) => j !== i))}
-                      className="shrink-0 h-8 w-8 flex items-center justify-center rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 cursor-pointer"
+                      className="shrink-0 h-9 w-9 flex items-center justify-center rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 cursor-pointer"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
@@ -216,8 +218,8 @@ export default function AdminContent({ adminLanguage }: AdminContentProps) {
                     onChange={(e) => setUspItems((prev) => prev.map((it, j) => j === i ? { ...it, text: e.target.value } : it))}
                     placeholder={t("Tekst", "Text", "Metin")}
                     maxLength={400}
-                    rows={2}
-                    className={`${inputCls} resize-y`}
+                    rows={3}
+                    className={`${inputCls} resize-y leading-relaxed`}
                   />
                   <div className="flex items-center gap-1.5 text-[10px] text-slate-400">
                     <Icon className="h-3 w-3" /> {t("Voorbeeld-icoon", "Preview icon", "Önizleme simgesi")}

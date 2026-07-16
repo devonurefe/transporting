@@ -217,4 +217,33 @@ describe("someUnitAvailable", () => {
     );
     expect(result).toBe(false);
   });
+
+  // Regression: DateRangeCalendar.tsx called someUnitAvailable() without a
+  // bufferDays argument (silently defaulting to 0), so a machine's own booking
+  // calendar coloured the day right after an existing order as "available",
+  // while BookingSection.tsx's checkAvailability (which does pass
+  // machine.bufferDays) then rejected that exact same day as booked at
+  // submit time — calendar shows green, booking says "Niet beschikbaar".
+  it("with bufferDays omitted (defaults to 0), the day right after a booking reads available", () => {
+    const orders = [{ id: "1", machineId: "unit-buf", startDate: "2026-07-20", endDate: "2026-07-22" }];
+    const dayAfter = someUnitAvailable([{ id: "unit-buf" }], "2026-07-23", "2026-07-23", orders, [], "2026-06-01");
+    expect(dayAfter).toBe(true);
+  });
+
+  it("with the machine's real bufferDays passed, that same day is correctly blocked", () => {
+    const orders = [{ id: "1", machineId: "unit-buf", startDate: "2026-07-20", endDate: "2026-07-22" }];
+    const dayAfter = someUnitAvailable([{ id: "unit-buf" }], "2026-07-23", "2026-07-23", orders, [], "2026-06-01", 1);
+    expect(dayAfter).toBe(false);
+  });
+
+  it("a 5-day range starting the buffer day is rejected — the calendar/booking-step mismatch from the bug report", () => {
+    // Mirrors the reported case: a booking ends 2026-07-22, machine has a 1-day
+    // maintenance buffer, customer picks 2026-07-23 – 2026-07-27 (5 days).
+    const orders = [{ id: "1", machineId: "bravi-leonardo", startDate: "2026-07-20", endDate: "2026-07-22" }];
+    const withoutBuffer = someUnitAvailable([{ id: "bravi-leonardo" }], "2026-07-23", "2026-07-27", orders, [], "2026-06-01");
+    expect(withoutBuffer).toBe(true); // what the calendar wrongly showed before the fix
+
+    const withBuffer = someUnitAvailable([{ id: "bravi-leonardo" }], "2026-07-23", "2026-07-27", orders, [], "2026-06-01", 1);
+    expect(withBuffer).toBe(false); // what checkAvailability correctly rejects at submit time
+  });
 });

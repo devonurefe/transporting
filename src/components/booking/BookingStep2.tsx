@@ -304,7 +304,7 @@ export default function BookingStep2({
               <span className="text-slate-700">Bezorgadres in Nederland</span>
             </label>
 
-            <span className="text-xs text-slate-400 font-medium">
+            <span className="text-xs text-slate-500 font-medium">
               Volledig ondersteund in Zuid- & Noord-Holland
             </span>
           </div>

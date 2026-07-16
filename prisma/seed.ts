@@ -295,7 +295,9 @@ const defaultMachines = [
     fourDayPrice: 185,
     weeklyPrice: 195,
     extraDayPrice: 46,
-    monthlyPrice: 540
+    monthlyPrice: 540,
+    sundayBlockFee: 40,
+    weekendRulesEnabled: true
   },
   {
     id: "optimum-8-2",
@@ -322,7 +324,9 @@ const defaultMachines = [
     fourDayPrice: 185,
     weeklyPrice: 195,
     extraDayPrice: 46,
-    monthlyPrice: 540
+    monthlyPrice: 540,
+    sundayBlockFee: 40,
+    weekendRulesEnabled: true
   },
   {
     id: "compact-8-1",
@@ -349,7 +353,9 @@ const defaultMachines = [
     fourDayPrice: 185,
     weeklyPrice: 195,
     extraDayPrice: 46,
-    monthlyPrice: 540
+    monthlyPrice: 540,
+    sundayBlockFee: 40,
+    weekendRulesEnabled: true
   },
   {
     id: "compact-8-2",
@@ -376,7 +382,9 @@ const defaultMachines = [
     fourDayPrice: 185,
     weeklyPrice: 195,
     extraDayPrice: 46,
-    monthlyPrice: 540
+    monthlyPrice: 540,
+    sundayBlockFee: 40,
+    weekendRulesEnabled: true
   },
 
   // CATEGORIE 4: Smalle Elektrische Schaarliften (10 meter)
@@ -404,8 +412,10 @@ const defaultMachines = [
     threeDayPrice: 215,
     fourDayPrice: 235,
     weeklyPrice: 250,
-    extraDayPrice: 60,
-    monthlyPrice: 680
+    extraDayPrice: 59,
+    monthlyPrice: 675,
+    sundayBlockFee: 50,
+    weekendRulesEnabled: true
   },
   {
     id: "compact-10n-2",
@@ -431,8 +441,10 @@ const defaultMachines = [
     threeDayPrice: 215,
     fourDayPrice: 235,
     weeklyPrice: 250,
-    extraDayPrice: 60,
-    monthlyPrice: 680
+    extraDayPrice: 59,
+    monthlyPrice: 675,
+    sundayBlockFee: 50,
+    weekendRulesEnabled: true
   },
 
   // CATEGORIE 4b: Compacte Schaarliften (6m) — Dingli JCPT 0607 DC
@@ -461,7 +473,9 @@ const defaultMachines = [
     fourDayPrice: 135,
     weeklyPrice: 145,
     extraDayPrice: 34,
-    monthlyPrice: 390
+    monthlyPrice: 390,
+    sundayBlockFee: 30,
+    weekendRulesEnabled: true
   },
 
   // CATEGORIE 4c: Kamersteigers — Altrex RS TOWER 44-Power (2-dag minimum, €15/2dgn, €19/week)
@@ -555,7 +569,9 @@ const defaultMachines = [
     fourDayPrice: 360,
     weeklyPrice: 405,
     extraDayPrice: 80,
-    monthlyPrice: 980
+    monthlyPrice: 980,
+    sundayBlockFee: 50,
+    weekendRulesEnabled: true
   },
   {
     id: "skyjack-sj16",
@@ -582,7 +598,9 @@ const defaultMachines = [
     fourDayPrice: 136,
     weeklyPrice: 150,
     extraDayPrice: 30,
-    monthlyPrice: 370
+    monthlyPrice: 370,
+    sundayBlockFee: 25,
+    weekendRulesEnabled: true
   },
   {
     id: "bravi-mini-hd",
@@ -592,7 +610,7 @@ const defaultMachines = [
     height: 4.9,
     reach: 0,
     weight: 510,
-    pricePerDay: 40,
+    pricePerDay: 45,
     powerType: "Elektrisch",
     imageUrl: "/images/machines/bravi-mini-hd.webp",
     imageAlt: "Bravi Leonardo HD compacte lift",
@@ -603,17 +621,18 @@ const defaultMachines = [
     campaignText: null,
     campaignDiscountPercent: null,
     campaignDiscountAmount: null,
-    // Tiered pricing + weekend rules (pilot product). 1d €40, 2d €80, 3d €105,
-    // 4d €125, 5d (werkweek) €140, dag 6+ = €28/dag (extraDayPrice), weekendpakket €69,
-    // zondagblokkade €20. Depot gesloten za/zo → weekendRulesEnabled.
+    // Tiered pricing + weekend rules. 1d €45, 2d €80, 3d €105, 4d €115,
+    // 5d (werkweek) €120, dag 6+ = €28/dag (extraDayPrice), weekendpakket €70,
+    // zondagblokkade €25 (= 3d − 2d, dus Vr+Za = 3-daagse prijs €105). Depot
+    // gesloten za/zo → weekendRulesEnabled.
     twoDayPrice: 80,
     threeDayPrice: 105,
-    fourDayPrice: 125,
-    weekendPrice: 69,
-    weeklyPrice: 140,
+    fourDayPrice: 115,
+    weekendPrice: 70,
+    weeklyPrice: 120,
     extraDayPrice: 28,
-    monthlyPrice: 340,
-    sundayBlockFee: 20,
+    monthlyPrice: 320,
+    sundayBlockFee: 25,
     weekendRulesEnabled: true
   },
   {
@@ -624,7 +643,7 @@ const defaultMachines = [
     height: 5.5,
     reach: 0,
     weight: 790,
-    pricePerDay: 40,
+    pricePerDay: 45,
     powerType: "Elektrisch",
     imageUrl: "/images/machines/jlg-1230es.webp",
     imageAlt: "JLG 1230ES mastlift",
@@ -635,13 +654,16 @@ const defaultMachines = [
     campaignText: null,
     campaignDiscountPercent: null,
     campaignDiscountAmount: null,
-    weekendPrice: 69,
+    // Zelfde tarief als Bravi. Zondagblokkade €25 (= 3d − 2d), dus Vr+Za = 3-daagse prijs €105.
+    weekendPrice: 70,
     twoDayPrice: 80,
     threeDayPrice: 105,
-    fourDayPrice: 125,
-    weeklyPrice: 140,
+    fourDayPrice: 115,
+    weeklyPrice: 120,
     extraDayPrice: 28,
-    monthlyPrice: 340
+    monthlyPrice: 320,
+    sundayBlockFee: 25,
+    weekendRulesEnabled: true
   },
 
   // CATEGORIE 6: Verhuisliften / Ladderliften
@@ -996,6 +1018,52 @@ async function main() {
   await prisma.machine.updateMany({
     where: { id: "nifty-170", twoDayPrice: 240, weekendPrice: 195 },
     data: { twoDayPrice: 210, threeDayPrice: 320, fourDayPrice: 390, weekendPrice: 150, monthlyPrice: 1250 }
+  });
+
+  // 2026-07 weekend-blokkade uitrol — weekendregels (depot za/zo dicht) van de pilot
+  // (Bravi) uitgebreid naar de volledige mast- en schaargroep, en de zondagblokkade
+  // per machine gezet op (3-daags − 2-daags) zodat een Vr+Za verhuur exact de
+  // doordeweekse 3-daagse prijs kost. Elke update is guarded op de vorige bekende
+  // waarde: een latere handmatige admin-wijziging (weekendregels al aan, of een
+  // aangepaste blokkade) wordt nooit overschreven, en een fresh install (die alles al
+  // via `create` + de generieke back-fill krijgt) slaat deze blokken over als no-op.
+  console.log("Applying 2026-07 weekend-blokkade uitrol (Vr+Za = 3-daagse prijs)...");
+  // Bravi: prijscorrectie + blokkade 20 → 25 (guarded op de vorige blokkade).
+  await prisma.machine.updateMany({
+    where: { id: "bravi-mini-hd", sundayBlockFee: 20 },
+    data: { pricePerDay: 45, fourDayPrice: 115, weeklyPrice: 120, weekendPrice: 70, monthlyPrice: 320, sundayBlockFee: 25 }
+  });
+  // JLG: zelfde tarief als Bravi + weekendregels aan (guarded op weekendRulesEnabled=false).
+  await prisma.machine.updateMany({
+    where: { id: "jlg-1230es", weekendRulesEnabled: false },
+    data: { pricePerDay: 45, fourDayPrice: 115, weeklyPrice: 120, weekendPrice: 70, monthlyPrice: 320, sundayBlockFee: 25, weekendRulesEnabled: true }
+  });
+  // Compact 10N: extraDag 60 → 59, maand 680 → 675 + weekendregels + blokkade 50.
+  await prisma.machine.updateMany({
+    where: { id: { in: ["compact-10n-1", "compact-10n-2"] }, weekendRulesEnabled: false },
+    data: { extraDayPrice: 59, monthlyPrice: 675, sundayBlockFee: 50, weekendRulesEnabled: true }
+  });
+  // Dingli / Optimum 8 / Compact 8 / Skyjack / Star 10: alleen weekendregels aan +
+  // blokkade = (3-daags − 2-daags). Prijzen zijn al correct via de 2026-07 refresh.
+  await prisma.machine.updateMany({
+    where: { id: "dingli-6m", weekendRulesEnabled: false },
+    data: { sundayBlockFee: 30, weekendRulesEnabled: true }
+  });
+  await prisma.machine.updateMany({
+    where: { id: { in: ["optimum-8-1", "optimum-8-2"] }, weekendRulesEnabled: false },
+    data: { sundayBlockFee: 40, weekendRulesEnabled: true }
+  });
+  await prisma.machine.updateMany({
+    where: { id: { in: ["compact-8-1", "compact-8-2"] }, weekendRulesEnabled: false },
+    data: { sundayBlockFee: 40, weekendRulesEnabled: true }
+  });
+  await prisma.machine.updateMany({
+    where: { id: "skyjack-sj16", weekendRulesEnabled: false },
+    data: { sundayBlockFee: 25, weekendRulesEnabled: true }
+  });
+  await prisma.machine.updateMany({
+    where: { id: "star-10", weekendRulesEnabled: false },
+    data: { sundayBlockFee: 50, weekendRulesEnabled: true }
   });
 
   console.log("Seeding blocked dates (upsert)...");

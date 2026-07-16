@@ -30,8 +30,8 @@ export interface Machine {
   weeklyPrice?: number; // flat rate for 5-day werkweek booking (base for 6-27 day pricing: weeklyPrice + extra days)
   extraDayPrice?: number; // flat rate per day beyond the 5-day werkweek (6-27 days), added on top of weeklyPrice. Falls back to weeklyPrice/5 when unset.
   monthlyPrice?: number; // flat rate for 28-day booking
-  sundayBlockFee?: number; // surcharge added when a rental's last work day is Saturday and the machine is held over the closed Sunday (return Monday). Requires weekendRulesEnabled.
-  weekendRulesEnabled?: boolean; // depot closed Sat+Sun: enables weekend package + automatic Sunday block. Off for scaffolding & campaign products (Nifty 120/170).
+  sundayBlockFee?: number; // surcharge added when a rental's last work day is Saturday and the machine is held over the closed Sunday (return Monday). Requires weekendRulesEnabled. Convention: set to (threeDayPrice − twoDayPrice) so Fri+Sat = weekday 3-day price.
+  weekendRulesEnabled?: boolean; // depot closed Sat+Sun: enables weekend package + automatic Sunday block. On for the mast & scissor-lift groups; off for Nifty 120/170, Hinowa, ladderlift, kamersteigers, Pecolift.
   packageContents?: string; // Semicolon separated included items checklist
   additionalImages?: string[];
   specs?: { label: string; value: string }[];

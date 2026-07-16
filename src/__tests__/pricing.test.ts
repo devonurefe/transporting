@@ -149,38 +149,39 @@ describe("calculateItemSubtotal — weekend rules (tiered model + Sunday block +
   const THU = "2026-06-11";
   const SUN = "2026-06-14";
   const TUE2 = "2026-06-02"; // +11 days = SAT 2026-06-13
-  // Bravi Leonardo pilot tariff. No monthlyPrice → the pro-rata ladder is uncapped,
-  // matching the owner's worked examples exactly.
+  // Bravi Leonardo tariff (2026-07 weekend-blokkade prijzen). No monthlyPrice → the
+  // pro-rata ladder is uncapped. sundayBlockFee 25 = threeDayPrice − twoDayPrice, so a
+  // Fri+Sat rental equals the weekday 3-day price €105 (see the invariant block below).
   const bravi = {
     id: "bravi-mini-hd", category: "mastlift", pricePerDay: 45,
-    twoDayPrice: 80, threeDayPrice: 105, fourDayPrice: 125, weeklyPrice: 140,
-    weekendPrice: 69, sundayBlockFee: 20, weekendRulesEnabled: true,
+    twoDayPrice: 80, threeDayPrice: 105, fourDayPrice: 115, weeklyPrice: 120,
+    weekendPrice: 70, sundayBlockFee: 25, weekendRulesEnabled: true,
   } as Machine;
 
-  it("distinct day tiers: 1→€45, 2→€80, 3→€105, 4→€125, 5→€140 (all Mon-start, ends weekday)", () => {
+  it("distinct day tiers: 1→€45, 2→€80, 3→€105, 4→€115, 5→€120 (all Mon-start, ends weekday)", () => {
     expect(calculateItemSubtotal(bravi, 1, "Particulier", noRules, MON)).toBe(45);
     expect(calculateItemSubtotal(bravi, 2, "Particulier", noRules, MON)).toBe(80);
     expect(calculateItemSubtotal(bravi, 3, "Particulier", noRules, MON)).toBe(105);
-    expect(calculateItemSubtotal(bravi, 4, "Particulier", noRules, MON)).toBe(125);
-    expect(calculateItemSubtotal(bravi, 5, "Particulier", noRules, MON)).toBe(140);
+    expect(calculateItemSubtotal(bravi, 4, "Particulier", noRules, MON)).toBe(115);
+    expect(calculateItemSubtotal(bravi, 5, "Particulier", noRules, MON)).toBe(120);
   });
 
-  it("Scenario 1: Thu start, 3 working days (Thu+Fri+Sat) → €105 + €20 Sunday block = €125", () => {
-    expect(calculateItemSubtotal(bravi, 3, "Particulier", noRules, THU)).toBe(125);
+  it("Scenario 1: Thu start, 3 working days (Thu+Fri+Sat) → €105 + €25 Sunday block = €130", () => {
+    expect(calculateItemSubtotal(bravi, 3, "Particulier", noRules, THU)).toBe(130);
   });
 
-  it("Scenario 2: Fri start, 2 working days (Fri+Sat) → €80 + €20 Sunday block = €100", () => {
-    expect(calculateItemSubtotal(bravi, 2, "Particulier", noRules, FRI)).toBe(100);
+  it("Scenario 2: Fri start, 2 working days (Fri+Sat) → €80 + €25 Sunday block = €105 (= 3-daagse prijs)", () => {
+    expect(calculateItemSubtotal(bravi, 2, "Particulier", noRules, FRI)).toBe(105);
   });
 
-  it("12 days ending Saturday → 12 × (140/5) + €20 block = 336 + 20 = €356", () => {
-    expect(calculateItemSubtotal(bravi, 12, "Particulier", noRules, TUE2)).toBe(356);
+  it("12 days ending Saturday → 12 × (120/5) + €25 block = 288 + 25 = €313", () => {
+    expect(calculateItemSubtotal(bravi, 12, "Particulier", noRules, TUE2)).toBe(313);
   });
 
-  it("weekend package: single Sat, single Sun, Sat+Sun → flat €69 (no block)", () => {
-    expect(calculateItemSubtotal(bravi, 1, "Particulier", noRules, SAT)).toBe(69);
-    expect(calculateItemSubtotal(bravi, 1, "Particulier", noRules, SUN)).toBe(69);
-    expect(calculateItemSubtotal(bravi, 2, "Particulier", noRules, SAT)).toBe(69);
+  it("weekend package: single Sat, single Sun, Sat+Sun → flat €70 (no block)", () => {
+    expect(calculateItemSubtotal(bravi, 1, "Particulier", noRules, SAT)).toBe(70);
+    expect(calculateItemSubtotal(bravi, 1, "Particulier", noRules, SUN)).toBe(70);
+    expect(calculateItemSubtotal(bravi, 2, "Particulier", noRules, SAT)).toBe(70);
   });
 
   it("Fri+Sat+Sun (3 days) is NOT the weekend package — normal 3-day tier, no block", () => {
@@ -191,29 +192,61 @@ describe("calculateItemSubtotal — weekend rules (tiered model + Sunday block +
   });
 
   it("a long Sat-start rental falls through to normal tiered pricing, not the weekend package", () => {
-    // Sat+Sun+Mon+Tue (4 days) extends past the weekend → normal 4-day tier €125.
-    expect(calculateItemSubtotal(bravi, 4, "Particulier", noRules, SAT)).toBe(125);
-    // Sat+Sun+Mon+Tue+Wed (5 days) → normal 5-day (werkweek) tier €140.
-    expect(calculateItemSubtotal(bravi, 5, "Particulier", noRules, SAT)).toBe(140);
+    // Sat+Sun+Mon+Tue (4 days) extends past the weekend → normal 4-day tier €115.
+    expect(calculateItemSubtotal(bravi, 4, "Particulier", noRules, SAT)).toBe(115);
+    // Sat+Sun+Mon+Tue+Wed (5 days) → normal 5-day (werkweek) tier €120.
+    expect(calculateItemSubtotal(bravi, 5, "Particulier", noRules, SAT)).toBe(120);
   });
 
   it("no Sunday block when the rental ends on a weekday (Thu+Fri = €80, ends Friday)", () => {
     expect(calculateItemSubtotal(bravi, 2, "Particulier", noRules, THU)).toBe(80);
   });
 
-  it("5-day werkweek Mon→Fri → €140, no block (ends Friday)", () => {
-    expect(calculateItemSubtotal(bravi, 5, "Particulier", noRules, MON)).toBe(140);
+  it("5-day werkweek Mon→Fri → €120, no block (ends Friday)", () => {
+    expect(calculateItemSubtotal(bravi, 5, "Particulier", noRules, MON)).toBe(120);
   });
 
-  it("monthly cap: with monthlyPrice €320, a 12-day ending Saturday caps at 320 + €20 = €340", () => {
-    const braviCapped = { ...bravi, monthlyPrice: 320 } as Machine;
-    expect(calculateItemSubtotal(braviCapped, 12, "Particulier", noRules, TUE2)).toBe(340);
+  it("monthly cap: with monthlyPrice €280, a 12-day ending Saturday caps at 280 + €25 = €305", () => {
+    // 12-day pro-rata base = 288 > €280 monthly → capped at 280, then the block is added.
+    const braviCapped = { ...bravi, monthlyPrice: 280 } as Machine;
+    expect(calculateItemSubtotal(braviCapped, 12, "Particulier", noRules, TUE2)).toBe(305);
   });
 
   it("legacy machine (no weekendRulesEnabled) is unaffected: Nifty 2-day Sat+Sun → weekendPrice, no block", () => {
     expect(calculateItemSubtotal(nifty120, 2, "Particulier", noRules, SAT)).toBe(150);
     expect(calculateItemSubtotal(nifty120, 3, "Particulier", noRules, THU)).toBe(335); // no block
   });
+});
+
+describe("weekend-blokkade uitrol — Vrijdag + Zaterdag = doordeweekse 3-daagse prijs", () => {
+  // The 2026-07 rollout applies weekend rules across the mast & scissor group with
+  // sundayBlockFee = (threeDayPrice − twoDayPrice). A Fri+Sat rental (2 work days +
+  // forced Sunday block, ends Saturday) must therefore equal the weekday 3-day price.
+  // Values mirror prisma/seed.ts.
+  const machines = [
+    { id: "dingli-6m", pricePerDay: 55, twoDayPrice: 95, threeDayPrice: 125, weekendPrice: 85, sundayBlockFee: 30 },
+    { id: "optimum-8-1", pricePerDay: 75, twoDayPrice: 130, threeDayPrice: 170, weekendPrice: 115, sundayBlockFee: 40 },
+    { id: "compact-10n-1", pricePerDay: 95, twoDayPrice: 165, threeDayPrice: 215, weekendPrice: 145, sundayBlockFee: 50 },
+    { id: "bravi-mini-hd", pricePerDay: 45, twoDayPrice: 80, threeDayPrice: 105, weekendPrice: 70, sundayBlockFee: 25 },
+    { id: "skyjack-sj16", pricePerDay: 49, twoDayPrice: 90, threeDayPrice: 115, weekendPrice: 75, sundayBlockFee: 25 },
+    { id: "star-10", pricePerDay: 130, twoDayPrice: 230, threeDayPrice: 280, weekendPrice: 200, sundayBlockFee: 50 },
+  ];
+
+  for (const m of machines) {
+    const machine = { ...m, category: "mastlift", weekendRulesEnabled: true } as Machine;
+
+    it(`${m.id}: sundayBlockFee (${m.sundayBlockFee}) === 3-daags − 2-daags`, () => {
+      expect(m.sundayBlockFee).toBe(m.threeDayPrice - m.twoDayPrice);
+    });
+
+    it(`${m.id}: Fri+Sat (2 dagen, vrijdag-start) === 3-daagse prijs €${m.threeDayPrice}`, () => {
+      expect(calculateItemSubtotal(machine, 2, "Particulier", noRules, FRI)).toBe(m.threeDayPrice);
+    });
+
+    it(`${m.id}: losse zaterdag → weekendpakket €${m.weekendPrice} (geen blokkade)`, () => {
+      expect(calculateItemSubtotal(machine, 1, "Particulier", noRules, SAT)).toBe(m.weekendPrice);
+    });
+  }
 });
 
 describe("displayRentalDays — shown day count equals the selected span", () => {

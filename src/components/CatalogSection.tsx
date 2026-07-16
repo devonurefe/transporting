@@ -467,7 +467,7 @@ export default function CatalogSection({
                         {/* Name + Price */}
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex-1 min-w-0">
-                            <h3 className="font-display font-bold text-[15px] text-slate-900 leading-snug line-clamp-2 group-hover:text-orange-600 transition-colors duration-200">
+                            <h3 className="font-display font-bold text-[15px] text-slate-900 leading-snug line-clamp-2 group-hover:text-orange-700 transition-colors duration-200">
                               <Link to={`/hoogwerker/${machine.id}`} className="hover:underline">
                                 {getBaseName(machine.name)}
                               </Link>
@@ -480,7 +480,7 @@ export default function CatalogSection({
                                 <div className="flex items-center gap-1 mt-1" aria-label={`${r.average.toFixed(1)} van 5 sterren, ${r.count} beoordelingen`}>
                                   <Star className="h-3.5 w-3.5 text-amber-400 fill-amber-400 shrink-0" />
                                   <span className="text-xs font-bold text-slate-700">{r.average.toFixed(1)}</span>
-                                  <span className="text-[11px] text-slate-400">({r.count})</span>
+                                  <span className="text-[11px] text-slate-500">({r.count})</span>
                                 </div>
                               );
                             })()}
@@ -492,7 +492,7 @@ export default function CatalogSection({
                                 <div className="text-xl font-display font-black leading-none text-amber-600 mt-1">
                                   {formatPrice(vp(machine.oneDayPrice))}
                                 </div>
-                                <div className="text-[10px] text-slate-400 mt-0.5">
+                                <div className="text-[10px] text-slate-500 mt-0.5">
                                   <span className="line-through">{formatPrice(vp(machine.pricePerDay))}</span> per dag {vatLabel}
                                 </div>
                               </>
@@ -501,14 +501,14 @@ export default function CatalogSection({
                                 <div className="text-xl font-display font-black leading-none text-slate-900">
                                   {formatPrice(vp(machine.weeklyPrice))}
                                 </div>
-                                <div className="text-[10px] text-slate-400 mt-0.5">per week {vatLabel}</div>
+                                <div className="text-[10px] text-slate-500 mt-0.5">per week {vatLabel}</div>
                               </>
                             ) : (
                               <>
                                 <div className="text-xl font-display font-black leading-none text-slate-900">
                                   {formatPrice(vp(machine.pricePerDay))}
                                 </div>
-                                <div className="text-[10px] text-slate-400 mt-0.5">per dag {vatLabel}</div>
+                                <div className="text-[10px] text-slate-500 mt-0.5">per dag {vatLabel}</div>
                               </>
                             )}
                           </div>
@@ -662,7 +662,7 @@ export default function CatalogSection({
                     <p className="text-[10px] font-bold uppercase tracking-widest text-orange-500 mb-0.5">{m.categoryLabel}</p>
                     <h3 className="font-display font-black text-slate-900 text-base leading-snug">{m.name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "")}</h3>
                     <p className="text-xs text-slate-500 mt-0.5">
-                      Dagtarief <span className="font-bold text-slate-800">{formatPrice(vp(m.pricePerDay))}</span> <span className="text-slate-400">{vatLabel}</span>
+                      Dagtarief <span className="font-bold text-slate-800">{formatPrice(vp(m.pricePerDay))}</span> <span className="text-slate-500">{vatLabel}</span>
                     </p>
                   </div>
                   <button
@@ -693,7 +693,7 @@ export default function CatalogSection({
                           row.highlight === "teal" ? "text-teal-700" :
                           row.highlight === "violet" ? "text-amber-700" : "text-slate-800"
                         }`}>{row.period}</p>
-                        <p className="text-[10px] text-slate-400 font-medium mt-0.5">{row.when}</p>
+                        <p className="text-[10px] text-slate-500 font-medium mt-0.5">{row.when}</p>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
                         {row.badge && (
@@ -714,7 +714,7 @@ export default function CatalogSection({
                     </div>
                   ))}
                   {rows.length === 0 && (
-                    <div className="px-5 py-6 text-center text-xs text-slate-400">Alleen dagprijs beschikbaar</div>
+                    <div className="px-5 py-6 text-center text-xs text-slate-500">Alleen dagprijs beschikbaar</div>
                   )}
                   {m.weekendRulesEnabled && (
                     <div className="px-5 py-3 bg-amber-100/70">

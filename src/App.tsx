@@ -1030,7 +1030,7 @@ export default function App() {
                 transition={{ duration: 0.18 }}
                 className="bg-white border border-slate-200 rounded-2xl shadow-xl p-3 w-64 space-y-1.5"
               >
-                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 px-1 pb-1">Stuur ons een bericht</p>
+                <p className="text-[10px] font-black uppercase tracking-wider text-slate-500 px-1 pb-1">Stuur ons een bericht</p>
                 {[
                   {
                     icon: "📅",
@@ -1068,7 +1068,7 @@ export default function App() {
                     <span className="text-base shrink-0">{item.icon}</span>
                     <div className="min-w-0">
                       <p className="text-xs font-bold text-slate-800 group-hover:text-emerald-700 leading-tight">{item.label}</p>
-                      <p className="text-[10px] text-slate-400 leading-tight truncate">{item.sub}</p>
+                      <p className="text-[10px] text-slate-500 leading-tight truncate">{item.sub}</p>
                     </div>
                   </a>
                 ))}
@@ -1086,6 +1086,8 @@ export default function App() {
               onClick={() => { setFabOpen(v => !v); setFabPulse(false); }}
               className={`relative flex items-center justify-center h-11 w-11 rounded-full text-white shadow-lg hover:scale-110 active:scale-95 transition-all cursor-pointer border-none shadow-emerald-500/25 ${fabOpen ? "bg-slate-700 hover:bg-slate-800" : "bg-[#25D366] hover:bg-[#1da851]"}`}
               title="Hulp nodig? Chat via WhatsApp"
+              aria-label={fabOpen ? "WhatsApp menu sluiten" : "Hulp nodig? Chat via WhatsApp"}
+              aria-expanded={fabOpen}
             >
               <MessageCircle className="h-5 w-5" />
             </motion.button>

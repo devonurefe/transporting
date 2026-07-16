@@ -875,7 +875,7 @@ export default function BookingSection({
         {/* Stepper — hide on success */}
         {step < STEP_SUCCESS && (
           <div className="mb-8">
-            <p className="text-center text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-5">
+            <p className="text-center text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-5">
               Stap {step} van {TOTAL_STEPS}
             </p>
             <div className="flex items-center justify-center max-w-xs mx-auto">
@@ -898,7 +898,7 @@ export default function BookingSection({
                           ? "bg-orange-500 text-white shadow-lg shadow-orange-500/25 scale-110"
                           : isDone
                             ? "bg-emerald-500 text-white"
-                            : "bg-slate-100 text-slate-400"
+                            : "bg-slate-100 text-slate-500"
                       }`}>
                         {isDone ? (
                           <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -907,7 +907,7 @@ export default function BookingSection({
                         ) : s.number}
                       </div>
                       <span className={`text-[10px] font-extrabold uppercase tracking-wider mt-2 ${
-                        isCurrent ? "text-orange-600" : isDone ? "text-emerald-600" : "text-slate-400"
+                        isCurrent ? "text-orange-700" : isDone ? "text-emerald-700" : "text-slate-500"
                       }`}>
                         {s.label}
                       </span>

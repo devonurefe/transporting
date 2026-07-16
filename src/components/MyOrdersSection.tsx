@@ -479,7 +479,7 @@ export default function MyOrdersSection({
                 <button
                   onClick={() => { setIsRegistering(false); setLoginError(null); setRegError(null); }}
                   className={`flex-1 pb-3 text-sm font-bold border-b-2 transition-all cursor-pointer ${
-                    !isRegistering ? "text-slate-900 border-slate-800" : "text-slate-400 hover:text-slate-600 border-transparent"
+                    !isRegistering ? "text-slate-900 border-slate-800" : "text-slate-500 hover:text-slate-700 border-transparent"
                   }`}
                 >
                   Regulier Inloggen
@@ -487,7 +487,7 @@ export default function MyOrdersSection({
                 <button
                   onClick={() => { setIsRegistering(true); setLoginError(null); setRegError(null); }}
                   className={`flex-1 pb-3 text-sm font-bold border-b-2 transition-all cursor-pointer ${
-                    isRegistering ? "text-slate-900 border-slate-800" : "text-slate-400 hover:text-slate-600 border-transparent"
+                    isRegistering ? "text-slate-900 border-slate-800" : "text-slate-500 hover:text-slate-700 border-transparent"
                   }`}
                 >
                   Account Aanmaken

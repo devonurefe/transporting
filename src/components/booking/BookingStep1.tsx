@@ -123,7 +123,7 @@ export default function BookingStep1({
           <button
             type="button"
             onClick={() => setActiveTab("catalog")}
-            className="flex items-center gap-1 text-xs text-slate-400 hover:text-slate-700 transition-colors cursor-pointer bg-transparent border-none p-0 font-medium"
+            className="flex items-center gap-1 text-xs text-slate-500 hover:text-slate-700 transition-colors cursor-pointer bg-transparent border-none p-0 font-medium"
           >
             <ChevronLeft className="h-3.5 w-3.5" />
             Terug naar het assortiment
@@ -133,7 +133,7 @@ export default function BookingStep1({
           <Calendar className="h-5 w-5 text-slate-700" />
           <span>{t("step1Title")}</span>
         </h3>
-        <p className="text-xs text-slate-400 mt-1">{t("step1Subtitle")}</p>
+        <p className="text-xs text-slate-500 mt-1">{t("step1Subtitle")}</p>
       </div>
 
       {cartItems.length === 0 ? (
@@ -256,14 +256,14 @@ export default function BookingStep1({
               </span>
               <div>
                 <h4 className="text-xs font-bold text-slate-900">Afhalen in Zoeterwoude</h4>
-                <span className="text-xs text-slate-400 block">Depot — gratis</span>
+                <span className="text-xs text-slate-500 block">Depot — gratis</span>
               </div>
             </div>
             <p className="text-xs text-slate-600 leading-relaxed">
               Dankzij de compacte afmetingen past dit product eenvoudig in een personenauto of kleine
               bestelwagen — u kunt het zelf gemakkelijk vervoeren.
             </p>
-            <span className="text-sm font-black text-emerald-600 block">Kosteloos</span>
+            <span className="text-sm font-black text-emerald-700 block">Kosteloos</span>
           </div>
         ) : (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -284,14 +284,14 @@ export default function BookingStep1({
               </span>
               <div>
                 <h4 className="text-xs font-bold text-slate-900">Wij bezorgen</h4>
-                <span className="text-xs text-slate-400 block">Binnen 20 km straal</span>
+                <span className="text-xs text-slate-500 block">Binnen 20 km straal</span>
               </div>
             </div>
             <p className="text-xs text-slate-500 leading-normal">
               Wij leveren de machine af en halen hem terug op.
             </p>
             <div className="mt-2 flex items-baseline gap-1">
-              <span className="text-sm font-black text-emerald-600">€150,-</span>
+              <span className="text-sm font-black text-emerald-700">€150,-</span>
               <span className="text-xs text-slate-500 font-semibold">heen + terug</span>
             </div>
             {deliveryType === "delivery_by_us" && (
@@ -325,7 +325,7 @@ export default function BookingStep1({
               </span>
               <div>
                 <h4 className="text-xs font-bold text-slate-900">Aanhanger huren</h4>
-                <span className="text-xs text-slate-400 block">Eigen auto, onze aanhanger</span>
+                <span className="text-xs text-slate-500 block">Eigen auto, onze aanhanger</span>
               </div>
             </div>
             <p className="text-xs text-slate-500 leading-normal">
@@ -333,12 +333,12 @@ export default function BookingStep1({
             </p>
             {sums && sums.days > 0 ? (
               <div className="mt-2 flex items-baseline gap-1">
-                <span className="text-sm font-black text-emerald-600">{euroCompact(sums.days * 25)}</span>
+                <span className="text-sm font-black text-emerald-700">{euroCompact(sums.days * 25)}</span>
                 <span className="text-xs text-slate-500 font-semibold">({sums.days} dgn × €25,-)</span>
               </div>
             ) : (
               <div className="mt-2 flex items-baseline gap-1">
-                <span className="text-sm font-black text-emerald-600">€25,-/dag</span>
+                <span className="text-sm font-black text-emerald-700">€25,-/dag</span>
               </div>
             )}
           </button>
@@ -364,13 +364,13 @@ export default function BookingStep1({
               </span>
               <div>
                 <h4 className="text-xs font-bold text-slate-900">Zelf ophalen</h4>
-                <span className="text-xs text-slate-400 block">Zoeterwoude depot</span>
+                <span className="text-xs text-slate-500 block">Zoeterwoude depot</span>
               </div>
             </div>
             <p className="text-xs text-slate-500 leading-normal">
               Ophalen bij ons depot — gratis.
             </p>
-            <span className="text-sm font-black text-emerald-600 mt-2 block">Kosteloos</span>
+            <span className="text-sm font-black text-emerald-700 mt-2 block">Kosteloos</span>
           </button>
         </div>
         )}
@@ -406,7 +406,7 @@ export default function BookingStep1({
         <div className="space-y-3 pt-4 border-t-2 border-slate-200">
           <div className="flex justify-between items-center">
             <span className="text-sm text-slate-800 font-bold">Gewenst bezorgmoment</span>
-            <span className="text-xs text-rose-500 font-semibold uppercase tracking-wide">Verplicht</span>
+            <span className="text-xs text-rose-600 font-semibold uppercase tracking-wide">Verplicht</span>
           </div>
           <div className={`grid grid-cols-2 gap-3 rounded-xl border p-2 transition-colors ${attempted && timeSlotBlocked ? "border-rose-400 bg-rose-50/40" : "border-transparent"}`}>
             {[
@@ -424,7 +424,7 @@ export default function BookingStep1({
                 }`}
               >
                 <span className="text-xs font-bold text-slate-900 block">{slot.label}</span>
-                <span className="text-xs text-slate-400 font-mono">{slot.time}</span>
+                <span className="text-xs text-slate-500 font-mono">{slot.time}</span>
               </button>
             ))}
           </div>
@@ -462,7 +462,7 @@ export default function BookingStep1({
           <span className="text-sm text-slate-800 font-bold">
             {selectedMachine?.crossSellAddons?.length ? "Handige accessoires voor uw klus" : t("step1AddonsTitle")}
           </span>
-          <span className="text-xs text-slate-400">Optioneel</span>
+          <span className="text-xs text-slate-500">Optioneel</span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">

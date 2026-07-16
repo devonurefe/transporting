@@ -156,7 +156,8 @@ export default function Footer({ siteName, setActiveTab, setShowContactModal }: 
 
           </div>
 
-          <p className="text-center text-[10px] text-slate-400 mt-4">Zweef om te pauzeren</p>
+          {/* Hover-only gesture — hint is meaningless on touch, so desktop only */}
+          <p className="hidden sm:block text-center text-[10px] text-slate-500 mt-4">Zweef om te pauzeren</p>
           </>
           )}
 

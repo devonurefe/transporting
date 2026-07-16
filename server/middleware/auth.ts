@@ -39,5 +39,8 @@ export function requireAdmin(req: AuthenticatedRequest, res: Response, next: Nex
   if (!req.user || req.user.role !== "admin") {
     return res.status(403).json({ error: "Toegang geweigerd. Beheerderstoegang vereist." });
   }
+  if (req.user.id && req.user.iat && isTokenRevoked(req.user.id, req.user.iat)) {
+    return res.status(401).json({ error: "Sessie verlopen na wachtwoordwijziging, log opnieuw in" });
+  }
   next();
 }

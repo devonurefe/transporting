@@ -968,6 +968,35 @@ async function applyDataMigrations() {
       }
     }
 
+    // 2026-07 weekend-blokkade uitrol — weekendregels (depot za/zo dicht) van de
+    // Bravi-pilot uitgebreid naar de volledige mast- en schaargroep, met de
+    // zondagblokkade per machine op (3-daags − 2-daags) zodat een Vr+Za verhuur
+    // exact de doordeweekse 3-daagse prijs kost. Dit blok draait op elke deploy
+    // (autoSeedIfEmpty seedt alleen een lege DB, dus de seed.ts-migratie raakt een
+    // bestaande productie-DB niet — deze applyDataMigrations-variant wél). Elke
+    // updateMany is guarded op de vorige bekende waarde: idempotent en een latere
+    // handmatige admin-wijziging wordt nooit overschreven.
+    const braviBlk = await prisma.machine.updateMany({
+      where: { id: "bravi-mini-hd", sundayBlockFee: 20 },
+      data: { pricePerDay: 45, fourDayPrice: 115, weeklyPrice: 120, weekendPrice: 70, monthlyPrice: 320, sundayBlockFee: 25 },
+    });
+    await prisma.machine.updateMany({
+      where: { id: "jlg-1230es", weekendRulesEnabled: false },
+      data: { pricePerDay: 45, fourDayPrice: 115, weeklyPrice: 120, weekendPrice: 70, monthlyPrice: 320, sundayBlockFee: 25, weekendRulesEnabled: true },
+    });
+    await prisma.machine.updateMany({
+      where: { id: { in: ["compact-10n-1", "compact-10n-2"] }, weekendRulesEnabled: false },
+      data: { extraDayPrice: 59, monthlyPrice: 675, sundayBlockFee: 50, weekendRulesEnabled: true },
+    });
+    await prisma.machine.updateMany({ where: { id: "dingli-6m", weekendRulesEnabled: false }, data: { sundayBlockFee: 30, weekendRulesEnabled: true } });
+    await prisma.machine.updateMany({ where: { id: { in: ["optimum-8-1", "optimum-8-2"] }, weekendRulesEnabled: false }, data: { sundayBlockFee: 40, weekendRulesEnabled: true } });
+    await prisma.machine.updateMany({ where: { id: { in: ["compact-8-1", "compact-8-2"] }, weekendRulesEnabled: false }, data: { sundayBlockFee: 40, weekendRulesEnabled: true } });
+    await prisma.machine.updateMany({ where: { id: "skyjack-sj16", weekendRulesEnabled: false }, data: { sundayBlockFee: 25, weekendRulesEnabled: true } });
+    const starBlk = await prisma.machine.updateMany({ where: { id: "star-10", weekendRulesEnabled: false }, data: { sundayBlockFee: 50, weekendRulesEnabled: true } });
+    if (braviBlk.count > 0 || starBlk.count > 0) {
+      console.log("[Migration] Weekend-blokkade uitrol toegepast (Vr+Za = 3-daagse prijs, weekendregels mast/schaar).");
+    }
+
     // One-time: set showInWeeklyOffers — only the 3 featured machines get true,
     // all others get false. Admin can override per machine afterwards.
     const WEEKLY_OFFERS_MIGRATION = "migration-weekly-offers-2026-06";

@@ -436,6 +436,12 @@ export function buildPricingTierRows(machine: Machine): PricingTierRow[] {
       rows.push({ period: oneDayHasActie ? "Dagactie" : "1 dag", when: "Ma – Vr", price: oneDayHasActie ? machine.oneDayPrice! : machine.pricePerDay, highlight: oneDayHasActie ? "fire" : undefined });
     }
     rows.push({ period: "2 dagen", when: "Doordeweeks", price: machine.twoDayPrice ?? (machine.pricePerDay * 2) });
+    // Vrijdag + Zaterdag: 2 werkdagen + de automatische zondagblokkade (retour ma 08:00).
+    // Toont het concrete totaal dat calculateItemSubtotal rekent (tarief 2 dagen +
+    // sundayBlockFee), dat per prijsblad gelijk is aan de doordeweekse 3-daagse prijs.
+    if (machine.sundayBlockFee) {
+      rows.push({ period: "Vrijdag + Zaterdag", when: "incl. zondagblokkade · retour ma 08:00", price: (machine.twoDayPrice ?? machine.pricePerDay * 2) + machine.sundayBlockFee });
+    }
     if (machine.threeDayPrice ?? machine.weeklyPrice) rows.push({ period: "3 dagen", when: "Doordeweeks", price: (machine.threeDayPrice ?? machine.weeklyPrice)! });
     if (machine.fourDayPrice ?? machine.weeklyPrice) rows.push({ period: "4 dagen", when: "Doordeweeks", price: (machine.fourDayPrice ?? machine.weeklyPrice)! });
     if (machine.weeklyPrice) rows.push({ period: "5 dagen (werkweek)", when: "Ma – Vr", price: machine.weeklyPrice, badge: d.weekly > 0 ? `−${d.weekly}%` : undefined, highlight: "green" });

@@ -3,6 +3,15 @@ import { prisma } from "../../prisma/client.js";
 import { requireAdmin } from "../middleware/auth.js";
 import { AuthenticatedRequest } from "../middleware/auth.js";
 import { publicReadLimiter } from "../middleware/publicGuard.js";
+import { audit } from "../utils/audit.js";
+import {
+  sanitizeFaqItems,
+  sanitizeUspItems,
+  sanitizeOpeningHours,
+  sanitizeTransportFees,
+  sanitizeGlobalAddons,
+  sanitizeLegalContent
+} from "../utils/sanitizeContent.js";
 
 export const siteConfigRouter = Router();
 
@@ -38,7 +47,10 @@ siteConfigRouter.get("/site-config", publicReadLimiter, async (req: Authenticate
       return res.json(config || defaultSiteConfig);
     }
     res.setHeader("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
-    const publicConfig: any = config || defaultSiteConfig;
+    // Juridische markdown (tot 2×60k) hoort niet in de publieke config-payload
+    // die elke first visit ophaalt — die content is opvraagbaar via /api/pages/:slug.
+    const { privacyPolicy: _pp, termsConditions: _tc, ...strippedConfig } = (config || defaultSiteConfig) as any;
+    const publicConfig: any = strippedConfig;
     const patch: Record<string, string> = {};
     if (typeof publicConfig.heroImageUrl === "string" && publicConfig.heroImageUrl.startsWith("data:image/")) {
       patch.heroImageUrl = "/site-hero-image";
@@ -60,7 +72,8 @@ const SITE_CONFIG_FIELDS = [
   // destructive db push, but no longer editable — the advisor feature is gone.
   "menuHomeLabel", "menuCatalogLabel", "menuOrdersLabel", "menuAdminLabel",
   "contactEmail", "contactPhone", "companyAddress", "kvkNumber", "btwNumber", "companyLegalName",
-  "coffeeCornerTitle", "coffeeCornerDescription", "coffeeCornerImageUrl", "coffeeCornerCtaLabel", "coffeeCornerCtaHref"
+  "coffeeCornerTitle", "coffeeCornerDescription", "coffeeCornerImageUrl", "coffeeCornerCtaLabel", "coffeeCornerCtaHref",
+  "footerDescription", "seoTitle", "seoDescription"
 ] as const;
 
 // Sanitize one admin-curated Google review. Everything is length-capped and the
@@ -135,6 +148,38 @@ function pickSiteConfigFields(body: any): Record<string, string | number | boole
     }
   }
 
+  // AdminContent-velden: null wist het veld (→ code-fallback), een geldig
+  // gesanitized object/array overschrijft. Misvormde input wordt genegeerd.
+  const jsonContentFields: Array<[string, (raw: unknown) => unknown | null]> = [
+    ["faqItems", sanitizeFaqItems],
+    ["uspItems", sanitizeUspItems],
+    ["openingHours", sanitizeOpeningHours],
+    ["transportFees", sanitizeTransportFees],
+    ["globalAddons", sanitizeGlobalAddons]
+  ];
+  for (const [field, sanitize] of jsonContentFields) {
+    if (field in (body ?? {})) {
+      const raw = body[field];
+      if (raw === null || raw === "") {
+        (data as any)[field] = null; // terug naar code-default
+      } else {
+        const cleaned = sanitize(raw);
+        if (cleaned !== null) (data as any)[field] = cleaned;
+      }
+    }
+  }
+  for (const field of ["privacyPolicy", "termsConditions"] as const) {
+    if (field in (body ?? {})) {
+      const raw = body[field];
+      if (raw === null || raw === "") {
+        data[field] = null;
+      } else {
+        const cleaned = sanitizeLegalContent(raw);
+        if (cleaned !== null) data[field] = cleaned;
+      }
+    }
+  }
+
   return data;
 }
 
@@ -147,10 +192,35 @@ siteConfigRouter.post("/site-config", requireAdmin as any, async (req: Authentic
       update: data,
       create: { ...defaultSiteConfig, ...data, id: "default" }
     });
+    // Veldnamen volstaan — waarden kunnen base64-afbeeldingen (hero) bevatten
+    audit(req, "siteconfig.updated", { entity: "SiteConfig", entityId: "default", meta: { fields: Object.keys(data).slice(0, 40) } });
     res.json({ success: true, siteConfig: updated });
   } catch (error) {
     console.error("Error updating site config:", error);
     res.status(500).json({ error: "Kon siteconfiguratie niet bijwerken" });
+  }
+});
+
+// GET /api/pages/:slug — juridische pagina's (markdown), buiten de site-config-
+// payload gehouden om de first-visit JSON klein te houden. Lege content = de
+// pagina toont een nette "inhoud volgt"-fallback client-side.
+siteConfigRouter.get("/pages/:slug", publicReadLimiter, async (req: AuthenticatedRequest, res: Response) => {
+  const FIELD_BY_SLUG: Record<string, "privacyPolicy" | "termsConditions"> = {
+    privacy: "privacyPolicy",
+    voorwaarden: "termsConditions"
+  };
+  const field = FIELD_BY_SLUG[req.params.slug];
+  if (!field) return res.status(404).json({ error: "Pagina niet gevonden" });
+  try {
+    const config = await prisma.siteConfig.findUnique({
+      where: { id: "default" },
+      select: { privacyPolicy: true, termsConditions: true }
+    });
+    res.setHeader("Cache-Control", "public, max-age=300, stale-while-revalidate=600");
+    return res.json({ slug: req.params.slug, content: (config?.[field] as string | null) ?? "" });
+  } catch (error) {
+    console.error("Error fetching legal page:", error);
+    return res.status(500).json({ error: "Pagina ophalen mislukt" });
   }
 });
 
@@ -229,6 +299,7 @@ siteConfigRouter.post("/campaign-rules", requireAdmin as any, async (req: Authen
         campaignRules: rules
       }
     });
+    audit(req, "campaignrules.updated", { entity: "SiteConfig", entityId: "default" });
     res.json({ success: true });
   } catch (error) {
     console.error("Error saving campaign rules:", error);
@@ -289,6 +360,7 @@ siteConfigRouter.post("/advisor-config", requireAdmin as any, async (req: Authen
       update: { advisorConfig } as any,
       create: { ...defaultSiteConfig, advisorConfig, id: "default" } as any,
     });
+    audit(req, "advisorconfig.updated", { entity: "SiteConfig", entityId: "default" });
     res.json({ success: true });
   } catch (error) {
     console.error("Error saving advisor config:", error);
@@ -338,6 +410,7 @@ siteConfigRouter.post("/categories", requireAdmin as any, async (req: Authentica
       });
     }
     const categories = await prisma.category.findMany();
+    audit(req, "categories.updated", { entity: "Category", meta: { count: categories.length } });
     res.json({ success: true, customCategories: categories });
   } catch (error) {
     console.error("Error updating categories:", error);

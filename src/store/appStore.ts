@@ -43,6 +43,21 @@ interface SiteConfig {
   coffeeCornerImageUrl?: string;
   coffeeCornerCtaLabel?: string;
   coffeeCornerCtaHref?: string;
+  // Admin-beheerbare content (AdminContent). null/undefined = code-fallback.
+  faqItems?: Array<{ q: string; a: string }> | null;
+  uspItems?: Array<{ icon: string; title: string; text: string }> | null;
+  openingHours?: { monFri?: string; sat?: string; sun?: string } | null;
+  transportFees?: { deliveryFee?: number; trailerPerDay?: number } | null;
+  globalAddons?: {
+    safety?: { name?: string; pricePerWeek?: number };
+    rijplaten?: { name?: string; pricePerWeek?: number };
+  } | null;
+  footerDescription?: string | null;
+  seoTitle?: string | null;
+  seoDescription?: string | null;
+  // Alleen aanwezig in het admin ?full=1 antwoord — de publieke feed stript ze
+  privacyPolicy?: string | null;
+  termsConditions?: string | null;
 }
 
 export interface GoogleReview {

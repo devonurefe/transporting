@@ -5,6 +5,8 @@
 
 import { CartItem } from "../types";
 import { euro, euroCompact } from "./format";
+import { getTransportFees } from "./pricing";
+import { useAppStore } from "../store/appStore";
 
 // HuurGo WhatsApp business number
 const WHATSAPP_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER ?? "31611848899";
@@ -65,11 +67,17 @@ export function buildWhatsAppUrl(
     lines.push("─────────────────────────────");
     lines.push("🚛 *TRANSPORT*");
     lines.push("─────────────────────────────");
+    // Tarieven, adres en openingstijden zijn admin-instelbaar (SiteConfig);
+    // de fallbacks zijn de historische literals.
+    const siteConfig = useAppStore.getState().siteConfig;
+    const fees = getTransportFees(siteConfig);
+    const pickupAddress = siteConfig.companyAddress || "Produktieweg 20, Zoeterwoude";
+    const pickupHours = siteConfig.openingHours?.monFri || "ma–vr 08:00–17:00";
     const label = deliveryType === "self_pickup"
-      ? "✅  Zelf ophalen  –  Produktieweg 20, Zoeterwoude  (Gratis)\n   🕐 Openingstijden: ma–vr 08:00–17:00"
+      ? `✅  Zelf ophalen  –  ${pickupAddress}  (Gratis)\n   🕐 Openingstijden: ${pickupHours}`
       : deliveryType === "trailer_rental"
-      ? `🔗  Aanhanger huren  (€25,-/dag${totals ? `  ×  ${totals.days} d  =  ${euroCompact(totals.transport)}` : ""})`
-      : `🚐  Bezorging door ons  (heen + terug = €150,-)`;
+      ? `🔗  Aanhanger huren  (${euroCompact(fees.trailerPerDay)}/dag${totals ? `  ×  ${totals.days} d  =  ${euroCompact(totals.transport)}` : ""})`
+      : `🚐  Bezorging door ons  (heen + terug = ${euroCompact(fees.deliveryFee)})`;
     lines.push(label);
     lines.push("");
   }

@@ -4,6 +4,7 @@
  */
 
 import { Resend } from "resend";
+import { prisma } from "../../prisma/client.js";
 
 // Initialize Resend with env key
 // In local development, if RESEND_API_KEY is not defined, we fallback to mocking
@@ -23,6 +24,47 @@ const WHATSAPP_NUMBER = (process.env.VITE_WHATSAPP_NUMBER || process.env.WHATSAP
 /** Build a wa.me link with a pre-filled, URL-encoded message. */
 const waLink = (message: string): string =>
   `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+
+// Admin-instelbare bedrijfsgegevens (SiteConfig, al bewerkbaar via AdminCustomizer)
+// voor de e-mailfooters en het afhaaladres. 60s in-memory cache — een template
+// wordt per verzonden e-mail één keer opgebouwd, geen reden om elke keer de DB
+// te raken. Fallbacks = de historische literals; sjabloonstructuur blijft in code.
+interface CompanyDetails {
+  legalName: string;
+  address: string;
+  footerLong: string;  // met "• Zoeterwoude, Nederland" suffix
+  footerShort: string; // zonder suffix (compactere sjablonen)
+}
+let companyDetailsCache: { value: CompanyDetails; expiresAt: number } | null = null;
+
+async function getCompanyDetails(): Promise<CompanyDetails> {
+  if (companyDetailsCache && companyDetailsCache.expiresAt > Date.now()) {
+    return companyDetailsCache.value;
+  }
+  const DEFAULT_LEGAL_NAME = "MB Hoogwerkers B.V.";
+  const DEFAULT_ADDRESS = "Produktieweg 20, 2382 PB Zoeterwoude";
+  let legalName = DEFAULT_LEGAL_NAME;
+  let address = DEFAULT_ADDRESS;
+  try {
+    const cfg = await prisma.siteConfig.findUnique({
+      where: { id: "default" },
+      select: { companyLegalName: true, companyAddress: true }
+    });
+    if (cfg?.companyLegalName) legalName = cfg.companyLegalName;
+    if (cfg?.companyAddress) address = cfg.companyAddress;
+  } catch {
+    // DB-hik: fallbacks blijven gelden, een e-mail mag hier nooit op falen
+  }
+  const year = new Date().getFullYear();
+  const value: CompanyDetails = {
+    legalName,
+    address,
+    footerLong: `© ${year} huurgo / ${legalName} • BMWT-gecertificeerd verhuurnetwerk • Zoeterwoude, Nederland`,
+    footerShort: `© ${year} huurgo / ${legalName} • BMWT-gecertificeerd verhuurnetwerk`
+  };
+  companyDetailsCache = { value, expiresAt: Date.now() + 60_000 };
+  return value;
+}
 
 // Escape user-supplied values before interpolating into HTML email bodies
 const esc = (s: unknown): string =>
@@ -71,6 +113,7 @@ export const emailService = {
    * Send Order Confirmation Email to the Customer
    */
   sendOrderConfirmation: async (order: EmailOrderData) => {
+    const company = await getCompanyDetails();
     const isPickup = order.deliveryType === "self_pickup";
     const deliveryMethodText = isPickup ? "Zelf Afhalen (Gratis)" : "Bezorgservice op locatie";
 
@@ -179,7 +222,7 @@ export const emailService = {
             </div>
           </div>
           <div class="footer">
-            © ${new Date().getFullYear()} huurgo / MB Hoogwerkers B.V. • BMWT-gecertificeerd verhuurnetwerk • Zoeterwoude, Nederland
+            ${company.footerLong}
           </div>
         </div>
       </body>
@@ -294,6 +337,7 @@ export const emailService = {
    * Send Order Status Update Email to Customer (e.g. Approved, Out for delivery)
    */
   sendStatusUpdate: async (order: EmailOrderData) => {
+    const company = await getCompanyDetails();
     let statusTitle = "Status bijgewerkt";
     let statusDescription = `De status van uw reservering ${order.id} is bijgewerkt naar: <strong>${order.status}</strong>.`;
     let headerColor = "linear-gradient(135deg, #4f46e5, #3b82f6)";
@@ -387,7 +431,7 @@ export const emailService = {
             ${ratingBlock}
           </div>
           <div class="footer">
-            © ${new Date().getFullYear()} huurgo / MB Hoogwerkers B.V. • BMWT-gecertificeerd verhuurnetwerk • Zoeterwoude, Nederland
+            ${company.footerLong}
           </div>
         </div>
       </body>
@@ -413,6 +457,7 @@ export const emailService = {
    * Send Email Verification Link to the Customer
    */
   sendVerificationEmail: async (customer: { name: string; email: string }, token: string, origin: string) => {
+    const company = await getCompanyDetails();
     const verificationUrl = `${origin}/api/auth/verify?token=${token}`;
 
     const htmlContent = `
@@ -463,7 +508,7 @@ export const emailService = {
             </div>
           </div>
           <div class="footer">
-            © ${new Date().getFullYear()} huurgo / MB Hoogwerkers B.V. • BMWT-gecertificeerd verhuurnetwerk • Zoeterwoude, Nederland
+            ${company.footerLong}
           </div>
         </div>
       </body>
@@ -489,8 +534,9 @@ export const emailService = {
    * Send a reminder email to the customer one day before the rental starts
    */
   sendRentalReminder: async (order: EmailOrderData) => {
+    const company = await getCompanyDetails();
     const isPickup = order.deliveryType === "self_pickup";
-    const deliveryText = isPickup ? "Zelf afhalen bij MB Hoogwerkers, Produktieweg 20, 2382 PB Zoeterwoude" : `Bezorging op adres: ${esc(order.deliveryAddress || "")}`;
+    const deliveryText = isPickup ? `Zelf afhalen bij MB Hoogwerkers, ${company.address}` : `Bezorging op adres: ${esc(order.deliveryAddress || "")}`;
 
     const htmlContent = `
       <!DOCTYPE html>
@@ -528,7 +574,7 @@ export const emailService = {
             </div>
             <p style="font-size: 13px; color: #475569;">Zorg dat de opstelplaats toegankelijk is. Bij vragen kunt u contact opnemen via WhatsApp.</p>
           </div>
-          <div class="footer">© ${new Date().getFullYear()} huurgo / MB Hoogwerkers B.V. • BMWT-gecertificeerd verhuurnetwerk</div>
+          <div class="footer">${company.footerShort}</div>
         </div>
       </body>
       </html>
@@ -554,6 +600,7 @@ export const emailService = {
    * after placing it. Mirrors sendRentalReminder's structure/styling.
    */
   sendPaymentReminder: async (order: EmailOrderData) => {
+    const company = await getCompanyDetails();
     const paymentWaLink = waLink(
       `Hallo huurgo! 👋\n\nIk heb zojuist een betaalherinnering ontvangen voor boeking ${order.id}.\n\nKunt u mij de betaallink nogmaals sturen?\n\nBedankt! 🦾`
     );
@@ -596,7 +643,7 @@ export const emailService = {
             ${WHATSAPP_NUMBER ? `<p style="text-align:center;"><a href="${paymentWaLink}" class="btn">💬 Betaallink opnieuw aanvragen</a></p>` : ""}
             <p style="font-size: 13px; color: #475569;">Loopt er iets mis of heeft u een vraag? Neem gerust contact met ons op via WhatsApp.</p>
           </div>
-          <div class="footer">© ${new Date().getFullYear()} huurgo / MB Hoogwerkers B.V. • BMWT-gecertificeerd verhuurnetwerk</div>
+          <div class="footer">${company.footerShort}</div>
         </div>
       </body>
       </html>
@@ -621,6 +668,7 @@ export const emailService = {
    * Send password reset link to customer
    */
   sendPasswordResetEmail: async (email: string, name: string, token: string, appUrl: string) => {
+    const company = await getCompanyDetails();
     const resetUrl = `${appUrl}/orders?reset_token=${token}`;
     const htmlContent = `
       <!DOCTYPE html>
@@ -654,7 +702,7 @@ export const emailService = {
               <a href="${resetUrl}" style="color:#4f46e5;">${resetUrl}</a>
             </div>
           </div>
-          <div class="footer">© ${new Date().getFullYear()} huurgo / MB Hoogwerkers B.V. • BMWT-gecertificeerd verhuurnetwerk</div>
+          <div class="footer">${company.footerShort}</div>
         </div>
       </body>
       </html>
@@ -679,6 +727,7 @@ export const emailService = {
    * Send cancellation alert to admin when a customer cancels an order
    */
   sendAdminCancelAlert: async (order: EmailOrderData) => {
+    const company = await getCompanyDetails();
     const htmlContent = `
       <!DOCTYPE html>
       <html>
@@ -745,6 +794,7 @@ export const emailService = {
    * Send a personalised campaign email to a single customer
    */
   sendCampaignEmail: async (customer: { name: string; email: string }, subject: string, body: string): Promise<boolean> => {
+    const company = await getCompanyDetails();
     const safeBody = body
       .split("\n")
       .map(line => `<p style="margin:0 0 10px;font-size:13px;line-height:1.6;color:#334155;">${
@@ -778,7 +828,7 @@ export const emailService = {
             </div>
           </div>
           <div class="footer">
-            © ${new Date().getFullYear()} huurgo / MB Hoogwerkers B.V. • BMWT-gecertificeerd verhuurnetwerk • Zoeterwoude, Nederland<br>
+            ${company.footerLong}<br>
             <span style="font-size:10px;color:#94a3b8;">U ontvangt dit bericht omdat u klant bent bij MB Hoogwerkers B.V.</span>
           </div>
         </div>

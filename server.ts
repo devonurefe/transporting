@@ -14,6 +14,7 @@ import { authRouter } from "./server/routes/auth.js";
 import { prisma } from "./prisma/client.js";
 import { emailService } from "./server/services/emailService.js";
 import { authenticateToken } from "./server/middleware/auth.js";
+import { pruneAuditLogs } from "./server/utils/audit.js";
 import { requestLogger } from "./server/middleware/logger.js";
 import { errorHandler } from "./server/middleware/errorHandler.js";
 import { validateEnvironment } from "./server/utils/env.js";
@@ -582,7 +583,35 @@ async function metaForRequest(pathname: string): Promise<RouteMeta> {
   }
   const meta = staticMeta(pathname);
   if (pathname === "/") {
+    // Admin-instelbare homepage-SEO (AdminContent → SEO); leeg = code-default.
+    try {
+      const cfg = await prisma.siteConfig.findUnique({
+        where: { id: "default" },
+        select: { seoTitle: true, seoDescription: true }
+      });
+      if (cfg?.seoTitle) meta.title = cfg.seoTitle;
+      if (cfg?.seoDescription) meta.description = cfg.seoDescription;
+    } catch { /* houd defaults bij een DB-hik */ }
     meta.heroPreload = await heroPreloadUrl();
+  }
+  if (pathname === "/veelgestelde-vragen") {
+    // Admin-beheerde FAQ moet ook in de server-side JSON-LD winnen, anders wijkt
+    // de structured data af van wat FaqSection toont (Google-eis).
+    try {
+      const cfg = await prisma.siteConfig.findUnique({ where: { id: "default" }, select: { faqItems: true } });
+      const items = cfg?.faqItems;
+      if (Array.isArray(items) && items.length > 0) {
+        meta.jsonLd = JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          "mainEntity": (items as Array<{ q: string; a: string }>).map((item) => ({
+            "@type": "Question",
+            "name": item.q,
+            "acceptedAnswer": { "@type": "Answer", "text": item.a },
+          })),
+        });
+      }
+    } catch { /* houd de code-default JSON-LD */ }
   }
   return meta;
 }
@@ -759,6 +788,8 @@ function scheduleDailyReminders() {
 
   const fireReminders = async () => {
     await sendBatch();
+    // Piggyback op de dagelijkse cron: audittrail-retentie (180 dagen)
+    pruneAuditLogs().catch(() => {});
     // Schedule next run at the next 07:00 Amsterdam time
     setTimeout(fireReminders, msUntilAmsterdam7am() + 60_000); // +60s buffer past the hour
   };

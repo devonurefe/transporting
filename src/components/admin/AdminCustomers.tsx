@@ -67,7 +67,11 @@ export default function AdminCustomers({ adminLanguage }: AdminCustomersProps) {
 
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterMarketing, setFilterMarketing] = useState<"all" | "yes" | "no">("all");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -85,12 +89,15 @@ export default function AdminCustomers({ adminLanguage }: AdminCustomersProps) {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch("/api/auth/customers", {
+        const res = await fetch("/api/auth/customers?page=1&limit=50", {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!res.ok) throw new Error("Ophalen mislukt");
         const data = await res.json();
         setCustomers(data.customers);
+        setPage(data.page ?? 1);
+        setTotalPages(data.totalPages ?? 1);
+        setTotalCount(data.totalCount ?? data.customers.length);
       } catch {
         setError(t("Klanten ophalen mislukt.", "Failed to load customers.", "Müşteriler yüklenemedi."));
       } finally {
@@ -98,6 +105,25 @@ export default function AdminCustomers({ adminLanguage }: AdminCustomersProps) {
       }
     })();
   }, [token]);
+
+  const loadMoreCustomers = async () => {
+    if (page >= totalPages || loadingMore) return;
+    setLoadingMore(true);
+    try {
+      const nextPage = page + 1;
+      const res = await fetch(`/api/auth/customers?page=${nextPage}&limit=50`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Ophalen mislukt");
+      const data = await res.json();
+      setCustomers((prev) => [...prev, ...data.customers]);
+      setPage(data.page ?? nextPage);
+    } catch {
+      showAdminToast(t("Meer klanten laden mislukt.", "Failed to load more customers.", "Daha fazla müşteri yüklenemedi."), "error");
+    } finally {
+      setLoadingMore(false);
+    }
+  };
 
   const filtered = useMemo(() => {
     let list = customers;
@@ -483,6 +509,20 @@ export default function AdminCustomers({ adminLanguage }: AdminCustomersProps) {
               })}
             </div>
           </div>
+
+          {page < totalPages && (
+            <div className="flex justify-center pt-3">
+              <button
+                onClick={loadMoreCustomers}
+                disabled={loadingMore}
+                className="text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 px-4 py-2.5 rounded-xl transition-colors cursor-pointer border-none disabled:opacity-50"
+              >
+                {loadingMore
+                  ? t("Laden...", "Loading...", "Yükleniyor...")
+                  : t(`Meer laden (${customers.length} van ${totalCount})`, `Load more (${customers.length} of ${totalCount})`, `Daha fazla yükle (${totalCount} müşteriden ${customers.length})`)}
+              </button>
+            </div>
+          )}
         </>
       )}
 

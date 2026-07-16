@@ -5,6 +5,8 @@ import { blockedDatesRouter } from "./blockedDates.js";
 import { siteConfigRouter } from "./siteConfig.js";
 import { calendarRouter } from "./calendar.js";
 import { blogPostsRouter } from "./blog.js";
+import { adminAuditRouter } from "./adminAudit.js";
+import { adminUsersRouter } from "./admins.js";
 import { prisma } from "../../prisma/client.js";
 import { requireAdmin } from "../middleware/auth.js";
 
@@ -39,6 +41,8 @@ apiRouter.use("/orders", ordersRouter);
 apiRouter.use("/blocked-dates", blockedDatesRouter);
 apiRouter.use("/calendar", calendarRouter);
 apiRouter.use("/blog-posts", blogPostsRouter);
+apiRouter.use("/admin/audit-logs", adminAuditRouter);
+apiRouter.use("/admin/users", adminUsersRouter);
 apiRouter.use("/", siteConfigRouter);
 
 import path from "path";

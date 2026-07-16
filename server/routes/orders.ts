@@ -6,6 +6,8 @@ import { prisma } from "../../prisma/client.js";
 import { AuthenticatedRequest, requireAdmin, requireAuth } from "../middleware/auth.js";
 import { publicReadLimiter } from "../middleware/publicGuard.js";
 import { emailService } from "../services/emailService.js";
+import { audit } from "../utils/audit.js";
+import { resolveFees } from "../utils/fees.js";
 
 export const ordersRouter = Router();
 
@@ -280,6 +282,9 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
     const siteConf = await prisma.siteConfig.findUnique({ where: { id: "default" } });
     const campaignRules: Array<{ scope: string; scopeValue: string; discountPercent: number; isActive: boolean }> =
       Array.isArray((siteConf as any)?.campaignRules) ? (siteConf as any).campaignRules : [];
+    // Admin-instelbare transport-/add-on-tarieven — spiegel van getTransportFees/
+    // getGlobalAddons in src/utils/pricing.ts (identieke defaults + clamps)
+    const fees = resolveFees(siteConf as any);
 
     // Server-side financial recalculation — prevent subtotal/VAT/total manipulation.
     // rentalDays is recomputed from the dates (inclusive, same formula as
@@ -301,8 +306,8 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
     }
     const authTransport =
       dt === "self_pickup"      ? 0
-      : dt === "delivery_by_us" ? 150
-      : /* trailer_rental */      25 * rentalDays;
+      : dt === "delivery_by_us" ? fees.deliveryFee
+      : /* trailer_rental */      fees.trailerPerDay * rentalDays;
     const transportCostClient = Number(orderData.transportCost || 0);
     if (Math.abs(transportCostClient - authTransport) > 0.01) {
       return res.status(400).json({ error: "Ongeldig transportbedrag" });
@@ -336,7 +341,10 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
     // additional started 7-day block (addonWeeks, same formula as above). Not
     // available on every machine — mirrors GLOBAL_ADDON_EXCLUDED_CATEGORIES in
     // BookingStep1.tsx / BookingSection.tsx — keep identical.
-    const GLOBAL_ADDON_RATES: Record<string, number> = { safety: 15, rijplaten: 6 };
+    const GLOBAL_ADDON_RATES: Record<string, number> = {
+      safety: fees.addons.safety.pricePerWeek,
+      rijplaten: fees.addons.rijplaten.pricePerWeek,
+    };
     const GLOBAL_ADDON_EXCLUDED_CATEGORIES: Record<string, string[]> = {
       safety: ["ladderlift"],
       rijplaten: ["aanhanger", "kamersteiger", "ecolift", "ladderlift"],
@@ -618,10 +626,10 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
           // Reconstruct from server-side data — never persist client-sent names or prices
           addons: JSON.stringify(rawAddons.map((a: any) => {
             const id = String(a.id ?? "");
-            if (id === "safety") return { id: "safety", name: "Veiligheidsset Pro", price: 15 * addonWeeks };
+            if (id === "safety") return { id: "safety", name: fees.addons.safety.name, price: fees.addons.safety.pricePerWeek * addonWeeks };
             if (id === "rijplaten") {
               const qty = globalAddonQty("rijplaten", a) ?? 1;
-              return { id: "rijplaten", name: `Rijplaten (${qty} ${qty === 1 ? "stuk" : "stuks"})`, price: 6 * addonWeeks * qty, quantity: qty };
+              return { id: "rijplaten", name: `${fees.addons.rijplaten.name} (${qty} ${qty === 1 ? "stuk" : "stuks"})`, price: fees.addons.rijplaten.pricePerWeek * addonWeeks * qty, quantity: qty };
             }
             const sa = crossSellMap.get(id);
             return { id, name: sa?.name ?? id, price: sa ? addonPrice(sa) : 0 };
@@ -695,6 +703,7 @@ ordersRouter.put("/:id/payment", requireAdmin as any, async (req: AuthenticatedR
       where: { id },
       data: { paymentStatus }
     });
+    audit(req, "order.payment", { entity: "Order", entityId: id, meta: { to: paymentStatus } });
     res.json({
       ...updatedOrder,
       startDate: updatedOrder.startDate.toISOString().split("T")[0],
@@ -1024,6 +1033,7 @@ ordersRouter.put("/:id/status", requireAdmin as any, async (req: AuthenticatedRe
       where: { id },
       data: { status }
     });
+    audit(req, "order.status", { entity: "Order", entityId: id, meta: { from: order.status, to: status } });
 
     // Trigger status update email asynchronously — respects the customer's live-update preference
     if (await customerWantsEmail(updatedOrder.customerId)) {

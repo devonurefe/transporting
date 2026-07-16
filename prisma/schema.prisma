@@ -93,6 +93,9 @@ model Customer {
   passwordResetExpiry  DateTime?
   marketingConsent     Boolean   @default(false)
   emailOptIn           Boolean   @default(true)
+  tokenVersion         Int       @default(0)
+  failedLoginCount     Int       @default(0)
+  lockedUntil          DateTime?
   createdAt            DateTime  @default(now())
   orders               Order[]
 }
@@ -104,8 +107,15 @@ model Admin {
   name                String
   role                String    @default("admin")
   createdAt           DateTime  @default(now())
-  passwordResetToken  String?
+  passwordResetToken  String?   // sha256-hex van het gemailde token, nooit plaintext
   passwordResetExpiry DateTime?
+  isActive            Boolean   @default(true)
+  tokenVersion        Int       @default(0)
+  failedLoginCount    Int       @default(0)
+  lockedUntil         DateTime?
+  lastLoginAt         DateTime?
+  totpSecret          String?   // AES-256-GCM versleuteld (zie server/utils/crypto.ts)
+  twoFactorEnabled    Boolean   @default(false)
 }
 
 model InvoiceCounter {
@@ -220,6 +230,43 @@ model SiteConfig {
   coffeeCornerImageUrl    String?
   coffeeCornerCtaLabel    String?
   coffeeCornerCtaHref     String?
+  // Admin-beheerbare content (AdminContent-paneel). Alle velden nullable:
+  // null = gebruik de hard-coded fallback in de code (single source of defaults;
+  // seed hoeft nooit aangepast). Gesanitized in server/routes/siteConfig.ts.
+  faqItems          Json?   // [{ q, a }] max 40, q≤200, a≤2000
+  uspItems          Json?   // [{ icon, title, text }] max 8, icon uit whitelist
+  openingHours      Json?   // { monFri, sat, sun } strings ≤60
+  transportFees     Json?   // { deliveryFee, trailerPerDay } — zie prijs-spiegel in orders.ts
+  globalAddons      Json?   // { safety: {name, pricePerWeek}, rijplaten: {name, pricePerWeek} }
+  footerDescription String?
+  seoTitle          String?
+  seoDescription    String?
+  // Juridische pagina's (markdown, ≤60k). NOOIT in de publieke /api/site-config
+  // response (payload-grootte) — geserveerd via GET /api/pages/:slug.
+  privacyPolicy     String?
+  termsConditions   String?
+}
+
+// Server-side audit trail van beveiligings- en beheeracties (login, orderstatus,
+// machine-CRUD, site-config, ...). Geschreven via server/utils/audit.ts
+// (fire-and-forget), gelezen door GET /api/admin/audit-logs (AdminLogs-paneel).
+// Rijen ouder dan 180 dagen worden dagelijks opgeruimd (pruneAuditLogs).
+model AuditLog {
+  id         String   @id @default(uuid())
+  actorId    String?
+  actorEmail String?
+  actorRole  String   // "admin" | "customer" | "anonymous" | "system"
+  action     String   // dot-namespaced: "login.success", "order.status", ...
+  entity     String?  // "Order" | "Machine" | "SiteConfig" | "Admin" | ...
+  entityId   String?
+  meta       Json?
+  ip         String?
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([actorId, createdAt])
+  @@index([entity, entityId])
+  @@index([action, createdAt])
 }
 
 // UNUSED: no code reads or writes this table. Kept (not dropped) to avoid a

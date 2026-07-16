@@ -283,6 +283,12 @@ export default function MyOrdersSection({
         }
       }
     } else {
+      if (useAuthStore.getState().requiresTwoFactor) {
+        // Adminaccount met 2FA — de codestap zit alleen in de beheerderslogin
+        useAuthStore.getState().clearError();
+        setLoginError("Dit account gebruikt tweestapsverificatie. Log in via de beheerderspagina (/admin).");
+        return;
+      }
       const isUnverified = useAuthStore.getState().isUnverified;
       const errorMsg = useAuthStore.getState().error || "Ongeldige inloggegevens.";
       if (isUnverified) {

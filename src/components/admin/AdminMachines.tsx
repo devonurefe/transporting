@@ -446,7 +446,93 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
           {t(`${filteredMachines.length} van ${machines.length} machines`, `${filteredMachines.length} of ${machines.length} machines`, `${machines.length} makineden ${filteredMachines.length} tanesi`)}
         </p>
 
-        <div className="overflow-x-auto scrollbar-thin">
+        {/* Mobile card layout — mirrors AdminOrders.tsx's md:hidden pattern */}
+        <div className="md:hidden space-y-3">
+          {filteredMachines.length === 0 ? (
+            <div className="py-8 text-center text-slate-500 text-xs">
+              {t("Geen machines gevonden.", "No machines found.", "Makine bulunamadı.")}
+            </div>
+          ) : (
+            filteredMachines.map((m) => {
+              const inactive = m.isActive === false;
+              return (
+                <div key={m.id} className={`bg-white rounded-2xl border border-slate-200 p-4 space-y-3 shadow-sm ${inactive ? "opacity-50" : ""}`}>
+                  <div className="flex items-center gap-2.5">
+                    <div className="h-11 w-11 rounded-lg overflow-hidden shrink-0 border border-slate-200 bg-slate-100">
+                      <img
+                        src={m.imageUrl || (m.additionalImages as string[])?.[0] || "/placeholder-machine.webp"}
+                        alt={m.name}
+                        className="h-full w-full object-cover"
+                        referrerPolicy="no-referrer"
+                        onError={(e) => {
+                          const fallback = (m.additionalImages as string[])?.[0];
+                          if (fallback && e.currentTarget.src !== fallback) {
+                            e.currentTarget.src = fallback;
+                          } else {
+                            e.currentTarget.src = "/placeholder-machine.webp";
+                          }
+                        }}
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-slate-800 text-xs leading-snug break-words">{m.name}</p>
+                      <span className="uppercase font-mono text-[9px] text-slate-500 font-extrabold">{m.category}</span>
+                    </div>
+                    <span className="font-mono text-teal-600 font-bold text-xs shrink-0">€ {m.pricePerDay}</span>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2 text-[10px] text-slate-600 font-mono">
+                    <div><span className="text-slate-400">{t("Hoogte", "Height", "Yükseklik")}:</span> {m.height} m</div>
+                    <div><span className="text-slate-400">{t("Bereik", "Reach", "Erişim")}:</span> {m.reach || "--"} m</div>
+                    <div><span className="text-slate-400">{t("Gewicht", "Weight", "Ağırlık")}:</span> {m.weight || "--"} kg</div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-slate-100">
+                    <button
+                      onClick={() => handleToggleActive(m)}
+                      disabled={togglingId === m.id}
+                      className={`font-bold text-[10.5px] px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer border-none shadow-sm ${
+                        inactive ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100" : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+                      } disabled:opacity-50`}
+                    >
+                      {togglingId === m.id ? "..." : inactive ? t("Activeer", "Activate", "Etkinleştir") : t("Deactiveer", "Deactivate", "Devre Dışı")}
+                    </button>
+                    <button
+                      onClick={() => handleStartEdit(m)}
+                      disabled={!!pendingEditId || !!editingMachine}
+                      style={{ touchAction: "manipulation" }}
+                      className="text-indigo-600 hover:text-indigo-800 font-bold text-[10.5px] bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer border-none shadow-sm flex items-center gap-1 disabled:opacity-60"
+                    >
+                      {pendingEditId === m.id
+                        ? <span className="h-3 w-3 rounded-full border-2 border-indigo-400 border-t-transparent animate-spin shrink-0" />
+                        : <Wrench className="h-3 w-3 shrink-0" />}
+                      <span>{pendingEditId === m.id ? "..." : t("Aanpassen", "Modify", "Düzenle")}</span>
+                    </button>
+                    <button
+                      onClick={() => handleDuplicate(m)}
+                      disabled={!!duplicatingId}
+                      className="text-sky-600 hover:text-sky-800 font-bold text-[10.5px] bg-sky-50 hover:bg-sky-100 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer border-none shadow-sm flex items-center gap-1 disabled:opacity-60"
+                    >
+                      {duplicatingId === m.id
+                        ? <span className="h-3 w-3 rounded-full border-2 border-sky-400 border-t-transparent animate-spin shrink-0" />
+                        : <Copy className="h-3 w-3 shrink-0" />}
+                      <span>{duplicatingId === m.id ? "..." : t("Dupliceren", "Duplicate", "Çoğalt")}</span>
+                    </button>
+                    <button
+                      onClick={() => { setDeleteConfirmText(""); setDeleteTarget(m); }}
+                      className="text-rose-600 hover:text-rose-800 font-bold text-[10.5px] bg-rose-50 hover:bg-rose-100 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer border-none shadow-sm flex items-center gap-1"
+                    >
+                      <Trash2 className="h-3 w-3 shrink-0" />
+                      <span>{t("Verwijderen", "Delete", "Sil")}</span>
+                    </button>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        <div className="hidden md:block overflow-x-auto scrollbar-thin">
           <table className="w-full text-left text-xs border-collapse whitespace-nowrap">
             <thead>
               <tr className="border-b border-slate-200 text-slate-500">

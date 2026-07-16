@@ -4,6 +4,7 @@ import { prisma } from "../../prisma/client.js";
 import { requireAdmin } from "../middleware/auth.js";
 import { AuthenticatedRequest } from "../middleware/auth.js";
 import { publicReadLimiter, softOriginGuard } from "../middleware/publicGuard.js";
+import { audit } from "../utils/audit.js";
 
 export const machinesRouter = Router();
 
@@ -297,6 +298,7 @@ machinesRouter.post("/", requireAdmin as any, async (req: AuthenticatedRequest, 
       }
     });
 
+    audit(req, "machine.created", { entity: "Machine", entityId: newMachine.id, meta: { name: newMachine.name } });
     res.status(201).json({
       ...newMachine,
       suitableFor: Array.isArray(newMachine.suitableFor) ? newMachine.suitableFor : [],
@@ -399,6 +401,8 @@ machinesRouter.put("/:id", requireAdmin as any, async (req: AuthenticatedRequest
       }
     });
 
+    // Alleen veldnamen loggen — de body bevat base64-afbeeldingen die niet in de audittabel horen
+    audit(req, "machine.updated", { entity: "Machine", entityId: id, meta: { fields: Object.keys(req.body).slice(0, 40) } });
     res.json({
       ...updatedMachine,
       suitableFor: Array.isArray(updatedMachine.suitableFor) ? updatedMachine.suitableFor : [],
@@ -423,6 +427,7 @@ machinesRouter.patch("/:id/toggle-active", requireAdmin as any, async (req: Auth
       where: { id },
       data: { isActive: !machine.isActive }
     });
+    audit(req, "machine.updated", { entity: "Machine", entityId: id, meta: { isActive: updated.isActive } });
     res.json({ id: updated.id, isActive: updated.isActive });
   } catch (error: any) {
     console.error("Error toggling machine status:", error);
@@ -448,6 +453,7 @@ machinesRouter.delete("/:id", requireAdmin as any, async (req: AuthenticatedRequ
       where: { id },
       data: { deletedAt: new Date(), isActive: false }
     });
+    audit(req, "machine.deleted", { entity: "Machine", entityId: id });
     res.json({ success: true, message: "Machine succesvol verwijderd" });
   } catch (error: any) {
     if (error?.code === "P2025") {

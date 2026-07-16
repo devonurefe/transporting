@@ -3,6 +3,7 @@ import { prisma } from "../../prisma/client.js";
 import { requireAdmin } from "../middleware/auth.js";
 import { AuthenticatedRequest } from "../middleware/auth.js";
 import { publicReadLimiter, softOriginGuard } from "../middleware/publicGuard.js";
+import { audit } from "../utils/audit.js";
 
 export const blogPostsRouter = Router();
 
@@ -129,6 +130,7 @@ blogPostsRouter.post("/", requireAdmin as any, async (req: AuthenticatedRequest,
         published: data.published,
       },
     });
+    audit(req, "blog.created", { entity: "BlogPost", entityId: post.id, meta: { slug: post.slug } });
     res.status(201).json(post);
   } catch (e) {
     console.error("Error creating blog post:", e);
@@ -158,6 +160,7 @@ blogPostsRouter.put("/:id", requireAdmin as any, async (req: AuthenticatedReques
         published: data.published,
       },
     });
+    audit(req, "blog.updated", { entity: "BlogPost", entityId: req.params.id });
     res.json(post);
   } catch (e: any) {
     if (e?.code === "P2025") return res.status(404).json({ error: "Artikel niet gevonden" });
@@ -175,6 +178,7 @@ blogPostsRouter.patch("/:id/toggle-publish", requireAdmin as any, async (req: Au
       where: { id: req.params.id },
       data: { published: !post.published },
     });
+    audit(req, "blog.updated", { entity: "BlogPost", entityId: updated.id, meta: { published: updated.published } });
     res.json({ id: updated.id, published: updated.published });
   } catch (e) {
     console.error("Error toggling blog post:", e);
@@ -186,6 +190,7 @@ blogPostsRouter.patch("/:id/toggle-publish", requireAdmin as any, async (req: Au
 blogPostsRouter.delete("/:id", requireAdmin as any, async (req: AuthenticatedRequest, res: Response) => {
   try {
     await prisma.blogPost.delete({ where: { id: req.params.id } });
+    audit(req, "blog.deleted", { entity: "BlogPost", entityId: req.params.id });
     res.json({ success: true });
   } catch (e: any) {
     if (e?.code === "P2025") return res.status(404).json({ error: "Artikel niet gevonden" });

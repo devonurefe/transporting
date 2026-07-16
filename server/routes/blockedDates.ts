@@ -2,6 +2,7 @@ import { Router, Response } from "express";
 import { prisma } from "../../prisma/client.js";
 import { requireAdmin } from "../middleware/auth.js";
 import { AuthenticatedRequest } from "../middleware/auth.js";
+import { audit } from "../utils/audit.js";
 
 export const blockedDatesRouter = Router();
 
@@ -39,6 +40,7 @@ blockedDatesRouter.post("/", requireAdmin as any, async (req: AuthenticatedReque
       await prisma.blockedDate.deleteMany({
         where: { machineId, date: parsedDate }
       });
+      audit(req, "blockeddate.deleted", { entity: "BlockedDate", entityId: machineId, meta: { date } });
       res.json({ success: true, message: "Datum gedeblokkeerd" });
     } else {
       const exists = await prisma.blockedDate.findFirst({
@@ -53,6 +55,7 @@ blockedDatesRouter.post("/", requireAdmin as any, async (req: AuthenticatedReque
           }
         });
       }
+      audit(req, "blockeddate.created", { entity: "BlockedDate", entityId: machineId, meta: { date } });
       res.status(201).json({ success: true, message: "Datum succesvol geblokkeerd" });
     }
   } catch (error) {

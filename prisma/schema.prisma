@@ -230,6 +230,21 @@ model SiteConfig {
   coffeeCornerImageUrl    String?
   coffeeCornerCtaLabel    String?
   coffeeCornerCtaHref     String?
+  // Admin-beheerbare content (AdminContent-paneel). Alle velden nullable:
+  // null = gebruik de hard-coded fallback in de code (single source of defaults;
+  // seed hoeft nooit aangepast). Gesanitized in server/routes/siteConfig.ts.
+  faqItems          Json?   // [{ q, a }] max 40, q≤200, a≤2000
+  uspItems          Json?   // [{ icon, title, text }] max 8, icon uit whitelist
+  openingHours      Json?   // { monFri, sat, sun } strings ≤60
+  transportFees     Json?   // { deliveryFee, trailerPerDay } — zie prijs-spiegel in orders.ts
+  globalAddons      Json?   // { safety: {name, pricePerWeek}, rijplaten: {name, pricePerWeek} }
+  footerDescription String?
+  seoTitle          String?
+  seoDescription    String?
+  // Juridische pagina's (markdown, ≤60k). NOOIT in de publieke /api/site-config
+  // response (payload-grootte) — geserveerd via GET /api/pages/:slug.
+  privacyPolicy     String?
+  termsConditions   String?
 }
 
 // Server-side audit trail van beveiligings- en beheeracties (login, orderstatus,

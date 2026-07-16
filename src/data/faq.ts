@@ -13,6 +13,14 @@ export interface FaqItem {
   a: string;
 }
 
+// Admin-override: wanneer de eigenaar FAQ-items heeft opgeslagen in SiteConfig
+// (AdminContent → FAQ) winnen die; anders geldt de hard-coded lijst hieronder.
+// FaqSection én de FAQPage JSON-LD in App.tsx moeten dezelfde resolver gebruiken,
+// anders wijkt de structured data af van de zichtbare pagina.
+export function resolveFaqItems(configItems?: Array<{ q: string; a: string }> | null): FaqItem[] {
+  return Array.isArray(configItems) && configItems.length > 0 ? configItems : FAQ_ITEMS;
+}
+
 export const FAQ_ITEMS: FaqItem[] = [
   {
     q: "Kan ik als particulier een hoogwerker huren?",

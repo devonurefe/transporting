@@ -583,7 +583,35 @@ async function metaForRequest(pathname: string): Promise<RouteMeta> {
   }
   const meta = staticMeta(pathname);
   if (pathname === "/") {
+    // Admin-instelbare homepage-SEO (AdminContent → SEO); leeg = code-default.
+    try {
+      const cfg = await prisma.siteConfig.findUnique({
+        where: { id: "default" },
+        select: { seoTitle: true, seoDescription: true }
+      });
+      if (cfg?.seoTitle) meta.title = cfg.seoTitle;
+      if (cfg?.seoDescription) meta.description = cfg.seoDescription;
+    } catch { /* houd defaults bij een DB-hik */ }
     meta.heroPreload = await heroPreloadUrl();
+  }
+  if (pathname === "/veelgestelde-vragen") {
+    // Admin-beheerde FAQ moet ook in de server-side JSON-LD winnen, anders wijkt
+    // de structured data af van wat FaqSection toont (Google-eis).
+    try {
+      const cfg = await prisma.siteConfig.findUnique({ where: { id: "default" }, select: { faqItems: true } });
+      const items = cfg?.faqItems;
+      if (Array.isArray(items) && items.length > 0) {
+        meta.jsonLd = JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          "mainEntity": (items as Array<{ q: string; a: string }>).map((item) => ({
+            "@type": "Question",
+            "name": item.q,
+            "acceptedAnswer": { "@type": "Answer", "text": item.a },
+          })),
+        });
+      }
+    } catch { /* houd de code-default JSON-LD */ }
   }
   return meta;
 }

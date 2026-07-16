@@ -8,21 +8,20 @@ import { motion, AnimatePresence } from "motion/react";
 import { Machine, Order, DeliveryType, UserProfile, CartItem } from "../types";
 import { useAppStore } from "../store/appStore";
 import { checkAvailability } from "../utils/availability";
-import { calculateItemSubtotal, isStrictWeekend, countWeekendDays, hasSundayBlock, calculateRentalDays, addonPriceForRental, billableWeeks, buildTierDisplay, WeeklyBreakdown } from "../utils/pricing";
+import { calculateItemSubtotal, isStrictWeekend, countWeekendDays, hasSundayBlock, calculateRentalDays, addonPriceForRental, billableWeeks, buildTierDisplay, WeeklyBreakdown, getTransportFees, getGlobalAddons } from "../utils/pricing";
 
 // Global add-ons available on every machine (unless excluded by category — see
 // GLOBAL_ADDON_EXCLUDED_CATEGORIES in BookingStep1.tsx / server/routes/orders.ts,
 // which must stay in sync). Priced like a weekly cross-sell extra: a flat rate for
 // the first started week, +rate for every additional started 7-day block.
-// Mirrored by server/routes/orders.ts — keep identical.
-const GLOBAL_ADDONS: Record<string, { name: string; pricePerWeek: number }> = {
-  safety: { name: "Veiligheidsset Pro", pricePerWeek: 15 },
-  rijplaten: { name: "Rijplaten", pricePerWeek: 6 },
-};
+// Names/prices come from SiteConfig via getGlobalAddons (admin-editable, defaults
+// = historical literals). Mirrored by server/routes/orders.ts — keep identical.
+const GLOBAL_ADDON_IDS = ["safety", "rijplaten"] as const;
 // qty is the customer-chosen amount (currently only Rijplaten is quantity-based —
 // the customer types how many plates they need). Every other global add-on uses qty 1.
 function globalAddonLine(id: string, days: number, qty = 1): { id: string; name: string; price: number } {
-  const def = GLOBAL_ADDONS[id];
+  const addons = getGlobalAddons(useAppStore.getState().siteConfig);
+  const def = addons[id as keyof typeof addons];
   const weeks = billableWeeks(days);
   const price = def.pricePerWeek * weeks * qty;
   const weekSuffix = weeks > 1 ? ` (${weeks}× €${def.pricePerWeek})` : "";
@@ -379,9 +378,10 @@ export default function BookingSection({
         campaignSavings += Math.max(0, itemSubNoCampaign - itemSub);
       }
 
-      const transport = deliveryType === "delivery_by_us" ? 150 : 0;
+      const cartFees = getTransportFees(useAppStore.getState().siteConfig);
+      const transport = deliveryType === "delivery_by_us" ? cartFees.deliveryFee : 0;
       // Trailer only charged for item[0]'s rental period — use leadCartDays, not totalDays
-      const trailerCost = deliveryType === "trailer_rental" ? 25 * leadCartDays : 0;
+      const trailerCost = deliveryType === "trailer_rental" ? cartFees.trailerPerDay * leadCartDays : 0;
       const driver = 0;
 
       // Forced Sunday block total: when a rental's last work day is Saturday the
@@ -398,7 +398,7 @@ export default function BookingSection({
       let addonCost = 0;
       const addonDetails: { id: string; name: string; price: number }[] = [];
 
-      for (const id of Object.keys(GLOBAL_ADDONS)) {
+      for (const id of GLOBAL_ADDON_IDS) {
         if (!selectedAddons.includes(id)) continue;
         const line = globalAddonLine(id, totalDays, id === "rijplaten" ? rijplatenQty : 1);
         addonCost += line.price;
@@ -506,14 +506,15 @@ export default function BookingSection({
     }
 
     const subtotal = itemSub;
-    const transport = deliveryType === "delivery_by_us" ? 150 : 0;
-    const trailerCost = deliveryType === "trailer_rental" ? 25 * days : 0;
+    const singleFees = getTransportFees(useAppStore.getState().siteConfig);
+    const transport = deliveryType === "delivery_by_us" ? singleFees.deliveryFee : 0;
+    const trailerCost = deliveryType === "trailer_rental" ? singleFees.trailerPerDay * days : 0;
     const driver = 0;
 
     let addonCost = 0;
     const addonDetails: { id: string; name: string; price: number }[] = [];
 
-    for (const id of Object.keys(GLOBAL_ADDONS)) {
+    for (const id of GLOBAL_ADDON_IDS) {
       if (!selectedAddons.includes(id)) continue;
       const line = globalAddonLine(id, days, id === "rijplaten" ? rijplatenQty : 1);
       addonCost += line.price;
@@ -723,13 +724,14 @@ export default function BookingSection({
             const days = Math.max(1, Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1);
 
             const itemSubtotal = calculateItemSubtotal(item.machine, days, customerProfile, campaignRules, item.startDate);
-            const transport = (deliveryType === "delivery_by_us" && i === 0) ? 150 : 0;
-            const trailerCost = (deliveryType === "trailer_rental" && i === 0) ? 25 * days : 0;
+            const submitFees = getTransportFees(useAppStore.getState().siteConfig);
+            const transport = (deliveryType === "delivery_by_us" && i === 0) ? submitFees.deliveryFee : 0;
+            const trailerCost = (deliveryType === "trailer_rental" && i === 0) ? submitFees.trailerPerDay * days : 0;
             const driver = 0;
 
             let addonCost = 0;
             const addonsList: { id: string; name: string; price: number; billing: "daily" | "flat" | "weekly"; quantity?: number }[] = [];
-            for (const id of Object.keys(GLOBAL_ADDONS)) {
+            for (const id of GLOBAL_ADDON_IDS) {
               if (!selectedAddons.includes(id)) continue;
               const qty = id === "rijplaten" ? rijplatenQty : 1;
               const line = globalAddonLine(id, days, qty);

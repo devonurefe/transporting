@@ -4,6 +4,8 @@
  */
 
 import { Order } from "../types";
+import { getTransportFees } from "./pricing";
+import { useAppStore } from "../store/appStore";
 
 /**
  * Utility to generate and print a professional Dutch rental invoice/agreement
@@ -100,7 +102,7 @@ export function printInvoice(orderOrOrders: Order | Order[], clientCompanyName?:
     ? "Zelf afhalen bij vestiging MB Hoogwerkers (gratis)"
     : primaryOrder.deliveryType === "trailer_rental"
     ? "Aanhanger meegenomen — zelf heen en terug"
-    : "Bezorging door MB Hoogwerkers (heen + terug €150)";
+    : `Bezorging door MB Hoogwerkers (heen + terug €${getTransportFees(useAppStore.getState().siteConfig).deliveryFee})`;
 
   const customerCompany = clientCompanyName || "Particulier";
 
@@ -514,7 +516,7 @@ export function printInvoice(orderOrOrders: Order | Order[], clientCompanyName?:
             <div class="party-detail">
               <strong>${primaryOrder.deliveryType === 'self_pickup' ? 'Afhalen' : 'Adreslevering'}</strong><br/>
               <span>${logisticsText}</span><br/>
-              ${primaryOrder.deliveryAddress ? `<span style="font-family: monospace; font-size:11px; display:inline-block; margin-top:5px; color:#475569;">${escDeliveryAddress}</span>` : '<span>Afhaallocatie: Produktieweg 20, 2382 PB Zoeterwoude</span>'}
+              ${primaryOrder.deliveryAddress ? `<span style="font-family: monospace; font-size:11px; display:inline-block; margin-top:5px; color:#475569;">${escDeliveryAddress}</span>` : `<span>Afhaallocatie: ${escapeHtml(businessInfo?.companyAddress || "Produktieweg 20, 2382 PB Zoeterwoude")}</span>`}
             </div>
           </div>
         </div>

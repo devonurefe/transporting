@@ -5,6 +5,63 @@
 
 import { Machine, CampaignRule } from "../types";
 
+// ───────────────────────────────────────────────────────────────────────────
+// Transport- en globale add-on-tarieven — CLIENT-kant van de prijs-spiegel.
+// Admin-instelbaar via SiteConfig (AdminContent → Tarieven); de server-kant is
+// resolveFees in server/utils/fees.ts. Defaults en clamps MOETEN identiek
+// blijven, anders wijkt de client-prijs af van de servervalidatie en faalt de
+// order met "Ongeldig transportbedrag". Pure functies: callers geven
+// useAppStore.getState().siteConfig door (geen store-import hier, zodat de
+// pricing-tests infravrij blijven).
+// ───────────────────────────────────────────────────────────────────────────
+
+export const DEFAULT_TRANSPORT_FEES = { deliveryFee: 150, trailerPerDay: 25 } as const;
+export const DEFAULT_GLOBAL_ADDONS = {
+  safety: { name: "Veiligheidsset Pro", pricePerWeek: 15 },
+  rijplaten: { name: "Rijplaten", pricePerWeek: 6 }
+} as const;
+
+type FeeSource = {
+  transportFees?: { deliveryFee?: number; trailerPerDay?: number } | null;
+  globalAddons?: {
+    safety?: { name?: string; pricePerWeek?: number };
+    rijplaten?: { name?: string; pricePerWeek?: number };
+  } | null;
+} | null | undefined;
+
+const clampFee = (raw: unknown, fallback: number): number => {
+  const n = Number(raw);
+  return isFinite(n) && n >= 0 && n <= 1000 ? Math.round(n * 100) / 100 : fallback;
+};
+
+const cleanAddonName = (raw: unknown, fallback: string): string =>
+  typeof raw === "string" && raw.trim() ? raw.trim().slice(0, 60) : fallback;
+
+export function getTransportFees(siteConfig: FeeSource): { deliveryFee: number; trailerPerDay: number } {
+  const tf = siteConfig?.transportFees ?? {};
+  return {
+    deliveryFee: clampFee(tf?.deliveryFee, DEFAULT_TRANSPORT_FEES.deliveryFee),
+    trailerPerDay: clampFee(tf?.trailerPerDay, DEFAULT_TRANSPORT_FEES.trailerPerDay)
+  };
+}
+
+export function getGlobalAddons(siteConfig: FeeSource): {
+  safety: { name: string; pricePerWeek: number };
+  rijplaten: { name: string; pricePerWeek: number };
+} {
+  const ga = siteConfig?.globalAddons ?? {};
+  return {
+    safety: {
+      name: cleanAddonName(ga?.safety?.name, DEFAULT_GLOBAL_ADDONS.safety.name),
+      pricePerWeek: clampFee(ga?.safety?.pricePerWeek, DEFAULT_GLOBAL_ADDONS.safety.pricePerWeek)
+    },
+    rijplaten: {
+      name: cleanAddonName(ga?.rijplaten?.name, DEFAULT_GLOBAL_ADDONS.rijplaten.name),
+      pricePerWeek: clampFee(ga?.rijplaten?.pricePerWeek, DEFAULT_GLOBAL_ADDONS.rijplaten.pricePerWeek)
+    }
+  };
+}
+
 // Inclusive rental days: 10th–12th = 3 days. The server recomputes this with
 // the same formula in server/routes/orders.ts — keep them identical.
 export function calculateRentalDays(startDate: string | Date, endDate: string | Date): number {

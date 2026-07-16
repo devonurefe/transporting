@@ -20,7 +20,8 @@ import {
   CalendarDays,
   Database,
   Users,
-  BookOpen
+  BookOpen,
+  FileText
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { UserProfile } from "../types";
@@ -40,6 +41,7 @@ const AdminAddMachine = React.lazy(() => import("./admin/AdminAddMachine"));
 const AdminCustomizer = React.lazy(() => import("./admin/AdminCustomizer"));
 const AdminLogs = React.lazy(() => import("./admin/AdminLogs"));
 const AdminUsers = React.lazy(() => import("./admin/AdminUsers"));
+const AdminContent = React.lazy(() => import("./admin/AdminContent"));
 const AdminDiagnostics = React.lazy(() => import("./admin/AdminDiagnostics"));
 const AdminAccounting = React.lazy(() => import("./admin/AdminAccounting"));
 const AdminPlanning = React.lazy(() => import("./admin/AdminPlanning"));
@@ -61,9 +63,9 @@ function AdminLoadingSpinner() {
 // type zodat de unions niet uit elkaar lopen.
 export type AdminSubTab =
   | "dashboard" | "orders" | "machines" | "calendar" | "planning" | "customers"
-  | "add" | "blog" | "logs" | "customizer" | "diagnostics" | "accounting" | "users";
+  | "add" | "blog" | "logs" | "customizer" | "diagnostics" | "accounting" | "users" | "content";
 
-const ADVANCED_TAB_IDS: AdminSubTab[] = ["add", "blog", "customizer", "accounting", "diagnostics", "logs", "users"];
+const ADVANCED_TAB_IDS: AdminSubTab[] = ["add", "blog", "customizer", "content", "accounting", "diagnostics", "logs", "users"];
 
 interface AdminSectionProps {
   isAdminMode: boolean;
@@ -133,6 +135,7 @@ export default function AdminSection({
     { id: "add", label: tAdmin("adminTabAdd"), icon: PlusCircle },
     { id: "blog", label: al("Kenniscentrum", "Knowledge base", "Bilgi Merkezi"), icon: BookOpen },
     { id: "customizer", label: tAdmin("adminTabCustomizer"), icon: Settings },
+    { id: "content", label: al("Content", "Content", "İçerik"), icon: FileText },
     { id: "accounting", label: al("Omzet & Export", "Revenue & Export", "Ciro ve Dışa Aktarma"), icon: Database },
     { id: "diagnostics", label: al("Systeemdiagnose", "System Diagnostics", "Sistem Teşhisi"), icon: ShieldAlert },
     { id: "logs", label: tAdmin("adminTabLogs"), icon: Terminal },
@@ -579,6 +582,9 @@ export default function AdminSection({
                 )}
                 {subTab === "customizer" && (
                   <AdminCustomizer key="customizer" onAddSystemLog={onAddSystemLog} adminLanguage={adminLanguage} />
+                )}
+                {subTab === "content" && (
+                  <AdminContent key="content" adminLanguage={adminLanguage} />
                 )}
                 {subTab === "accounting" && (
                   <AdminAccounting key="accounting" adminLanguage={adminLanguage} />

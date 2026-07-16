@@ -182,7 +182,7 @@ export default function Footer({ siteName, setActiveTab, setShowContactModal }: 
             <HuurGoLogo className="h-9" dark />
             <p className="text-[10px] text-slate-400 -mt-1"><BrandedText text="HuurGo is een initiatief van MB Hoogwerkers" dark /></p>
             <p className="text-xs text-slate-400 leading-relaxed max-w-xs">
-              Professionele verhuur van gecertificeerde hoogwerkers, schaarliften en mastliften voor ZZP'ers, aannemers en particulieren.
+              {siteConfig.footerDescription || "Professionele verhuur van gecertificeerde hoogwerkers, schaarliften en mastliften voor ZZP'ers, aannemers en particulieren."}
             </p>
             <a href={`mailto:${contactEmail}`} className="flex items-center gap-2 text-xs text-slate-400 hover:text-white transition-colors no-underline mt-1">
               <span className="h-7 w-7 rounded-lg bg-slate-800 flex items-center justify-center shrink-0">
@@ -201,8 +201,11 @@ export default function Footer({ siteName, setActiveTab, setShowContactModal }: 
                   <Clock className="h-3.5 w-3.5 text-slate-400" />
                 </span>
                 <div className="leading-snug">
-                  <span className="font-semibold text-slate-200 block">{t("footerHoursLine")}</span>
-                  <span className="text-slate-400 text-[11px]">{t("footerClosed")}</span>
+                  <span className="font-semibold text-slate-200 block">{siteConfig.openingHours?.monFri || t("footerHoursLine")}</span>
+                  <span className="text-slate-400 text-[11px]">{siteConfig.openingHours?.sun || t("footerClosed")}</span>
+                  {siteConfig.openingHours?.sat && (
+                    <span className="text-slate-400 text-[11px] block">{siteConfig.openingHours.sat}</span>
+                  )}
                 </div>
               </div>
               <a
@@ -223,7 +226,7 @@ export default function Footer({ siteName, setActiveTab, setShowContactModal }: 
                 </span>
                 <div className="leading-snug">
                   <span className="font-semibold text-slate-200 block group-hover:text-white transition-colors">Zoeterwoude (HQ)</span>
-                  <span className="text-slate-400 text-[11px] group-hover:text-slate-200 transition-colors">Produktieweg 20, 2382 PB</span>
+                  <span className="text-slate-400 text-[11px] group-hover:text-slate-200 transition-colors">{siteConfig.companyAddress || "Produktieweg 20, 2382 PB"}</span>
                 </div>
               </a>
             </div>
@@ -288,7 +291,9 @@ export default function Footer({ siteName, setActiveTab, setShowContactModal }: 
 
         {/* Bottom row — copyright + badges */}
         <div className="pt-7 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs text-slate-400">
-          <span><BrandedText text="© 2026 HuurGo / MB Hoogwerkers B.V. · KvK 67438237 · BTW NL856990656B01" dark /></span>
+          {/* KvK/BTW/naam uit siteConfig — was voorheen een literal die de
+              bewerkbare Customizer-velden negeerde */}
+          <span><BrandedText text={`© ${new Date().getFullYear()} HuurGo / ${siteConfig.companyLegalName || "MB Hoogwerkers B.V."} · KvK ${siteConfig.kvkNumber || "67438237"} · BTW ${siteConfig.btwNumber || "NL856990656B01"}`} dark /></span>
           <div className="flex gap-2">
             <span className="text-[10px] font-bold bg-slate-800/60 border border-slate-700/60 text-slate-400 px-2.5 py-1 rounded-lg">TÜV Gecertificeerd</span>
             <span className="text-[10px] font-bold bg-slate-800/60 border border-slate-700/60 text-slate-400 px-2.5 py-1 rounded-lg">Cat. 1-3B</span>

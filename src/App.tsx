@@ -19,7 +19,7 @@ import { Machine, Order, OrderStatus, AppNotification, UserProfile, CartItem } f
 import { useAuthStore } from "./store/authStore";
 import { useAppStore } from "./store/appStore";
 import { buildWhatsAppGeneralUrl, buildWhatsAppOrderStatusUrl, buildWhatsAppPaymentLinkUrl, buildWhatsAppAdviceUrl } from "./utils/whatsapp";
-import { FAQ_ITEMS } from "./data/faq";
+import { resolveFaqItems } from "./data/faq";
 import { useModalA11y } from "./hooks/useModalA11y";
 
 // Escape </script> inside JSON-LD so an admin-supplied string cannot break out of the script tag.
@@ -62,6 +62,7 @@ const MyOrdersSection = lazy(() => import("./components/MyOrdersSection"));
 const AdviesSection = lazy(() => import("./components/AdviesSection"));
 const KenniscentrumSection = lazy(() => import("./components/KenniscentrumSection"));
 const BlogArticlePage = lazy(() => import("./components/BlogArticlePage"));
+const LegalPage = lazy(() => import("./components/LegalPage"));
 
 // Premium Loading Indicator Component
 function LoadingSpinner() {
@@ -735,7 +736,7 @@ export default function App() {
           __html: safeJsonLd({
             "@context": "https://schema.org",
             "@type": "FAQPage",
-            "mainEntity": FAQ_ITEMS.map((item) => ({
+            "mainEntity": resolveFaqItems(siteConfig.faqItems).map((item) => ({
               "@type": "Question",
               "name": item.q,
               "acceptedAnswer": { "@type": "Answer", "text": item.a }
@@ -811,6 +812,10 @@ export default function App() {
             } />
 
             <Route path="/veelgestelde-vragen" element={<FaqSection />} />
+
+            <Route path="/privacy" element={<LegalPage slug="privacy" title="Privacybeleid" />} />
+
+            <Route path="/voorwaarden" element={<LegalPage slug="voorwaarden" title="Algemene voorwaarden" />} />
 
             <Route path="/kenniscentrum" element={<KenniscentrumSection setActiveTab={setActiveTab} />} />
 

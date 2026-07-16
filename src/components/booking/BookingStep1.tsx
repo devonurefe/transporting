@@ -15,6 +15,7 @@ import { useLanguageStore } from "../../store/languageStore";
 import { useAppStore } from "../../store/appStore";
 import MachineDetailModal from "../MachineDetailModal";
 import { euroCompact } from "../../utils/format";
+import { getTransportFees, getGlobalAddons } from "../../utils/pricing";
 
 // Categories the global add-ons never apply to. "safety" (Veiligheidsset Pro) only
 // excludes ladderlift (a furniture-moving lift, not a working-at-height platform);
@@ -100,6 +101,11 @@ export default function BookingStep1({
   const [attempted, setAttempted] = useState(false);
 
   const timeSlotBlocked = deliveryType === "delivery_by_us" && !deliveryTimeSlot;
+
+  // Admin-instelbare tarieven (SiteConfig → AdminContent); defaults = de oude literals
+  const siteConfig = useAppStore((state) => state.siteConfig);
+  const fees = getTransportFees(siteConfig);
+  const gAddons = getGlobalAddons(siteConfig);
 
   // The error banner/highlights above reflect a validation snapshot from the
   // last click — once the customer actually fixes the thing it complained
@@ -291,14 +297,14 @@ export default function BookingStep1({
               Wij leveren de machine af en halen hem terug op.
             </p>
             <div className="mt-2 flex items-baseline gap-1">
-              <span className="text-sm font-black text-emerald-600">€150,-</span>
+              <span className="text-sm font-black text-emerald-600">{euroCompact(fees.deliveryFee)}</span>
               <span className="text-xs text-slate-500 font-semibold">heen + terug</span>
             </div>
             {deliveryType === "delivery_by_us" && (
               <div className="mt-2.5 flex items-start gap-1.5 rounded-lg bg-amber-50 border border-amber-200 px-2.5 py-1.5">
                 <Info className="h-3.5 w-3.5 text-amber-600 shrink-0 mt-px" />
                 <p className="text-xs text-amber-800 font-semibold leading-snug">
-                  Tip: huur zelf een aanhanger en bespaar €150 transportkosten.
+                  Tip: huur zelf een aanhanger en bespaar {euroCompact(fees.deliveryFee)} transportkosten.
                 </p>
               </div>
             )}
@@ -333,12 +339,12 @@ export default function BookingStep1({
             </p>
             {sums && sums.days > 0 ? (
               <div className="mt-2 flex items-baseline gap-1">
-                <span className="text-sm font-black text-emerald-600">{euroCompact(sums.days * 25)}</span>
-                <span className="text-xs text-slate-500 font-semibold">({sums.days} dgn × €25,-)</span>
+                <span className="text-sm font-black text-emerald-600">{euroCompact(sums.days * fees.trailerPerDay)}</span>
+                <span className="text-xs text-slate-500 font-semibold">({sums.days} dgn × {euroCompact(fees.trailerPerDay)})</span>
               </div>
             ) : (
               <div className="mt-2 flex items-baseline gap-1">
-                <span className="text-sm font-black text-emerald-600">€25,-/dag</span>
+                <span className="text-sm font-black text-emerald-600">{euroCompact(fees.trailerPerDay)}/dag</span>
               </div>
             )}
           </button>
@@ -484,7 +490,7 @@ export default function BookingStep1({
           >
             <div>
               <div className="flex items-center justify-between mb-2">
-                <h4 className="text-xs font-bold text-slate-900">Veiligheidsset Pro</h4>
+                <h4 className="text-xs font-bold text-slate-900">{gAddons.safety.name}</h4>
                 <input
                   type="checkbox"
                   checked={selectedAddons.includes("safety")}
@@ -496,7 +502,7 @@ export default function BookingStep1({
                 Luxe veiligheidsharnas combi, lijn met valdemper en TÜV goedgekeurde bouwhelm met gehoorbescherming.
               </p>
             </div>
-            <span className="text-xs font-bold text-slate-700 mt-3 block">€15,- / week (elke 7 dagen +€15)</span>
+            <span className="text-xs font-bold text-slate-700 mt-3 block">€{gAddons.safety.pricePerWeek},- / week (elke 7 dagen +€{gAddons.safety.pricePerWeek})</span>
           </div>
           )}
 
@@ -587,7 +593,7 @@ export default function BookingStep1({
                     </div>
                   </div>
                   <p className="text-xs text-slate-500 mt-1.5">
-                    {rijplatenQty} × €6,- = <span className="font-bold text-slate-700">€{rijplatenQty * 6},- per week</span>
+                    {rijplatenQty} × €{gAddons.rijplaten.pricePerWeek},- = <span className="font-bold text-slate-700">€{rijplatenQty * gAddons.rijplaten.pricePerWeek},- per week</span>
                   </p>
 
                   <button

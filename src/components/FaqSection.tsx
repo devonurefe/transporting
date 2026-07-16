@@ -7,7 +7,8 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
 import { ChevronDown, HelpCircle, MessageCircle, ArrowRight } from "lucide-react";
-import { FAQ_ITEMS } from "../data/faq";
+import { resolveFaqItems } from "../data/faq";
+import { useAppStore } from "../store/appStore";
 import { HuurGoText } from "./Header";
 import { buildWhatsAppGeneralUrl } from "../utils/whatsapp";
 
@@ -17,6 +18,9 @@ import { buildWhatsAppGeneralUrl } from "../utils/whatsapp";
  */
 export default function FaqSection() {
   const [open, setOpen] = useState<number | null>(0);
+  // Admin-beheerde FAQ (AdminContent) met de hard-coded lijst als fallback —
+  // dezelfde resolver als de FAQPage JSON-LD in App.tsx
+  const faqItems = resolveFaqItems(useAppStore((state) => state.siteConfig).faqItems);
 
   useEffect(() => {
     document.title = "Veelgestelde vragen — Hoogwerker huren | huurgo";
@@ -37,7 +41,7 @@ export default function FaqSection() {
       </header>
 
       <div className="space-y-2.5">
-        {FAQ_ITEMS.map((item, i) => {
+        {faqItems.map((item, i) => {
           const isOpen = open === i;
           return (
             <div key={i} className="rounded-2xl border border-slate-200 bg-white overflow-hidden">

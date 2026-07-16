@@ -114,6 +114,28 @@ Enabled per machine (pilot: Bravi Leonardo; **off** for scaffolding & campaign p
 - **Backend validation**: `server/routes/orders.ts` → flat-rate block (`tierPrice` + `isWeekendPackage`/`hasSundayBlock` mirror) — **must mirror frontend exactly** or orders fail with "Totaalbedrag klopt niet"
 - **Catalog display**: `CatalogSection.tsx` pricing popup + `MachineDetailModal.tsx` (tiered rows + weekend info-icon); `computeDiscounts(m)` derives week/maand % badges from flat rates
 
+### Transport & global add-on fees (admin-editable — a second, smaller price mirror)
+Delivery fee, trailer-per-day and the two global add-ons (Veiligheidsset Pro,
+Rijplaten) are **not machine fields** — they're admin-editable via `AdminContent`
+→ Tarieven (`SiteConfig.transportFees` / `SiteConfig.globalAddons`, both nullable
+JSON; `null` = the historical hard-coded default). Same mirror discipline as the
+machine pricing above, but resolved through a dedicated pair of functions instead
+of being duplicated inline:
+- **Frontend**: `getTransportFees()` / `getGlobalAddons()` in `src/utils/pricing.ts`
+- **Backend**: `resolveFees()` in `server/utils/fees.ts`, called once per order in
+  `server/routes/orders.ts` (reuses the `siteConfig` row already fetched for
+  campaign rules — no extra query)
+
+Both sides share identical defaults (`DEFAULT_TRANSPORT_FEES` / `DEFAULT_GLOBAL_ADDONS`,
+duplicated as constants on each side — keep values identical) and identical clamps
+(fee ∈ [0, 1000], 2-decimal rounding; add-on name ≤60 chars). **If you add a new
+fee field, add it to both resolvers with the same default/clamp — never read a raw
+`siteConfig.transportFees.x` value directly in a component.** Consumers: `orders.ts`
+(authoritative), `BookingSection.tsx`, `BookingStep1.tsx`, `whatsapp.ts`, `invoice.ts`.
+Validation stays strict (`> 0.01` rejection, no tolerance band) — see `server/utils/sanitizeContent.ts`
+for the admin-input sanitizers (`sanitizeTransportFees`/`sanitizeGlobalAddons`) that
+reject the whole object rather than storing a half-valid fee pair.
+
 ### Showing discount % on cards
 `computeDiscounts(machine)` returns `{ weekly, monthly }` as percentages computed from flat rates:
 - `weekly = round((1 - weeklyPrice / (5 × pricePerDay)) × 100)`, capped at 0 (no negative badges)
@@ -144,23 +166,49 @@ If you add a new schema field that needs seeding, use the conditional `updateMan
 
 ## Admin Panel
 
-Eleven lazy-loaded panels inside `src/components/admin/`:
+Thirteen lazy-loaded panels inside `src/components/admin/`:
 
 | Panel | File | Purpose |
 |-------|------|---------|
 | Dashboard | `AdminDashboard.tsx` | KPI cards, revenue chart, fleet composition |
 | Orders | `AdminOrders.tsx` | Order list, status changes, invoice print |
-| Machines | `AdminMachines.tsx` | Edit existing machines — prices, images, flat rates, gallery |
+| Machines | `AdminMachines.tsx` | Edit existing machines — prices, images, flat rates, gallery (mobile card view + desktop table) |
 | Add Machine | `AdminAddMachine.tsx` | Add new machine — includes Weekend/Werkweek/4W price inputs |
 | Calendar | `AdminCalendar.tsx` | Block/unblock dates per machine with reason dropdown |
 | Planning | `AdminPlanning.tsx` | Daily logistics timeline (departures/returns, addresses) |
-| Customers | `AdminCustomers.tsx` | Customer list, order history, lifetime value |
-| Logs | `AdminLogs.tsx` | System activity log |
+| Customers | `AdminCustomers.tsx` | Paginated customer list (50/page, "Meer laden"), order history, lifetime value |
+| Logs | `AdminLogs.tsx` | Real audit trail viewer (`GET /api/admin/audit-logs`) — filterable, paginated |
 | Diagnostics | `AdminDiagnostics.tsx` | System health (KPIs + live DB latency probe, 15s interval) |
 | Customizer | `AdminCustomizer.tsx` | Site config (hero text, labels), campaign rules, categories |
+| Content | `AdminContent.tsx` | FAQ, USPs, opening hours, transport/add-on fees, SEO, legal pages (`/privacy`, `/voorwaarden`) — see "Admin-manageable content" below |
+| Beheerders | `AdminUsers.tsx` | Own 2FA setup, admin account list, create/disable/reset-password/reset-2FA |
 | Accounting | `AdminAccounting.tsx` | Revenue reporting + CSV export |
 
 Shared admin widgets (not panels): `AdminStatusBadge.tsx`, `AdminConfirmDialog.tsx`, `AdminAvailabilityWidget.tsx`.
+
+### Admin-manageable content (no developer needed)
+`AdminContent.tsx` writes to `SiteConfig` (all fields nullable — `null` means "use
+the code fallback", so no seed change is ever required): `faqItems`, `uspItems`,
+`openingHours`, `transportFees`, `globalAddons`, `footerDescription`, `seoTitle`/
+`seoDescription`, `privacyPolicy`/`termsConditions`. Sanitizers live in
+`server/utils/sanitizeContent.ts` (length caps, icon whitelist, fee clamping,
+`data:image` stripping — never store base64 in a text field here).
+
+Consumers read `siteConfig.x ?? codeDefault`: `FaqSection.tsx` / `App.tsx` FAQPage
+JSON-LD / `server.ts` `metaForRequest` (`resolveFaqItems` in `src/data/faq.ts` is
+the single resolver so structured data never diverges from the visible page),
+`WhyHuurGoBand.tsx` (USPs), `Footer.tsx` (KvK/BTW/address/opening hours — these
+were already-editable `SiteConfig` fields the Footer used to ignore; now wired
+correctly), `LegalPage.tsx` (fetches `GET /api/pages/:slug`, kept **out** of the
+public `/api/site-config` payload so the cached first-visit JSON stays small).
+
+**Explicitly out of scope** (documented here so it isn't re-proposed): a
+full email-template or invoice-template editor — too easy to break; instead
+`emailService.ts`'s `getCompanyDetails()` (60s cache) and `invoice.ts` interpolate
+company name/address/fees from `SiteConfig` into the existing literal templates.
+Also out of scope: the full i18n dictionary (`languageStore.ts`), homepage
+`FLEET_BRANDS`/category copy (`HomeSection.tsx`), and per-city SEO copy
+(`src/data/serviceCities.ts`) — developer-curated, not owner-editable.
 
 ### Image upload in admin
 - Main image: URL field with X button (clears to "") + file upload → sets `editImageUrl`
@@ -172,6 +220,55 @@ Shared admin widgets (not panels): `AdminStatusBadge.tsx`, `AdminConfirmDialog.t
 - `printInvoice(order)` in `src/utils/invoice.ts`
 - Opens `window.open("", "_blank")`, writes full HTML, calls `printWindow.print()` after 900 ms
 - **Do not add `opacity:0` font-loading trick** — it caused blank print pages
+
+---
+
+## Admin Security
+
+- **Password hashing**: bcrypt, 12 rounds (`server/utils/auth.ts`). **Password
+  policy**: min 10 chars + ≥1 letter + ≥1 digit (`PASSWORD_POLICY` in
+  `server/routes/auth.ts`, exported for reuse in `server/routes/admins.ts`).
+- **JWT**: admin tokens expire after **12h**, customer tokens after 7d
+  (`generateToken` in `server/utils/auth.ts`). Every token carries a `v`
+  (tokenVersion) claim; `requireAuth`/`requireAdmin` compare it against the DB
+  value via a 60s TTL in-process cache (`isTokenVersionValid` — fails **open** on
+  a transient DB error so a brief outage never logs everyone out).
+  `change-password` and `password-reset` both bump `tokenVersion` (reset
+  previously left old sessions alive — fixed). **Token storage stays
+  `localStorage` + `Authorization: Bearer`** (not an httpOnly cookie) — a
+  deliberate choice: every one of the ~30 mutation endpoints already uses the
+  Bearer pattern, and moving to cookies would need CSRF tokens plus a rework of
+  the admin `?full=1` image flow for marginal gain. Compensating controls: the
+  short admin expiry, tokenVersion revocation, and 2FA below.
+- **Account lockout**: DB-backed (`Admin`/`Customer.failedLoginCount` +
+  `lockedUntil`), survives restarts — 5 failed attempts → 15 min lock. Only
+  logins against an **unknown** email (no row to increment) still use a small
+  in-memory throttle, documented inline in `server/routes/auth.ts`.
+- **2FA (TOTP)**: admin-only, self-service via `AdminUsers.tsx` → `/api/auth/2fa/setup|enable|disable`.
+  Secrets are AES-256-GCM encrypted at rest (`server/utils/crypto.ts`, key derived
+  from `JWT_SECRET` — no new env var). Login becomes two-step when enabled: password
+  success returns a 5-minute **pre-auth token** (`stage: "2fa"`, no `role` claim —
+  `authenticateToken` never accepts it as a session) instead of a real JWT; the
+  client then calls `POST /api/auth/login/2fa` with the TOTP code. **No backup
+  codes** — recovery is another admin calling `reset-2fa` on the locked-out account
+  (single-admin shops: reset directly via `prisma studio` on the VPS).
+- **Admin user management**: `/api/admin/users` (`server/routes/admins.ts`) —
+  list/create/rename/disable/enable/reset-password/reset-2fa. All admins share one
+  role (`"admin"`) — no role hierarchy. `canDisable()` blocks disabling your own
+  account or the last active admin. Disabling bumps `tokenVersion` so a live
+  session dies immediately, not just on next token refresh.
+- **Audit log**: every admin mutation (login, password change, order status/payment,
+  machine CRUD, site-config/campaign/category changes, blocked dates, blog,
+  admin-user actions) is written via `audit()` in `server/utils/audit.ts` —
+  fire-and-forget, never fails the parent request. **Never log raw request
+  bodies** (Machine PUT carries base64 images) — log changed field *names* only,
+  capped at 2000 chars (`buildAuditRow`). Viewed in the real-time `AdminLogs.tsx`
+  panel via `GET /api/admin/audit-logs` (paginated, action-group + email filters).
+  Retention: 180 days, pruned daily by `pruneAuditLogs()` piggybacking on the
+  existing 07:00 Amsterdam reminder cron in `server.ts`.
+- Reset/verification tokens are stored as **sha256 hashes** (`hashToken` in
+  `server/utils/auth.ts`) — the DB never holds a directly usable token, only the
+  raw value emailed to the user matches on lookup.
 
 ---
 
@@ -272,7 +369,9 @@ protect these invariants:
 
 Payment flow: customer sends WhatsApp → admin sends Tikkie/iDEAL link → payment confirmed → admin sets status "Goedgekeurd".
 
-Transport costs: delivery €150 flat, trailer rental €25/day, self pickup free.
+Transport costs: delivery €150 flat, trailer rental €25/day, self pickup free —
+these are the **defaults**; admin-editable via AdminContent → Tarieven (see
+"Transport & global add-on fees" under Pricing System above).
 
 ---
 
@@ -316,7 +415,31 @@ All builders in `src/utils/whatsapp.ts`. Sign-off emoji: **🦾** (never 🙏).
 
 ---
 
-## Recent Changes (2026-07)
+## Recent Changes (2026-07, admin security & content management)
+
+- **Admin security hardening**: real DB-backed audit log (`AuditLog` model,
+  `server/utils/audit.ts`, `AdminLogs.tsx` now shows real data instead of the old
+  client-side demo feed); login lockout + tokenVersion revocation moved from
+  in-memory to the DB (survives restarts); admin JWT expiry shortened 7d→12h;
+  reset/verification tokens now sha256-hashed at rest; password policy min
+  8→10 chars. **2FA (TOTP)** for admins with AES-256-GCM-encrypted secrets and a
+  two-step login (pre-auth token → code); new **Beheerders** panel
+  (`AdminUsers.tsx`) for admin account management (create/disable/reset).
+  See "Admin Security" above for the full mechanism list.
+- **Admin-manageable content**: FAQ, homepage USPs, opening hours, transport/
+  add-on fees and SEO/legal-page text moved from hard-coded literals into
+  `SiteConfig` (nullable fields, `null` = code fallback — no seed change),
+  editable via the new **Content** panel (`AdminContent.tsx`). New `/privacy`
+  and `/voorwaarden` routes (previously dead links) render admin-edited
+  markdown. Footer now actually reads the already-editable KvK/BTW/address
+  fields instead of ignoring them (bug fix). See "Admin-manageable content"
+  above for the resolver pattern and what's intentionally still code-only.
+- **Mobile/UX**: `AdminMachines.tsx` gained a mobile card view (was a
+  horizontally-scrolling table, the one admin list without one); booking
+  calendar day cells `h-9`→`h-11 sm:h-9` (44px tap target on mobile); customer
+  list paginated (50/page, "Meer laden") — previously fetched unbounded.
+
+## Recent Changes (2026-07, performance)
 
 - **PageSpeed/Lighthouse overhaul** (PRs #215–#220): mobile Performance 58→81, Desktop→97,
   CLS 0.513→0, LCP 4.3s→~4.1s mobile/0.9s desktop. See "Performance & Accessibility — CRITICAL"

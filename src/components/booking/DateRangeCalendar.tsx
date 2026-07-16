@@ -408,7 +408,9 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
                     {grid.map((cell, i) => {
                       if (!cell) return <div key={`e-${i}`} />;
                       const { key, day, status, selectable, isStart, isEnd, inRange } = cell;
-                      const base = "relative h-9 rounded-lg text-xs font-bold flex items-center justify-center transition-colors";
+                      // 44px op mobiel (WCAG/iOS dokungrootte-richtlijn), h-9 (36px) blijft vanaf sm: —
+                      // geen xs:-breakpoint in deze Tailwind-setup, dus sm: is de kleinste beschikbare stap.
+                      const base = "relative h-11 sm:h-9 rounded-lg text-xs font-bold flex items-center justify-center transition-colors";
                       let cls = "";
                       if (isStart || isEnd) cls = "bg-amber-500 text-white shadow-sm";
                       else if (inRange) cls = "bg-amber-100 text-amber-900";

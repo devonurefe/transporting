@@ -784,25 +784,38 @@ authRouter.post("/resend-verification", async (req: Request, res: Response) => {
   }
 });
 
-// GET /api/auth/customers — admin-only: list all registered customers
-authRouter.get("/customers", authenticateToken, requireAdmin, async (_req: AuthenticatedRequest, res: Response) => {
+// GET /api/auth/customers — admin-only: paginated list of registered customers
+// (mirrors the orders.ts pagination shape — X-Total-Pages/X-Total-Count headers)
+authRouter.get("/customers", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const customers = await prisma.customer.findMany({
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        phone: true,
-        companyName: true,
-        profile: true,
-        marketingConsent: true,
-        isEmailVerified: true,
-        createdAt: true,
-        _count: { select: { orders: true } }
-      },
-      orderBy: { createdAt: "desc" }
-    });
-    return res.json({ customers });
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 50));
+    const skip = (page - 1) * limit;
+
+    const [customers, totalCount] = await Promise.all([
+      prisma.customer.findMany({
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true,
+          companyName: true,
+          profile: true,
+          marketingConsent: true,
+          isEmailVerified: true,
+          createdAt: true,
+          _count: { select: { orders: true } }
+        },
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit
+      }),
+      prisma.customer.count()
+    ]);
+
+    res.setHeader("X-Total-Pages", String(Math.ceil(totalCount / limit)));
+    res.setHeader("X-Total-Count", String(totalCount));
+    return res.json({ customers, totalCount, page, totalPages: Math.ceil(totalCount / limit) });
   } catch (error) {
     console.error("Get customers error:", error);
     return res.status(500).json({ error: "Klanten ophalen mislukt." });

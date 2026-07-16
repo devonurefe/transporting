@@ -63,6 +63,7 @@ const AdviesSection = lazy(() => import("./components/AdviesSection"));
 const KenniscentrumSection = lazy(() => import("./components/KenniscentrumSection"));
 const BlogArticlePage = lazy(() => import("./components/BlogArticlePage"));
 const LegalPage = lazy(() => import("./components/LegalPage"));
+const AboutSection = lazy(() => import("./components/AboutSection"));
 
 // Premium Loading Indicator Component
 function LoadingSpinner() {
@@ -812,6 +813,8 @@ export default function App() {
             } />
 
             <Route path="/veelgestelde-vragen" element={<FaqSection />} />
+
+            <Route path="/over-ons" element={<AboutSection />} />
 
             <Route path="/privacy" element={<LegalPage slug="privacy" title="Privacybeleid" />} />
 

@@ -27,6 +27,13 @@ export function generateToken(payload: { id: string; email: string; role: string
   );
 }
 
+// Tussenstap-token voor 2FA: wachtwoord klopt, TOTP-code moet nog. Bevat GEEN
+// role-claim, dus authenticateToken wijst het af als sessietoken — het is
+// uitsluitend bruikbaar op POST /api/auth/login/2fa.
+export function generatePreAuthToken(id: string): string {
+  return jwt.sign({ id, stage: "2fa" }, EFFECTIVE_JWT_SECRET, { expiresIn: "5m" });
+}
+
 export function verifyToken(token: string): any {
   try {
     return jwt.verify(token, EFFECTIVE_JWT_SECRET);

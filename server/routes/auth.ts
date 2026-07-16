@@ -2,10 +2,23 @@ import { Router, Request, Response } from "express";
 import { z } from "zod";
 import crypto from "crypto";
 import { prisma } from "../../prisma/client.js";
-import { hashPassword, comparePassword, generateToken, hashToken, invalidateAuthCache } from "../utils/auth.js";
+import { generateSecret as totpGenerateSecret, generateURI as totpGenerateURI, verifySync as totpVerifySync } from "otplib";
+import QRCode from "qrcode";
+import { hashPassword, comparePassword, generateToken, generatePreAuthToken, verifyToken, hashToken, invalidateAuthCache } from "../utils/auth.js";
 import { AuthenticatedRequest, authenticateToken, requireAuth, requireAdmin } from "../middleware/auth.js";
 import { emailService } from "../services/emailService.js";
 import { audit } from "../utils/audit.js";
+import { encryptSecret, decryptSecret } from "../utils/crypto.js";
+
+// TOTP-verificatie met 30s klokdrift-tolerantie (vorige/volgende window).
+// otplib gooit op misvormde tokens — dat is gewoon "ongeldige code".
+function totpVerify(secret: string, code: string): boolean {
+  try {
+    return totpVerifySync({ secret, token: code.replace(/\s/g, ""), epochTolerance: 30 }).valid;
+  } catch {
+    return false;
+  }
+}
 
 export const authRouter = Router();
 
@@ -175,6 +188,12 @@ authRouter.post("/login", async (req: AuthenticatedRequest, res: Response) => {
         return res.status(400).json({ error: "Ongeldige inloggegevens" });
       }
 
+      // Wachtwoord klopt maar 2FA staat aan → nog GEEN sessietoken; de client
+      // moet eerst de TOTP-code aanleveren op /login/2fa met dit pre-auth token.
+      if (admin.twoFactorEnabled) {
+        return res.json({ requires2fa: true, preAuthToken: generatePreAuthToken(admin.id) });
+      }
+
       await prisma.admin.update({
         where: { id: admin.id },
         data: { failedLoginCount: 0, lockedUntil: null, lastLoginAt: now }
@@ -271,6 +290,147 @@ authRouter.post("/login", async (req: AuthenticatedRequest, res: Response) => {
   }
 });
 
+// POST /api/auth/login/2fa — tweede stap van de adminlogin (TOTP-code)
+authRouter.post("/login/2fa", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { preAuthToken, code } = req.body;
+    if (!preAuthToken || typeof preAuthToken !== "string" || !code || typeof code !== "string") {
+      return res.status(400).json({ error: "Code is verplicht" });
+    }
+
+    const payload = verifyToken(preAuthToken);
+    if (!payload || payload.stage !== "2fa" || !payload.id) {
+      return res.status(401).json({ error: "Sessie verlopen, log opnieuw in" });
+    }
+
+    const admin = await prisma.admin.findUnique({ where: { id: payload.id } });
+    if (!admin || !admin.isActive || !admin.twoFactorEnabled || !admin.totpSecret) {
+      return res.status(401).json({ error: "Sessie verlopen, log opnieuw in" });
+    }
+    const adminActor = { id: admin.id, email: admin.email, role: "admin" };
+
+    const now = new Date();
+    if (admin.lockedUntil && admin.lockedUntil > now) {
+      return res.status(429).json({ error: LOCKED_MSG(admin.lockedUntil) });
+    }
+
+    const secret = decryptSecret(admin.totpSecret);
+    const codeOk = !!secret && totpVerify(secret, code);
+    if (!codeOk) {
+      const newCount = admin.failedLoginCount + 1;
+      const locks = newCount >= MAX_LOGIN_ATTEMPTS;
+      await prisma.admin.update({
+        where: { id: admin.id },
+        data: {
+          failedLoginCount: newCount,
+          lockedUntil: locks ? new Date(Date.now() + LOGIN_LOCK_MS) : admin.lockedUntil
+        }
+      });
+      audit(req, locks ? "login.locked" : "login.2fa_failed", { actor: adminActor });
+      return res.status(400).json({ error: "Ongeldige verificatiecode" });
+    }
+
+    await prisma.admin.update({
+      where: { id: admin.id },
+      data: { failedLoginCount: 0, lockedUntil: null, lastLoginAt: now }
+    });
+    audit(req, "login.success", { actor: adminActor, meta: { via: "2fa" } });
+
+    const token = generateToken({ id: admin.id, email: admin.email, role: admin.role, v: admin.tokenVersion });
+    return res.json({
+      token,
+      user: { id: admin.id, email: admin.email, name: admin.name, role: admin.role }
+    });
+  } catch (error) {
+    console.error("2FA login error:", error);
+    return res.status(500).json({ error: "Inloggen mislukt" });
+  }
+});
+
+// ── Tweestapsverificatie (self-service, alleen admins) ─────────────────────
+// setup → QR scannen → enable {code} bevestigt. Disable vereist wachtwoord + code
+// en trekt lopende sessies in. Herstel zonder telefoon: een andere beheerder
+// reset 2FA via het Beheerders-paneel (POST /api/admin/users/:id/reset-2fa).
+
+authRouter.post("/2fa/setup", requireAdmin as any, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const admin = await prisma.admin.findUnique({ where: { id: req.user!.id } });
+    if (!admin) return res.status(404).json({ error: "Gebruiker niet gevonden" });
+    if (admin.twoFactorEnabled) {
+      return res.status(400).json({ error: "Tweestapsverificatie is al ingeschakeld." });
+    }
+
+    const secret = totpGenerateSecret();
+    await prisma.admin.update({
+      where: { id: admin.id },
+      data: { totpSecret: encryptSecret(secret), twoFactorEnabled: false }
+    });
+
+    const otpauthUrl = totpGenerateURI({ issuer: "HuurGo Admin", label: admin.email, secret });
+    const qrDataUrl = await QRCode.toDataURL(otpauthUrl, { width: 240, margin: 1 });
+    return res.json({ otpauthUrl, qrDataUrl });
+  } catch (error) {
+    console.error("2FA setup error:", error);
+    return res.status(500).json({ error: "2FA instellen mislukt" });
+  }
+});
+
+authRouter.post("/2fa/enable", requireAdmin as any, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { code } = req.body;
+    if (!code || typeof code !== "string") {
+      return res.status(400).json({ error: "Code is verplicht" });
+    }
+    const admin = await prisma.admin.findUnique({ where: { id: req.user!.id } });
+    if (!admin || !admin.totpSecret) {
+      return res.status(400).json({ error: "Start eerst de 2FA-setup." });
+    }
+
+    const secret = decryptSecret(admin.totpSecret);
+    if (!secret || !totpVerify(secret, code)) {
+      return res.status(400).json({ error: "Ongeldige verificatiecode" });
+    }
+
+    await prisma.admin.update({ where: { id: admin.id }, data: { twoFactorEnabled: true } });
+    audit(req, "2fa.enabled");
+    return res.json({ success: true, message: "Tweestapsverificatie is ingeschakeld." });
+  } catch (error) {
+    console.error("2FA enable error:", error);
+    return res.status(500).json({ error: "2FA inschakelen mislukt" });
+  }
+});
+
+authRouter.post("/2fa/disable", requireAdmin as any, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { password, code } = req.body;
+    if (!password || typeof password !== "string" || !code || typeof code !== "string") {
+      return res.status(400).json({ error: "Wachtwoord en code zijn verplicht" });
+    }
+    const admin = await prisma.admin.findUnique({ where: { id: req.user!.id } });
+    if (!admin || !admin.twoFactorEnabled || !admin.totpSecret) {
+      return res.status(400).json({ error: "Tweestapsverificatie is niet ingeschakeld." });
+    }
+
+    const secret = decryptSecret(admin.totpSecret);
+    const passwordOk = await comparePassword(password, admin.passwordHash);
+    const codeOk = !!secret && totpVerify(secret, code);
+    if (!passwordOk || !codeOk) {
+      return res.status(400).json({ error: "Wachtwoord of code is onjuist" });
+    }
+
+    await prisma.admin.update({
+      where: { id: admin.id },
+      data: { twoFactorEnabled: false, totpSecret: null, tokenVersion: { increment: 1 } }
+    });
+    invalidateAuthCache(admin.id);
+    audit(req, "2fa.disabled");
+    return res.json({ success: true, message: "Tweestapsverificatie is uitgeschakeld. Log opnieuw in." });
+  } catch (error) {
+    console.error("2FA disable error:", error);
+    return res.status(500).json({ error: "2FA uitschakelen mislukt" });
+  }
+});
+
 // GET ME
 authRouter.get("/me", authenticateToken, requireAuth, async (req: AuthenticatedRequest, res: Response) => {
   try {
@@ -288,7 +448,8 @@ authRouter.get("/me", authenticateToken, requireAuth, async (req: AuthenticatedR
           id: admin.id,
           email: admin.email,
           name: admin.name,
-          role: admin.role
+          role: admin.role,
+          twoFactorEnabled: admin.twoFactorEnabled
         }
       });
     } else {

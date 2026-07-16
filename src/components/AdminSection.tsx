@@ -39,6 +39,7 @@ const AdminCalendar = React.lazy(() => import("./admin/AdminCalendar"));
 const AdminAddMachine = React.lazy(() => import("./admin/AdminAddMachine"));
 const AdminCustomizer = React.lazy(() => import("./admin/AdminCustomizer"));
 const AdminLogs = React.lazy(() => import("./admin/AdminLogs"));
+const AdminUsers = React.lazy(() => import("./admin/AdminUsers"));
 const AdminDiagnostics = React.lazy(() => import("./admin/AdminDiagnostics"));
 const AdminAccounting = React.lazy(() => import("./admin/AdminAccounting"));
 const AdminPlanning = React.lazy(() => import("./admin/AdminPlanning"));
@@ -60,9 +61,9 @@ function AdminLoadingSpinner() {
 // type zodat de unions niet uit elkaar lopen.
 export type AdminSubTab =
   | "dashboard" | "orders" | "machines" | "calendar" | "planning" | "customers"
-  | "add" | "blog" | "logs" | "customizer" | "diagnostics" | "accounting";
+  | "add" | "blog" | "logs" | "customizer" | "diagnostics" | "accounting" | "users";
 
-const ADVANCED_TAB_IDS: AdminSubTab[] = ["add", "blog", "customizer", "accounting", "diagnostics", "logs"];
+const ADVANCED_TAB_IDS: AdminSubTab[] = ["add", "blog", "customizer", "accounting", "diagnostics", "logs", "users"];
 
 interface AdminSectionProps {
   isAdminMode: boolean;
@@ -135,11 +136,32 @@ export default function AdminSection({
     { id: "accounting", label: al("Omzet & Export", "Revenue & Export", "Ciro ve Dışa Aktarma"), icon: Database },
     { id: "diagnostics", label: al("Systeemdiagnose", "System Diagnostics", "Sistem Teşhisi"), icon: ShieldAlert },
     { id: "logs", label: tAdmin("adminTabLogs"), icon: Terminal },
+    { id: "users", label: al("Beheerders", "Administrators", "Yöneticiler"), icon: ShieldCheck },
   ];
 
   // Admin login credentials
   const [adminEmail, setAdminEmail] = useState("");
   const [adminPassword, setAdminPassword] = useState("");
+  const [twoFactorCode, setTwoFactorCode] = useState("");
+  const requiresTwoFactor = useAuthStore((state) => state.requiresTwoFactor);
+
+  const completeAdminLogin = () => {
+    const user = useAuthStore.getState().user;
+    if (user && user.role === "admin") {
+      setIsAdminMode(true);
+      onAddSystemLog(
+        "login",
+        "huurgo Admin",
+        "Beheersessie verbonden met beveiligd beheerderstoken."
+      );
+      // Synchronously fetch all data with the newly set admin token
+      useAppStore.getState().fetchAllData();
+    } else {
+      logout();
+      setIsAdminMode(false);
+      showAdminToast(al("Toegang geweigerd. Dit account heeft geen beheerdersrechten.", "Access denied. This account has no administrator rights.", "Erişim reddedildi. Bu hesabın yönetici yetkisi yok."), "error");
+    }
+  };
 
   const handleAdminVerifyLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -150,24 +172,30 @@ export default function AdminSection({
 
     const success = await login(adminEmail, adminPassword);
     if (success) {
-      const user = useAuthStore.getState().user;
-      if (user && user.role === "admin") {
-        setIsAdminMode(true);
-        onAddSystemLog(
-          "login", 
-          "huurgo Admin",
-          "Beheersessie verbonden met beveiligd beheerderstoken."
-        );
-        // Synchronously fetch all data with the newly set admin token
-        useAppStore.getState().fetchAllData();
-      } else {
-        logout();
-        setIsAdminMode(false);
-        showAdminToast(al("Toegang geweigerd. Dit account heeft geen beheerdersrechten.", "Access denied. This account has no administrator rights.", "Erişim reddedildi. Bu hesabın yönetici yetkisi yok."), "error");
-      }
+      completeAdminLogin();
+    } else if (useAuthStore.getState().requiresTwoFactor) {
+      // Wachtwoord klopte, 2FA-codestap wordt getoond — geen fouttoast
+      setTwoFactorCode("");
     } else {
       const errorMsg = useAuthStore.getState().error || "Fout bij beheerdersinlog.";
       showAdminToast(`${al("Inloggen mislukt", "Login failed", "Giriş başarısız")}: ${errorMsg}`, "error");
+    }
+  };
+
+  const handleTwoFactorSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (twoFactorCode.trim().length < 6) {
+      showAdminToast(al("Voer de 6-cijferige code in.", "Enter the 6-digit code.", "6 haneli kodu girin."), "error");
+      return;
+    }
+    const success = await useAuthStore.getState().verifyTwoFactor(twoFactorCode.trim());
+    if (success) {
+      setTwoFactorCode("");
+      completeAdminLogin();
+    } else {
+      const state = useAuthStore.getState();
+      showAdminToast(state.error || al("Ongeldige verificatiecode", "Invalid verification code", "Geçersiz doğrulama kodu"), "error");
+      if (!state.requiresTwoFactor) setTwoFactorCode(""); // pre-auth verlopen → terug naar stap 1
     }
   };
 
@@ -192,6 +220,44 @@ export default function AdminSection({
             </p>
           </div>
 
+          {requiresTwoFactor ? (
+            <form onSubmit={handleTwoFactorSubmit} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold text-slate-400 tracking-wider uppercase font-mono">Verificatiecode (2FA)</label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  maxLength={6}
+                  required
+                  autoFocus
+                  value={twoFactorCode}
+                  onChange={(e) => setTwoFactorCode(e.target.value.replace(/\D/g, ""))}
+                  placeholder="123456"
+                  className="w-full bg-slate-950/50 border border-white/5 focus:border-amber-500/40 rounded-xl px-3.5 py-2.5 text-lg text-white outline-none font-bold h-12 transition-all font-mono tracking-[0.4em] text-center"
+                />
+                <p className="text-[10px] text-slate-500">
+                  Voer de 6-cijferige code uit uw authenticator-app in.
+                </p>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-3 mt-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-slate-950 font-black text-xs rounded-xl shadow-lg transition-transform hover:scale-[1.01] active:scale-99 cursor-pointer flex items-center justify-center space-x-1.5 border-none"
+              >
+                <ShieldCheck className="h-4 w-4 shrink-0" />
+                <span>Code verifiëren</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => { useAuthStore.getState().clearError(); setTwoFactorCode(""); }}
+                className="w-full py-2 text-[10px] font-bold text-slate-400 hover:text-white bg-transparent border-none cursor-pointer transition-colors"
+              >
+                ← Terug naar inloggen
+              </button>
+            </form>
+          ) : (
           <form onSubmit={handleAdminVerifyLogin} className="space-y-4">
             <div className="space-y-1.5">
               <label className="text-[11px] font-bold text-slate-400 tracking-wider uppercase font-mono">Beheerder E-mail</label>
@@ -223,6 +289,7 @@ export default function AdminSection({
               <span>Inloggen als Beheerder</span>
             </button>
           </form>
+          )}
 
           <div className="pt-2 text-center">
             <span className="text-[10px] text-slate-500 font-mono">
@@ -527,6 +594,9 @@ export default function AdminSection({
                 )}
                 {subTab === "logs" && (
                   <AdminLogs key="logs" adminLanguage={adminLanguage} />
+                )}
+                {subTab === "users" && (
+                  <AdminUsers key="users" adminLanguage={adminLanguage} />
                 )}
               </AnimatePresence>
             </React.Suspense>

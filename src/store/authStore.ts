@@ -22,7 +22,11 @@ interface AuthState {
   error: string | null;
   isUnverified: boolean;
   authChecked: boolean;
+  // 2FA-tussenstap: wachtwoord klopte, TOTP-code is nog nodig (alleen admins)
+  requiresTwoFactor: boolean;
+  preAuthToken: string | null;
   login: (email: string, password: string) => Promise<boolean>;
+  verifyTwoFactor: (code: string) => Promise<boolean>;
   register: (data: { email: string; password?: string; name: string; phone?: string; profile?: string; companyName?: string; marketingConsent?: boolean }) => Promise<boolean>;
   resendVerification: (email: string) => Promise<boolean>;
   updateProfile: (data: { name: string; phone?: string; profile?: string; companyName?: string; address?: string; avatarUrl?: string }) => Promise<boolean>;
@@ -43,18 +47,20 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   error: null,
   isUnverified: false,
   authChecked: false,
+  requiresTwoFactor: false,
+  preAuthToken: null,
 
-  clearError: () => set({ error: null, isUnverified: false }),
+  clearError: () => set({ error: null, isUnverified: false, requiresTwoFactor: false, preAuthToken: null }),
 
   logout: () => {
     localStorage.removeItem("hwh_token");
     localStorage.removeItem("hwh_admin_token");
     localStorage.removeItem("hwh_admin_mode");
-    set({ token: null, user: null, isAuthenticated: false, isAdmin: false, isUnverified: false });
+    set({ token: null, user: null, isAuthenticated: false, isAdmin: false, isUnverified: false, requiresTwoFactor: false, preAuthToken: null });
   },
 
   login: async (email, password) => {
-    set({ isLoading: true, error: null, isUnverified: false });
+    set({ isLoading: true, error: null, isUnverified: false, requiresTwoFactor: false, preAuthToken: null });
     try {
       const res = await fetch("/api/auth/login", {
         method: "POST",
@@ -69,6 +75,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         } else {
           set({ error: data.error || "Inloggen mislukt", isLoading: false });
         }
+        return false;
+      }
+
+      // Admin met 2FA: nog geen sessietoken — caller toont de codestap
+      if (data.requires2fa) {
+        set({ requiresTwoFactor: true, preAuthToken: data.preAuthToken, isLoading: false });
         return false;
       }
 
@@ -91,6 +103,49 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         isAdmin: data.user.role === "admin",
         isLoading: false,
         isUnverified: false
+      });
+      return true;
+    } catch (err: any) {
+      set({ error: err.message, isLoading: false });
+      return false;
+    }
+  },
+
+  verifyTwoFactor: async (code) => {
+    const preAuthToken = get().preAuthToken;
+    if (!preAuthToken) {
+      set({ error: "Sessie verlopen, log opnieuw in", requiresTwoFactor: false });
+      return false;
+    }
+    set({ isLoading: true, error: null });
+    try {
+      const res = await fetch("/api/auth/login/2fa", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ preAuthToken, code })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        // 401 = pre-auth token verlopen → terug naar stap 1; 400 = foute code, opnieuw proberen
+        if (res.status === 401) {
+          set({ error: data.error || "Sessie verlopen, log opnieuw in", requiresTwoFactor: false, preAuthToken: null, isLoading: false });
+        } else {
+          set({ error: data.error || "Ongeldige verificatiecode", isLoading: false });
+        }
+        return false;
+      }
+
+      localStorage.setItem("hwh_admin_token", data.token);
+      localStorage.setItem("hwh_admin_mode", "true");
+      localStorage.removeItem("hwh_token");
+      set({
+        token: data.token,
+        user: data.user,
+        isAuthenticated: true,
+        isAdmin: true,
+        isLoading: false,
+        requiresTwoFactor: false,
+        preAuthToken: null
       });
       return true;
     } catch (err: any) {

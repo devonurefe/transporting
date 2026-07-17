@@ -138,6 +138,17 @@ function DealsCarousel({ machines, onSearch }: { machines: Machine[]; onSearch: 
   // a mouse idling there (which never happens on touch) would otherwise
   // freeze the carousel forever instead of just while actively interacting.
   const lastInteractionRef = useRef(0);
+  // Authoritative sub-pixel scroll position, tracked independently of
+  // el.scrollLeft. At this speed (~42px/s) each frame only advances by a
+  // fraction of a pixel; `el.scrollLeft += delta` reads back whatever the
+  // browser rounded scrollLeft to on the previous write, so on engines that
+  // round to the nearest (or floor to the) integer pixel on every read, the
+  // fractional part gets silently discarded every single frame — the value
+  // never crosses the next whole pixel and the row never visibly moves at
+  // all, even though the rAF loop is running correctly. Driving scrollLeft
+  // from our own float ref instead of round-tripping through the DOM avoids
+  // that class of bug regardless of which engine rounds it.
+  const scrollPosRef = useRef(0);
 
   const seen = new Set<string>();
   const deduped = machines.filter(m => {
@@ -155,8 +166,15 @@ function DealsCarousel({ machines, onSearch }: { machines: Machine[]; onSearch: 
     const el = ref.current;
     const recentlyInteracted = now - lastInteractionRef.current < 1200;
     if (el && !isDragging.current && !recentlyInteracted) {
-      el.scrollLeft += (42 * dt) / 1000;
-      if (el.scrollLeft >= el.scrollWidth / 2) el.scrollLeft -= el.scrollWidth / 2;
+      const half = el.scrollWidth / 2;
+      scrollPosRef.current += (42 * dt) / 1000;
+      if (scrollPosRef.current >= half) scrollPosRef.current -= half;
+      el.scrollLeft = scrollPosRef.current;
+    } else if (el) {
+      // User (or native touch scroll) is driving scrollLeft directly right
+      // now — keep our accumulator in sync so auto-scroll resumes from the
+      // real position instead of jumping back to wherever it last was.
+      scrollPosRef.current = el.scrollLeft;
     }
     rafRef.current = requestAnimationFrame(tick);
   }, []);

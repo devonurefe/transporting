@@ -680,7 +680,7 @@ export default function App() {
             "url": window.location.origin,
             "logo": `${window.location.origin}/og-image.png`,
             "telephone": siteConfig.contactPhone || "+31715428114",
-            "email": siteConfig.contactEmail || "info@mbhoogwerkers.com",
+            "email": siteConfig.contactEmail || "info@huurgo.nl",
             "address": {
               "@type": "PostalAddress",
               "streetAddress": siteConfig.companyAddress || "Produktieweg 20",

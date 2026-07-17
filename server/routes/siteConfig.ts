@@ -27,7 +27,7 @@ const defaultSiteConfig = {
   menuCatalogLabel: "Assortiment",
   menuOrdersLabel: "Mijn Account",
   menuAdminLabel: "Portaal",
-  contactEmail: "info@mbhoogwerkers.com",
+  contactEmail: "info@huurgo.nl",
   contactPhone: "+31 71 542 8114",
   companyAddress: "Produktieweg 20, 2382 PB Zoeterwoude",
   kvkNumber: "67438237",

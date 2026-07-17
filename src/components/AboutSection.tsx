@@ -51,7 +51,7 @@ export default function AboutSection() {
 
   const legalName = siteConfig.companyLegalName || "MB Hoogwerkers B.V.";
   const address = siteConfig.companyAddress || "Produktieweg 20, 2382 PB Zoeterwoude";
-  const contactEmail = siteConfig.contactEmail || "info@mbhoogwerkers.com";
+  const contactEmail = siteConfig.contactEmail || "info@huurgo.nl";
   const contactPhone = siteConfig.contactPhone || "+31 71 542 8114";
   const kvk = siteConfig.kvkNumber || "67438237";
   const btw = siteConfig.btwNumber || "NL856990656B01";

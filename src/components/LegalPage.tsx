@@ -28,7 +28,7 @@ interface LegalPageProps {
 export default function LegalPage({ slug, title }: LegalPageProps) {
   const [content, setContent] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const contactEmail = useAppStore((state) => state.siteConfig.contactEmail) || "info@mbhoogwerkers.com";
+  const contactEmail = useAppStore((state) => state.siteConfig.contactEmail) || "info@huurgo.nl";
 
   useEffect(() => {
     let active = true;

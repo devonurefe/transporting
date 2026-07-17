@@ -181,11 +181,10 @@ export function printInvoice(orderOrOrders: Order | Order[], clientCompanyName?:
     <head>
       <meta charset="UTF-8">
       <title>${invoiceNumber} - huurgo Nederland</title>
-      <!-- Premium Fonts -->
-      <link rel="preconnect" href="https://fonts.googleapis.com">
-      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800;900&display=swap" rel="stylesheet">
-      <script>/* fonts load passively — print triggered from parent */</script>
+      <!-- Zelf-bevattend: geen externe fonts. De productie-CSP (styleSrc 'self')
+           blokkeert de Google Fonts CDN toch, dus de factuur viel al terug op de
+           systeem-fontstack hieronder — de render blijft identiek en we vermijden
+           een dode externe request (zelfde CDN-verbod als de homepage). -->
 
       <style>
         /* Modern styling optimized for both screen preview and high-contrast A4 print */

@@ -249,10 +249,10 @@ export default function MachineDetailModal({
             <div className="border border-slate-200 rounded-2xl overflow-hidden">
               <div className="px-4 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between gap-2">
                 <div>
-                  <span className="text-xs text-slate-400 uppercase tracking-wider">Dagtarief</span>
+                  <span className="text-xs text-slate-500 uppercase tracking-wider">Dagtarief</span>
                   <div className="flex items-baseline gap-1.5 mt-0.5">
                     <span className="text-xl font-display font-black text-slate-900">€{priceNum(vp(machine.pricePerDay))}</span>
-                    <span className="text-[10px] text-slate-400">{vatLabel} p/dag</span>
+                    <span className="text-[10px] text-slate-500">{vatLabel} p/dag</span>
                   </div>
                 </div>
                 <VatToggle size="xs" />
@@ -270,7 +270,7 @@ export default function MachineDetailModal({
                   const subtext = row.highlight === "fire" ? "text-amber-500"
                     : row.highlight === "green" ? "text-emerald-600"
                     : row.highlight === "teal" ? "text-teal-600"
-                    : row.highlight === "violet" ? "text-amber-600" : "text-slate-400";
+                    : row.highlight === "violet" ? "text-amber-600" : "text-slate-500";
                   const badgeCls = row.highlight === "teal" ? "bg-teal-100 text-teal-700" : "bg-emerald-100 text-emerald-700";
                   return (
                     <div key={i} className={`flex items-center px-4 py-2.5 ${bg}`}>
@@ -313,41 +313,41 @@ export default function MachineDetailModal({
 
           {/* C — Description */}
           <div className="space-y-1.5">
-            <p className="text-xs text-slate-400 uppercase tracking-wider font-bold">Omschrijving</p>
+            <p className="text-xs text-slate-500 uppercase tracking-wider font-bold">Omschrijving</p>
             <p className="text-slate-700 text-sm leading-relaxed">{machine.description?.replace(/\s*\(Unit\s+\d+\)/gi, "").replace(/\s{2,}/g, " ").trim()}</p>
           </div>
 
           {/* D — Technical specs */}
           <div className="space-y-2">
-            <p className="text-xs text-slate-400 uppercase tracking-wider font-bold">Technische Specificaties</p>
+            <p className="text-xs text-slate-500 uppercase tracking-wider font-bold">Technische Specificaties</p>
             <div className="divide-y divide-slate-100 rounded-xl border border-slate-200 overflow-hidden">
               <div className="flex items-center justify-between px-3 py-2.5 bg-white">
-                <span className="text-xs text-slate-400 font-medium">Type machine</span>
+                <span className="text-xs text-slate-500 font-medium">Type machine</span>
                 <span className="text-sm font-bold text-slate-900">{machine.categoryLabel}</span>
               </div>
               <div className="flex items-center justify-between px-3 py-2.5 bg-white">
-                <span className="text-xs text-slate-400 font-medium">Werkhoogte</span>
+                <span className="text-xs text-slate-500 font-medium">Werkhoogte</span>
                 <span className="text-sm font-bold text-slate-900 font-mono text-right">{machine.height} m</span>
               </div>
               {machine.reach > 0 && (
                 <div className="flex items-center justify-between px-3 py-2.5 bg-white">
-                  <span className="text-xs text-slate-400 font-medium">Uitreik</span>
+                  <span className="text-xs text-slate-500 font-medium">Uitreik</span>
                   <span className="text-sm font-bold text-slate-900 font-mono text-right">{machine.reach} m</span>
                 </div>
               )}
               <div className="flex items-center justify-between px-3 py-2.5 bg-white">
-                <span className="text-xs text-slate-400 font-medium">Gewicht</span>
+                <span className="text-xs text-slate-500 font-medium">Gewicht</span>
                 <span className="text-sm font-bold text-slate-900 font-mono text-right">{machine.weight.toLocaleString("nl-NL")} kg</span>
               </div>
               <div className="flex items-center justify-between px-3 py-2.5 bg-white">
-                <span className="text-xs text-slate-400 font-medium">Aandrijving</span>
+                <span className="text-xs text-slate-500 font-medium">Aandrijving</span>
                 <span className="text-sm font-bold font-mono text-slate-900 text-right">
                   {machine.powerType}
                 </span>
               </div>
               {getSpecsForMachine(machine.id, (machine as any).specs).map((spec) => (
                 <div key={spec.label} className="flex items-center justify-between px-3 py-2.5 bg-white">
-                  <span className="text-xs text-slate-400 font-medium">{spec.label}</span>
+                  <span className="text-xs text-slate-500 font-medium">{spec.label}</span>
                   <span className="text-sm font-bold text-slate-700 text-right max-w-[55%]">{spec.value}</span>
                 </div>
               ))}
@@ -356,7 +356,7 @@ export default function MachineDetailModal({
               const items = machine.packageContents!.split(";").map(s => s.trim()).filter(Boolean);
               return items.length > 0 ? (
                 <div className="space-y-1.5 pt-1">
-                  <p className="text-xs text-slate-400 uppercase tracking-wider font-bold">Inbegrepen</p>
+                  <p className="text-xs text-slate-500 uppercase tracking-wider font-bold">Inbegrepen</p>
                   {items.map((item, i) => (
                     <div key={i} className="flex items-start gap-2 text-xs text-slate-600">
                       <span className="text-emerald-500 font-black shrink-0 mt-0.5 select-none">✓</span><span>{renderPkg(item)}</span>
@@ -432,7 +432,7 @@ export default function MachineDetailModal({
               <span className="bg-amber-100 border border-amber-200 text-amber-900 px-2 py-0.5 rounded text-[10px] uppercase tracking-wider font-extrabold">BMWT</span>
               <span>Jaarlijks veilig gekeurd</span>
             </div>
-            <span className="font-mono text-slate-400">Art. {machine.id}</span>
+            <span className="font-mono text-slate-500">Art. {machine.id}</span>
           </div>
 
         </div>
@@ -446,9 +446,9 @@ export default function MachineDetailModal({
             Sluiten
           </button>
           <div className="shrink-0 px-2 hidden sm:block">
-            <p className="text-[9px] text-slate-400 leading-none">per dag</p>
+            <p className="text-[9px] text-slate-500 leading-none">per dag</p>
             <p className="text-sm font-black text-slate-900 font-mono leading-tight">
-              €{priceNum(vp(machine.pricePerDay))}<span className="text-[10px] font-normal text-slate-400">/dag</span>
+              €{priceNum(vp(machine.pricePerDay))}<span className="text-[10px] font-normal text-slate-500">/dag</span>
             </p>
           </div>
           <button

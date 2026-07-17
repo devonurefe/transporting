@@ -862,4 +862,47 @@ export const emailService = {
       html: `<p>De klantbevestiging voor bestelling <strong>${orderId}</strong> kon niet worden bezorgd aan <strong>${customerEmail}</strong>.<br><br>Neem handmatig contact op met de klant.<br><br><small>Fout: ${errorMsg}</small></p>`,
     });
   },
+
+  /**
+   * Diagnostic send: a real email through the same Resend client/sender as
+   * every other transactional email, addressed to the requesting admin's own
+   * inbox. Distinct from every other method here in that it reports whether
+   * it actually hit the Resend API (`mocked: false`) or silently no-opped
+   * because RESEND_API_KEY is absent (`mocked: true`) — every other method
+   * above collapses that distinction to a plain `true`, which is correct for
+   * fire-and-forget order emails but useless for a "why isn't email arriving"
+   * diagnostic, where that exact distinction is the whole point.
+   */
+  sendTestEmail: async (toEmail: string): Promise<{ ok: boolean; mocked: boolean }> => {
+    if (!resend) {
+      console.log(`[EmailService] [MOCK] Test email to ${toEmail} — RESEND_API_KEY not configured, nothing actually sent.`);
+      return { ok: true, mocked: true };
+    }
+    const html = `
+      <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:480px;margin:0 auto;padding:24px;">
+        <h2 style="margin:0 0 12px;color:#0f172a;">huur<span style="color:#fb923c;">go</span> — testmail</h2>
+        <p style="font-size:14px;color:#334155;">Dit is een testbericht vanuit het admin-diagnostiekpaneel, verstuurd op ${new Date().toISOString()}.</p>
+        <p style="font-size:13px;color:#64748b;">Komt deze e-mail aan? Dan werkt de Resend-configuratie (${SENDER_EMAIL}) correct.</p>
+      </div>`;
+    const ok = await sendWithRetry({
+      from: SENDER_EMAIL,
+      to: toEmail,
+      subject: "huurgo — testmail vanuit Diagnostiek",
+      html,
+    });
+    return { ok, mocked: false };
+  },
 };
+
+// Config-status voor het admin-diagnostiekpaneel — booleans/veilige velden alleen,
+// nooit de sleutel zelf. Los geëxporteerd (i.p.v. via het emailService-object)
+// zodat het duidelijk een ander soort functie is: synchroon, geen sideeffects.
+export function getEmailDiagnostics() {
+  return {
+    resendConfigured: !!resend,
+    emailFrom: SENDER_EMAIL,
+    adminAlertEmailConfigured: !!ADMIN_ALERT_EMAIL,
+    adminAlertEmail: ADMIN_ALERT_EMAIL || null,
+    whatsappConfigured: !!WHATSAPP_NUMBER,
+  };
+}

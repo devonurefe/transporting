@@ -1,4 +1,5 @@
 import { Router, json as expressJson } from "express";
+import rateLimit from "express-rate-limit";
 import { machinesRouter } from "./machines.js";
 import { ordersRouter } from "./orders.js";
 import { blockedDatesRouter } from "./blockedDates.js";
@@ -8,7 +9,8 @@ import { blogPostsRouter } from "./blog.js";
 import { adminAuditRouter } from "./adminAudit.js";
 import { adminUsersRouter } from "./admins.js";
 import { prisma } from "../../prisma/client.js";
-import { requireAdmin } from "../middleware/auth.js";
+import { requireAdmin, AuthenticatedRequest } from "../middleware/auth.js";
+import { emailService, getEmailDiagnostics } from "../services/emailService.js";
 
 const uploadBodyParser = expressJson({ limit: "10mb" });
 
@@ -32,6 +34,41 @@ apiRouter.get("/health", async (req, res) => {
       timestamp: new Date().toISOString(),
       error: "Databaseverbinding mislukt"
     });
+  }
+});
+
+// GET /api/admin/email-status — admin-only diagnostic: is Resend actually
+// configured, or silently running in mock mode (every mock-mode send logs to
+// the server console and returns success to the caller, so from inside the
+// app nothing looks wrong — this is the only place that surfaces the truth
+// without SSH-ing into the server to read the boot-time diagnostic log).
+// Booleans/safe fields only — never the API key itself.
+apiRouter.get("/admin/email-status", requireAdmin as any, (req, res) => {
+  res.json(getEmailDiagnostics());
+});
+
+// POST /api/admin/test-email — sends a real email through the exact same
+// Resend client as every transactional email, to the CALLING admin's own
+// address (looked up fresh from the DB — never an arbitrary address from the
+// request body, so this can't be used as an open mail-relay probe). Confirms
+// actual delivery, not just that RESEND_API_KEY is present (a set-but-invalid
+// key, or an unverified sender domain, would still fail here).
+const testEmailLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  message: { error: "Te veel testmails. Probeer het over een uur opnieuw." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+apiRouter.post("/admin/test-email", testEmailLimiter, requireAdmin as any, async (req: AuthenticatedRequest, res) => {
+  try {
+    const admin = await prisma.admin.findUnique({ where: { id: req.user!.id }, select: { email: true } });
+    if (!admin) return res.status(404).json({ error: "Beheerder niet gevonden" });
+    const result = await emailService.sendTestEmail(admin.email);
+    res.json({ ...result, sentTo: admin.email });
+  } catch (error) {
+    console.error("Test email error:", error);
+    res.status(500).json({ error: "Testmail versturen mislukt" });
   }
 });
 

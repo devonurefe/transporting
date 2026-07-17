@@ -162,7 +162,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
     const machine = getBaseName(order.machineName);
     const lines: string[] = [];
     if (nextStatus === "Goedgekeurd") {
-      lines.push("Goed nieuws! ✅", "", `Uw boeking *${order.id}* voor de *${machine}* is goedgekeurd.`, "", "U ontvangt binnenkort de iDEAL betaallink om de huur te bevestigen.", "", "Met vriendelijke groet,", "*huurgo*");
+      lines.push("Goed nieuws! ✅", "", `Uw boeking *${order.id}* voor de *${machine}* is goedgekeurd.`, "", "Uw betaling is ontvangen en de machine staat voor u gereserveerd.", "", "Met vriendelijke groet,", "*huurgo*");
     } else if (nextStatus === "Onderweg") {
       lines.push("Uw machine is onderweg! 🚐", "", `De *${machine}* (ref: *${order.id}*) wordt vandaag bezorgd.`, "", "De chauffeur neemt contact op bij aankomst.", "", "Met vriendelijke groet,", "*huurgo*");
     } else if (nextStatus === "Voltooid") {

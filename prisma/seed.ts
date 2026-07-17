@@ -963,9 +963,15 @@ async function main() {
   // nooit overschreven, en een fresh install (die de nieuwe prijzen al via `create`
   // krijgt) slaat deze blokken automatisch over als no-op.
   console.log("Applying 2026-07 competitive price refresh...");
+  // Bravi Leonardo — definitieve prijs is €45/dag, €320/maand (gelijk aan de JLG
+  // 1230ES, "zelfde tarief als Bravi"). Een eerdere refresh zette 'm abusievelijk
+  // op 40/340, waardoor een fresh install (create = 45/320) alsnog naar 40/340
+  // sprong en dus afweek van productie. Deze correctie is guarded op exact die
+  // foutieve staat (40/340): een fresh install (al 45/320) slaat 'm over als
+  // no-op, en een bewuste admin-prijs die hier niet exact op staat blijft ongemoeid.
   await prisma.machine.updateMany({
-    where: { id: "bravi-mini-hd", pricePerDay: 45, monthlyPrice: 320 },
-    data: { pricePerDay: 40, monthlyPrice: 340 }
+    where: { id: "bravi-mini-hd", pricePerDay: 40, monthlyPrice: 340 },
+    data: { pricePerDay: 45, monthlyPrice: 320 }
   });
   await prisma.machine.updateMany({
     where: { id: "jlg-1230es", pricePerDay: 45, weeklyPrice: 110 },

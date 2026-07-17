@@ -217,16 +217,20 @@ export default function AdminSection({
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400">
               <ShieldAlert className="h-6 w-6" />
             </div>
-            <h1 className="font-display text-2xl font-black text-white tracking-tight">Eigenaarsportaal Login</h1>
+            <h1 className="font-display text-2xl font-black text-white tracking-tight">{al("Eigenaarsportaal Login", "Owner Portal Login", "Yönetici Portalı Girişi")}</h1>
             <p className="text-xs text-slate-400 max-w-xs mx-auto">
-              Beveiligde console voor de bedrijfseigenaar om de volledige vloot en actieve gebruikersstromen te overzien.
+              {al(
+                "Beveiligde console voor de bedrijfseigenaar om de volledige vloot en actieve gebruikersstromen te overzien.",
+                "Secure console for the business owner to oversee the full fleet and active user flows.",
+                "İşletme sahibinin tüm filoyu ve aktif kullanıcı akışlarını görüntülemesi için güvenli konsol."
+              )}
             </p>
           </div>
 
           {requiresTwoFactor ? (
             <form onSubmit={handleTwoFactorSubmit} className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-[11px] font-bold text-slate-400 tracking-wider uppercase font-mono">Verificatiecode (2FA)</label>
+                <label className="text-[11px] font-bold text-slate-400 tracking-wider uppercase font-mono">{al("Verificatiecode (2FA)", "Verification code (2FA)", "Doğrulama kodu (2FA)")}</label>
                 <input
                   type="text"
                   inputMode="numeric"
@@ -240,7 +244,7 @@ export default function AdminSection({
                   className="w-full bg-slate-950/50 border border-white/5 focus:border-amber-500/40 rounded-xl px-3.5 py-2.5 text-lg text-white outline-none font-bold h-12 transition-all font-mono tracking-[0.4em] text-center"
                 />
                 <p className="text-[10px] text-slate-500">
-                  Voer de 6-cijferige code uit uw authenticator-app in.
+                  {al("Voer de 6-cijferige code uit uw authenticator-app in.", "Enter the 6-digit code from your authenticator app.", "Kimlik doğrulama uygulamanızdaki 6 haneli kodu girin.")}
                 </p>
               </div>
 
@@ -249,7 +253,7 @@ export default function AdminSection({
                 className="w-full py-3 mt-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-slate-950 font-black text-xs rounded-xl shadow-lg transition-transform hover:scale-[1.01] active:scale-99 cursor-pointer flex items-center justify-center space-x-1.5 border-none"
               >
                 <ShieldCheck className="h-4 w-4 shrink-0" />
-                <span>Code verifiëren</span>
+                <span>{al("Code verifiëren", "Verify code", "Kodu doğrula")}</span>
               </button>
 
               <button
@@ -257,13 +261,13 @@ export default function AdminSection({
                 onClick={() => { useAuthStore.getState().clearError(); setTwoFactorCode(""); }}
                 className="w-full py-2 text-[10px] font-bold text-slate-400 hover:text-white bg-transparent border-none cursor-pointer transition-colors"
               >
-                ← Terug naar inloggen
+                {al("← Terug naar inloggen", "← Back to login", "← Girişe dön")}
               </button>
             </form>
           ) : (
           <form onSubmit={handleAdminVerifyLogin} className="space-y-4">
             <div className="space-y-1.5">
-              <label className="text-[11px] font-bold text-slate-400 tracking-wider uppercase font-mono">Beheerder E-mail</label>
+              <label className="text-[11px] font-bold text-slate-400 tracking-wider uppercase font-mono">{al("Beheerder E-mail", "Admin e-mail", "Yönetici E-postası")}</label>
               <input
                 type="email"
                 required
@@ -274,7 +278,7 @@ export default function AdminSection({
             </div>
 
             <div className="space-y-1.5 font-sans">
-              <label className="text-[11px] font-bold text-slate-400 tracking-wider uppercase">Beveiligd Wachtwoord</label>
+              <label className="text-[11px] font-bold text-slate-400 tracking-wider uppercase">{al("Beveiligd Wachtwoord", "Secure password", "Güvenli Şifre")}</label>
               <input
                 type="password"
                 required
@@ -289,14 +293,14 @@ export default function AdminSection({
               className="w-full py-3 mt-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-slate-950 font-black text-xs rounded-xl shadow-lg transition-transform hover:scale-[1.01] active:scale-99 cursor-pointer flex items-center justify-center space-x-1.5 border-none"
             >
               <LogIn className="h-4 w-4 shrink-0" />
-              <span>Inloggen als Beheerder</span>
+              <span>{al("Inloggen als Beheerder", "Log in as Admin", "Yönetici Olarak Giriş Yap")}</span>
             </button>
           </form>
           )}
 
           <div className="pt-2 text-center">
             <span className="text-[10px] text-slate-500 font-mono">
-              Beveiligde toegang voor geautoriseerde beheerders
+              {al("Beveiligde toegang voor geautoriseerde beheerders", "Secure access for authorized administrators", "Yetkili yöneticiler için güvenli erişim")}
             </span>
           </div>
         </div>

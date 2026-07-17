@@ -226,7 +226,9 @@ interface LanguageState {
 
 export const useLanguageStore = create<LanguageState>((set, get) => ({
   language: (localStorage.getItem("hwh_lang") as Language) || "nl",
-  adminLanguage: (localStorage.getItem("hwh_admin_lang") as AdminLanguage) || "nl",
+  // Admin console default is Turkish (the operator's language) — the public
+  // storefront's `language` above stays "nl" by design, this is separate.
+  adminLanguage: (localStorage.getItem("hwh_admin_lang") as AdminLanguage) || "tr",
   
   toggleLanguage: () => {
     // Strictly toggle nl <-> en for the public storefront

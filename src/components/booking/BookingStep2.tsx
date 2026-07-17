@@ -377,9 +377,9 @@ export default function BookingStep2({
             </div>
 
             {addressSuccessMsg && (
-              <div className="text-xs text-teal-700 font-bold flex items-center space-x-1.5 pt-1">
-                <Check className="h-4 w-4 shrink-0 bg-teal-50 text-teal-700 p-0.5 rounded-full" />
-                <span>{addressSuccessMsg}</span>
+              <div className="text-xs text-teal-700 font-bold flex items-start gap-1.5 pt-1">
+                <Check className="h-4 w-4 shrink-0 bg-teal-50 text-teal-700 p-0.5 rounded-full mt-px" />
+                <span className="leading-relaxed">{addressSuccessMsg}</span>
               </div>
             )}
 

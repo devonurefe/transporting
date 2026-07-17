@@ -7,15 +7,14 @@ import React, { useEffect, useState } from "react";
 import { FileText } from "lucide-react";
 import MarkdownBody from "./MarkdownBody";
 import { useAppStore } from "../store/appStore";
-import { DEFAULT_PRIVACY_POLICY } from "../data/legalContent";
+import { DEFAULT_PRIVACY_POLICY, DEFAULT_TERMS_CONDITIONS } from "../data/legalContent";
 
 // Code-fallback per slug (zelfde `?? codeDefault`-patroon als de rest van de
-// admin-manageable content). Zolang de admin niets opslaat, toont de pagina deze
-// standaardtekst i.p.v. het "volgt binnenkort"-blok. Terms heeft (nog) geen
-// standaardtekst en valt dus terug op dat blok.
+// admin-manageable content). Zolang de admin niets opslaat, tonen /privacy en
+// /voorwaarden deze standaardtekst i.p.v. het "volgt binnenkort"-blok.
 const DEFAULT_CONTENT: Record<LegalPageProps["slug"], string> = {
   privacy: DEFAULT_PRIVACY_POLICY,
-  voorwaarden: "",
+  voorwaarden: DEFAULT_TERMS_CONDITIONS,
 };
 
 // Beheerd via AdminContent → Juridisch (POST /api/site-config); geserveerd

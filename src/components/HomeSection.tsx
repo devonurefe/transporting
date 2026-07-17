@@ -174,7 +174,16 @@ function DealsCarousel({ machines, onSearch }: { machines: Machine[]; onSearch: 
   // button underneath, so cards silently stopped being clickable.
   const DRAG_THRESHOLD = 6;
 
+  // Custom drag is mouse-only: desktop browsers have no native "click and
+  // drag to scroll" gesture, so we simulate one. Touch pointers bail out
+  // immediately and fall through to the browser's own native horizontal
+  // scrolling instead (see touchAction below) — an earlier version routed
+  // touch through this same pointer-capture logic, which turned out to be
+  // unreliable on real iOS Safari (reported: manual swiping did nothing at
+  // all, not just the auto-scroll). Native scrolling is guaranteed to work
+  // everywhere and needs zero custom JS.
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.pointerType === "touch") return;
     activePointerIdRef.current = e.pointerId;
     dragStartX.current = e.clientX;
     dragScrollLeft.current = ref.current?.scrollLeft ?? 0;
@@ -182,17 +191,18 @@ function DealsCarousel({ machines, onSearch }: { machines: Machine[]; onSearch: 
   };
 
   const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.pointerType === "touch") return;
     if (activePointerIdRef.current !== e.pointerId || !ref.current) return;
     const dx = dragStartX.current - e.clientX;
     if (!isDragging.current) {
       if (Math.abs(dx) < DRAG_THRESHOLD) return;
       isDragging.current = true;
       didDragRef.current = true;
-      // Some mobile browsers (notably iOS Safari) can throw here for touch
-      // pointers in edge cases. isDragging is already true at this point, so
-      // an uncaught throw would permanently block the auto-scroll tick below
-      // (it never gets reset back to false) — the carousel freezes for good
-      // instead of just losing capture-follow-outside-bounds behavior.
+      // Defensive: setPointerCapture can throw in some browsers. isDragging
+      // is already true at this point, so an uncaught throw would otherwise
+      // permanently block the auto-scroll tick below (never reset back to
+      // false) — freezing the carousel for good instead of just losing
+      // capture-follow-outside-bounds behavior.
       try {
         (e.currentTarget as HTMLDivElement).setPointerCapture(e.pointerId);
       } catch { /* non-fatal — dragging still works without capture */ }
@@ -208,6 +218,22 @@ function DealsCarousel({ machines, onSearch }: { machines: Machine[]; onSearch: 
     activePointerIdRef.current = null;
     isDragging.current = false;
     lastTimeRef.current = 0;
+    lastInteractionRef.current = performance.now();
+  };
+
+  // Native touch scroll doesn't run through the pointer handlers above (they
+  // bail out for touch), so track its start/end via plain Touch Events —
+  // supported forever, unlike Pointer Events during scroll gestures which
+  // are inconsistent on some mobile browsers. This is what actually pauses
+  // the rAF auto-scroll while the user is touch-scrolling, and resumes it
+  // ~1.2s after they lift their finger, mirroring the mouse behavior above.
+  const onTouchStart = () => {
+    lastInteractionRef.current = performance.now();
+  };
+  const onTouchMove = () => {
+    lastInteractionRef.current = performance.now();
+  };
+  const onTouchEnd = () => {
     lastInteractionRef.current = performance.now();
   };
 
@@ -268,7 +294,11 @@ function DealsCarousel({ machines, onSearch }: { machines: Machine[]; onSearch: 
       <div
         ref={ref}
         className="overflow-x-scroll cursor-grab active:cursor-grabbing select-none"
-        style={{ scrollbarWidth: "none", msOverflowStyle: "none", touchAction: "pan-y" }}
+        // No touchAction override — default "auto" lets the browser natively
+        // scroll this row horizontally on touch (and pass vertical swipes
+        // through to the page). Touch is deliberately not routed through the
+        // pointer-drag handlers below; see the comment on onPointerDown.
+        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
@@ -280,6 +310,9 @@ function DealsCarousel({ machines, onSearch }: { machines: Machine[]; onSearch: 
         onLostPointerCapture={onPointerUp}
         onMouseEnter={onMouseEnter}
         onMouseMove={onMouseMove}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
       >
         <div className="flex gap-4 px-4" style={{ width: "max-content" }}>
           {allCards.map((m, i) => {

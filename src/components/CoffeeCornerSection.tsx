@@ -71,7 +71,7 @@ export default function CoffeeCornerSection() {
             {isInternalCta ? (
               <Link
                 to={ctaHref}
-                className="self-start inline-flex items-center px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-xs rounded-xl shadow-sm hover:shadow-md transition-all no-underline"
+                className="self-center sm:self-start inline-flex items-center px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-xs rounded-xl shadow-sm hover:shadow-md transition-all no-underline"
               >
                 {ctaLabel}
               </Link>
@@ -80,7 +80,7 @@ export default function CoffeeCornerSection() {
                 href={ctaHref}
                 target={ctaHref.startsWith("http") ? "_blank" : undefined}
                 rel={ctaHref.startsWith("http") ? "noopener noreferrer" : undefined}
-                className="self-start inline-flex items-center px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-xs rounded-xl shadow-sm hover:shadow-md transition-all no-underline"
+                className="self-center sm:self-start inline-flex items-center px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-xs rounded-xl shadow-sm hover:shadow-md transition-all no-underline"
               >
                 {ctaLabel}
               </a>

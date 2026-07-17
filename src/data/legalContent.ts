@@ -3,11 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-// Standaard juridische teksten (privacybeleid). Dit is de CODE-fallback, in lijn
-// met het `siteConfig.x ?? codeDefault`-patroon elders in de app: zolang de
-// admin geen eigen tekst opslaat via AdminContent → Juridisch (SiteConfig.
-// privacyPolicy blijft null), tonen zowel de publieke /privacy-pagina als het
-// admin-tekstvak deze versie. Zodra de admin opslaat, wint de DB-waarde.
+// Standaard juridische teksten (privacybeleid + algemene voorwaarden). Dit is
+// de CODE-fallback, in lijn met het `siteConfig.x ?? codeDefault`-patroon
+// elders in de app: zolang de admin geen eigen tekst opslaat via AdminContent
+// → Juridisch (SiteConfig.privacyPolicy / termsConditions blijft null), tonen
+// zowel de publieke /privacy- en /voorwaarden-pagina's als het admin-tekstvak
+// deze versie. Zodra de admin opslaat, wint de DB-waarde.
 //
 // Formaat = de lichte markdown die MarkdownBody.tsx ondersteunt: `## kop`,
 // alinea's gescheiden door een lege regel, `- ` opsommingen en **vet**. Geen
@@ -109,6 +110,84 @@ Wij kunnen dit privacybeleid van tijd tot tijd aanpassen, bijvoorbeeld bij wijzi
 ## Contact
 
 Heeft u vragen over dit privacybeleid of over de verwerking van uw persoonsgegevens? Neem gerust contact met ons op:
+
+- **MB Hoogwerkers B.V. (HuurGo)**
+- **E-mail:** info@mbhoogwerkers.com
+- **Adres:** Produktieweg 20, 2382 PB Zoeterwoude`;
+
+export const DEFAULT_TERMS_CONDITIONS = `Deze algemene voorwaarden zijn van toepassing op elke huurovereenkomst die via huurgo.nl tot stand komt tussen u ("huurder") en MB Hoogwerkers B.V., handelend onder de naam HuurGo ("wij", "ons", "verhuurder").
+
+**Laatst bijgewerkt:** 17 juli 2026
+
+## Verhuurder
+
+- **Bedrijf:** MB Hoogwerkers B.V.
+- **Adres:** Produktieweg 20, 2382 PB Zoeterwoude
+- **KvK-nummer:** 67438237
+- **BTW-nummer:** NL856990656B01
+- **E-mail:** info@mbhoogwerkers.com
+
+## Toepasselijkheid
+
+Deze voorwaarden gelden voor iedere aanvraag, boeking en huurovereenkomst via huurgo.nl, ongeacht of u als particulier, ZZP'er of bedrijf huurt. Door een boeking te plaatsen gaat u akkoord met deze voorwaarden. Afwijkende afspraken gelden alleen als wij deze schriftelijk (e-mail volstaat) hebben bevestigd.
+
+## Totstandkoming van de huurovereenkomst
+
+- U selecteert een machine, kiest een huurperiode en rondt de boeking af via de website.
+- De huurovereenkomst komt tot stand zodra u de boeking bevestigt en hiervan een orderbevestiging per e-mail ontvangt.
+- Directe onlinebetaling is niet nodig om te boeken; zie "Betaling" hieronder voor hoe de betaling verloopt.
+
+## Prijzen en btw
+
+- Prijzen op de website worden standaard exclusief 21% btw getoond, met een schakelaar om inclusief btw te bekijken. Het bedrag dat u bij het afronden van de boeking ziet, is het definitieve, inclusief btw en eventuele transport- of servicekosten.
+- Er wordt **geen borg of aanbetaling** in rekening gebracht.
+- Prijzen kunnen door ons worden aangepast; een reeds bevestigde boeking blijft tegen de destijds afgesproken prijs staan.
+
+## Betaling
+
+- Na uw boeking nemen wij per WhatsApp contact met u op om een betaallink (bijvoorbeeld iDEAL of Tikkie) te sturen.
+- Wij verwerken en bewaren zelf geen creditcard- of volledige rekeninggegevens; de betaling verloopt via de externe betaaldienst achter de link.
+- Uw bestelling krijgt de status "Goedgekeurd" zodra de betaling door ons is ontvangen en bevestigd. Zonder ontvangen betaling kan een boeking niet worden goedgekeurd of uitgeleverd.
+
+## Levering en afhalen
+
+U kiest bij het boeken één van de volgende opties:
+
+- **Zelf afhalen:** kosteloos, op ons depot in Zoeterwoude.
+- **Bezorging door ons:** tegen een vaste bezorgvergoeding (zichtbaar vóór het afronden van de boeking), standaard binnen 20 km van ons depot. Buiten dit gebied is bezorging op aanvraag, tegen een offerte op maat.
+- **Aanhanger huren:** u haalt de machine zelf op met onze aanhanger, tegen een dagtarief.
+
+Bij bezorging kiest u een gewenst tijdvak (ochtend of middag); wij spannen ons in dit aan te houden, maar dit is geen harde levertijd-garantie.
+
+## Huurperiode en gebruik van de machine
+
+- De huurperiode telt vanaf de afgesproken startdatum tot en met de afgesproken einddatum (beide dagen inbegrepen).
+- Onze machines zijn BMWT-gecertificeerd (categorie 1-3B) en worden bedrijfsklaar en goed onderhouden afgeleverd.
+- U gebruikt de machine uitsluitend voor het doel waarvoor deze is bestemd, conform de bijgeleverde instructies en geldende veiligheidsvoorschriften, en uitsluitend door personen die daartoe bevoegd en bekwaam zijn.
+- Onderverhuur of het in gebruik geven van de machine aan derden is niet toegestaan zonder onze schriftelijke toestemming.
+- U levert de machine bij het einde van de huurperiode terug in dezelfde staat als waarin u deze ontvangen heeft, behoudens normale slijtage.
+
+## Annuleren
+
+- Zolang uw bestelling de status "In behandeling" heeft (dus vóór goedkeuring/betaling), kunt u deze kosteloos zelf annuleren via "Mijn Account".
+- Is uw bestelling al goedgekeurd, neem dan zo snel mogelijk contact met ons op via WhatsApp of e-mail; wij bekijken dan samen met u de mogelijkheden.
+- Wij kunnen een bestelling annuleren bij bijvoorbeeld onvoorziene onbeschikbaarheid van de machine; u ontvangt hiervan bericht en een reeds ontvangen betaling wordt terugbetaald.
+
+## Aansprakelijkheid en schade
+
+- U bent tijdens de huurperiode verantwoordelijk voor de machine en aansprakelijk voor schade die ontstaat door onzorgvuldig, onjuist of ondeskundig gebruik, of door gebruik in strijd met deze voorwaarden of de bijgeleverde instructies.
+- Wij zijn niet aansprakelijk voor gevolgschade, bedrijfsschade of schade aan derden die voortvloeit uit het gebruik van de gehuurde machine, behoudens opzet of bewuste roekeloosheid van onze kant.
+- Meld schade, een defect of een ongeval met de machine zo snel mogelijk aan ons, in ieder geval vóór retournering.
+
+## Klachten en geschillen
+
+Heeft u een klacht over de machine, de levering of onze dienstverlening? Neem dan contact met ons op via info@mbhoogwerkers.com, zodat wij samen naar een oplossing kunnen zoeken. Komen we er onderling niet uit, dan is Nederlands recht van toepassing en is de bevoegde Nederlandse rechter aangewezen om het geschil te beslechten.
+
+## Wijzigingen
+
+Wij kunnen deze algemene voorwaarden van tijd tot tijd aanpassen. De actuele versie staat altijd op deze pagina, met bovenaan de datum van de laatste wijziging. Voor een reeds lopende huurovereenkomst blijven de voorwaarden gelden die golden op het moment van boeken.
+
+## Contact
 
 - **MB Hoogwerkers B.V. (HuurGo)**
 - **E-mail:** info@mbhoogwerkers.com

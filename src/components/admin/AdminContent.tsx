@@ -12,7 +12,7 @@ import {
 import { useAppStore } from "../../store/appStore";
 import { showAdminToast } from "./AdminToast";
 import { FAQ_ITEMS } from "../../data/faq";
-import { DEFAULT_PRIVACY_POLICY } from "../../data/legalContent";
+import { DEFAULT_PRIVACY_POLICY, DEFAULT_TERMS_CONDITIONS } from "../../data/legalContent";
 import { DEFAULT_TRANSPORT_FEES, DEFAULT_GLOBAL_ADDONS } from "../../utils/pricing";
 
 interface AdminContentProps {
@@ -69,7 +69,7 @@ export default function AdminContent({ adminLanguage }: AdminContentProps) {
   // (SiteConfig.privacyPolicy is null), zodat de beheerder de bestaande /privacy-
   // inhoud in het tekstvak ziet en direct kan bijwerken i.p.v. een leeg veld.
   const [privacyPolicy, setPrivacyPolicy] = useState(siteConfig.privacyPolicy || DEFAULT_PRIVACY_POLICY);
-  const [termsConditions, setTermsConditions] = useState(siteConfig.termsConditions || "");
+  const [termsConditions, setTermsConditions] = useState(siteConfig.termsConditions || DEFAULT_TERMS_CONDITIONS);
 
   const save = async (payload: Record<string, unknown>, successMsg: string) => {
     setSaving(true);
@@ -376,6 +376,15 @@ export default function AdminContent({ adminLanguage }: AdminContentProps) {
 
           <div className="space-y-1 pt-3 border-t border-slate-200">
             <label className={labelCls}>{t("Algemene voorwaarden (/voorwaarden)", "Terms & conditions (/voorwaarden)", "Genel koşullar (/voorwaarden)")}</label>
+            {!siteConfig.termsConditions && (
+              <p className="text-[11px] text-slate-500">
+                {t(
+                  "Voorgevuld met de standaardtekst die nu op /voorwaarden staat. Pas aan en sla op om een eigen versie vast te leggen; laat 'm juridisch controleren.",
+                  "Pre-filled with the default text currently shown on /voorwaarden. Edit and save to store your own version; have it legally reviewed.",
+                  "/voorwaarden'de şu an görünen varsayılan metinle önceden dolduruldu. Kendi sürümünüz için düzenleyip kaydedin; hukuki kontrolden geçirin."
+                )}
+              </p>
+            )}
             <textarea value={termsConditions} onChange={(e) => setTermsConditions(e.target.value)} maxLength={60000} rows={10} className={`${inputCls} resize-y font-mono`} />
           </div>
           <button disabled={saving} onClick={() => save({ termsConditions }, t("Voorwaarden opgeslagen.", "Terms saved.", "Koşullar kaydedildi."))} className={btnSave}>

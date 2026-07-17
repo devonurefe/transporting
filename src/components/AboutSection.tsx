@@ -11,7 +11,7 @@ import {
   ShieldCheck, Truck, MessageCircle, Clock, BadgeCheck, Euro,
 } from "lucide-react";
 import { useAppStore } from "../store/appStore";
-import { HuurGoLogo, BrandedText } from "./Header";
+import { BrandedText } from "./Header";
 
 // "Over ons" — verzamelt uitsluitend al bestaande, echte gegevens (geen
 // verzonnen content): bedrijfsgegevens/adres (SiteConfig, dezelfde velden als
@@ -74,7 +74,6 @@ export default function AboutSection() {
         transition={{ duration: 0.35 }}
         className="text-center space-y-4"
       >
-        <HuurGoLogo className="h-9 mx-auto" />
         <h1 className="font-display text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
           Maak kennis met <BrandedText text="HuurGo" />
         </h1>

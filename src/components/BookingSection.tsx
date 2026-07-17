@@ -625,7 +625,7 @@ export default function BookingSection({
           : bestDoc.weergavenaam;
         setDeliveryAddress(resolvedAddress);
         setStreetName(street || "");
-        setAddressSuccessMsg(`✓ Gevalideerd adres gevonden: ${resolvedAddress}`);
+        setAddressSuccessMsg(`Gevalideerd adres gevonden: ${resolvedAddress}`);
 
         // Distance check — parse PDOK centroide_ll "POINT(lon lat)"
         const centroide = bestDoc.centroide_ll as string | undefined;

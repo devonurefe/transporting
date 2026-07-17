@@ -188,7 +188,14 @@ function DealsCarousel({ machines, onSearch }: { machines: Machine[]; onSearch: 
       if (Math.abs(dx) < DRAG_THRESHOLD) return;
       isDragging.current = true;
       didDragRef.current = true;
-      (e.currentTarget as HTMLDivElement).setPointerCapture(e.pointerId);
+      // Some mobile browsers (notably iOS Safari) can throw here for touch
+      // pointers in edge cases. isDragging is already true at this point, so
+      // an uncaught throw would permanently block the auto-scroll tick below
+      // (it never gets reset back to false) — the carousel freezes for good
+      // instead of just losing capture-follow-outside-bounds behavior.
+      try {
+        (e.currentTarget as HTMLDivElement).setPointerCapture(e.pointerId);
+      } catch { /* non-fatal — dragging still works without capture */ }
     }
     let next = dragScrollLeft.current + dx;
     const half = ref.current.scrollWidth / 2;
@@ -266,6 +273,11 @@ function DealsCarousel({ machines, onSearch }: { machines: Machine[]; onSearch: 
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
+        // Fires whenever capture is released, including cases where the
+        // browser revokes it without a matching pointerup/pointercancel —
+        // a safety net so isDragging can never get stuck true and freeze
+        // the auto-scroll tick for good.
+        onLostPointerCapture={onPointerUp}
         onMouseEnter={onMouseEnter}
         onMouseMove={onMouseMove}
       >

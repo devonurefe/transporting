@@ -51,12 +51,17 @@ siteConfigRouter.get("/site-config", publicReadLimiter, async (req: Authenticate
     // die elke first visit ophaalt — die content is opvraagbaar via /api/pages/:slug.
     const { privacyPolicy: _pp, termsConditions: _tc, ...strippedConfig } = (config || defaultSiteConfig) as any;
     const publicConfig: any = strippedConfig;
-    const patch: Record<string, string> = {};
+    const patch: Record<string, unknown> = {};
     if (typeof publicConfig.heroImageUrl === "string" && publicConfig.heroImageUrl.startsWith("data:image/")) {
       patch.heroImageUrl = "/site-hero-image";
     }
     if (typeof publicConfig.coffeeCornerImageUrl === "string" && publicConfig.coffeeCornerImageUrl.startsWith("data:image/")) {
       patch.coffeeCornerImageUrl = "/site-coffee-image";
+    }
+    if (Array.isArray(publicConfig.galleryImages)) {
+      patch.galleryImages = publicConfig.galleryImages.map((img: unknown, i: number) =>
+        typeof img === "string" && img.startsWith("data:image/") ? `/site-gallery-image/${i}` : img
+      );
     }
     res.json(Object.keys(patch).length ? { ...publicConfig, ...patch } : publicConfig);
   } catch (error) {
@@ -73,6 +78,7 @@ const SITE_CONFIG_FIELDS = [
   "menuHomeLabel", "menuCatalogLabel", "menuOrdersLabel", "menuAdminLabel",
   "contactEmail", "contactPhone", "companyAddress", "kvkNumber", "btwNumber", "companyLegalName",
   "coffeeCornerTitle", "coffeeCornerDescription", "coffeeCornerImageUrl", "coffeeCornerCtaLabel", "coffeeCornerCtaHref",
+  "galleryTitle", "galleryDescription",
   "footerDescription", "seoTitle", "seoDescription"
 ] as const;
 
@@ -96,10 +102,10 @@ function pickSiteConfigFields(body: any): Record<string, string | number | boole
   const data: Record<string, string | number | boolean | null | unknown[]> = {};
   for (const field of SITE_CONFIG_FIELDS) {
     // heroImageUrl/coffeeCornerImageUrl store a base64 data URL — allow up to 5 MB;
-    // all other fields max 1 KB (coffeeCornerDescription gets a bit more room).
+    // all other fields max 1 KB (coffeeCornerDescription/galleryDescription get a bit more room).
     const maxLen = field === "heroImageUrl" || field === "coffeeCornerImageUrl"
       ? 5_000_000
-      : field === "coffeeCornerDescription" ? 2000 : 1000;
+      : field === "coffeeCornerDescription" || field === "galleryDescription" ? 2000 : 1000;
     // Never persist the binary-proxy placeholder: the public feed returns
     // heroImageUrl="/site-hero-image" / coffeeCornerImageUrl="/site-coffee-image", so
     // if a stale client echoes it back we must ignore it rather than overwrite the
@@ -114,6 +120,27 @@ function pickSiteConfigFields(body: any): Record<string, string | number | boole
   // Coffee Corner on/off toggle — plain boolean, defaults off.
   if ("coffeeCornerEnabled" in (body ?? {})) {
     data.coffeeCornerEnabled = body.coffeeCornerEnabled === true;
+  }
+
+  // Photo gallery on/off toggle — plain boolean, defaults off.
+  if ("galleryEnabled" in (body ?? {})) {
+    data.galleryEnabled = body.galleryEnabled === true;
+  }
+
+  // Photo gallery images (max 10). Each entry is either a base64 data URL
+  // (admin upload, same size ceiling as heroImageUrl) or the binary-proxy
+  // placeholder path a stale client might echo back — ignore the latter so it
+  // never overwrites the real stored photo. Send [] or null to clear.
+  if ("galleryImages" in (body ?? {})) {
+    const raw = body.galleryImages;
+    if (raw === null || raw === "") {
+      data.galleryImages = [];
+    } else if (Array.isArray(raw)) {
+      data.galleryImages = raw
+        .slice(0, 10)
+        .filter((img: unknown): img is string =>
+          typeof img === "string" && img.length <= 5_000_000 && !img.startsWith("/site-gallery-image/"));
+    }
   }
 
   // Google rating: real external number, admin-entered. Accept a value in [0,5]

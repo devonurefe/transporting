@@ -20,36 +20,36 @@ export default function HowItWorksSection() {
       Icon: Search,
       title: t("Kies een machine", "Choose a machine", "Bir makine seçin"),
       body: t(
-        "Vind de juiste hoogwerker in het assortiment, of laat de Adviestool meedenken.",
-        "Find the right lift in the assortment, or let the advice tool help you choose.",
-        "Katalogdan doğru platformu bulun veya tavsiye aracını kullanın."
+        "Vind de juiste hoogwerker in het assortiment.",
+        "Find the right lift in the assortment.",
+        "Katalogdan doğru platformu bulun."
       ),
     },
     {
       Icon: CalendarDays,
       title: t("Kies uw datum", "Pick your dates", "Tarihinizi seçin"),
       body: t(
-        "Bekijk de live beschikbaarheid en reserveer direct online — zonder borg.",
-        "Check live availability and book directly online — no deposit required.",
-        "Canlı müsaitliği görün ve depozitosuz hemen online rezervasyon yapın."
+        "Live beschikbaarheid bekijken en direct boeken — zonder borg.",
+        "Check live availability and book directly — no deposit.",
+        "Canlı müsaitliği görün, depozitosuz hemen ayırtın."
       ),
     },
     {
       Icon: Truck,
       title: t("Bezorging of afhalen", "Delivery or pickup", "Teslimat veya teslim alma"),
       body: t(
-        "Wij bezorgen in heel Nederland, of haal zelf gratis op in Zoeterwoude.",
-        "We deliver across the Netherlands, or pick up for free in Zoeterwoude.",
-        "Tüm Hollanda'ya teslimat yapıyoruz veya Zoeterwoude'dan ücretsiz alın."
+        "Wij bezorgen in heel NL, of gratis afhalen in Zoeterwoude.",
+        "We deliver across the Netherlands, or pick up for free.",
+        "Tüm Hollanda'ya teslimat veya ücretsiz teslim alma."
       ),
     },
     {
       Icon: HardHat,
       title: t("Aan de slag", "Get to work", "İşe koyulun"),
       body: t(
-        "De machine wordt bedrijfsklaar geleverd, zodat u meteen kunt beginnen.",
-        "The machine arrives ready for use, so you can start right away.",
-        "Makine kullanıma hazır teslim edilir, hemen başlayabilirsiniz."
+        "Bedrijfsklaar geleverd — u kunt meteen beginnen.",
+        "Delivered ready to use — start right away.",
+        "Kullanıma hazır teslim, hemen başlayın."
       ),
     },
   ];
@@ -72,7 +72,7 @@ export default function HowItWorksSection() {
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 max-w-md sm:max-w-2xl mx-auto">
           {STEPS.map(({ Icon, title, body }, i) => (
             <motion.div
               key={title}
@@ -80,18 +80,16 @@ export default function HowItWorksSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-40px" }}
               transition={{ duration: 0.4, delay: i * 0.08 }}
-              className="relative bg-white border border-slate-200 shadow-sm rounded-2xl p-5 space-y-2.5"
+              className="relative aspect-square bg-white border border-slate-200 shadow-sm rounded-2xl p-3.5 sm:p-5 flex flex-col items-center justify-center text-center gap-1.5 sm:gap-2"
             >
-              <div className="flex items-center justify-between">
-                <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-orange-500/10 text-orange-500 border border-orange-500/20">
-                  <Icon className="h-5 w-5" strokeWidth={2.2} />
-                </span>
-                <span className="font-display font-black text-2xl text-slate-200 select-none leading-none" aria-hidden="true">
-                  {i + 1}
-                </span>
-              </div>
-              <h3 className="text-sm font-bold text-slate-900">{title}</h3>
-              <p className="text-[13px] text-slate-500 leading-relaxed">{body}</p>
+              <span className="absolute top-2.5 right-3 font-display font-black text-xl sm:text-2xl text-slate-200 select-none leading-none" aria-hidden="true">
+                {i + 1}
+              </span>
+              <span className="inline-flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-xl bg-orange-500/10 text-orange-500 border border-orange-500/20">
+                <Icon className="h-5 w-5" strokeWidth={2.2} />
+              </span>
+              <h3 className="text-xs sm:text-sm font-bold text-slate-900 leading-snug">{title}</h3>
+              <p className="text-[11px] sm:text-xs text-slate-500 leading-snug line-clamp-2">{body}</p>
             </motion.div>
           ))}
         </div>

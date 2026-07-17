@@ -40,7 +40,7 @@ function ReviewCard({ r }: { r: GoogleReview }) {
 export default function Footer({ siteName, setActiveTab, setShowContactModal }: FooterProps) {
   const t = useLanguageStore((state) => state.t);
   const siteConfig = useAppStore((state) => state.siteConfig);
-  const contactEmail = siteConfig.contactEmail || "info@mbhoogwerkers.com";
+  const contactEmail = siteConfig.contactEmail || "info@huurgo.nl";
 
   // Echte externe Google-score (door admin ingevoerd); los van de interne
   // klantbeoordelingen die WhyHuurGoBand op de homepage toont.

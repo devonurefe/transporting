@@ -18,7 +18,7 @@ interface ContactModalProps {
 
 export default function ContactModal({ isOpen, onClose, onShowToast, onAddSystemLog }: ContactModalProps) {
   const siteConfig = useAppStore((state) => state.siteConfig);
-  const contactEmail = siteConfig.contactEmail || "info@mbhoogwerkers.com";
+  const contactEmail = siteConfig.contactEmail || "info@huurgo.nl";
   const contactPhone = siteConfig.contactPhone || "+31 (0)6 11 84 88 99";
   const dialogRef = useModalA11y<HTMLDivElement>(isOpen, onClose);
   const [activeTab, setActiveTab] = useState<"ticket" | "callback">("ticket");

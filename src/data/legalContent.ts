@@ -30,7 +30,7 @@ MB Hoogwerkers B.V., handelend onder de naam HuurGo, is de verwerkingsverantwoor
 - **Adres:** Produktieweg 20, 2382 PB Zoeterwoude
 - **KvK-nummer:** 67438237
 - **BTW-nummer:** NL856990656B01
-- **E-mail:** info@mbhoogwerkers.com
+- **E-mail:** info@huurgo.nl
 - **Website:** huurgo.nl
 
 ## Welke gegevens wij verwerken
@@ -97,7 +97,7 @@ Op grond van de AVG heeft u het recht om:
 - uw gegevens in een gangbaar formaat te ontvangen (**dataportabiliteit**);
 - een eenmaal gegeven **toestemming in te trekken**.
 
-Wilt u een van deze rechten uitoefenen? Neem dan contact met ons op via info@mbhoogwerkers.com. Wij reageren binnen de wettelijke termijn en kunnen u om aanvullende identificatie vragen om misbruik te voorkomen.
+Wilt u een van deze rechten uitoefenen? Neem dan contact met ons op via info@huurgo.nl. Wij reageren binnen de wettelijke termijn en kunnen u om aanvullende identificatie vragen om misbruik te voorkomen.
 
 ## Klacht indienen
 
@@ -112,7 +112,7 @@ Wij kunnen dit privacybeleid van tijd tot tijd aanpassen, bijvoorbeeld bij wijzi
 Heeft u vragen over dit privacybeleid of over de verwerking van uw persoonsgegevens? Neem gerust contact met ons op:
 
 - **MB Hoogwerkers B.V. (HuurGo)**
-- **E-mail:** info@mbhoogwerkers.com
+- **E-mail:** info@huurgo.nl
 - **Adres:** Produktieweg 20, 2382 PB Zoeterwoude`;
 
 export const DEFAULT_TERMS_CONDITIONS = `Deze algemene voorwaarden zijn van toepassing op elke huurovereenkomst die via huurgo.nl tot stand komt tussen u ("huurder") en MB Hoogwerkers B.V., handelend onder de naam HuurGo ("wij", "ons", "verhuurder").
@@ -125,7 +125,7 @@ export const DEFAULT_TERMS_CONDITIONS = `Deze algemene voorwaarden zijn van toep
 - **Adres:** Produktieweg 20, 2382 PB Zoeterwoude
 - **KvK-nummer:** 67438237
 - **BTW-nummer:** NL856990656B01
-- **E-mail:** info@mbhoogwerkers.com
+- **E-mail:** info@huurgo.nl
 
 ## Toepasselijkheid
 
@@ -181,7 +181,7 @@ Bij bezorging kiest u een gewenst tijdvak (ochtend of middag); wij spannen ons i
 
 ## Klachten en geschillen
 
-Heeft u een klacht over de machine, de levering of onze dienstverlening? Neem dan contact met ons op via info@mbhoogwerkers.com, zodat wij samen naar een oplossing kunnen zoeken. Komen we er onderling niet uit, dan is Nederlands recht van toepassing en is de bevoegde Nederlandse rechter aangewezen om het geschil te beslechten.
+Heeft u een klacht over de machine, de levering of onze dienstverlening? Neem dan contact met ons op via info@huurgo.nl, zodat wij samen naar een oplossing kunnen zoeken. Komen we er onderling niet uit, dan is Nederlands recht van toepassing en is de bevoegde Nederlandse rechter aangewezen om het geschil te beslechten.
 
 ## Wijzigingen
 
@@ -190,5 +190,5 @@ Wij kunnen deze algemene voorwaarden van tijd tot tijd aanpassen. De actuele ver
 ## Contact
 
 - **MB Hoogwerkers B.V. (HuurGo)**
-- **E-mail:** info@mbhoogwerkers.com
+- **E-mail:** info@huurgo.nl
 - **Adres:** Produktieweg 20, 2382 PB Zoeterwoude`;

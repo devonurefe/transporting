@@ -484,7 +484,7 @@ export function printInvoice(orderOrOrders: Order | Order[], clientCompanyName?:
           <div class="issuer-info">
             <div class="issuer-name">${escapeHtml(businessInfo?.companyLegalName || "huurgo B.V.")}</div>
             <div>${escapeHtml(businessInfo?.companyAddress || "Produktieweg 20, 2382 PB Zoeterwoude")}</div>
-            <div>E: ${escapeHtml(businessInfo?.contactEmail || "info@mbhoogwerkers.com")} | T: ${escapeHtml(businessInfo?.contactPhone || "071 542 8114")}</div>
+            <div>E: ${escapeHtml(businessInfo?.contactEmail || "info@huurgo.nl")} | T: ${escapeHtml(businessInfo?.contactPhone || "071 542 8114")}</div>
             <div>KvK-nummer: ${escapeHtml(businessInfo?.kvkNumber || "67438237")} | BTW-nummer: ${escapeHtml(businessInfo?.btwNumber || "NL856990656B01")}</div>
           </div>
         </header>

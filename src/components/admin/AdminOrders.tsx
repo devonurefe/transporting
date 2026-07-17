@@ -75,6 +75,8 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
     setSelectedIds(prev => prev.size === displayOrders.length && displayOrders.every(o => prev.has(o.id)) ? new Set() : new Set(displayOrders.map(o => o.id)));
   const clearSelection = () => setSelectedIds(new Set());
 
+  const getBaseName = (name: string) => name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "").trim();
+
   const todayISO = new Date().toISOString().split("T")[0];
   const tomorrowISO = (() => { const d = new Date(); d.setDate(d.getDate() + 1); return d.toISOString().split("T")[0]; })();
   const weekStartISO = (() => {
@@ -128,8 +130,6 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
     if (adminLanguage === "en") return en;
     return nl;
   };
-
-  const getBaseName = (name: string) => name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "").trim();
 
   // Zombie/stale pending detection. An "In behandeling" order that is unpaid
   // blocks the machine's availability indefinitely (server/routes/orders.ts only

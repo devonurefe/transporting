@@ -268,6 +268,22 @@ export default function Footer({ siteName, setActiveTab, setShowContactModal }: 
                 <span className="h-1 w-1 rounded-full bg-slate-700 group-hover:bg-orange-500 transition-colors shrink-0" />
                 Contact &amp; openingstijden
               </button>
+              <Link
+                to="/privacy"
+                onClick={(e) => { e.preventDefault(); setActiveTab("privacy"); }}
+                className="flex items-center gap-2 py-2 text-xs text-slate-400 hover:text-white transition-colors no-underline group"
+              >
+                <span className="h-1 w-1 rounded-full bg-slate-700 group-hover:bg-orange-500 transition-colors shrink-0" />
+                Privacybeleid
+              </Link>
+              <Link
+                to="/voorwaarden"
+                onClick={(e) => { e.preventDefault(); setActiveTab("voorwaarden"); }}
+                className="flex items-center gap-2 py-2 text-xs text-slate-400 hover:text-white transition-colors no-underline group"
+              >
+                <span className="h-1 w-1 rounded-full bg-slate-700 group-hover:bg-orange-500 transition-colors shrink-0" />
+                Algemene voorwaarden
+              </Link>
             </div>
           </div>
 

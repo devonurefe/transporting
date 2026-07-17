@@ -13,6 +13,7 @@ import { Machine } from "../../types";
 import { getSpecsForMachine } from "../../utils/machineSpecs";
 import { showAdminToast } from "./AdminToast";
 import { getAdminAuthHeaders } from "../../utils/authHeaders";
+import { CAROUSEL_SKIP_NAMES } from "../HomeSection";
 import type { AdminSubTab } from "../AdminSection";
 
 interface AdminMachinesProps {
@@ -169,6 +170,15 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
       m.name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "").trim() === baseName
     ) ?? null;
   }, [editingMachine, editShowInWeeklyOffers, machines]);
+
+  // A handful of machines are hard-excluded from the carousel entirely (photo
+  // doesn't crop well into the small square thumbnail) — same silent-no-op
+  // trap as the sibling case above, just via a name denylist instead of a dedup.
+  const weeklyOfferSkipped = useMemo(() => {
+    if (!editingMachine || !editShowInWeeklyOffers) return false;
+    const baseName = editingMachine.name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "").trim();
+    return CAROUSEL_SKIP_NAMES.has(baseName);
+  }, [editingMachine, editShowInWeeklyOffers]);
   const [editCrossSell, setEditCrossSell] = useState<{ id: string; name: string; description: string; pricePerWeek: string; pricePerDay: string; pricePerTwoDay: string }[]>([]);
 
   const handleEditAdditionalImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1270,7 +1280,16 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                       <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${editShowInWeeklyOffers ? 'translate-x-6' : 'translate-x-1'}`} />
                     </button>
                   </div>
-                  {weeklyOfferSibling && (
+                  {weeklyOfferSkipped && (
+                    <p className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 -mt-2">
+                      {t(
+                        "Let op: deze machine staat op de uitsluitingslijst van de carousel (foto past niet goed in het vierkante kaartformaat) en wordt daarom nooit getoond, ook niet met deze schakelaar aan.",
+                        "Note: this machine is on the carousel's exclusion list (photo doesn't crop well into the square card format), so it will never show here, even with this toggle on.",
+                        "Dikkat: bu makine carousel dışlama listesinde (fotoğraf kare kart formatına iyi sığmıyor), bu yüzden bu anahtar açık olsa bile burada asla gösterilmeyecek."
+                      )}
+                    </p>
+                  )}
+                  {!weeklyOfferSkipped && weeklyOfferSibling && (
                     <p className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 -mt-2">
                       {t(
                         `Let op: "${weeklyOfferSibling.name}" staat al in de Weekaanbiedingen met dezelfde naam — deze unit wordt niet als apart kaartje getoond.`,

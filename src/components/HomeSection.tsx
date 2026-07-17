@@ -111,8 +111,10 @@ const SKIP_IDS = new Set(["klussensets", "schaarlift-smal", "schaarlift-6m"]);
 // Categories that are billed per week, not per day
 const WEEKLY_PRICED_CATEGORIES = new Set(["kamersteiger"]);
 
-// Machines excluded from the deals carousel (image fit issues)
-const CAROUSEL_SKIP_NAMES = new Set([
+// Machines excluded from the deals carousel (image fit issues). Exported so
+// AdminMachines.tsx can warn admins who toggle "In Weekaanbiedingen weergeven"
+// on one of these — the toggle saves fine but the card is always filtered out.
+export const CAROUSEL_SKIP_NAMES = new Set([
   "Haulotte Star 10 Mastlift",
   "Skyjack SJ16 Verticale Mastlift",
   "Altrex RS TOWER 44-Power Kamersteiger",

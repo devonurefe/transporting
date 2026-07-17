@@ -16,9 +16,14 @@ import {
   Clock,
   XCircle,
   CheckCircle2,
+  Mail,
+  Send,
+  MessageCircle,
 } from "lucide-react";
 import { motion } from "motion/react";
 import { useAppStore } from "../../store/appStore";
+import { getAdminAuthHeaders } from "../../utils/authHeaders";
+import { showAdminToast } from "./AdminToast";
 
 interface AdminDiagnosticsProps {
   systemLogs: any[];
@@ -96,6 +101,61 @@ export default function AdminDiagnostics({ systemLogs, userProfiles, onAddSystem
     const timer = setInterval(probe, 15000);
     return () => { active = false; clearInterval(timer); };
   }, []);
+
+  // Echte e-mail-/WhatsApp-configuratiestatus — beantwoordt "waarom komt er geen
+  // mail aan" zonder dat iemand op de VPS moet inloggen om de boot-log te lezen.
+  interface EmailDiagnostics {
+    resendConfigured: boolean;
+    emailFrom: string;
+    adminAlertEmailConfigured: boolean;
+    adminAlertEmail: string | null;
+    whatsappConfigured: boolean;
+  }
+  const [emailDiag, setEmailDiag] = useState<EmailDiagnostics | null>(null);
+  const [emailDiagError, setEmailDiagError] = useState(false);
+  const [testEmailState, setTestEmailState] = useState<"idle" | "sending" | "sent">("idle");
+
+  useEffect(() => {
+    let active = true;
+    fetch("/api/admin/email-status", { headers: getAdminAuthHeaders() })
+      .then((res) => (res.ok ? res.json() : Promise.reject()))
+      .then((data) => { if (active) setEmailDiag(data); })
+      .catch(() => { if (active) setEmailDiagError(true); });
+    return () => { active = false; };
+  }, []);
+
+  const sendTestEmail = async () => {
+    setTestEmailState("sending");
+    try {
+      const res = await fetch("/api/admin/test-email", { method: "POST", headers: getAdminAuthHeaders() });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || "Onbekende fout");
+      if (data.mocked) {
+        showAdminToast(
+          t(
+            "MOCK-modus: RESEND_API_KEY is niet ingesteld — er is GEEN echte e-mail verzonden.",
+            "MOCK mode: RESEND_API_KEY is not set — no real e-mail was sent.",
+            "MOCK modu: RESEND_API_KEY ayarlı değil — gerçek bir e-posta gönderilmedi."
+          ),
+          "error"
+        );
+      } else if (data.ok) {
+        showAdminToast(
+          t(`Testmail verzonden naar ${data.sentTo} via Resend.`, `Test e-mail sent to ${data.sentTo} via Resend.`, `${data.sentTo} adresine Resend üzerinden test e-postası gönderildi.`),
+          "success"
+        );
+      } else {
+        showAdminToast(
+          t("Resend accepteerde de testmail niet — controleer de API-sleutel en het afzenderdomein.", "Resend rejected the test e-mail — check the API key and sender domain.", "Resend test e-postasını kabul etmedi — API anahtarını ve gönderen alan adını kontrol edin."),
+          "error"
+        );
+      }
+    } catch (err: any) {
+      showAdminToast(err?.message || t("Testmail versturen mislukt.", "Failed to send test e-mail.", "Test e-postası gönderilemedi."), "error");
+    }
+    setTestEmailState("sent");
+    setTimeout(() => setTestEmailState("idle"), 3000);
+  };
 
   // Format systemLogs as terminal lines
   const terminalLines = useMemo(() => {
@@ -318,6 +378,92 @@ export default function AdminDiagnostics({ systemLogs, userProfiles, onAddSystem
           </div>
         </div>
 
+      </div>
+
+      {/* E-mail & WhatsApp configuratie — beantwoordt "waarom komt er geen mail
+          aan": elke transactionele mail-methode valt stil terug op MOCK-modus
+          (console-log, geen echte verzending) zodra RESEND_API_KEY ontbreekt,
+          zonder dat dat ergens anders in de app zichtbaar wordt. */}
+      <div className="glass-panel p-5.5 rounded-3xl space-y-4">
+        <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+          <div className="flex items-center space-x-2">
+            <Mail className="h-4.5 w-4.5 text-indigo-600" />
+            <h3 className="font-display font-bold text-sm text-slate-900">{t("E-mail & WhatsApp Configuratie", "Email & WhatsApp Configuration", "E-posta & WhatsApp Yapılandırması")}</h3>
+          </div>
+        </div>
+
+        {emailDiagError ? (
+          <p className="text-xs text-rose-600 font-semibold">{t("Kon configuratiestatus niet ophalen.", "Could not fetch configuration status.", "Yapılandırma durumu alınamadı.")}</p>
+        ) : !emailDiag ? (
+          <p className="text-xs text-slate-400">{t("Laden…", "Loading…", "Yükleniyor…")}</p>
+        ) : (
+          <div className="space-y-3.5 pt-1 text-xs">
+            <div className="flex items-center justify-between p-2.5 bg-slate-50 rounded-xl border border-slate-200/60 shadow-sm">
+              <div className="flex items-center space-x-2.5">
+                <div className={`p-1.5 rounded-lg border ${emailDiag.resendConfigured ? "bg-teal-50 border-teal-200 text-teal-600" : "bg-rose-50 border-rose-200 text-rose-600"}`}>
+                  <Mail className="h-4 w-4" />
+                </div>
+                <div>
+                  <span className="font-semibold block text-slate-800">Resend (transactionele e-mail)</span>
+                  <span className="text-[10px] text-slate-500 block font-mono">{t("Afzender: ", "Sender: ", "Gönderen: ")}{emailDiag.emailFrom}</span>
+                </div>
+              </div>
+              <span className={`text-[10px] font-bold font-mono px-2 py-0.5 rounded-full border ${emailDiag.resendConfigured ? "bg-teal-100 text-teal-800 border-teal-200" : "bg-rose-100 text-rose-800 border-rose-200"}`}>
+                {emailDiag.resendConfigured ? t("GECONFIGUREERD", "CONFIGURED", "YAPILANDIRILDI") : t("MOCK-MODUS", "MOCK MODE", "MOCK MODU")}
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between p-2.5 bg-slate-50 rounded-xl border border-slate-200/60 shadow-sm">
+              <div className="flex items-center space-x-2.5">
+                <div className={`p-1.5 rounded-lg border ${emailDiag.adminAlertEmailConfigured ? "bg-teal-50 border-teal-200 text-teal-600" : "bg-amber-50 border-amber-200 text-amber-600"}`}>
+                  <ShieldAlert className="h-4 w-4" />
+                </div>
+                <div>
+                  <span className="font-semibold block text-slate-800">{t("Admin-alertmail (nieuwe order/annulering)", "Admin alert e-mail (new order/cancellation)", "Yönetici uyarı e-postası (yeni sipariş/iptal)")}</span>
+                  <span className="text-[10px] text-slate-500 block font-mono">{emailDiag.adminAlertEmail ?? t("niet ingesteld (ADMIN_EMAIL)", "not set (ADMIN_EMAIL)", "ayarlı değil (ADMIN_EMAIL)")}</span>
+                </div>
+              </div>
+              <span className={`text-[10px] font-bold font-mono px-2 py-0.5 rounded-full border ${emailDiag.adminAlertEmailConfigured ? "bg-teal-100 text-teal-800 border-teal-200" : "bg-amber-100 text-amber-800 border-amber-200"}`}>
+                {emailDiag.adminAlertEmailConfigured ? t("INGESTELD", "SET", "AYARLI") : t("ONTBREEKT", "MISSING", "EKSİK")}
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between p-2.5 bg-slate-50 rounded-xl border border-slate-200/60 shadow-sm">
+              <div className="flex items-center space-x-2.5">
+                <div className={`p-1.5 rounded-lg border ${emailDiag.whatsappConfigured ? "bg-teal-50 border-teal-200 text-teal-600" : "bg-amber-50 border-amber-200 text-amber-600"}`}>
+                  <MessageCircle className="h-4 w-4" />
+                </div>
+                <div>
+                  <span className="font-semibold block text-slate-800">WhatsApp (VITE_WHATSAPP_NUMBER)</span>
+                  <span className="text-[10px] text-slate-500 block">{t("Handmatige knoppen/links — nooit automatisch verzonden.", "Manual buttons/links — never sent automatically.", "Manuel butonlar/linkler — asla otomatik gönderilmez.")}</span>
+                </div>
+              </div>
+              <span className={`text-[10px] font-bold font-mono px-2 py-0.5 rounded-full border ${emailDiag.whatsappConfigured ? "bg-teal-100 text-teal-800 border-teal-200" : "bg-amber-100 text-amber-800 border-amber-200"}`}>
+                {emailDiag.whatsappConfigured ? t("INGESTELD", "SET", "AYARLI") : t("ONTBREEKT", "MISSING", "EKSİK")}
+              </span>
+            </div>
+
+            <div className="pt-1">
+              <button
+                onClick={sendTestEmail}
+                disabled={testEmailState === "sending"}
+                className="w-full flex items-center justify-center gap-2 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white text-xs font-bold rounded-xl transition-all cursor-pointer border-none"
+              >
+                <Send className="h-3.5 w-3.5" />
+                {testEmailState === "sending"
+                  ? t("Versturen…", "Sending…", "Gönderiliyor…")
+                  : t("Testmail naar mijn eigen e-mailadres sturen", "Send test e-mail to my own address", "Kendi e-posta adresime test e-postası gönder")}
+              </button>
+              <p className="text-[10px] text-slate-400 mt-1.5 leading-relaxed">
+                {t(
+                  "Test de daadwerkelijke bezorging (niet alleen of de sleutel aanwezig is) — een ongeldige sleutel of een niet-geverifieerd afzenderdomein faalt pas hier.",
+                  "Tests actual delivery (not just whether the key is present) — an invalid key or unverified sender domain only fails here.",
+                  "Gerçek teslimatı test eder (sadece anahtarın var olup olmadığını değil) — geçersiz bir anahtar veya doğrulanmamış gönderen alan adı ancak burada başarısız olur."
+                )}
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Activity log terminal — real session events */}

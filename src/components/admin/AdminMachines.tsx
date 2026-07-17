@@ -155,6 +155,20 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
   const [editWeeklyOnly, setEditWeeklyOnly] = useState(false);
   const [editPickupOnly, setEditPickupOnly] = useState(false);
   const [editShowInWeeklyOffers, setEditShowInWeeklyOffers] = useState(false);
+
+  // The homepage deals carousel (HomeSection.tsx) dedupes cards by base name
+  // (stripping " (Unit N)"), so turning this on for a second unit of a machine
+  // that already has a sibling shown there is a silent no-op — warn the admin
+  // instead of leaving them wondering why their toggle "didn't work".
+  const weeklyOfferSibling = useMemo(() => {
+    if (!editingMachine || !editShowInWeeklyOffers) return null;
+    const baseName = editingMachine.name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "").trim();
+    return machines.find(m =>
+      m.id !== editingMachine.id &&
+      m.showInWeeklyOffers &&
+      m.name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "").trim() === baseName
+    ) ?? null;
+  }, [editingMachine, editShowInWeeklyOffers, machines]);
   const [editCrossSell, setEditCrossSell] = useState<{ id: string; name: string; description: string; pricePerWeek: string; pricePerDay: string; pricePerTwoDay: string }[]>([]);
 
   const handleEditAdditionalImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1256,6 +1270,15 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                       <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${editShowInWeeklyOffers ? 'translate-x-6' : 'translate-x-1'}`} />
                     </button>
                   </div>
+                  {weeklyOfferSibling && (
+                    <p className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 -mt-2">
+                      {t(
+                        `Let op: "${weeklyOfferSibling.name}" staat al in de Weekaanbiedingen met dezelfde naam — deze unit wordt niet als apart kaartje getoond.`,
+                        `Note: "${weeklyOfferSibling.name}" is already in Weekly Offers with the same name — this unit won't show as a separate card.`,
+                        `Dikkat: "${weeklyOfferSibling.name}" aynı isimle zaten Haftalık Tekliflerde — bu ünite ayrı bir kart olarak gösterilmeyecek.`
+                      )}
+                    </p>
+                  )}
 
                   <div className="space-y-1">
                     <label className="text-xs text-slate-700 block font-bold">{t("Minimale huurperiode (dagen)", "Minimum rental (days)", "Minimum kiralama (gün)")}</label>

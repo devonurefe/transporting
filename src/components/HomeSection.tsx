@@ -111,15 +111,6 @@ const SKIP_IDS = new Set(["klussensets", "schaarlift-smal", "schaarlift-6m"]);
 // Categories that are billed per week, not per day
 const WEEKLY_PRICED_CATEGORIES = new Set(["kamersteiger"]);
 
-// Machines excluded from the deals carousel (image fit issues)
-const CAROUSEL_SKIP_NAMES = new Set([
-  "Haulotte Star 10 Mastlift",
-  "Skyjack SJ16 Verticale Mastlift",
-  "Altrex RS TOWER 44-Power Kamersteiger",
-  "Pecolift Low-Level",
-  "Dingli JCPT 0607 DC Compact Schaarlift",
-]);
-
 // ── Single-row draggable + auto-scrolling deals carousel ──
 function DealsCarousel({ machines, onSearch }: { machines: Machine[]; onSearch: (q: string, cat: string) => void }) {
   const t = useLanguageStore((state) => state.t);
@@ -151,7 +142,6 @@ function DealsCarousel({ machines, onSearch }: { machines: Machine[]; onSearch: 
   const seen = new Set<string>();
   const deduped = machines.filter(m => {
     const bn = m.name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "").trim();
-    if (CAROUSEL_SKIP_NAMES.has(bn)) return false;
     if (seen.has(bn)) return false;
     seen.add(bn);
     return true;

@@ -48,11 +48,17 @@ apiRouter.get("/admin/email-status", requireAdmin as any, (req, res) => {
 });
 
 // POST /api/admin/test-email — sends a real email through the exact same
-// Resend client as every transactional email, to the CALLING admin's own
-// address (looked up fresh from the DB — never an arbitrary address from the
-// request body, so this can't be used as an open mail-relay probe). Confirms
-// actual delivery, not just that RESEND_API_KEY is present (a set-but-invalid
-// key, or an unverified sender domain, would still fail here).
+// Resend client as every transactional email. Defaults to the CALLING
+// admin's own address (looked up fresh from the DB), but accepts an
+// optional `to` override in the body so an admin can point a test straight
+// at a mailbox they can actually check right now (e.g. their own Gmail) —
+// the login/account address (often on a custom domain like admin@huurgo.nl)
+// may not be a real, checked mailbox even when Resend reports success,
+// since a successful send only proves Resend accepted and attempted
+// delivery, not that the receiving domain's mail routing works. Still
+// admin-only + rate-limited, same abuse posture as the bulk campaign-email
+// endpoint (auth.ts POST /campaigns/email), which already accepts arbitrary
+// recipient addresses under the same guard.
 const testEmailLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   max: 5,
@@ -60,12 +66,21 @@ const testEmailLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/;
 apiRouter.post("/admin/test-email", testEmailLimiter, requireAdmin as any, async (req: AuthenticatedRequest, res) => {
   try {
-    const admin = await prisma.admin.findUnique({ where: { id: req.user!.id }, select: { email: true } });
-    if (!admin) return res.status(404).json({ error: "Beheerder niet gevonden" });
-    const result = await emailService.sendTestEmail(admin.email);
-    res.json({ ...result, sentTo: admin.email });
+    const requestedTo = typeof req.body?.to === "string" ? req.body.to.trim() : "";
+    if (requestedTo && !EMAIL_RE.test(requestedTo)) {
+      return res.status(400).json({ error: "Ongeldig e-mailadres" });
+    }
+    let sendTo = requestedTo;
+    if (!sendTo) {
+      const admin = await prisma.admin.findUnique({ where: { id: req.user!.id }, select: { email: true } });
+      if (!admin) return res.status(404).json({ error: "Beheerder niet gevonden" });
+      sendTo = admin.email;
+    }
+    const result = await emailService.sendTestEmail(sendTo);
+    res.json({ ...result, sentTo: sendTo });
   } catch (error) {
     console.error("Test email error:", error);
     res.status(500).json({ error: "Testmail versturen mislukt" });

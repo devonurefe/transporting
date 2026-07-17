@@ -12,6 +12,7 @@ import {
 import { useAppStore } from "../../store/appStore";
 import { showAdminToast } from "./AdminToast";
 import { FAQ_ITEMS } from "../../data/faq";
+import { DEFAULT_PRIVACY_POLICY } from "../../data/legalContent";
 import { DEFAULT_TRANSPORT_FEES, DEFAULT_GLOBAL_ADDONS } from "../../utils/pricing";
 
 interface AdminContentProps {
@@ -64,7 +65,10 @@ export default function AdminContent({ adminLanguage }: AdminContentProps) {
   const [seoTitle, setSeoTitle] = useState(siteConfig.seoTitle || "");
   const [seoDescription, setSeoDescription] = useState(siteConfig.seoDescription || "");
   const [footerDescription, setFooterDescription] = useState(siteConfig.footerDescription || "");
-  const [privacyPolicy, setPrivacyPolicy] = useState(siteConfig.privacyPolicy || "");
+  // Toon de standaard-privacytekst voorgevuld zolang er nog niets is opgeslagen
+  // (SiteConfig.privacyPolicy is null), zodat de beheerder de bestaande /privacy-
+  // inhoud in het tekstvak ziet en direct kan bijwerken i.p.v. een leeg veld.
+  const [privacyPolicy, setPrivacyPolicy] = useState(siteConfig.privacyPolicy || DEFAULT_PRIVACY_POLICY);
   const [termsConditions, setTermsConditions] = useState(siteConfig.termsConditions || "");
 
   const save = async (payload: Record<string, unknown>, successMsg: string) => {
@@ -355,6 +359,15 @@ export default function AdminContent({ adminLanguage }: AdminContentProps) {
           </p>
           <div className="space-y-1">
             <label className={labelCls}>{t("Privacybeleid (/privacy)", "Privacy policy (/privacy)", "Gizlilik politikası (/privacy)")}</label>
+            {!siteConfig.privacyPolicy && (
+              <p className="text-[11px] text-slate-500">
+                {t(
+                  "Voorgevuld met de standaardtekst die nu op /privacy staat. Pas aan en sla op om een eigen versie vast te leggen; laat 'm juridisch controleren.",
+                  "Pre-filled with the default text currently shown on /privacy. Edit and save to store your own version; have it legally reviewed.",
+                  "/privacy'de şu an görünen varsayılan metinle önceden dolduruldu. Kendi sürümünüz için düzenleyip kaydedin; hukuki kontrolden geçirin."
+                )}
+              </p>
+            )}
             <textarea value={privacyPolicy} onChange={(e) => setPrivacyPolicy(e.target.value)} maxLength={60000} rows={10} className={`${inputCls} resize-y font-mono`} />
           </div>
           <button disabled={saving} onClick={() => save({ privacyPolicy }, t("Privacybeleid opgeslagen.", "Privacy policy saved.", "Gizlilik politikası kaydedildi."))} className={btnSave}>

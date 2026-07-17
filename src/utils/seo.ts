@@ -66,16 +66,29 @@ export function useSeo({ title, description, path = "/", jsonLd }: SeoOptions) {
       upsertMeta("property", "twitter:description", description);
     }
 
-    let script: HTMLScriptElement | null = null;
+    // Reuse the same #seo-jsonld tag the server may have pre-rendered into the
+    // initial HTML (see injectMeta in server.ts) instead of appending a second,
+    // possibly-divergent ld+json block on top of it during SPA navigation.
+    const existing = document.head.querySelector<HTMLScriptElement>("script#seo-jsonld");
     if (jsonLdKey) {
-      script = document.createElement("script");
-      script.type = "application/ld+json";
-      script.textContent = jsonLdKey;
-      document.head.appendChild(script);
+      if (existing) {
+        existing.textContent = jsonLdKey;
+      } else {
+        const script = document.createElement("script");
+        script.type = "application/ld+json";
+        script.id = "seo-jsonld";
+        script.textContent = jsonLdKey;
+        document.head.appendChild(script);
+      }
+    } else {
+      existing?.remove();
     }
 
     return () => {
-      script?.remove();
+      // Only clean up if it still holds *this* route's content — a newly
+      // mounted route's own effect may already have overwritten it.
+      const current = document.head.querySelector<HTMLScriptElement>("script#seo-jsonld");
+      if (current && current.textContent === jsonLdKey) current.remove();
     };
   }, [title, description, path, jsonLdKey]);
 }

@@ -109,10 +109,31 @@ export default function App() {
     clearChunkReloadFlag();
   }, []);
 
+  // selectedCategory/searchQuery only seed from the URL on App's initial mount
+  // (see initialFilters above) — a client-side Link straight into
+  // "/catalog?cat=…" from another page (e.g. the assortiment/category links on
+  // AboutSection or a city landing page) doesn't remount App, so without this,
+  // the mirror effect below would immediately push the *stale* pre-navigation
+  // state back into the URL and silently strip the incoming ?cat=. Detect a
+  // fresh entry into /catalog from elsewhere and adopt that URL's filters.
+  const prevPathRef = useRef(location.pathname);
+  const skipNextUrlMirrorRef = useRef(false);
+  useEffect(() => {
+    const enteringCatalog = location.pathname === "/catalog" && prevPathRef.current !== "/catalog";
+    prevPathRef.current = location.pathname;
+    if (enteringCatalog) {
+      const params = new URLSearchParams(location.search);
+      skipNextUrlMirrorRef.current = true;
+      setSearchQuery(params.get("q") ?? "");
+      setSelectedCategory(params.get("cat") ?? "all");
+    }
+  }, [location.pathname, location.search]);
+
   // Mirror the active catalog filters into the URL query string (replace, so we
   // don't spam browser history) so a refresh or shared link restores them.
   useEffect(() => {
     if (activeTab !== "catalog") return;
+    if (skipNextUrlMirrorRef.current) { skipNextUrlMirrorRef.current = false; return; }
     const params = new URLSearchParams(location.search);
     if (searchQuery) params.set("q", searchQuery); else params.delete("q");
     if (selectedCategory && selectedCategory !== "all") params.set("cat", selectedCategory); else params.delete("cat");

@@ -387,16 +387,18 @@ function cityMeta(slug: string): RouteMeta | null {
         "serviceType": "Hoogwerker verhuur",
         "name": `Hoogwerker huren in ${city.name}`,
         "description": description,
-        "areaServed": { "@type": "City", "name": city.name },
+        "areaServed": [city.name, ...city.nearby].map((n) => ({ "@type": "City", "name": n })),
         "provider": {
           "@type": "LocalBusiness",
           "name": "huurgo — MB Hoogwerkers B.V.",
           "telephone": "+31715428114",
+          "image": `${SEO_BASE}/og-image.jpg`,
           "address": {
             "@type": "PostalAddress",
             "streetAddress": "Produktieweg 20",
             "postalCode": "2382 PB",
             "addressLocality": "Zoeterwoude",
+            "addressRegion": "Zuid-Holland",
             "addressCountry": "NL",
           },
           "url": SEO_BASE,
@@ -535,7 +537,10 @@ function injectMeta(html: string, meta: RouteMeta): string {
     out = out.replace(/(<meta name="robots" content=")[^"]*(")/, `$1noindex, nofollow$2`);
   }
   if (meta.jsonLd) {
-    out = out.replace("</head>", `    <script type="application/ld+json">${meta.jsonLd}</script>\n  </head>`);
+    // id lets the client-side useSeo() hook (src/utils/seo.ts) find and update this
+    // same tag on SPA navigation instead of appending a second, possibly-divergent
+    // ld+json block next to it.
+    out = out.replace("</head>", `    <script type="application/ld+json" id="seo-jsonld">${meta.jsonLd}</script>\n  </head>`);
   }
   if (meta.heroPreload) {
     // Preload the actual LCP hero (admin /site-hero-image or the default WebP) at

@@ -264,7 +264,7 @@ function DealsCarousel({ machines, onSearch }: { machines: Machine[]; onSearch: 
         </button>
       </div>
 
-      <div className="relative">
+      <div className="max-w-5xl mx-auto relative">
       {/* Edge fades — hint that the row scrolls/drags on mobile */}
       <div className="pointer-events-none absolute inset-y-0 left-0 w-5 z-10 bg-gradient-to-r from-amber-50 to-transparent" />
       <div className="pointer-events-none absolute inset-y-0 right-0 w-8 z-10 bg-gradient-to-l from-white to-transparent" />

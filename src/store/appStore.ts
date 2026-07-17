@@ -43,6 +43,13 @@ interface SiteConfig {
   coffeeCornerImageUrl?: string;
   coffeeCornerCtaLabel?: string;
   coffeeCornerCtaHref?: string;
+  // Photo gallery: admin-editable homepage carousel of real company photos,
+  // shown between Coffee Corner and the footer reviews. Off until an admin
+  // fills in a title + at least one photo and enables it.
+  galleryEnabled?: boolean;
+  galleryTitle?: string;
+  galleryDescription?: string;
+  galleryImages?: string[];
   // Admin-beheerbare content (AdminContent). null/undefined = code-fallback.
   faqItems?: Array<{ q: string; a: string }> | null;
   uspItems?: Array<{ icon: string; title: string; text: string }> | null;

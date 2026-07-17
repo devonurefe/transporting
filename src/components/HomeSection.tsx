@@ -34,6 +34,7 @@ import TrustBadges from "./TrustBadges";
 import HowItWorksSection from "./HowItWorksSection";
 import WhyHuurGoBand from "./WhyHuurGoBand";
 import CoffeeCornerSection from "./CoffeeCornerSection";
+import PhotoGallerySection from "./PhotoGallerySection";
 
 // Merken die daadwerkelijk in de vloot zitten (zie seed) — als muted
 // wordmark-strip onder de categoriekaarten. Tekst, geen logo-assets.
@@ -966,6 +967,9 @@ export default function HomeSection({
 
       {/* ── COFFEE CORNER — admin-editable, hidden until enabled in Customizer ── */}
       <CoffeeCornerSection />
+
+      {/* ── PHOTO GALLERY — admin-editable, hidden until enabled in Customizer ── */}
+      <PhotoGallerySection />
 
     </div>
   );

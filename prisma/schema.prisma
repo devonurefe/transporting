@@ -230,6 +230,16 @@ model SiteConfig {
   coffeeCornerImageUrl    String?
   coffeeCornerCtaLabel    String?
   coffeeCornerCtaHref     String?
+  // Photo gallery: admin-editable homepage carousel (real company/work photos)
+  // shown between Coffee Corner and the footer reviews. Off by default until an
+  // admin fills in a title + at least one photo — same "no fabricated content"
+  // rule as Coffee Corner. Images stored as base64 (same pattern as
+  // heroImageUrl/coffeeCornerImageUrl), served via /site-gallery-image/:idx so
+  // the public site-config payload stays small.
+  galleryEnabled          Boolean?
+  galleryTitle            String?
+  galleryDescription      String?
+  galleryImages           Json?
   // Admin-beheerbare content (AdminContent-paneel). Alle velden nullable:
   // null = gebruik de hard-coded fallback in de code (single source of defaults;
   // seed hoeft nooit aangepast). Gesanitized in server/routes/siteConfig.ts.

@@ -235,6 +235,22 @@ app.get("/site-coffee-image", async (req, res) => {
   }
 });
 
+// Serve one admin-configured photo gallery image (SiteConfig.galleryImages[idx])
+// as binary, same reasoning as /site-coffee-image — keeps the public site-config
+// feed small and lets these below-the-fold photos be cached/resized.
+app.get("/site-gallery-image/:idx", async (req, res) => {
+  try {
+    const idx = Number(req.params.idx);
+    if (!Number.isInteger(idx) || idx < 0) return res.redirect(DEFAULT_OG_IMAGE);
+    const cfg = await prisma.siteConfig.findUnique({ where: { id: "default" }, select: { galleryImages: true } });
+    const images = Array.isArray(cfg?.galleryImages) ? (cfg!.galleryImages as unknown[]) : [];
+    const url = typeof images[idx] === "string" ? (images[idx] as string) : null;
+    return await serveStoredImage(res, url, { defaultWidth: 900, reqWidth: req.query.w });
+  } catch {
+    return res.redirect(DEFAULT_OG_IMAGE);
+  }
+});
+
 // SEO: robots.txt
 app.get("/robots.txt", (_req, res) => {
   const base = (process.env.APP_URL || "https://huurgo.nl").replace(/\/$/, "");

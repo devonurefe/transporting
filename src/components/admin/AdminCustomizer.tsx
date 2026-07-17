@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from "react";
-import { Settings, Check, Trash2, Tag, Plus, ChevronDown, Upload, Coffee } from "lucide-react";
+import { Settings, Check, Trash2, Tag, Plus, ChevronDown, Upload, Coffee, Camera } from "lucide-react";
 import { resizeImage } from "../../utils/image";
 import { motion, AnimatePresence } from "motion/react";
 import { useAppStore, type GoogleReview } from "../../store/appStore";
@@ -202,6 +202,12 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
   const [coffeeCornerCtaLabel, setCoffeeCornerCtaLabel] = useState(siteConfig.coffeeCornerCtaLabel || "");
   const [coffeeCornerCtaHref, setCoffeeCornerCtaHref] = useState(siteConfig.coffeeCornerCtaHref || "");
   const [isUploadingCoffeeCorner, setIsUploadingCoffeeCorner] = useState(false);
+  // Photo gallery homepage-blok — uit tot een admin titel + minstens 1 foto invult en aanzet
+  const [galleryEnabled, setGalleryEnabled] = useState(siteConfig.galleryEnabled ?? false);
+  const [galleryTitle, setGalleryTitle] = useState(siteConfig.galleryTitle || "");
+  const [galleryDescription, setGalleryDescription] = useState(siteConfig.galleryDescription || "");
+  const [galleryImages, setGalleryImages] = useState<string[]>(siteConfig.galleryImages ?? []);
+  const [isUploadingGallery, setIsUploadingGallery] = useState(false);
   // Echte Google-score — leeg = niets tonen in de footer
   const [googleRating, setGoogleRating] = useState(siteConfig.googleRating != null ? String(siteConfig.googleRating) : "");
   const [googleReviewCount, setGoogleReviewCount] = useState(siteConfig.googleReviewCount != null ? String(siteConfig.googleReviewCount) : "");
@@ -239,6 +245,10 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
       setCoffeeCornerImageUrl(siteConfig.coffeeCornerImageUrl || "");
       setCoffeeCornerCtaLabel(siteConfig.coffeeCornerCtaLabel || "");
       setCoffeeCornerCtaHref(siteConfig.coffeeCornerCtaHref || "");
+      setGalleryEnabled(siteConfig.galleryEnabled ?? false);
+      setGalleryTitle(siteConfig.galleryTitle || "");
+      setGalleryDescription(siteConfig.galleryDescription || "");
+      setGalleryImages(siteConfig.galleryImages ?? []);
       setGoogleRating(siteConfig.googleRating != null ? String(siteConfig.googleRating) : "");
       setGoogleReviewCount(siteConfig.googleReviewCount != null ? String(siteConfig.googleReviewCount) : "");
       setGoogleReviews(siteConfig.googleReviews ?? []);
@@ -305,6 +315,41 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
     }
   };
 
+  const handleGalleryImagesUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setIsUploadingGallery(true);
+    for (let i = 0; i < files.length; i++) {
+      if (galleryImages.length + 1 > 10) {
+        showAdminToast(t("Maximaal 10 foto's toegestaan.", "Maximum 10 photos allowed.", "En fazla 10 fotoğraf yüklenebilir."), "error");
+        break;
+      }
+      const file = files[i];
+      try {
+        // Below-the-fold gallery photo, not the LCP hero — a smaller size is plenty.
+        const base64 = await resizeImage(file, 1200, 1200, 0.80, false);
+        const ext = base64.startsWith("data:image/webp") ? ".webp" : ".jpg";
+        const token = localStorage.getItem("hwh_admin_token") || localStorage.getItem("hwh_token");
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+          body: JSON.stringify({ fileName: `gallery${ext}`, base64Data: base64 })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setGalleryImages((prev) => (prev.length < 10 ? [...prev, data.url] : prev));
+        } else {
+          showAdminToast(t("Uploaden mislukt voor: ", "Upload failed for: ", "Yükleme başarısız: ") + file.name, "error");
+        }
+      } catch {
+        showAdminToast(t("Fout bij uploaden afbeelding.", "Error uploading image.", "Resim yükleme hatası."), "error");
+      }
+    }
+    setIsUploadingGallery(false);
+    e.target.value = "";
+  };
+
   const handleSaveSiteConfig = async () => {
     setIsSavingConfig(true);
     const success = await updateSiteConfig({
@@ -329,6 +374,10 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
       coffeeCornerImageUrl,
       coffeeCornerCtaLabel,
       coffeeCornerCtaHref,
+      galleryEnabled,
+      galleryTitle,
+      galleryDescription,
+      galleryImages,
       // Lege string wist de score (server zet dan null); anders het getal
       googleRating: googleRating.trim() === "" ? null : Number(googleRating),
       googleReviewCount: googleReviewCount.trim() === "" ? null : Number(googleReviewCount),
@@ -806,6 +855,97 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
                 </div>
               )}
               <p className="text-[10px] text-slate-400">{t("PNG, JPG en WebP worden geaccepteerd. Aanbevolen: liggende foto (bijv. 1200×800px), scherp en zonder ingebakken tekst — hij wordt uitgesneden (bijgesneden) om de kaart te vullen. Leeg laten = placeholder-icoon.", "PNG, JPG and WebP accepted. Recommended: landscape photo (e.g. 1200×800px), sharp and without baked-in text — it gets cropped to fill the card. Leave empty = placeholder icon.", "PNG, JPG ve WebP kabul edilir. Önerilen: yatay fotoğraf (örn. 1200×800px), net ve içine yazı gömülmemiş — kartı doldurmak için kırpılır. Boş bırak = yer tutucu ikon.")}</p>
+            </div>
+          </div>
+
+          {/* Photo Gallery Form */}
+          <div className="space-y-4 p-5 rounded-2xl bg-slate-50 border border-slate-200/80 shadow-sm col-span-1 md:col-span-2">
+            <div className="flex items-center justify-between gap-3">
+              <h4 className="text-xs font-bold text-amber-600 uppercase tracking-wider flex items-center gap-1.5">
+                <Camera className="h-3.5 w-3.5" /> {t("Fotogalerij", "Photo gallery", "Fotoğraf galerisi")}
+              </h4>
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <span className="text-xs font-bold text-slate-600">{t("Tonen op homepage", "Show on homepage", "Ana sayfada göster")}</span>
+                <input
+                  type="checkbox"
+                  checked={galleryEnabled}
+                  onChange={(e) => setGalleryEnabled(e.target.checked)}
+                  className="h-4 w-4 accent-amber-500 cursor-pointer"
+                />
+              </label>
+            </div>
+            <p className="text-[10px] text-slate-500">{t("Dit blok verschijnt op de homepage tussen Coffee Corner en de reviews: een carrousel met echte bedrijfsfoto's. Op mobiel schuift 1 foto per keer, op desktop meerdere naast elkaar. Vul een titel in, upload minstens 1 foto en zet 'Tonen' aan.", "This block appears on the homepage between Coffee Corner and the reviews: a carousel of real company photos. On mobile one photo slides at a time, on desktop several side by side. Fill in a title, upload at least 1 photo and turn on 'Show'.", "Bu blok ana sayfada Coffee Corner ile yorumlar arasında görünür: gerçek şirket fotoğraflarından oluşan bir slayt gösterisi. Mobilde tek tek, masaüstünde yan yana kayar. Bir başlık girin, en az 1 fotoğraf yükleyin ve 'Göster' seçeneğini açın.")}</p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-xs text-slate-700 block font-bold">{t("Titel", "Title", "Başlık")}</label>
+                <input
+                  type="text"
+                  value={galleryTitle}
+                  onChange={(e) => setGalleryTitle(e.target.value)}
+                  placeholder={t("Onze werkzaamheden", "Our work", "Yaptığımız işler")}
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs text-slate-700 block font-bold">{t("Omschrijving (optioneel)", "Description (optional)", "Açıklama (opsiyonel)")}</label>
+                <input
+                  type="text"
+                  value={galleryDescription}
+                  onChange={(e) => setGalleryDescription(e.target.value)}
+                  placeholder={t("Een impressie van onze machines en klussen in het echt.", "A look at our machines and jobs in real life.", "Makinelerimizden ve işlerimizden gerçek kareler.")}
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-baseline justify-between">
+                <label className="text-xs text-slate-700 block font-bold">{t("Foto's (max 10)", "Photos (max 10)", "Fotoğraflar (en fazla 10)")}</label>
+                <span className="text-[10px] text-slate-400">{galleryImages.length}/10</span>
+              </div>
+              <div className="relative">
+                <label className={`flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border-2 border-dashed cursor-pointer transition-colors ${isUploadingGallery || galleryImages.length >= 10 ? "border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed" : "border-slate-200 bg-white hover:border-amber-400 hover:bg-amber-50 text-slate-600 hover:text-amber-700"}`}>
+                  {isUploadingGallery ? (
+                    <>
+                      <span className="h-3.5 w-3.5 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+                      <span className="text-xs font-bold">{t("Uploaden...", "Uploading...", "Yükleniyor...")}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="h-4 w-4 shrink-0" />
+                      <span className="text-xs font-bold">{t("Foto's uploaden", "Upload photos", "Fotoğraf yükle")}</span>
+                    </>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="sr-only"
+                    disabled={isUploadingGallery || galleryImages.length >= 10}
+                    onChange={handleGalleryImagesUpload}
+                  />
+                </label>
+              </div>
+
+              {galleryImages.length > 0 && (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-1 animate-fade-in">
+                  {galleryImages.map((url, idx) => (
+                    <div key={idx} className="relative aspect-square rounded-xl overflow-hidden border border-slate-200 bg-slate-100 group shadow-sm">
+                      <img src={url} alt={`Gallery ${idx + 1}`} className="w-full h-full object-cover" loading="lazy" />
+                      <button
+                        type="button"
+                        onClick={() => setGalleryImages((prev) => prev.filter((_, i) => i !== idx))}
+                        className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-lg opacity-90 hover:opacity-100 transition-opacity shadow cursor-pointer flex items-center justify-center"
+                        title={t("Verwijderen", "Delete", "Sil")}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <p className="text-[10px] text-slate-400">{t("PNG, JPG, WebP en de meeste andere formaten worden geaccepteerd. Meerdere foto's tegelijk selecteren kan.", "PNG, JPG, WebP and most other formats accepted. You can select multiple photos at once.", "PNG, JPG, WebP ve diğer birçok format kabul edilir. Aynı anda birden fazla fotoğraf seçebilirsiniz.")}</p>
             </div>
           </div>
 

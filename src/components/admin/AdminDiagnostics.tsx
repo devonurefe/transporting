@@ -114,6 +114,12 @@ export default function AdminDiagnostics({ systemLogs, userProfiles, onAddSystem
   const [emailDiag, setEmailDiag] = useState<EmailDiagnostics | null>(null);
   const [emailDiagError, setEmailDiagError] = useState(false);
   const [testEmailState, setTestEmailState] = useState<"idle" | "sending" | "sent">("idle");
+  // Leeg = server stuurt naar het account-e-mailadres van de ingelogde admin.
+  // Overschrijfbaar: Resend "geslaagd" bewijst alleen dat de send is
+  // geaccepteerd, niet dat het inlog-adres (vaak op een eigen domein, bv.
+  // admin@huurgo.nl) ook echt een gecontroleerde mailbox is — daarom kan de
+  // admin hier een adres invullen dat ze nu meteen kunnen checken (bv. Gmail).
+  const [testEmailTo, setTestEmailTo] = useState("");
 
   useEffect(() => {
     let active = true;
@@ -127,7 +133,12 @@ export default function AdminDiagnostics({ systemLogs, userProfiles, onAddSystem
   const sendTestEmail = async () => {
     setTestEmailState("sending");
     try {
-      const res = await fetch("/api/admin/test-email", { method: "POST", headers: getAdminAuthHeaders() });
+      const to = testEmailTo.trim();
+      const res = await fetch("/api/admin/test-email", {
+        method: "POST",
+        headers: getAdminAuthHeaders(true),
+        body: JSON.stringify(to ? { to } : {}),
+      });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || "Onbekende fout");
       if (data.mocked) {
@@ -443,7 +454,26 @@ export default function AdminDiagnostics({ systemLogs, userProfiles, onAddSystem
               </span>
             </div>
 
-            <div className="pt-1">
+            <div className="pt-1 space-y-2">
+              <div className="space-y-1">
+                <label className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">
+                  {t("Verzenden naar (leeg = mijn eigen accountadres)", "Send to (blank = my own account address)", "Şuraya gönder (boş = kendi hesap adresim)")}
+                </label>
+                <input
+                  type="email"
+                  value={testEmailTo}
+                  onChange={(e) => setTestEmailTo(e.target.value)}
+                  placeholder={t("bv. eigen Gmail-adres om nu meteen te checken", "e.g. your Gmail address to check right away", "örn. hemen kontrol edebileceğiniz Gmail adresiniz")}
+                  className="w-full bg-slate-50 border border-slate-200 focus:border-indigo-400 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:ring-0 placeholder:text-slate-400"
+                />
+                <p className="text-[10px] text-slate-400 leading-relaxed">
+                  {t(
+                    "Een 'geslaagd' bij Resend bewijst alleen dat de send is geaccepteerd — niet dat het inlog-adres (vaak op een eigen domein) ook een echt gecontroleerde mailbox is. Vul hier een adres in dat u nu direct kunt checken.",
+                    "A Resend 'success' only proves the send was accepted — not that the login address (often on a custom domain) is a real, checked mailbox. Enter an address you can check right now.",
+                    "Resend'in 'başarılı' demesi sadece gönderimin kabul edildiğini kanıtlar — giriş adresinin (genelde kendi alan adında) gerçekten kontrol edilen bir kutu olduğunu değil. Şimdi hemen kontrol edebileceğiniz bir adres girin."
+                  )}
+                </p>
+              </div>
               <button
                 onClick={sendTestEmail}
                 disabled={testEmailState === "sending"}
@@ -452,9 +482,11 @@ export default function AdminDiagnostics({ systemLogs, userProfiles, onAddSystem
                 <Send className="h-3.5 w-3.5" />
                 {testEmailState === "sending"
                   ? t("Versturen…", "Sending…", "Gönderiliyor…")
+                  : testEmailTo.trim()
+                  ? t(`Testmail sturen naar ${testEmailTo.trim()}`, `Send test e-mail to ${testEmailTo.trim()}`, `${testEmailTo.trim()} adresine test e-postası gönder`)
                   : t("Testmail naar mijn eigen e-mailadres sturen", "Send test e-mail to my own address", "Kendi e-posta adresime test e-postası gönder")}
               </button>
-              <p className="text-[10px] text-slate-400 mt-1.5 leading-relaxed">
+              <p className="text-[10px] text-slate-400 leading-relaxed">
                 {t(
                   "Test de daadwerkelijke bezorging (niet alleen of de sleutel aanwezig is) — een ongeldige sleutel of een niet-geverifieerd afzenderdomein faalt pas hier.",
                   "Tests actual delivery (not just whether the key is present) — an invalid key or unverified sender domain only fails here.",

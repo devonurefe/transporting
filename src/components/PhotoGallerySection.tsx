@@ -4,7 +4,7 @@
  */
 
 import React, { useCallback, useEffect, useRef } from "react";
-import { Camera, ChevronLeft } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import { motion } from "motion/react";
 import { useAppStore } from "../store/appStore";
 import { withImageWidth } from "../utils/image";
@@ -87,8 +87,8 @@ export default function PhotoGallerySection() {
           transition={{ duration: 0.35 }}
           className="text-center mb-8"
         >
-          <span className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-600 mb-2">
-            <Camera className="h-4 w-4" /> <HuurGoText />
+          <span className="inline-flex items-center text-base sm:text-lg mb-2">
+            <HuurGoText />
           </span>
           <h2 className="font-display font-black text-lg sm:text-xl text-slate-900 leading-tight">
             {siteConfig.galleryTitle}
@@ -132,7 +132,7 @@ export default function PhotoGallerySection() {
               <div
                 key={i}
                 data-gallery-card
-                className="shrink-0 w-full sm:w-[calc(50%-0.5rem)] lg:w-[calc(33.333%-0.667rem)] h-64 sm:h-72 lg:h-80 rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 shadow-sm flex items-center justify-center"
+                className="shrink-0 w-full sm:w-[calc(50%-0.5rem)] lg:w-[calc(33.333%-0.667rem)] h-64 sm:h-72 lg:h-80 rounded-2xl overflow-hidden bg-white border border-slate-200 shadow-sm flex items-center justify-center"
               >
                 <img
                   src={withImageWidth(url, 640) || url}

@@ -12,7 +12,7 @@ import {
   Truck,
   CheckCircle2,
   ArrowRight,
-  ArrowLeft,
+  ChevronRight,
   Phone,
 } from "lucide-react";
 import { Machine } from "../types";
@@ -35,6 +35,7 @@ export default function CityLandingPage({ onSelectMachineForBooking }: CityLandi
   const { stad } = useParams<{ stad: string }>();
   const navigate = useNavigate();
   const machines = useAppStore((s) => s.machines);
+  const customCategories = useAppStore((s) => s.customCategories);
   const city = stad ? getCityBySlug(stad) : undefined;
 
   useSeo(
@@ -56,15 +57,17 @@ export default function CityLandingPage({ onSelectMachineForBooking }: CityLandi
                 provider: {
                   "@type": "LocalBusiness",
                   name: "huurgo — MB Hoogwerkers B.V.",
+                  telephone: "+31715428114",
                   url: SEO_BASE_URL,
                   image: `${SEO_BASE_URL}/og-image.jpg`,
                   address: {
                     "@type": "PostalAddress",
+                    streetAddress: "Produktieweg 20",
+                    postalCode: "2382 PB",
                     addressLocality: "Zoeterwoude",
                     addressRegion: "Zuid-Holland",
                     addressCountry: "NL",
                   },
-                  areaServed: "Zuid-Holland",
                 },
               },
               {
@@ -117,11 +120,13 @@ export default function CityLandingPage({ onSelectMachineForBooking }: CityLandi
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-6 sm:py-10">
-      {/* Breadcrumb */}
-      <nav aria-label="Kruimelpad" className="mb-4">
-        <Link to="/catalog" className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors">
-          <ArrowLeft className="h-3.5 w-3.5" /> Alle hoogwerkers
-        </Link>
+      {/* Breadcrumb — visible trail matching the BreadcrumbList JSON-LD (Home / Assortiment / stad) */}
+      <nav aria-label="Kruimelpad" className="mb-4 flex items-center gap-1.5 text-xs font-semibold text-slate-500 flex-wrap">
+        <Link to="/" className="hover:text-slate-800 transition-colors no-underline">Home</Link>
+        <ChevronRight className="h-3 w-3 text-slate-300 shrink-0" aria-hidden="true" />
+        <Link to="/catalog" className="hover:text-slate-800 transition-colors no-underline">Assortiment</Link>
+        <ChevronRight className="h-3 w-3 text-slate-300 shrink-0" aria-hidden="true" />
+        <span className="text-slate-900" aria-current="page">{city.name}</span>
       </nav>
 
       {/* Hero */}
@@ -173,6 +178,30 @@ export default function CityLandingPage({ onSelectMachineForBooking }: CityLandi
         <h2 className="text-base font-extrabold text-slate-900 mb-2">Verhuur op maat in {city.name}</h2>
         <p className="text-sm text-slate-600 leading-relaxed">{city.body}</p>
       </section>
+
+      {/* Assortiment — categorie-links naar de gefilterde catalogus, zodat bezoekers
+          in één klik bij het juiste machinetype in {city.name} uitkomen. */}
+      {customCategories.length > 0 && (
+        <section className="mb-10">
+          <h2 className="text-base font-extrabold text-slate-900 mb-3">Assortiment in {city.name}</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {customCategories.filter((c) => c.id !== "klussensets").map((c) => (
+              <Link
+                key={c.id}
+                to={`/catalog?cat=${encodeURIComponent(c.id)}`}
+                className="group flex items-center justify-between gap-3 bg-white border border-slate-200 hover:border-orange-300 hover:shadow-md rounded-2xl p-4 transition-all no-underline"
+              >
+                <div className="min-w-0">
+                  <h3 className="text-sm font-bold text-slate-900">{c.listLabel || c.label} in {city.name}</h3>
+                  {c.desc && <p className="text-xs text-slate-500 mt-0.5 line-clamp-2">{c.desc}</p>}
+                  <p className="text-[11px] text-slate-400 mt-1">{c.heights} · {c.price}</p>
+                </div>
+                <ArrowRight className="h-4 w-4 text-slate-300 group-hover:text-orange-500 group-hover:translate-x-0.5 transition-all shrink-0" />
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Popular machines */}
       {popular.length > 0 && (

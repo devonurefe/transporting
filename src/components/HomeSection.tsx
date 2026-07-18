@@ -72,19 +72,6 @@ const CAT_LABEL: Record<string, string> = {
   kamersteiger: "Kamersteiger",
 };
 
-// Short plural noun for the category-card CTA ("Bekijk Schaarliften →") — kept
-// separate from listLabel, which gets overridden with marketing copy like
-// "Schaarliften 6-8-10" for the card title and would make an awkward CTA.
-const CAT_CTA_LABEL: Record<string, string> = {
-  schaarlift:   "Schaarliften",
-  spin:         "Rupshoogwerkers",
-  aanhanger:    "Aanhangerhoogwerkers",
-  mastlift:     "Mastliften",
-  ladderlift:   "Ladderliften",
-  ecolift:      "Pecolift",
-  kamersteiger: "Kamersteigers",
-};
-
 interface HomeSectionProps {
   onSearch: (query: string, category: string) => void;
   setActiveTab: (tab: string) => void;
@@ -411,6 +398,7 @@ function DealsCarousel({ machines, onSearch }: { machines: Machine[]; onSearch: 
 
 export default function HomeSection({
   onSearch,
+  setActiveTab,
   // Fallback-labels (alleen zichtbaar in de adminbeheer + als de live prijs
   // ontbreekt); de kaart zelf toont altijd de live "vanaf"-prijs. Consistent
   // "v.a."-formaat en één schaarlift-vanafprijs (€49, ook in SEO/marketing).
@@ -791,7 +779,7 @@ export default function HomeSection({
           </div>
           <VatToggle />
         </div>
-        <div className="max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-5 sm:gap-4">
+        <div className="max-w-5xl mx-auto grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
           {displayCategories.map((cat, i) => {
             const Icon = CATEGORY_ICONS[cat.id] ?? Truck;
             const meta = categoryMeta[cat.id];
@@ -810,38 +798,30 @@ export default function HomeSection({
                     reserves right-padding so a short name never runs under it;
                     a long name (line-clamp-2) simply wraps to its own second
                     line, which has full width since the badge only occupies
-                    the first line's corner. Mobile is a single full-width
-                    column (roomier per card); desktop is 3-across, so each
-                    card is narrower there than on mobile — sizing below is
-                    deliberately larger at the base (mobile) breakpoint and
-                    smaller at sm: (desktop), the reverse of the usual pattern. */}
+                    the first line's corner. Mobile is now 2-across (the old
+                    full-width single column made this section ~40% of the
+                    whole page), so both breakpoints use the same compact
+                    sizing with only minor mobile bumps for tap targets. */}
                 {meta && meta.badge !== "none" && (
                   <span
-                    className={`absolute top-2.5 right-2.5 sm:top-1.5 sm:right-1.5 z-10 inline-flex items-center gap-1 sm:gap-0.5 rounded-full pl-2.5 pr-3 sm:pl-1.5 sm:pr-2 py-1.5 sm:py-0.5 text-[11px] sm:text-[9px] font-black text-white shadow-md ring-1 ring-white/40 ${
+                    className={`absolute top-2 right-2 sm:top-1.5 sm:right-1.5 z-10 inline-flex items-center gap-0.5 rounded-full pl-2 pr-2.5 sm:pl-1.5 sm:pr-2 py-1 sm:py-0.5 text-[10px] sm:text-[9px] font-black text-white shadow-md ring-1 ring-white/40 ${
                       meta.badge === "tier"
                         ? "bg-gradient-to-r from-indigo-600 to-violet-600 shadow-indigo-500/25"
                         : "bg-gradient-to-r from-rose-600 to-red-500 shadow-rose-500/25"
                     }`}
                   >
-                    <Zap className="h-3 w-3 sm:h-2 sm:w-2 shrink-0 fill-current" />
-                    <span className="hidden sm:inline">{`−${meta.badgePct}%`}</span>
-                    <span className="sm:hidden">
-                      {meta.badge === "dag"
-                        ? t(`Dagactie −${meta.badgePct}%`, `Day deal −${meta.badgePct}%`, `Gün fırsatı −%${meta.badgePct}`)
-                        : meta.badge === "actie"
-                        ? t(`Actie −${meta.badgePct}%`, `Deal −${meta.badgePct}%`, `Kampanya −%${meta.badgePct}`)
-                        : t(`−${meta.badgePct}% per week`, `−${meta.badgePct}%/week`, `Haftada −%${meta.badgePct}`)}
-                    </span>
+                    <Zap className="h-2.5 w-2.5 sm:h-2 sm:w-2 shrink-0 fill-current" />
+                    <span>{`−${meta.badgePct}%`}</span>
                   </span>
                 )}
-                <div className="p-5 sm:p-3.5 flex flex-col min-w-0">
-                  <p className={`font-display font-black text-lg sm:text-sm text-slate-900 leading-snug line-clamp-2 mb-2.5 sm:mb-1.5 ${hasBadge ? "pr-24 sm:pr-14" : ""}`}>
+                <div className="p-3 sm:p-3.5 flex flex-col min-w-0">
+                  <p className={`font-display font-black text-[13px] sm:text-sm text-slate-900 leading-snug line-clamp-2 mb-1.5 ${hasBadge ? "pr-11 sm:pr-14" : ""}`}>
                     {cat.listLabel || cat.label}
                   </p>
-                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 sm:gap-y-1 mb-3 sm:mb-2">
-                    <span className="font-semibold text-slate-600 text-sm sm:hidden">{cat.heights}</span>
+                  <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 mb-2">
+                    <span className="font-semibold text-slate-500 text-[11px] sm:hidden">{cat.heights}</span>
                     <span className="text-slate-300 select-none sm:hidden">•</span>
-                    <span className="font-black text-emerald-700 text-base sm:text-xs leading-tight">
+                    <span className="font-black text-emerald-700 text-xs leading-tight">
                       {(() => {
                         if (!meta) return "Prijs op aanvraag";
                         const v = withVat(meta.price, vatDisplay);
@@ -852,13 +832,12 @@ export default function HomeSection({
                     </span>
                   </div>
                   <div className="flex items-center justify-between gap-2">
-                    <span className="inline-flex items-center gap-1 sm:gap-0.5 text-sm sm:text-[10px] font-bold text-orange-700 group-hover:text-orange-800 group-hover:gap-1.5 transition-all duration-300">
-                      <span className="sm:hidden">{t("Bekijk", "View", "Görüntüle")} {CAT_CTA_LABEL[cat.id] ?? cat.label}</span>
-                      <span className="hidden sm:inline">{t("Bekijk", "View", "Görüntüle")}</span>
-                      <ChevronRight className="h-4 w-4 sm:h-3 sm:w-3" />
+                    <span className="inline-flex items-center gap-0.5 text-[11px] sm:text-[10px] font-bold text-orange-700 group-hover:text-orange-800 group-hover:gap-1 transition-all duration-300">
+                      <span>{t("Bekijk", "View", "Görüntüle")}</span>
+                      <ChevronRight className="h-3 w-3" />
                     </span>
                     {meta && meta.count > 1 && (
-                      <span className="sm:hidden text-[11px] text-slate-500 font-medium shrink-0">
+                      <span className="sm:hidden text-[10px] text-slate-500 font-medium shrink-0">
                         {t(`${meta.count} modellen`, `${meta.count} models`, `${meta.count} model`)}
                       </span>
                     )}
@@ -871,9 +850,9 @@ export default function HomeSection({
                   <CardBrandWatermark />
                   {catImage ? (
                     <img
-                      src={withImageWidth(catImage, 640) ?? catImage}
+                      src={withImageWidth(catImage, 480) ?? catImage}
                       alt={cat.label}
-                      className="w-full h-full object-contain p-3 sm:p-1.5 transition-transform duration-500 ease-out group-hover:scale-105"
+                      className="w-full h-full object-contain p-2 sm:p-1.5 transition-transform duration-500 ease-out group-hover:scale-105"
                       referrerPolicy="no-referrer"
                       onError={(e) => {
                         e.currentTarget.style.display = "none";
@@ -885,7 +864,7 @@ export default function HomeSection({
                   <div
                     className={`absolute inset-0 bg-white flex items-center justify-center ${catImage ? "hidden" : "flex"}`}
                   >
-                    <Icon className="h-10 w-10 sm:h-6 sm:w-6 text-slate-300" />
+                    <Icon className="h-8 w-8 sm:h-6 sm:w-6 text-slate-300" />
                   </div>
                 </div>
               </button>
@@ -928,8 +907,10 @@ export default function HomeSection({
             <h2 className="font-display font-black text-xl text-slate-900">{t("Veelgestelde vragen", "Frequently asked questions", "Sık sorulan sorular")}</h2>
             <p className="text-xs text-slate-500 mt-1">{t("Alles wat u wilt weten over hoogwerker huren", "Everything you need to know about renting aerial lifts", "Yüksek erişim kiralama hakkında bilmeniz gerekenler")}</p>
           </div>
+          {/* Homepage toont bewust maar 3 vragen — de volledige lijst (incl.
+              admin-beheerde items) staat op /veelgestelde-vragen. */}
           <div className="space-y-2.5">
-            {FAQ_ITEMS.map((item, i) => (
+            {FAQ_ITEMS.slice(0, 3).map((item, i) => (
               <div key={i} className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200">
                 <button
                   type="button"
@@ -961,6 +942,15 @@ export default function HomeSection({
                 </AnimatePresence>
               </div>
             ))}
+          </div>
+          <div className="text-center mt-5">
+            <button
+              type="button"
+              onClick={() => setActiveTab("veelgestelde-vragen")}
+              className="inline-flex items-center gap-1 text-sm font-bold text-orange-700 hover:text-orange-900 transition-colors cursor-pointer bg-transparent border-none"
+            >
+              {t("Alle vragen", "All questions", "Tüm sorular")} <ChevronRight className="h-4 w-4" />
+            </button>
           </div>
         </div>
       </div>

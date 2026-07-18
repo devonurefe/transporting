@@ -182,8 +182,15 @@ describe.skipIf(!HAS_DB)("Boeken E2E — per categorie prijs- en kalendertest", 
     ({ prisma } = await import("../../prisma/client.js"));
     ({ app } = await import("../../server.ts"));
 
+    // Exclude ephemeral fixtures other integration test files create in the
+    // same shared CI database (e.g. api.integration.test.ts's "itest-machine",
+    // category "schaarlift") — Vitest runs test files in parallel, so this
+    // suite's beforeAll can otherwise grab a fixture machine right before its
+    // own afterAll deletes it, turning every order placed against it into a
+    // flaky 404 "Machine niet gevonden" instead of the intended real seeded
+    // machine for that category.
     const machines = await prisma.machine.findMany({
-      where: { isActive: true, deletedAt: null },
+      where: { isActive: true, deletedAt: null, id: { not: { startsWith: "itest-" } } },
       orderBy: { id: "asc" },
     });
     for (const m of machines) {

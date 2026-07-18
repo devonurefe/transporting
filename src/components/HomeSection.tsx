@@ -828,8 +828,11 @@ export default function HomeSection({
                     shots are object-contain with whitespace there), so the
                     title above keeps its full width and never gets cramped —
                     that happened when the badge shared the title row on the
-                    narrow 2-across mobile cards. */}
-                <div className="relative w-full aspect-[4/3] overflow-hidden border-t border-slate-100 bg-white">
+                    narrow 2-across mobile cards. The photo box is square on
+                    mobile (taller than the desktop 4:3) and the img gets top
+                    padding matching the pill row, so tall machines (Pecolift,
+                    mastliften) never slide up underneath the badges. */}
+                <div className="relative w-full aspect-square sm:aspect-[4/3] overflow-hidden border-t border-slate-100 bg-white">
                   {/* Left corner — the huurgo watermark pill owns the right corner */}
                   {hasBadge && meta && (
                     <span
@@ -848,7 +851,7 @@ export default function HomeSection({
                     <img
                       src={withImageWidth(catImage, 480) ?? catImage}
                       alt={cat.label}
-                      className="w-full h-full object-contain p-2 sm:p-1.5 transition-transform duration-500 ease-out group-hover:scale-105"
+                      className="w-full h-full object-contain px-2 pb-2 pt-11 sm:px-1.5 sm:pb-1.5 sm:pt-8 transition-transform duration-500 ease-out group-hover:scale-105"
                       referrerPolicy="no-referrer"
                       onError={(e) => {
                         e.currentTarget.style.display = "none";

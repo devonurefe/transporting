@@ -62,14 +62,14 @@ export default function WhyHuurGoBand() {
 
   return (
     <div className="bg-gradient-to-b from-amber-50 to-white border-y border-amber-100">
-      <div className="py-10 sm:py-14 px-5 sm:px-8 lg:px-10 mx-auto max-w-7xl">
+      <div className="py-8 sm:py-10 px-5 sm:px-8 lg:px-10 mx-auto max-w-5xl">
 
         <motion.div
           initial={{ opacity: 0, y: 14 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-60px" }}
           transition={{ duration: 0.45 }}
-          className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8"
+          className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-5"
         >
           <div>
             <h3 className="font-display text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
@@ -88,24 +88,28 @@ export default function WhyHuurGoBand() {
           )}
         </motion.div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
-          {trustPoints.map(({ Icon, title, body }, i) => (
-            <motion.div
-              key={title}
-              initial={{ opacity: 0, y: 18 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-40px" }}
-              transition={{ duration: 0.4, delay: i * 0.1 }}
-              className="group bg-white border border-slate-200 shadow-sm rounded-2xl p-5 space-y-2.5 hover:border-orange-300 hover:shadow-md hover:-translate-y-1 transition-all duration-300"
-            >
-              <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-orange-500/10 text-orange-500 border border-orange-500/20 group-hover:bg-orange-500/20 group-hover:scale-105 transition-all duration-300">
-                <Icon className="h-5 w-5" strokeWidth={2.2} />
+        {/* Eén compacte strip i.p.v. drie losse kaarten — icoon + titel + tekst
+            per rij op mobiel, drie kolommen met scheidingslijnen op desktop.
+            Zelfde content (incl. admin-beheerde uspItems), veel minder hoogte. */}
+        <motion.div
+          initial={{ opacity: 0, y: 18 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-40px" }}
+          transition={{ duration: 0.4 }}
+          className="bg-white border border-slate-200 shadow-sm rounded-2xl divide-y sm:divide-y-0 sm:divide-x divide-slate-100 sm:grid sm:grid-cols-3"
+        >
+          {trustPoints.map(({ Icon, title, body }) => (
+            <div key={title} className="flex items-start gap-3 p-4 sm:p-4">
+              <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-orange-500/10 text-orange-500 border border-orange-500/20 shrink-0">
+                <Icon className="h-4 w-4" strokeWidth={2.2} />
               </span>
-              <h4 className="text-sm font-bold text-slate-900">{title}</h4>
-              <p className="text-[13px] text-slate-500 leading-relaxed">{body}</p>
-            </motion.div>
+              <div className="min-w-0">
+                <h4 className="text-[13px] font-bold text-slate-900 leading-snug">{title}</h4>
+                <p className="text-xs text-slate-500 leading-relaxed mt-0.5">{body}</p>
+              </div>
+            </div>
           ))}
-        </div>
+        </motion.div>
 
       </div>
     </div>

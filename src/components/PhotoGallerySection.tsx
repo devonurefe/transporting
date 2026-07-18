@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useCallback, useEffect, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import { ChevronLeft } from "lucide-react";
 import { motion } from "motion/react";
 import { useAppStore } from "../store/appStore";
@@ -12,69 +12,64 @@ import { HuurGoText } from "./Header";
 
 // Admin-editable homepage photo gallery (Admin → Customizer) shown between the
 // Coffee Corner block and the footer reviews: real company/work photos in a
-// continuously auto-scrolling carousel (drifts left by itself, like the
-// homepage deals row) — one photo at a time on mobile, several side by side
-// on desktop. Off until an admin fills in a title + at least one photo and
-// enables it — same "no fabricated content" rule as Coffee Corner/the hero.
+// carousel that auto-advances one full card at a time (never mid-scroll/cut
+// off — each stop shows a complete, sharp photo) — one photo at a time on
+// mobile, several side by side on desktop. Off until an admin fills in a
+// title + at least one photo and enables it — same "no fabricated content"
+// rule as Coffee Corner/the hero.
 export default function PhotoGallerySection() {
   const siteConfig = useAppStore((state) => state.siteConfig);
   const siteConfigLoaded = useAppStore((state) => state.siteConfigLoaded);
   const scrollRef = useRef<HTMLDivElement>(null);
   // Tracks the last real user interaction (touch/hover/manual nav) so the
-  // auto-scroll tick can pause for a bit instead of fighting it — same
-  // approach as the homepage deals carousel (HomeSection.tsx DealsCarousel).
+  // auto-advance timer can pause for a bit instead of fighting it.
   const lastInteractionRef = useRef(0);
-  const scrollPosRef = useRef(0);
-  const lastTimeRef = useRef(0);
-  const rafRef = useRef(0);
 
   const images = (siteConfig.galleryImages ?? []).filter((url): url is string => typeof url === "string" && url.length > 0);
-  const canLoop = images.length > 1;
-  // Duplicate the row so the auto-scroll can wrap seamlessly from the end
-  // back to the start instead of snapping back visibly.
-  const loopImages = canLoop ? [...images, ...images] : images;
+  const canAdvance = images.length > 1;
 
   const markInteraction = () => {
     lastInteractionRef.current = performance.now();
   };
 
-  const tick = useCallback((now: number) => {
-    if (!lastTimeRef.current) lastTimeRef.current = now;
-    const dt = Math.min(now - lastTimeRef.current, 64);
-    lastTimeRef.current = now;
+  // Finds the card nearest the current scroll position, so advancing always
+  // starts from wherever the user last manually swiped to (never desyncs).
+  const currentIndex = () => {
     const el = scrollRef.current;
-    const recentlyInteracted = now - lastInteractionRef.current < 1500;
-    if (el && canLoop && !recentlyInteracted) {
-      const half = el.scrollWidth / 2;
-      scrollPosRef.current += (34 * dt) / 1000;
-      if (scrollPosRef.current >= half) scrollPosRef.current -= half;
-      el.scrollLeft = scrollPosRef.current;
-    } else if (el) {
-      scrollPosRef.current = el.scrollLeft;
-    }
-    rafRef.current = requestAnimationFrame(tick);
-  }, [canLoop]);
+    if (!el) return 0;
+    let closest = 0;
+    let closestDist = Infinity;
+    Array.from(el.children).forEach((child, i) => {
+      const dist = Math.abs((child as HTMLElement).offsetLeft - el.scrollLeft);
+      if (dist < closestDist) { closestDist = dist; closest = i; }
+    });
+    return closest;
+  };
+
+  const goTo = (index: number) => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const card = el.children[index] as HTMLElement | undefined;
+    if (!card) return;
+    el.scrollTo({ left: card.offsetLeft, behavior: "smooth" });
+  };
 
   useEffect(() => {
-    if (!canLoop) return;
-    rafRef.current = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(rafRef.current);
-  }, [tick, canLoop]);
+    if (!canAdvance) return;
+    const interval = setInterval(() => {
+      if (performance.now() - lastInteractionRef.current < 3000) return;
+      goTo((currentIndex() + 1) % images.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canAdvance, images.length]);
 
   if (!siteConfigLoaded || !siteConfig.galleryEnabled) return null;
   if (!siteConfig.galleryTitle?.trim() || images.length === 0) return null;
 
-  const scrollBack = () => {
-    const el = scrollRef.current;
-    if (!el) return;
+  const goBack = () => {
     markInteraction();
-    const card = el.querySelector<HTMLElement>("[data-gallery-card]");
-    const step = card ? card.offsetWidth + 16 : el.clientWidth;
-    const half = el.scrollWidth / 2;
-    let next = el.scrollLeft - step;
-    if (next < 0) next += half;
-    scrollPosRef.current = next;
-    el.scrollTo({ left: next, behavior: "smooth" });
+    goTo((currentIndex() - 1 + images.length) % images.length);
   };
 
   return (
@@ -105,12 +100,12 @@ export default function PhotoGallerySection() {
           <div className="pointer-events-none absolute inset-y-0 left-0 w-6 z-10 bg-gradient-to-r from-white to-transparent" />
           <div className="pointer-events-none absolute inset-y-0 right-0 w-6 z-10 bg-gradient-to-l from-white to-transparent" />
 
-          {/* Only a "back" control — the row already drifts forward on its
+          {/* Only a "back" control — the row already advances forward on its
               own, on both mobile and desktop. */}
-          {canLoop && (
+          {canAdvance && (
             <button
               type="button"
-              onClick={scrollBack}
+              onClick={goBack}
               aria-label="Vorige"
               className="hidden sm:flex absolute -left-4 top-1/2 -translate-y-1/2 z-20 h-9 w-9 items-center justify-center rounded-full bg-white border border-slate-200 shadow-md text-slate-600 hover:text-amber-600 hover:border-amber-300 transition-colors cursor-pointer"
             >
@@ -120,7 +115,7 @@ export default function PhotoGallerySection() {
 
           <div
             ref={scrollRef}
-            className="flex gap-4 overflow-x-auto pb-1 select-none"
+            className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-1 select-none"
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
             onTouchStart={markInteraction}
             onTouchMove={markInteraction}
@@ -128,15 +123,14 @@ export default function PhotoGallerySection() {
             onMouseEnter={markInteraction}
             onMouseMove={markInteraction}
           >
-            {loopImages.map((url, i) => (
+            {images.map((url, i) => (
               <div
                 key={i}
-                data-gallery-card
-                className="shrink-0 w-full sm:w-[calc(50%-0.5rem)] lg:w-[calc(33.333%-0.667rem)] h-64 sm:h-72 lg:h-80 rounded-2xl overflow-hidden bg-white border border-slate-200 shadow-sm flex items-center justify-center"
+                className="snap-center shrink-0 w-full sm:w-[calc(50%-0.5rem)] lg:w-[calc(33.333%-0.667rem)] h-64 sm:h-72 lg:h-80 rounded-2xl overflow-hidden bg-white border border-slate-200 shadow-sm flex items-center justify-center"
               >
                 <img
                   src={withImageWidth(url, 640) || url}
-                  alt={`${siteConfig.galleryTitle} ${(i % images.length) + 1}`}
+                  alt={`${siteConfig.galleryTitle} ${i + 1}`}
                   loading="lazy"
                   decoding="async"
                   className="w-full h-full object-contain"

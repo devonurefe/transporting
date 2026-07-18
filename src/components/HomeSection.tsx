@@ -920,7 +920,7 @@ export default function HomeSection({
                   onClick={() => setOpenFaq(openFaq === i ? null : i)}
                   className="no-press w-full flex items-center justify-between px-4 py-4 text-left cursor-pointer hover:bg-slate-50 transition-colors"
                 >
-                  <span className="font-bold text-sm text-slate-900 pr-4">{item.q}</span>
+                  <span className="font-bold text-xs sm:text-sm text-slate-900 pr-4">{item.q}</span>
                   <motion.span
                     animate={{ rotate: openFaq === i ? 180 : 0 }}
                     transition={{ duration: 0.2 }}
@@ -939,7 +939,7 @@ export default function HomeSection({
                       transition={{ duration: 0.22, ease: "easeInOut" }}
                       className="overflow-hidden"
                     >
-                      <p className="px-4 pb-4 text-sm text-slate-600 leading-relaxed border-t border-slate-100 pt-3">{item.a}</p>
+                      <p className="px-4 pb-4 text-xs sm:text-sm text-slate-600 leading-relaxed border-t border-slate-100 pt-3">{item.a}</p>
                     </motion.div>
                   )}
                 </AnimatePresence>

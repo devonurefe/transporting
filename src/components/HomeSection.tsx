@@ -284,7 +284,7 @@ function DealsCarousel({ machines, onSearch }: { machines: Machine[]; onSearch: 
             <div className="bg-amber-500 rounded-lg p-1">
               <Zap className="h-4 w-4 text-white" />
             </div>
-            <h2 className="font-display font-black text-xl text-slate-900">{t("Weekaanbiedingen", "Weekly Deals", "Haftalık Fırsatlar")}</h2>
+            <h2 className="font-display font-black text-lg sm:text-xl text-slate-900">{t("Weekaanbiedingen", "Weekly Deals", "Haftalık Fırsatlar")}</h2>
           </div>
           <p className="text-xs text-slate-500 mt-1 ml-8">{t("Profiteer nu van onze speciale actieprijzen", "Take advantage of our special offers", "Özel fiyatlardan şimdi yararlanın")}</p>
         </div>
@@ -373,7 +373,7 @@ function DealsCarousel({ machines, onSearch }: { machines: Machine[]; onSearch: 
                     <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide leading-none">
                       {CAT_LABEL[m.category] ?? m.category}
                     </span>
-                    <p className="font-display font-black text-xs text-slate-900 leading-snug line-clamp-2">{baseName}</p>
+                    <p className="font-bold text-xs text-slate-900 leading-snug line-clamp-2">{baseName}</p>
                     <div className="flex items-baseline gap-1 flex-wrap">
                       <span className="text-sm font-black text-amber-700">{fmt(displayPrice)}</span>
                       {hasDiscount && <span className="text-[10px] text-slate-500 line-through">{fmt(originalPrice)}</span>}
@@ -793,7 +793,7 @@ export default function HomeSection({
                 className="group relative bg-white border border-slate-200 rounded-2xl overflow-hidden text-left cursor-pointer hover:border-orange-300 hover:shadow-xl hover:shadow-orange-500/5 hover:-translate-y-1.5 active:scale-[0.98] transition-all duration-300 flex flex-col"
               >
                 <div className="p-3 sm:p-3.5 flex flex-col min-w-0">
-                  <p className="font-display font-black text-[13px] sm:text-sm text-slate-900 leading-snug line-clamp-2 mb-1.5">
+                  <p className="font-bold text-[13px] sm:text-sm text-slate-900 leading-snug line-clamp-2 mb-1.5">
                     {cat.listLabel || cat.label}
                   </p>
                   <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 mb-2">
@@ -888,16 +888,17 @@ export default function HomeSection({
         </div>
       </div>
 
-      {/* ── HOE WERKT HUREN? — vier stappen ── */}
-      <HowItWorksSection />
-
-      {/* ── ADVIESTOOL ENTRY — compacte variant (de tall-versie maakte dit
-          blok onnodig hoog voor wat een secundaire hulplink is) ── */}
-      <div className="px-4 sm:px-6 pt-2 pb-10">
+      {/* ── ADVIESTOOL ENTRY — direct onder het categorie-overzicht, zodat een
+          bezoeker die niet meteen de juiste categorie herkent hier meteen de
+          keuzehulp kan starten in plaats van pas na "Hoe werkt huren?" ── */}
+      <div className="bg-white px-4 sm:px-6 py-8">
         <div className="max-w-2xl mx-auto">
           <AdviesStrip />
         </div>
       </div>
+
+      {/* ── HOE WERKT HUREN? — vier stappen ── */}
+      <HowItWorksSection />
 
       {/* ── WAAROM HUURGO — trustband (verhuisd uit de footer) ── */}
       <WhyHuurGoBand />
@@ -906,7 +907,7 @@ export default function HomeSection({
       <div className="bg-slate-50 border-t border-slate-100 px-4 sm:px-6 py-12">
         <div className="max-w-2xl mx-auto">
           <div className="text-center mb-7">
-            <h2 className="font-display font-black text-xl text-slate-900">{t("Veelgestelde vragen", "Frequently asked questions", "Sık sorulan sorular")}</h2>
+            <h2 className="font-display font-black text-lg sm:text-xl text-slate-900">{t("Veelgestelde vragen", "Frequently asked questions", "Sık sorulan sorular")}</h2>
             <p className="text-xs text-slate-500 mt-1">{t("Alles wat u wilt weten over hoogwerker huren", "Everything you need to know about renting aerial lifts", "Yüksek erişim kiralama hakkında bilmeniz gerekenler")}</p>
           </div>
           {/* Homepage toont bewust maar 3 vragen — de volledige lijst (incl.

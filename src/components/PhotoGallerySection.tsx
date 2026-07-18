@@ -94,7 +94,7 @@ export default function PhotoGallerySection() {
             {siteConfig.galleryTitle}
           </h2>
           {siteConfig.galleryDescription?.trim() && (
-            <p className="text-xs sm:text-sm text-slate-500 mt-1.5 max-w-xl mx-auto">
+            <p className="text-xs text-slate-500 mt-1.5 max-w-xl mx-auto">
               {siteConfig.galleryDescription}
             </p>
           )}

@@ -72,7 +72,7 @@ export default function WhyHuurGoBand() {
           className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-5"
         >
           <div>
-            <h3 className="font-display text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+            <h3 className="font-display text-lg sm:text-xl font-black text-slate-900 tracking-tight">
               Waarom <BrandedText text="HuurGo" />
             </h3>
             <p className="text-xs text-slate-500 mt-1.5">Betrouwbaar materieel, eerlijk advies en scherpe tarieven in heel Nederland.</p>
@@ -104,8 +104,8 @@ export default function WhyHuurGoBand() {
                 <Icon className="h-4 w-4" strokeWidth={2.2} />
               </span>
               <div className="min-w-0">
-                <h4 className="text-[13px] font-bold text-slate-900 leading-snug">{title}</h4>
-                <p className="text-xs text-slate-500 leading-relaxed mt-0.5">{body}</p>
+                <h4 className="text-xs sm:text-sm font-bold text-slate-900 leading-snug">{title}</h4>
+                <p className="text-[11px] sm:text-xs text-slate-500 leading-relaxed mt-0.5">{body}</p>
               </div>
             </div>
           ))}

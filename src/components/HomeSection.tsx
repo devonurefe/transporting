@@ -796,9 +796,12 @@ export default function HomeSection({
                   <p className="font-bold text-[13px] sm:text-sm text-slate-900 leading-snug line-clamp-2 mb-1.5">
                     {cat.listLabel || cat.label}
                   </p>
-                  <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 mb-2">
-                    <span className="font-semibold text-slate-500 text-[11px] sm:hidden">{cat.heights}</span>
-                    <span className="text-slate-300 select-none sm:hidden">•</span>
+                  <span className="font-semibold text-slate-500 text-[11px] sm:hidden mb-2">{cat.heights}</span>
+                  {/* Price bottom-left, CTA bottom-right — replaces the old
+                      three-row stack (specs+price / Bekijk / "X modellen") with
+                      the standard price+action pairing; the model count wasn't
+                      worth the extra row. */}
+                  <div className="flex items-center justify-between gap-2">
                     <span className="font-black text-emerald-700 text-xs leading-tight">
                       {(() => {
                         if (!meta) return "Prijs op aanvraag";
@@ -808,17 +811,10 @@ export default function HomeSection({
                         return `€${fmt}/${unit}`;
                       })()}
                     </span>
-                  </div>
-                  <div className="flex items-center justify-between gap-2">
                     <span className="inline-flex items-center gap-0.5 text-[11px] sm:text-[10px] font-bold text-orange-700 group-hover:text-orange-800 group-hover:gap-1 transition-all duration-300">
                       <span>{t("Bekijk", "View", "Görüntüle")}</span>
                       <ChevronRight className="h-3 w-3" />
                     </span>
-                    {meta && meta.count > 1 && (
-                      <span className="sm:hidden text-[10px] text-slate-500 font-medium shrink-0">
-                        {t(`${meta.count} modellen`, `${meta.count} models`, `${meta.count} model`)}
-                      </span>
-                    )}
                   </div>
                 </div>
 

@@ -784,7 +784,6 @@ export default function HomeSection({
             const Icon = CATEGORY_ICONS[cat.id] ?? Truck;
             const meta = categoryMeta[cat.id];
             const catImage = meta?.image || "";
-            const fallbackGradient = CAT_GRADIENT[cat.id] ?? "from-slate-100 to-slate-200";
             const hasBadge = !!(meta && meta.badge !== "none");
 
             return (
@@ -793,29 +792,8 @@ export default function HomeSection({
                 onClick={() => onSearch("", cat.id)}
                 className="group relative bg-white border border-slate-200 rounded-2xl overflow-hidden text-left cursor-pointer hover:border-orange-300 hover:shadow-xl hover:shadow-orange-500/5 hover:-translate-y-1.5 active:scale-[0.98] transition-all duration-300 flex flex-col"
               >
-                {/* Discount badge — pinned to the card's own top-right corner
-                    instead of sharing a row with the price. The title below
-                    reserves right-padding so a short name never runs under it;
-                    a long name (line-clamp-2) simply wraps to its own second
-                    line, which has full width since the badge only occupies
-                    the first line's corner. Mobile is now 2-across (the old
-                    full-width single column made this section ~40% of the
-                    whole page), so both breakpoints use the same compact
-                    sizing with only minor mobile bumps for tap targets. */}
-                {meta && meta.badge !== "none" && (
-                  <span
-                    className={`absolute top-2 right-2 sm:top-1.5 sm:right-1.5 z-10 inline-flex items-center gap-0.5 rounded-full pl-2 pr-2.5 sm:pl-1.5 sm:pr-2 py-1 sm:py-0.5 text-[10px] sm:text-[9px] font-black text-white shadow-md ring-1 ring-white/40 ${
-                      meta.badge === "tier"
-                        ? "bg-gradient-to-r from-indigo-600 to-violet-600 shadow-indigo-500/25"
-                        : "bg-gradient-to-r from-rose-600 to-red-500 shadow-rose-500/25"
-                    }`}
-                  >
-                    <Zap className="h-2.5 w-2.5 sm:h-2 sm:w-2 shrink-0 fill-current" />
-                    <span>{`−${meta.badgePct}%`}</span>
-                  </span>
-                )}
                 <div className="p-3 sm:p-3.5 flex flex-col min-w-0">
-                  <p className={`font-display font-black text-[13px] sm:text-sm text-slate-900 leading-snug line-clamp-2 mb-1.5 ${hasBadge ? "pr-11 sm:pr-14" : ""}`}>
+                  <p className="font-display font-black text-[13px] sm:text-sm text-slate-900 leading-snug line-clamp-2 mb-1.5">
                     {cat.listLabel || cat.label}
                   </p>
                   <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 mb-2">
@@ -845,8 +823,26 @@ export default function HomeSection({
                 </div>
 
                 {/* Bottom — wide machine photo on a pure white background so the
-                    white-background product photos sit flush with no grey halo */}
+                    white-background product photos sit flush with no grey halo.
+                    The discount badge lives on the photo's corner (product
+                    shots are object-contain with whitespace there), so the
+                    title above keeps its full width and never gets cramped —
+                    that happened when the badge shared the title row on the
+                    narrow 2-across mobile cards. */}
                 <div className="relative w-full aspect-[4/3] overflow-hidden border-t border-slate-100 bg-white">
+                  {/* Left corner — the huurgo watermark pill owns the right corner */}
+                  {hasBadge && meta && (
+                    <span
+                      className={`absolute top-2 left-2 z-10 inline-flex items-center gap-0.5 rounded-full pl-2 pr-2.5 py-1 text-[10px] font-black text-white shadow-md ring-1 ring-white/40 ${
+                        meta.badge === "tier"
+                          ? "bg-gradient-to-r from-indigo-600 to-violet-600 shadow-indigo-500/25"
+                          : "bg-gradient-to-r from-rose-600 to-red-500 shadow-rose-500/25"
+                      }`}
+                    >
+                      <Zap className="h-2.5 w-2.5 shrink-0 fill-current" />
+                      <span>{`−${meta.badgePct}%`}</span>
+                    </span>
+                  )}
                   <CardBrandWatermark />
                   {catImage ? (
                     <img
@@ -890,10 +886,11 @@ export default function HomeSection({
       {/* ── HOE WERKT HUREN? — vier stappen ── */}
       <HowItWorksSection />
 
-      {/* ── ADVIESTOOL ENTRY ── */}
-      <div className="px-4 sm:px-6 pt-2 pb-12">
+      {/* ── ADVIESTOOL ENTRY — compacte variant (de tall-versie maakte dit
+          blok onnodig hoog voor wat een secundaire hulplink is) ── */}
+      <div className="px-4 sm:px-6 pt-2 pb-10">
         <div className="max-w-2xl mx-auto">
-          <AdviesStrip tall />
+          <AdviesStrip />
         </div>
       </div>
 

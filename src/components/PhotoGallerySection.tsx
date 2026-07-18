@@ -4,7 +4,7 @@
  */
 
 import React, { useEffect, useRef } from "react";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { motion } from "motion/react";
 import { useAppStore } from "../store/appStore";
 import { withImageWidth } from "../utils/image";
@@ -72,6 +72,11 @@ export default function PhotoGallerySection() {
     goTo((currentIndex() - 1 + images.length) % images.length);
   };
 
+  const goNext = () => {
+    markInteraction();
+    goTo((currentIndex() + 1) % images.length);
+  };
+
   return (
     <div className="bg-white border-t border-slate-100 px-4 sm:px-6 py-12">
       <div className="max-w-5xl mx-auto">
@@ -100,17 +105,28 @@ export default function PhotoGallerySection() {
           <div className="pointer-events-none absolute inset-y-0 left-0 w-6 z-10 bg-gradient-to-r from-white to-transparent" />
           <div className="pointer-events-none absolute inset-y-0 right-0 w-6 z-10 bg-gradient-to-l from-white to-transparent" />
 
-          {/* Only a "back" control — the row already advances forward on its
-              own, on both mobile and desktop. */}
+          {/* Prev/next controls — shown on mobile too (not just desktop) so it's
+              obvious there's more to see and people can tap through instead of
+              only relying on swipe/auto-advance. */}
           {canAdvance && (
-            <button
-              type="button"
-              onClick={goBack}
-              aria-label="Vorige"
-              className="hidden sm:flex absolute -left-4 top-1/2 -translate-y-1/2 z-20 h-9 w-9 items-center justify-center rounded-full bg-white border border-slate-200 shadow-md text-slate-600 hover:text-amber-600 hover:border-amber-300 transition-colors cursor-pointer"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={goBack}
+                aria-label="Vorige"
+                className="flex absolute -left-2 sm:-left-4 top-1/2 -translate-y-1/2 z-20 h-9 w-9 items-center justify-center rounded-full bg-white border border-slate-200 shadow-md text-slate-600 hover:text-amber-600 hover:border-amber-300 transition-colors cursor-pointer"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={goNext}
+                aria-label="Volgende"
+                className="flex absolute -right-2 sm:-right-4 top-1/2 -translate-y-1/2 z-20 h-9 w-9 items-center justify-center rounded-full bg-white border border-slate-200 shadow-md text-slate-600 hover:text-amber-600 hover:border-amber-300 transition-colors cursor-pointer"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </>
           )}
 
           <div

@@ -828,30 +828,32 @@ export default function HomeSection({
                     shots are object-contain with whitespace there), so the
                     title above keeps its full width and never gets cramped —
                     that happened when the badge shared the title row on the
-                    narrow 2-across mobile cards. The photo box is square on
-                    mobile (taller than the desktop 4:3) and the img gets top
-                    padding matching the pill row, so tall machines (Pecolift,
-                    mastliften) never slide up underneath the badges. */}
-                <div className="relative w-full aspect-square sm:aspect-[4/3] overflow-hidden border-t border-slate-100 bg-white">
+                    narrow 2-across mobile cards. The photo box is taller than
+                    wide on mobile (was a cramped square) so it reads as a
+                    proper product shot instead of a thumbnail; the img gets
+                    top padding matching the (now smaller, xs) pill row so
+                    tall machines (Pecolift, mastliften) never slide up
+                    underneath the badges. */}
+                <div className="relative w-full aspect-[3/4] sm:aspect-[4/3] overflow-hidden border-t border-slate-100 bg-white">
                   {/* Left corner — the huurgo watermark pill owns the right corner */}
                   {hasBadge && meta && (
                     <span
-                      className={`absolute top-2 left-2 z-10 inline-flex items-center gap-0.5 rounded-full pl-2 pr-2.5 py-1 text-[10px] font-black text-white shadow-md ring-1 ring-white/40 ${
+                      className={`absolute top-1.5 left-1.5 z-10 inline-flex items-center gap-0.5 rounded-full pl-1.5 pr-2 py-0.5 text-[9px] font-black text-white shadow-md ring-1 ring-white/40 ${
                         meta.badge === "tier"
                           ? "bg-gradient-to-r from-indigo-600 to-violet-600 shadow-indigo-500/25"
                           : "bg-gradient-to-r from-rose-600 to-red-500 shadow-rose-500/25"
                       }`}
                     >
-                      <Zap className="h-2.5 w-2.5 shrink-0 fill-current" />
+                      <Zap className="h-2 w-2 shrink-0 fill-current" />
                       <span>{`−${meta.badgePct}%`}</span>
                     </span>
                   )}
-                  <CardBrandWatermark />
+                  <CardBrandWatermark size="xs" />
                   {catImage ? (
                     <img
                       src={withImageWidth(catImage, 480) ?? catImage}
                       alt={cat.label}
-                      className="w-full h-full object-contain px-2 pb-2 pt-11 sm:px-1.5 sm:pb-1.5 sm:pt-8 transition-transform duration-500 ease-out group-hover:scale-105"
+                      className="w-full h-full object-contain px-2 pb-2 pt-9 sm:px-1.5 sm:pb-1.5 sm:pt-7 transition-transform duration-500 ease-out group-hover:scale-105"
                       referrerPolicy="no-referrer"
                       onError={(e) => {
                         e.currentTarget.style.display = "none";

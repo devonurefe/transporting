@@ -62,7 +62,7 @@ export default function CoffeeCornerSection() {
             <span className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-600 mb-2">
               <Coffee className="h-4 w-4" /> Coffee Corner
             </span>
-            <h2 className="font-display font-black text-xl sm:text-2xl text-slate-900 mb-2.5">
+            <h2 className="font-display font-black text-lg sm:text-xl text-slate-900 mb-2.5">
               {siteConfig.coffeeCornerTitle}
             </h2>
             <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line mb-5">

@@ -284,7 +284,7 @@ function DealsCarousel({ machines, onSearch }: { machines: Machine[]; onSearch: 
             <div className="bg-amber-500 rounded-lg p-1">
               <Zap className="h-4 w-4 text-white" />
             </div>
-            <h2 className="font-display font-black text-xl text-slate-900">{t("Weekaanbiedingen", "Weekly Deals", "Haftalık Fırsatlar")}</h2>
+            <h2 className="font-display font-black text-lg sm:text-xl text-slate-900">{t("Weekaanbiedingen", "Weekly Deals", "Haftalık Fırsatlar")}</h2>
           </div>
           <p className="text-xs text-slate-500 mt-1 ml-8">{t("Profiteer nu van onze speciale actieprijzen", "Take advantage of our special offers", "Özel fiyatlardan şimdi yararlanın")}</p>
         </div>
@@ -906,7 +906,7 @@ export default function HomeSection({
       <div className="bg-slate-50 border-t border-slate-100 px-4 sm:px-6 py-12">
         <div className="max-w-2xl mx-auto">
           <div className="text-center mb-7">
-            <h2 className="font-display font-black text-xl text-slate-900">{t("Veelgestelde vragen", "Frequently asked questions", "Sık sorulan sorular")}</h2>
+            <h2 className="font-display font-black text-lg sm:text-xl text-slate-900">{t("Veelgestelde vragen", "Frequently asked questions", "Sık sorulan sorular")}</h2>
             <p className="text-xs text-slate-500 mt-1">{t("Alles wat u wilt weten over hoogwerker huren", "Everything you need to know about renting aerial lifts", "Yüksek erişim kiralama hakkında bilmeniz gerekenler")}</p>
           </div>
           {/* Homepage toont bewust maar 3 vragen — de volledige lijst (incl.

@@ -299,7 +299,7 @@ function DealsCarousel({ machines, onSearch }: { machines: Machine[]; onSearch: 
       <div className="pointer-events-none absolute inset-y-0 right-0 w-8 z-10 bg-gradient-to-l from-white to-transparent" />
       <div
         ref={ref}
-        className="overflow-x-scroll cursor-grab active:cursor-grabbing select-none"
+        className="overflow-x-scroll overscroll-x-contain cursor-grab active:cursor-grabbing select-none"
         // No touchAction override — default "auto" lets the browser natively
         // scroll this row horizontally on touch (and pass vertical swipes
         // through to the page). Touch is deliberately not routed through the

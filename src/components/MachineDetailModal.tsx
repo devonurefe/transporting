@@ -228,7 +228,7 @@ export default function MachineDetailModal({
               )}
             </div>
             {allImages.length > 1 && (
-              <div className="flex gap-2 overflow-x-auto py-0.5 scrollbar-none">
+              <div className="flex gap-2 overflow-x-auto overscroll-x-contain py-0.5 scrollbar-none">
                 {allImages.map((url, i) => (
                   <button key={i} type="button" onClick={() => setActiveImageIndex(i)}
                     className={`relative h-11 w-16 rounded-lg overflow-hidden border-2 shrink-0 transition-all cursor-pointer bg-white ${i === activeImageIndex ? "border-orange-500 ring-2 ring-orange-400/20" : "border-slate-200 hover:border-slate-400"}`}

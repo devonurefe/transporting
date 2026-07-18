@@ -101,10 +101,19 @@
   [role="button"] {
     -webkit-tap-highlight-color: transparent;
   }
+  /* overscroll-behavior-x: none is the real fix for iOS Safari's horizontal
+     rubber-band: overflow-x: hidden alone stops visible overflow, but iOS still
+     lets a horizontal drag inside any nested scroller (carousels, image strips)
+     chain into a whole-page bounce once that scroller hits its edge — which
+     also visibly flickers the fixed bottom mobile nav bar (Header.tsx) mid-
+     bounce. This is a page-level safety net; the individual horizontal
+     scrollers also set overscroll-x-contain so they don't chain in the first
+     place. */
   html {
     width: 100%;
     max-width: 100vw;
     overflow-x: hidden;
+    overscroll-behavior-x: none;
     -webkit-text-size-adjust: 100%;
     touch-action: manipulation;
   }
@@ -112,6 +121,7 @@
     width: 100%;
     max-width: 100vw;
     overflow-x: hidden;
+    overscroll-behavior-x: none;
     background-color: #f8fafc;
     color: #1e293b;
     font-family: var(--font-sans);
@@ -122,6 +132,7 @@
     width: 100%;
     max-width: 100vw;
     overflow-x: hidden;
+    overscroll-behavior-x: none;
     min-height: 100vh;
   }
 }

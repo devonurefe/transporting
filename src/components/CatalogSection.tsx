@@ -314,7 +314,7 @@ export default function CatalogSection({
         <div className="flex flex-col gap-3 bg-white border border-slate-200 p-3 rounded-2xl shadow-sm mb-6">
           {/* Row 1: Category tabs */}
           <div className="relative">
-          <nav ref={categoryNavRef} aria-label="Categorie filter" className="flex items-center space-x-1.5 overflow-x-auto scrollbar-none pr-7">
+          <nav ref={categoryNavRef} aria-label="Categorie filter" className="flex items-center space-x-1.5 overflow-x-auto overscroll-x-contain scrollbar-none pr-7">
             {categoryTabs.map((tab) => {
               const isActive = selectedCategory === tab.id;
               return (

@@ -129,9 +129,13 @@ export default function PhotoGallerySection() {
             </>
           )}
 
+          {/* overscroll-x-contain stops iOS Safari from chaining the rubber-band
+              bounce (dragging past the first/last photo) to the whole page —
+              without it the entire site visibly rocks left/right and the fixed
+              bottom nav bar flickers during that chained overscroll. */}
           <div
             ref={scrollRef}
-            className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-1 select-none"
+            className="flex gap-4 overflow-x-auto overscroll-x-contain snap-x snap-mandatory pb-1 select-none"
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
             onTouchStart={markInteraction}
             onTouchMove={markInteraction}

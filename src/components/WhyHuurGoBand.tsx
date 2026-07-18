@@ -104,8 +104,8 @@ export default function WhyHuurGoBand() {
                 <Icon className="h-4 w-4" strokeWidth={2.2} />
               </span>
               <div className="min-w-0">
-                <h4 className="text-[13px] font-bold text-slate-900 leading-snug">{title}</h4>
-                <p className="text-xs text-slate-500 leading-relaxed mt-0.5">{body}</p>
+                <h4 className="text-xs sm:text-sm font-bold text-slate-900 leading-snug">{title}</h4>
+                <p className="text-[11px] sm:text-xs text-slate-500 leading-relaxed mt-0.5">{body}</p>
               </div>
             </div>
           ))}

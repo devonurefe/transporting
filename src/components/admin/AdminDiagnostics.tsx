@@ -324,7 +324,7 @@ export default function AdminDiagnostics({ systemLogs, userProfiles, onAddSystem
                 </div>
                 <div>
                   <span className="font-semibold block text-slate-800">{t("HTTPS / SSL Certificaat", "HTTPS / SSL Certificate", "HTTPS / SSL Sertifikası")}</span>
-                  <span className="text-[10px] text-slate-500 block">{t("Render.com beheerd TLS certificaat", "Render.com managed TLS certificate", "Render.com yönetilen TLS sertifikası")}</span>
+                  <span className="text-[10px] text-slate-500 block">{t("Let's Encrypt via Certbot (Nginx reverse proxy)", "Let's Encrypt via Certbot (Nginx reverse proxy)", "Certbot ile Let's Encrypt (Nginx ters proxy)")}</span>
                 </div>
               </div>
               <span className="text-[10px] bg-emerald-100 text-emerald-800 font-extrabold px-2 py-0.5 rounded-full border border-emerald-200 uppercase">

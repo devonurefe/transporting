@@ -559,7 +559,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                 <th className="pb-3.5 pr-3 w-8">
                   <input
                     type="checkbox"
-                    className="h-3.5 w-3.5 rounded accent-indigo-600 cursor-pointer"
+                    className="h-4 w-4 rounded accent-indigo-600 cursor-pointer"
                     checked={displayOrders.length > 0 && displayOrders.every(o => selectedIds.has(o.id))}
                     onChange={toggleSelectAll}
                   />
@@ -587,7 +587,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                       <td className="py-3 pr-3 pl-1 w-8">
                         <input
                           type="checkbox"
-                          className="h-3.5 w-3.5 rounded accent-indigo-600 cursor-pointer"
+                          className="h-4 w-4 rounded accent-indigo-600 cursor-pointer"
                           checked={selectedIds.has(o.id)}
                           onChange={() => toggleSelect(o.id)}
                         />

@@ -156,6 +156,39 @@ ordersRouter.get("/", requireAuth as any, async (req: AuthenticatedRequest, res:
   }
 });
 
+// GET /api/orders/stats — admin dashboard headline aggregates over ALL orders.
+// The order list is paginated (max 100/page), so computing KPIs client-side from
+// the loaded window silently under-counts once there are >100 orders. This
+// aggregates in the DB (groupBy + sum), so cumulative revenue and counts stay
+// correct at any volume. Cancelled orders are excluded from revenue.
+ordersRouter.get("/stats", requireAdmin as any, async (_req: AuthenticatedRequest, res: Response) => {
+  try {
+    const [statusGroups, revenueAgg, paidAgg] = await Promise.all([
+      prisma.order.groupBy({ by: ["status"], _count: { _all: true } }),
+      prisma.order.aggregate({ _sum: { totalAmount: true }, where: { status: { not: "Geannuleerd" } } }),
+      prisma.order.aggregate({ _sum: { totalAmount: true }, where: { status: { not: "Geannuleerd" }, paymentStatus: "paid" } })
+    ]);
+    const byStatus: Record<string, number> = {};
+    let totalOrders = 0;
+    for (const g of statusGroups) {
+      byStatus[g.status] = g._count._all;
+      totalOrders += g._count._all;
+    }
+    res.setHeader("Cache-Control", "no-store");
+    return res.json({
+      totalOrders,
+      totalRevenue: revenueAgg._sum.totalAmount ?? 0,
+      paidRevenue: paidAgg._sum.totalAmount ?? 0,
+      activeRentals: (byStatus["Goedgekeurd"] ?? 0) + (byStatus["Onderweg"] ?? 0),
+      pending: byStatus["In behandeling"] ?? 0,
+      byStatus
+    });
+  } catch (error) {
+    console.error("Error computing order stats:", error);
+    res.status(500).json({ error: "Kon orderstatistieken niet berekenen" });
+  }
+});
+
 // POST orders — with input validation and date collision detection
 ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, res: Response) => {
   // Idempotency: return the existing order if the client retries with the same key (network timeout scenario)

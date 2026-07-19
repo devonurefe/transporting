@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useMemo, useEffect, useRef } from "react";
+import React, { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { ArrowUpRight, Bell, Smartphone, Calendar, UserPlus } from "lucide-react";
 import { motion } from "motion/react";
 import { useAppStore } from "../../store/appStore";
@@ -31,6 +31,18 @@ export default function AdminDashboard({ setSubTab, setOrdersFilter, adminLangua
   );
   const prevOrderCount = useRef(orders.length);
   const [customerStats, setCustomerStats] = useState<{ total: number; newThisMonth: number } | null>(null);
+  // Server-side aggregates over ALL orders — the order list is paginated (max 100),
+  // so headline KPIs computed from the loaded window under-count at scale. Prefer
+  // these when available, fall back to the store-derived numbers otherwise.
+  const [orderStats, setOrderStats] = useState<{ totalRevenue: number; paidRevenue: number; activeRentals: number; pending: number; totalOrders: number } | null>(null);
+
+  const refreshOrderStats = useCallback(() => {
+    if (!token) return;
+    fetch("/api/orders/stats", { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (d && typeof d.totalRevenue === "number") setOrderStats(d); })
+      .catch(() => {});
+  }, [token]);
 
   const last6Months = useMemo(() => {
     const months = [];
@@ -83,6 +95,12 @@ export default function AdminDashboard({ setSubTab, setOrdersFilter, adminLangua
     }, { Schilder: 0, Hovenier: 0, Glazenwasser: 0, Aannemer: 0, Particulier: 0 } as Record<string, number>)
   }), [orders]);
 
+  // Effective headline KPIs: server aggregate (all orders) wins over the
+  // store-derived value (loaded window only) so counts/revenue stay correct >100 orders.
+  const kpiEarnings = orderStats?.totalRevenue ?? totalEarnings;
+  const kpiActive = orderStats?.activeRentals ?? activeRentals;
+  const kpiPending = orderStats?.pending ?? pendingRegistrations;
+
   const categoryCount = machines.reduce((acc, machine) => {
     const cat = machine.category;
     let label = "Algemeen";
@@ -130,10 +148,16 @@ export default function AdminDashboard({ setSubTab, setOrdersFilter, adminLangua
   // Auto-refresh orders every 60 s — skips when tab is hidden to avoid wasted fetches
   useEffect(() => {
     const interval = setInterval(async () => {
-      if (document.visibilityState === "visible") await fetchOrders();
+      if (document.visibilityState === "visible") {
+        await fetchOrders();
+        refreshOrderStats();
+      }
     }, 60_000);
     return () => clearInterval(interval);
-  }, [fetchOrders]);
+  }, [fetchOrders, refreshOrderStats]);
+
+  // Fetch server-side order aggregates on mount (and whenever the token changes)
+  useEffect(() => { refreshOrderStats(); }, [refreshOrderStats]);
 
   // Fetch customer count once on mount
   useEffect(() => {
@@ -182,10 +206,10 @@ export default function AdminDashboard({ setSubTab, setOrdersFilter, adminLangua
       {/* Glowing Premium KPI Card deck */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {[
-          { title: t("Cumulatieve Omzet", "Cumulative Revenue", "Toplam Ciro"), value: `${euro(totalEarnings)}`, trend: revenueTrend, color: "bg-amber-50 border border-amber-200 text-amber-900 shadow-sm", tab: "accounting" as const, filter: [] as string[] },
-          { title: t("Actieve Huren", "Active Rentals", "Aktif Kiralamalar"), value: `${activeRentals} ${t("machines", "machines", "makine")}`, trend: t("Klik voor details →", "Click for details →", "Detay için tıkla →"), color: "border border-slate-200 bg-slate-50 text-slate-800 shadow-sm", tab: "orders" as const, filter: ["Goedgekeurd", "Onderweg"] as string[] },
-          { title: t("Vloot Bezetting", "Fleet Occupancy", "Filo Doluluk Oranı"), value: `${machines.length > 0 ? Math.round((activeRentals / machines.length) * 100) : 0}% ${t("bezet", "occupied", "dolu")}`, trend: `${machines.length} ${t("units totaal", "total units", "toplam adet")}`, color: "border border-slate-200 bg-slate-50 text-slate-800 shadow-sm", tab: "machines" as const, filter: [] as string[] },
-          { title: t("Ter Beoordeling", "To Review", "Onay Bekleyenler"), value: `${pendingRegistrations} ${t("aanvragen", "requests", "başvuru")}`, trend: t("Klik voor details →", "Click for details →", "Detay için tıkla →"), color: pendingRegistrations > 0 ? "border border-amber-200 bg-amber-50 text-amber-950 shadow-sm" : "border border-slate-200 bg-slate-50 text-slate-500 shadow-sm", tab: "orders" as const, filter: ["In behandeling"] as string[] }
+          { title: t("Cumulatieve Omzet", "Cumulative Revenue", "Toplam Ciro"), value: `${euro(kpiEarnings)}`, trend: revenueTrend, color: "bg-amber-50 border border-amber-200 text-amber-900 shadow-sm", tab: "accounting" as const, filter: [] as string[] },
+          { title: t("Actieve Huren", "Active Rentals", "Aktif Kiralamalar"), value: `${kpiActive} ${t("machines", "machines", "makine")}`, trend: t("Klik voor details →", "Click for details →", "Detay için tıkla →"), color: "border border-slate-200 bg-slate-50 text-slate-800 shadow-sm", tab: "orders" as const, filter: ["Goedgekeurd", "Onderweg"] as string[] },
+          { title: t("Vloot Bezetting", "Fleet Occupancy", "Filo Doluluk Oranı"), value: `${machines.length > 0 ? Math.round((kpiActive / machines.length) * 100) : 0}% ${t("bezet", "occupied", "dolu")}`, trend: `${machines.length} ${t("units totaal", "total units", "toplam adet")}`, color: "border border-slate-200 bg-slate-50 text-slate-800 shadow-sm", tab: "machines" as const, filter: [] as string[] },
+          { title: t("Ter Beoordeling", "To Review", "Onay Bekleyenler"), value: `${kpiPending} ${t("aanvragen", "requests", "başvuru")}`, trend: t("Klik voor details →", "Click for details →", "Detay için tıkla →"), color: kpiPending > 0 ? "border border-amber-200 bg-amber-50 text-amber-950 shadow-sm" : "border border-slate-200 bg-slate-50 text-slate-500 shadow-sm", tab: "orders" as const, filter: ["In behandeling"] as string[] }
         ].map((card, idx) => {
           return (
             <div
@@ -395,7 +419,7 @@ export default function AdminDashboard({ setSubTab, setOrdersFilter, adminLangua
             </p>
           </div>
           <div className="text-[10px] font-mono font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-xl border border-indigo-200/30 shadow-inner">
-            {t("Totaal", "Total", "Toplam")}: {euro(totalEarnings)}
+            {t("Totaal", "Total", "Toplam")}: {euro(kpiEarnings)}
           </div>
         </div>
 

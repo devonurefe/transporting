@@ -8,6 +8,7 @@ import { publicReadLimiter } from "../middleware/publicGuard.js";
 import { emailService } from "../services/emailService.js";
 import { audit } from "../utils/audit.js";
 import { resolveFees } from "../utils/fees.js";
+import { computeOrderSubtotal, computeTransport, computeAddonsTotal, computeVatAndTotal, buildStoredAddons, CampaignRuleLike } from "../utils/orderPricing.js";
 
 export const ordersRouter = Router();
 
@@ -337,10 +338,7 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
     if ((machine as any).pickupOnly && dt !== "self_pickup") {
       return res.status(400).json({ error: "Voor dit product is alleen afhalen mogelijk" });
     }
-    const authTransport =
-      dt === "self_pickup"      ? 0
-      : dt === "delivery_by_us" ? fees.deliveryFee
-      : /* trailer_rental */      fees.trailerPerDay * rentalDays;
+    const authTransport = computeTransport(dt, rentalDays, fees);
     const transportCostClient = Number(orderData.transportCost || 0);
     if (Math.abs(transportCostClient - authTransport) > 0.01) {
       return res.status(400).json({ error: "Ongeldig transportbedrag" });
@@ -351,196 +349,17 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
       return res.status(400).json({ error: "Ongeldig chauffeurskostenbedrag" });
     }
     // Addon prices are recomputed authoritatively from the DB — never trusted from
-    // the client. The global add-ons ("safety" = Veiligheidsset Pro, "rijplaten")
-    // plus this machine's own product-specific cross-sell extras are the only
-    // accepted ids. (Weekend handling is no longer an addon — the weekend package /
-    // Sunday block adjust the subtotal below.)
-    const crossSell: Array<{ id: string; name?: string; pricePerWeek: number; pricePerDay?: number; pricePerTwoDay?: number }> =
-      Array.isArray((machine as any).crossSellAddons) ? (machine as any).crossSellAddons : [];
-    const crossSellMap = new Map(crossSell.map(a => [String(a.id), a]));
-    const machineWeeklyOnly = Boolean((machine as any).weeklyOnly);
-    const addonWeeks = Math.max(1, Math.ceil(
-      Math.max(rentalDays, ((machine as any).minRentalDays > 0 ? (machine as any).minRentalDays : 7)) / 7
-    ));
-    // Authoritative add-on price — mirrors src/utils/pricing.ts addonPriceForRental EXACTLY.
-    const addonPrice = (sa: { pricePerWeek?: number; pricePerDay?: number; pricePerTwoDay?: number }): number => {
-      if (!machineWeeklyOnly) {
-        if (rentalDays === 1 && sa.pricePerDay != null && sa.pricePerDay > 0) return Number(sa.pricePerDay);
-        if (rentalDays === 2 && sa.pricePerTwoDay != null && sa.pricePerTwoDay > 0) return Number(sa.pricePerTwoDay);
-      }
-      return Number(sa.pricePerWeek || 0) * addonWeeks;
-    };
-    // Global add-ons: a flat rate for the first started week, +rate for every
-    // additional started 7-day block (addonWeeks, same formula as above). Not
-    // available on every machine — mirrors GLOBAL_ADDON_EXCLUDED_CATEGORIES in
-    // BookingStep1.tsx / BookingSection.tsx — keep identical.
-    const GLOBAL_ADDON_RATES: Record<string, number> = {
-      safety: fees.addons.safety.pricePerWeek,
-      rijplaten: fees.addons.rijplaten.pricePerWeek,
-    };
-    const GLOBAL_ADDON_EXCLUDED_CATEGORIES: Record<string, string[]> = {
-      safety: ["ladderlift"],
-      rijplaten: ["aanhanger", "kamersteiger", "ecolift", "ladderlift"],
-    };
-    // Validated customer-entered amount for a global add-on. Only "rijplaten" is
-    // quantity-based (1–999, integer); all others are a single unit. Returns null
-    // when the client sent an invalid amount so the caller can reject the order.
-    const globalAddonQty = (id: string, a: any): number | null => {
-      if (id !== "rijplaten") return 1;
-      const q = Number(a?.quantity);
-      if (!Number.isInteger(q) || q < 1 || q > 999) return null;
-      return q;
-    };
-    const machineCategory = String((machine as any).category ?? "");
-    const rawAddons = Array.isArray(orderData.addons) ? orderData.addons : [];
-    let addonsTotal = 0;
-    for (const a of rawAddons) {
-      if (typeof a !== "object" || a === null) {
-        return res.status(400).json({ error: "Ongeldige toevoeging in bestelling" });
-      }
-      const id = String(a.id ?? "");
-      if (id in GLOBAL_ADDON_RATES) {
-        if (GLOBAL_ADDON_EXCLUDED_CATEGORIES[id].includes(machineCategory)) {
-          return res.status(400).json({ error: "Ongeldige toevoeging in bestelling" });
-        }
-        // Rijplaten is quantity-based (customer types how many plates they need);
-        // every other global add-on is a single unit. Never trust the client price —
-        // validate the amount and recompute here.
-        const qty = globalAddonQty(id, a);
-        if (qty === null) {
-          return res.status(400).json({ error: "Ongeldig aantal rijplaten" });
-        }
-        addonsTotal += GLOBAL_ADDON_RATES[id] * addonWeeks * qty;
-      } else if (crossSellMap.has(id)) {
-        addonsTotal += addonPrice(crossSellMap.get(id)!);
-      } else {
-        return res.status(400).json({ error: "Ongeldige toevoeging in bestelling" });
-      }
+    // the client. Shared with PATCH/manual-create via computeAddonsTotal (mirrors
+    // src/utils/pricing.ts addonPriceForRental + the category exclusions).
+    const addonsResult = computeAddonsTotal(machine, rentalDays, orderData.addons, fees);
+    if ("error" in addonsResult) {
+      return res.status(400).json({ error: addonsResult.error });
     }
-    // Flat-rate pricing mirrors src/utils/pricing.ts calculateItemSubtotal.
-    // Strict weekend: 2 days starting Saturday (Sat+Sun).
-    // startDate is a UTC-parsed Date, so getUTCDay() is timezone-safe.
-    const profile = String(orderData.customerProfile || "").toLowerCase();
-
-    // Campaign discounts apply on top of flat rates (mirrors pricing.ts withCampaign).
-    // Volume discounts are already embedded in flat rates — not double-counted.
-    const withCampaign = (base: number): number => {
-      let pct = 0;
-      for (const rule of campaignRules.filter(r => r.isActive)) {
-        const matches = rule.scope === "global"
-          || (rule.scope === "category" && machine.category.toLowerCase() === rule.scopeValue.toLowerCase())
-          || (rule.scope === "product" && machine.id === rule.scopeValue)
-          || (rule.scope === "role" && profile === rule.scopeValue.toLowerCase());
-        if (matches) pct = Math.max(pct, rule.discountPercent);
-      }
-      if (machine.campaignDiscountPercent) pct = Math.max(pct, machine.campaignDiscountPercent as number);
-      let disc = base * (pct / 100);
-      if (machine.campaignDiscountAmount) disc += machine.campaignDiscountAmount as number;
-      return Math.max(0, base - disc);
-    };
-
-    let serverSubtotal: number;
-    const m = machine as any;
-    const dow = startDate.getUTCDay();
-    const strictWeekend = rentalDays === 2 && dow === 6;
-
-    // Flat-rate price for an effective day count `n`, or null when no flat tier
-    // applies (caller falls back to the percentage path). Mirrors the tierPrice
-    // helper in src/utils/pricing.ts. The legacy strict-weekend (Sat+Sun) price
-    // only applies to machines without weekendRulesEnabled; enabled machines route
-    // a Sat+Sun selection through the weekend package below.
-    const tierPrice = (n: number): number | null => {
-      if (n === 1 && m.oneDayPrice) return m.oneDayPrice;
-      if (n === 2) {
-        if (!m.weekendRulesEnabled && strictWeekend && m.weekendPrice) return m.weekendPrice;
-        if (m.twoDayPrice) return m.twoDayPrice;
-      }
-      if (n === 3 && m.threeDayPrice) return m.threeDayPrice;
-      if (n === 4 && m.fourDayPrice) return m.fourDayPrice;
-      if ((n === 3 || n === 4 || n === 5) && m.weeklyPrice) return m.weeklyPrice;
-      if (n >= 6 && n < 28 && m.weeklyPrice) {
-        const extra = m.extraDayPrice ?? m.weeklyPrice / 5;
-        let base = Math.round(m.weeklyPrice + (n - 5) * extra);
-        if (m.monthlyPrice) base = Math.min(base, m.monthlyPrice);
-        return base;
-      }
-      if (n >= 28 && m.monthlyPrice) {
-        const fullMonths = Math.floor(n / 28);
-        const remainder = n % 28;
-        let remainderCost: number;
-        if (remainder >= 3 && m.weeklyPrice) {
-          const extra = m.extraDayPrice ?? m.weeklyPrice / 5;
-          remainderCost = Math.round(remainder * extra);
-        } else {
-          remainderCost = remainder * machine.pricePerDay;
-        }
-        remainderCost = Math.min(remainderCost, m.monthlyPrice);
-        return fullMonths * m.monthlyPrice + remainderCost;
-      }
-      return null;
-    };
-
-    // Weekend rules (depot closed Sat+Sun) — mirrors src/utils/pricing.ts
-    // isWeekendPackage / hasSundayBlock. getUTCDay(): 0=Sun, 6=Sat.
-    const endDow = (() => {
-      const e = new Date(startDate);
-      e.setUTCHours(0, 0, 0, 0);
-      e.setUTCDate(e.getUTCDate() + (rentalDays - 1));
-      return e.getUTCDay();
-    })();
-    // Weekend package: only a rental that stays entirely within the closed
-    // weekend (single Sat, single Sun, or Sat+Sun) — never a Friday start, and
-    // never a longer rental that merely starts on Sat/Sun and extends past it.
-    const isWeekendPackage = !!(m.weekendRulesEnabled && m.weekendPrice && (
-      (rentalDays === 1 && (dow === 6 || dow === 0)) ||  // single Sat or single Sun
-      (rentalDays === 2 && dow === 6 && endDow === 0)     // Sat + Sun
-    ));
-    const hasSundayBlock = !!(m.weekendRulesEnabled && m.sundayBlockFee && !isWeekendPackage && endDow === 6);
-
-    if (m.weeklyOnly && m.weeklyPrice) {
-      // Weekly-only billing — minimum 1 week, charged per started week.
-      // Mirrors src/utils/pricing.ts billableWeeks().
-      const min = m.minRentalDays > 0 ? m.minRentalDays : 7;
-      const weeks = Math.max(1, Math.ceil(Math.max(rentalDays, min) / 7));
-      serverSubtotal = withCampaign(weeks * m.weeklyPrice);
-    } else if (isWeekendPackage) {
-      // Flat weekend package. No Sunday block.
-      serverSubtotal = withCampaign(m.weekendPrice);
-    } else if (tierPrice(rentalDays) !== null) {
-      serverSubtotal = withCampaign(tierPrice(rentalDays) as number);
-    } else {
-      // Mirrors src/utils/pricing.ts evaluateDiscountPercent: take the HIGHEST discount,
-      // do not stack volume + campaign discounts. Campaign rules are also applied here.
-      const rawSubtotal = machine.pricePerDay * rentalDays;
-      let highestDiscountPercent = 0;
-      if (rentalDays >= 28 && machine.monthlyDiscountPercent) {
-        highestDiscountPercent = Math.max(highestDiscountPercent, machine.monthlyDiscountPercent);
-      } else if (rentalDays >= 6 && machine.weeklyDiscountPercent) {
-        highestDiscountPercent = Math.max(highestDiscountPercent, machine.weeklyDiscountPercent);
-      }
-      for (const rule of campaignRules.filter(r => r.isActive)) {
-        let matches = false;
-        if (rule.scope === "global") matches = true;
-        else if (rule.scope === "category") matches = machine.category.toLowerCase() === rule.scopeValue.toLowerCase();
-        else if (rule.scope === "product") matches = machine.id === rule.scopeValue;
-        else if (rule.scope === "role") matches = profile === rule.scopeValue.toLowerCase();
-        if (matches) highestDiscountPercent = Math.max(highestDiscountPercent, rule.discountPercent);
-      }
-      if (machine.campaignDiscountPercent) {
-        highestDiscountPercent = Math.max(highestDiscountPercent, machine.campaignDiscountPercent);
-      }
-      let serverDiscountAmount = rawSubtotal * (highestDiscountPercent / 100);
-      if (machine.campaignDiscountAmount) {
-        serverDiscountAmount += (machine.campaignDiscountAmount as number);
-      }
-      serverSubtotal = Math.max(0, rawSubtotal - serverDiscountAmount);
-    }
-    // Forced Sunday block: last work day is Saturday → machine held over the closed
-    // Sunday (return Monday 08:00). Flat surcharge on top of the tier, not discounted.
-    if (hasSundayBlock) serverSubtotal += Number(m.sundayBlockFee);
-    serverSubtotal = Math.round(serverSubtotal * 100) / 100;
-    const serverVat = Math.round((serverSubtotal + transportCostClient + driverCostClient + addonsTotal) * 21) / 100;
-    const serverTotal = Math.round((serverSubtotal + transportCostClient + driverCostClient + addonsTotal + serverVat) * 100) / 100;
+    const addonsTotal = addonsResult.total;
+    // Authoritative subtotal (tier + weekend package + Sunday block + campaign) —
+    // shared with PATCH/manual-create, mirrors src/utils/pricing.ts calculateItemSubtotal.
+    const serverSubtotal = computeOrderSubtotal(machine, rentalDays, startDate, campaignRules, String(orderData.customerProfile || ""));
+    const { vat: serverVat, total: serverTotal } = computeVatAndTotal(serverSubtotal, transportCostClient, driverCostClient, addonsTotal);
     if (Math.abs(serverTotal - Number(orderData.totalAmount)) > 0.01) {
       return res.status(400).json({ error: "Totaalbedrag klopt niet. Ververs de pagina en probeer opnieuw." });
     }
@@ -657,16 +476,7 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
           status: "In behandeling",
           customerId: resolvedCustomerId,
           // Reconstruct from server-side data — never persist client-sent names or prices
-          addons: JSON.stringify(rawAddons.map((a: any) => {
-            const id = String(a.id ?? "");
-            if (id === "safety") return { id: "safety", name: fees.addons.safety.name, price: fees.addons.safety.pricePerWeek * addonWeeks };
-            if (id === "rijplaten") {
-              const qty = globalAddonQty("rijplaten", a) ?? 1;
-              return { id: "rijplaten", name: `${fees.addons.rijplaten.name} (${qty} ${qty === 1 ? "stuk" : "stuks"})`, price: fees.addons.rijplaten.pricePerWeek * addonWeeks * qty, quantity: qty };
-            }
-            const sa = crossSellMap.get(id);
-            return { id, name: sa?.name ?? id, price: sa ? addonPrice(sa) : 0 };
-          })),
+          addons: JSON.stringify(buildStoredAddons(machine, rentalDays, orderData.addons, fees)),
           weekendWork: null, // legacy field — weekend work toggle removed; weekend handling is now automatic (package + Sunday block)
           invoiceNumber,
           paymentStatus: "awaiting"

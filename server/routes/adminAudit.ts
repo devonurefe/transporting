@@ -6,9 +6,10 @@ export const adminAuditRouter = Router();
 
 // Filtergroepen voor het AdminLogs-paneel: één chip dekt meerdere action-prefixen.
 const GROUP_PREFIXES: Record<string, string[]> = {
-  auth: ["login.", "password.", "admin."],
+  auth: ["login.", "password.", "admin.", "2fa."],
   orders: ["order."],
   machines: ["machine.", "blockeddate."],
+  customers: ["customer."],
   settings: ["siteconfig.", "campaignrules.", "categories.", "advisorconfig.", "blog."]
 };
 

@@ -24,7 +24,7 @@ interface AdminLogsProps {
   adminLanguage?: string;
 }
 
-type LogGroup = "" | "auth" | "orders" | "machines" | "settings";
+type LogGroup = "" | "auth" | "orders" | "machines" | "customers" | "settings";
 
 const PAGE_SIZE = 50;
 
@@ -36,6 +36,7 @@ function actionColor(action: string): string {
   if (action.startsWith("order.")) return "text-teal-400 bg-teal-500/10 border border-teal-500/15";
   if (action.startsWith("machine.") || action.startsWith("blockeddate.")) return "text-indigo-400 bg-indigo-500/10 border border-indigo-500/15";
   if (action.startsWith("admin.")) return "text-fuchsia-400 bg-fuchsia-500/10 border border-fuchsia-500/15";
+  if (action.startsWith("customer.")) return "text-violet-400 bg-violet-500/10 border border-violet-500/15";
   return "text-emerald-400 bg-emerald-500/10 border border-emerald-500/15";
 }
 
@@ -53,6 +54,12 @@ function describeLog(log: AuditLogRow): string {
     case "password.reset_completed": return "Wachtwoordreset voltooid";
     case "order.status": return `Bestelling${id}: status ${meta.from ?? "?"} → ${meta.to ?? "?"}`;
     case "order.payment": return `Bestelling${id}: betaalstatus → ${meta.to ?? "?"}`;
+    case "order.updated": return `Bestelling${id} bewerkt${Array.isArray(meta.fields) ? ` (${(meta.fields as string[]).length} velden)` : ""}`;
+    case "order.created_manual": return `Bestelling${id} handmatig aangemaakt${meta.total ? ` (${meta.total} €)` : ""}`;
+    case "customer.updated": return `Klant${id} bijgewerkt${Array.isArray(meta.fields) ? ` (${(meta.fields as string[]).length} velden)` : ""}`;
+    case "customer.blocked": return `Klant${id} geblokkeerd`;
+    case "customer.unblocked": return `Klant${id} gedeblokkeerd`;
+    case "customer.deleted": return `Klant${id} verwijderd${meta.email ? ` (${meta.email})` : ""}`;
     case "machine.created": return `Machine aangemaakt${meta.name ? `: ${meta.name}` : id}`;
     case "machine.updated": return `Machine${id} bijgewerkt${Array.isArray(meta.fields) ? ` (${(meta.fields as string[]).length} velden)` : ""}`;
     case "machine.deleted": return `Machine${id} verwijderd`;
@@ -126,6 +133,7 @@ export default function AdminLogs({ adminLanguage }: AdminLogsProps) {
     { id: "auth", label: t("Inloggen & beveiliging", "Login & security", "Giriş ve güvenlik") },
     { id: "orders", label: t("Bestellingen", "Orders", "Siparişler") },
     { id: "machines", label: t("Machines & agenda", "Machines & calendar", "Makineler ve takvim") },
+    { id: "customers", label: t("Klanten", "Customers", "Müşteriler") },
     { id: "settings", label: t("Instellingen & content", "Settings & content", "Ayarlar ve içerik") },
   ];
 

@@ -21,6 +21,7 @@ interface AdminCustomizerProps {
 export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: AdminCustomizerProps) {
   const siteConfig = useAppStore((state) => state.siteConfig);
   const customCategories = useAppStore((state) => state.customCategories);
+  const machines = useAppStore((state) => state.machines);
   const updateSiteConfig = useAppStore((state) => state.updateSiteConfig);
   const updateCategories = useAppStore((state) => state.updateCategories);
   const adminUser = useAuthStore((state) => state.user);
@@ -31,7 +32,7 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
     return nl;
   };
 
-  const [pendingDeleteCategory, setPendingDeleteCategory] = useState<{ id: string; label: string } | null>(null);
+  const [pendingDeleteCategory, setPendingDeleteCategory] = useState<{ id: string; label: string; machineCount: number } | null>(null);
 
   const [isSavingConfig, setIsSavingConfig] = useState<boolean>(false);
   const [saveConfigMsg, setSaveConfigMsg] = useState<{ ok: boolean; text: string } | null>(null);
@@ -337,7 +338,8 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
   };
 
   const handleDeleteCategory = (id: string, label: string) => {
-    setPendingDeleteCategory({ id, label });
+    const machineCount = machines.filter((m) => m.category === id).length;
+    setPendingDeleteCategory({ id, label, machineCount });
   };
 
   const confirmDeleteCategory = async () => {
@@ -1054,7 +1056,17 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
       <AdminConfirmDialog
         open={!!pendingDeleteCategory}
         title={t("Categorie verwijderen", "Delete category", "Kategoriyi sil")}
-        message={pendingDeleteCategory ? t(`Weet u zeker dat u de categorie "${pendingDeleteCategory.label}" wilt verwijderen?`, `Are you sure you want to delete the category "${pendingDeleteCategory.label}"?`, `Kategoriyi "${pendingDeleteCategory.label}" silmek istediğinizden emin misiniz?`) : ""}
+        message={
+          pendingDeleteCategory
+            ? pendingDeleteCategory.machineCount > 0
+              ? t(
+                  `Let op: ${pendingDeleteCategory.machineCount} machine(s) staan nog in de categorie "${pendingDeleteCategory.label}". Als u deze categorie verwijdert, blijven die machines bestaan maar zijn ze niet meer via deze categorie te filteren of te koppelen aan een campagneregel. Weet u het zeker?`,
+                  `Warning: ${pendingDeleteCategory.machineCount} machine(s) are still in category "${pendingDeleteCategory.label}". Deleting it leaves those machines intact but they can no longer be filtered by this category or targeted by a category-scoped campaign rule. Are you sure?`,
+                  `Dikkat: "${pendingDeleteCategory.label}" kategorisinde hâlâ ${pendingDeleteCategory.machineCount} makine var. Bu kategoriyi silerseniz makineler kalır ama artık bu kategoriye göre filtrelenemez veya kategori bazlı bir kampanya kuralıyla hedeflenemez. Emin misiniz?`
+                )
+              : t(`Weet u zeker dat u de categorie "${pendingDeleteCategory.label}" wilt verwijderen?`, `Are you sure you want to delete the category "${pendingDeleteCategory.label}"?`, `Kategoriyi "${pendingDeleteCategory.label}" silmek istediğinizden emin misiniz?`)
+            : ""
+        }
         confirmLabel={t("Verwijderen", "Delete", "Sil")}
         cancelLabel={t("Annuleren", "Cancel", "İptal")}
         onConfirm={confirmDeleteCategory}

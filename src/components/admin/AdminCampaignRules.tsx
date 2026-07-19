@@ -39,28 +39,28 @@ export default function AdminCampaignRules({ onAddSystemLog, adminLanguage }: Ad
   const [ruleDiscount, setRuleDiscount] = useState<number>(5);
   const [pendingDeleteRule, setPendingDeleteRule] = useState<{ id: string; name: string } | null>(null);
 
-  const handleToggleRule = (id: string) => {
+  const handleToggleRule = async (id: string) => {
     const updated = campaignRules.map(r => r.id === id ? { ...r, isActive: !r.isActive } : r);
-    updateCampaignRules(updated);
-    onAddSystemLog("system", adminUser?.name ?? "Admin", t("Campagneregel status bijgewerkt.", "Campaign rule status updated.", "Kampanya kuralı durumu güncellendi."));
+    const ok = await updateCampaignRules(updated);
+    if (ok) onAddSystemLog("system", adminUser?.name ?? "Admin", t("Campagneregel status bijgewerkt.", "Campaign rule status updated.", "Kampanya kuralı durumu güncellendi."));
   };
 
   const handleDeleteRule = (id: string, name: string) => {
     setPendingDeleteRule({ id, name });
   };
 
-  const confirmDeleteRule = () => {
+  const confirmDeleteRule = async () => {
     if (!pendingDeleteRule) return;
     const { id, name } = pendingDeleteRule;
     const updated = campaignRules.filter(r => r.id !== id);
-    updateCampaignRules(updated);
-    onAddSystemLog("system", adminUser?.name ?? "Admin", t("Campagneregel verwijderd: ", "Campaign rule deleted: ", "Kampanya kuralı silindi: ") + name);
+    const ok = await updateCampaignRules(updated);
+    if (ok) onAddSystemLog("system", adminUser?.name ?? "Admin", t("Campagneregel verwijderd: ", "Campaign rule deleted: ", "Kampanya kuralı silindi: ") + name);
     setPendingDeleteRule(null);
   };
 
   const [addRuleError, setAddRuleError] = useState<string>("");
 
-  const handleAddRule = (e: React.FormEvent) => {
+  const handleAddRule = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!ruleName.trim()) return;
     setAddRuleError("");
@@ -80,7 +80,8 @@ export default function AdminCampaignRules({ onAddSystemLog, adminLanguage }: Ad
       isActive: true
     };
 
-    updateCampaignRules([...campaignRules, newRule]);
+    const ok = await updateCampaignRules([...campaignRules, newRule]);
+    if (!ok) return;
     onAddSystemLog("system", adminUser?.name ?? "Admin", t("Nieuwe campagneregel toegevoegd: ", "New campaign rule added: ", "Yeni kampanya kuralı eklendi: ") + newRule.name);
 
     // reset form
@@ -107,7 +108,7 @@ export default function AdminCampaignRules({ onAddSystemLog, adminLanguage }: Ad
 
   const [editRuleError, setEditRuleError] = useState<string>("");
 
-  const handleSaveEditRule = (e: React.FormEvent) => {
+  const handleSaveEditRule = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingRule || !editName.trim()) return;
     setEditRuleError("");
@@ -124,7 +125,8 @@ export default function AdminCampaignRules({ onAddSystemLog, adminLanguage }: Ad
         : r
     );
 
-    updateCampaignRules(updated);
+    const ok = await updateCampaignRules(updated);
+    if (!ok) return;
     onAddSystemLog("system", adminUser?.name ?? "Admin", t("Campagneregel gewijzigd: ", "Campaign rule edited: ", "Kampanya kuralı düzenlendi: ") + trimmed);
     setEditingRule(null);
   };

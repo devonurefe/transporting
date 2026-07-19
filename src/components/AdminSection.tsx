@@ -603,7 +603,7 @@ export default function AdminSection({
                   <AdminCustomizer key="customizer" onAddSystemLog={onAddSystemLog} adminLanguage={adminLanguage} />
                 )}
                 {subTab === "content" && (
-                  <AdminContent key="content" adminLanguage={adminLanguage} />
+                  <AdminContent key="content" adminLanguage={adminLanguage} onAddSystemLog={onAddSystemLog} />
                 )}
                 {subTab === "accounting" && (
                   <AdminAccounting key="accounting" adminLanguage={adminLanguage} />

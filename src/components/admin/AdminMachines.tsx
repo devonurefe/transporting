@@ -401,7 +401,9 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
       setEditingMachine(null);
       showAdminToast(t("Machine succesvol bijgewerkt!", "Machine successfully updated!", "Makine başarıyla güncellendi!"), "success");
     } else {
-      showAdminToast(t("Fout bij het bijwerken.", "Error updating.", "Güncelleme sırasında hata oluştu."), "error");
+      // Specific server error (e.g. "Prijs moet tussen 0 en 100000 liggen") — a
+      // generic fallback here would just duplicate the store's own error toast.
+      showAdminToast(useAppStore.getState().error || t("Fout bij het bijwerken.", "Error updating.", "Güncelleme sırasında hata oluştu."), "error");
     }
   };
 

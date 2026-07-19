@@ -148,7 +148,7 @@ interface AppState {
   clearError: () => void;
 
   campaignRules: CampaignRule[];
-  updateCampaignRules: (rules: CampaignRule[]) => void;
+  updateCampaignRules: (rules: CampaignRule[]) => Promise<boolean>;
 
   // Adviestool (product-finder) admin copy-overrides
   updateAdvisorConfig: (config: AdvisorConfig) => Promise<boolean>;
@@ -767,18 +767,29 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   clearError: () => set({ error: null }),
 
-  updateCampaignRules: (rules) => {
-    // Optimistic update
+  updateCampaignRules: async (rules) => {
+    // Optimistic update — rolled back below if the server rejects the save,
+    // so the admin is never shown a "saved" state that never actually persisted.
+    const previous = get().campaignRules;
     set({ campaignRules: rules });
     try { localStorage.setItem("hwh_campaign_rules", JSON.stringify(rules)); } catch { /* ignore */ }
-    // Persist to DB
-    fetch("/api/campaign-rules", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-      body: JSON.stringify(rules)
-    }).then((res) => {
-      if (res.ok) get().fetchCampaignRules();
-    }).catch(() => devWarn("Failed to save campaign rules to DB, localStorage fallback active."));
+    try {
+      const res = await fetch("/api/campaign-rules", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+        body: JSON.stringify(rules)
+      });
+      if (res.ok) {
+        await get().fetchCampaignRules();
+        return true;
+      }
+      const data = await res.json().catch(() => ({}));
+      set({ campaignRules: previous, error: data?.error || null });
+    } catch {
+      devWarn("Failed to save campaign rules to DB, localStorage fallback active.");
+      set({ campaignRules: previous });
+    }
+    return false;
   },
 
   updateAdvisorConfig: async (config) => {

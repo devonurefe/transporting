@@ -294,7 +294,7 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
       setCrossSell([]);
       setSubTab("machines");
     } else {
-      setFormError(t("Fout bij opslaan.", "Error saving.", "Kaydetme hatası."));
+      setFormError(useAppStore.getState().error || t("Fout bij opslaan.", "Error saving.", "Kaydetme hatası."));
     }
   };
 

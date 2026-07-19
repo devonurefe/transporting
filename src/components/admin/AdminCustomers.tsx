@@ -13,12 +13,19 @@ import {
   X,
   Send,
   MessageCircle,
+  Pencil,
+  Ban,
+  Trash2,
+  ClipboardList,
+  Loader2,
 } from "lucide-react";
 
 const WHATSAPP_NUMBER = (import.meta as any).env?.VITE_WHATSAPP_NUMBER ?? "";
 import { useAuthStore } from "../../store/authStore";
 import { useLanguageStore } from "../../store/languageStore";
 import { showAdminToast } from "./AdminToast";
+import AdminConfirmDialog from "./AdminConfirmDialog";
+import { euro } from "../../utils/format";
 
 interface Customer {
   id: string;
@@ -29,8 +36,15 @@ interface Customer {
   profile: string | null;
   marketingConsent: boolean;
   isEmailVerified: boolean;
+  lockedUntil?: string | null;
   createdAt: string;
   _count: { orders: number };
+}
+
+// A customer is considered "blocked" when lockedUntil is set far in the future
+// (the admin block action sets 2999). Short lockouts from failed logins expire.
+function isBlocked(c: { lockedUntil?: string | null }): boolean {
+  return !!c.lockedUntil && new Date(c.lockedUntil).getTime() > Date.now() + 365 * 24 * 3600 * 1000;
 }
 
 interface AdminCustomersProps {
@@ -123,6 +137,74 @@ export default function AdminCustomers({ adminLanguage }: AdminCustomersProps) {
     } finally {
       setLoadingMore(false);
     }
+  };
+
+  // ── Customer management (Faz 2) ──────────────────────────────────────────
+  const authHeaders = () => ({ "Content-Type": "application/json", Authorization: `Bearer ${token}` });
+  const [editCustomer, setEditCustomer] = useState<Customer | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Customer | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [ordersFor, setOrdersFor] = useState<Customer | null>(null);
+  const [ordersList, setOrdersList] = useState<any[] | null>(null);
+
+  const applyCustomer = (updated: Customer) =>
+    setCustomers((prev) => prev.map((c) => (c.id === updated.id ? { ...c, ...updated } : c)));
+
+  const saveEdit = async (patch: Record<string, unknown>) => {
+    if (!editCustomer) return;
+    setBusyId(editCustomer.id);
+    try {
+      const res = await fetch(`/api/auth/customers/${editCustomer.id}`, { method: "PATCH", headers: authHeaders(), body: JSON.stringify(patch) });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.customer) {
+        applyCustomer(data.customer);
+        showAdminToast(t("Klant bijgewerkt.", "Customer updated.", "Müşteri güncellendi."), "success");
+        setEditCustomer(null);
+      } else {
+        showAdminToast(data?.error || t("Bijwerken mislukt.", "Update failed.", "Güncelleme başarısız."), "error");
+      }
+    } finally { setBusyId(null); }
+  };
+
+  const toggleBlock = async (c: Customer) => {
+    const block = !isBlocked(c);
+    setBusyId(c.id);
+    try {
+      const res = await fetch(`/api/auth/customers/${c.id}/block`, { method: "POST", headers: authHeaders(), body: JSON.stringify({ blocked: block }) });
+      if (res.ok) {
+        applyCustomer({ ...c, lockedUntil: block ? "2999-12-31T00:00:00.000Z" : null });
+        showAdminToast(block ? t("Klant geblokkeerd.", "Customer blocked.", "Müşteri engellendi.") : t("Blokkade opgeheven.", "Customer unblocked.", "Engel kaldırıldı."), "success");
+      } else {
+        const d = await res.json().catch(() => ({}));
+        showAdminToast(d?.error || t("Actie mislukt.", "Action failed.", "İşlem başarısız."), "error");
+      }
+    } finally { setBusyId(null); }
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    const c = deleteTarget;
+    setBusyId(c.id);
+    try {
+      const res = await fetch(`/api/auth/customers/${c.id}`, { method: "DELETE", headers: authHeaders() });
+      if (res.ok) {
+        setCustomers((prev) => prev.filter((x) => x.id !== c.id));
+        setTotalCount((n) => Math.max(0, n - 1));
+        showAdminToast(t("Klant verwijderd.", "Customer deleted.", "Müşteri silindi."), "success");
+      } else {
+        const d = await res.json().catch(() => ({}));
+        showAdminToast(d?.error || t("Verwijderen mislukt.", "Delete failed.", "Silme başarısız."), "error");
+      }
+    } finally { setBusyId(null); setDeleteTarget(null); }
+  };
+
+  const openOrders = async (c: Customer) => {
+    setOrdersFor(c);
+    setOrdersList(null);
+    try {
+      const res = await fetch(`/api/auth/customers/${c.id}/orders`, { headers: { Authorization: `Bearer ${token}` } });
+      setOrdersList(res.ok ? await res.json() : []);
+    } catch { setOrdersList([]); }
   };
 
   const filtered = useMemo(() => {
@@ -428,6 +510,18 @@ export default function AdminCustomers({ adminLanguage }: AdminCustomersProps) {
                             <XCircle className="h-3 w-3" /> Niet geverifieerd
                           </span>
                         )}
+                        {isBlocked(c) && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-rose-50 text-rose-700">
+                            <Ban className="h-3 w-3" /> {t("Geblokkeerd", "Blocked", "Engelli")}
+                          </span>
+                        )}
+                      </div>
+                      {/* Management actions */}
+                      <div className="flex items-center gap-1.5 mt-2.5 flex-wrap">
+                        <button type="button" onClick={() => setEditCustomer(c)} className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors cursor-pointer"><Pencil className="h-3 w-3" /> {t("Bewerk", "Edit", "Düzenle")}</button>
+                        <button type="button" onClick={() => openOrders(c)} className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 transition-colors cursor-pointer"><ClipboardList className="h-3 w-3" /> {t("Orders", "Orders", "Siparişler")}</button>
+                        <button type="button" disabled={busyId === c.id} onClick={() => toggleBlock(c)} className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-colors cursor-pointer disabled:opacity-50 ${isBlocked(c) ? "bg-emerald-50 hover:bg-emerald-100 text-emerald-700" : "bg-amber-50 hover:bg-amber-100 text-amber-700"}`}><Ban className="h-3 w-3" /> {isBlocked(c) ? t("Deblokkeer", "Unblock", "Aç") : t("Blokkeer", "Block", "Engelle")}</button>
+                        <button type="button" disabled={busyId === c.id} onClick={() => setDeleteTarget(c)} className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold bg-rose-50 hover:bg-rose-100 text-rose-700 transition-colors cursor-pointer disabled:opacity-50"><Trash2 className="h-3 w-3" /> {t("Verwijder", "Delete", "Sil")}</button>
                       </div>
                     </div>
                   </div>
@@ -439,7 +533,7 @@ export default function AdminCustomers({ adminLanguage }: AdminCustomersProps) {
           {/* ── Desktop table view (hidden below md) ── */}
           <div className="hidden md:block bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
             {/* Table header */}
-            <div className="grid grid-cols-[auto_auto_1fr_1fr_auto_auto_auto_auto] gap-2 px-4 py-2.5 bg-slate-50 border-b border-slate-100 text-[10px] font-black text-slate-500 uppercase tracking-wider">
+            <div className="grid grid-cols-[auto_auto_1fr_1fr_auto_auto_auto_auto_auto] gap-2 px-4 py-2.5 bg-slate-50 border-b border-slate-100 text-[10px] font-black text-slate-500 uppercase tracking-wider">
               <input
                 type="checkbox"
                 checked={allFilteredSelected}
@@ -453,6 +547,7 @@ export default function AdminCustomers({ adminLanguage }: AdminCustomersProps) {
               <span className="text-center">Mktg</span>
               <span className="text-center">✓</span>
               <span>{t("Datum", "Date", "Tarih")}</span>
+              <span className="text-center">{t("Acties", "Actions", "İşlem")}</span>
             </div>
             <div className="divide-y divide-slate-50">
               {filtered.map((c) => {
@@ -460,7 +555,7 @@ export default function AdminCustomers({ adminLanguage }: AdminCustomersProps) {
                 return (
                   <div
                     key={c.id}
-                    className={`grid grid-cols-[auto_auto_1fr_1fr_auto_auto_auto_auto] gap-2 items-center px-4 py-3 text-xs transition-colors ${selectedIds.has(c.id) ? "bg-amber-50/60" : "hover:bg-slate-50/80"}`}
+                    className={`grid grid-cols-[auto_auto_1fr_1fr_auto_auto_auto_auto_auto] gap-2 items-center px-4 py-3 text-xs transition-colors ${selectedIds.has(c.id) ? "bg-amber-50/60" : isBlocked(c) ? "bg-rose-50/40" : "hover:bg-slate-50/80"}`}
                   >
                     <input
                       type="checkbox"
@@ -503,6 +598,12 @@ export default function AdminCustomers({ adminLanguage }: AdminCustomersProps) {
                     </span>
                     <span className="text-[10px] text-slate-400 font-mono whitespace-nowrap">
                       {new Date(c.createdAt).toLocaleDateString("nl-NL", { day: "2-digit", month: "2-digit", year: "2-digit" })}
+                    </span>
+                    <span className="flex items-center justify-center gap-1">
+                      <button type="button" title={t("Bewerk", "Edit", "Düzenle")} onClick={() => setEditCustomer(c)} className="h-6 w-6 flex items-center justify-center rounded-md bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors cursor-pointer"><Pencil className="h-3 w-3" /></button>
+                      <button type="button" title={t("Orders bekijken", "View orders", "Siparişler")} onClick={() => openOrders(c)} className="h-6 w-6 flex items-center justify-center rounded-md bg-indigo-50 hover:bg-indigo-100 text-indigo-600 transition-colors cursor-pointer"><ClipboardList className="h-3 w-3" /></button>
+                      <button type="button" title={isBlocked(c) ? t("Deblokkeer", "Unblock", "Aç") : t("Blokkeer", "Block", "Engelle")} disabled={busyId === c.id} onClick={() => toggleBlock(c)} className={`h-6 w-6 flex items-center justify-center rounded-md transition-colors cursor-pointer disabled:opacity-50 ${isBlocked(c) ? "bg-emerald-50 hover:bg-emerald-100 text-emerald-600" : "bg-amber-50 hover:bg-amber-100 text-amber-600"}`}><Ban className="h-3 w-3" /></button>
+                      <button type="button" title={t("Verwijder", "Delete", "Sil")} disabled={busyId === c.id} onClick={() => setDeleteTarget(c)} className="h-6 w-6 flex items-center justify-center rounded-md bg-rose-50 hover:bg-rose-100 text-rose-600 transition-colors cursor-pointer disabled:opacity-50"><Trash2 className="h-3 w-3" /></button>
                     </span>
                   </div>
                 );
@@ -651,6 +752,117 @@ export default function AdminCustomers({ adminLanguage }: AdminCustomersProps) {
           </motion.div>
         </div>
       )}
+
+      {/* Edit customer modal */}
+      {editCustomer && (
+        <CustomerEditModal
+          key={editCustomer.id}
+          customer={editCustomer}
+          busy={busyId === editCustomer.id}
+          onCancel={() => setEditCustomer(null)}
+          onSave={saveEdit}
+          t={t}
+        />
+      )}
+
+      {/* Delete (GDPR) confirm */}
+      <AdminConfirmDialog
+        open={!!deleteTarget}
+        title={t("Klant verwijderen", "Delete customer", "Müşteriyi sil")}
+        message={t(
+          `Weet u zeker dat u ${deleteTarget?.name ?? ""} permanent wilt verwijderen? Het account wordt gewist; bestaande bestellingen blijven bewaard (wettelijke bewaarplicht) maar worden losgekoppeld.`,
+          `Permanently delete ${deleteTarget?.name ?? ""}? The account is erased; existing orders are kept (legal retention) but detached.`,
+          `${deleteTarget?.name ?? ""} kalıcı olarak silinsin mi? Hesap silinir; mevcut siparişler saklanır ama bağlantısı kaldırılır.`
+        )}
+        confirmLabel={t("Verwijderen", "Delete", "Sil")}
+        cancelLabel={t("Annuleren", "Cancel", "İptal")}
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
+
+      {/* Order history drill-down */}
+      {ordersFor && (
+        <div className="fixed inset-0 z-[80] flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" onClick={() => setOrdersFor(null)} />
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="relative w-full sm:max-w-lg bg-white sm:rounded-2xl rounded-t-2xl shadow-2xl max-h-[85vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-slate-100 px-5 py-3.5 flex items-center justify-between">
+              <h3 className="text-sm font-extrabold text-slate-900">{t("Bestellingen van", "Orders of", "Siparişleri")} {ordersFor.name}</h3>
+              <button onClick={() => setOrdersFor(null)} className="h-8 w-8 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-500 cursor-pointer"><X className="h-4 w-4" /></button>
+            </div>
+            <div className="p-4 space-y-2">
+              {ordersList === null ? (
+                <div className="flex items-center justify-center py-10 text-slate-400"><Loader2 className="h-5 w-5 animate-spin" /></div>
+              ) : ordersList.length === 0 ? (
+                <p className="text-center text-xs text-slate-400 py-10">{t("Nog geen bestellingen.", "No orders yet.", "Henüz sipariş yok.")}</p>
+              ) : (
+                ordersList.map((o) => (
+                  <div key={o.id} className="border border-slate-100 rounded-xl px-3.5 py-2.5 flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="font-mono text-[11px] font-bold text-slate-700">{o.id}</p>
+                      <p className="text-[11px] text-slate-500 truncate">{o.machineName}</p>
+                      <p className="text-[10px] text-slate-400">{o.startDate} → {o.endDate} · {o.status}</p>
+                    </div>
+                    <span className="font-mono text-xs font-bold text-teal-600 shrink-0">{euro(o.totalAmount)}</span>
+                  </div>
+                ))
+              )}
+            </div>
+          </motion.div>
+        </div>
+      )}
     </motion.div>
+  );
+}
+
+// Inline edit form for a customer's profile fields (Faz 2).
+function CustomerEditModal({ customer, busy, onCancel, onSave, t }: {
+  customer: Customer;
+  busy: boolean;
+  onCancel: () => void;
+  onSave: (patch: Record<string, unknown>) => void;
+  t: (nl: string, en: string, tr: string) => string;
+}) {
+  const [name, setName] = useState(customer.name);
+  const [email, setEmail] = useState(customer.email);
+  const [phone, setPhone] = useState(customer.phone ?? "");
+  const [companyName, setCompanyName] = useState(customer.companyName ?? "");
+  const [profile, setProfile] = useState(customer.profile ?? "");
+  const inputCls = "w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-800 outline-none focus:border-indigo-500";
+  const labelCls = "text-[11px] text-slate-600 block font-bold mb-1";
+  const submit = () => {
+    const patch: Record<string, unknown> = {};
+    if (name.trim() !== customer.name) patch.name = name.trim();
+    if (email.trim().toLowerCase() !== customer.email.toLowerCase()) patch.email = email.trim();
+    if (phone.trim() !== (customer.phone ?? "")) patch.phone = phone.trim();
+    if (companyName.trim() !== (customer.companyName ?? "")) patch.companyName = companyName.trim();
+    if (profile !== (customer.profile ?? "")) patch.profile = profile;
+    if (Object.keys(patch).length === 0) { onCancel(); return; }
+    onSave(patch);
+  };
+  return (
+    <div className="fixed inset-0 z-[85] flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" onClick={onCancel} />
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="relative w-full sm:max-w-md bg-white sm:rounded-2xl rounded-t-2xl shadow-2xl">
+        <div className="border-b border-slate-100 px-5 py-3.5 flex items-center justify-between">
+          <h3 className="text-sm font-extrabold text-slate-900">{t("Klant bewerken", "Edit customer", "Müşteriyi düzenle")}</h3>
+          <button onClick={onCancel} className="h-8 w-8 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-500 cursor-pointer"><X className="h-4 w-4" /></button>
+        </div>
+        <div className="p-5 space-y-3">
+          <div><label className={labelCls}>{t("Naam", "Name", "Ad")}</label><input className={inputCls} value={name} onChange={(e) => setName(e.target.value)} /></div>
+          <div><label className={labelCls}>E-mail</label><input className={inputCls} type="email" value={email} onChange={(e) => setEmail(e.target.value)} /></div>
+          <div className="grid grid-cols-2 gap-3">
+            <div><label className={labelCls}>{t("Telefoon", "Phone", "Telefon")}</label><input className={inputCls} value={phone} onChange={(e) => setPhone(e.target.value)} /></div>
+            <div><label className={labelCls}>{t("Bedrijf", "Company", "Şirket")}</label><input className={inputCls} value={companyName} onChange={(e) => setCompanyName(e.target.value)} /></div>
+          </div>
+          <div><label className={labelCls}>{t("Profiel", "Profile", "Profil")}</label><input className={inputCls} value={profile} onChange={(e) => setProfile(e.target.value)} /></div>
+        </div>
+        <div className="border-t border-slate-100 px-5 py-3 flex gap-2" style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}>
+          <button onClick={onCancel} className="flex-1 py-2.5 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl cursor-pointer">{t("Annuleren", "Cancel", "İptal")}</button>
+          <button onClick={submit} disabled={busy} className="flex-1 py-2.5 text-xs font-black text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-60">
+            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null}{t("Opslaan", "Save", "Kaydet")}
+          </button>
+        </div>
+      </motion.div>
+    </div>
   );
 }

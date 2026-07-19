@@ -803,6 +803,7 @@ authRouter.get("/customers", authenticateToken, requireAdmin, async (req: Authen
           profile: true,
           marketingConsent: true,
           isEmailVerified: true,
+          lockedUntil: true,
           createdAt: true,
           _count: { select: { orders: true } }
         },
@@ -819,6 +820,122 @@ authRouter.get("/customers", authenticateToken, requireAdmin, async (req: Authen
   } catch (error) {
     console.error("Get customers error:", error);
     return res.status(500).json({ error: "Klanten ophalen mislukt." });
+  }
+});
+
+// GET /api/auth/customers/:id/orders — admin-only: one customer's order history.
+authRouter.get("/customers/:id/orders", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const orders = await prisma.order.findMany({
+      where: { customerId: req.params.id },
+      orderBy: { createdAt: "desc" },
+      take: 200
+    });
+    return res.json(orders.map(o => ({
+      ...o,
+      startDate: o.startDate.toISOString().split("T")[0],
+      endDate: o.endDate.toISOString().split("T")[0]
+    })));
+  } catch (error) {
+    console.error("Get customer orders error:", error);
+    return res.status(500).json({ error: "Bestellingen ophalen mislukt." });
+  }
+});
+
+// PATCH /api/auth/customers/:id — admin-only: edit a customer's profile fields.
+authRouter.patch("/customers/:id", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res: Response) => {
+  const { id } = req.params;
+  const body = req.body ?? {};
+  try {
+    const existing = await prisma.customer.findUnique({ where: { id } });
+    if (!existing) return res.status(404).json({ error: "Klant niet gevonden." });
+
+    const data: Record<string, unknown> = {};
+    const changed: string[] = [];
+    if (body.name !== undefined) {
+      const v = String(body.name).trim();
+      if (!v || v.length > 200) return res.status(400).json({ error: "Ongeldige naam." });
+      data.name = v; changed.push("name");
+    }
+    if (body.email !== undefined) {
+      const v = String(body.email).trim().toLowerCase();
+      if (v.length > 254 || !/^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/.test(v)) return res.status(400).json({ error: "Ongeldig e-mailadres." });
+      if (v !== existing.email) {
+        const clash = await prisma.customer.findFirst({ where: { email: { equals: v, mode: "insensitive" }, id: { not: id } }, select: { id: true } });
+        if (clash) return res.status(409).json({ error: "Er bestaat al een klant met dit e-mailadres." });
+      }
+      data.email = v; changed.push("email");
+    }
+    if (body.phone !== undefined) {
+      const raw = String(body.phone).trim();
+      if (raw) {
+        const clean = raw.replace(/[\s\-().+]/g, "");
+        if (!/^\d{7,15}$/.test(clean)) return res.status(400).json({ error: "Ongeldig telefoonnummer." });
+      }
+      data.phone = raw || null; changed.push("phone");
+    }
+    if (body.companyName !== undefined) {
+      const v = String(body.companyName).trim();
+      if (v.length > 200) return res.status(400).json({ error: "Bedrijfsnaam is te lang." });
+      data.companyName = v || null; changed.push("companyName");
+    }
+    if (body.profile !== undefined) {
+      data.profile = String(body.profile).slice(0, 100) || null; changed.push("profile");
+    }
+    if (changed.length === 0) return res.status(400).json({ error: "Geen wijzigingen opgegeven." });
+
+    const updated = await prisma.customer.update({
+      where: { id },
+      data,
+      select: { id: true, name: true, email: true, phone: true, companyName: true, profile: true, marketingConsent: true, isEmailVerified: true, createdAt: true, _count: { select: { orders: true } } }
+    });
+    audit(req, "customer.updated", { entity: "Customer", entityId: id, meta: { fields: changed } });
+    return res.json({ customer: updated });
+  } catch (error) {
+    console.error("Update customer error:", error);
+    return res.status(500).json({ error: "Klant bijwerken mislukt." });
+  }
+});
+
+// POST /api/auth/customers/:id/block — admin-only: block a customer account
+// (sets lockedUntil far in the future and revokes live sessions). Reversible.
+authRouter.post("/customers/:id/block", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res: Response) => {
+  const { id } = req.params;
+  const block = req.body?.blocked !== false; // default true; pass { blocked: false } to unblock
+  try {
+    const existing = await prisma.customer.findUnique({ where: { id } });
+    if (!existing) return res.status(404).json({ error: "Klant niet gevonden." });
+    await prisma.customer.update({
+      where: { id },
+      data: block
+        ? { lockedUntil: new Date("2999-12-31T00:00:00Z"), tokenVersion: { increment: 1 } }
+        : { lockedUntil: null, failedLoginCount: 0 }
+    });
+    audit(req, block ? "customer.blocked" : "customer.unblocked", { entity: "Customer", entityId: id });
+    return res.json({ success: true, blocked: block });
+  } catch (error) {
+    console.error("Block customer error:", error);
+    return res.status(500).json({ error: "Klant blokkeren mislukt." });
+  }
+});
+
+// DELETE /api/auth/customers/:id — admin-only: GDPR erase. Orders are kept (legal
+// retention / BTW) but detached from the account: customerId → null so the order
+// history survives without the personal account. The customer row is deleted.
+authRouter.delete("/customers/:id", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res: Response) => {
+  const { id } = req.params;
+  try {
+    const existing = await prisma.customer.findUnique({ where: { id } });
+    if (!existing) return res.status(404).json({ error: "Klant niet gevonden." });
+    await prisma.$transaction([
+      prisma.order.updateMany({ where: { customerId: id }, data: { customerId: null } }),
+      prisma.customer.delete({ where: { id } })
+    ]);
+    audit(req, "customer.deleted", { entity: "Customer", entityId: id, meta: { email: existing.email } });
+    return res.json({ success: true });
+  } catch (error) {
+    console.error("Delete customer error:", error);
+    return res.status(500).json({ error: "Klant verwijderen mislukt." });
   }
 });
 

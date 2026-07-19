@@ -249,6 +249,50 @@ describe("weekend-blokkade uitrol — Vrijdag + Zaterdag = doordeweekse 3-daagse
   }
 });
 
+describe("2026-07 Nifty + Hinowa prijsupdate — nieuw prijzenblad, weekendregels aan", () => {
+  // New price card (MB Hoogwerkers). Nifty 120/170 keep an aggressive 1-day campaign
+  // price (60/70) but every 2+-day tier and the weekend are on the normal standard rate.
+  // Hinowa 15.70/17.75 have no 1-day campaign (1 day = pricePerDay). All four now use
+  // weekend rules: weekend package + automatic Sunday block, with
+  // sundayBlockFee = threeDayPrice − twoDayPrice → Fri+Sat = weekday 3-day price.
+  // Values mirror prisma/seed.ts.
+  const cards = [
+    { id: "nifty-120-1", pricePerDay: 120, oneDayPrice: 60, twoDayPrice: 205, threeDayPrice: 275, fourDayPrice: 295, weeklyPrice: 315, weekendPrice: 185, sundayBlockFee: 70, monthlyPrice: 850 },
+    { id: "nifty-170", pricePerDay: 185, oneDayPrice: 70, twoDayPrice: 320, threeDayPrice: 420, fourDayPrice: 455, weeklyPrice: 490, weekendPrice: 285, sundayBlockFee: 100, monthlyPrice: 1310 },
+    { id: "hinowa-15-70", pricePerDay: 228, twoDayPrice: 395, threeDayPrice: 520, fourDayPrice: 560, weeklyPrice: 600, weekendPrice: 350, sundayBlockFee: 125, monthlyPrice: 1615 },
+    { id: "hinowa-17-75", pricePerDay: 275, twoDayPrice: 475, threeDayPrice: 625, fourDayPrice: 675, weeklyPrice: 725, weekendPrice: 425, sundayBlockFee: 150, monthlyPrice: 1950 },
+  ] as (Partial<Machine> & { id: string })[];
+
+  for (const c of cards) {
+    const machine = { ...c, category: "aanhanger", weekendRulesEnabled: true } as Machine;
+    const day1 = c.oneDayPrice ?? c.pricePerDay!;
+
+    it(`${c.id}: dagtieren 1→€${day1}, 2→€${c.twoDayPrice}, 3→€${c.threeDayPrice}, 4→€${c.fourDayPrice}, 5→€${c.weeklyPrice} (ma-start, eindigt doordeweeks)`, () => {
+      expect(calculateItemSubtotal(machine, 1, "Particulier", noRules, MON)).toBe(day1);
+      expect(calculateItemSubtotal(machine, 2, "Particulier", noRules, MON)).toBe(c.twoDayPrice);
+      expect(calculateItemSubtotal(machine, 3, "Particulier", noRules, MON)).toBe(c.threeDayPrice);
+      expect(calculateItemSubtotal(machine, 4, "Particulier", noRules, MON)).toBe(c.fourDayPrice);
+      expect(calculateItemSubtotal(machine, 5, "Particulier", noRules, MON)).toBe(c.weeklyPrice);
+    });
+
+    it(`${c.id}: sundayBlockFee (${c.sundayBlockFee}) === 3-daags − 2-daags`, () => {
+      expect(c.sundayBlockFee).toBe(c.threeDayPrice! - c.twoDayPrice!);
+    });
+
+    it(`${c.id}: Vr+Za (2 dagen, vrijdag-start) === 3-daagse prijs €${c.threeDayPrice}`, () => {
+      expect(calculateItemSubtotal(machine, 2, "Particulier", noRules, FRI)).toBe(c.threeDayPrice);
+    });
+
+    it(`${c.id}: losse zaterdag → weekendpakket €${c.weekendPrice} (geen blokkade)`, () => {
+      expect(calculateItemSubtotal(machine, 1, "Particulier", noRules, SAT)).toBe(c.weekendPrice);
+    });
+
+    it(`${c.id}: 28 dagen → maandtarief €${c.monthlyPrice}`, () => {
+      expect(calculateItemSubtotal(machine, 28, "Particulier", noRules, MON)).toBe(c.monthlyPrice);
+    });
+  }
+});
+
 describe("displayRentalDays — shown day count equals the selected span", () => {
   it("returns the calendar day count as-is", () => {
     expect(displayRentalDays(nifty120, FRI, 4)).toBe(4);

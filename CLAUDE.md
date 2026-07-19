@@ -102,9 +102,11 @@ Machines have two pricing mechanisms. **Flat rates take priority over percentage
 
 ### Weekend rules (per-machine, `weekendRulesEnabled`) — depot closed Sat+Sun
 Enabled per machine. **On** for the vertical-mast and scissor-lift groups: Bravi Leonardo,
-JLG 1230, Skyjack SJ16, Star 10, Dingli 6m, Optimum 8, Compact 8, Compact 10N. **Off** for
-Nifty 120/170 (campaign), Hinowa, Ladderlift, Altrex kamersteigers and Pecolift. Two mechanics
-on top of the tier table:
+JLG 1230, Skyjack SJ16, Star 10, Dingli 6m, Optimum 8, Compact 8, Compact 10N — and (2026-07)
+also for the aanhanger group Nifty 120/170 and the Hinowa spider lifts 15.70/17.75. The Nifty
+1-day campaign price (60/70) stays aggressive, but every 2+-day tier and the weekend are formulated
+on the normal standard day rate (120/185). **Off** for Ladderlift, Altrex kamersteigers and
+Pecolift. Two mechanics on top of the tier table:
 - **Weekend package** (`weekendPrice`, flat): triggers ONLY when the entire rental stays within the closed weekend — single Sat, single Sun, or Sat+Sun together (1–2 days, start on Sat or Sun). It never triggers for a Friday start, nor for a longer rental that merely starts on Sat/Sun and extends past the weekend — those always use the normal day-count tier table instead. Helper: `isWeekendPackage(machine, startDate, days)` in `src/utils/pricing.ts`.
 - **Automatic Sunday block** (`sundayBlockFee`, flat surcharge): when a rental's **last work day is Saturday** (and it isn't a weekend package), the machine is held over the closed Sunday (return Monday 08:00) → tier price **+ sundayBlockFee** (not discounted). If Sunday itself is the deliberately chosen end day (e.g. Fri+Sat+Sun, or a long Sat-start rental ending later in the week), there is **no surcharge** — it's just the normal tier price for that day count. Interior Sundays in a long rental are counted as normal pro-rata days; only a *trailing forced* Sunday adds the fee. Helper: `hasSundayBlock(machine, startDate, days)`. **Convention: `sundayBlockFee` is set to `(threeDayPrice − twoDayPrice)` per machine, so a Fri+Sat rental (2 work days + forced Sunday block) equals the weekday 3-day tier price exactly** — this is how the owner quotes it (e.g. Dingli "2-daags 95 + blokkade 30 = 125 = 3-daags"). The customer-facing tariff table shows this as an explicit "Vrijdag + Zaterdag (incl. zondagblokkade)" row (`buildPricingTierRows`).
 - The old "hafta sonu çalışıyorum/çalışmıyorum" toggle (`weekendWorkAnswer`) is **removed** — weekend handling is now automatic. A later Friday-specific toggle UI was also removed: a Friday start (1 day / Fri+Sat 2 days+block / Fri+Sat+Sun 3 days no block) always uses the normal tier table, never the weekend package.

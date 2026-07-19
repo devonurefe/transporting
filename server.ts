@@ -1018,6 +1018,52 @@ async function applyDataMigrations() {
       console.log("[Migration] Weekend-blokkade uitrol toegepast (Vr+Za = 3-daagse prijs, weekendregels mast/schaar).");
     }
 
+    // 2026-07 Nifty + Hinowa prijsupdate — nieuw prijzenblad met dezelfde formule
+    // en pazar-blokkadelogica als de mast/schaargroep hierboven. Deze migratie
+    // stond eerder ALLEEN in prisma/seed.ts, dat — net als hierboven uitgelegd —
+    // nooit een bestaande productie-DB raakt (autoSeedIfEmpty seedt alleen een
+    // lege DB). Marker-gated (i.p.v. guarded op een vorige bekende waarde) omdat
+    // de exacte tussentoestand op productie onzeker is (een eerdere ronde raakte
+    // deze machines mogelijk ook niet) — draait daardoor precies één keer en zet
+    // de volledige, correcte eindwaarden; een latere admin-wijziging aan deze
+    // machines wordt nooit overschreven omdat de marker het daarna overslaat.
+    const NIFTY_HINOWA_PRICE_MIGRATION = "migration-nifty-hinowa-prices-2026-07";
+    const niftyHinowaDone = await prisma.invoiceCounter.findUnique({ where: { id: NIFTY_HINOWA_PRICE_MIGRATION } });
+    if (!niftyHinowaDone) {
+      await prisma.machine.updateMany({
+        where: { id: { in: ["nifty-120-1", "nifty-120-2", "nifty-120-3"] } },
+        data: {
+          pricePerDay: 120, oneDayPrice: 60, twoDayPrice: 205, threeDayPrice: 275, fourDayPrice: 295,
+          weeklyPrice: 315, extraDayPrice: 74, weekendPrice: 185, monthlyPrice: 850,
+          sundayBlockFee: 70, weekendRulesEnabled: true,
+        },
+      });
+      await prisma.machine.updateMany({
+        where: { id: "nifty-170" },
+        data: {
+          pricePerDay: 185, oneDayPrice: 70, twoDayPrice: 320, threeDayPrice: 420, fourDayPrice: 455,
+          weeklyPrice: 490, extraDayPrice: 114, weekendPrice: 285, monthlyPrice: 1310,
+          sundayBlockFee: 100, weekendRulesEnabled: true,
+        },
+      });
+      await prisma.machine.updateMany({
+        where: { id: "hinowa-15-70" },
+        data: {
+          pricePerDay: 228, twoDayPrice: 395, threeDayPrice: 520, fourDayPrice: 560, weeklyPrice: 600,
+          extraDayPrice: 141, weekendPrice: 350, monthlyPrice: 1615, sundayBlockFee: 125, weekendRulesEnabled: true,
+        },
+      });
+      await prisma.machine.updateMany({
+        where: { id: "hinowa-17-75" },
+        data: {
+          pricePerDay: 275, twoDayPrice: 475, threeDayPrice: 625, fourDayPrice: 675, weeklyPrice: 725,
+          extraDayPrice: 170, weekendPrice: 425, monthlyPrice: 1950, sundayBlockFee: 150, weekendRulesEnabled: true,
+        },
+      });
+      await prisma.invoiceCounter.create({ data: { id: NIFTY_HINOWA_PRICE_MIGRATION, lastNumber: 1 } });
+      console.log("[Migration] Nifty 120/170 + Hinowa 15.70/17.75 prijsupdate + weekendregels toegepast.");
+    }
+
     // One-time: set showInWeeklyOffers — only the 3 featured machines get true,
     // all others get false. Admin can override per machine afterwards.
     const WEEKLY_OFFERS_MIGRATION = "migration-weekly-offers-2026-06";

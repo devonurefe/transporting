@@ -126,6 +126,8 @@ interface AppState {
   updateMachine: (id: string, machData: Partial<Machine>) => Promise<boolean>;
   deleteMachine: (id: string) => Promise<boolean>;
   updateOrderStatus: (orderId: string, status: OrderStatus) => Promise<true | false | string>;
+  updateOrder: (orderId: string, patch: Record<string, unknown>) => Promise<{ ok: true } | { ok: false; error: string }>;
+  createManualOrder: (data: Record<string, unknown>) => Promise<{ ok: true; order: any } | { ok: false; error: string }>;
   blockDate: (machineId: string, date: string, reason: string) => Promise<boolean>;
   unblockDate: (machineId: string, date: string) => Promise<boolean>;
   updateCategories: (categories: Category[]) => Promise<boolean>;
@@ -510,6 +512,44 @@ export const useAppStore = create<AppState>((set, get) => ({
       rollback();
     }
     return false;
+  },
+
+  updateOrder: async (orderId, patch) => {
+    try {
+      const res = await fetch(`/api/orders/${orderId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+        body: JSON.stringify(patch)
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        await get().fetchOrders();
+        return { ok: true };
+      }
+      return { ok: false, error: data?.error || "Bestelling bijwerken mislukt." };
+    } catch (e) {
+      console.error("Failed to update order:", e);
+      return { ok: false, error: "Netwerkfout bij het bijwerken van de bestelling." };
+    }
+  },
+
+  createManualOrder: async (data) => {
+    try {
+      const res = await fetch("/api/orders/admin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+        body: JSON.stringify(data)
+      });
+      const body = await res.json().catch(() => ({}));
+      if (res.ok) {
+        await get().fetchOrders();
+        return { ok: true, order: body };
+      }
+      return { ok: false, error: body?.error || "Bestelling aanmaken mislukt." };
+    } catch (e) {
+      console.error("Failed to create manual order:", e);
+      return { ok: false, error: "Netwerkfout bij het aanmaken van de bestelling." };
+    }
   },
 
   blockDate: async (machineId, date, reason) => {

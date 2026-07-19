@@ -22,7 +22,9 @@ import {
   Truck,
   Loader2,
   Bell,
-  Undo2
+  Undo2,
+  PlusCircle,
+  Pencil
 } from "lucide-react";
 import { useAppStore } from "../../store/appStore";
 import { useAuthStore } from "../../store/authStore";
@@ -30,6 +32,7 @@ import { HuurGoText } from "../Header";
 import { printInvoice } from "../../utils/invoice";
 import { euro, formatDateNL } from "../../utils/format";
 import AdminConfirmDialog from "./AdminConfirmDialog";
+import AdminOrderFormModal from "./AdminOrderFormModal";
 import AdminStatusBadge from "./AdminStatusBadge";
 import { OrderStatus } from "../../types";
 import { getAdminAuthHeaders } from "../../utils/authHeaders";
@@ -227,6 +230,8 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
   const [staleDismissed, setStaleDismissed] = useState<boolean>(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState<boolean>(false);
   const [showRefundConfirm, setShowRefundConfirm] = useState<boolean>(false);
+  const [showCreateForm, setShowCreateForm] = useState<boolean>(false);
+  const [editingOrder, setEditingOrder] = useState<any | null>(null);
 
   const confirmRefundOrder = () => {
     if (!selectedDetailOrder) return;
@@ -364,9 +369,20 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
       className="space-y-6"
     >
       <div className="glass-panel p-6 rounded-3xl space-y-4">
-        <div className="border-b border-slate-200 pb-3">
-          <h3 className="font-display font-bold text-sm text-slate-900">{t("Alle Actieve & Historische Contracten", "All Active & Historical Contracts", "Tüm Aktif ve Geçmiş Sözleşmeler")}</h3>
-          <p className="text-[11px] text-slate-500 mt-0.5">{t("Hier accordeert u inkomende reserveringen en past u de logistieke status aan van klanten.", "Here you approve incoming reservations and adjust the logistics status.", "Buradan gelen rezervasyonları onaylar ve müşterilerin lojistik durumlarını düzenlersiniz.")}</p>
+        <div className="border-b border-slate-200 pb-3 flex items-start justify-between gap-3">
+          <div>
+            <h3 className="font-display font-bold text-sm text-slate-900">{t("Alle Actieve & Historische Contracten", "All Active & Historical Contracts", "Tüm Aktif ve Geçmiş Sözleşmeler")}</h3>
+            <p className="text-[11px] text-slate-500 mt-0.5">{t("Hier accordeert u inkomende reserveringen en past u de logistieke status aan van klanten.", "Here you approve incoming reservations and adjust the logistics status.", "Buradan gelen rezervasyonları onaylar ve müşterilerin lojistik durumlarını düzenlersiniz.")}</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowCreateForm(true)}
+            className="shrink-0 inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold py-2 px-3 rounded-xl transition-colors cursor-pointer shadow-sm"
+          >
+            <PlusCircle className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">{t("Nieuwe bestelling", "New order", "Yeni sipariş")}</span>
+            <span className="sm:hidden">{t("Nieuw", "New", "Yeni")}</span>
+          </button>
         </div>
 
         {/* Status filter chips */}
@@ -1170,6 +1186,19 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                   </div>
                 )}
 
+                {/* Edit — reschedule / fix customer details / change delivery.
+                    Only while the order can still change (not completed/cancelled). */}
+                {selectedDetailOrder.status !== "Voltooid" && selectedDetailOrder.status !== "Geannuleerd" && (
+                  <button
+                    type="button"
+                    onClick={() => setEditingOrder(selectedDetailOrder)}
+                    className="w-full py-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                  >
+                    <Pencil className="h-3.5 w-3.5 shrink-0" />
+                    <span>{t("Bestelling bewerken", "Edit order", "Siparişi düzenle")}</span>
+                  </button>
+                )}
+
                 {/* Row 3: Utility actions (print + close) */}
                 <div className="flex items-center gap-2 pt-1">
                   <button
@@ -1226,6 +1255,23 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
         onConfirm={confirmRefundOrder}
         onCancel={() => setShowRefundConfirm(false)}
       />
+      {showCreateForm && (
+        <AdminOrderFormModal
+          mode="create"
+          adminLanguage={adminLanguage}
+          onClose={() => setShowCreateForm(false)}
+          onSaved={(msg) => showAdminToast(msg, "success")}
+        />
+      )}
+      {editingOrder && (
+        <AdminOrderFormModal
+          mode="edit"
+          order={editingOrder}
+          adminLanguage={adminLanguage}
+          onClose={() => setEditingOrder(null)}
+          onSaved={(msg) => { showAdminToast(msg, "success"); closeModal(); }}
+        />
+      )}
     </motion.div>
   );
 }

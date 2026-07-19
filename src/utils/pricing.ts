@@ -118,7 +118,7 @@ function rangeEndDow(startDate: string | Date, days: number): number {
 }
 
 // Weekend rules (depot closed Sat+Sun). Only apply to machines with
-// weekendRulesEnabled — scaffolding and campaign products (Nifty 120/170) opt out.
+// weekendRulesEnabled — scaffolding (Altrex) and the Pecolift opt out.
 //
 // A "weekend package" (weekendPrice, e.g. €69) is the fixed flat rate for a rental
 // that stays entirely within the closed weekend: single Saturday, single Sunday,

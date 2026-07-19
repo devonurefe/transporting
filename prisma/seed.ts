@@ -108,8 +108,8 @@ const defaultMachines = [
     height: 12.2,
     reach: 6.1,
     weight: 1400,
-    pricePerDay: 95,   // regular day rate (= twoDayPrice/2)
-    oneDayPrice: 50,   // 1-dag actie "Slechts 1 dag korting!"
+    pricePerDay: 120,  // normale standaard dagprijs (1-dag = actieprijs 60)
+    oneDayPrice: 60,   // 1-dag actie "Slechts 1 dag korting!"
     powerType: "Elektrisch",
     imageUrl: "/images/machines/nifty-120-1.webp",
     imageAlt: "Nifty 120 aanhangerhoogwerker met trekhaak",
@@ -120,13 +120,15 @@ const defaultMachines = [
     campaignText: null,
     campaignDiscountPercent: null,
     campaignDiscountAmount: null,
-    weekendPrice: 120,
-    twoDayPrice: 170,
-    threeDayPrice: 260,
-    fourDayPrice: 310,
-    weeklyPrice: 340,
-    extraDayPrice: 70,
-    monthlyPrice: 990
+    weekendPrice: 185,
+    twoDayPrice: 205,
+    threeDayPrice: 275,
+    fourDayPrice: 295,
+    weeklyPrice: 315,
+    extraDayPrice: 74,
+    monthlyPrice: 850,
+    sundayBlockFee: 70,        // = threeDayPrice − twoDayPrice (Vr+Za = 3-daagse prijs)
+    weekendRulesEnabled: true  // depot za/zo dicht: weekendpakket + automatische zondagblokkade
   },
   {
     id: "nifty-120-2",
@@ -136,8 +138,8 @@ const defaultMachines = [
     height: 12.2,
     reach: 6.1,
     weight: 1400,
-    pricePerDay: 95,
-    oneDayPrice: 50,
+    pricePerDay: 120,
+    oneDayPrice: 60,
     powerType: "Elektrisch",
     imageUrl: "/images/machines/nifty-120-2.webp",
     imageAlt: "Nifty 120 aanhangerhoogwerker met trekhaak",
@@ -148,13 +150,15 @@ const defaultMachines = [
     campaignText: null,
     campaignDiscountPercent: null,
     campaignDiscountAmount: null,
-    weekendPrice: 120,
-    twoDayPrice: 170,
-    threeDayPrice: 260,
-    fourDayPrice: 310,
-    weeklyPrice: 340,
-    extraDayPrice: 70,
-    monthlyPrice: 990
+    weekendPrice: 185,
+    twoDayPrice: 205,
+    threeDayPrice: 275,
+    fourDayPrice: 295,
+    weeklyPrice: 315,
+    extraDayPrice: 74,
+    monthlyPrice: 850,
+    sundayBlockFee: 70,        // = threeDayPrice − twoDayPrice (Vr+Za = 3-daagse prijs)
+    weekendRulesEnabled: true  // depot za/zo dicht: weekendpakket + automatische zondagblokkade
   },
   {
     id: "nifty-120-3",
@@ -164,8 +168,8 @@ const defaultMachines = [
     height: 12.2,
     reach: 6.1,
     weight: 1400,
-    pricePerDay: 95,
-    oneDayPrice: 50,
+    pricePerDay: 120,
+    oneDayPrice: 60,
     powerType: "Elektrisch",
     imageUrl: "/images/machines/nifty-120-3.webp",
     imageAlt: "Nifty 120 aanhangerhoogwerker met trekhaak",
@@ -176,13 +180,15 @@ const defaultMachines = [
     campaignText: null,
     campaignDiscountPercent: null,
     campaignDiscountAmount: null,
-    weekendPrice: 120,
-    twoDayPrice: 170,
-    threeDayPrice: 260,
-    fourDayPrice: 310,
-    weeklyPrice: 340,
-    extraDayPrice: 70,
-    monthlyPrice: 990
+    weekendPrice: 185,
+    twoDayPrice: 205,
+    threeDayPrice: 275,
+    fourDayPrice: 295,
+    weeklyPrice: 315,
+    extraDayPrice: 74,
+    monthlyPrice: 850,
+    sundayBlockFee: 70,        // = threeDayPrice − twoDayPrice (Vr+Za = 3-daagse prijs)
+    weekendRulesEnabled: true  // depot za/zo dicht: weekendpakket + automatische zondagblokkade
   },
   {
     id: "nifty-170",
@@ -192,8 +198,8 @@ const defaultMachines = [
     height: 17.1,
     reach: 8.7,
     weight: 2160,
-    pricePerDay: 120,  // regular day rate (= twoDayPrice/2)
-    oneDayPrice: 60,   // 1-dag actie
+    pricePerDay: 185,  // normale standaard dagprijs (1-dag = actieprijs 70)
+    oneDayPrice: 70,   // 1-dag actie
     powerType: "Hybride",
     imageUrl: "/images/machines/nifty-170.webp",
     imageAlt: "Nifty 170 zware aanhangerhoogwerker",
@@ -204,13 +210,15 @@ const defaultMachines = [
     campaignText: null,
     campaignDiscountPercent: null,
     campaignDiscountAmount: null,
-    weekendPrice: 150,
-    twoDayPrice: 210,
-    threeDayPrice: 320,
-    fourDayPrice: 390,
-    weeklyPrice: 430,
-    extraDayPrice: 90,
-    monthlyPrice: 1250
+    weekendPrice: 285,
+    twoDayPrice: 320,
+    threeDayPrice: 420,
+    fourDayPrice: 455,
+    weeklyPrice: 490,
+    extraDayPrice: 114,
+    monthlyPrice: 1310,
+    sundayBlockFee: 100,       // = threeDayPrice − twoDayPrice (Vr+Za = 3-daagse prijs)
+    weekendRulesEnabled: true  // depot za/zo dicht: weekendpakket + automatische zondagblokkade
   },
 
   // CATEGORIE 2: Spinhoogwerkers (Rupshoogwerkers)
@@ -233,13 +241,15 @@ const defaultMachines = [
     campaignText: null,
     campaignDiscountPercent: null,
     campaignDiscountAmount: null,
-    weekendPrice: 340,
-    twoDayPrice: 390,
+    weekendPrice: 350,
+    twoDayPrice: 395,
     threeDayPrice: 520,
     fourDayPrice: 560,
-    weeklyPrice: 590,
-    extraDayPrice: 115,
-    monthlyPrice: 1750
+    weeklyPrice: 600,
+    extraDayPrice: 141,
+    monthlyPrice: 1615,
+    sundayBlockFee: 125,       // = threeDayPrice − twoDayPrice (Vr+Za = 3-daagse prijs)
+    weekendRulesEnabled: true  // depot za/zo dicht: weekendpakket + automatische zondagblokkade
   },
   {
     id: "hinowa-17-75",
@@ -260,13 +270,15 @@ const defaultMachines = [
     campaignText: null,
     campaignDiscountPercent: null,
     campaignDiscountAmount: null,
-    weekendPrice: 410,
-    twoDayPrice: 470,
-    threeDayPrice: 630,
-    fourDayPrice: 680,
-    weeklyPrice: 715,
-    extraDayPrice: 140,
-    monthlyPrice: 2100
+    weekendPrice: 425,
+    twoDayPrice: 475,
+    threeDayPrice: 625,
+    fourDayPrice: 675,
+    weeklyPrice: 725,
+    extraDayPrice: 170,
+    monthlyPrice: 1950,
+    sundayBlockFee: 150,       // = threeDayPrice − twoDayPrice (Vr+Za = 3-daagse prijs)
+    weekendRulesEnabled: true  // depot za/zo dicht: weekendpakket + automatische zondagblokkade
   },
 
   // CATEGORIE 3: Elektrische Schaarliften (8 meter)
@@ -1070,6 +1082,48 @@ async function main() {
   await prisma.machine.updateMany({
     where: { id: "star-10", weekendRulesEnabled: false },
     data: { sundayBlockFee: 50, weekendRulesEnabled: true }
+  });
+
+  // 2026-07 Nifty + Hinowa prijsupdate — nieuw prijzenblad met dezelfde formule en
+  // pazar-blokkade-logica als de mast/schaargroep. Nifty 120/170 en beide Hinowa's
+  // krijgen nu ook weekendregels (depot za/zo dicht): een weekendpakket (losse za,
+  // losse zo of za+zo) en de automatische zondagblokkade, met sundayBlockFee =
+  // (3-daags − 2-daags) zodat een Vr+Za verhuur exact de doordeweekse 3-daagse prijs
+  // kost. De 1-daagse Nifty-actieprijzen (60/70) blijven agressief; alle 2+-daagse
+  // tarieven en het weekend zijn geformuleerd op de normale standaardprijs (120/185).
+  // Elke update is guarded op de vorige bekende waarde: een handmatige admin-wijziging
+  // wordt nooit overschreven, en een fresh install (die de nieuwe prijzen al via
+  // `create` krijgt) slaat deze blokken over als no-op.
+  console.log("Applying 2026-07 Nifty + Hinowa prijsupdate (weekendregels + Vr+Za = 3-daagse prijs)...");
+  await prisma.machine.updateMany({
+    where: { id: { in: ["nifty-120-1", "nifty-120-2", "nifty-120-3"] }, twoDayPrice: 170, weeklyPrice: 340 },
+    data: {
+      pricePerDay: 120, oneDayPrice: 60, twoDayPrice: 205, threeDayPrice: 275, fourDayPrice: 295,
+      weeklyPrice: 315, extraDayPrice: 74, weekendPrice: 185, monthlyPrice: 850,
+      sundayBlockFee: 70, weekendRulesEnabled: true
+    }
+  });
+  await prisma.machine.updateMany({
+    where: { id: "nifty-170", twoDayPrice: 210, weeklyPrice: 430 },
+    data: {
+      pricePerDay: 185, oneDayPrice: 70, twoDayPrice: 320, threeDayPrice: 420, fourDayPrice: 455,
+      weeklyPrice: 490, extraDayPrice: 114, weekendPrice: 285, monthlyPrice: 1310,
+      sundayBlockFee: 100, weekendRulesEnabled: true
+    }
+  });
+  await prisma.machine.updateMany({
+    where: { id: "hinowa-15-70", pricePerDay: 228, weeklyPrice: 590 },
+    data: {
+      twoDayPrice: 395, threeDayPrice: 520, fourDayPrice: 560, weeklyPrice: 600, extraDayPrice: 141,
+      weekendPrice: 350, monthlyPrice: 1615, sundayBlockFee: 125, weekendRulesEnabled: true
+    }
+  });
+  await prisma.machine.updateMany({
+    where: { id: "hinowa-17-75", pricePerDay: 275, weeklyPrice: 715 },
+    data: {
+      twoDayPrice: 475, threeDayPrice: 625, fourDayPrice: 675, weeklyPrice: 725, extraDayPrice: 170,
+      weekendPrice: 425, monthlyPrice: 1950, sundayBlockFee: 150, weekendRulesEnabled: true
+    }
   });
 
   console.log("Seeding blocked dates (upsert)...");

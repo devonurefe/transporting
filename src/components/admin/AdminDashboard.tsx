@@ -21,6 +21,7 @@ export default function AdminDashboard({ setSubTab, setOrdersFilter, adminLangua
   const machines = useAppStore((state) => state.machines);
   const orders = useAppStore((state) => state.orders);
   const fetchOrders = useAppStore((state) => state.fetchOrders);
+  const loadAllOrders = useAppStore((state) => state.loadAllOrders);
   const token = useAuthStore((state) => state.token);
 
   const [hoveredSector, setHoveredSector] = useState<string | null>(null);
@@ -158,6 +159,12 @@ export default function AdminDashboard({ setSubTab, setOrdersFilter, adminLangua
 
   // Fetch server-side order aggregates on mount (and whenever the token changes)
   useEffect(() => { refreshOrderStats(); }, [refreshOrderStats]);
+
+  // The revenue trend / utilization charts below read from the shared `orders`
+  // store, which fetchOrders() only fills with the 100 most-recently-created
+  // orders. Load every remaining page once so those charts (and their "based
+  // on all contracts" copy) actually cover the full history, not just page 1.
+  useEffect(() => { loadAllOrders(); }, [loadAllOrders]);
 
   // Fetch customer count once on mount
   useEffect(() => {
@@ -378,7 +385,6 @@ export default function AdminDashboard({ setSubTab, setOrdersFilter, adminLangua
 
               <div className="flex justify-between text-[10px] font-mono text-slate-500">
                 <span>{t("Vloot-omvang", "Fleet size", "Filo büyüklüğü")}: {machines.length} {t("Geregistreerd", "Registered", "Kayıtlı")}</span>
-                <span>{t("BMWT Inspectienorm 2026", "BMWT Inspection Standard 2026", "BMWT Denetim Standardı 2026")}</span>
               </div>
             </div>
 

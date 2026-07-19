@@ -40,6 +40,13 @@ export default function AdminDiagnostics({ systemLogs, userProfiles, onAddSystem
   };
 
   const orders = useAppStore((state) => state.orders);
+  const loadAllOrders = useAppStore((state) => state.loadAllOrders);
+
+  // Booking-statistics cards below claim to be "computed from real orders" —
+  // the shared store only holds the 100 most-recently-created orders by
+  // default, which under-counts once total orders exceed that. Load every
+  // page so the claim is actually true.
+  useEffect(() => { loadAllOrders(); }, [loadAllOrders]);
 
   // Operational counts — real
   const activeRentals = orders.filter((o) => o.status === "Goedgekeurd" || o.status === "Onderweg").length;
@@ -309,7 +316,7 @@ export default function AdminDiagnostics({ systemLogs, userProfiles, onAddSystem
                 </div>
                 <div>
                   <span className="font-semibold block text-slate-800">{t("SQL-Injectie Filters (Prisma ORM)", "SQL Injection Filters (Prisma ORM)", "SQL Enjeksiyon Filtreleri (Prisma ORM)")}</span>
-                  <span className="text-[10px] text-slate-500 block">{t("Geparametriseerde queries — geen raw SQL", "Parameterised queries — no raw SQL", "Parametreli sorgular — ham SQL yok")}</span>
+                  <span className="text-[10px] text-slate-500 block">{t("Geparametriseerde queries — enkele getagde raw SQL-calls, nooit met user input", "Parameterised queries — a few tagged raw SQL calls, never with user input", "Parametreli sorgular — birkaç etiketli ham SQL çağrısı, asla kullanıcı girdisiyle değil")}</span>
                 </div>
               </div>
               <span className="text-[10px] bg-indigo-100 text-indigo-800 font-bold px-2 py-0.5 rounded-full border border-indigo-200">

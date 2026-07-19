@@ -124,8 +124,8 @@ export default function AdminUsers({ adminLanguage }: AdminUsersProps) {
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setPwMessage(null);
-    if (pwNew.length < 8) {
-      setPwMessage({ ok: false, text: t("Nieuw wachtwoord moet minimaal 8 tekens bevatten.", "New password must be at least 8 characters.", "Yeni şifre en az 8 karakter olmalı.") });
+    if (pwNew.length < 10 || !/[a-zA-Z]/.test(pwNew) || !/[0-9]/.test(pwNew)) {
+      setPwMessage({ ok: false, text: t("Nieuw wachtwoord moet minimaal 10 tekens bevatten, met minstens 1 letter en 1 cijfer.", "New password must be at least 10 characters, with at least 1 letter and 1 digit.", "Yeni şifre en az 10 karakter, en az 1 harf ve 1 rakam içermeli.") });
       return;
     }
     if (pwNew !== pwRepeat) {
@@ -244,8 +244,8 @@ export default function AdminUsers({ adminLanguage }: AdminUsersProps) {
               <input type="password" required autoComplete="current-password" value={pwCurrent} onChange={(e) => setPwCurrent(e.target.value)} className={inputCls} />
             </div>
             <div className="space-y-1">
-              <label className={labelCls}>{t("Nieuw wachtwoord (min. 8)", "New password (min. 8)", "Yeni şifre (min. 8)")}</label>
-              <input type="password" required autoComplete="new-password" value={pwNew} onChange={(e) => setPwNew(e.target.value)} className={inputCls} />
+              <label className={labelCls}>{t("Nieuw wachtwoord (min. 10, letter + cijfer)", "New password (min. 10, letter + digit)", "Yeni şifre (min. 10, harf + rakam)")}</label>
+              <input type="password" required minLength={10} autoComplete="new-password" value={pwNew} onChange={(e) => setPwNew(e.target.value)} className={inputCls} />
             </div>
             <div className="space-y-1">
               <label className={labelCls}>{t("Herhaal nieuw wachtwoord", "Repeat new password", "Yeni şifreyi tekrarla")}</label>

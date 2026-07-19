@@ -287,6 +287,120 @@ const WeekGrid = React.memo(function WeekGrid({
   );
 });
 
+// ── WeekDayList — mobile stacked alternative to WeekGrid (no horizontal
+// scroll). WeekGrid's 7-column layout needs min-w-[700px] to stay readable,
+// which forces sideways scrolling on a phone; this shows the same per-day
+// data as one card per day instead, mirroring the md:hidden card pattern
+// already used in AdminOrders/AdminMachines/AdminCustomers. ──
+const WeekDayList = React.memo(function WeekDayList({
+  weekDays, activeOrders, blockedDates, todayStr, machineMap, locale, adminLanguage, onSelectOrder,
+}: WeekGridProps) {
+  const al = makeAl(adminLanguage);
+
+  const departingByDate = useMemo(() => {
+    const m = new Map<string, AnyOrder[]>();
+    for (const o of activeOrders) {
+      if (!m.has(o.startDate)) m.set(o.startDate, []);
+      m.get(o.startDate)!.push(o);
+    }
+    return m;
+  }, [activeOrders]);
+
+  const returningByDate = useMemo(() => {
+    const m = new Map<string, AnyOrder[]>();
+    for (const o of activeOrders) {
+      if (!m.has(o.endDate)) m.set(o.endDate, []);
+      m.get(o.endDate)!.push(o);
+    }
+    return m;
+  }, [activeOrders]);
+
+  const blockedByDate = useMemo(() => {
+    const m = new Map<string, typeof blockedDates>();
+    for (const b of blockedDates) {
+      if (!m.has(b.date)) m.set(b.date, []);
+      m.get(b.date)!.push(b);
+    }
+    return m;
+  }, [blockedDates]);
+
+  return (
+    <div className="space-y-2.5">
+      {weekDays.map((day, idx) => {
+        const dayStr = fmtLocalDate(day);
+        const departing = departingByDate.get(dayStr) ?? [];
+        const returning = returningByDate.get(dayStr) ?? [];
+        const blocked = blockedByDate.get(dayStr) ?? [];
+        const current = dayStr === todayStr;
+        const total = departing.length + returning.length + blocked.length;
+
+        return (
+          <div key={idx} className={`rounded-xl border overflow-hidden ${current ? "border-amber-300" : "border-slate-200"}`}>
+            <div className={`flex items-center justify-between px-3 py-2 ${current ? "bg-amber-50" : "bg-slate-50"}`}>
+              <div className="flex items-baseline gap-1.5">
+                <span className={`text-[11px] font-black uppercase tracking-wide ${current ? "text-amber-700" : "text-slate-500"}`}>
+                  {day.toLocaleDateString(locale, { weekday: "short" })}
+                </span>
+                <span className={`text-xs font-bold ${current ? "text-amber-800" : "text-slate-700"}`}>
+                  {day.toLocaleDateString(locale, { day: "numeric", month: "short" })}
+                </span>
+              </div>
+              {total > 0 && (
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-200 text-slate-600">{total}</span>
+              )}
+            </div>
+            {total === 0 ? (
+              <div className="px-3 py-3 text-center text-[11px] text-slate-300 bg-white">—</div>
+            ) : (
+              <div className="p-2 space-y-1.5 bg-white">
+                {departing.map((o) => (
+                  <button
+                    key={`d-${o.id}`}
+                    type="button"
+                    onClick={() => onSelectOrder(o)}
+                    className="w-full flex items-center gap-2 px-2.5 py-2 bg-indigo-50 rounded-lg border border-indigo-100 hover:bg-indigo-100 transition-colors cursor-pointer text-left min-h-[40px]"
+                  >
+                    <Truck className="h-3.5 w-3.5 text-indigo-500 shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[11px] font-bold text-slate-800 truncate">{o.machineName}</p>
+                      <p className="text-[10px] text-slate-500 truncate">{o.customerName}</p>
+                    </div>
+                    <AdminStatusBadge status={o.status} adminLanguage={adminLanguage} className="shrink-0" />
+                  </button>
+                ))}
+                {returning.map((o) => (
+                  <button
+                    key={`r-${o.id}`}
+                    type="button"
+                    onClick={() => onSelectOrder(o)}
+                    className="w-full flex items-center gap-2 px-2.5 py-2 bg-teal-50 rounded-lg border border-teal-100 hover:bg-teal-100 transition-colors cursor-pointer text-left min-h-[40px]"
+                  >
+                    <RotateCcw className="h-3.5 w-3.5 text-teal-500 shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[11px] font-bold text-slate-800 truncate">{o.machineName}</p>
+                      <p className="text-[10px] text-slate-500 truncate">{o.customerName}</p>
+                    </div>
+                    <AdminStatusBadge status={o.status} adminLanguage={adminLanguage} className="shrink-0" />
+                  </button>
+                ))}
+                {blocked.map((b, i) => (
+                  <div key={`b-${i}`} className="w-full flex items-center gap-2 px-2.5 py-2 bg-red-50 rounded-lg border border-red-100 min-h-[40px]">
+                    <Lock className="h-3.5 w-3.5 text-red-400 shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[11px] font-bold text-red-800 truncate">{machineMap.get(b.machineId) ?? al("Geblokkeerd", "Blocked", "Bloke")}</p>
+                      {b.reason && <p className="text-[10px] text-red-500 truncate">{b.reason}</p>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+});
+
 // ── Main component ──────────────────────────────────────────────────────────
 interface AdminPlanningProps {
   adminLanguage: string;
@@ -483,23 +597,31 @@ export default function AdminPlanning({ adminLanguage }: AdminPlanningProps) {
             </button>
           </div>
 
-          <div className="relative">
-            <div className="overflow-x-auto -mx-2 px-2 sm:mx-0 sm:px-0 pb-1">
-              <WeekGrid
-                weekDays={weekDays}
-                activeOrders={activeOrders}
-                blockedDates={blockedDates}
-                todayStr={todayStr}
-                machineMap={machineMap}
-                locale={locale}
-                adminLanguage={adminLanguage}
-                onSelectOrder={handleSelectOrder}
-              />
-            </div>
-            {/* Rechterrand-fade als scroll-hint op mobiel — de 7-koloms grid is breder
-                dan het viewport (min-w-[700px]) en zonder deze hint lijkt de afgesneden
-                laatste dag-kaart een layoutfout in plaats van "swipe voor meer". */}
-            <div className="sm:hidden pointer-events-none absolute top-0 right-0 bottom-1 w-8 bg-gradient-to-l from-white to-transparent" />
+          {/* Mobile: one stacked card per day (no horizontal scroll). At sm: and up,
+              the 7-column grid fits without a forced min-width, so it switches over. */}
+          <div className="sm:hidden">
+            <WeekDayList
+              weekDays={weekDays}
+              activeOrders={activeOrders}
+              blockedDates={blockedDates}
+              todayStr={todayStr}
+              machineMap={machineMap}
+              locale={locale}
+              adminLanguage={adminLanguage}
+              onSelectOrder={handleSelectOrder}
+            />
+          </div>
+          <div className="hidden sm:block overflow-x-auto -mx-2 px-2 sm:mx-0 sm:px-0 pb-1">
+            <WeekGrid
+              weekDays={weekDays}
+              activeOrders={activeOrders}
+              blockedDates={blockedDates}
+              todayStr={todayStr}
+              machineMap={machineMap}
+              locale={locale}
+              adminLanguage={adminLanguage}
+              onSelectOrder={handleSelectOrder}
+            />
           </div>
 
           <div className="flex items-center gap-5 text-[10px] text-slate-500 pt-1">

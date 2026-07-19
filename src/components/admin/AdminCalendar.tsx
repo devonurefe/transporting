@@ -41,8 +41,16 @@ export default function AdminCalendar({ onAddSystemLog, adminLanguage }: AdminCa
     { value: "Anders...", label: t("Anders...", "Other...", "Diğer...") },
   ];
 
+  // Local calendar day, not UTC — new Date().toISOString() converts to UTC, which
+  // shows YESTERDAY as "today" for an NL admin (UTC+1/+2) working shortly after
+  // local midnight. Mirrors fmtLocalDate() in AdminPlanning.tsx.
+  const todayLocalISO = (): string => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  };
+
   const [selectedBlockMachineId, setSelectedBlockMachineId] = useState<string>("");
-  const [blockDate, setBlockDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [blockDate, setBlockDate] = useState<string>(todayLocalISO());
   const [blockEndDate, setBlockEndDate] = useState<string>("");
   const [blockReasonPreset, setBlockReasonPreset] = useState<string>("Planmatig Onderhoud / Keuring");
   const [blockReasonCustom, setBlockReasonCustom] = useState<string>("");
@@ -73,14 +81,18 @@ export default function AdminCalendar({ onAddSystemLog, adminLanguage }: AdminCa
     if (!selectedBlockMachineId || !blockDate) return;
     setIsSubmittingBlock(true);
 
-    // Build list of dates to block (single date or range)
+    // Build list of dates to block (single date or range). blockDate/end are
+    // "YYYY-MM-DD" calendar dates, not moments — new Date(str) parses them as UTC
+    // midnight (per src/utils/pricing.ts convention), so the walk MUST stay on
+    // UTC methods (setUTCDate/getUTCDate) throughout. Mixing in local setDate()
+    // here previously risked drifting a day during DST transitions.
     const datesToBlock: string[] = [];
     const end = blockEndDate && blockEndDate >= blockDate ? blockEndDate : blockDate;
     const cur = new Date(blockDate);
     const endD = new Date(end);
     while (cur <= endD) {
       datesToBlock.push(cur.toISOString().split("T")[0]);
-      cur.setDate(cur.getDate() + 1);
+      cur.setUTCDate(cur.getUTCDate() + 1);
     }
 
     let allOk = true;

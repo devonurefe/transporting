@@ -190,6 +190,7 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
   const [menuAdmin, setMenuAdmin] = useState(siteConfig.menuAdminLabel || "");
   const [contactEmail, setContactEmail] = useState(siteConfig.contactEmail || "");
   const [contactPhone, setContactPhone] = useState(siteConfig.contactPhone || "");
+  const [whatsappNumber, setWhatsappNumber] = useState(siteConfig.whatsappNumber || "");
   const [companyAddress, setCompanyAddress] = useState(siteConfig.companyAddress || "");
   const [kvkNumber, setKvkNumber] = useState(siteConfig.kvkNumber || "");
   const [btwNumber, setBtwNumber] = useState(siteConfig.btwNumber || "");
@@ -235,6 +236,7 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
       setMenuAdmin(siteConfig.menuAdminLabel || "");
       setContactEmail(siteConfig.contactEmail || "");
       setContactPhone(siteConfig.contactPhone || "");
+      setWhatsappNumber(siteConfig.whatsappNumber || "");
       setCompanyAddress(siteConfig.companyAddress || "");
       setKvkNumber(siteConfig.kvkNumber || "");
       setBtwNumber(siteConfig.btwNumber || "");
@@ -364,6 +366,7 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
       menuAdminLabel: menuAdmin.trim() || "Portaal",
       contactEmail,
       contactPhone,
+      whatsappNumber,
       companyAddress,
       kvkNumber,
       btwNumber,
@@ -653,6 +656,11 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
               <div className="space-y-1">
                 <label className="text-xs text-slate-700 block font-bold">{t("Telefoonnummer", "Phone Number", "Telefon Numarası")}</label>
                 <input type="text" value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} placeholder="+31 71 542 8114" className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs text-slate-700 block font-bold">{t("WhatsApp-nummer", "WhatsApp Number", "WhatsApp Numarası")}</label>
+                <input type="text" value={whatsappNumber} onChange={(e) => setWhatsappNumber(e.target.value)} placeholder="31611848899" className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500" />
+                <p className="text-[10px] text-slate-400">{t("Alleen cijfers, met landcode zonder +. Stuurt alle WhatsApp-knoppen aan. Leeg = standaard uit instellingen.", "Digits only, country code without +. Drives every WhatsApp button. Empty = default from settings.", "Sadece rakam, ülke kodu + olmadan. Tüm WhatsApp butonlarını yönetir. Boş = ayarlardaki varsayılan.")}</p>
               </div>
               <div className="space-y-1">
                 <label className="text-xs text-slate-700 block font-bold">{t("Adres", "Address", "Adres")}</label>

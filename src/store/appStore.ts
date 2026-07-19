@@ -29,6 +29,7 @@ interface SiteConfig {
   menuAdminLabel: string;
   contactEmail?: string;
   contactPhone?: string;
+  whatsappNumber?: string | null;
   companyAddress?: string;
   kvkNumber?: string;
   btwNumber?: string;

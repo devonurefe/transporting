@@ -117,6 +117,18 @@ function pickSiteConfigFields(body: any): Record<string, string | number | boole
     }
   }
 
+  // WhatsApp-nummer: alleen cijfers bewaren (wa.me heeft geen + of spaties nodig).
+  // "" of null wist het veld → de site valt terug op de VITE_WHATSAPP_NUMBER env-var.
+  if ("whatsappNumber" in (body ?? {})) {
+    const raw = body.whatsappNumber;
+    if (raw === null || raw === "") {
+      data.whatsappNumber = null;
+    } else if (typeof raw === "string") {
+      const digits = raw.replace(/[^0-9]/g, "").slice(0, 20);
+      data.whatsappNumber = digits || null;
+    }
+  }
+
   // Coffee Corner on/off toggle — plain boolean, defaults off.
   if ("coffeeCornerEnabled" in (body ?? {})) {
     data.coffeeCornerEnabled = body.coffeeCornerEnabled === true;

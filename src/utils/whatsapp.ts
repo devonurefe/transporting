@@ -8,8 +8,16 @@ import { euro, euroCompact } from "./format";
 import { getTransportFees } from "./pricing";
 import { useAppStore } from "../store/appStore";
 
-// HuurGo WhatsApp business number
-const WHATSAPP_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER ?? "31611848899";
+// HuurGo WhatsApp business number. Admin-instelbaar via SiteConfig
+// (AdminCustomizer → Contact): siteConfig.whatsappNumber wint, anders valt het
+// terug op de VITE_WHATSAPP_NUMBER env-var en tenslotte de historische default.
+// Alleen cijfers — wa.me heeft geen + of spaties nodig.
+const WHATSAPP_ENV_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER ?? "31611848899";
+export function getWhatsAppNumber(): string {
+  const fromConfig = useAppStore.getState().siteConfig?.whatsappNumber;
+  const digits = (fromConfig ?? "").replace(/[^0-9]/g, "");
+  return digits || WHATSAPP_ENV_NUMBER;
+}
 
 interface OrderTotals {
   days: number;
@@ -110,7 +118,7 @@ export function buildWhatsAppUrl(
   lines.push("Alvast bedankt! 🦾");
 
   const encodedText = encodeURIComponent(lines.join("\n"));
-  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodedText}`;
+  return `https://wa.me/${getWhatsAppNumber()}?text=${encodedText}`;
 }
 
 /**
@@ -124,7 +132,7 @@ export function buildWhatsAppGeneralUrl(categoryLabel?: string): string {
   }
 
   const encodedText = encodeURIComponent(message);
-  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodedText}`;
+  return `https://wa.me/${getWhatsAppNumber()}?text=${encodedText}`;
 }
 
 /**
@@ -142,7 +150,7 @@ export function buildWhatsAppAlternativeDatesUrl(
     `Ik zie dat ${machineName} niet beschikbaar is voor mijn periode${period}.\n\n` +
     `Kunt u mij helpen met alternatieve datums of een vergelijkbare machine?\n\n` +
     `Alvast bedankt! 🦾`;
-  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+  return `https://wa.me/${getWhatsAppNumber()}?text=${encodeURIComponent(message)}`;
 }
 
 /**
@@ -172,7 +180,7 @@ export function buildWhatsAppTransportInquiryUrl(
     `Alvast bedankt! 🦾`,
   ];
 
-  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(lines.join("\n"))}`;
+  return `https://wa.me/${getWhatsAppNumber()}?text=${encodeURIComponent(lines.join("\n"))}`;
 }
 
 /**
@@ -189,7 +197,7 @@ export function buildWhatsAppOrderStatusUrl(orderId?: string, machineName?: stri
     "Kunt u mij informeren over de huidige status en wanneer ik de bevestiging kan verwachten?",
     "Alvast bedankt! 🦾",
   ].filter(Boolean);
-  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(lines.join("\n"))}`;
+  return `https://wa.me/${getWhatsAppNumber()}?text=${encodeURIComponent(lines.join("\n"))}`;
 }
 
 /**
@@ -205,7 +213,7 @@ export function buildWhatsAppPaymentLinkUrl(orderId?: string): string {
     "Kunt u mij de betaallink sturen zodat ik direct kan afrekenen?",
     "Bedankt! 🦾",
   ].filter(Boolean);
-  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(lines.join("\n"))}`;
+  return `https://wa.me/${getWhatsAppNumber()}?text=${encodeURIComponent(lines.join("\n"))}`;
 }
 
 /**
@@ -221,7 +229,7 @@ export function buildWhatsAppLogisticsUrl(): string {
     "Kunt u mij hierbij helpen?",
     "Alvast bedankt! 🦾",
   ];
-  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(lines.join("\n"))}`;
+  return `https://wa.me/${getWhatsAppNumber()}?text=${encodeURIComponent(lines.join("\n"))}`;
 }
 
 /**
@@ -237,5 +245,5 @@ export function buildWhatsAppAdviceUrl(jobDescription?: string): string {
     "Kunt u mij adviseren welke machine het meest geschikt is?",
     "Alvast bedankt! 🦾",
   ].filter(Boolean);
-  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(lines.join("\n"))}`;
+  return `https://wa.me/${getWhatsAppNumber()}?text=${encodeURIComponent(lines.join("\n"))}`;
 }

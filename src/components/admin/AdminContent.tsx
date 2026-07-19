@@ -276,9 +276,9 @@ export default function AdminContent({ adminLanguage, onAddSystemLog }: AdminCon
             <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
             <p className="text-[11px] text-amber-800 font-semibold leading-snug">
               {t(
-                "Wijzigingen zijn direct actief in de boekingsflow. Een klant die de pagina niet ververst kan tot 60 seconden een oud tarief zien — de server rekent altijd het nieuwe tarief af.",
-                "Changes take effect immediately in the booking flow. A customer who hasn't refreshed may see a stale rate for up to 60 seconds — the server always charges the new rate.",
-                "Değişiklikler rezervasyon akışında hemen etkili olur. Sayfayı yenilemeyen bir müşteri 60 saniyeye kadar eski ücreti görebilir — sunucu her zaman yeni ücreti uygular."
+                "Wijzigingen zijn direct actief in de boekingsflow voor nieuwe paginabezoeken. Een klant met een al open tabblad blijft het oude tarief zien totdat die de pagina ververst — de server rekent bij het afronden altijd het nieuwe tarief af.",
+                "Changes take effect immediately in the booking flow for new page visits. A customer with an already-open tab keeps seeing the old rate until they reload the page — the server always charges the new rate at checkout.",
+                "Değişiklikler yeni sayfa ziyaretlerinde rezervasyon akışında hemen etkili olur. Sekmesi zaten açık olan bir müşteri sayfayı yenileyene kadar eski ücreti görmeye devam eder — sunucu ödeme sırasında her zaman yeni ücreti uygular."
               )}
             </p>
           </div>

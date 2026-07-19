@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { CalendarSearch, CheckCircle2, XCircle, MinusCircle } from "lucide-react";
 import { useAppStore } from "../../store/appStore";
+import { checkAvailability } from "../../utils/availability";
 
 export default function AdminAvailabilityWidget() {
   const [startDate, setStartDate] = useState("");
@@ -8,6 +9,7 @@ export default function AdminAvailabilityWidget() {
 
   const machines = useAppStore((s) => s.machines);
   const orders = useAppStore((s) => s.orders);
+  const blockedDates = useAppStore((s) => s.blockedDates);
 
   const todayStr = new Date().toISOString().split("T")[0];
 
@@ -15,9 +17,6 @@ export default function AdminAvailabilityWidget() {
 
   const results = useMemo(() => {
     if (!startDate || !endDate || startDate > endDate) return null;
-
-    const s = new Date(startDate).getTime();
-    const e = new Date(endDate).getTime();
 
     // Group machines by base model name
     const modelMap: Record<string, { units: typeof machines; }> = {};
@@ -28,19 +27,17 @@ export default function AdminAvailabilityWidget() {
       modelMap[base].units.push(m);
     });
 
-    const activeStatuses = ["In behandeling", "Goedgekeurd", "Onderweg"];
-
+    // Same engine the public booking flow uses (src/utils/availability.ts) —
+    // combines orders AND blocked dates (maintenance/keuring), honoring
+    // bufferDays and stockQuantity, so this widget can't show "Beschikbaar"
+    // for a machine an admin just blocked in the Calendar panel.
     return Object.entries(modelMap).map(([base, { units }]) => {
-      const freeUnits = units.filter(unit => {
-        const conflict = orders.some(o => {
-          if (o.machineId !== unit.id) return false;
-          if (!activeStatuses.includes(o.status)) return false;
-          const os = new Date(o.startDate).getTime();
-          const oe = new Date(o.endDate).getTime();
-          return s <= oe && e >= os;
-        });
-        return !conflict;
-      });
+      const freeUnits = units.filter(unit =>
+        checkAvailability(
+          unit.id, startDate, endDate, orders, blockedDates, todayStr,
+          unit.bufferDays ?? 0, unit.stockQuantity ?? 1
+        ).available
+      );
 
       return {
         name: base,
@@ -49,7 +46,7 @@ export default function AdminAvailabilityWidget() {
         category: units[0].categoryLabel,
       };
     }).sort((a, b) => a.name.localeCompare(b.name));
-  }, [startDate, endDate, machines, orders]);
+  }, [startDate, endDate, machines, orders, blockedDates, todayStr]);
 
   return (
     <div className="glass-panel p-4 rounded-2xl hidden lg:block bg-white border border-slate-200 shadow-sm space-y-3">

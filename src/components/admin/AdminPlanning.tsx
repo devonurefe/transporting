@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { CalendarDays, Truck, RotateCcw, Lock, ChevronLeft, ChevronRight, X, Phone, Mail, MapPin, Package } from "lucide-react";
 import { useAppStore } from "../../store/appStore";
@@ -410,6 +410,14 @@ export default function AdminPlanning({ adminLanguage }: AdminPlanningProps) {
   const orders = useAppStore((state) => state.orders);
   const blockedDates = useAppStore((state) => state.blockedDates);
   const machines = useAppStore((state) => state.machines);
+  const loadAllOrders = useAppStore((state) => state.loadAllOrders);
+
+  // The shared `orders` store only holds the 100 most-recently-CREATED
+  // orders by default. A delivery/return scheduled far in advance can fall
+  // outside that window once enough newer orders exist, silently vanishing
+  // from today/tomorrow/week views. Load every page so Planning always sees
+  // the full order set.
+  useEffect(() => { loadAllOrders(); }, [loadAllOrders]);
 
   const [view, setView] = useState<"today" | "tomorrow" | "week">("today");
   const [weekOffset, setWeekOffset] = useState(0);

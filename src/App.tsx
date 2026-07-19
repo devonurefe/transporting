@@ -696,7 +696,7 @@ export default function App() {
             "@context": "https://schema.org",
             "@type": ["LocalBusiness", "RentalService", "Organization"],
             "name": `${siteConfig.siteName || "huurgo"} — Hoogwerkers Verhuur`,
-            "legalName": "MB Hoogwerkers B.V.",
+            "legalName": siteConfig.companyLegalName || "MB Hoogwerkers B.V.",
             "description": "Snel en eenvoudig hoogwerkers huren bij huurgo. Schaarlift, spinhoogwerker en aanhangerhoogwerker voor ZZP'ers en particulieren.",
             "url": window.location.origin,
             "logo": `${window.location.origin}/og-image.png`,

@@ -97,12 +97,17 @@ export function printInvoice(orderOrOrders: Order | Order[], clientCompanyName?:
     }
   }
 
+  // Bedrijfsnaam voor de lopende tekst — volgt de admin-instelbare companyLegalName
+  // (SiteConfig), met de historische operationele naam als fallback. Het issuer-blok
+  // hieronder houdt zijn eigen "huurgo B.V."-fallback voor de juridische factuurkop.
+  const companyName = businessInfo?.companyLegalName || "MB Hoogwerkers";
+
   // Delivery details display
   const logisticsText = primaryOrder.deliveryType === "self_pickup"
-    ? "Zelf afhalen bij vestiging MB Hoogwerkers (gratis)"
+    ? `Zelf afhalen bij vestiging ${companyName} (gratis)`
     : primaryOrder.deliveryType === "trailer_rental"
     ? "Aanhanger meegenomen — zelf heen en terug"
-    : `Bezorging door MB Hoogwerkers (heen + terug €${getTransportFees(useAppStore.getState().siteConfig).deliveryFee})`;
+    : `Bezorging door ${companyName} (heen + terug €${getTransportFees(useAppStore.getState().siteConfig).deliveryFee})`;
 
   const customerCompany = clientCompanyName || "Particulier";
 
@@ -585,7 +590,7 @@ export function printInvoice(orderOrOrders: Order | Order[], clientCompanyName?:
         <!-- Proforma notice -->
         <div style="background: #fffbeb; border: 1px dashed #fbbf24; border-radius: 12px; padding: 16px 20px; margin-bottom: 35px; font-size: 11px; color: #92400e; line-height: 1.6;">
           <strong style="display: block; margin-bottom: 4px; font-size: 12px;">⚠️ Dit is een pro-forma offerte — geen officiële factuur</strong>
-          Betaling vindt plaats na ontvangst van een iDEAL-betaallink via WhatsApp. Zodra de betaling is ontvangen, maakt MB Hoogwerkers een officiële factuur op en stuurt deze per e-mail toe.
+          Betaling vindt plaats na ontvangst van een iDEAL-betaallink via WhatsApp. Zodra de betaling is ontvangen, maakt ${escapeHtml(companyName)} een officiële factuur op en stuurt deze per e-mail toe.
         </div>
         ` : ''}
 
@@ -596,7 +601,7 @@ export function printInvoice(orderOrOrders: Order | Order[], clientCompanyName?:
             ? `<p>Betaling via WhatsApp — u ontvangt een Tikkie of Mollie iDEAL-betaallink. Na betaling is uw boeking definitief bevestigd.</p>`
             : `<p>Betalingswijze: Voldaan via iDEAL / Tikkie betaallink. Factuurkenmerk: ${primaryOrder.invoiceNumber || primaryOrder.id}</p>`
           }
-          <p style="margin-top: 8px;">Dank u voor uw vertrouwen in de hoogste en veiligste kwaliteit van <strong>MB Hoogwerkers</strong>.</p>
+          <p style="margin-top: 8px;">Dank u voor uw vertrouwen in de hoogste en veiligste kwaliteit van <strong>${escapeHtml(companyName)}</strong>.</p>
         </footer>
         
       </div>

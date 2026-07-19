@@ -36,7 +36,18 @@ export default function CityLandingPage({ onSelectMachineForBooking }: CityLandi
   const navigate = useNavigate();
   const machines = useAppStore((s) => s.machines);
   const customCategories = useAppStore((s) => s.customCategories);
+  const siteConfig = useAppStore((s) => s.siteConfig);
   const city = stad ? getCityBySlug(stad) : undefined;
+
+  // Admin-instelbare bedrijfsgegevens (SiteConfig) i.p.v. hard-coded literals —
+  // zo volgen de stadspagina's een gewijzigd telefoonnummer/bedrijfsnaam/adres,
+  // net als de rest van de site. Fallbacks = de historische waarden.
+  const bizName = siteConfig.companyLegalName
+    ? `huurgo — ${siteConfig.companyLegalName}`
+    : "huurgo — MB Hoogwerkers B.V.";
+  const bizPhoneDisplay = siteConfig.contactPhone || "+31 71 542 8114";
+  const bizPhoneTel = bizPhoneDisplay.replace(/[^0-9+]/g, "");
+  const bizStreet = siteConfig.companyAddress || "Produktieweg 20";
 
   useSeo(
     city
@@ -56,13 +67,13 @@ export default function CityLandingPage({ onSelectMachineForBooking }: CityLandi
                 areaServed: [city.name, ...city.nearby].map((n) => ({ "@type": "City", name: n })),
                 provider: {
                   "@type": "LocalBusiness",
-                  name: "huurgo — MB Hoogwerkers B.V.",
-                  telephone: "+31715428114",
+                  name: bizName,
+                  telephone: bizPhoneTel,
                   url: SEO_BASE_URL,
                   image: `${SEO_BASE_URL}/og-image.jpg`,
                   address: {
                     "@type": "PostalAddress",
-                    streetAddress: "Produktieweg 20",
+                    streetAddress: bizStreet,
                     postalCode: "2382 PB",
                     addressLocality: "Zoeterwoude",
                     addressRegion: "Zuid-Holland",
@@ -146,7 +157,7 @@ export default function CityLandingPage({ onSelectMachineForBooking }: CityLandi
             Bekijk beschikbaarheid <ArrowRight className="h-4 w-4" />
           </button>
           <a
-            href="tel:+31715428114"
+            href={`tel:${bizPhoneTel}`}
             className="inline-flex items-center gap-1.5 py-2.5 px-5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-sm font-semibold transition-all"
           >
             <Phone className="h-4 w-4 text-emerald-500" /> Bel voor advies

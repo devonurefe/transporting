@@ -5,7 +5,7 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import { motion } from "motion/react";
-import { ShieldCheck, ShieldOff, UserPlus, Users, KeyRound, QrCode, RotateCcw, Ban, CheckCircle2 } from "lucide-react";
+import { ShieldCheck, ShieldOff, UserPlus, Users, KeyRound, QrCode, RotateCcw, Ban, CheckCircle2, Lock } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
 import AdminConfirmDialog from "./AdminConfirmDialog";
 // AdminToastHost wordt al één keer gemount in AdminSection
@@ -112,6 +112,47 @@ export default function AdminUsers({ adminLanguage }: AdminUsersProps) {
   const [resetPwFor, setResetPwFor] = useState<AdminRow | null>(null);
   const [resetPwValue, setResetPwValue] = useState("");
 
+  // ── Mijn beveiliging: eigen wachtwoord wijzigen ───────────────────────────
+  // Verplaatst uit AdminCustomizer.tsx (Mağaza Ayarları) — hoort inhoudelijk bij
+  // accountbeveiliging (naast 2FA hieronder), niet tussen merk-/customizer-content.
+  const [pwCurrent, setPwCurrent] = useState("");
+  const [pwNew, setPwNew] = useState("");
+  const [pwRepeat, setPwRepeat] = useState("");
+  const [pwBusy, setPwBusy] = useState(false);
+  const [pwMessage, setPwMessage] = useState<{ ok: boolean; text: string } | null>(null);
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPwMessage(null);
+    if (pwNew.length < 8) {
+      setPwMessage({ ok: false, text: t("Nieuw wachtwoord moet minimaal 8 tekens bevatten.", "New password must be at least 8 characters.", "Yeni şifre en az 8 karakter olmalı.") });
+      return;
+    }
+    if (pwNew !== pwRepeat) {
+      setPwMessage({ ok: false, text: t("Wachtwoorden komen niet overeen.", "Passwords do not match.", "Şifreler eşleşmiyor.") });
+      return;
+    }
+    setPwBusy(true);
+    try {
+      const res = await fetch("/api/auth/change-password", {
+        method: "POST",
+        headers: authHeaders,
+        body: JSON.stringify({ currentPassword: pwCurrent, newPassword: pwNew })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setPwMessage({ ok: true, text: t("Wachtwoord succesvol gewijzigd.", "Password changed successfully.", "Şifre başarıyla değiştirildi.") });
+        setPwCurrent(""); setPwNew(""); setPwRepeat("");
+      } else {
+        setPwMessage({ ok: false, text: data.error || t("Wachtwoord wijzigen mislukt.", "Password change failed.", "Şifre değiştirilemedi.") });
+      }
+    } catch {
+      setPwMessage({ ok: false, text: t("Netwerkfout. Probeer opnieuw.", "Network error. Try again.", "Ağ hatası. Tekrar deneyin.") });
+    } finally {
+      setPwBusy(false);
+    }
+  };
+
   // ── Mijn beveiliging: 2FA setup/disable ───────────────────────────────────
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [setupCode, setSetupCode] = useState("");
@@ -190,6 +231,41 @@ export default function AdminUsers({ adminLanguage }: AdminUsersProps) {
             {t("Mijn beveiliging", "My security", "Güvenliğim")}
           </h3>
         </div>
+
+        {/* Wachtwoord wijzigen */}
+        <form onSubmit={handleChangePassword} className="space-y-3 pb-4 mb-1 border-b border-slate-200">
+          <h4 className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+            <Lock className="h-3.5 w-3.5 text-slate-400" />
+            {t("Wachtwoord wijzigen", "Change password", "Şifre değiştir")}
+          </h4>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="space-y-1">
+              <label className={labelCls}>{t("Huidig wachtwoord", "Current password", "Mevcut şifre")}</label>
+              <input type="password" required autoComplete="current-password" value={pwCurrent} onChange={(e) => setPwCurrent(e.target.value)} className={inputCls} />
+            </div>
+            <div className="space-y-1">
+              <label className={labelCls}>{t("Nieuw wachtwoord (min. 8)", "New password (min. 8)", "Yeni şifre (min. 8)")}</label>
+              <input type="password" required autoComplete="new-password" value={pwNew} onChange={(e) => setPwNew(e.target.value)} className={inputCls} />
+            </div>
+            <div className="space-y-1">
+              <label className={labelCls}>{t("Herhaal nieuw wachtwoord", "Repeat new password", "Yeni şifreyi tekrarla")}</label>
+              <input type="password" required autoComplete="new-password" value={pwRepeat} onChange={(e) => setPwRepeat(e.target.value)} className={inputCls} />
+            </div>
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            {pwMessage ? (
+              <span className={`text-xs font-bold ${pwMessage.ok ? "text-emerald-600" : "text-rose-600"}`}>{pwMessage.text}</span>
+            ) : <span />}
+            <button
+              type="submit"
+              disabled={pwBusy}
+              className="shrink-0 flex items-center gap-1.5 text-[11px] font-bold text-white bg-slate-900 hover:bg-slate-800 disabled:opacity-50 px-4 py-2.5 rounded-xl transition-colors cursor-pointer border-none"
+            >
+              {pwBusy && <span className="h-3 w-3 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+              {t("Wachtwoord opslaan", "Save password", "Şifreyi kaydet")}
+            </button>
+          </div>
+        </form>
 
         {me?.twoFactorEnabled ? (
           <div className="space-y-3">

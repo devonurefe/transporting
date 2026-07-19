@@ -18,8 +18,7 @@ import {
   buildAdvisorWhatsAppUrl,
   type AdvisorAnswers,
 } from "../utils/advisor";
-
-const WHATSAPP_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER ?? "31611848899";
+import { getWhatsAppNumber } from "../utils/whatsapp";
 
 interface AdviesModalProps {
   open: boolean;
@@ -197,7 +196,7 @@ export default function AdviesModal({ open, onClose }: AdviesModalProps) {
                       antwoorden sturen we automatisch mee.
                     </p>
                     <a
-                      href={buildAdvisorWhatsAppUrl(flow, answers, WHATSAPP_NUMBER)}
+                      href={buildAdvisorWhatsAppUrl(flow, answers, getWhatsAppNumber())}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-2 bg-[#25d366] hover:brightness-105 text-emerald-950 font-bold text-sm px-5 py-2.5 rounded-xl transition-all cursor-pointer"

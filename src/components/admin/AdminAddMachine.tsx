@@ -650,7 +650,7 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
               />
               <span>
                 <span className="text-xs font-bold text-slate-800 block">{t("Weekendregels actief", "Weekend rules active", "Hafta sonu kuralları aktif")}</span>
-                <span className="text-[10px] text-slate-400 block">{t("Depot za/zo dicht: weekendpakket + automatische zondagblokkade. Uit voor steigers & campagne (Nifty).", "Depot closed Sat/Sun: weekend package + automatic Sunday block. Off for scaffolding & campaign (Nifty).", "Depo Cmt/Paz kapalı: hafta sonu paketi + otomatik Pazar blokajı. İskele & kampanya (Nifty) için kapalı.")}</span>
+                <span className="text-[10px] text-slate-400 block">{t("Depot za/zo dicht: weekendpakket + automatische zondagblokkade. Uit voor steigers (Altrex).", "Depot closed Sat/Sun: weekend package + automatic Sunday block. Off for scaffolding (Altrex).", "Depo Cmt/Paz kapalı: hafta sonu paketi + otomatik Pazar blokajı. İskele (Altrex) için kapalı.")}</span>
               </span>
             </label>
           </div>

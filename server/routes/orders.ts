@@ -8,6 +8,7 @@ import { publicReadLimiter } from "../middleware/publicGuard.js";
 import { emailService } from "../services/emailService.js";
 import { audit } from "../utils/audit.js";
 import { resolveFees } from "../utils/fees.js";
+import { computeOrderSubtotal, computeTransport, computeAddonsTotal, computeVatAndTotal, buildStoredAddons, computeRentalDays, CampaignRuleLike } from "../utils/orderPricing.js";
 
 export const ordersRouter = Router();
 
@@ -44,6 +45,81 @@ async function withSerializableRetry<T>(fn: () => Promise<T>, retries = 3): Prom
       if (!isSerializationFailure || attempt >= retries) throw error;
       await new Promise(r => setTimeout(r, attempt * 100 + Math.random() * 100));
     }
+  }
+}
+
+// Gedeelde order-validatieconstanten + regexen. POST heeft historisch eigen
+// inline-kopieën (ongewijzigd gelaten); PATCH en handmatige creatie gebruiken deze.
+const ORDER_VALID_PROFILES = [
+  "Schilder", "Hovenier / Groenverzorging", "Glazenwasser / Gevelreiniger",
+  "Aannemer", "Installateur / Elektricien", "Dakdekker / Gevelwerker",
+  "Industrieel Onderhoud", "Particulier", "Overig / Anders",
+  "Installateur", "Hovenier", "Glazenwasser", "Stukadoor", "Magazijn", "Gevelreiniger",
+];
+const ORDER_VALID_DELIVERY_TYPES = ["self_pickup", "delivery_by_us", "trailer_rental"];
+const ORDER_VALID_TIME_SLOTS = ["morning", "afternoon"];
+const ORDER_EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/;
+
+// Availability + blocked-date check binnen een transactie. Gooit CONFLICT_ORDER /
+// BLOCKED_DATE (zelfde vorm als POST) zodat de catch-afhandeling identiek is.
+// excludeOrderId: sla de order zelf over bij het bewerken van bestaande datums.
+// Mirrors src/utils/availability.ts checkAvailability() (capacity + buffer).
+async function assertMachineAvailableInTx(
+  tx: Prisma.TransactionClient,
+  machineId: string,
+  startDate: Date,
+  endDate: Date,
+  excludeOrderId?: string
+): Promise<void> {
+  const machineCapacity = await tx.machine.findUnique({
+    where: { id: machineId },
+    select: { bufferDays: true, stockQuantity: true }
+  });
+  const bufferMs = (machineCapacity?.bufferDays ?? 0) * 24 * 60 * 60 * 1000;
+  const stockQuantity = machineCapacity?.stockQuantity ?? 1;
+
+  const potentialConflicts = await tx.order.findMany({
+    where: {
+      machineId,
+      status: { not: "Geannuleerd" },
+      startDate: { lte: endDate },
+      ...(excludeOrderId ? { id: { not: excludeOrderId } } : {})
+    }
+  });
+  const candidateOrders = potentialConflicts.filter(o => startDate <= new Date(o.endDate.getTime() + bufferMs));
+
+  if (candidateOrders.length > 0) {
+    let curr = new Date(startDate);
+    let dayCounter = 0;
+    let exhaustedOn: Date | null = null;
+    while (curr <= endDate && dayCounter < 1000) {
+      dayCounter++;
+      const dayTime = curr.getTime();
+      const concurrent = candidateOrders.filter(o => {
+        const bufferedEnd = o.endDate.getTime() + bufferMs;
+        return dayTime >= o.startDate.getTime() && dayTime <= bufferedEnd;
+      }).length;
+      if (concurrent >= stockQuantity) { exhaustedOn = new Date(curr); break; }
+      curr.setUTCDate(curr.getUTCDate() + 1);
+    }
+    if (exhaustedOn) {
+      const exhaustedTime = exhaustedOn.getTime();
+      throw Object.assign(new Error("CONFLICT_ORDER"), {
+        conflictingDates: candidateOrders
+          .filter(o => exhaustedTime >= o.startDate.getTime() && exhaustedTime <= (o.endDate.getTime() + bufferMs))
+          .map(o => ({ start: o.startDate.toISOString().split("T")[0], end: o.endDate.toISOString().split("T")[0] }))
+      });
+    }
+  }
+
+  const blocked = await tx.blockedDate.findFirst({
+    where: { machineId, date: { gte: startDate, lte: endDate } }
+  });
+  if (blocked) {
+    throw Object.assign(new Error("BLOCKED_DATE"), {
+      date: blocked.date.toISOString().split("T")[0],
+      reason: blocked.reason
+    });
   }
 }
 
@@ -153,6 +229,39 @@ ordersRouter.get("/", requireAuth as any, async (req: AuthenticatedRequest, res:
   } catch (error) {
     console.error("Error fetching orders:", error);
     res.status(500).json({ error: "Kon bestellingen niet ophalen" });
+  }
+});
+
+// GET /api/orders/stats — admin dashboard headline aggregates over ALL orders.
+// The order list is paginated (max 100/page), so computing KPIs client-side from
+// the loaded window silently under-counts once there are >100 orders. This
+// aggregates in the DB (groupBy + sum), so cumulative revenue and counts stay
+// correct at any volume. Cancelled orders are excluded from revenue.
+ordersRouter.get("/stats", requireAdmin as any, async (_req: AuthenticatedRequest, res: Response) => {
+  try {
+    const [statusGroups, revenueAgg, paidAgg] = await Promise.all([
+      prisma.order.groupBy({ by: ["status"], _count: { _all: true } }),
+      prisma.order.aggregate({ _sum: { totalAmount: true }, where: { status: { not: "Geannuleerd" } } }),
+      prisma.order.aggregate({ _sum: { totalAmount: true }, where: { status: { not: "Geannuleerd" }, paymentStatus: "paid" } })
+    ]);
+    const byStatus: Record<string, number> = {};
+    let totalOrders = 0;
+    for (const g of statusGroups) {
+      byStatus[g.status] = g._count._all;
+      totalOrders += g._count._all;
+    }
+    res.setHeader("Cache-Control", "no-store");
+    return res.json({
+      totalOrders,
+      totalRevenue: revenueAgg._sum.totalAmount ?? 0,
+      paidRevenue: paidAgg._sum.totalAmount ?? 0,
+      activeRentals: (byStatus["Goedgekeurd"] ?? 0) + (byStatus["Onderweg"] ?? 0),
+      pending: byStatus["In behandeling"] ?? 0,
+      byStatus
+    });
+  } catch (error) {
+    console.error("Error computing order stats:", error);
+    res.status(500).json({ error: "Kon orderstatistieken niet berekenen" });
   }
 });
 
@@ -304,10 +413,7 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
     if ((machine as any).pickupOnly && dt !== "self_pickup") {
       return res.status(400).json({ error: "Voor dit product is alleen afhalen mogelijk" });
     }
-    const authTransport =
-      dt === "self_pickup"      ? 0
-      : dt === "delivery_by_us" ? fees.deliveryFee
-      : /* trailer_rental */      fees.trailerPerDay * rentalDays;
+    const authTransport = computeTransport(dt, rentalDays, fees);
     const transportCostClient = Number(orderData.transportCost || 0);
     if (Math.abs(transportCostClient - authTransport) > 0.01) {
       return res.status(400).json({ error: "Ongeldig transportbedrag" });
@@ -318,196 +424,17 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
       return res.status(400).json({ error: "Ongeldig chauffeurskostenbedrag" });
     }
     // Addon prices are recomputed authoritatively from the DB — never trusted from
-    // the client. The global add-ons ("safety" = Veiligheidsset Pro, "rijplaten")
-    // plus this machine's own product-specific cross-sell extras are the only
-    // accepted ids. (Weekend handling is no longer an addon — the weekend package /
-    // Sunday block adjust the subtotal below.)
-    const crossSell: Array<{ id: string; name?: string; pricePerWeek: number; pricePerDay?: number; pricePerTwoDay?: number }> =
-      Array.isArray((machine as any).crossSellAddons) ? (machine as any).crossSellAddons : [];
-    const crossSellMap = new Map(crossSell.map(a => [String(a.id), a]));
-    const machineWeeklyOnly = Boolean((machine as any).weeklyOnly);
-    const addonWeeks = Math.max(1, Math.ceil(
-      Math.max(rentalDays, ((machine as any).minRentalDays > 0 ? (machine as any).minRentalDays : 7)) / 7
-    ));
-    // Authoritative add-on price — mirrors src/utils/pricing.ts addonPriceForRental EXACTLY.
-    const addonPrice = (sa: { pricePerWeek?: number; pricePerDay?: number; pricePerTwoDay?: number }): number => {
-      if (!machineWeeklyOnly) {
-        if (rentalDays === 1 && sa.pricePerDay != null && sa.pricePerDay > 0) return Number(sa.pricePerDay);
-        if (rentalDays === 2 && sa.pricePerTwoDay != null && sa.pricePerTwoDay > 0) return Number(sa.pricePerTwoDay);
-      }
-      return Number(sa.pricePerWeek || 0) * addonWeeks;
-    };
-    // Global add-ons: a flat rate for the first started week, +rate for every
-    // additional started 7-day block (addonWeeks, same formula as above). Not
-    // available on every machine — mirrors GLOBAL_ADDON_EXCLUDED_CATEGORIES in
-    // BookingStep1.tsx / BookingSection.tsx — keep identical.
-    const GLOBAL_ADDON_RATES: Record<string, number> = {
-      safety: fees.addons.safety.pricePerWeek,
-      rijplaten: fees.addons.rijplaten.pricePerWeek,
-    };
-    const GLOBAL_ADDON_EXCLUDED_CATEGORIES: Record<string, string[]> = {
-      safety: ["ladderlift"],
-      rijplaten: ["aanhanger", "kamersteiger", "ecolift", "ladderlift"],
-    };
-    // Validated customer-entered amount for a global add-on. Only "rijplaten" is
-    // quantity-based (1–999, integer); all others are a single unit. Returns null
-    // when the client sent an invalid amount so the caller can reject the order.
-    const globalAddonQty = (id: string, a: any): number | null => {
-      if (id !== "rijplaten") return 1;
-      const q = Number(a?.quantity);
-      if (!Number.isInteger(q) || q < 1 || q > 999) return null;
-      return q;
-    };
-    const machineCategory = String((machine as any).category ?? "");
-    const rawAddons = Array.isArray(orderData.addons) ? orderData.addons : [];
-    let addonsTotal = 0;
-    for (const a of rawAddons) {
-      if (typeof a !== "object" || a === null) {
-        return res.status(400).json({ error: "Ongeldige toevoeging in bestelling" });
-      }
-      const id = String(a.id ?? "");
-      if (id in GLOBAL_ADDON_RATES) {
-        if (GLOBAL_ADDON_EXCLUDED_CATEGORIES[id].includes(machineCategory)) {
-          return res.status(400).json({ error: "Ongeldige toevoeging in bestelling" });
-        }
-        // Rijplaten is quantity-based (customer types how many plates they need);
-        // every other global add-on is a single unit. Never trust the client price —
-        // validate the amount and recompute here.
-        const qty = globalAddonQty(id, a);
-        if (qty === null) {
-          return res.status(400).json({ error: "Ongeldig aantal rijplaten" });
-        }
-        addonsTotal += GLOBAL_ADDON_RATES[id] * addonWeeks * qty;
-      } else if (crossSellMap.has(id)) {
-        addonsTotal += addonPrice(crossSellMap.get(id)!);
-      } else {
-        return res.status(400).json({ error: "Ongeldige toevoeging in bestelling" });
-      }
+    // the client. Shared with PATCH/manual-create via computeAddonsTotal (mirrors
+    // src/utils/pricing.ts addonPriceForRental + the category exclusions).
+    const addonsResult = computeAddonsTotal(machine, rentalDays, orderData.addons, fees);
+    if ("error" in addonsResult) {
+      return res.status(400).json({ error: addonsResult.error });
     }
-    // Flat-rate pricing mirrors src/utils/pricing.ts calculateItemSubtotal.
-    // Strict weekend: 2 days starting Saturday (Sat+Sun).
-    // startDate is a UTC-parsed Date, so getUTCDay() is timezone-safe.
-    const profile = String(orderData.customerProfile || "").toLowerCase();
-
-    // Campaign discounts apply on top of flat rates (mirrors pricing.ts withCampaign).
-    // Volume discounts are already embedded in flat rates — not double-counted.
-    const withCampaign = (base: number): number => {
-      let pct = 0;
-      for (const rule of campaignRules.filter(r => r.isActive)) {
-        const matches = rule.scope === "global"
-          || (rule.scope === "category" && machine.category.toLowerCase() === rule.scopeValue.toLowerCase())
-          || (rule.scope === "product" && machine.id === rule.scopeValue)
-          || (rule.scope === "role" && profile === rule.scopeValue.toLowerCase());
-        if (matches) pct = Math.max(pct, rule.discountPercent);
-      }
-      if (machine.campaignDiscountPercent) pct = Math.max(pct, machine.campaignDiscountPercent as number);
-      let disc = base * (pct / 100);
-      if (machine.campaignDiscountAmount) disc += machine.campaignDiscountAmount as number;
-      return Math.max(0, base - disc);
-    };
-
-    let serverSubtotal: number;
-    const m = machine as any;
-    const dow = startDate.getUTCDay();
-    const strictWeekend = rentalDays === 2 && dow === 6;
-
-    // Flat-rate price for an effective day count `n`, or null when no flat tier
-    // applies (caller falls back to the percentage path). Mirrors the tierPrice
-    // helper in src/utils/pricing.ts. The legacy strict-weekend (Sat+Sun) price
-    // only applies to machines without weekendRulesEnabled; enabled machines route
-    // a Sat+Sun selection through the weekend package below.
-    const tierPrice = (n: number): number | null => {
-      if (n === 1 && m.oneDayPrice) return m.oneDayPrice;
-      if (n === 2) {
-        if (!m.weekendRulesEnabled && strictWeekend && m.weekendPrice) return m.weekendPrice;
-        if (m.twoDayPrice) return m.twoDayPrice;
-      }
-      if (n === 3 && m.threeDayPrice) return m.threeDayPrice;
-      if (n === 4 && m.fourDayPrice) return m.fourDayPrice;
-      if ((n === 3 || n === 4 || n === 5) && m.weeklyPrice) return m.weeklyPrice;
-      if (n >= 6 && n < 28 && m.weeklyPrice) {
-        const extra = m.extraDayPrice ?? m.weeklyPrice / 5;
-        let base = Math.round(m.weeklyPrice + (n - 5) * extra);
-        if (m.monthlyPrice) base = Math.min(base, m.monthlyPrice);
-        return base;
-      }
-      if (n >= 28 && m.monthlyPrice) {
-        const fullMonths = Math.floor(n / 28);
-        const remainder = n % 28;
-        let remainderCost: number;
-        if (remainder >= 3 && m.weeklyPrice) {
-          const extra = m.extraDayPrice ?? m.weeklyPrice / 5;
-          remainderCost = Math.round(remainder * extra);
-        } else {
-          remainderCost = remainder * machine.pricePerDay;
-        }
-        remainderCost = Math.min(remainderCost, m.monthlyPrice);
-        return fullMonths * m.monthlyPrice + remainderCost;
-      }
-      return null;
-    };
-
-    // Weekend rules (depot closed Sat+Sun) — mirrors src/utils/pricing.ts
-    // isWeekendPackage / hasSundayBlock. getUTCDay(): 0=Sun, 6=Sat.
-    const endDow = (() => {
-      const e = new Date(startDate);
-      e.setUTCHours(0, 0, 0, 0);
-      e.setUTCDate(e.getUTCDate() + (rentalDays - 1));
-      return e.getUTCDay();
-    })();
-    // Weekend package: only a rental that stays entirely within the closed
-    // weekend (single Sat, single Sun, or Sat+Sun) — never a Friday start, and
-    // never a longer rental that merely starts on Sat/Sun and extends past it.
-    const isWeekendPackage = !!(m.weekendRulesEnabled && m.weekendPrice && (
-      (rentalDays === 1 && (dow === 6 || dow === 0)) ||  // single Sat or single Sun
-      (rentalDays === 2 && dow === 6 && endDow === 0)     // Sat + Sun
-    ));
-    const hasSundayBlock = !!(m.weekendRulesEnabled && m.sundayBlockFee && !isWeekendPackage && endDow === 6);
-
-    if (m.weeklyOnly && m.weeklyPrice) {
-      // Weekly-only billing — minimum 1 week, charged per started week.
-      // Mirrors src/utils/pricing.ts billableWeeks().
-      const min = m.minRentalDays > 0 ? m.minRentalDays : 7;
-      const weeks = Math.max(1, Math.ceil(Math.max(rentalDays, min) / 7));
-      serverSubtotal = withCampaign(weeks * m.weeklyPrice);
-    } else if (isWeekendPackage) {
-      // Flat weekend package. No Sunday block.
-      serverSubtotal = withCampaign(m.weekendPrice);
-    } else if (tierPrice(rentalDays) !== null) {
-      serverSubtotal = withCampaign(tierPrice(rentalDays) as number);
-    } else {
-      // Mirrors src/utils/pricing.ts evaluateDiscountPercent: take the HIGHEST discount,
-      // do not stack volume + campaign discounts. Campaign rules are also applied here.
-      const rawSubtotal = machine.pricePerDay * rentalDays;
-      let highestDiscountPercent = 0;
-      if (rentalDays >= 28 && machine.monthlyDiscountPercent) {
-        highestDiscountPercent = Math.max(highestDiscountPercent, machine.monthlyDiscountPercent);
-      } else if (rentalDays >= 6 && machine.weeklyDiscountPercent) {
-        highestDiscountPercent = Math.max(highestDiscountPercent, machine.weeklyDiscountPercent);
-      }
-      for (const rule of campaignRules.filter(r => r.isActive)) {
-        let matches = false;
-        if (rule.scope === "global") matches = true;
-        else if (rule.scope === "category") matches = machine.category.toLowerCase() === rule.scopeValue.toLowerCase();
-        else if (rule.scope === "product") matches = machine.id === rule.scopeValue;
-        else if (rule.scope === "role") matches = profile === rule.scopeValue.toLowerCase();
-        if (matches) highestDiscountPercent = Math.max(highestDiscountPercent, rule.discountPercent);
-      }
-      if (machine.campaignDiscountPercent) {
-        highestDiscountPercent = Math.max(highestDiscountPercent, machine.campaignDiscountPercent);
-      }
-      let serverDiscountAmount = rawSubtotal * (highestDiscountPercent / 100);
-      if (machine.campaignDiscountAmount) {
-        serverDiscountAmount += (machine.campaignDiscountAmount as number);
-      }
-      serverSubtotal = Math.max(0, rawSubtotal - serverDiscountAmount);
-    }
-    // Forced Sunday block: last work day is Saturday → machine held over the closed
-    // Sunday (return Monday 08:00). Flat surcharge on top of the tier, not discounted.
-    if (hasSundayBlock) serverSubtotal += Number(m.sundayBlockFee);
-    serverSubtotal = Math.round(serverSubtotal * 100) / 100;
-    const serverVat = Math.round((serverSubtotal + transportCostClient + driverCostClient + addonsTotal) * 21) / 100;
-    const serverTotal = Math.round((serverSubtotal + transportCostClient + driverCostClient + addonsTotal + serverVat) * 100) / 100;
+    const addonsTotal = addonsResult.total;
+    // Authoritative subtotal (tier + weekend package + Sunday block + campaign) —
+    // shared with PATCH/manual-create, mirrors src/utils/pricing.ts calculateItemSubtotal.
+    const serverSubtotal = computeOrderSubtotal(machine, rentalDays, startDate, campaignRules, String(orderData.customerProfile || ""));
+    const { vat: serverVat, total: serverTotal } = computeVatAndTotal(serverSubtotal, transportCostClient, driverCostClient, addonsTotal);
     if (Math.abs(serverTotal - Number(orderData.totalAmount)) > 0.01) {
       return res.status(400).json({ error: "Totaalbedrag klopt niet. Ververs de pagina en probeer opnieuw." });
     }
@@ -521,75 +448,9 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
 
     // Serializable transaction: availability check + blocked-date check + create are atomic
     const newOrder = await withSerializableRetry(() => prisma.$transaction(async (tx) => {
-      // Re-fetch bufferDays/stockQuantity inside the transaction so we always use
-      // the current value even if an admin changed it between the machine fetch
-      // above and now
-      const machineCapacity = await tx.machine.findUnique({
-        where: { id: orderData.machineId },
-        select: { bufferDays: true, stockQuantity: true }
-      });
-      const bufferMs = (machineCapacity?.bufferDays ?? 0) * 24 * 60 * 60 * 1000;
-      const stockQuantity = machineCapacity?.stockQuantity ?? 1;
-
-      // Fetch orders that could potentially conflict (started before or on the requested end date)
-      // Then apply buffer: an existing order blocks startDate..endDate+bufferDays
-      const potentialConflicts = await tx.order.findMany({
-        where: {
-          machineId: orderData.machineId,
-          status: { not: "Geannuleerd" },
-          startDate: { lte: endDate }
-        }
-      });
-      const candidateOrders = potentialConflicts.filter(o => {
-        const bufferedEnd = new Date(o.endDate.getTime() + bufferMs);
-        return startDate <= bufferedEnd;
-      });
-
-      // Capacity check: a machine with stock > 1 can have multiple orders active
-      // on the same day. Walk each requested day and reject only once the number
-      // of orders already covering that day (buffer included) reaches stockQuantity
-      // — mirrors src/utils/availability.ts checkAvailability() exactly.
-      if (candidateOrders.length > 0) {
-        let curr = new Date(startDate);
-        let dayCounter = 0;
-        let exhaustedOn: Date | null = null;
-        while (curr <= endDate && dayCounter < 1000) {
-          dayCounter++;
-          const dayTime = curr.getTime();
-          const concurrent = candidateOrders.filter(o => {
-            const bufferedEnd = o.endDate.getTime() + bufferMs;
-            return dayTime >= o.startDate.getTime() && dayTime <= bufferedEnd;
-          }).length;
-          if (concurrent >= stockQuantity) { exhaustedOn = new Date(curr); break; }
-          curr.setUTCDate(curr.getUTCDate() + 1);
-        }
-
-        if (exhaustedOn) {
-          const exhaustedTime = exhaustedOn.getTime();
-          throw Object.assign(new Error("CONFLICT_ORDER"), {
-            conflictingDates: candidateOrders
-              .filter(o => exhaustedTime >= o.startDate.getTime() && exhaustedTime <= (o.endDate.getTime() + bufferMs))
-              .map(o => ({
-                start: o.startDate.toISOString().split("T")[0],
-                end: o.endDate.toISOString().split("T")[0]
-              }))
-          });
-        }
-      }
-
-      const blocked = await tx.blockedDate.findFirst({
-        where: {
-          machineId: orderData.machineId,
-          date: { gte: startDate, lte: endDate }
-        }
-      });
-
-      if (blocked) {
-        throw Object.assign(new Error("BLOCKED_DATE"), {
-          date: blocked.date.toISOString().split("T")[0],
-          reason: blocked.reason
-        });
-      }
+      // Availability + blocked-date check (capacity/buffer aware) — shared with
+      // PATCH/manual-create via assertMachineAvailableInTx.
+      await assertMachineAvailableInTx(tx, orderData.machineId, startDate, endDate);
 
       // Atomic sequential invoice number (Dutch BTW wetgeving)
       const counter = await tx.invoiceCounter.upsert({
@@ -624,16 +485,7 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
           status: "In behandeling",
           customerId: resolvedCustomerId,
           // Reconstruct from server-side data — never persist client-sent names or prices
-          addons: JSON.stringify(rawAddons.map((a: any) => {
-            const id = String(a.id ?? "");
-            if (id === "safety") return { id: "safety", name: fees.addons.safety.name, price: fees.addons.safety.pricePerWeek * addonWeeks };
-            if (id === "rijplaten") {
-              const qty = globalAddonQty("rijplaten", a) ?? 1;
-              return { id: "rijplaten", name: `${fees.addons.rijplaten.name} (${qty} ${qty === 1 ? "stuk" : "stuks"})`, price: fees.addons.rijplaten.pricePerWeek * addonWeeks * qty, quantity: qty };
-            }
-            const sa = crossSellMap.get(id);
-            return { id, name: sa?.name ?? id, price: sa ? addonPrice(sa) : 0 };
-          })),
+          addons: JSON.stringify(buildStoredAddons(machine, rentalDays, orderData.addons, fees)),
           weekendWork: null, // legacy field — weekend work toggle removed; weekend handling is now automatic (package + Sunday block)
           invoiceNumber,
           paymentStatus: "awaiting"
@@ -685,6 +537,227 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
     }
     console.error("Error creating order:", error);
     res.status(500).json({ error: "Kon bestelling niet aanmaken" });
+  }
+});
+
+// POST /api/orders/admin — back-office manual order creation (walk-in/phone).
+// Admin-only, no rate limit, price computed authoritatively server-side (no client
+// price to trust). Links to an existing customer by email when one matches.
+ordersRouter.post("/admin", requireAdmin as any, async (req: AuthenticatedRequest, res: Response) => {
+  const body = req.body ?? {};
+  try {
+    if (!body.machineId || !body.customerName || !body.customerEmail) {
+      return res.status(400).json({ error: "Onvolledige bestelgegevens" });
+    }
+    if (String(body.customerName).length > 200) return res.status(400).json({ error: "Naam is te lang (max 200 tekens)" });
+    const email = String(body.customerEmail);
+    if (email.length > 254 || !ORDER_EMAIL_REGEX.test(email)) return res.status(400).json({ error: "Ongeldig e-mailadres" });
+    if (body.customerProfile && !ORDER_VALID_PROFILES.includes(String(body.customerProfile))) {
+      return res.status(400).json({ error: "Profiel type niet ondersteund" });
+    }
+    if (!body.startDate || !body.endDate) return res.status(400).json({ error: "Start- en einddatum zijn verplicht" });
+    const startDate = new Date(body.startDate);
+    const endDate = new Date(body.endDate);
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return res.status(400).json({ error: "Ongeldige datumnotatie" });
+    if (endDate < startDate) return res.status(400).json({ error: "Einddatum moet na de startdatum liggen" });
+    if (!ORDER_VALID_DELIVERY_TYPES.includes(body.deliveryType)) return res.status(400).json({ error: "Ongeldig bezorgtype" });
+    if (body.deliveryAddress && String(body.deliveryAddress).length > 500) return res.status(400).json({ error: "Bezorgadres is te lang (max 500 tekens)" });
+    if (body.deliveryTimeSlot && !ORDER_VALID_TIME_SLOTS.includes(String(body.deliveryTimeSlot))) return res.status(400).json({ error: "Ongeldig bezorgmoment" });
+    if (body.customerPhone) {
+      const clean = String(body.customerPhone).replace(/[\s\-().+]/g, "");
+      if (!/^\d{7,15}$/.test(clean)) return res.status(400).json({ error: "Ongeldig telefoonnummer" });
+    }
+
+    const machine = await prisma.machine.findUnique({ where: { id: body.machineId } });
+    if (!machine || machine.isActive === false || machine.deletedAt) {
+      return res.status(404).json({ error: "Machine niet gevonden" });
+    }
+    if ((machine as any).pickupOnly && body.deliveryType !== "self_pickup") {
+      return res.status(400).json({ error: "Voor dit product is alleen afhalen mogelijk" });
+    }
+
+    const rentalDays = computeRentalDays(startDate, endDate);
+    if (rentalDays > 365) return res.status(400).json({ error: "Maximale huurperiode is 365 dagen. Neem contact op voor langere periodes." });
+
+    const siteConf = await prisma.siteConfig.findUnique({ where: { id: "default" } });
+    const campaignRules: CampaignRuleLike[] = Array.isArray((siteConf as any)?.campaignRules) ? (siteConf as any).campaignRules : [];
+    const fees = resolveFees(siteConf as any);
+    const addonsResult = computeAddonsTotal(machine, rentalDays, body.addons, fees);
+    if ("error" in addonsResult) return res.status(400).json({ error: addonsResult.error });
+    const subtotal = computeOrderSubtotal(machine, rentalDays, startDate, campaignRules, String(body.customerProfile || ""));
+    const transport = computeTransport(body.deliveryType, rentalDays, fees);
+    const { vat, total } = computeVatAndTotal(subtotal, transport, 0, addonsResult.total);
+    const storedAddons = buildStoredAddons(machine, rentalDays, body.addons, fees);
+
+    // Link to an existing customer account by email (case-insensitive) if present.
+    const matchedCustomer = await prisma.customer.findFirst({ where: { email: { equals: email, mode: "insensitive" } }, select: { id: true } });
+
+    const created = await withSerializableRetry(() => prisma.$transaction(async (tx) => {
+      await assertMachineAvailableInTx(tx, body.machineId, startDate, endDate);
+      const counter = await tx.invoiceCounter.upsert({
+        where: { id: "default" }, create: { id: "default", lastNumber: 1 }, update: { lastNumber: { increment: 1 } }
+      });
+      const invoiceNumber = `INV-${new Date().getFullYear()}-${String(counter.lastNumber).padStart(4, "0")}`;
+      return tx.order.create({
+        data: {
+          id: `HWH-${crypto.randomBytes(4).toString("hex").toUpperCase()}`,
+          machineId: body.machineId,
+          machineName: machine.name,
+          machinePrice: machine.pricePerDay,
+          startDate, endDate, rentalDays,
+          deliveryType: body.deliveryType,
+          deliveryAddress: body.deliveryAddress || "",
+          deliveryTimeSlot: body.deliveryTimeSlot ? String(body.deliveryTimeSlot) : null,
+          customerName: String(body.customerName),
+          customerEmail: email,
+          customerPhone: body.customerPhone ? String(body.customerPhone) : "",
+          customerProfile: body.customerProfile || "Particulier",
+          subtotal, transportCost: transport, driverCost: 0, vatAmount: vat, totalAmount: total,
+          status: "In behandeling",
+          customerId: matchedCustomer?.id ?? null,
+          addons: JSON.stringify(storedAddons),
+          weekendWork: null,
+          invoiceNumber,
+          paymentStatus: "awaiting"
+        }
+      });
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }));
+
+    audit(req, "order.created_manual", { entity: "Order", entityId: created.id, meta: { machineId: body.machineId, total } });
+    return res.status(201).json({
+      ...created,
+      startDate: created.startDate.toISOString().split("T")[0],
+      endDate: created.endDate.toISOString().split("T")[0],
+      addons: safeParseAddons(created.addons)
+    });
+  } catch (error: any) {
+    if (error?.message === "CONFLICT_ORDER") return res.status(409).json({ error: "Deze machine is al gereserveerd in de opgegeven periode", conflictingDates: error.conflictingDates });
+    if (error?.message === "BLOCKED_DATE") return res.status(409).json({ error: "De machine is niet beschikbaar op bepaalde datums in de opgegeven periode", blockedDates: [{ date: error.date, reason: error.reason }] });
+    if (error?.code === "P2034" || error?.code === "40001") return res.status(409).json({ error: "Er is veel vraag naar deze machine. Probeer het over enkele seconden opnieuw." });
+    console.error("Error creating manual order:", error);
+    return res.status(500).json({ error: "Kon bestelling niet aanmaken" });
+  }
+});
+
+// PATCH /api/orders/:id — admin edits an existing order (reschedule, fix customer
+// contact, change delivery/add-ons). All prices are recomputed authoritatively
+// server-side via the shared pricing helpers; only provided fields change. Not
+// allowed on a completed/cancelled order. Availability is re-checked (excluding
+// this order) so a reschedule can't double-book.
+ordersRouter.patch("/:id", requireAdmin as any, async (req: AuthenticatedRequest, res: Response) => {
+  const { id } = req.params;
+  const body = req.body ?? {};
+  try {
+    const existing = await prisma.order.findUnique({ where: { id } });
+    if (!existing) return res.status(404).json({ error: "Bestelling niet gevonden" });
+    if (existing.status === "Geannuleerd" || existing.status === "Voltooid") {
+      return res.status(400).json({ error: "Een afgeronde of geannuleerde bestelling kan niet meer worden bewerkt" });
+    }
+    const machine = await prisma.machine.findUnique({ where: { id: existing.machineId } });
+    if (!machine) return res.status(404).json({ error: "Machine niet gevonden" });
+
+    const changed: string[] = [];
+    let startDate = existing.startDate;
+    let endDate = existing.endDate;
+    if (body.startDate !== undefined || body.endDate !== undefined) {
+      const s = new Date(body.startDate ?? existing.startDate);
+      const e = new Date(body.endDate ?? existing.endDate);
+      if (isNaN(s.getTime()) || isNaN(e.getTime())) return res.status(400).json({ error: "Ongeldige datumnotatie" });
+      if (e < s) return res.status(400).json({ error: "Einddatum moet na de startdatum liggen" });
+      if (s.getTime() !== existing.startDate.getTime()) { startDate = s; changed.push("startDate"); }
+      if (e.getTime() !== existing.endDate.getTime()) { endDate = e; changed.push("endDate"); }
+    }
+    let customerName = existing.customerName;
+    if (body.customerName !== undefined) {
+      const v = String(body.customerName).trim();
+      if (!v || v.length > 200) return res.status(400).json({ error: "Ongeldige naam" });
+      customerName = v; changed.push("customerName");
+    }
+    let customerEmail = existing.customerEmail;
+    if (body.customerEmail !== undefined) {
+      const v = String(body.customerEmail);
+      if (v.length > 254 || !ORDER_EMAIL_REGEX.test(v)) return res.status(400).json({ error: "Ongeldig e-mailadres" });
+      customerEmail = v; changed.push("customerEmail");
+    }
+    let customerPhone = existing.customerPhone;
+    if (body.customerPhone !== undefined) {
+      const raw = String(body.customerPhone);
+      if (raw) {
+        const clean = raw.replace(/[\s\-().+]/g, "");
+        if (!/^\d{7,15}$/.test(clean)) return res.status(400).json({ error: "Ongeldig telefoonnummer" });
+      }
+      customerPhone = raw || null; changed.push("customerPhone");
+    }
+    let customerProfile = existing.customerProfile;
+    if (body.customerProfile !== undefined) {
+      if (body.customerProfile && !ORDER_VALID_PROFILES.includes(String(body.customerProfile))) {
+        return res.status(400).json({ error: "Profiel type niet ondersteund" });
+      }
+      customerProfile = body.customerProfile || "Particulier"; changed.push("customerProfile");
+    }
+    let deliveryType = existing.deliveryType;
+    if (body.deliveryType !== undefined) {
+      if (!ORDER_VALID_DELIVERY_TYPES.includes(body.deliveryType)) return res.status(400).json({ error: "Ongeldig bezorgtype" });
+      deliveryType = body.deliveryType; changed.push("deliveryType");
+    }
+    if ((machine as any).pickupOnly && deliveryType !== "self_pickup") {
+      return res.status(400).json({ error: "Voor dit product is alleen afhalen mogelijk" });
+    }
+    let deliveryAddress = existing.deliveryAddress;
+    if (body.deliveryAddress !== undefined) {
+      if (String(body.deliveryAddress).length > 500) return res.status(400).json({ error: "Bezorgadres is te lang (max 500 tekens)" });
+      deliveryAddress = String(body.deliveryAddress || ""); changed.push("deliveryAddress");
+    }
+    let deliveryTimeSlot = existing.deliveryTimeSlot;
+    if (body.deliveryTimeSlot !== undefined) {
+      if (body.deliveryTimeSlot && !ORDER_VALID_TIME_SLOTS.includes(String(body.deliveryTimeSlot))) return res.status(400).json({ error: "Ongeldig bezorgmoment" });
+      deliveryTimeSlot = body.deliveryTimeSlot ? String(body.deliveryTimeSlot) : null; changed.push("deliveryTimeSlot");
+    }
+    const addonsInput = body.addons !== undefined ? body.addons : safeParseAddons(existing.addons);
+    if (body.addons !== undefined) changed.push("addons");
+
+    if (changed.length === 0) return res.status(400).json({ error: "Geen wijzigingen opgegeven" });
+
+    const rentalDays = computeRentalDays(startDate, endDate);
+    if (rentalDays > 365) return res.status(400).json({ error: "Maximale huurperiode is 365 dagen." });
+
+    const siteConf = await prisma.siteConfig.findUnique({ where: { id: "default" } });
+    const campaignRules: CampaignRuleLike[] = Array.isArray((siteConf as any)?.campaignRules) ? (siteConf as any).campaignRules : [];
+    const fees = resolveFees(siteConf as any);
+    const addonsResult = computeAddonsTotal(machine, rentalDays, addonsInput, fees);
+    if ("error" in addonsResult) return res.status(400).json({ error: addonsResult.error });
+    const subtotal = computeOrderSubtotal(machine, rentalDays, startDate, campaignRules, String(customerProfile || ""));
+    const transport = computeTransport(deliveryType, rentalDays, fees);
+    const { vat, total } = computeVatAndTotal(subtotal, transport, 0, addonsResult.total);
+    const storedAddons = buildStoredAddons(machine, rentalDays, addonsInput, fees);
+
+    const updated = await withSerializableRetry(() => prisma.$transaction(async (tx) => {
+      await assertMachineAvailableInTx(tx, existing.machineId, startDate, endDate, id);
+      return tx.order.update({
+        where: { id },
+        data: {
+          startDate, endDate, rentalDays,
+          customerName, customerEmail, customerPhone, customerProfile,
+          deliveryType, deliveryAddress, deliveryTimeSlot,
+          subtotal, transportCost: transport, driverCost: 0, vatAmount: vat, totalAmount: total,
+          addons: JSON.stringify(storedAddons)
+        }
+      });
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }));
+
+    audit(req, "order.updated", { entity: "Order", entityId: id, meta: { fields: changed.slice(0, 40) } });
+    return res.json({
+      ...updated,
+      startDate: updated.startDate.toISOString().split("T")[0],
+      endDate: updated.endDate.toISOString().split("T")[0],
+      addons: safeParseAddons(updated.addons)
+    });
+  } catch (error: any) {
+    if (error?.message === "CONFLICT_ORDER") return res.status(409).json({ error: "Deze machine is al gereserveerd in de opgegeven periode", conflictingDates: error.conflictingDates });
+    if (error?.message === "BLOCKED_DATE") return res.status(409).json({ error: "De machine is niet beschikbaar op bepaalde datums in de opgegeven periode", blockedDates: [{ date: error.date, reason: error.reason }] });
+    if (error?.code === "P2034" || error?.code === "40001") return res.status(409).json({ error: "Er is veel vraag naar deze machine. Probeer het over enkele seconden opnieuw." });
+    console.error("Error updating order:", error);
+    return res.status(500).json({ error: "Kon bestelling niet bijwerken" });
   }
 });
 

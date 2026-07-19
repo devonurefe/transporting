@@ -6,7 +6,7 @@
 import React, { useState } from "react";
 import { motion } from "motion/react";
 import {
-  HelpCircle, Star, Clock, Euro, FileText, Search,
+  HelpCircle, Star, Clock, Euro, FileText, Search, Tag,
   Plus, Trash2, ShieldCheck, Truck, BadgeCheck, Phone, AlertTriangle
 } from "lucide-react";
 import { useAppStore } from "../../store/appStore";
@@ -14,19 +14,21 @@ import { showAdminToast } from "./AdminToast";
 import { FAQ_ITEMS } from "../../data/faq";
 import { DEFAULT_PRIVACY_POLICY, DEFAULT_TERMS_CONDITIONS } from "../../data/legalContent";
 import { DEFAULT_TRANSPORT_FEES, DEFAULT_GLOBAL_ADDONS } from "../../utils/pricing";
+import AdminCampaignRules from "./AdminCampaignRules";
 
 interface AdminContentProps {
   adminLanguage?: string;
+  onAddSystemLog: (type: "login" | "logout" | "signup" | "booking" | "fleet" | "status" | "system", user: string, description: string) => void;
 }
 
-type ContentTab = "faq" | "usp" | "hours" | "fees" | "seo" | "legal";
+type ContentTab = "faq" | "usp" | "hours" | "fees" | "campaigns" | "seo" | "legal";
 
 const USP_ICON_OPTIONS = ["shield", "clock", "truck", "badge-check", "euro", "phone"] as const;
 const USP_ICON_MAP: Record<string, typeof ShieldCheck> = {
   shield: ShieldCheck, clock: Clock, truck: Truck, "badge-check": BadgeCheck, euro: Euro, phone: Phone,
 };
 
-export default function AdminContent({ adminLanguage }: AdminContentProps) {
+export default function AdminContent({ adminLanguage, onAddSystemLog }: AdminContentProps) {
   const t = (nl: string, en: string, tr: string) => {
     if (adminLanguage === "tr") return tr;
     if (adminLanguage === "en") return en;
@@ -86,6 +88,7 @@ export default function AdminContent({ adminLanguage }: AdminContentProps) {
     { id: "usp", label: "USP's", icon: Star },
     { id: "hours", label: t("Openingstijden", "Opening hours", "Çalışma saatleri"), icon: Clock },
     { id: "fees", label: t("Tarieven", "Rates", "Ücretler"), icon: Euro },
+    { id: "campaigns", label: t("Kortingen", "Discounts", "İndirimler"), icon: Tag },
     { id: "seo", label: "SEO", icon: Search },
     { id: "legal", label: t("Juridisch", "Legal", "Yasal"), icon: FileText },
   ];
@@ -320,6 +323,11 @@ export default function AdminContent({ adminLanguage }: AdminContentProps) {
             {t("Add-on-tarieven opslaan", "Save add-on rates", "Ek ürün ücretlerini kaydet")}
           </button>
         </div>
+      )}
+
+      {/* ── Kortingen (campagneregels) ──────────────────────────────────── */}
+      {tab === "campaigns" && (
+        <AdminCampaignRules onAddSystemLog={onAddSystemLog} adminLanguage={adminLanguage} />
       )}
 
       {/* ── SEO ─────────────────────────────────────────────────────────── */}

@@ -21,7 +21,10 @@ import {
   Printer,
   Truck,
   Loader2,
-  Bell
+  Bell,
+  Undo2,
+  PlusCircle,
+  Pencil
 } from "lucide-react";
 import { useAppStore } from "../../store/appStore";
 import { useAuthStore } from "../../store/authStore";
@@ -29,6 +32,7 @@ import { HuurGoText } from "../Header";
 import { printInvoice } from "../../utils/invoice";
 import { euro, formatDateNL } from "../../utils/format";
 import AdminConfirmDialog from "./AdminConfirmDialog";
+import AdminOrderFormModal from "./AdminOrderFormModal";
 import AdminStatusBadge from "./AdminStatusBadge";
 import { OrderStatus } from "../../types";
 import { getAdminAuthHeaders } from "../../utils/authHeaders";
@@ -225,6 +229,15 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
   const [statusError, setStatusError] = useState<string | null>(null);
   const [staleDismissed, setStaleDismissed] = useState<boolean>(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState<boolean>(false);
+  const [showRefundConfirm, setShowRefundConfirm] = useState<boolean>(false);
+  const [showCreateForm, setShowCreateForm] = useState<boolean>(false);
+  const [editingOrder, setEditingOrder] = useState<any | null>(null);
+
+  const confirmRefundOrder = () => {
+    if (!selectedDetailOrder) return;
+    handleUpdatePaymentStatus(selectedDetailOrder.id, "refunded");
+    setShowRefundConfirm(false);
+  };
 
   const closeModal = () => {
     setSelectedDetailOrder(null);
@@ -356,9 +369,20 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
       className="space-y-6"
     >
       <div className="glass-panel p-6 rounded-3xl space-y-4">
-        <div className="border-b border-slate-200 pb-3">
-          <h3 className="font-display font-bold text-sm text-slate-900">{t("Alle Actieve & Historische Contracten", "All Active & Historical Contracts", "Tüm Aktif ve Geçmiş Sözleşmeler")}</h3>
-          <p className="text-[11px] text-slate-500 mt-0.5">{t("Hier accordeert u inkomende reserveringen en past u de logistieke status aan van klanten.", "Here you approve incoming reservations and adjust the logistics status.", "Buradan gelen rezervasyonları onaylar ve müşterilerin lojistik durumlarını düzenlersiniz.")}</p>
+        <div className="border-b border-slate-200 pb-3 flex items-start justify-between gap-3">
+          <div>
+            <h3 className="font-display font-bold text-sm text-slate-900">{t("Alle Actieve & Historische Contracten", "All Active & Historical Contracts", "Tüm Aktif ve Geçmiş Sözleşmeler")}</h3>
+            <p className="text-[11px] text-slate-500 mt-0.5">{t("Hier accordeert u inkomende reserveringen en past u de logistieke status aan van klanten.", "Here you approve incoming reservations and adjust the logistics status.", "Buradan gelen rezervasyonları onaylar ve müşterilerin lojistik durumlarını düzenlersiniz.")}</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowCreateForm(true)}
+            className="shrink-0 inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold py-2 px-3 rounded-xl transition-colors cursor-pointer shadow-sm"
+          >
+            <PlusCircle className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">{t("Nieuwe bestelling", "New order", "Yeni sipariş")}</span>
+            <span className="sm:hidden">{t("Nieuw", "New", "Yeni")}</span>
+          </button>
         </div>
 
         {/* Status filter chips */}
@@ -551,7 +575,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                 <th className="pb-3.5 pr-3 w-8">
                   <input
                     type="checkbox"
-                    className="h-3.5 w-3.5 rounded accent-indigo-600 cursor-pointer"
+                    className="h-4 w-4 rounded accent-indigo-600 cursor-pointer"
                     checked={displayOrders.length > 0 && displayOrders.every(o => selectedIds.has(o.id))}
                     onChange={toggleSelectAll}
                   />
@@ -579,7 +603,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                       <td className="py-3 pr-3 pl-1 w-8">
                         <input
                           type="checkbox"
-                          className="h-3.5 w-3.5 rounded accent-indigo-600 cursor-pointer"
+                          className="h-4 w-4 rounded accent-indigo-600 cursor-pointer"
                           checked={selectedIds.has(o.id)}
                           onChange={() => toggleSelect(o.id)}
                         />
@@ -1075,6 +1099,20 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                     )}
                   </div>
                 )}
+                {/* Refund — only for a paid order. Records paymentStatus "refunded"
+                    so cancelled-but-paid money is reconciled (the badge then reads
+                    "Teruggestort"). Guarded behind a confirm dialog. */}
+                {selectedDetailOrder.paymentStatus === "paid" && (
+                  <button
+                    type="button"
+                    disabled={isUpdatingPayment}
+                    onClick={() => setShowRefundConfirm(true)}
+                    className="w-full bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200 rounded-xl text-xs font-bold py-2.5 px-3 transition-all cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50"
+                  >
+                    <Undo2 className="h-3.5 w-3.5 shrink-0" />
+                    <span>{t("Terugstorting registreren", "Register refund", "İade Kaydet")}</span>
+                  </button>
+                )}
 
                 {/* Row 2: Primary action (forward status) — full width, dominant */}
                 {selectedDetailOrder.status !== "Geannuleerd" && selectedDetailOrder.status !== "Voltooid" && (
@@ -1128,17 +1166,37 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                       </button>
                     )}
 
-                    {/* Cancel — destructive, separated below primary */}
-                    <button
-                      type="button"
-                      disabled={isUpdatingStatus}
-                      onClick={() => setShowCancelConfirm(true)}
-                      className="w-full py-2 text-rose-600 hover:text-rose-700 border border-rose-200 hover:border-rose-300 hover:bg-rose-50 rounded-xl text-[11px] font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed bg-white"
-                    >
-                      <X className="h-3.5 w-3.5 shrink-0" />
-                      <span>{t("Bestelling annuleren", "Cancel order", "Siparişi İptal Et")}</span>
-                    </button>
+                    {/* Cancel — destructive, separated below primary. Only shown for
+                        statuses the server actually allows to cancel
+                        (VALID_STATUS_TRANSITIONS in server/routes/orders.ts:
+                        In behandeling / Goedgekeurd → Geannuleerd). A dispatched
+                        ("Onderweg") order can no longer be cancelled, so hiding the
+                        button here prevents a guaranteed server rejection. */}
+                    {(selectedDetailOrder.status === "In behandeling" || selectedDetailOrder.status === "Goedgekeurd") && (
+                      <button
+                        type="button"
+                        disabled={isUpdatingStatus}
+                        onClick={() => setShowCancelConfirm(true)}
+                        className="w-full py-2 text-rose-600 hover:text-rose-700 border border-rose-200 hover:border-rose-300 hover:bg-rose-50 rounded-xl text-[11px] font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed bg-white"
+                      >
+                        <X className="h-3.5 w-3.5 shrink-0" />
+                        <span>{t("Bestelling annuleren", "Cancel order", "Siparişi İptal Et")}</span>
+                      </button>
+                    )}
                   </div>
+                )}
+
+                {/* Edit — reschedule / fix customer details / change delivery.
+                    Only while the order can still change (not completed/cancelled). */}
+                {selectedDetailOrder.status !== "Voltooid" && selectedDetailOrder.status !== "Geannuleerd" && (
+                  <button
+                    type="button"
+                    onClick={() => setEditingOrder(selectedDetailOrder)}
+                    className="w-full py-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                  >
+                    <Pencil className="h-3.5 w-3.5 shrink-0" />
+                    <span>{t("Bestelling bewerken", "Edit order", "Siparişi düzenle")}</span>
+                  </button>
                 )}
 
                 {/* Row 3: Utility actions (print + close) */}
@@ -1169,12 +1227,51 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
       <AdminConfirmDialog
         open={showCancelConfirm}
         title={t("Bestelling annuleren", "Cancel order", "Siparişi iptal et")}
-        message={t("Weet u zeker dat u dit contract permanent wilt annuleren?", "Are you sure you want to permanently cancel this order?", "Bu siparişi kalıcı olarak iptal etmek istediğinizden emin misiniz?")}
+        message={
+          selectedDetailOrder?.paymentStatus === "paid"
+            ? t(
+                "Weet u zeker dat u dit contract permanent wilt annuleren? Let op: de betaling blijft als 'Betaald' staan — registreer daarna een terugstorting om het bedrag terug te boeken.",
+                "Are you sure you want to permanently cancel this order? Note: the payment stays marked 'Paid' — register a refund afterwards to reconcile the amount.",
+                "Bu siparişi kalıcı olarak iptal etmek istediğinizden emin misiniz? Not: ödeme 'Ödendi' olarak kalır — tutarı geri almak için ardından iade kaydedin."
+              )
+            : t("Weet u zeker dat u dit contract permanent wilt annuleren?", "Are you sure you want to permanently cancel this order?", "Bu siparişi kalıcı olarak iptal etmek istediğinizden emin misiniz?")
+        }
         confirmLabel={t("Annuleren bevestigen", "Confirm cancellation", "İptali onayla")}
         cancelLabel={t("Terug", "Back", "Geri")}
         onConfirm={confirmCancelOrder}
         onCancel={() => setShowCancelConfirm(false)}
       />
+      <AdminConfirmDialog
+        open={showRefundConfirm}
+        danger={false}
+        title={t("Terugstorting registreren", "Register refund", "İade kaydet")}
+        message={t(
+          "Markeer de betaling van deze bestelling als teruggestort? Dit past alleen de betaalstatus aan; het bedrag stort u zelf terug via uw betaalprovider.",
+          "Mark this order's payment as refunded? This only updates the payment status; you refund the amount yourself via your payment provider.",
+          "Bu siparişin ödemesini iade edildi olarak işaretle? Bu yalnızca ödeme durumunu günceller; tutarı kendi ödeme sağlayıcınız üzerinden iade edersiniz."
+        )}
+        confirmLabel={t("Terugstorting bevestigen", "Confirm refund", "İadeyi onayla")}
+        cancelLabel={t("Terug", "Back", "Geri")}
+        onConfirm={confirmRefundOrder}
+        onCancel={() => setShowRefundConfirm(false)}
+      />
+      {showCreateForm && (
+        <AdminOrderFormModal
+          mode="create"
+          adminLanguage={adminLanguage}
+          onClose={() => setShowCreateForm(false)}
+          onSaved={(msg) => showAdminToast(msg, "success")}
+        />
+      )}
+      {editingOrder && (
+        <AdminOrderFormModal
+          mode="edit"
+          order={editingOrder}
+          adminLanguage={adminLanguage}
+          onClose={() => setEditingOrder(null)}
+          onSaved={(msg) => { showAdminToast(msg, "success"); closeModal(); }}
+        />
+      )}
     </motion.div>
   );
 }

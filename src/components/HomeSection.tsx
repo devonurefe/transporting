@@ -465,6 +465,14 @@ export default function HomeSection({
     },
   ];
 
+  // Admin-override: als de eigenaar FAQ-items in AdminContent heeft opgeslagen,
+  // winnen die ook op de homepage (voorheen las alleen /veelgestelde-vragen die
+  // via resolveFaqItems — de 3 homepage-vragen negeerden de admin-editor volledig).
+  // Zonder admin-items blijft de meertalige standaardlijst hierboven gelden.
+  const homeFaqItems = (siteConfig?.faqItems && siteConfig.faqItems.length > 0)
+    ? siteConfig.faqItems
+    : FAQ_ITEMS;
+
   const SCHAARLIFT_VARIANTS = new Set(["schaarlift", "schaarlift-smal", "schaarlift-6m"]);
 
   const activeMachines = React.useMemo(() => machines.filter(m => m.isActive !== false), [machines]);
@@ -909,7 +917,7 @@ export default function HomeSection({
           {/* Homepage toont bewust maar 3 vragen — de volledige lijst (incl.
               admin-beheerde items) staat op /veelgestelde-vragen. */}
           <div className="space-y-2.5">
-            {FAQ_ITEMS.slice(0, 3).map((item, i) => (
+            {homeFaqItems.slice(0, 3).map((item, i) => (
               <div key={i} className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200">
                 <button
                   type="button"

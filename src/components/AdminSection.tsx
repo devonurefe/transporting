@@ -86,6 +86,21 @@ export default function AdminSection({
   const [ordersFilter, setOrdersFilter] = useState<string[]>([]);
   const [showAdvancedSubmenu, setShowAdvancedSubmenu] = useState<boolean>(false);
   const [showMobileMenu, setShowMobileMenu] = useState<boolean>(false);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
+
+  // Close the mobile nav dropdown on an outside tap/click — it previously only
+  // closed via a tab selection or re-tapping the toggle button, so tapping
+  // anywhere else on the page left it open, covering the content below it.
+  useEffect(() => {
+    if (!showMobileMenu) return;
+    const handlePointerDown = (e: PointerEvent) => {
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(e.target as Node)) {
+        setShowMobileMenu(false);
+      }
+    };
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, [showMobileMenu]);
 
   // Reset to dashboard when logo is clicked (navigate to /admin while already on /admin)
   const location = useLocation();
@@ -360,7 +375,7 @@ export default function AdminSection({
           
           <div className="lg:col-span-3 space-y-4">
             {/* Mobile Navigation Dropdown */}
-            <div className="lg:hidden relative w-full mb-2 z-20">
+            <div ref={mobileMenuRef} className="lg:hidden relative w-full mb-2 z-20">
               <button
                 type="button"
                 onClick={() => setShowMobileMenu(!showMobileMenu)}
@@ -588,7 +603,7 @@ export default function AdminSection({
                   <AdminCustomizer key="customizer" onAddSystemLog={onAddSystemLog} adminLanguage={adminLanguage} />
                 )}
                 {subTab === "content" && (
-                  <AdminContent key="content" adminLanguage={adminLanguage} />
+                  <AdminContent key="content" adminLanguage={adminLanguage} onAddSystemLog={onAddSystemLog} />
                 )}
                 {subTab === "accounting" && (
                   <AdminAccounting key="accounting" adminLanguage={adminLanguage} />

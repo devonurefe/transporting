@@ -373,7 +373,7 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
               // a fixed 92dvh height left a large empty white band under the legend.
               // max-h keeps the scrollable body working on very short viewports.
               // Reverts to a centered card on wider screens.
-              className="relative z-[60] w-full max-h-[92dvh] sm:max-w-sm bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-200 flex flex-col sm:max-h-[85vh] overflow-hidden"
+              className="relative z-[60] w-full max-h-[92dvh] sm:max-w-sm lg:max-w-md bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-200 flex flex-col sm:max-h-[85vh] lg:max-h-[88vh] overflow-hidden"
             >
               {/* Header */}
               <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
@@ -418,7 +418,9 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
                       const { key, day, status, selectable, isStart, isEnd, inRange } = cell;
                       // 44px op mobiel (WCAG/iOS dokungrootte-richtlijn), h-9 (36px) blijft vanaf sm: —
                       // geen xs:-breakpoint in deze Tailwind-setup, dus sm: is de kleinste beschikbare stap.
-                      const base = "relative h-11 sm:h-9 rounded-lg text-xs font-bold flex items-center justify-center transition-colors";
+                      // lg: schaalt weer iets op — de bredere lg:max-w-md dialoog liet anders
+                      // alleen witruimte rond de cellen groeien in plaats van de cellen zelf.
+                      const base = "relative h-11 sm:h-9 lg:h-11 rounded-lg text-xs lg:text-sm font-bold flex items-center justify-center transition-colors";
                       let cls = "";
                       if (isStart || isEnd) cls = "bg-amber-500 text-white shadow-sm";
                       else if (inRange) cls = "bg-amber-100 text-amber-900";

@@ -523,6 +523,12 @@ export default function BookingStep1({
               selectedAddons.includes("rijplaten")
                 ? "bg-slate-50 border-slate-400 shadow-sm"
                 : "bg-white border-slate-200 hover:border-slate-300 shadow-sm"
+            } ${
+              // Expanded "Meer info" text used to just push this single grid column
+              // taller and taller while an unused column of blank space sat next to
+              // it (the grid is md:grid-cols-3 but often only 2 addons render) —
+              // span the free width instead so the text reflows wider and shorter.
+              selectedAddons.includes("rijplaten") && rijplatenInfoOpen ? "md:col-span-2" : ""
             }`}
           >
             <div>

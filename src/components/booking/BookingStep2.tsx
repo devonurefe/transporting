@@ -12,6 +12,8 @@ import { HuurGoText } from "../Header";
 
 interface BookingStep2Props {
   currentUser: UserProfile | null;
+  isGuestConfirmed: boolean;
+  setIsGuestConfirmed: (confirmed: boolean) => void;
   customerName: string;
   setCustomerName: (name: string) => void;
   customerEmail: string;
@@ -68,6 +70,8 @@ const PROFESSIONS = [
 
 export default function BookingStep2({
   currentUser,
+  isGuestConfirmed,
+  setIsGuestConfirmed,
   customerName,
   setCustomerName,
   customerEmail,
@@ -101,7 +105,6 @@ export default function BookingStep2({
   isSubmitting,
   bookingError
 }: BookingStep2Props) {
-  const [isGuestConfirmed, setIsGuestConfirmed] = React.useState<boolean>(false);
   const [sectorOpen, setSectorOpen] = React.useState(false);
   const selectedProfession = PROFESSIONS.find(p => p.value === customerProfile) ?? PROFESSIONS[0];
   // Set once the customer tries to submit — gates the red "missing field"

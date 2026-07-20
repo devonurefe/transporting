@@ -161,7 +161,11 @@ export default function MachineDetailModal({
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 15 }}
         transition={{ type: "spring", stiffness: 350, damping: 26 }}
-        className="w-full max-w-4xl bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden z-[60] flex flex-col max-h-[90vh] my-8 outline-none"
+        // max-w-4xl (896px) read as oversized on desktop — the aspect-video hero
+        // image alone rendered ~500px tall, dwarfing everything below it. max-w-2xl
+        // only ever shrinks the sm:+ breakpoints in practice since mobile viewports
+        // are already narrower than that, so this doesn't touch the mobile layout.
+        className="w-full max-w-2xl bg-white border border-slate-200 rounded-3xl p-6 sm:p-7 shadow-2xl relative overflow-hidden z-[60] flex flex-col max-h-[90vh] my-8 outline-none"
       >
         {/* Top gradient stripe */}
         <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-emerald-400 via-orange-400 to-amber-400" />
@@ -437,7 +441,10 @@ export default function MachineDetailModal({
 
         </div>
 
-        {/* Footer — price + CTA, always visible on all screen sizes */}
+        {/* Footer — price + CTA, always visible on all screen sizes. Sluiten stays
+            pinned left; price chip + Huur Nu are grouped on the right from sm: so they
+            read as one unit instead of Huur Nu stretching to fill the entire row next
+            to a comparatively tiny price on wide screens. */}
         <div className="flex items-center gap-2 pt-3 border-t border-slate-200 shrink-0 mt-3">
           <button
             onClick={onClose}
@@ -445,19 +452,21 @@ export default function MachineDetailModal({
           >
             Sluiten
           </button>
-          <div className="shrink-0 px-2 hidden sm:block">
-            <p className="text-[9px] text-slate-500 leading-none">per dag</p>
-            <p className="text-sm font-black text-slate-900 font-mono leading-tight">
-              €{priceNum(vp(machine.pricePerDay))}<span className="text-[10px] font-normal text-slate-500">/dag</span>
-            </p>
+          <div className="flex-1 flex items-center justify-end gap-2 min-w-0">
+            <div className="shrink-0 px-3 py-2 hidden sm:block bg-slate-50 border border-slate-200 rounded-xl">
+              <p className="text-[9px] text-slate-500 leading-none">per dag</p>
+              <p className="text-sm font-black text-slate-900 font-mono leading-tight">
+                €{priceNum(vp(machine.pricePerDay))}<span className="text-[10px] font-normal text-slate-500">/dag</span>
+              </p>
+            </div>
+            <button
+              onClick={() => onBook(machine)}
+              className="cta-shine flex-1 sm:flex-none flex items-center justify-center gap-2 py-3 px-4 sm:px-8 rounded-xl bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white text-sm font-bold transition-all shadow-md cursor-pointer active:scale-[0.98]"
+            >
+              <ShoppingCart className="h-4 w-4" />
+              Huur Nu
+            </button>
           </div>
-          <button
-            onClick={() => onBook(machine)}
-            className="cta-shine flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white text-sm font-bold transition-all shadow-md cursor-pointer active:scale-[0.98]"
-          >
-            <ShoppingCart className="h-4 w-4" />
-            Huur Nu
-          </button>
         </div>
       </motion.div>
     </div>

@@ -1108,12 +1108,12 @@ export default function App() {
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               onClick={() => { setFabOpen(v => !v); setFabPulse(false); }}
-              className={`relative flex items-center justify-center h-11 w-11 rounded-full text-white shadow-lg hover:scale-110 active:scale-95 transition-all cursor-pointer border-none shadow-emerald-500/25 ${fabOpen ? "bg-slate-700 hover:bg-slate-800" : "bg-[#25D366] hover:bg-[#1da851]"}`}
+              className={`relative flex items-center justify-center h-11 w-11 md:h-14 md:w-14 rounded-full text-white shadow-lg hover:scale-110 active:scale-95 transition-all cursor-pointer border-none shadow-emerald-500/25 ${fabOpen ? "bg-slate-700 hover:bg-slate-800" : "bg-[#25D366] hover:bg-[#1da851]"}`}
               title="Hulp nodig? Chat via WhatsApp"
               aria-label={fabOpen ? "WhatsApp menu sluiten" : "Hulp nodig? Chat via WhatsApp"}
               aria-expanded={fabOpen}
             >
-              <MessageCircle className="h-5 w-5" />
+              <MessageCircle className="h-5 w-5 md:h-6 md:w-6" />
             </motion.button>
           </div>
         </div>

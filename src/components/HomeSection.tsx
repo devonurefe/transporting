@@ -350,9 +350,13 @@ function DealsCarousel({ machines, onSearch }: { machines: Machine[]; onSearch: 
                 className="shrink-0 w-[200px] rounded-2xl shadow-sm hover:shadow-lg hover:-translate-y-1 active:scale-[0.98] transition-all text-left group"
               >
                 <div className="overflow-hidden rounded-2xl border border-amber-100 bg-white flex flex-col h-full">
-                  <div className="relative aspect-square w-full bg-amber-50 shrink-0 overflow-hidden">
+                  {/* object-contain (not object-cover) so the full machine — often long
+                      and narrow, e.g. a mastlift laid diagonally — stays visible inside
+                      its own square box instead of getting cropped at the edges to fill it,
+                      matching how CatalogSection's product cards render photos. */}
+                  <div className="relative aspect-square w-full bg-amber-50 shrink-0 overflow-hidden p-2">
                     {machineImage ? (
-                      <img src={machineImage} alt={baseName} loading="lazy" draggable={false} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                      <img src={machineImage} alt={baseName} loading="lazy" draggable={false} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300" />
                     ) : (
                       <div className={`w-full h-full bg-gradient-to-br ${CAT_GRADIENT[m.category] ?? "from-amber-100 to-amber-200"} flex items-center justify-center`}>
                         <CatIcon className="h-10 w-10 text-slate-400" />

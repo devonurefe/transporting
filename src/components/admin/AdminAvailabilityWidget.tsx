@@ -49,41 +49,46 @@ export default function AdminAvailabilityWidget() {
   }, [startDate, endDate, machines, orders, blockedDates, todayStr]);
 
   return (
-    <div className="glass-panel p-4 rounded-2xl hidden lg:block bg-white border border-slate-200 shadow-sm space-y-3">
-      <div className="flex items-center space-x-2">
-        <CalendarSearch className="h-4 w-4 text-indigo-600 shrink-0" />
+    <div className="glass-panel p-4 rounded-2xl hidden lg:block bg-white border border-slate-200 shadow-sm space-y-3.5">
+      <div className="flex items-center gap-2">
+        <span className="h-6 w-6 rounded-lg bg-indigo-50 flex items-center justify-center shrink-0">
+          <CalendarSearch className="h-3.5 w-3.5 text-indigo-600" />
+        </span>
         <h4 className="font-display font-bold text-[10px] uppercase text-slate-500 tracking-wider">
           Beschikbaarheid Checker
         </h4>
       </div>
 
-      <div className="space-y-2">
-        <div className="grid grid-cols-2 gap-1.5">
-          <div>
-            <label className="text-[9px] font-bold text-slate-500 uppercase tracking-wide block mb-0.5">Van</label>
-            <input
-              type="date"
-              value={startDate}
-              min={todayStr}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="w-full text-[10px] bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 text-slate-800 focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/30"
-            />
-          </div>
-          <div>
-            <label className="text-[9px] font-bold text-slate-500 uppercase tracking-wide block mb-0.5">Tot</label>
-            <input
-              type="date"
-              value={endDate}
-              min={startDate || todayStr}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="w-full text-[10px] bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 text-slate-800 focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/30"
-            />
-          </div>
+      <div className="grid grid-cols-2 gap-2">
+        <div className="space-y-1">
+          <label htmlFor="avw-start" className="text-[9px] font-bold text-slate-500 uppercase tracking-wide block">Van</label>
+          <input
+            id="avw-start"
+            type="date"
+            value={startDate}
+            min={todayStr}
+            onChange={(e) => setStartDate(e.target.value)}
+            className="w-full text-[11px] bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 text-slate-800 outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/30 cursor-pointer transition-colors"
+          />
+        </div>
+        <div className="space-y-1">
+          <label htmlFor="avw-end" className="text-[9px] font-bold text-slate-500 uppercase tracking-wide block">Tot</label>
+          <input
+            id="avw-end"
+            type="date"
+            value={endDate}
+            min={startDate || todayStr}
+            onChange={(e) => setEndDate(e.target.value)}
+            className="w-full text-[11px] bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 text-slate-800 outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/30 cursor-pointer transition-colors"
+          />
         </div>
       </div>
 
       {!results && (
-        <p className="text-[10px] text-slate-400 text-center py-1">Kies een periode om beschikbaarheid te zien.</p>
+        <div className="flex flex-col items-center gap-1.5 py-3 text-center">
+          <CalendarSearch className="h-5 w-5 text-slate-300" />
+          <p className="text-[10px] text-slate-400">Kies een periode om beschikbaarheid te zien.</p>
+        </div>
       )}
 
       {startDate && endDate && startDate > endDate && (
@@ -91,9 +96,9 @@ export default function AdminAvailabilityWidget() {
       )}
 
       {results && results.length > 0 && (
-        <div className="space-y-1 max-h-64 overflow-y-auto scrollbar-none">
+        <div className="space-y-1 max-h-64 overflow-y-auto scrollbar-none -mx-1 px-1">
           {results.map((r) => (
-            <div key={r.name} className="flex items-center justify-between py-1 border-b border-slate-100 last:border-0">
+            <div key={r.name} className="flex items-center justify-between py-1.5 px-1.5 rounded-lg hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0">
               <div className="min-w-0 flex-1">
                 <p className="text-[10px] font-bold text-slate-800 truncate">{r.name}</p>
                 <p className="text-[9px] text-slate-400">{r.category}</p>

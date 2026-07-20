@@ -84,6 +84,9 @@ export default function AdminSection({
 }: AdminSectionProps) {
   const [subTab, setSubTab] = useState<AdminSubTab>("dashboard");
   const [ordersFilter, setOrdersFilter] = useState<string[]>([]);
+  // Deep-link target set by AdminCustomers' order-history drill-down —
+  // jumps to Orders with this exact order opened (see AdminOrders' initialOrderId).
+  const [orderIdFocus, setOrderIdFocus] = useState<string | null>(null);
   const [showAdvancedSubmenu, setShowAdvancedSubmenu] = useState<boolean>(false);
   const [showMobileMenu, setShowMobileMenu] = useState<boolean>(false);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
@@ -109,6 +112,7 @@ export default function AdminSection({
     if (!isMounted.current) { isMounted.current = true; return; }
     setSubTab("dashboard");
     setOrdersFilter([]);
+    setOrderIdFocus(null);
     setShowMobileMenu(false);
   }, [location.key]);
 
@@ -579,7 +583,7 @@ export default function AdminSection({
                   <AdminDashboard key="dashboard" setSubTab={setSubTab} setOrdersFilter={setOrdersFilter} adminLanguage={adminLanguage} />
                 )}
                 {subTab === "orders" && (
-                  <AdminOrders key="orders" onAddSystemLog={onAddSystemLog} adminLanguage={adminLanguage} statusFilter={ordersFilter} onClearStatusFilter={() => setOrdersFilter([])} />
+                  <AdminOrders key="orders" onAddSystemLog={onAddSystemLog} adminLanguage={adminLanguage} statusFilter={ordersFilter} onClearStatusFilter={() => setOrdersFilter([])} initialOrderId={orderIdFocus} />
                 )}
                 {subTab === "machines" && (
                   <AdminMachines key="machines" setSubTab={setSubTab} onAddSystemLog={onAddSystemLog} adminLanguage={adminLanguage} />
@@ -591,7 +595,7 @@ export default function AdminSection({
                   <AdminPlanning key="planning" adminLanguage={adminLanguage} />
                 )}
                 {subTab === "customers" && (
-                  <AdminCustomers key="customers" adminLanguage={adminLanguage} />
+                  <AdminCustomers key="customers" adminLanguage={adminLanguage} onViewOrder={(orderId) => { setOrderIdFocus(orderId); setSubTab("orders"); }} />
                 )}
                 {subTab === "add" && (
                   <AdminAddMachine key="add" setSubTab={setSubTab} onAddSystemLog={onAddSystemLog} adminLanguage={adminLanguage} />

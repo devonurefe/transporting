@@ -72,7 +72,12 @@ export default function HowItWorksSection() {
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-2 gap-3 sm:gap-4 max-w-md sm:max-w-2xl mx-auto">
+        {/* 2x2 on mobile/tablet (deliberate — see earlier redesign); 4-across
+            from lg: so the squares shrink into the wider row instead of
+            staying just as large but now with acres of empty white space
+            around each one, which is what a 672px-capped 2x2 grid looked like
+            stretched across a wide desktop viewport. */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 max-w-md sm:max-w-2xl lg:max-w-5xl mx-auto">
           {STEPS.map(({ Icon, title, body }, i) => (
             <motion.div
               key={title}

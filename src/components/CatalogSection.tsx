@@ -398,8 +398,11 @@ export default function CatalogSection({
               </div>
             )}
 
-            {/* Grid layout — wider cards: 1-col mobile, 2-col tablet+ */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
+            {/* Grid layout — 1-col mobile, 2-col tablet, 3-col desktop (lg+).
+                Stayed at 2 columns even on wide monitors before, which made
+                every product photo/card enormous relative to the content
+                inside it; 3 keeps cards a normal product-card width instead. */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
               {/* initial={false}: skip the fly-in animation for cards already on
                   screen when this mounts — otherwise every card in the grid
                   animates in at once on first visit, which reads as jittery/

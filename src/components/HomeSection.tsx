@@ -707,7 +707,12 @@ export default function HomeSection({
       <div className="relative bg-white px-5 sm:px-6 pt-10 pb-8 border-b border-slate-100 overflow-hidden">
         {/* Soft ambient glow — drifts gently behind the headline for depth */}
         <div className="float-slow pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 h-72 w-72 rounded-full bg-orange-500/10 blur-[90px] -z-0" aria-hidden="true" />
-        <div className="relative mx-auto max-w-xl text-center space-y-3.5">
+        {/* max-w-xl (576px) read as a small, isolated island on wide desktop
+            screens next to the max-w-5xl sections below it — widened, but
+            kept short of matching them exactly since the subtitle is body
+            text (unlike the headline/CTAs) and a 1024px line length would
+            hurt readability. */}
+        <div className="relative mx-auto max-w-3xl text-center space-y-3.5">
           <motion.p
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -894,8 +899,11 @@ export default function HomeSection({
 
       {/* ── ADVIESTOOL ENTRY — direct onder het categorie-overzicht, zodat een
           bezoeker die niet meteen de juiste categorie herkent hier meteen de
-          keuzehulp kan starten in plaats van pas na "Hoe werkt huren?" ── */}
-      <div className="bg-white px-4 sm:px-6 py-8">
+          keuzehulp kan starten in plaats van pas na "Hoe werkt huren?". Eigen
+          getinte achtergrond (i.p.v. hetzelfde wit als de secties eromheen)
+          zodat het duidelijk een eigen blok is, niet een los knopje dat toevallig
+          tussen twee andere secties in zweeft. ── */}
+      <div className="bg-gradient-to-b from-indigo-50/70 to-white border-y border-indigo-100/60 px-4 sm:px-6 py-10">
         <div className="max-w-2xl mx-auto">
           <AdviesStrip />
         </div>

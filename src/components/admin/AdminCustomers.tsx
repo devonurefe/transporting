@@ -49,6 +49,36 @@ function isBlocked(c: { lockedUntil?: string | null }): boolean {
 
 interface AdminCustomersProps {
   adminLanguage: "nl" | "en" | "tr";
+  onViewOrder?: (orderId: string) => void;
+}
+
+// Small hover tooltip for the icon-only action buttons in the desktop table —
+// they already had a native `title` attribute, but that browser tooltip is
+// slow to appear and inconsistently styled, so it read as "unclear what these
+// icons do." Same visual pattern as the chart tooltips in AdminDashboard.tsx.
+function IconActionButton({ title, onClick, disabled, className, children }: {
+  title: string;
+  onClick: () => void;
+  disabled?: boolean;
+  className: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <span className="relative inline-flex group">
+      <button
+        type="button"
+        title={title}
+        disabled={disabled}
+        onClick={onClick}
+        className={`h-6 w-6 flex items-center justify-center rounded-md transition-colors cursor-pointer disabled:opacity-50 ${className}`}
+      >
+        {children}
+      </button>
+      <span className="absolute bottom-full mb-1.5 left-1/2 -translate-x-1/2 opacity-0 scale-90 group-hover:opacity-100 group-hover:scale-100 transition-all duration-150 bg-slate-900 text-white text-[10px] font-semibold px-2 py-1 rounded-md pointer-events-none whitespace-nowrap z-30 shadow-lg">
+        {title}
+      </span>
+    </span>
+  );
 }
 
 const TEMPLATE_EMAILS = [
@@ -72,7 +102,7 @@ const TEMPLATE_EMAILS = [
   },
 ];
 
-export default function AdminCustomers({ adminLanguage }: AdminCustomersProps) {
+export default function AdminCustomers({ adminLanguage, onViewOrder }: AdminCustomersProps) {
   const { token } = useAuthStore();
   const { tAdmin } = useLanguageStore();
 
@@ -600,10 +630,10 @@ export default function AdminCustomers({ adminLanguage }: AdminCustomersProps) {
                       {new Date(c.createdAt).toLocaleDateString("nl-NL", { day: "2-digit", month: "2-digit", year: "2-digit" })}
                     </span>
                     <span className="flex items-center justify-center gap-1">
-                      <button type="button" title={t("Bewerk", "Edit", "Düzenle")} onClick={() => setEditCustomer(c)} className="h-6 w-6 flex items-center justify-center rounded-md bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors cursor-pointer"><Pencil className="h-3 w-3" /></button>
-                      <button type="button" title={t("Orders bekijken", "View orders", "Siparişler")} onClick={() => openOrders(c)} className="h-6 w-6 flex items-center justify-center rounded-md bg-indigo-50 hover:bg-indigo-100 text-indigo-600 transition-colors cursor-pointer"><ClipboardList className="h-3 w-3" /></button>
-                      <button type="button" title={isBlocked(c) ? t("Deblokkeer", "Unblock", "Aç") : t("Blokkeer", "Block", "Engelle")} disabled={busyId === c.id} onClick={() => toggleBlock(c)} className={`h-6 w-6 flex items-center justify-center rounded-md transition-colors cursor-pointer disabled:opacity-50 ${isBlocked(c) ? "bg-emerald-50 hover:bg-emerald-100 text-emerald-600" : "bg-amber-50 hover:bg-amber-100 text-amber-600"}`}><Ban className="h-3 w-3" /></button>
-                      <button type="button" title={t("Verwijder", "Delete", "Sil")} disabled={busyId === c.id} onClick={() => setDeleteTarget(c)} className="h-6 w-6 flex items-center justify-center rounded-md bg-rose-50 hover:bg-rose-100 text-rose-600 transition-colors cursor-pointer disabled:opacity-50"><Trash2 className="h-3 w-3" /></button>
+                      <IconActionButton title={t("Bewerk", "Edit", "Düzenle")} onClick={() => setEditCustomer(c)} className="bg-slate-100 hover:bg-slate-200 text-slate-600"><Pencil className="h-3 w-3" /></IconActionButton>
+                      <IconActionButton title={t("Orders bekijken", "View orders", "Siparişler")} onClick={() => openOrders(c)} className="bg-indigo-50 hover:bg-indigo-100 text-indigo-600"><ClipboardList className="h-3 w-3" /></IconActionButton>
+                      <IconActionButton title={isBlocked(c) ? t("Deblokkeer", "Unblock", "Aç") : t("Blokkeer", "Block", "Engelle")} disabled={busyId === c.id} onClick={() => toggleBlock(c)} className={isBlocked(c) ? "bg-emerald-50 hover:bg-emerald-100 text-emerald-600" : "bg-amber-50 hover:bg-amber-100 text-amber-600"}><Ban className="h-3 w-3" /></IconActionButton>
+                      <IconActionButton title={t("Verwijder", "Delete", "Sil")} disabled={busyId === c.id} onClick={() => setDeleteTarget(c)} className="bg-rose-50 hover:bg-rose-100 text-rose-600"><Trash2 className="h-3 w-3" /></IconActionButton>
                     </span>
                   </div>
                 );
@@ -798,7 +828,18 @@ export default function AdminCustomers({ adminLanguage }: AdminCustomersProps) {
                 ordersList.map((o) => (
                   <div key={o.id} className="border border-slate-100 rounded-xl px-3.5 py-2.5 flex items-center justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="font-mono text-[11px] font-bold text-slate-700">{o.id}</p>
+                      {onViewOrder ? (
+                        <button
+                          type="button"
+                          onClick={() => { onViewOrder(o.id); setOrdersFor(null); }}
+                          title={t("Ga naar deze bestelling in Orders", "Go to this order in Orders", "Bu siparişe Siparişler'de git")}
+                          className="font-mono text-[11px] font-bold text-indigo-600 hover:text-indigo-800 underline decoration-dotted underline-offset-2 cursor-pointer bg-transparent border-none p-0"
+                        >
+                          {o.id}
+                        </button>
+                      ) : (
+                        <p className="font-mono text-[11px] font-bold text-slate-700">{o.id}</p>
+                      )}
                       <p className="text-[11px] text-slate-500 truncate">{o.machineName}</p>
                       <p className="text-[10px] text-slate-400">{o.startDate} → {o.endDate} · {o.status}</p>
                     </div>

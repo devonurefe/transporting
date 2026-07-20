@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   X,
@@ -43,9 +43,12 @@ interface AdminOrdersProps {
   adminLanguage?: string;
   statusFilter?: string[];
   onClearStatusFilter?: () => void;
+  // Deep-link target from AdminCustomers' order-history drill-down: jump
+  // straight to this order (search filter + auto-opened detail modal).
+  initialOrderId?: string | null;
 }
 
-export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilter, onClearStatusFilter }: AdminOrdersProps) {
+export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilter, onClearStatusFilter, initialOrderId }: AdminOrdersProps) {
   const orders = useAppStore((state) => state.orders);
   const ordersPage = useAppStore((state) => state.ordersPage);
   const ordersTotalPages = useAppStore((state) => state.ordersTotalPages);
@@ -57,7 +60,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
   const adminUser = useAuthStore((state) => state.user);
 
   const [dateFilter, setDateFilter] = useState<"all" | "today" | "tomorrow" | "week">("all");
-  const [searchText, setSearchText] = useState("");
+  const [searchText, setSearchText] = useState(initialOrderId ?? "");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [localStatusFilter, setLocalStatusFilter] = useState<string>(
     statusFilter && statusFilter.length > 0 ? statusFilter[0] : "all"
@@ -72,6 +75,12 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
       setLocalStatusFilter("all");
     }
   }, [statusFilterKey]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Sync when the initialOrderId prop changes (deep-link from AdminCustomers'
+  // order-history drill-down).
+  useEffect(() => {
+    if (initialOrderId) setSearchText(initialOrderId);
+  }, [initialOrderId]);
 
   const toggleSelect = (id: string) =>
     setSelectedIds(prev => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s; });
@@ -222,6 +231,23 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
   // Modal and custom date proposal state
   const [selectedDetailOrder, setSelectedDetailOrder] = useState<any | null>(null);
   const [isProposingDate, setIsProposingDate] = useState<boolean>(false);
+
+  // Auto-open the deep-linked order's detail modal once it's loaded (the
+  // search-text filter above only narrows the list — this is what makes the
+  // link land "birebir" on the exact order instead of just a filtered list).
+  // Guarded by a ref so it only fires once per initialOrderId — otherwise the
+  // admin closing the modal manually while orders keeps refreshing would pop
+  // it back open every time the polled order list updates.
+  const autoOpenedForRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!initialOrderId || autoOpenedForRef.current === initialOrderId) return;
+    const match = orders.find(o => o.id === initialOrderId);
+    if (match) {
+      setSelectedDetailOrder(match);
+      setIsProposingDate(false);
+      autoOpenedForRef.current = initialOrderId;
+    }
+  }, [initialOrderId, orders]);
   const [newStartDate, setNewStartDate] = useState<string>("");
   const [newEndDate, setNewEndDate] = useState<string>("");
   const [isUpdatingStatus, setIsUpdatingStatus] = useState<boolean>(false);

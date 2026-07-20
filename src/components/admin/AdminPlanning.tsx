@@ -223,7 +223,7 @@ const WeekGrid = React.memo(function WeekGrid({
         return (
           <div
             key={idx}
-            className={`rounded-xl border p-1.5 min-h-[140px] flex flex-col gap-1 ${
+            className={`rounded-xl border p-1.5 min-h-[170px] flex flex-col gap-1 ${
               current ? "border-amber-400 bg-amber-50" : "border-slate-200 bg-white"
             }`}
           >

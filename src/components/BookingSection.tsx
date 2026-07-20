@@ -108,6 +108,14 @@ export default function BookingSection({
   const [customerEmail, setCustomerEmail] = useState<string>(currentUser ? currentUser.email : "");
   const [customerPhone, setCustomerPhone] = useState<string>(currentUser ? currentUser.phone : "");
   const [customerProfile, setCustomerProfile] = useState<string>(currentUser ? currentUser.profileType : "Particulier");
+  // Lifted out of BookingStep2 (was local useState there) — that component is
+  // conditionally rendered ({step === 2 && <BookingStep2 .../>}) so it fully
+  // unmounts when the customer steps back to Logistiek, wiping local state on
+  // remount. A guest who'd already confirmed "Doorgaan als gast" and filled in
+  // their details was dropped back onto the guest/login choice screen, reading
+  // as "all my selections reset to default" even though the underlying form
+  // fields (name/email/etc., already lifted) were untouched.
+  const [isGuestConfirmed, setIsGuestConfirmed] = useState<boolean>(false);
 
   // Availability checking state
   const [isAvailable, setIsAvailable] = useState<boolean>(true);
@@ -986,6 +994,8 @@ export default function BookingSection({
                   >
                   <BookingStep2
                     currentUser={currentUser}
+                    isGuestConfirmed={isGuestConfirmed}
+                    setIsGuestConfirmed={setIsGuestConfirmed}
                     customerName={customerName}
                     setCustomerName={setCustomerName}
                     customerEmail={customerEmail}

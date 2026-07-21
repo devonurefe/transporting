@@ -561,13 +561,24 @@ export default function App() {
     }
   }, [guestRatingData, guestRatingStars, triggerNotification]);
 
-  // Triggered when search is executed from landing hero
+  // Triggered when search is executed from landing hero (category cards, deals
+  // carousel, "Bekijk alles", etc. — anything that calls onSearch on HomeSection).
   const handleLandingPageSearch = (query: string, category: string) => {
     setSearchQuery(query);
     // "schaarlift" on homepage = all scissor lifts group in catalog
     const mapped = category === "schaarlift" ? "schaarlift-group" : (category || "all");
     setSelectedCategory(mapped);
-    navigate("/catalog");
+    // Must carry cat/q in the navigate() call itself, not just via the state
+    // setters above — the "fresh entry into /catalog" effect below re-derives
+    // selectedCategory/searchQuery from the URL on every navigation that lands
+    // here from another route, so a bare navigate("/catalog") with no query
+    // string was overwriting the category we just set back to "all", making
+    // every homepage category card show the full, unfiltered assortment.
+    const params = new URLSearchParams();
+    if (query) params.set("q", query);
+    if (mapped !== "all") params.set("cat", mapped);
+    const search = params.toString();
+    navigate(search ? `/catalog?${search}` : "/catalog");
   };
 
   // Replaces the cart with the chosen machine and moves to the booking flow.

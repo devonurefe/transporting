@@ -486,6 +486,14 @@ export function printInvoice(orderOrOrders: Order | Order[], clientCompanyName?:
         }
         .ab-print { background: #d97706; color: #ffffff; }
         .ab-close { background: #334155; color: #ffffff; }
+        .ab-close-hint {
+          display: none;
+          width: 100%;
+          text-align: center;
+          font-size: 11px;
+          color: #fbbf24;
+          margin-top: 2px;
+        }
 
         /* Print rules */
         @media print {
@@ -510,8 +518,24 @@ export function printInvoice(orderOrOrders: Order | Order[], clientCompanyName?:
       <!-- Screen-only controls (hidden in print) — the mobile close/print affordance -->
       <div class="action-bar">
         <button type="button" class="ab-print" onclick="window.print()">🖨️ Printen / Opslaan als PDF</button>
-        <button type="button" class="ab-close" onclick="window.close()">✕ Sluiten</button>
+        <button type="button" class="ab-close" onclick="huurgoTryClose()">✕ Sluiten</button>
+        <div class="ab-close-hint" id="ab-close-hint">Sluiten lukt niet automatisch in deze browser — sluit dit tabblad handmatig.</div>
       </div>
+      <script>
+        // Mobile Safari/Chrome silently refuse to let a script close a tab that
+        // was opened as a normal target="_blank" tab (only "true" popups opened
+        // by script, with no browsing history, are closable) — window.close()
+        // just no-ops there instead of throwing. If the tab is still around a
+        // moment later, tell the admin to close it by hand instead of leaving a
+        // button that looks broken.
+        function huurgoTryClose() {
+          window.close();
+          setTimeout(function () {
+            var hint = document.getElementById("ab-close-hint");
+            if (hint) hint.style.display = "block";
+          }, 300);
+        }
+      </script>
       <div class="container">
         
         <!-- Header Section -->

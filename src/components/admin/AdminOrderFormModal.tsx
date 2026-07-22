@@ -81,6 +81,10 @@ export default function AdminOrderFormModal({ mode, order, onClose, onSaved, adm
   }, [selectedMachine, startDate, endDate, customerProfile, campaignRules, siteConfig, deliveryType]);
 
   const pickupOnly = Boolean((selectedMachine as any)?.pickupOnly);
+  // Nifty 120/170 ("aanhanger" category) and Ladderlift are themselves towed
+  // behind a vehicle — renting an additional trailer makes no sense. Mirrors
+  // BookingStep1.tsx / server/routes/orders.ts TRAILER_RENTAL_EXCLUDED_CATEGORIES.
+  const trailerRentalExcluded = !!selectedMachine && ["aanhanger", "ladderlift"].includes(selectedMachine.category);
 
   const handleSubmit = async () => {
     setError(null);
@@ -89,6 +93,7 @@ export default function AdminOrderFormModal({ mode, order, onClose, onSaved, adm
     if (new Date(endDate) < new Date(startDate)) { setError(t("Einddatum moet op of na de startdatum liggen.", "End date must be on or after start date.", "Bitiş tarihi başlangıçtan önce olamaz.")); return; }
     if (!customerName.trim() || !customerEmail.trim()) { setError(t("Naam en e-mail zijn verplicht.", "Name and email are required.", "Ad ve e-posta zorunludur.")); return; }
     if (pickupOnly && deliveryType !== "self_pickup") { setError(t("Voor dit product is alleen afhalen mogelijk.", "This product is pickup-only.", "Bu ürün yalnızca teslim alınabilir.")); return; }
+    if (trailerRentalExcluded && deliveryType === "trailer_rental") { setError(t("Aanhanger huren is niet beschikbaar voor dit product.", "Trailer rental is not available for this product.", "Bu ürün için römork kiralama mevcut değil.")); return; }
 
     setSaving(true);
     if (mode === "create") {
@@ -199,7 +204,7 @@ export default function AdminOrderFormModal({ mode, order, onClose, onSaved, adm
               <div>
                 <label className={labelCls}>{t("Bezorgtype", "Delivery", "Teslimat")}</label>
                 <select value={deliveryType} onChange={(e) => setDeliveryType(e.target.value)} className={inputCls} disabled={pickupOnly}>
-                  {DELIVERY_TYPES.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
+                  {DELIVERY_TYPES.filter((d) => d.value !== "trailer_rental" || !trailerRentalExcluded).map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
                 </select>
               </div>
               <div>

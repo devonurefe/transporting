@@ -27,6 +27,12 @@ const GLOBAL_ADDON_EXCLUDED_CATEGORIES: Record<"safety" | "rijplaten", string[]>
   rijplaten: ["aanhanger", "kamersteiger", "ecolift", "ladderlift"],
 };
 
+// Nifty 120/170 ("aanhanger" category) and Ladderlift are themselves towed
+// behind the customer's own vehicle — renting an additional trailer to move
+// a product that already hitches to a tow bar makes no sense. Mirrored by
+// server/routes/orders.ts (TRAILER_RENTAL_EXCLUDED_CATEGORIES) — keep identical.
+const TRAILER_RENTAL_EXCLUDED_CATEGORIES = ["aanhanger", "ladderlift"];
+
 interface BookingStep1Props {
   cartItems: CartItem[];
   getItemAvailability: (machineId: string, start: string, end: string) => { available: boolean; reason: string };
@@ -118,7 +124,11 @@ export default function BookingStep1({
   const leadTrailerDays = (cartItems[0]?.startDate && cartItems[0]?.endDate)
     ? calculateRentalDays(cartItems[0].startDate, cartItems[0].endDate)
     : 0;
-  const maxTrailerDays = Math.max(1, leadTrailerDays || 365);
+  // No "|| 365" fallback here: before the lead item has dates, leadTrailerDays
+  // is legitimately 0 and the cap should reflect that (1), not a made-up
+  // ceiling — showing "Maximaal 365 dagen" to a customer who hasn't even
+  // chosen a rental period yet was the actual bug being fixed here.
+  const maxTrailerDays = Math.max(1, leadTrailerDays);
 
   // Admin-instelbare tarieven (SiteConfig → AdminContent); defaults = de oude literals
   const siteConfig = useAppStore((state) => state.siteConfig);
@@ -290,7 +300,9 @@ export default function BookingStep1({
             <span className="text-sm font-black text-emerald-700 block">Kosteloos</span>
           </div>
         ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className={`grid grid-cols-1 ${
+          !!selectedMachine && TRAILER_RENTAL_EXCLUDED_CATEGORIES.includes(selectedMachine.category) ? "sm:grid-cols-2" : "sm:grid-cols-3"
+        } gap-3`}>
           {/* Opt 1 — Wij bezorgen */}
           <button
             type="button"
@@ -318,7 +330,7 @@ export default function BookingStep1({
               <span className="text-sm font-black text-emerald-700">{euroCompact(fees.deliveryFee)}</span>
               <span className="text-xs text-slate-500 font-semibold">heen + terug</span>
             </div>
-            {deliveryType === "delivery_by_us" && (
+            {deliveryType === "delivery_by_us" && (!selectedMachine || !TRAILER_RENTAL_EXCLUDED_CATEGORIES.includes(selectedMachine.category)) && (
               <div className="mt-2.5 flex items-start gap-1.5 rounded-lg bg-amber-50 border border-amber-200 px-2.5 py-1.5">
                 <Info className="h-3.5 w-3.5 text-amber-600 shrink-0 mt-px" />
                 <p className="text-xs text-amber-800 font-semibold leading-snug">
@@ -328,7 +340,10 @@ export default function BookingStep1({
             )}
           </button>
 
-          {/* Opt 2 — Aanhanger huren */}
+          {/* Opt 2 — Aanhanger huren (niet relevant voor producten die zelf al
+              achter een voertuig getrokken worden — Nifty aanhanger-groep,
+              Ladderlift) */}
+          {(!selectedMachine || !TRAILER_RENTAL_EXCLUDED_CATEGORIES.includes(selectedMachine.category)) && (
           <button
             type="button"
             onClick={() => {
@@ -369,6 +384,7 @@ export default function BookingStep1({
               </div>
             )}
           </button>
+          )}
 
           {/* Opt 3 — Zelf ophalen */}
           <button

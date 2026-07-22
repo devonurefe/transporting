@@ -22,6 +22,8 @@ interface BookingStep2Props {
   setCustomerPhone: (phone: string) => void;
   customerProfile: string;
   setCustomerProfile: (profile: string) => void;
+  poNumber: string;
+  setPoNumber: (po: string) => void;
   deliveryType: "self_pickup" | "delivery_by_us" | "trailer_rental";
   postcode: string;
   setPostcode: (pc: string) => void;
@@ -80,6 +82,8 @@ export default function BookingStep2({
   setCustomerPhone,
   customerProfile,
   setCustomerProfile,
+  poNumber,
+  setPoNumber,
   deliveryType,
   postcode,
   setPostcode,
@@ -296,6 +300,23 @@ export default function BookingStep2({
             </div>
           )}
         </div>
+      </div>
+
+      {/* Optional purchase-order (PO) reference — shown on the invoice */}
+      <div className="space-y-1.5">
+        <label htmlFor="bs2-ponumber" className="text-xs text-slate-700 block font-bold">
+          Inkoopordernummer (PO) <span className="font-medium text-slate-400">— optioneel</span>
+        </label>
+        <input
+          id="bs2-ponumber"
+          type="text"
+          value={poNumber}
+          onChange={e => setPoNumber(e.target.value)}
+          maxLength={60}
+          placeholder="Bijv. PO-2026-0421"
+          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-800 font-semibold outline-none focus:border-slate-400 shadow-sm"
+        />
+        <p className="text-[11px] text-slate-500">Heeft u een inkoopordernummer? Dan tonen wij dit op uw factuur.</p>
       </div>
 
       {/* Address entry with interactive Postcode Lookup */}

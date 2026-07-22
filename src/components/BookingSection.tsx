@@ -108,6 +108,7 @@ export default function BookingSection({
   const [customerEmail, setCustomerEmail] = useState<string>(currentUser ? currentUser.email : "");
   const [customerPhone, setCustomerPhone] = useState<string>(currentUser ? currentUser.phone : "");
   const [customerProfile, setCustomerProfile] = useState<string>(currentUser ? currentUser.profileType : "Particulier");
+  const [poNumber, setPoNumber] = useState<string>("");
   // Lifted out of BookingStep2 (was local useState there) — that component is
   // conditionally rendered ({step === 2 && <BookingStep2 .../>}) so it fully
   // unmounts when the customer steps back to Logistiek, wiping local state on
@@ -788,6 +789,7 @@ export default function BookingSection({
               customerEmail,
               customerPhone,
               customerProfile,
+              poNumber: poNumber.trim() || undefined,
               subtotal: itemSubtotal,
               transportCost: transport + trailerCost,
               driverCost: parseFloat(driver.toFixed(2)),
@@ -1018,6 +1020,8 @@ export default function BookingSection({
                     setCustomerPhone={setCustomerPhone}
                     customerProfile={customerProfile}
                     setCustomerProfile={setCustomerProfile}
+                    poNumber={poNumber}
+                    setPoNumber={setPoNumber}
                     deliveryType={deliveryType}
                     postcode={postcode}
                     setPostcode={setPostcode}

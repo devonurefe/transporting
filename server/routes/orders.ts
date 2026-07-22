@@ -12,6 +12,25 @@ import { computeOrderSubtotal, computeTransport, computeAddonsTotal, computeVatA
 
 export const ordersRouter = Router();
 
+// Sequential invoice number, format "Factuur YYNNNN" (2-digit year + 4-digit
+// sequence, e.g. "Factuur 260013"). The counter is global (not reset per year),
+// matching the historical INV-YYYY-NNNN scheme it replaces. Shared by both order
+// creation paths so the format never diverges. Legacy orders keep their old
+// stored INV-… number.
+function formatInvoiceNumber(seq: number): string {
+  const yy = String(new Date().getFullYear()).slice(-2);
+  return `Factuur ${yy}${String(seq).padStart(4, "0")}`;
+}
+
+// Optional customer purchase-order (PO) reference, shown on the invoice.
+// Free text, capped and trimmed; empty/whitespace becomes null.
+function sanitizePoNumber(raw: unknown): string | null {
+  if (raw === undefined || raw === null) return null;
+  const s = String(raw).trim();
+  if (!s) return null;
+  return s.slice(0, 60);
+}
+
 // Addons are stored as a JSON string column — a corrupt row must not crash the request
 function safeParseAddons(raw: string | null): any[] {
   try {
@@ -467,8 +486,7 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
         create: { id: "default", lastNumber: 1 },
         update: { lastNumber: { increment: 1 } }
       });
-      const invoiceYear = new Date().getFullYear();
-      const invoiceNumber = `INV-${invoiceYear}-${String(counter.lastNumber).padStart(4, "0")}`;
+      const invoiceNumber = formatInvoiceNumber(counter.lastNumber);
 
       return tx.order.create({
         data: {
@@ -482,6 +500,7 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
           deliveryType: orderData.deliveryType,
           deliveryAddress: orderData.deliveryAddress || "",
           deliveryTimeSlot: orderData.deliveryTimeSlot ? String(orderData.deliveryTimeSlot) : null,
+          poNumber: sanitizePoNumber(orderData.poNumber),
           trailerDays, // server-gevalideerd; null voor niet-trailer bezorgtypes
           customerName: orderData.customerName,
           customerEmail: orderData.customerEmail,
@@ -614,7 +633,7 @@ ordersRouter.post("/admin", requireAdmin as any, async (req: AuthenticatedReques
       const counter = await tx.invoiceCounter.upsert({
         where: { id: "default" }, create: { id: "default", lastNumber: 1 }, update: { lastNumber: { increment: 1 } }
       });
-      const invoiceNumber = `INV-${new Date().getFullYear()}-${String(counter.lastNumber).padStart(4, "0")}`;
+      const invoiceNumber = formatInvoiceNumber(counter.lastNumber);
       return tx.order.create({
         data: {
           id: `HWH-${crypto.randomBytes(4).toString("hex").toUpperCase()}`,
@@ -625,6 +644,7 @@ ordersRouter.post("/admin", requireAdmin as any, async (req: AuthenticatedReques
           deliveryType: body.deliveryType,
           deliveryAddress: body.deliveryAddress || "",
           deliveryTimeSlot: body.deliveryTimeSlot ? String(body.deliveryTimeSlot) : null,
+          poNumber: sanitizePoNumber(body.poNumber),
           trailerDays: manualTrailerDays,
           customerName: String(body.customerName),
           customerEmail: email,
@@ -731,6 +751,10 @@ ordersRouter.patch("/:id", requireAdmin as any, async (req: AuthenticatedRequest
       if (body.deliveryTimeSlot && !ORDER_VALID_TIME_SLOTS.includes(String(body.deliveryTimeSlot))) return res.status(400).json({ error: "Ongeldig bezorgmoment" });
       deliveryTimeSlot = body.deliveryTimeSlot ? String(body.deliveryTimeSlot) : null; changed.push("deliveryTimeSlot");
     }
+    let poNumber = existing.poNumber;
+    if (body.poNumber !== undefined) {
+      poNumber = sanitizePoNumber(body.poNumber); changed.push("poNumber");
+    }
     const addonsInput = body.addons !== undefined ? body.addons : safeParseAddons(existing.addons);
     if (body.addons !== undefined) changed.push("addons");
 
@@ -770,7 +794,7 @@ ordersRouter.patch("/:id", requireAdmin as any, async (req: AuthenticatedRequest
         where: { id },
         data: {
           startDate, endDate, rentalDays,
-          customerName, customerEmail, customerPhone, customerProfile,
+          customerName, customerEmail, customerPhone, customerProfile, poNumber,
           deliveryType, deliveryAddress, deliveryTimeSlot, trailerDays,
           subtotal, transportCost: transport, driverCost: 0, vatAmount: vat, totalAmount: total,
           addons: JSON.stringify(storedAddons)

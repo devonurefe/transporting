@@ -111,13 +111,20 @@ export function printInvoice(orderOrOrders: Order | Order[], clientCompanyName?:
 
   const customerCompany = clientCompanyName || "Particulier";
 
+  // Insert a comma after a Dutch postcode (4 digits + 2 letters) when it's
+  // directly followed by the city, so "1234AB Amsterdam" reads "1234AB, Amsterdam".
+  // Display-only; the stored address is untouched. No-op if a comma is already there.
+  const formatAddressNL = (a: string): string =>
+    a.replace(/(\d{4}\s?[A-Z]{2})\s+(?=\S)/g, "$1, ");
+
   // Escape user input fields to prevent XSS / HTML Injection
   const escCustomerName = escapeHtml(primaryOrder.customerName);
   const escCustomerCompany = escapeHtml(customerCompany);
   const escCustomerProfile = escapeHtml(primaryOrder.customerProfile || "Particulier");
   const escCustomerPhone = escapeHtml(primaryOrder.customerPhone || "");
   const escCustomerEmail = escapeHtml(primaryOrder.customerEmail);
-  const escDeliveryAddress = escapeHtml(primaryOrder.deliveryAddress || "");
+  const escPoNumber = primaryOrder.poNumber ? escapeHtml(primaryOrder.poNumber) : "";
+  const escDeliveryAddress = escapeHtml(formatAddressNL(primaryOrder.deliveryAddress || ""));
 
   // Generate dynamic table rows
   let tableRowsHtml = "";
@@ -547,6 +554,7 @@ export function printInvoice(orderOrOrders: Order | Order[], clientCompanyName?:
               <span>Vakgebied: ${escCustomerProfile}</span><br/>
               <span>Telefoon: ${escCustomerPhone}</span><br/>
               <span>E-mail: ${escCustomerEmail}</span>
+              ${escPoNumber ? `<br/><span>Inkoopordernr (PO): <strong>${escPoNumber}</strong></span>` : ''}
             </div>
           </div>
           
@@ -637,7 +645,7 @@ export function printInvoice(orderOrOrders: Order | Order[], clientCompanyName?:
             ? `<p>Betaling via WhatsApp — u ontvangt een Tikkie of Mollie iDEAL-betaallink. Na betaling is uw boeking definitief bevestigd.</p>`
             : `<p>Betalingswijze: Voldaan via iDEAL / Tikkie betaallink. Factuurkenmerk: ${primaryOrder.invoiceNumber || primaryOrder.id}</p>`
           }
-          <p style="margin-top: 8px;">Dank u voor uw vertrouwen in de hoogste en veiligste kwaliteit van <strong>${escapeHtml(companyName)}</strong>.</p>
+          <p style="margin-top: 8px;">Dank u voor uw vertrouwen in de hoogste en veiligste kwaliteit van <strong>Huurgo</strong>, onderdeel van MB Hoogwerkers.</p>
         </footer>
         
       </div>

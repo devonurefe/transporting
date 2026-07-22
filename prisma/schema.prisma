@@ -142,6 +142,9 @@ model Order {
   customerEmail   String
   customerPhone   String?
   customerProfile String?
+  // Optionele inkoopordernummer (PO) van de klant — puur ter referentie op de
+  // factuur. Vrije tekst, gesanitiseerd/gecapped in orders.ts.
+  poNumber        String?
   subtotal        Float
   transportCost   Float
   driverCost      Float

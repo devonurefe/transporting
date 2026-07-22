@@ -356,7 +356,22 @@ function DealsCarousel({ machines, onSearch }: { machines: Machine[]; onSearch: 
                       matching how CatalogSection's product cards render photos. */}
                   <div className="relative aspect-square w-full bg-amber-50 shrink-0 overflow-hidden p-2">
                     {machineImage ? (
-                      <img src={machineImage} alt={baseName} loading="lazy" draggable={false} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300" />
+                      <img
+                        src={machineImage}
+                        alt={baseName}
+                        loading="lazy"
+                        draggable={false}
+                        referrerPolicy="no-referrer"
+                        className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+                        onError={(e) => {
+                          // Fall back to the placeholder instead of showing broken alt text
+                          // (matches CatalogSection / AdminMachines). Guard against a loop if
+                          // the placeholder itself somehow fails.
+                          if (!e.currentTarget.src.endsWith("/placeholder-machine.webp")) {
+                            e.currentTarget.src = "/placeholder-machine.webp";
+                          }
+                        }}
+                      />
                     ) : (
                       <div className={`w-full h-full bg-gradient-to-br ${CAT_GRADIENT[m.category] ?? "from-amber-100 to-amber-200"} flex items-center justify-center`}>
                         <CatIcon className="h-10 w-10 text-slate-400" />

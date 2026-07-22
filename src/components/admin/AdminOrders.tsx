@@ -1135,23 +1135,33 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           <div className="space-y-1 min-w-0">
                             <label className="text-[10px] text-slate-500 block font-bold">{t("Startdatum", "Start date", "Başlangıç tarihi")}</label>
-                            <input
-                              type="date"
-                              required
-                              value={newStartDate}
-                              onChange={(e) => setNewStartDate(e.target.value)}
-                              className="w-full min-w-0 bg-white border border-slate-200 focus:border-amber-500 rounded-lg px-2 py-2 text-sm text-slate-800 font-bold outline-none cursor-pointer shadow-sm"
-                            />
+                            {/* Icon overlay: a bare native date input renders as a blank box with
+                                no placeholder/icon on iOS Safari until tapped, so it can look broken.
+                                Decorative only (pointer-events-none) — the input itself is still what
+                                receives the tap and opens the native picker. */}
+                            <div className="relative">
+                              <Calendar className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                              <input
+                                type="date"
+                                required
+                                value={newStartDate}
+                                onChange={(e) => setNewStartDate(e.target.value)}
+                                className="w-full min-w-0 bg-white border border-slate-200 focus:border-amber-500 rounded-lg pl-8 pr-2 py-2 text-sm text-slate-800 font-bold outline-none cursor-pointer shadow-sm"
+                              />
+                            </div>
                           </div>
                           <div className="space-y-1 min-w-0">
                             <label className="text-[10px] text-slate-500 block font-bold">{t("Einddatum", "End date", "Bitiş tarihi")}</label>
-                            <input
-                              type="date"
-                              required
-                              value={newEndDate}
-                              onChange={(e) => setNewEndDate(e.target.value)}
-                              className="w-full min-w-0 bg-white border border-slate-200 focus:border-amber-500 rounded-lg px-2 py-2 text-sm text-slate-800 font-bold outline-none cursor-pointer shadow-sm"
-                            />
+                            <div className="relative">
+                              <Calendar className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                              <input
+                                type="date"
+                                required
+                                value={newEndDate}
+                                onChange={(e) => setNewEndDate(e.target.value)}
+                                className="w-full min-w-0 bg-white border border-slate-200 focus:border-amber-500 rounded-lg pl-8 pr-2 py-2 text-sm text-slate-800 font-bold outline-none cursor-pointer shadow-sm"
+                              />
+                            </div>
                           </div>
                         </div>
 

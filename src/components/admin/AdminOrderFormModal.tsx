@@ -162,11 +162,11 @@ export default function AdminOrderFormModal({ mode, order, onClose, onSaved, adm
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className={labelCls}>{t("Startdatum", "Start date", "Başlangıç")}</label>
-                <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className={inputCls} />
+                <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className={`${inputCls} text-center`} />
               </div>
               <div>
                 <label className={labelCls}>{t("Einddatum", "End date", "Bitiş")}</label>
-                <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className={inputCls} />
+                <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className={`${inputCls} text-center`} />
               </div>
             </div>
 

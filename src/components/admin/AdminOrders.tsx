@@ -1146,7 +1146,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                                 required
                                 value={newStartDate}
                                 onChange={(e) => setNewStartDate(e.target.value)}
-                                className="w-full min-w-0 bg-white border border-slate-200 focus:border-amber-500 rounded-lg pl-8 pr-2 py-2 text-sm text-slate-800 font-bold outline-none cursor-pointer shadow-sm"
+                                className="w-full min-w-0 bg-white border border-slate-200 focus:border-amber-500 rounded-lg pl-8 pr-8 py-2 text-sm text-slate-800 font-bold text-center outline-none cursor-pointer shadow-sm"
                               />
                             </div>
                           </div>
@@ -1159,7 +1159,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                                 required
                                 value={newEndDate}
                                 onChange={(e) => setNewEndDate(e.target.value)}
-                                className="w-full min-w-0 bg-white border border-slate-200 focus:border-amber-500 rounded-lg pl-8 pr-2 py-2 text-sm text-slate-800 font-bold outline-none cursor-pointer shadow-sm"
+                                className="w-full min-w-0 bg-white border border-slate-200 focus:border-amber-500 rounded-lg pl-8 pr-8 py-2 text-sm text-slate-800 font-bold text-center outline-none cursor-pointer shadow-sm"
                               />
                             </div>
                           </div>

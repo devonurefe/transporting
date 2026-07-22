@@ -68,7 +68,7 @@ export default function AdminAvailabilityWidget() {
             value={startDate}
             min={todayStr}
             onChange={(e) => setStartDate(e.target.value)}
-            className="w-full text-[11px] bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 text-slate-800 outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/30 cursor-pointer transition-colors"
+            className="w-full text-[11px] bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 text-slate-800 text-center outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/30 cursor-pointer transition-colors"
           />
         </div>
         <div className="space-y-1">
@@ -79,7 +79,7 @@ export default function AdminAvailabilityWidget() {
             value={endDate}
             min={startDate || todayStr}
             onChange={(e) => setEndDate(e.target.value)}
-            className="w-full text-[11px] bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 text-slate-800 outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/30 cursor-pointer transition-colors"
+            className="w-full text-[11px] bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 text-slate-800 text-center outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/30 cursor-pointer transition-colors"
           />
         </div>
       </div>

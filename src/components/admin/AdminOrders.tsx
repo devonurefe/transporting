@@ -345,7 +345,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
     setIsUpdatingPayment(false);
   };
 
-  const handleSendDateProposal = (e: React.FormEvent) => {
+  const handleSendDateProposal = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newStartDate || !newEndDate) {
       showAdminToast("Voer zowel de startdatum als de einddatum in.", "error");
@@ -354,6 +354,30 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
     if (new Date(newEndDate) < new Date(newStartDate)) {
       showAdminToast("Einddatum moet op of na de startdatum liggen.", "error");
       return;
+    }
+    // Persist the proposal so it's visible on the order afterwards (follow-up).
+    // Non-blocking for the WhatsApp step: if saving fails we still let the admin
+    // send the message, but we warn them the follow-up flag wasn't stored.
+    try {
+      const res = await fetch(`/api/orders/${selectedDetailOrder.id}/date-proposal`, {
+        method: "PUT",
+        headers: getAdminAuthHeaders(true),
+        body: JSON.stringify({ proposedStartDate: newStartDate, proposedEndDate: newEndDate })
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        useAppStore.setState((state: any) => ({
+          orders: state.orders.map((o: any) =>
+            o.id === selectedDetailOrder.id
+              ? { ...o, proposedStartDate: updated.proposedStartDate, proposedEndDate: updated.proposedEndDate, proposedAt: updated.proposedAt }
+              : o
+          )
+        }));
+      } else {
+        showAdminToast("Voorstel kon niet worden opgeslagen, maar u kunt het bericht wel versturen.", "error");
+      }
+    } catch {
+      showAdminToast("Voorstel kon niet worden opgeslagen, maar u kunt het bericht wel versturen.", "error");
     }
     const machine = getBaseName(selectedDetailOrder.machineName);
     const lines = [
@@ -387,6 +411,31 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
       `Datumvoorstel via WhatsApp gestuurd voor contract ${selectedDetailOrder.id} (${selectedDetailOrder.customerName}). Voorstel: ${newStartDate} t/m ${newEndDate}.`
     );
     closeModal();
+  };
+
+  // Clear a stored date proposal once the customer has responded / it's resolved.
+  const handleClearDateProposal = async (orderId: string) => {
+    try {
+      const res = await fetch(`/api/orders/${orderId}/date-proposal`, {
+        method: "PUT",
+        headers: getAdminAuthHeaders(true),
+        body: JSON.stringify({ proposedStartDate: null, proposedEndDate: null })
+      });
+      if (res.ok) {
+        useAppStore.setState((state: any) => ({
+          orders: state.orders.map((o: any) =>
+            o.id === orderId ? { ...o, proposedStartDate: null, proposedEndDate: null, proposedAt: null } : o
+          )
+        }));
+        if (selectedDetailOrder?.id === orderId) {
+          setSelectedDetailOrder((prev: any) => prev ? { ...prev, proposedStartDate: null, proposedEndDate: null, proposedAt: null } : prev);
+        }
+      } else {
+        showAdminToast("Voorstel wissen mislukt.", "error");
+      }
+    } catch {
+      showAdminToast("Voorstel wissen mislukt.", "error");
+    }
   };
 
   return (
@@ -425,6 +474,8 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
             { key: "Geannuleerd",   nl: "Geannuleerd",   en: "Cancelled",  tr: "İptal",     color: "rose"   },
           ] as const).map((s) => {
             const label = adminLanguage === "tr" ? s.tr : adminLanguage === "en" ? s.en : s.nl;
+            // Count per status from the loaded orders window (same scope as the list itself).
+            const count = s.key === "all" ? orders.length : orders.filter(o => o.status === s.key).length;
             const isActive = localStatusFilter === s.key;
             const colorClass = isActive
               ? s.key === "all"           ? "bg-indigo-600 text-white border-indigo-700"
@@ -441,7 +492,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                 onClick={() => { setLocalStatusFilter(s.key); if (s.key === "all") onClearStatusFilter?.(); }}
                 className={`px-3 py-1.5 rounded-full text-[11px] font-bold transition-all border cursor-pointer shadow-sm ${colorClass}`}
               >
-                {label}
+                {label} <span className={`ml-0.5 tabular-nums ${isActive ? "opacity-90" : "opacity-60"}`}>({count})</span>
               </button>
             );
           })}
@@ -538,6 +589,11 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                   {isStalePending(o) && (
                     <span className="inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 border border-amber-200">
                       <Clock className="h-2.5 w-2.5" /> {daysOpen(o)}d {t("open", "open", "açık")}
+                    </span>
+                  )}
+                  {o.proposedStartDate && (
+                    <span className="inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 border border-orange-200">
+                      📅 {t("Voorstel", "Proposal", "Öneri")}
                     </span>
                   )}
                 </div>
@@ -662,6 +718,12 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                       <td className="py-3 px-3">
                         <div className="font-bold text-slate-800 text-xs mb-1">{getBaseName(o.machineName)}</div>
                         <span className="inline-block bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-[9.5px] font-bold">{o.customerProfile}</span>
+                        {o.proposedStartDate && (
+                          <span className="inline-flex items-center gap-1 ml-1.5 text-[9px] font-bold px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 border border-orange-200 align-middle"
+                            title={t("Openstaand datumvoorstel", "Pending date proposal", "Bekleyen tarih önerisi")}>
+                            📅 {t("Voorstel", "Proposal", "Öneri")}
+                          </span>
+                        )}
                       </td>
                       <td className="py-3 px-3">
                         <span className="text-[11px] font-semibold text-slate-700 block">
@@ -1035,6 +1097,27 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                       {isProposingDate ? t("Sluiten", "Close", "Kapat") : t("Datum wijzigen", "Change date", "Tarihi Değiştir")}
                     </button>
                   </div>
+
+                  {/* Pending proposal follow-up — visible so a sent proposal is tracked */}
+                  {selectedDetailOrder.proposedStartDate && selectedDetailOrder.proposedEndDate && (
+                    <div className="flex items-start justify-between gap-2 bg-white border border-amber-300 rounded-xl px-3 py-2.5">
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-bold text-amber-700 uppercase tracking-wide">{t("Openstaand voorstel", "Pending proposal", "Bekleyen öneri")}</p>
+                        <p className="text-xs font-bold text-slate-800 mt-0.5">
+                          📅 {new Date(selectedDetailOrder.proposedStartDate).toLocaleDateString("nl-NL")} t/m {new Date(selectedDetailOrder.proposedEndDate).toLocaleDateString("nl-NL")}
+                        </p>
+                        {selectedDetailOrder.proposedAt && (
+                          <p className="text-[10px] text-slate-400 mt-0.5">{t("Verstuurd op", "Sent on", "Gönderildi")}: {new Date(selectedDetailOrder.proposedAt).toLocaleString("nl-NL")}</p>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => handleClearDateProposal(selectedDetailOrder.id)}
+                        className="shrink-0 text-[10px] font-bold text-slate-500 hover:text-slate-800 border border-slate-200 hover:bg-slate-50 bg-white py-1 px-2.5 rounded-lg transition-colors cursor-pointer"
+                      >
+                        {t("Afgehandeld", "Resolved", "Tamamlandı")}
+                      </button>
+                    </div>
+                  )}
 
                   <AnimatePresence>
                     {isProposingDate && (

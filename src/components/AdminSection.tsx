@@ -18,6 +18,7 @@ import {
   ShieldCheck,
   Calendar,
   CalendarDays,
+  CalendarRange,
   Database,
   Users,
   BookOpen,
@@ -45,6 +46,7 @@ const AdminContent = React.lazy(() => import("./admin/AdminContent"));
 const AdminDiagnostics = React.lazy(() => import("./admin/AdminDiagnostics"));
 const AdminAccounting = React.lazy(() => import("./admin/AdminAccounting"));
 const AdminPlanning = React.lazy(() => import("./admin/AdminPlanning"));
+const AdminRentalTimeline = React.lazy(() => import("./admin/AdminRentalTimeline"));
 const AdminCustomers = React.lazy(() => import("./admin/AdminCustomers"));
 const AdminBlog = React.lazy(() => import("./admin/AdminBlog"));
 
@@ -62,7 +64,7 @@ function AdminLoadingSpinner() {
 // Alle admin-subtabs — panelen die setSubTab als prop krijgen importeren dit
 // type zodat de unions niet uit elkaar lopen.
 export type AdminSubTab =
-  | "dashboard" | "orders" | "machines" | "calendar" | "planning" | "customers"
+  | "dashboard" | "orders" | "machines" | "calendar" | "planning" | "timeline" | "customers"
   | "add" | "blog" | "logs" | "customizer" | "diagnostics" | "accounting" | "users" | "content";
 
 const ADVANCED_TAB_IDS: AdminSubTab[] = ["add", "blog", "customizer", "content", "accounting", "diagnostics", "logs", "users"];
@@ -148,6 +150,7 @@ export default function AdminSection({
     { id: "machines", label: tAdmin("adminTabMachines"), icon: Layers, count: machines.length },
     { id: "calendar", label: tAdmin("adminTabCalendar"), icon: Calendar, count: blockedDates.length },
     { id: "planning", label: al("Planning", "Planning", "Planlama"), icon: CalendarDays },
+    { id: "timeline", label: al("Verhuurkalender", "Rental calendar", "Kiralama Takvimi"), icon: CalendarRange },
     { id: "customers", label: al("Klanten", "Customers", "Müşteriler"), icon: Users },
   ];
   const advancedTabs: { id: AdminSubTab; label: string; icon: typeof Settings; count?: number }[] = [
@@ -593,6 +596,9 @@ export default function AdminSection({
                 )}
                 {subTab === "planning" && (
                   <AdminPlanning key="planning" adminLanguage={adminLanguage} />
+                )}
+                {subTab === "timeline" && (
+                  <AdminRentalTimeline key="timeline" adminLanguage={adminLanguage} />
                 )}
                 {subTab === "customers" && (
                   <AdminCustomers key="customers" adminLanguage={adminLanguage} onViewOrder={(orderId) => { setOrderIdFocus(orderId); setSubTab("orders"); }} />

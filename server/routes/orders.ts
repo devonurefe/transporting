@@ -76,6 +76,11 @@ const ORDER_VALID_PROFILES = [
   "Installateur", "Hovenier", "Glazenwasser", "Stukadoor", "Magazijn", "Gevelreiniger",
 ];
 const ORDER_VALID_DELIVERY_TYPES = ["self_pickup", "delivery_by_us", "trailer_rental"];
+// Nifty 120/170 ("aanhanger" category) and Ladderlift are themselves towed
+// behind the customer's own vehicle — renting an additional trailer to move
+// a product that already hitches to a tow bar makes no sense. Mirrors the
+// exclusion in src/components/booking/BookingStep1.tsx.
+const TRAILER_RENTAL_EXCLUDED_CATEGORIES = ["aanhanger", "ladderlift"];
 const ORDER_VALID_TIME_SLOTS = ["morning", "afternoon"];
 const ORDER_EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/;
 
@@ -434,8 +439,13 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
     }
     // trailer_rental: klant kiest zelf het aantal aanhangerdagen (1..rentalDays).
     // Verplicht + gevalideerd voor trailer-orders; genegeerd voor andere bezorgtypes.
+    // Uitgesloten voor Nifty ("aanhanger") en Ladderlift — die worden zelf al
+    // achter een voertuig getrokken, een extra aanhanger huren is dan zinloos.
     let trailerDays: number | null = null;
     if (dt === "trailer_rental") {
+      if (TRAILER_RENTAL_EXCLUDED_CATEGORIES.includes((machine as any).category)) {
+        return res.status(400).json({ error: "Aanhanger huren is niet beschikbaar voor dit product — het wordt zelf achter een voertuig getrokken." });
+      }
       trailerDays = clampTrailerDays(orderData.trailerDays, rentalDays);
       if (trailerDays === null) {
         return res.status(400).json({ error: "Ongeldig aantal aanhangerdagen" });
@@ -604,6 +614,9 @@ ordersRouter.post("/admin", requireAdmin as any, async (req: AuthenticatedReques
     if ((machine as any).pickupOnly && body.deliveryType !== "self_pickup") {
       return res.status(400).json({ error: "Voor dit product is alleen afhalen mogelijk" });
     }
+    if (body.deliveryType === "trailer_rental" && TRAILER_RENTAL_EXCLUDED_CATEGORIES.includes((machine as any).category)) {
+      return res.status(400).json({ error: "Aanhanger huren is niet beschikbaar voor dit product — het wordt zelf achter een voertuig getrokken." });
+    }
 
     const rentalDays = computeRentalDays(startDate, endDate);
     if (rentalDays > 365) return res.status(400).json({ error: "Maximale huurperiode is 365 dagen. Neem contact op voor langere periodes." });
@@ -740,6 +753,9 @@ ordersRouter.patch("/:id", requireAdmin as any, async (req: AuthenticatedRequest
     }
     if ((machine as any).pickupOnly && deliveryType !== "self_pickup") {
       return res.status(400).json({ error: "Voor dit product is alleen afhalen mogelijk" });
+    }
+    if (deliveryType === "trailer_rental" && TRAILER_RENTAL_EXCLUDED_CATEGORIES.includes((machine as any).category)) {
+      return res.status(400).json({ error: "Aanhanger huren is niet beschikbaar voor dit product — het wordt zelf achter een voertuig getrokken." });
     }
     let deliveryAddress = existing.deliveryAddress;
     if (body.deliveryAddress !== undefined) {

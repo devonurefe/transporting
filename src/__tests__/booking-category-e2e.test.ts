@@ -335,7 +335,11 @@ describe.skipIf(!HAS_DB)("Boeken E2E — per categorie prijs- en kalendertest", 
   // Rijplaten × aantal) — één representatieve machine.
   // ────────────────────────────────────────────────────────────────────────
   it("transportkosten (bezorging + aanhanger) spiegelen exact", async () => {
-    const m = [...machineByCategory.values()].find((x) => !x.pickupOnly);
+    // "aanhanger" (Nifty) en "ladderlift" zijn zelf al aanhanger-achtige,
+    // achter een voertuig getrokken producten — trailer_rental is voor die
+    // categorieën uitgesloten (TRAILER_RENTAL_EXCLUDED_CATEGORIES), dus deze
+    // spiegeltest heeft een machine nodig waarvoor de optie wél geldig is.
+    const m = [...machineByCategory.values()].find((x) => !x.pickupOnly && !["aanhanger", "ladderlift"].includes(x.category));
     if (!m) return;
     const sc: Scenario = { label: "3 dagen bezorgd", start: baseMonday, days: 3 };
 

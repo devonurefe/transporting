@@ -901,12 +901,16 @@ export default function App() {
         </Suspense>
       </main>
 
-      {/* Bottom Footer block */}
-      <Footer 
-        siteName={siteConfig.siteName} 
-        setActiveTab={setActiveTab} 
-        setShowContactModal={setShowContactModal} 
-      />
+      {/* Bottom Footer block — hidden in the admin console so it stays a
+          self-contained dashboard (the public marketing footer shouldn't
+          bleed in below the admin panels). */}
+      {!location.pathname.startsWith("/admin") && (
+        <Footer
+          siteName={siteConfig.siteName}
+          setActiveTab={setActiveTab}
+          setShowContactModal={setShowContactModal}
+        />
+      )}
 
       {/* CART REPLACE CONFIRMATION (Dutch in-app modal, not native confirm) */}
       <AnimatePresence>

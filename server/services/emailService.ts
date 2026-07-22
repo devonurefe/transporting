@@ -15,6 +15,10 @@ const resend = resendApiKey && resendApiKey !== "MY_RESEND_API_KEY" ? new Resend
 const SENDER_ADDRESS = process.env.EMAIL_FROM || "onboarding@resend.dev";
 // Show a friendly "HuurGo" display name in the recipient's inbox instead of the raw address
 const SENDER_EMAIL = SENDER_ADDRESS.includes("<") ? SENDER_ADDRESS : `HuurGo <${SENDER_ADDRESS}>`;
+// Reply-to for customer-facing mail. EMAIL_FROM may be a noreply address that isn't
+// monitored, so replies must land on the real, MX-forwarded mailbox (info@huurgo.nl →
+// huurgomb@gmail.com). Overridable via REPLY_TO; defaults to the info-box.
+const REPLY_TO_ADDRESS = process.env.REPLY_TO || "info@huurgo.nl";
 const APP_URL = process.env.APP_URL || "https://localhost:3000";
 const ADMIN_ALERT_EMAIL = process.env.ADMIN_EMAIL || "";
 // Payment runs over WhatsApp (customer requests the iDEAL/Tikkie link). The
@@ -239,6 +243,7 @@ export const emailService = {
     return sendWithRetry({
       from: SENDER_EMAIL,
       to: order.customerEmail,
+      replyTo: REPLY_TO_ADDRESS,
       subject: `Bevestiging van uw reservering ${order.id} - huurgo`,
       html: htmlContent,
     });
@@ -328,6 +333,8 @@ export const emailService = {
     return sendWithRetry({
       from: SENDER_EMAIL,
       to: ADMIN_ALERT_EMAIL,
+      // Reply straight to the customer from the alert, not to the info-box
+      replyTo: order.customerEmail || REPLY_TO_ADDRESS,
       subject: `🚨 Nieuwe Reservering ${order.id} - €${order.totalAmount.toFixed(2)} - ${order.customerName}`,
       html: htmlContent,
     });
@@ -448,6 +455,7 @@ export const emailService = {
     return sendWithRetry({
       from: SENDER_EMAIL,
       to: order.customerEmail,
+      replyTo: REPLY_TO_ADDRESS,
       subject: `Update van uw reservering ${order.id}: ${order.status} - huurgo`,
       html: htmlContent,
     });
@@ -525,6 +533,7 @@ export const emailService = {
     return sendWithRetry({
       from: SENDER_EMAIL,
       to: customer.email,
+      replyTo: REPLY_TO_ADDRESS,
       subject: "Activeer uw huurgo account",
       html: htmlContent,
     });
@@ -590,6 +599,7 @@ export const emailService = {
     return sendWithRetry({
       from: SENDER_EMAIL,
       to: order.customerEmail,
+      replyTo: REPLY_TO_ADDRESS,
       subject: `Herinnering: Uw hoogwerker ${order.machineName} is morgen klaar — ${order.id}`,
       html: htmlContent
     });
@@ -659,6 +669,7 @@ export const emailService = {
     return sendWithRetry({
       from: SENDER_EMAIL,
       to: order.customerEmail,
+      replyTo: REPLY_TO_ADDRESS,
       subject: `Herinnering: betaling voor ${order.machineName} nog niet ontvangen — ${order.id}`,
       html: htmlContent
     });
@@ -718,6 +729,7 @@ export const emailService = {
     return sendWithRetry({
       from: SENDER_EMAIL,
       to: email,
+      replyTo: REPLY_TO_ADDRESS,
       subject: "Wachtwoord resetten - huurgo",
       html: htmlContent
     });
@@ -774,6 +786,7 @@ export const emailService = {
     return sendWithRetry({
       from: SENDER_EMAIL,
       to: ADMIN_ALERT_EMAIL,
+      replyTo: order.customerEmail || REPLY_TO_ADDRESS,
       subject: `❌ Annulering ${order.id} — ${order.customerName} — €${order.totalAmount.toFixed(2)}`,
       html: htmlContent,
     });
@@ -844,6 +857,7 @@ export const emailService = {
     return sendWithRetry({
       from: SENDER_EMAIL,
       to: customer.email,
+      replyTo: REPLY_TO_ADDRESS,
       subject,
       html: htmlContent,
     });
@@ -858,6 +872,7 @@ export const emailService = {
     return sendWithRetry({
       from: SENDER_EMAIL,
       to: ADMIN_ALERT_EMAIL,
+      replyTo: customerEmail || REPLY_TO_ADDRESS,
       subject: `⚠️ [HuurGo] Email bevestiging mislukt: ${orderId}`,
       html: `<p>De klantbevestiging voor bestelling <strong>${orderId}</strong> kon niet worden bezorgd aan <strong>${customerEmail}</strong>.<br><br>Neem handmatig contact op met de klant.<br><br><small>Fout: ${errorMsg}</small></p>`,
     });
@@ -887,6 +902,7 @@ export const emailService = {
     const ok = await sendWithRetry({
       from: SENDER_EMAIL,
       to: toEmail,
+      replyTo: REPLY_TO_ADDRESS,
       subject: "huurgo — testmail vanuit Diagnostiek",
       html,
     });
@@ -901,6 +917,7 @@ export function getEmailDiagnostics() {
   return {
     resendConfigured: !!resend,
     emailFrom: SENDER_EMAIL,
+    replyTo: REPLY_TO_ADDRESS,
     adminAlertEmailConfigured: !!ADMIN_ALERT_EMAIL,
     adminAlertEmail: ADMIN_ALERT_EMAIL || null,
     whatsappConfigured: !!WHATSAPP_NUMBER,

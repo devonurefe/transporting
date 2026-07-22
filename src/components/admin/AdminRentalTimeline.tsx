@@ -4,9 +4,12 @@
  */
 
 import React, { useEffect, useMemo, useState } from "react";
-import { motion } from "motion/react";
-import { ChevronLeft, ChevronRight, CalendarRange } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
+import { ChevronLeft, ChevronRight, CalendarRange, X, Phone, Mail, MapPin, Package } from "lucide-react";
 import { useAppStore } from "../../store/appStore";
+import { euro } from "../../utils/format";
+import { Order } from "../../types";
+import AdminStatusBadge from "./AdminStatusBadge";
 
 interface AdminRentalTimelineProps {
   adminLanguage: "nl" | "en" | "tr";
@@ -39,6 +42,7 @@ interface Lane {
     end: Date; // inclusive last rental day
     leftPct: number;
     widthPct: number;
+    order: Order; // full order, so a tap can open the same quick-view used in Planning
   }[];
   lastEnd: number; // day-offset of the last booking's end, for greedy lane packing
 }
@@ -65,6 +69,16 @@ export default function AdminRentalTimeline({ adminLanguage }: AdminRentalTimeli
 
   const [windowDays, setWindowDays] = useState<number>(30);
   const [anchor, setAnchor] = useState<Date>(() => startOfDay(new Date()));
+  // Quick-view popup for a tapped booking bar — narrow bars (short rentals on
+  // a long window) truncate the customer name to a couple of characters, so
+  // a tap needs to reveal the full details. Same pattern/markup as the
+  // booking quick-view modal in AdminPlanning.
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const deliveryLabel = (type: string) => {
+    if (type === "delivery_by_us") return al("Bezorging", "Delivery", "Teslimat");
+    if (type === "trailer_rental") return al("Aanhanger", "Trailer", "Treyler");
+    return al("Ophalen", "Pickup", "Teslim Al");
+  };
 
   const today = useMemo(() => startOfDay(new Date()), []);
   const windowStart = anchor;
@@ -117,6 +131,7 @@ export default function AdminRentalTimeline({ adminLanguage }: AdminRentalTimeli
           end: b.end,
           leftPct,
           widthPct,
+          order: b.o,
         };
         let lane = lanes.find((l) => l.lastEnd < b.startOff);
         if (!lane) { lane = { bookings: [], lastEnd: -Infinity }; lanes.push(lane); }
@@ -268,14 +283,16 @@ export default function AdminRentalTimeline({ adminLanguage }: AdminRentalTimeli
                       lane.bookings.map((b) => {
                         const style = STATUS_STYLE[b.status] ?? STATUS_STYLE["Voltooid"];
                         return (
-                          <div
+                          <button
                             key={b.id}
-                            className={`absolute h-[26px] rounded-md border px-1.5 flex items-center overflow-hidden ${style.bar}`}
+                            type="button"
+                            onClick={() => setSelectedOrder(b.order)}
+                            className={`absolute h-[26px] rounded-md border px-1.5 flex items-center overflow-hidden cursor-pointer appearance-none transition-transform hover:scale-[1.03] hover:z-20 ${style.bar}`}
                             style={{ left: `${b.leftPct}%`, width: `${b.widthPct}%`, top: 6 + li * 30 }}
                             title={`${machine.name}\n${b.customerName}\n${b.start.toLocaleDateString("nl-NL")} t/m ${b.end.toLocaleDateString("nl-NL")}\n${b.status} · ${b.id}`}
                           >
                             <span className="text-[10px] font-bold truncate">{b.customerName}</span>
-                          </div>
+                          </button>
                         );
                       })
                     )}
@@ -286,6 +303,108 @@ export default function AdminRentalTimeline({ adminLanguage }: AdminRentalTimeli
           </div>
         </div>
       </div>
+
+      {/* Quick-view popup — same markup/pattern as AdminPlanning's booking modal */}
+      <AnimatePresence>
+        {selectedOrder && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.1 }}
+              onClick={() => setSelectedOrder(null)}
+              className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96, y: 8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: 8 }}
+              transition={{ type: "spring", stiffness: 500, damping: 34 }}
+              className="relative z-[60] w-full max-w-sm bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200"
+            >
+              <div className="h-1 bg-gradient-to-r from-teal-400 via-indigo-500 to-amber-400" />
+
+              <div className="flex items-start justify-between px-5 pt-5 pb-3">
+                <div>
+                  <p className="text-[10px] font-mono text-indigo-500 uppercase tracking-widest">{selectedOrder.id}</p>
+                  <h3 className="font-display font-black text-slate-900 text-base leading-snug mt-0.5">
+                    {selectedOrder.machineName}
+                  </h3>
+                  <AdminStatusBadge status={selectedOrder.status} adminLanguage={adminLanguage} className="mt-1" />
+                </div>
+                <button
+                  onClick={() => setSelectedOrder(null)}
+                  className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer border-none bg-transparent"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              <div className="px-5 pb-5 space-y-3">
+                <div className="bg-slate-50 rounded-2xl p-3 space-y-2">
+                  <p className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">
+                    {al("Klant", "Customer", "Müşteri")}
+                  </p>
+                  <p className="text-sm font-bold text-slate-900">{selectedOrder.customerName}</p>
+                  {selectedOrder.customerPhone && (
+                    <a href={`tel:${selectedOrder.customerPhone}`} className="flex items-center gap-2 text-xs text-indigo-600 no-underline hover:text-indigo-800">
+                      <Phone className="h-3 w-3" />{selectedOrder.customerPhone}
+                    </a>
+                  )}
+                  {selectedOrder.customerEmail && (
+                    <a href={`mailto:${selectedOrder.customerEmail}`} className="flex items-center gap-2 text-xs text-indigo-600 no-underline hover:text-indigo-800">
+                      <Mail className="h-3 w-3" />{selectedOrder.customerEmail}
+                    </a>
+                  )}
+                  {selectedOrder.deliveryAddress && (
+                    <div className="flex items-start gap-2 text-xs text-slate-600">
+                      <MapPin className="h-3 w-3 shrink-0 mt-0.5" />{selectedOrder.deliveryAddress}
+                    </div>
+                  )}
+                </div>
+
+                <div className="divide-y divide-slate-100 rounded-2xl border border-slate-200 overflow-hidden text-xs">
+                  <div className="flex items-center justify-between px-3 py-2">
+                    <span className="text-slate-400 font-mono text-[10px]">{al("Periode", "Period", "Dönem")}</span>
+                    <span className="font-bold text-slate-800">{fmt(parseDay(selectedOrder.startDate))} – {fmt(parseDay(selectedOrder.endDate))}</span>
+                  </div>
+                  <div className="flex items-center justify-between px-3 py-2">
+                    <span className="text-slate-400 font-mono text-[10px]">{al("Dagen", "Days", "Günler")}</span>
+                    <span className="font-bold text-slate-800">{selectedOrder.rentalDays} {al("dag", "day", "gün")}{selectedOrder.rentalDays !== 1 ? (adminLanguage === "nl" ? "en" : adminLanguage === "en" ? "s" : "") : ""}</span>
+                  </div>
+                  <div className="flex items-center justify-between px-3 py-2">
+                    <span className="text-slate-400 font-mono text-[10px]">{al("Logistiek", "Logistics", "Lojistik")}</span>
+                    <span className="font-bold text-slate-800">{deliveryLabel(selectedOrder.deliveryType)}</span>
+                  </div>
+                  <div className="flex items-center justify-between px-3 py-2">
+                    <span className="text-slate-400 font-mono text-[10px]">{al("Profiel", "Profile", "Profil")}</span>
+                    <span className="font-bold text-slate-800">{selectedOrder.customerProfile}</span>
+                  </div>
+                  <div className="flex items-center justify-between px-3 py-2 bg-indigo-50">
+                    <span className="text-indigo-600 font-mono text-[10px] font-bold">{al("Totaal", "Total", "Toplam")}</span>
+                    <span className="font-extrabold text-indigo-700 font-mono">{selectedOrder.totalAmount != null ? euro(selectedOrder.totalAmount) : ""}</span>
+                  </div>
+                </div>
+
+                {selectedOrder.addons && selectedOrder.addons.length > 0 && (
+                  <div className="flex items-center gap-2 text-[10px] text-slate-500">
+                    <Package className="h-3 w-3 shrink-0" />
+                    {selectedOrder.addons.map((a) => a.name).join(" · ")}
+                  </div>
+                )}
+
+                <button
+                  onClick={() => setSelectedOrder(null)}
+                  className="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all cursor-pointer border-none"
+                >
+                  {al("Sluiten", "Close", "Kapat")}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }

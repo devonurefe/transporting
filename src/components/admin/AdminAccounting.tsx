@@ -166,7 +166,7 @@ export default function AdminAccounting({ adminLanguage }: AdminAccountingProps)
                   type="date"
                   value={fromDate}
                   onChange={(e) => setFromDate(e.target.value)}
-                  className={`w-full bg-white border rounded-xl px-3 py-2.5 text-sm text-slate-800 outline-none cursor-pointer ${dateRangeInvalid ? "border-rose-400 focus:border-rose-500" : "border-slate-200 focus:border-amber-400"}`}
+                  className={`w-full bg-white border rounded-xl px-3 py-2.5 text-sm text-slate-800 text-center outline-none cursor-pointer ${dateRangeInvalid ? "border-rose-400 focus:border-rose-500" : "border-slate-200 focus:border-amber-400"}`}
                 />
               </div>
               <div className="space-y-1.5">
@@ -175,7 +175,7 @@ export default function AdminAccounting({ adminLanguage }: AdminAccountingProps)
                   type="date"
                   value={toDate}
                   onChange={(e) => setToDate(e.target.value)}
-                  className={`w-full bg-white border rounded-xl px-3 py-2.5 text-sm text-slate-800 outline-none cursor-pointer ${dateRangeInvalid ? "border-rose-400 focus:border-rose-500" : "border-slate-200 focus:border-amber-400"}`}
+                  className={`w-full bg-white border rounded-xl px-3 py-2.5 text-sm text-slate-800 text-center outline-none cursor-pointer ${dateRangeInvalid ? "border-rose-400 focus:border-rose-500" : "border-slate-200 focus:border-amber-400"}`}
                 />
               </div>
             </div>

@@ -503,6 +503,15 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                     <div><span className="text-slate-400">{t("Gewicht", "Weight", "Ağırlık")}:</span> {m.weight || "--"} kg</div>
                   </div>
 
+                  {(m.weekendPrice || m.twoDayPrice || m.weeklyPrice || m.monthlyPrice) && (
+                    <div className="flex flex-wrap gap-1.5 text-[10px] font-mono">
+                      {m.twoDayPrice ? <span className="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">2d € {m.twoDayPrice}</span> : null}
+                      {m.weekendPrice ? <span className="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">WE € {m.weekendPrice}</span> : null}
+                      {m.weeklyPrice ? <span className="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">{t("Week", "Week", "Hafta")} € {m.weeklyPrice}</span> : null}
+                      {m.monthlyPrice ? <span className="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">{t("Maand", "Month", "Ay")} € {m.monthlyPrice}</span> : null}
+                    </div>
+                  )}
+
                   <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-slate-100">
                     <button
                       onClick={() => handleToggleActive(m)}
@@ -591,7 +600,17 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                     <td className="py-3 pr-4 text-slate-700 font-mono">{m.reach || "--"} m</td>
                     <td className="py-3 pr-4 text-slate-700 font-mono">{m.weight || "--"} kg</td>
                     <td className="py-3 pr-4 text-slate-700">{m.powerType ? (m.powerType === "Elektrisch" ? t("Elektrisch", "Electric", "Elektrikli") : m.powerType === "Diesel" ? t("Diesel", "Diesel", "Dizel") : t("Hybride", "Hybrid", "Hibrit")) : t("Elektrisch", "Electric", "Elektrikli")}</td>
-                    <td className="py-3 pr-4 font-mono text-teal-600 font-bold">€ {m.pricePerDay}</td>
+                    <td className="py-3 pr-4 font-mono text-teal-600 font-bold">
+                      € {m.pricePerDay}
+                      {(m.weekendPrice || m.twoDayPrice || m.weeklyPrice || m.monthlyPrice) && (
+                        <div className="text-[9px] text-slate-400 font-semibold mt-0.5 space-x-1.5">
+                          {m.twoDayPrice ? <span>2d €{m.twoDayPrice}</span> : null}
+                          {m.weekendPrice ? <span>WE €{m.weekendPrice}</span> : null}
+                          {m.weeklyPrice ? <span>{t("W", "W", "H")} €{m.weeklyPrice}</span> : null}
+                          {m.monthlyPrice ? <span>{t("M", "M", "A")} €{m.monthlyPrice}</span> : null}
+                        </div>
+                      )}
+                    </td>
                     <td className="py-3 text-right pr-4">
                       <div className="flex items-center justify-end space-x-1.5 ml-auto">
                         <button

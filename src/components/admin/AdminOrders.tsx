@@ -357,7 +357,10 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
     }
     const machine = getBaseName(selectedDetailOrder.machineName);
     const lines = [
-      "Goed nieuws! Wij kunnen uw reservering herplannen. 📅",
+      `Beste *${selectedDetailOrder.customerName}*`,
+      "",
+      "Goed nieuws!",
+      "Wij kunnen uw reservering herplannen. 📅",
       "",
       `Bestelling: *${selectedDetailOrder.id}*`,
       `Machine: *${machine}*`,
@@ -366,7 +369,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
       "Kunt u dit bevestigen of heeft u een andere voorkeur?",
       "",
       "Met vriendelijke groet,",
-      "*huurgo*"
+      "*HuurGo Team*"
     ];
     if (selectedDetailOrder.customerPhone) {
       const phone = formatPhoneForWA(selectedDetailOrder.customerPhone);

@@ -50,6 +50,7 @@ export default function AdminOrderFormModal({ mode, order, onClose, onSaved, adm
   const [customerEmail, setCustomerEmail] = useState<string>(order?.customerEmail ?? "");
   const [customerPhone, setCustomerPhone] = useState<string>(order?.customerPhone ?? "");
   const [customerProfile, setCustomerProfile] = useState<string>(order?.customerProfile ?? "Particulier");
+  const [poNumber, setPoNumber] = useState<string>(order?.poNumber ?? "");
   const [deliveryType, setDeliveryType] = useState<string>(order?.deliveryType ?? "self_pickup");
   const [deliveryAddress, setDeliveryAddress] = useState<string>(order?.deliveryAddress ?? "");
   const [deliveryTimeSlot, setDeliveryTimeSlot] = useState<string>(order?.deliveryTimeSlot ?? "");
@@ -95,6 +96,7 @@ export default function AdminOrderFormModal({ mode, order, onClose, onSaved, adm
         machineId, startDate, endDate,
         customerName: customerName.trim(), customerEmail: customerEmail.trim(),
         customerPhone: customerPhone.trim() || undefined, customerProfile,
+        poNumber: poNumber.trim() || undefined,
         deliveryType, deliveryAddress: deliveryAddress.trim() || undefined,
         deliveryTimeSlot: deliveryTimeSlot || undefined,
       };
@@ -111,6 +113,7 @@ export default function AdminOrderFormModal({ mode, order, onClose, onSaved, adm
       if (customerEmail.trim() !== (order.customerEmail ?? "")) patch.customerEmail = customerEmail.trim();
       if (customerPhone.trim() !== (order.customerPhone ?? "")) patch.customerPhone = customerPhone.trim();
       if (customerProfile !== (order.customerProfile ?? "")) patch.customerProfile = customerProfile;
+      if (poNumber.trim() !== (order.poNumber ?? "")) patch.poNumber = poNumber.trim();
       if (deliveryType !== order.deliveryType) patch.deliveryType = deliveryType;
       if (deliveryAddress.trim() !== (order.deliveryAddress ?? "")) patch.deliveryAddress = deliveryAddress.trim();
       if ((deliveryTimeSlot || null) !== (order.deliveryTimeSlot ?? null)) patch.deliveryTimeSlot = deliveryTimeSlot || "";
@@ -186,6 +189,10 @@ export default function AdminOrderFormModal({ mode, order, onClose, onSaved, adm
               <select value={customerProfile} onChange={(e) => setCustomerProfile(e.target.value)} className={inputCls}>
                 {PROFILES.map((p) => <option key={p} value={p}>{p}</option>)}
               </select>
+            </div>
+            <div>
+              <label className={labelCls}>{t("Inkoopordernr (PO)", "PO number", "PO numarası")} <span className="font-normal text-slate-400">— {t("optioneel", "optional", "opsiyonel")}</span></label>
+              <input type="text" value={poNumber} onChange={(e) => setPoNumber(e.target.value)} maxLength={60} placeholder="PO-2026-0421" className={inputCls} />
             </div>
 
             <div className="grid grid-cols-2 gap-3">

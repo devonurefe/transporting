@@ -76,6 +76,7 @@ export interface Order {
   customerEmail: string;
   customerPhone: string;
   customerProfile: string; // e.g., "Schilder", "Aannemer", "Particulier", etc.
+  poNumber?: string | null; // optional customer purchase-order reference, shown on invoice
   subtotal: number;
   transportCost: number;
   driverCost: number;

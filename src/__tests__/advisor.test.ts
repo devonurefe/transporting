@@ -131,8 +131,8 @@ describe("questionsFor / coerceAnswer / summary", () => {
     const a: AdvisorAnswers = { job: "hoogte", use: "hovenier", h: 12, access: "tuin" };
     const summary = buildSummary(flow, a);
     expect(summary).toContain("hovenier");
-    const url = buildAdvisorWhatsAppUrl(flow, a, "31611848899");
-    expect(url).toContain("wa.me/31611848899");
+    const url = buildAdvisorWhatsAppUrl(flow, a, "31611691692");
+    expect(url).toContain("wa.me/31611691692");
     expect(decodeURIComponent(url)).toContain("hovenier");
   });
 });

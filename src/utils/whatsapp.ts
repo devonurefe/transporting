@@ -12,7 +12,7 @@ import { useAppStore } from "../store/appStore";
 // (AdminCustomizer → Contact): siteConfig.whatsappNumber wint, anders valt het
 // terug op de VITE_WHATSAPP_NUMBER env-var en tenslotte de historische default.
 // Alleen cijfers — wa.me heeft geen + of spaties nodig.
-const WHATSAPP_ENV_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER ?? "31611848899";
+const WHATSAPP_ENV_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER ?? "31611691692";
 export function getWhatsAppNumber(): string {
   const fromConfig = useAppStore.getState().siteConfig?.whatsappNumber;
   const digits = (fromConfig ?? "").replace(/[^0-9]/g, "");

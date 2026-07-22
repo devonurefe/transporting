@@ -86,7 +86,7 @@ const TEMPLATE_EMAILS = [
     id: "welcome",
     label: { nl: "Welkomstmail", en: "Welcome email", tr: "Hoş geldiniz maili" },
     subject: "Welkom bij MB Hoogwerkers – uw account is actief",
-    body: "Beste {naam},\n\nBedankt voor uw registratie bij HuurGo van MB Hoogwerkers B.V.\n\nU kunt nu eenvoudig hoogwerkers, schaarhoogwerkers en spinnen reserveren via huurgo.nl.\n\nHeeft u vragen? Bel ons op +31 6 11 84 88 99 of stuur een bericht via WhatsApp.\n\nMet vriendelijke groet,\nMB Hoogwerkers B.V. 🦾",
+    body: "Beste {naam},\n\nBedankt voor uw registratie bij HuurGo van MB Hoogwerkers B.V.\n\nU kunt nu eenvoudig hoogwerkers, schaarhoogwerkers en spinnen reserveren via huurgo.nl.\n\nHeeft u vragen? Bel ons op +31 6 11 69 16 92 of stuur een bericht via WhatsApp.\n\nMet vriendelijke groet,\nMB Hoogwerkers B.V. 🦾",
   },
   {
     id: "promo",

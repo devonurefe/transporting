@@ -382,7 +382,7 @@ these are the **defaults**; admin-editable via AdminContent → Tarieven (see
 
 ## WhatsApp
 
-Number from env: `VITE_WHATSAPP_NUMBER` (format `31611848899`, no `+`).  
+Number from env: `VITE_WHATSAPP_NUMBER` (format `31611691692`, no `+`).  
 All builders in `src/utils/whatsapp.ts`. Sign-off emoji: **🦾** (never 🙏).
 
 ---
@@ -410,7 +410,7 @@ All builders in `src/utils/whatsapp.ts`. Sign-off emoji: **🦾** (never 🙏).
 | `RESEND_API_KEY` | Transactional email (optional — mock fallback if absent) |
 | `EMAIL_FROM` | Sender address (e.g. `noreply@huurgo.nl`) |
 | `ADMIN_EMAIL` | Admin alert recipient (e.g. `info@mbhoogwerkers.com`) |
-| `VITE_WHATSAPP_NUMBER` | WA number without `+` (e.g. `31611848899`) |
+| `VITE_WHATSAPP_NUMBER` | WA number without `+` (e.g. `31611691692`) |
 | `VITE_CLARITY_ID` | Microsoft Clarity project ID (optional). Empty = no tracking. Requires cookie consent (KVKK/GDPR) before enabling for EU visitors. |
 | `APP_URL` | Production base URL (used in email links) |
 | `REMINDER_SECRET` | Secret for cron reminder endpoint |

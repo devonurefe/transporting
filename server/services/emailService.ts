@@ -15,6 +15,10 @@ const resend = resendApiKey && resendApiKey !== "MY_RESEND_API_KEY" ? new Resend
 const SENDER_ADDRESS = process.env.EMAIL_FROM || "onboarding@resend.dev";
 // Show a friendly "HuurGo" display name in the recipient's inbox instead of the raw address
 const SENDER_EMAIL = SENDER_ADDRESS.includes("<") ? SENDER_ADDRESS : `HuurGo <${SENDER_ADDRESS}>`;
+// Reply-to for customer-facing mail. EMAIL_FROM may be a noreply address that isn't
+// monitored, so replies must land on the real, MX-forwarded mailbox (info@huurgo.nl →
+// huurgomb@gmail.com). Overridable via REPLY_TO; defaults to the info-box.
+const REPLY_TO_ADDRESS = process.env.REPLY_TO || "info@huurgo.nl";
 const APP_URL = process.env.APP_URL || "https://localhost:3000";
 const ADMIN_ALERT_EMAIL = process.env.ADMIN_EMAIL || "";
 // Payment runs over WhatsApp (customer requests the iDEAL/Tikkie link). The
@@ -239,6 +243,7 @@ export const emailService = {
     return sendWithRetry({
       from: SENDER_EMAIL,
       to: order.customerEmail,
+      replyTo: REPLY_TO_ADDRESS,
       subject: `Bevestiging van uw reservering ${order.id} - huurgo`,
       html: htmlContent,
     });
@@ -328,6 +333,8 @@ export const emailService = {
     return sendWithRetry({
       from: SENDER_EMAIL,
       to: ADMIN_ALERT_EMAIL,
+      // Reply straight to the customer from the alert, not to the info-box
+      replyTo: order.customerEmail || REPLY_TO_ADDRESS,
       subject: `🚨 Nieuwe Reservering ${order.id} - €${order.totalAmount.toFixed(2)} - ${order.customerName}`,
       html: htmlContent,
     });
@@ -355,6 +362,15 @@ export const emailService = {
       statusDescription = "De huurperiode is beëindigd en het materieel is succesvol retour ontvangen. Bedankt voor uw vertrouwen in huurgo!";
       headerColor = "linear-gradient(135deg, #64748b, #475569)";
     }
+
+    // Approval only fires after payment is marked "paid" (enforced server-side in
+    // orders.ts), so the Goedgekeurd mail doubles as the payment-received receipt —
+    // no separate payment email is sent.
+    const paymentBlock = order.status === "Goedgekeurd" ? `
+      <div style="text-align: center; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 16px; padding: 16px 20px; margin-top: 24px;">
+        <p style="font-size: 14px; font-weight: 700; color: #166534; margin: 0;">✓ Betaling ontvangen</p>
+        <p style="font-size: 12px; color: #15803d; margin: 6px 0 0;">Uw betaling van €${order.totalAmount.toFixed(2)} is verwerkt. Uw reservering is nu definitief bevestigd.</p>
+      </div>` : "";
 
     const ratingUrl = `${APP_URL}/?rate=${encodeURIComponent(order.id)}&email=${encodeURIComponent(order.customerEmail)}`;
     const ratingBlock = order.status === "Voltooid" ? `
@@ -398,7 +414,8 @@ export const emailService = {
             </div>
             <p>Beste <strong>${esc(order.customerName)}</strong>,</p>
             <p>${statusDescription}</p>
-            
+            ${paymentBlock}
+
             <h4 style="margin-top: 24px; font-size: 14px; border-bottom: 1px solid #edf2f7; padding-bottom: 8px;">Reservering details</h4>
             <div class="details-grid">
               <div class="details-item">
@@ -448,6 +465,7 @@ export const emailService = {
     return sendWithRetry({
       from: SENDER_EMAIL,
       to: order.customerEmail,
+      replyTo: REPLY_TO_ADDRESS,
       subject: `Update van uw reservering ${order.id}: ${order.status} - huurgo`,
       html: htmlContent,
     });
@@ -525,6 +543,7 @@ export const emailService = {
     return sendWithRetry({
       from: SENDER_EMAIL,
       to: customer.email,
+      replyTo: REPLY_TO_ADDRESS,
       subject: "Activeer uw huurgo account",
       html: htmlContent,
     });
@@ -590,6 +609,7 @@ export const emailService = {
     return sendWithRetry({
       from: SENDER_EMAIL,
       to: order.customerEmail,
+      replyTo: REPLY_TO_ADDRESS,
       subject: `Herinnering: Uw hoogwerker ${order.machineName} is morgen klaar — ${order.id}`,
       html: htmlContent
     });
@@ -659,6 +679,7 @@ export const emailService = {
     return sendWithRetry({
       from: SENDER_EMAIL,
       to: order.customerEmail,
+      replyTo: REPLY_TO_ADDRESS,
       subject: `Herinnering: betaling voor ${order.machineName} nog niet ontvangen — ${order.id}`,
       html: htmlContent
     });
@@ -718,6 +739,7 @@ export const emailService = {
     return sendWithRetry({
       from: SENDER_EMAIL,
       to: email,
+      replyTo: REPLY_TO_ADDRESS,
       subject: "Wachtwoord resetten - huurgo",
       html: htmlContent
     });
@@ -774,6 +796,7 @@ export const emailService = {
     return sendWithRetry({
       from: SENDER_EMAIL,
       to: ADMIN_ALERT_EMAIL,
+      replyTo: order.customerEmail || REPLY_TO_ADDRESS,
       subject: `❌ Annulering ${order.id} — ${order.customerName} — €${order.totalAmount.toFixed(2)}`,
       html: htmlContent,
     });
@@ -844,6 +867,7 @@ export const emailService = {
     return sendWithRetry({
       from: SENDER_EMAIL,
       to: customer.email,
+      replyTo: REPLY_TO_ADDRESS,
       subject,
       html: htmlContent,
     });
@@ -858,6 +882,7 @@ export const emailService = {
     return sendWithRetry({
       from: SENDER_EMAIL,
       to: ADMIN_ALERT_EMAIL,
+      replyTo: customerEmail || REPLY_TO_ADDRESS,
       subject: `⚠️ [HuurGo] Email bevestiging mislukt: ${orderId}`,
       html: `<p>De klantbevestiging voor bestelling <strong>${orderId}</strong> kon niet worden bezorgd aan <strong>${customerEmail}</strong>.<br><br>Neem handmatig contact op met de klant.<br><br><small>Fout: ${errorMsg}</small></p>`,
     });
@@ -887,6 +912,7 @@ export const emailService = {
     const ok = await sendWithRetry({
       from: SENDER_EMAIL,
       to: toEmail,
+      replyTo: REPLY_TO_ADDRESS,
       subject: "huurgo — testmail vanuit Diagnostiek",
       html,
     });
@@ -901,6 +927,7 @@ export function getEmailDiagnostics() {
   return {
     resendConfigured: !!resend,
     emailFrom: SENDER_EMAIL,
+    replyTo: REPLY_TO_ADDRESS,
     adminAlertEmailConfigured: !!ADMIN_ALERT_EMAIL,
     adminAlertEmail: ADMIN_ALERT_EMAIL || null,
     whatsappConfigured: !!WHATSAPP_NUMBER,

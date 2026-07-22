@@ -452,6 +452,34 @@ export function printInvoice(orderOrOrders: Order | Order[], clientCompanyName?:
           font-weight: 600;
         }
         
+        /* On-screen action bar — lets mobile users close/print the invoice tab.
+           Without it, the invoice fills the screen with no way back once the
+           native print sheet is dismissed. Hidden entirely when printing. */
+        .action-bar {
+          position: sticky;
+          top: 0;
+          z-index: 1000;
+          display: flex;
+          gap: 10px;
+          justify-content: center;
+          flex-wrap: wrap;
+          padding: 12px;
+          margin: -40px -40px 24px;
+          background: #0f172a;
+        }
+        .action-bar button {
+          appearance: none;
+          border: none;
+          cursor: pointer;
+          font-family: inherit;
+          font-size: 14px;
+          font-weight: 700;
+          padding: 11px 22px;
+          border-radius: 10px;
+        }
+        .ab-print { background: #d97706; color: #ffffff; }
+        .ab-close { background: #334155; color: #ffffff; }
+
         /* Print rules */
         @media print {
           body {
@@ -461,6 +489,9 @@ export function printInvoice(orderOrOrders: Order | Order[], clientCompanyName?:
           .container {
             width: 100%;
           }
+          .action-bar {
+            display: none !important;
+          }
           @page {
             size: A4 portrait;
             margin: 15mm;
@@ -469,6 +500,11 @@ export function printInvoice(orderOrOrders: Order | Order[], clientCompanyName?:
       </style>
     </head>
     <body>
+      <!-- Screen-only controls (hidden in print) — the mobile close/print affordance -->
+      <div class="action-bar">
+        <button type="button" class="ab-print" onclick="window.print()">🖨️ Printen / Opslaan als PDF</button>
+        <button type="button" class="ab-close" onclick="window.close()">✕ Sluiten</button>
+      </div>
       <div class="container">
         
         <!-- Header Section -->

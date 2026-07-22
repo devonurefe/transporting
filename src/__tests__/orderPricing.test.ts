@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { computeOrderSubtotal, computeTransport, computeAddonsTotal, computeVatAndTotal, computeRentalDays } from "../../server/utils/orderPricing";
+import { computeOrderSubtotal, computeTransport, computeAddonsTotal, computeVatAndTotal, computeRentalDays, clampTrailerDays } from "../../server/utils/orderPricing";
 import { DEFAULT_TRANSPORT_FEES, DEFAULT_GLOBAL_ADDONS } from "../../server/utils/fees";
 import { calculateItemSubtotal } from "../utils/pricing";
 import { Machine, CampaignRule } from "../types";
@@ -95,7 +95,28 @@ describe("computeTransport", () => {
   const fees = { ...DEFAULT_TRANSPORT_FEES, addons: DEFAULT_GLOBAL_ADDONS } as any;
   it("self pickup = 0", () => expect(computeTransport("self_pickup", 5, fees)).toBe(0));
   it("delivery = flat delivery fee", () => expect(computeTransport("delivery_by_us", 5, fees)).toBe(150));
-  it("trailer = perDay × days", () => expect(computeTransport("trailer_rental", 4, fees)).toBe(100));
+  // Aanhanger: kosten = tarief × door de klant gekozen aantal dagen (niet de huurperiode).
+  it("trailer = perDay × chosen trailerDays (2 of a 9-day rental)", () =>
+    expect(computeTransport("trailer_rental", 9, fees, 2)).toBe(50));
+  it("trailer = perDay × trailerDays when equal to rental period", () =>
+    expect(computeTransport("trailer_rental", 4, fees, 4)).toBe(100));
+  it("trailer without trailerDays falls back to full rental period (legacy)", () =>
+    expect(computeTransport("trailer_rental", 4, fees)).toBe(100));
+});
+
+describe("clampTrailerDays", () => {
+  it("accepts an integer within [1, rentalDays]", () => {
+    expect(clampTrailerDays(2, 9)).toBe(2);
+    expect(clampTrailerDays(9, 9)).toBe(9);
+    expect(clampTrailerDays(1, 9)).toBe(1);
+  });
+  it("rejects 0, negatives, non-integers and values above the rental period", () => {
+    expect(clampTrailerDays(0, 9)).toBeNull();
+    expect(clampTrailerDays(-1, 9)).toBeNull();
+    expect(clampTrailerDays(2.5, 9)).toBeNull();
+    expect(clampTrailerDays(10, 9)).toBeNull();
+    expect(clampTrailerDays("abc", 9)).toBeNull();
+  });
 });
 
 describe("computeAddonsTotal", () => {

@@ -25,10 +25,30 @@ export function computeRentalDays(startDate: Date, endDate: Date): number {
 }
 
 // Autoritatieve transportkosten voor een bezorgtype. Spiegelt de POST-logica.
-export function computeTransport(deliveryType: string, rentalDays: number, fees: ResolvedFees): number {
+//
+// trailer_rental: de klant kiest zelf hoeveel dagen hij de aanhanger houdt (hij
+// gebruikt hem in de praktijk alleen bij ophalen + terugbrengen, niet de hele
+// huurperiode). `trailerDays` komt daarom van de client en wordt hier geclampt op
+// [1, rentalDays]. Ontbreekt het (legacy-order van vóór deze functie), dan valt
+// het terug op de oude berekening (× volledige huurperiode) zodat bestaande
+// orders hun oorspronkelijke prijs behouden.
+export function clampTrailerDays(trailerDays: unknown, rentalDays: number): number | null {
+  const n = Number(trailerDays);
+  if (!Number.isInteger(n) || n < 1 || n > rentalDays) return null;
+  return n;
+}
+
+export function computeTransport(
+  deliveryType: string,
+  rentalDays: number,
+  fees: ResolvedFees,
+  trailerDays?: number | null
+): number {
   if (deliveryType === "self_pickup") return 0;
   if (deliveryType === "delivery_by_us") return fees.deliveryFee;
-  return fees.trailerPerDay * rentalDays; // trailer_rental
+  // trailer_rental
+  const days = trailerDays == null ? rentalDays : trailerDays;
+  return fees.trailerPerDay * days;
 }
 
 // Autoritatief subtotaal (excl. transport/add-ons/btw), inclusief weekendpakket,

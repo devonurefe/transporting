@@ -130,13 +130,16 @@ describe.skipIf(!HAS_DB)("Boeken E2E — per categorie prijs- en kalendertest", 
   async function placeOrder(
     m: Machine,
     sc: Scenario,
-    opts: { deliveryType?: string; addons?: any[]; addonsTotal?: number; keep?: boolean } = {}
+    opts: { deliveryType?: string; addons?: any[]; addonsTotal?: number; keep?: boolean; trailerDays?: number } = {}
   ) {
     const deliveryType = opts.deliveryType ?? "self_pickup";
     const fees = getTransportFees(siteConfig);
+    // Aanhanger wordt per klant-gekozen aantal dagen berekend; valt terug op de
+    // volledige periode wanneer geen trailerDays is meegegeven (legacy-pad).
+    const trailerDays = opts.trailerDays ?? sc.days;
     const transport =
       deliveryType === "delivery_by_us" ? fees.deliveryFee
-      : deliveryType === "trailer_rental" ? fees.trailerPerDay * sc.days
+      : deliveryType === "trailer_rental" ? fees.trailerPerDay * trailerDays
       : 0;
     const subtotal = calculateItemSubtotal(m, sc.days, PROFILE, campaignRules, iso(sc.start));
     const addonsTotal = opts.addonsTotal ?? 0;
@@ -165,6 +168,7 @@ describe.skipIf(!HAS_DB)("Boeken E2E — per categorie prijs- en kalendertest", 
         vatAmount: vat,
         totalAmount: total,
         addons: opts.addons ?? [],
+        ...(deliveryType === "trailer_rental" ? { trailerDays } : {}),
       });
 
     if (res.status === 201) {
@@ -340,10 +344,17 @@ describe.skipIf(!HAS_DB)("Boeken E2E — per categorie prijs- en kalendertest", 
     expect(del.res.body.transportCost).toBeCloseTo(getTransportFees(siteConfig).deliveryFee, 2);
     expect(del.res.body.totalAmount).toBeCloseTo(del.expected.total, 2);
 
-    const trl = await placeOrder(m, sc, { deliveryType: "trailer_rental" });
+    // Aanhanger: klant kiest zelf het aantal dagen (hier 2 van een 3-daagse verhuur)
+    // → transportkosten = trailerPerDay × 2, niet × de volledige huurperiode.
+    const trl = await placeOrder(m, sc, { deliveryType: "trailer_rental", trailerDays: 2 });
     expect(trl.res.status, JSON.stringify(trl.res.body)).toBe(201);
-    expect(trl.res.body.transportCost).toBeCloseTo(getTransportFees(siteConfig).trailerPerDay * 3, 2);
+    expect(trl.res.body.transportCost).toBeCloseTo(getTransportFees(siteConfig).trailerPerDay * 2, 2);
+    expect(trl.res.body.trailerDays).toBe(2);
     expect(trl.res.body.totalAmount).toBeCloseTo(trl.expected.total, 2);
+
+    // Ongeldig aantal aanhangerdagen (0) → 400.
+    const bad = await placeOrder(m, sc, { deliveryType: "trailer_rental", trailerDays: 0 });
+    expect(bad.res.status).toBe(400);
   }, 30_000);
 
   it("globale add-ons (Veiligheidsset + Rijplaten ×3) spiegelen exact", async () => {

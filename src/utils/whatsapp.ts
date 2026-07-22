@@ -81,10 +81,15 @@ export function buildWhatsAppUrl(
     const fees = getTransportFees(siteConfig);
     const pickupAddress = siteConfig.companyAddress || "Produktieweg 20, Zoeterwoude";
     const pickupHours = siteConfig.openingHours?.monFri || "ma–vr 08:00–17:00";
+    // Aanhanger wordt per klant-gekozen aantal dagen berekend (niet de huurperiode).
+    // Het aantal is af te leiden uit de opgeslagen transportkosten ÷ dagtarief.
+    const trailerDays = totals && fees.trailerPerDay > 0
+      ? Math.round(totals.transport / fees.trailerPerDay)
+      : 0;
     const label = deliveryType === "self_pickup"
       ? `✅  Zelf ophalen  –  ${pickupAddress}  (Gratis)\n   🕐 Openingstijden: ${pickupHours}`
       : deliveryType === "trailer_rental"
-      ? `🔗  Aanhanger huren  (${euroCompact(fees.trailerPerDay)}/dag${totals ? `  ×  ${totals.days} d  =  ${euroCompact(totals.transport)}` : ""})`
+      ? `🔗  Aanhanger huren  (${euroCompact(fees.trailerPerDay)}/dag${totals ? `  ×  ${trailerDays} d  =  ${euroCompact(totals.transport)}` : ""})`
       : `🚐  Bezorging door ons  (heen + terug = ${euroCompact(fees.deliveryFee)})`;
     lines.push(label);
     lines.push("");

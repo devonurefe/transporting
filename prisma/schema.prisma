@@ -158,6 +158,13 @@ model Order {
   invoiceNumber   String?   @unique
   paymentStatus   String    @default("awaiting")
   paymentReminderSentAt DateTime?
+  // Door de admin voorgestelde herplan-datums (WhatsApp-datumvoorstel). Beide null
+  // = geen openstaand voorstel. Puur ter opvolging in het adminpaneel; de echte
+  // huurperiode (startDate/endDate) wijzigt pas als de admin de order daadwerkelijk
+  // aanpast nadat de klant akkoord is.
+  proposedStartDate DateTime?
+  proposedEndDate   DateTime?
+  proposedAt        DateTime?
 
   customer        Customer? @relation(fields: [customerId], references: [id])
 

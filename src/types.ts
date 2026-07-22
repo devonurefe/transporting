@@ -88,6 +88,10 @@ export interface Order {
   weekendWork?: "ja" | "nee" | null;
   invoiceNumber?: string;
   paymentStatus?: string;
+  // Admin-voorgestelde herplan-datums (ISO). Beide leeg = geen openstaand voorstel.
+  proposedStartDate?: string | null;
+  proposedEndDate?: string | null;
+  proposedAt?: string | null;
 }
 
 export interface AppNotification {

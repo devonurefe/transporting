@@ -846,6 +846,55 @@ ordersRouter.put("/:id/payment", requireAdmin as any, async (req: AuthenticatedR
   }
 });
 
+// PUT /api/orders/:id/date-proposal — admin records/clears a proposed reschedule.
+// Lightweight and non-destructive: it only stores the proposed dates for follow-up
+// in the admin panel; it never touches the real startDate/endDate, pricing, or
+// availability. Send { proposedStartDate, proposedEndDate } (ISO date strings) to
+// set, or { proposedStartDate: null } to clear once the customer has responded.
+ordersRouter.put("/:id/date-proposal", requireAdmin as any, async (req: AuthenticatedRequest, res: Response) => {
+  const { id } = req.params;
+  const { proposedStartDate, proposedEndDate } = req.body ?? {};
+
+  try {
+    const existing = await prisma.order.findUnique({ where: { id } });
+    if (!existing) return res.status(404).json({ error: "Bestelling niet gevonden" });
+
+    let data: { proposedStartDate: Date | null; proposedEndDate: Date | null; proposedAt: Date | null };
+    if (proposedStartDate == null && proposedEndDate == null) {
+      // Clear an existing proposal
+      data = { proposedStartDate: null, proposedEndDate: null, proposedAt: null };
+    } else {
+      const start = new Date(proposedStartDate);
+      const end = new Date(proposedEndDate);
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+        return res.status(400).json({ error: "Ongeldige voorsteldata" });
+      }
+      if (end < start) {
+        return res.status(400).json({ error: "Einddatum moet op of na de startdatum liggen" });
+      }
+      data = { proposedStartDate: start, proposedEndDate: end, proposedAt: new Date() };
+    }
+
+    const updatedOrder = await prisma.order.update({ where: { id }, data });
+    audit(req, "order.date_proposal", {
+      entity: "Order",
+      entityId: id,
+      meta: data.proposedStartDate
+        ? { start: proposedStartDate, end: proposedEndDate }
+        : { cleared: true }
+    });
+    res.json({
+      ...updatedOrder,
+      startDate: updatedOrder.startDate.toISOString().split("T")[0],
+      endDate: updatedOrder.endDate.toISOString().split("T")[0],
+      addons: safeParseAddons(updatedOrder.addons)
+    });
+  } catch (error) {
+    console.error("Error saving date proposal:", error);
+    res.status(500).json({ error: "Kon datumvoorstel niet opslaan" });
+  }
+});
+
 // PUT /api/orders/:id/cancel — customer cancels their own order
 ordersRouter.put("/:id/cancel", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
   const { id } = req.params;

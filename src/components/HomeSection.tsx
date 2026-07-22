@@ -353,8 +353,10 @@ function DealsCarousel({ machines, onSearch }: { machines: Machine[]; onSearch: 
                   {/* object-contain (not object-cover) so the full machine — often long
                       and narrow, e.g. a mastlift laid diagonally — stays visible inside
                       its own square box instead of getting cropped at the edges to fill it,
-                      matching how CatalogSection's product cards render photos. */}
-                  <div className="relative aspect-square w-full bg-amber-50 shrink-0 overflow-hidden p-2">
+                      matching how CatalogSection's product cards render photos. White (not
+                      amber-50) to match the photos' own white background — otherwise
+                      object-contain's letterboxing shows a visible amber seam. */}
+                  <div className="relative aspect-square w-full bg-white shrink-0 overflow-hidden p-2">
                     {machineImage ? (
                       <img
                         src={machineImage}

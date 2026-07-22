@@ -473,8 +473,8 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
               const inactive = m.isActive === false;
               return (
                 <div key={m.id} className={`bg-white rounded-2xl border border-slate-200 p-4 space-y-3 shadow-sm ${inactive ? "opacity-50" : ""}`}>
-                  <div className="flex items-center gap-2.5">
-                    <div className="h-11 w-11 rounded-lg overflow-hidden shrink-0 border border-slate-200 bg-slate-100">
+                  <div className="flex items-center gap-3">
+                    <div className="h-16 w-16 rounded-xl overflow-hidden shrink-0 border border-slate-200 bg-slate-100">
                       <img
                         src={m.imageUrl || (m.additionalImages as string[])?.[0] || "/placeholder-machine.webp"}
                         alt={m.name}
@@ -504,11 +504,11 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                   </div>
 
                   {(m.weekendPrice || m.twoDayPrice || m.weeklyPrice || m.monthlyPrice) && (
-                    <div className="flex flex-wrap gap-1.5 text-[10px] font-mono">
-                      {m.twoDayPrice ? <span className="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">2d € {m.twoDayPrice}</span> : null}
-                      {m.weekendPrice ? <span className="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">WE € {m.weekendPrice}</span> : null}
-                      {m.weeklyPrice ? <span className="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">{t("Week", "Week", "Hafta")} € {m.weeklyPrice}</span> : null}
-                      {m.monthlyPrice ? <span className="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">{t("Maand", "Month", "Ay")} € {m.monthlyPrice}</span> : null}
+                    <div className="flex flex-wrap gap-1.5">
+                      {m.twoDayPrice ? <span className="bg-teal-50 text-teal-700 border border-teal-100 px-2 py-1 rounded-lg text-[10px] font-mono font-bold">2d € {m.twoDayPrice}</span> : null}
+                      {m.weekendPrice ? <span className="bg-teal-50 text-teal-700 border border-teal-100 px-2 py-1 rounded-lg text-[10px] font-mono font-bold">WE € {m.weekendPrice}</span> : null}
+                      {m.weeklyPrice ? <span className="bg-teal-50 text-teal-700 border border-teal-100 px-2 py-1 rounded-lg text-[10px] font-mono font-bold">{t("Week", "Week", "Hafta")} € {m.weeklyPrice}</span> : null}
+                      {m.monthlyPrice ? <span className="bg-teal-50 text-teal-700 border border-teal-100 px-2 py-1 rounded-lg text-[10px] font-mono font-bold">{t("Maand", "Month", "Ay")} € {m.monthlyPrice}</span> : null}
                     </div>
                   )}
 
@@ -576,8 +576,8 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                 const inactive = m.isActive === false;
                 return (
                    <tr key={m.id} className={`hover:bg-slate-50 transition-colors ${inactive ? "opacity-50" : ""}`}>
-                    <td className="py-3 pr-4 font-bold text-slate-800 flex items-center space-x-2.5">
-                      <div className="h-10 w-10 rounded-lg overflow-hidden shrink-0 border border-slate-200 bg-slate-100">
+                    <td className="py-3 pr-4 font-bold text-slate-800 flex items-center space-x-3">
+                      <div className="h-12 w-12 rounded-xl overflow-hidden shrink-0 border border-slate-200 bg-slate-100">
                         <img
                           src={m.imageUrl || (m.additionalImages as string[])?.[0] || "/placeholder-machine.webp"}
                           alt={m.name}
@@ -603,11 +603,11 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                     <td className="py-3 pr-4 font-mono text-teal-600 font-bold">
                       € {m.pricePerDay}
                       {(m.weekendPrice || m.twoDayPrice || m.weeklyPrice || m.monthlyPrice) && (
-                        <div className="text-[9px] text-slate-400 font-semibold mt-0.5 space-x-1.5">
-                          {m.twoDayPrice ? <span>2d €{m.twoDayPrice}</span> : null}
-                          {m.weekendPrice ? <span>WE €{m.weekendPrice}</span> : null}
-                          {m.weeklyPrice ? <span>{t("W", "W", "H")} €{m.weeklyPrice}</span> : null}
-                          {m.monthlyPrice ? <span>{t("M", "M", "A")} €{m.monthlyPrice}</span> : null}
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {m.twoDayPrice ? <span className="bg-teal-50 text-teal-700 border border-teal-100 px-1.5 py-0.5 rounded text-[9px] font-mono font-bold">2d €{m.twoDayPrice}</span> : null}
+                          {m.weekendPrice ? <span className="bg-teal-50 text-teal-700 border border-teal-100 px-1.5 py-0.5 rounded text-[9px] font-mono font-bold">WE €{m.weekendPrice}</span> : null}
+                          {m.weeklyPrice ? <span className="bg-teal-50 text-teal-700 border border-teal-100 px-1.5 py-0.5 rounded text-[9px] font-mono font-bold">{t("W", "W", "H")} €{m.weeklyPrice}</span> : null}
+                          {m.monthlyPrice ? <span className="bg-teal-50 text-teal-700 border border-teal-100 px-1.5 py-0.5 rounded text-[9px] font-mono font-bold">{t("M", "M", "A")} €{m.monthlyPrice}</span> : null}
                         </div>
                       )}
                     </td>

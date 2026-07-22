@@ -3,10 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { motion } from "motion/react";
 import {
   BookOpen, Wrench, Plus, Pencil, Trash2, Eye, EyeOff, ExternalLink, ArrowLeft, Save, X,
+  Bold, Heading, List,
 } from "lucide-react";
 import { useAppStore, type BlogPost } from "../../store/appStore";
 import AdminConfirmDialog from "./AdminConfirmDialog";
@@ -54,8 +55,47 @@ export default function AdminBlog({ adminLanguage, onAddSystemLog }: AdminBlogPr
   const [draft, setDraft] = useState<Draft | null>(null);
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<BlogPost | null>(null);
+  const contentRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => { fetchBlogPosts(); }, [fetchBlogPosts]);
+
+  // Markdown formatting helpers for the content editor. The public renderer
+  // (MarkdownBody) supports exactly: **bold**, "## " headings and "- " bullets,
+  // so the toolbar inserts only those — no button produces syntax that would
+  // render as literal text.
+  const wrapContentSelection = (marker: string, placeholder: string) => {
+    const ta = contentRef.current;
+    if (!ta || !draft) return;
+    const start = ta.selectionStart;
+    const end = ta.selectionEnd;
+    const value = draft.content;
+    const selected = value.slice(start, end) || placeholder;
+    const next = value.slice(0, start) + marker + selected + marker + value.slice(end);
+    setDraft({ ...draft, content: next });
+    requestAnimationFrame(() => {
+      ta.focus();
+      ta.setSelectionRange(start + marker.length, start + marker.length + selected.length);
+    });
+  };
+
+  const prefixContentLine = (prefix: string) => {
+    const ta = contentRef.current;
+    if (!ta || !draft) return;
+    const start = ta.selectionStart;
+    const value = draft.content;
+    const lineStart = value.lastIndexOf("\n", start - 1) + 1;
+    // Toggle off if the prefix is already there, otherwise add it.
+    const already = value.slice(lineStart).startsWith(prefix);
+    const next = already
+      ? value.slice(0, lineStart) + value.slice(lineStart + prefix.length)
+      : value.slice(0, lineStart) + prefix + value.slice(lineStart);
+    setDraft({ ...draft, content: next });
+    const delta = already ? -prefix.length : prefix.length;
+    requestAnimationFrame(() => {
+      ta.focus();
+      ta.setSelectionRange(Math.max(lineStart, start + delta), Math.max(lineStart, start + delta));
+    });
+  };
 
   const startNew = () => setDraft({ ...emptyDraft });
   const startEdit = (p: BlogPost) => setDraft({
@@ -211,7 +251,35 @@ export default function AdminBlog({ adminLanguage, onAddSystemLog }: AdminBlogPr
         {/* Content */}
         <div>
           <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-1.5">{t("Inhoud", "Content", "İçerik")}</label>
+          {/* Markdown formatting toolbar */}
+          <div className="flex items-center gap-1 mb-1.5">
+            <button
+              type="button"
+              onClick={() => wrapContentSelection("**", t("vette tekst", "bold text", "kalın metin"))}
+              title={t("Vet", "Bold", "Kalın")}
+              className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer border-none"
+            >
+              <Bold className="h-3.5 w-3.5" /> {t("Vet", "Bold", "Kalın")}
+            </button>
+            <button
+              type="button"
+              onClick={() => prefixContentLine("## ")}
+              title={t("Tussenkop", "Heading", "Başlık")}
+              className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer border-none"
+            >
+              <Heading className="h-3.5 w-3.5" /> {t("Kop", "Heading", "Başlık")}
+            </button>
+            <button
+              type="button"
+              onClick={() => prefixContentLine("- ")}
+              title={t("Opsomming", "Bullet list", "Liste")}
+              className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer border-none"
+            >
+              <List className="h-3.5 w-3.5" /> {t("Lijst", "List", "Liste")}
+            </button>
+          </div>
           <textarea
+            ref={contentRef}
             className={inputCls + " resize-y font-mono text-[13px] leading-relaxed"}
             rows={16}
             value={draft.content}

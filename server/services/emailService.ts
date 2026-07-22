@@ -363,6 +363,15 @@ export const emailService = {
       headerColor = "linear-gradient(135deg, #64748b, #475569)";
     }
 
+    // Approval only fires after payment is marked "paid" (enforced server-side in
+    // orders.ts), so the Goedgekeurd mail doubles as the payment-received receipt —
+    // no separate payment email is sent.
+    const paymentBlock = order.status === "Goedgekeurd" ? `
+      <div style="text-align: center; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 16px; padding: 16px 20px; margin-top: 24px;">
+        <p style="font-size: 14px; font-weight: 700; color: #166534; margin: 0;">✓ Betaling ontvangen</p>
+        <p style="font-size: 12px; color: #15803d; margin: 6px 0 0;">Uw betaling van €${order.totalAmount.toFixed(2)} is verwerkt. Uw reservering is nu definitief bevestigd.</p>
+      </div>` : "";
+
     const ratingUrl = `${APP_URL}/?rate=${encodeURIComponent(order.id)}&email=${encodeURIComponent(order.customerEmail)}`;
     const ratingBlock = order.status === "Voltooid" ? `
       <div style="text-align: center; background: #fffbeb; border: 1px solid #fde68a; border-radius: 16px; padding: 20px; margin-top: 24px;">
@@ -405,7 +414,8 @@ export const emailService = {
             </div>
             <p>Beste <strong>${esc(order.customerName)}</strong>,</p>
             <p>${statusDescription}</p>
-            
+            ${paymentBlock}
+
             <h4 style="margin-top: 24px; font-size: 14px; border-bottom: 1px solid #edf2f7; padding-bottom: 8px;">Reservering details</h4>
             <div class="details-grid">
               <div class="details-item">

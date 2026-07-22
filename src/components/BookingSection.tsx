@@ -167,6 +167,11 @@ export default function BookingSection({
   // Rijplaten is quantity-based — the customer types how many plates they need.
   // Default 4 (one under each wheel); clamped/validated again on the server.
   const [rijplatenQty, setRijplatenQty] = useState<number>(4);
+  // Aanhanger huren is dagen-gebaseerd — de klant kiest zelf hoeveel dagen hij de
+  // aanhanger houdt (in de praktijk alleen bij ophalen + terugbrengen, niet de hele
+  // huurperiode). Start op 0; de klant moet ≥1 kiezen om door te kunnen. Op de
+  // server geclampt op [1, rentalDays].
+  const [trailerDays, setTrailerDays] = useState<number>(0);
 
   // Delivery distance & time slot
   const [deliveryDistanceKm, setDeliveryDistanceKm] = useState<number | null>(null);
@@ -388,8 +393,8 @@ export default function BookingSection({
 
       const cartFees = getTransportFees(useAppStore.getState().siteConfig);
       const transport = deliveryType === "delivery_by_us" ? cartFees.deliveryFee : 0;
-      // Trailer only charged for item[0]'s rental period — use leadCartDays, not totalDays
-      const trailerCost = deliveryType === "trailer_rental" ? cartFees.trailerPerDay * leadCartDays : 0;
+      // Trailer billed per klant-gekozen aantal dagen (niet de huurperiode).
+      const trailerCost = deliveryType === "trailer_rental" ? cartFees.trailerPerDay * trailerDays : 0;
       const driver = 0;
 
       // Forced Sunday block total: when a rental's last work day is Saturday the
@@ -516,7 +521,7 @@ export default function BookingSection({
     const subtotal = itemSub;
     const singleFees = getTransportFees(useAppStore.getState().siteConfig);
     const transport = deliveryType === "delivery_by_us" ? singleFees.deliveryFee : 0;
-    const trailerCost = deliveryType === "trailer_rental" ? singleFees.trailerPerDay * days : 0;
+    const trailerCost = deliveryType === "trailer_rental" ? singleFees.trailerPerDay * trailerDays : 0;
     const driver = 0;
 
     let addonCost = 0;
@@ -681,6 +686,10 @@ export default function BookingSection({
         setValidationError("Kies een gewenst bezorgmoment (ochtend of middag) om door te gaan.");
         return;
       }
+      if (deliveryType === "trailer_rental" && trailerDays < 1) {
+        setValidationError("Kies bij 'Aanhanger huren' voor hoeveel dagen u de aanhanger meeneemt (minimaal 1 dag).");
+        return;
+      }
       if (deliveryType === "delivery_by_us" && deliveryDistanceKm !== null && deliveryDistanceKm > 20) {
         setValidationError("Bezorging buiten 20 km is alleen op aanvraag. Neem contact op via WhatsApp.");
         return;
@@ -734,7 +743,7 @@ export default function BookingSection({
             const itemSubtotal = calculateItemSubtotal(item.machine, days, customerProfile, campaignRules, item.startDate);
             const submitFees = getTransportFees(useAppStore.getState().siteConfig);
             const transport = (deliveryType === "delivery_by_us" && i === 0) ? submitFees.deliveryFee : 0;
-            const trailerCost = (deliveryType === "trailer_rental" && i === 0) ? submitFees.trailerPerDay * days : 0;
+            const trailerCost = (deliveryType === "trailer_rental" && i === 0) ? submitFees.trailerPerDay * trailerDays : 0;
             const driver = 0;
 
             let addonCost = 0;
@@ -772,6 +781,9 @@ export default function BookingSection({
               deliveryType,
               deliveryAddress: deliveryType === "self_pickup" ? undefined : deliveryAddress,
               deliveryTimeSlot: deliveryType === "delivery_by_us" ? deliveryTimeSlot || undefined : undefined,
+              // Aantal aanhangerdagen alleen op item 0 en alleen bij trailer_rental
+              // (mirror van de trailerCost-toewijzing hierboven).
+              trailerDays: (deliveryType === "trailer_rental" && i === 0) ? trailerDays : undefined,
               customerName,
               customerEmail,
               customerPhone,
@@ -860,7 +872,7 @@ export default function BookingSection({
     () => calculationSummary(),
     // calculationSummary closes over these values — re-run only when they change
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [cartItems, selectedAddons, rijplatenQty, deliveryType, customerProfile, campaignRules, startDate, endDate]
+    [cartItems, selectedAddons, rijplatenQty, trailerDays, deliveryType, customerProfile, campaignRules, startDate, endDate]
   );
 
   // Reservation period for the price summary box — neutral copy when the cart
@@ -965,6 +977,8 @@ export default function BookingSection({
                     setSelectedAddons={setSelectedAddons}
                     rijplatenQty={rijplatenQty}
                     setRijplatenQty={setRijplatenQty}
+                    trailerDays={trailerDays}
+                    setTrailerDays={setTrailerDays}
                     validationError={validationError}
                     setValidationError={setValidationError}
                     isAvailable={cartItems.length > 0 && cartItems.every(item => {

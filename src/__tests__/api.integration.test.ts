@@ -175,4 +175,65 @@ describe.skipIf(!HAS_DB)("API integration", () => {
     expect(res.status).toBe(400);
     expect(res.body?.error).toMatch(/aantal rijplaten/i);
   });
+
+  it("POST /api/orders aanhanger → transportkosten = trailerPerDay × gekozen dagen", async () => {
+    // 1-daagse verhuur, klant houdt de aanhanger 1 dag: transport = €25 × 1.
+    // serverTotal = (100 subtotaal + 25 transport) × 1.21 = 151,25.
+    const res = await request(app)
+      .post("/api/orders")
+      .set("idempotency-key", `itest-trl-${Date.now()}`)
+      // Eigen IP zodat deze test niet in de order-rate-limit (6/uur/IP) van de
+      // overige POST-tests in dit bestand loopt.
+      .set("X-Forwarded-For", "10.9.0.11")
+      .send({
+        ...validOrder(),
+        startDate: isoDay(6),
+        endDate: isoDay(6),
+        deliveryType: "trailer_rental",
+        deliveryAddress: "Teststraat 1, 2381 AB Zoeterwoude",
+        trailerDays: 1,
+        transportCost: 25,
+        totalAmount: 151.25,
+      });
+    expect([200, 201]).toContain(res.status);
+    expect(Number(res.body?.transportCost)).toBeCloseTo(25, 2);
+    expect(res.body?.trailerDays).toBe(1);
+  });
+
+  it("POST /api/orders aanhanger met 0 dagen → 400", async () => {
+    const res = await request(app)
+      .post("/api/orders")
+      .set("X-Forwarded-For", "10.9.0.12")
+      .send({
+        ...validOrder(),
+        startDate: isoDay(7),
+        endDate: isoDay(7),
+        deliveryType: "trailer_rental",
+        deliveryAddress: "Teststraat 1, 2381 AB Zoeterwoude",
+        trailerDays: 0,
+        transportCost: 0,
+        totalAmount: 121,
+      });
+    expect(res.status).toBe(400);
+    expect(res.body?.error).toMatch(/aanhangerdagen/i);
+  });
+
+  it("POST /api/orders aanhanger met meer dagen dan de huurperiode → 400", async () => {
+    // 1-daagse verhuur maar 2 aanhangerdagen gevraagd → boven het maximum.
+    const res = await request(app)
+      .post("/api/orders")
+      .set("X-Forwarded-For", "10.9.0.13")
+      .send({
+        ...validOrder(),
+        startDate: isoDay(8),
+        endDate: isoDay(8),
+        deliveryType: "trailer_rental",
+        deliveryAddress: "Teststraat 1, 2381 AB Zoeterwoude",
+        trailerDays: 2,
+        transportCost: 50,
+        totalAmount: 181.5,
+      });
+    expect(res.status).toBe(400);
+    expect(res.body?.error).toMatch(/aanhangerdagen/i);
+  });
 });

@@ -134,6 +134,10 @@ model Order {
   deliveryType      String
   deliveryAddress   String?
   deliveryTimeSlot  String?
+  // Aantal dagen dat de klant de aanhanger houdt (bij deliveryType "trailer_rental").
+  // Null voor niet-trailer bezorgtypes en voor legacy-orders van vóór deze functie —
+  // de transportkosten worden dan berekend als trailerPerDay × volledige huurperiode.
+  trailerDays       Int?
   customerName      String
   customerEmail   String
   customerPhone   String?

@@ -70,6 +70,8 @@ export interface Order {
   deliveryType: DeliveryType;
   deliveryAddress?: string;
   deliveryTimeSlot?: string;
+  // Aantal dagen dat de klant de aanhanger huurt (alleen bij trailer_rental).
+  trailerDays?: number | null;
   customerName: string;
   customerEmail: string;
   customerPhone: string;

@@ -106,7 +106,7 @@ export function printInvoice(orderOrOrders: Order | Order[], clientCompanyName?:
   const logisticsText = primaryOrder.deliveryType === "self_pickup"
     ? `Zelf afhalen bij vestiging ${companyName} (gratis)`
     : primaryOrder.deliveryType === "trailer_rental"
-    ? "Aanhanger meegenomen — zelf heen en terug"
+    ? `Aanhanger meegenomen — zelf heen en terug${primaryOrder.trailerDays ? ` (${primaryOrder.trailerDays} ${primaryOrder.trailerDays === 1 ? "dag" : "dagen"})` : ""}`
     : `Bezorging door ${companyName} (heen + terug €${getTransportFees(useAppStore.getState().siteConfig).deliveryFee})`;
 
   const customerCompany = clientCompanyName || "Particulier";

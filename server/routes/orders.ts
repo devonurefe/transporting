@@ -8,7 +8,7 @@ import { publicReadLimiter } from "../middleware/publicGuard.js";
 import { emailService } from "../services/emailService.js";
 import { audit } from "../utils/audit.js";
 import { resolveFees } from "../utils/fees.js";
-import { computeOrderSubtotal, computeTransport, computeAddonsTotal, computeVatAndTotal, buildStoredAddons, computeRentalDays, CampaignRuleLike } from "../utils/orderPricing.js";
+import { computeOrderSubtotal, computeTransport, computeAddonsTotal, computeVatAndTotal, buildStoredAddons, computeRentalDays, clampTrailerDays, CampaignRuleLike } from "../utils/orderPricing.js";
 
 export const ordersRouter = Router();
 
@@ -413,7 +413,16 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
     if ((machine as any).pickupOnly && dt !== "self_pickup") {
       return res.status(400).json({ error: "Voor dit product is alleen afhalen mogelijk" });
     }
-    const authTransport = computeTransport(dt, rentalDays, fees);
+    // trailer_rental: klant kiest zelf het aantal aanhangerdagen (1..rentalDays).
+    // Verplicht + gevalideerd voor trailer-orders; genegeerd voor andere bezorgtypes.
+    let trailerDays: number | null = null;
+    if (dt === "trailer_rental") {
+      trailerDays = clampTrailerDays(orderData.trailerDays, rentalDays);
+      if (trailerDays === null) {
+        return res.status(400).json({ error: "Ongeldig aantal aanhangerdagen" });
+      }
+    }
+    const authTransport = computeTransport(dt, rentalDays, fees, trailerDays);
     const transportCostClient = Number(orderData.transportCost || 0);
     if (Math.abs(transportCostClient - authTransport) > 0.01) {
       return res.status(400).json({ error: "Ongeldig transportbedrag" });
@@ -473,6 +482,7 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
           deliveryType: orderData.deliveryType,
           deliveryAddress: orderData.deliveryAddress || "",
           deliveryTimeSlot: orderData.deliveryTimeSlot ? String(orderData.deliveryTimeSlot) : null,
+          trailerDays, // server-gevalideerd; null voor niet-trailer bezorgtypes
           customerName: orderData.customerName,
           customerEmail: orderData.customerEmail,
           customerPhone: orderData.customerPhone,
@@ -585,7 +595,14 @@ ordersRouter.post("/admin", requireAdmin as any, async (req: AuthenticatedReques
     const addonsResult = computeAddonsTotal(machine, rentalDays, body.addons, fees);
     if ("error" in addonsResult) return res.status(400).json({ error: addonsResult.error });
     const subtotal = computeOrderSubtotal(machine, rentalDays, startDate, campaignRules, String(body.customerProfile || ""));
-    const transport = computeTransport(body.deliveryType, rentalDays, fees);
+    // trailer_rental: aantal aanhangerdagen (1..rentalDays). Ontbreekt het bij een
+    // handmatige trailer-order, dan valt computeTransport terug op de volledige periode.
+    let manualTrailerDays: number | null = null;
+    if (body.deliveryType === "trailer_rental" && body.trailerDays !== undefined) {
+      manualTrailerDays = clampTrailerDays(body.trailerDays, rentalDays);
+      if (manualTrailerDays === null) return res.status(400).json({ error: "Ongeldig aantal aanhangerdagen" });
+    }
+    const transport = computeTransport(body.deliveryType, rentalDays, fees, manualTrailerDays);
     const { vat, total } = computeVatAndTotal(subtotal, transport, 0, addonsResult.total);
     const storedAddons = buildStoredAddons(machine, rentalDays, body.addons, fees);
 
@@ -608,6 +625,7 @@ ordersRouter.post("/admin", requireAdmin as any, async (req: AuthenticatedReques
           deliveryType: body.deliveryType,
           deliveryAddress: body.deliveryAddress || "",
           deliveryTimeSlot: body.deliveryTimeSlot ? String(body.deliveryTimeSlot) : null,
+          trailerDays: manualTrailerDays,
           customerName: String(body.customerName),
           customerEmail: email,
           customerPhone: body.customerPhone ? String(body.customerPhone) : "",
@@ -727,7 +745,22 @@ ordersRouter.patch("/:id", requireAdmin as any, async (req: AuthenticatedRequest
     const addonsResult = computeAddonsTotal(machine, rentalDays, addonsInput, fees);
     if ("error" in addonsResult) return res.status(400).json({ error: addonsResult.error });
     const subtotal = computeOrderSubtotal(machine, rentalDays, startDate, campaignRules, String(customerProfile || ""));
-    const transport = computeTransport(deliveryType, rentalDays, fees);
+    // Aanhangerdagen bepalen: expliciet in de body (strikt gevalideerd), anders de
+    // opgeslagen waarde (soepel geclampt zodat een datumwijziging niet faalt op een
+    // oude waarde), anders null → computeTransport valt terug op de volledige periode
+    // (legacy-orders van vóór deze functie behouden zo hun prijs). Bij een niet-trailer
+    // bezorgtype wordt de aanhangerwaarde gewist.
+    let trailerDays: number | null = null;
+    if (deliveryType === "trailer_rental") {
+      if (body.trailerDays !== undefined) {
+        trailerDays = clampTrailerDays(body.trailerDays, rentalDays);
+        if (trailerDays === null) return res.status(400).json({ error: "Ongeldig aantal aanhangerdagen" });
+        changed.push("trailerDays");
+      } else if (existing.trailerDays != null) {
+        trailerDays = Math.max(1, Math.min(existing.trailerDays, rentalDays));
+      }
+    }
+    const transport = computeTransport(deliveryType, rentalDays, fees, trailerDays);
     const { vat, total } = computeVatAndTotal(subtotal, transport, 0, addonsResult.total);
     const storedAddons = buildStoredAddons(machine, rentalDays, addonsInput, fees);
 
@@ -738,7 +771,7 @@ ordersRouter.patch("/:id", requireAdmin as any, async (req: AuthenticatedRequest
         data: {
           startDate, endDate, rentalDays,
           customerName, customerEmail, customerPhone, customerProfile,
-          deliveryType, deliveryAddress, deliveryTimeSlot,
+          deliveryType, deliveryAddress, deliveryTimeSlot, trailerDays,
           subtotal, transportCost: transport, driverCost: 0, vatAmount: vat, totalAmount: total,
           addons: JSON.stringify(storedAddons)
         }

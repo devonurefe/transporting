@@ -15,7 +15,7 @@ import { useLanguageStore } from "../../store/languageStore";
 import { useAppStore } from "../../store/appStore";
 import MachineDetailModal from "../MachineDetailModal";
 import { euroCompact } from "../../utils/format";
-import { getTransportFees, getGlobalAddons } from "../../utils/pricing";
+import { getTransportFees, getGlobalAddons, calculateRentalDays } from "../../utils/pricing";
 
 // Categories the global add-ons never apply to. "safety" (Veiligheidsset Pro) only
 // excludes ladderlift (a furniture-moving lift, not a working-at-height platform);
@@ -39,6 +39,8 @@ interface BookingStep1Props {
   setSelectedAddons: (addons: string[]) => void;
   rijplatenQty: number;
   setRijplatenQty: (qty: number) => void;
+  trailerDays: number;
+  setTrailerDays: (days: number) => void;
   validationError: string | null;
   setValidationError: (err: string | null) => void;
   isAvailable: boolean;
@@ -73,6 +75,8 @@ export default function BookingStep1({
   setSelectedAddons,
   rijplatenQty,
   setRijplatenQty,
+  trailerDays,
+  setTrailerDays,
   validationError,
   setValidationError,
   isAvailable,
@@ -96,11 +100,25 @@ export default function BookingStep1({
   // customer can clear it and type any number without the value snapping back on
   // every keystroke; it's normalised (min 1, default 4) on blur.
   const [rijplatenQtyText, setRijplatenQtyText] = useState(String(rijplatenQty || 4));
+  // Lokale draft-tekst voor het aanhanger-dagenveld. Start leeg bij 0 zodat de
+  // klant een bewuste keuze maakt (min 1 is verplicht om door te gaan).
+  const [trailerDaysText, setTrailerDaysText] = useState(trailerDays > 0 ? String(trailerDays) : "");
   // Set once the customer tries to proceed — gates the red "missing field"
   // highlights below so they never show before the first attempt.
   const [attempted, setAttempted] = useState(false);
 
   const timeSlotBlocked = deliveryType === "delivery_by_us" && !deliveryTimeSlot;
+  // Aanhanger geselecteerd maar nog geen (geldig) aantal dagen gekozen → blokkeer
+  // het doorgaan, net als de verplichte bezorgtijdslot-keuze hierboven.
+  const trailerBlocked = deliveryType === "trailer_rental" && trailerDays < 1;
+  // Bovengrens = de huurperiode van het EERSTE cart-item (de aanhanger wordt alleen
+  // op item 0 berekend, en de server clampt op dat item z'n rentalDays). Niet
+  // sums.days gebruiken — dat is de som over álle cart-items en zou bij meerdere
+  // machines te hoog zijn, waardoor de server-validatie de order zou weigeren.
+  const leadTrailerDays = (cartItems[0]?.startDate && cartItems[0]?.endDate)
+    ? calculateRentalDays(cartItems[0].startDate, cartItems[0].endDate)
+    : 0;
+  const maxTrailerDays = Math.max(1, leadTrailerDays || 365);
 
   // Admin-instelbare tarieven (SiteConfig → AdminContent); defaults = de oude literals
   const siteConfig = useAppStore((state) => state.siteConfig);
@@ -113,7 +131,7 @@ export default function BookingStep1({
   useEffect(() => {
     if (validationError) setValidationError(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [deliveryTimeSlot, deliveryType, cartItems.length, deliveryDistanceKm]);
+  }, [deliveryTimeSlot, deliveryType, cartItems.length, deliveryDistanceKm, trailerDays]);
 
   // Reservation period for the price summary — neutral copy when the cart
   // mixes machines booked for different periods.
@@ -337,14 +355,17 @@ export default function BookingStep1({
             <p className="text-xs text-slate-500 leading-normal">
               U rijdt zelf met uw eigen voertuig en onze aanhanger.
             </p>
-            {sums && sums.days > 0 ? (
+            {/* Prijs hangt af van het aantal gekozen dagen (kiezer verschijnt
+                hieronder zodra deze optie is geselecteerd). */}
+            {deliveryType === "trailer_rental" && trailerDays > 0 ? (
               <div className="mt-2 flex items-baseline gap-1">
-                <span className="text-sm font-black text-emerald-700">{euroCompact(sums.days * fees.trailerPerDay)}</span>
-                <span className="text-xs text-slate-500 font-semibold">({sums.days} dgn × {euroCompact(fees.trailerPerDay)})</span>
+                <span className="text-sm font-black text-emerald-700">{euroCompact(trailerDays * fees.trailerPerDay)}</span>
+                <span className="text-xs text-slate-500 font-semibold">({trailerDays} {trailerDays === 1 ? "dag" : "dgn"} × {euroCompact(fees.trailerPerDay)})</span>
               </div>
             ) : (
               <div className="mt-2 flex items-baseline gap-1">
                 <span className="text-sm font-black text-emerald-700">{euroCompact(fees.trailerPerDay)}/dag</span>
+                <span className="text-xs text-slate-500 font-semibold">u kiest het aantal dagen</span>
               </div>
             )}
           </button>
@@ -404,6 +425,90 @@ export default function BookingStep1({
             <MessageCircle className="h-4 w-4 shrink-0" />
             Vraag offerte aan via WhatsApp
           </a>
+        </div>
+      )}
+
+      {/* Aanhanger — aantal dagen (alleen bij "Aanhanger huren"). De klant betaalt
+          de aanhanger alleen voor de dagen die hij hem meeneemt, niet de hele
+          huurperiode. Zelfde +/− kiezer-patroon als de Rijplaten-add-on. */}
+      {deliveryType === "trailer_rental" && (
+        <div className="space-y-3 pt-4 border-t-2 border-slate-200">
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-slate-800 font-bold">Aanhanger — aantal dagen</span>
+            <span className="text-xs text-rose-600 font-semibold uppercase tracking-wide">Verplicht</span>
+          </div>
+          <div className={`rounded-xl border p-4 transition-colors ${attempted && trailerBlocked ? "border-rose-400 bg-rose-50/40" : "border-slate-200 bg-slate-50"}`}>
+            <p className="text-xs text-slate-600 leading-normal mb-3">
+              U betaalt de aanhanger alleen voor de dagen dat u hem meeneemt (ophalen +
+              terugbrengen), niet voor de hele huurperiode. Kies hieronder het aantal dagen.
+            </p>
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs font-bold text-slate-800">Aantal dagen</span>
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  aria-label="Eén dag minder"
+                  onClick={() => {
+                    const n = Math.max(0, (parseInt(trailerDaysText, 10) || 0) - 1);
+                    setTrailerDays(n);
+                    setTrailerDaysText(n > 0 ? String(n) : "");
+                  }}
+                  className="h-8 w-8 inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-700 font-bold text-base leading-none hover:bg-slate-100 cursor-pointer"
+                >
+                  −
+                </button>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={trailerDaysText}
+                  placeholder="0"
+                  onChange={(e) => {
+                    const raw = e.target.value.replace(/[^0-9]/g, "").slice(0, 3);
+                    setTrailerDaysText(raw);
+                    if (raw !== "") setTrailerDays(Math.min(maxTrailerDays, parseInt(raw, 10)));
+                    else setTrailerDays(0);
+                  }}
+                  onBlur={() => {
+                    let n = parseInt(trailerDaysText, 10);
+                    if (Number.isNaN(n) || n < 0) n = 0;
+                    n = Math.min(maxTrailerDays, n);
+                    setTrailerDays(n);
+                    setTrailerDaysText(n > 0 ? String(n) : "");
+                  }}
+                  className="w-16 text-center text-sm font-bold text-slate-900 border border-slate-300 rounded-lg py-1.5 px-2 focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white"
+                />
+                <button
+                  type="button"
+                  aria-label="Eén dag meer"
+                  onClick={() => {
+                    const n = Math.min(maxTrailerDays, (parseInt(trailerDaysText, 10) || 0) + 1);
+                    setTrailerDays(n);
+                    setTrailerDaysText(String(n));
+                  }}
+                  className="h-8 w-8 inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-700 font-bold text-base leading-none hover:bg-slate-100 cursor-pointer"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+            <p className="text-xs text-slate-500 mt-1.5">
+              {trailerDays > 0 ? (
+                <>{trailerDays} {trailerDays === 1 ? "dag" : "dagen"} × {euroCompact(fees.trailerPerDay)} = <span className="font-bold text-slate-700">{euroCompact(trailerDays * fees.trailerPerDay)}</span></>
+              ) : (
+                <>Kies minimaal 1 dag · {euroCompact(fees.trailerPerDay)} per dag</>
+              )}
+            </p>
+            <p className="text-[11px] text-slate-400 mt-1">
+              Maximaal {maxTrailerDays} {maxTrailerDays === 1 ? "dag" : "dagen"} (uw huurperiode). Langer nodig? Neem contact op via WhatsApp.
+            </p>
+          </div>
+          {attempted && trailerBlocked && (
+            <p className="text-xs font-bold text-rose-600 flex items-center gap-1.5">
+              <ShieldAlert className="h-3.5 w-3.5 shrink-0" />
+              Kies minimaal 1 aanhangerdag om door te gaan
+            </p>
+          )}
         </div>
       )}
 

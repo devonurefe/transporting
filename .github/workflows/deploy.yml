@@ -104,10 +104,13 @@ jobs:
               root@${{ secrets.VPS_HOST }} \
               "echo '${{ secrets.GITHUB_TOKEN }}' | docker login ghcr.io -u ${{ github.actor }} --password-stdin && \
                cd /opt/huurgo && \
-               git pull origin main && \
+               git fetch origin main && \
+               git reset --hard origin/main && \
+               docker image prune -f && \
                docker compose pull app && \
                docker compose up -d --force-recreate --no-deps app && \
                docker compose exec -T nginx nginx -s reload && \
+               docker image prune -f && \
                echo 'Deploy tamamlandi:' \$(date)"; then
               echo "Basarili!"
               success=1

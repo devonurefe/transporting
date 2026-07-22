@@ -599,7 +599,7 @@ cp .env.example .env
 # Edit .env:
 #   DATABASE_URL=postgresql://huurgo:password@localhost:5432/huurgo
 #   JWT_SECRET=your-secret-here
-#   VITE_WHATSAPP_NUMBER=31611848899
+#   VITE_WHATSAPP_NUMBER=31611691692
 
 # Initialize database
 npx prisma db push
@@ -635,7 +635,7 @@ npm run dev
 | `RESEND_API_KEY` | Email service API key (optional) | `re_xxxx` |
 | `EMAIL_FROM` | Sender email | `noreply@huurgo.nl` |
 | `ADMIN_EMAIL` | Alert recipient | `info@mbhoogwerkers.com` |
-| `VITE_WHATSAPP_NUMBER` | Customer contact number (no +) | `31611848899` |
+| `VITE_WHATSAPP_NUMBER` | Customer contact number (no +) | `31611691692` |
 | `VITE_CLARITY_ID` | Microsoft Clarity project ID (optional) | `xxxx` |
 | `APP_URL` | Production base URL (for email links) | `https://huurgo.nl` |
 | `REMINDER_SECRET` | Cron endpoint secret | `secret-token` |
@@ -1125,7 +1125,7 @@ npm run build      # Verify build succeeds
 
 **Company:** MB Hoogwerkers B.V. (Zoeterwoude)  
 **KvK:** 72839102 | **BTW:** NL82039401B01  
-**WhatsApp:** [+31 6 11 84 88 99](https://wa.me/31611848899)  
+**WhatsApp:** [+31 6 11 69 16 92](https://wa.me/31611691692)  
 **Email:** [info@mbhoogwerkers.com](mailto:info@mbhoogwerkers.com)  
 **Website:** [huurgo.nl](https://huurgo.nl)
 

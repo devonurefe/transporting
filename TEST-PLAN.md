@@ -72,7 +72,7 @@ uyuşmazlığı → 400.
 - **Ana sayfa:** VAT toggle (excl↔incl, ×1.21); kampanya carousel mobilde
   otomatik akar, dokunınca durur; review ticker akar (hover'da durur, hint
   yalnız desktop'ta); footer linkleri; WhatsApp FAB: `aria-label` +
-  `aria-expanded` mevcut, panel 4 şablon linki `wa.me/31611848899?...`,
+  `aria-expanded` mevcut, panel 4 şablon linki `wa.me/31611691692?...`,
   scrim'e tıklayınca kapanır.
 - **Katalog:** kategori chip'leri `?cat=` yazar; indirim rozetleri
   `computeDiscounts` ile tutarlı (negatif rozet asla); "Dagactie" rozeti;

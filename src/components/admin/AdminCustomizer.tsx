@@ -534,7 +534,7 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
               </div>
               <div className="space-y-1">
                 <label className="text-xs text-slate-700 block font-bold">{t("WhatsApp-nummer", "WhatsApp Number", "WhatsApp Numarası")}</label>
-                <input type="text" value={whatsappNumber} onChange={(e) => setWhatsappNumber(e.target.value)} placeholder="31611848899" className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500" />
+                <input type="text" value={whatsappNumber} onChange={(e) => setWhatsappNumber(e.target.value)} placeholder="31611691692" className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500" />
                 <p className="text-[10px] text-slate-400">{t("Alleen cijfers, met landcode zonder +. Stuurt alle WhatsApp-knoppen aan. Leeg = standaard uit instellingen.", "Digits only, country code without +. Drives every WhatsApp button. Empty = default from settings.", "Sadece rakam, ülke kodu + olmadan. Tüm WhatsApp butonlarını yönetir. Boş = ayarlardaki varsayılan.")}</p>
               </div>
               <div className="space-y-1">

@@ -208,7 +208,7 @@ model SiteConfig {
   campaignRules    Json?
   contactEmail     String?
   contactPhone     String?
-  // WhatsApp-bedrijfsnummer (alleen cijfers, bv. "31611848899") dat de
+  // WhatsApp-bedrijfsnummer (alleen cijfers, bv. "31611691692") dat de
   // WhatsApp-deeplinks op de site aandrijft. null = val terug op de
   // VITE_WHATSAPP_NUMBER env-var (historisch gedrag). Los van contactPhone,
   // dat een net leesbaar weergavenummer is (met spaties/+).

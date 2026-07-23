@@ -48,6 +48,11 @@ model Machine {
   isActive                Boolean       @default(true)
   showInWeeklyOffers       Boolean       @default(false)
   deletedAt               DateTime?
+  // Permanent "out of fleet" flag — set only by an admin, distinct from
+  // isActive (catalog visibility) and from the temporary damage/maintenance
+  // blocks below (DamageReport/MaintenanceEvent). A retired machine is never
+  // bookable, regardless of isActive.
+  isRetired                Boolean       @default(false)
   blockedDates            BlockedDate[]
   updatedAt               DateTime      @updatedAt @default(now())
 
@@ -165,6 +170,10 @@ model Order {
   proposedStartDate DateTime?
   proposedEndDate   DateTime?
   proposedAt        DateTime?
+  // Set once an "overdue rental" alert email has been sent for this order
+  // (status "Onderweg" past its endDate) — prevents re-sending the same
+  // alert on every daily cron run. Cleared implicitly once status moves on.
+  overdueAlertSentAt DateTime?
 
   customer        Customer? @relation(fields: [customerId], references: [id])
 
@@ -181,6 +190,43 @@ model OrderRating {
   rating    Int
   comment   String?
   createdAt DateTime @default(now())
+}
+
+// Damage reported on a machine — logged via POST /api/orders/:id/report-damage
+// (order-linked, the common case) or directly via the Maintenance admin panel
+// (no order — e.g. damage noticed outside a rental). While resolvedAt is null
+// the machine is operationally blocked (see server/utils/machineStatus.ts) —
+// it cannot be booked regardless of stockQuantity/availability elsewhere.
+model DamageReport {
+  id          String    @id @default(uuid())
+  orderId     String?
+  machineId   String
+  machineName String
+  description String
+  // Array of base64 data: URLs — admin-only, never exposed on any public
+  // endpoint (same discipline as the audit-log rule against base64 in meta).
+  photos      Json?
+  repairCost  Float?
+  reportedAt  DateTime  @default(now())
+  resolvedAt  DateTime?
+
+  @@index([machineId])
+}
+
+// Structured maintenance record, replacing the free-text BlockedDate.reason
+// workaround. While completedDate is null the machine is operationally
+// blocked (same mechanism as DamageReport) — reactive, not predictive: an
+// admin opens this when maintenance actually starts, not in advance.
+model MaintenanceEvent {
+  id            String    @id @default(uuid())
+  machineId     String
+  machineName   String
+  description   String
+  cost          Float?
+  scheduledDate DateTime  @default(now())
+  completedDate DateTime?
+
+  @@index([machineId])
 }
 
 // Kenniscentrum content: SEO blog articles ("artikel") and shareable product

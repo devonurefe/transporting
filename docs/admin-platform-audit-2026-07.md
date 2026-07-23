@@ -6,6 +6,21 @@
 
 ---
 
+## Implementation Status (2026-07-23 update)
+
+All **P0** and **P1** items from §17 have since been implemented on this branch. The findings below are left as originally written (they're the record of what prompted the work); this note is the only part of the document that reflects the post-implementation state.
+
+- **P0 — Damage tracking + block-on-damage** ✅ — `DamageReport` + `MaintenanceEvent` models (`prisma/schema.prisma`), `Machine.isRetired`, `server/utils/machineStatus.ts`. A retired/damaged/in-repair machine is rejected server-side (`assertMachineAvailableInTx` in `server/routes/orders.ts`) and client-side (`checkAvailability`'s `operationallyBlocked` param, `src/utils/availability.ts`) regardless of stock/date overlap. Verified end-to-end against a live dev DB: booking a damaged machine returns 409, resolving the damage report immediately re-enables it.
+- **P0 — Return/inspection step** ✅ — order state machine extended: `Onderweg → Retour → Voltooid | Schade gemeld` (`VALID_STATUS_TRANSITIONS`, `server/routes/orders.ts`). `POST /api/orders/:id/report-damage` atomically logs the damage and transitions the order. AdminOrders UI updated (Retour → inspect/report-damage flow with inline photo upload).
+- **P1 — Overdue detection** ✅ — `checkOverdueRentals()` in `server.ts` (piggybacks the existing 07:00 Amsterdam cron), `Order.overdueAlertSentAt` idempotency marker, `GET /api/orders/stats` → `overdueCount`, visible in AdminOrders/AdminPlanning/AdminDashboard.
+- **P1 — Structured maintenance module** ✅ — `server/routes/maintenance.ts` + `damageReports.ts`, new `AdminMaintenance` panel (Onderhoud & Schade), replacing the free-text `BlockedDate.reason` workaround for anything that needs to block a machine.
+- **P1 — Machine operational status** ✅ — `Machine.isRetired` (permanent, admin toggle in AdminMachines) distinct from `isActive` (catalog visibility) and from the temporary damage/maintenance blocks.
+- **P1 — Dashboard cheap wins** ✅ — today's departures/returns, cancellation rate, revenue-by-category, overdue/open-maintenance/open-damage tiles added to `AdminDashboard.tsx` (§12's "most-rented" finding was already covered by the existing utilization panel).
+
+**Still open (P2/P3, unchanged from §17):** individual physical-unit identity, order-level internal notes, company/multi-user CRM, driver assignment + delivery proof, role-based access control, certification/inspection-date tracking, delivery-zone pricing, customer-specific pricing, payment-gateway integration, the `Machine`/`MachineUnit` schema split, and the separate schema-hardening migration already scoped in `docs/P0-schema-migratie-plan.md`.
+
+---
+
 ## 1. Current Architecture Map
 
 ```

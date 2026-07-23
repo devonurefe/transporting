@@ -59,7 +59,7 @@ export interface CrossSellAddon {
 
 export type DeliveryType = "self_pickup" | "delivery_by_us" | "trailer_rental";
 
-export type OrderStatus = "In behandeling" | "Goedgekeurd" | "Onderweg" | "Voltooid" | "Geannuleerd";
+export type OrderStatus = "In behandeling" | "Goedgekeurd" | "Onderweg" | "Retour" | "Schade gemeld" | "Voltooid" | "Geannuleerd";
 
 export interface Order {
   id: string;

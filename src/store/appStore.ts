@@ -126,6 +126,9 @@ interface AppState {
   updateMachine: (id: string, machData: Partial<Machine>) => Promise<boolean>;
   deleteMachine: (id: string) => Promise<boolean>;
   updateOrderStatus: (orderId: string, status: OrderStatus) => Promise<true | false | string>;
+  // Atomically logs a DamageReport for the order's machine and moves the
+  // order to "Schade gemeld" (server/routes/orders.ts POST :id/report-damage).
+  reportOrderDamage: (orderId: string, data: { description: string; photos?: string[]; repairCost?: number }) => Promise<true | string>;
   updateOrder: (orderId: string, patch: Record<string, unknown>) => Promise<{ ok: true } | { ok: false; error: string }>;
   createManualOrder: (data: Record<string, unknown>) => Promise<{ ok: true; order: any } | { ok: false; error: string }>;
   blockDate: (machineId: string, date: string, reason: string) => Promise<boolean>;
@@ -512,6 +515,28 @@ export const useAppStore = create<AppState>((set, get) => ({
       rollback();
     }
     return false;
+  },
+
+  reportOrderDamage: async (orderId, data) => {
+    try {
+      const res = await fetch(`/api/orders/${orderId}/report-damage`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...getAuthHeaders()
+        },
+        body: JSON.stringify(data)
+      });
+      const body = await res.json().catch(() => ({}));
+      if (res.ok) {
+        await get().fetchOrders();
+        return true;
+      }
+      return body?.error || "Schademelding opslaan mislukt.";
+    } catch (e) {
+      console.error("Failed to report order damage:", e);
+      return "Schademelding opslaan mislukt.";
+    }
   },
 
   updateOrder: async (orderId, patch) => {

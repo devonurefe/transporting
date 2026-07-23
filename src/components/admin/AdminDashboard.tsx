@@ -35,7 +35,7 @@ export default function AdminDashboard({ setSubTab, setOrdersFilter, adminLangua
   // Server-side aggregates over ALL orders — the order list is paginated (max 100),
   // so headline KPIs computed from the loaded window under-count at scale. Prefer
   // these when available, fall back to the store-derived numbers otherwise.
-  const [orderStats, setOrderStats] = useState<{ totalRevenue: number; paidRevenue: number; activeRentals: number; pending: number; totalOrders: number } | null>(null);
+  const [orderStats, setOrderStats] = useState<{ totalRevenue: number; paidRevenue: number; activeRentals: number; pending: number; awaitingInspection: number; totalOrders: number } | null>(null);
 
   const refreshOrderStats = useCallback(() => {
     if (!token) return;
@@ -79,9 +79,10 @@ export default function AdminDashboard({ setSubTab, setOrdersFilter, adminLangua
   };
   
   // Sums for KPI dashboards — memoized to avoid re-running on every render
-  const { activeRentals, pendingRegistrations, totalEarnings, profileEarnings } = useMemo(() => ({
+  const { activeRentals, pendingRegistrations, awaitingInspection, totalEarnings, profileEarnings } = useMemo(() => ({
     activeRentals: orders.filter(o => o.status === "Goedgekeurd" || o.status === "Onderweg").length,
     pendingRegistrations: orders.filter(o => o.status === "In behandeling").length,
+    awaitingInspection: orders.filter(o => o.status === "Retour" || o.status === "Schade gemeld").length,
     totalEarnings: orders.reduce((acc, o) => o.status === "Geannuleerd" ? acc : acc + o.totalAmount, 0),
     profileEarnings: orders.reduce((acc, order) => {
       if (order.status === "Geannuleerd") return acc;
@@ -101,6 +102,7 @@ export default function AdminDashboard({ setSubTab, setOrdersFilter, adminLangua
   const kpiEarnings = orderStats?.totalRevenue ?? totalEarnings;
   const kpiActive = orderStats?.activeRentals ?? activeRentals;
   const kpiPending = orderStats?.pending ?? pendingRegistrations;
+  const kpiAwaitingInspection = orderStats?.awaitingInspection ?? awaitingInspection;
 
   const categoryCount = machines.reduce((acc, machine) => {
     const cat = machine.category;
@@ -216,7 +218,8 @@ export default function AdminDashboard({ setSubTab, setOrdersFilter, adminLangua
           { title: t("Cumulatieve Omzet", "Cumulative Revenue", "Toplam Ciro"), value: `${euro(kpiEarnings)}`, trend: revenueTrend, color: "bg-amber-50 border border-amber-200 text-amber-900 shadow-sm", tab: "accounting" as const, filter: [] as string[] },
           { title: t("Actieve Huren", "Active Rentals", "Aktif Kiralamalar"), value: `${kpiActive} ${t("machines", "machines", "makine")}`, trend: t("Klik voor details →", "Click for details →", "Detay için tıkla →"), color: "border border-slate-200 bg-slate-50 text-slate-800 shadow-sm", tab: "orders" as const, filter: ["Goedgekeurd", "Onderweg"] as string[] },
           { title: t("Vloot Bezetting", "Fleet Occupancy", "Filo Doluluk Oranı"), value: `${machines.length > 0 ? Math.round((kpiActive / machines.length) * 100) : 0}% ${t("bezet", "occupied", "dolu")}`, trend: `${machines.length} ${t("units totaal", "total units", "toplam adet")}`, color: "border border-slate-200 bg-slate-50 text-slate-800 shadow-sm", tab: "machines" as const, filter: [] as string[] },
-          { title: t("Ter Beoordeling", "To Review", "Onay Bekleyenler"), value: `${kpiPending} ${t("aanvragen", "requests", "başvuru")}`, trend: t("Klik voor details →", "Click for details →", "Detay için tıkla →"), color: kpiPending > 0 ? "border border-amber-200 bg-amber-50 text-amber-950 shadow-sm" : "border border-slate-200 bg-slate-50 text-slate-500 shadow-sm", tab: "orders" as const, filter: ["In behandeling"] as string[] }
+          { title: t("Ter Beoordeling", "To Review", "Onay Bekleyenler"), value: `${kpiPending} ${t("aanvragen", "requests", "başvuru")}`, trend: t("Klik voor details →", "Click for details →", "Detay için tıkla →"), color: kpiPending > 0 ? "border border-amber-200 bg-amber-50 text-amber-950 shadow-sm" : "border border-slate-200 bg-slate-50 text-slate-500 shadow-sm", tab: "orders" as const, filter: ["In behandeling"] as string[] },
+          { title: t("Wacht op Controle", "Awaiting Inspection", "Kontrol Bekliyor"), value: `${kpiAwaitingInspection} ${t("retouren", "returns", "iade")}`, trend: t("Klik voor details →", "Click for details →", "Detay için tıkla →"), color: kpiAwaitingInspection > 0 ? "border border-indigo-200 bg-indigo-50 text-indigo-950 shadow-sm" : "border border-slate-200 bg-slate-50 text-slate-500 shadow-sm", tab: "orders" as const, filter: ["Retour", "Schade gemeld"] as string[] }
         ].map((card, idx) => {
           return (
             <div

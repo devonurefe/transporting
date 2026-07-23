@@ -105,6 +105,7 @@ app.use("/api/calendar", calendarLimiter);
 app.use("/api/upload",      express.json({ limit: "10mb" }));
 app.use("/api/machines",    express.json({ limit: "10mb" })); // PUT with base64 imageUrl
 app.use("/api/site-config", express.json({ limit: "10mb" })); // may store base64 hero image
+app.use("/api/orders",      express.json({ limit: "15mb" })); // POST :id/report-damage carries base64 photos
 app.use(express.json({ limit: "256kb" })); // Default for all other API routes
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 app.use(authenticateToken);

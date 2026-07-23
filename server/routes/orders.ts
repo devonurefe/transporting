@@ -1284,14 +1284,16 @@ ordersRouter.put("/:id/status", requireAdmin as any, async (req: AuthenticatedRe
 // Admin-only photos array for a damage report — base64 data: URLs, same storage
 // pattern as Machine.imageUrl but never exposed on any public endpoint. Caps
 // count and per-item length to bound abuse; returns null (reject) if malformed.
+// Bounded to stay well under the 15mb body limit registered in server.ts
+// for /api/orders (POST :id/report-damage) — 6 × 2M chars ≈ 12MB base64 max.
 function sanitizeDamagePhotos(raw: unknown): string[] | null {
   if (raw === undefined || raw === null) return [];
   if (!Array.isArray(raw)) return null;
-  if (raw.length > 10) return null;
+  if (raw.length > 6) return null;
   const cleaned: string[] = [];
   for (const p of raw) {
     if (typeof p !== "string" || p.length === 0) return null;
-    if (p.length > 6_000_000) return null; // ~4.5MB decoded, generous for a phone photo
+    if (p.length > 2_000_000) return null; // ~1.5MB decoded per photo
     cleaned.push(p);
   }
   return cleaned;

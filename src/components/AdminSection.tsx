@@ -22,7 +22,8 @@ import {
   Database,
   Users,
   BookOpen,
-  FileText
+  FileText,
+  Wrench
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { UserProfile } from "../types";
@@ -49,6 +50,7 @@ const AdminPlanning = React.lazy(() => import("./admin/AdminPlanning"));
 const AdminRentalTimeline = React.lazy(() => import("./admin/AdminRentalTimeline"));
 const AdminCustomers = React.lazy(() => import("./admin/AdminCustomers"));
 const AdminBlog = React.lazy(() => import("./admin/AdminBlog"));
+const AdminMaintenance = React.lazy(() => import("./admin/AdminMaintenance"));
 
 function AdminLoadingSpinner() {
   return (
@@ -65,9 +67,9 @@ function AdminLoadingSpinner() {
 // type zodat de unions niet uit elkaar lopen.
 export type AdminSubTab =
   | "dashboard" | "orders" | "machines" | "calendar" | "planning" | "timeline" | "customers"
-  | "add" | "blog" | "logs" | "customizer" | "diagnostics" | "accounting" | "users" | "content";
+  | "add" | "blog" | "logs" | "customizer" | "diagnostics" | "accounting" | "users" | "content" | "maintenance";
 
-const ADVANCED_TAB_IDS: AdminSubTab[] = ["add", "blog", "customizer", "content", "accounting", "diagnostics", "logs", "users"];
+const ADVANCED_TAB_IDS: AdminSubTab[] = ["add", "blog", "customizer", "content", "accounting", "diagnostics", "logs", "users", "maintenance"];
 
 interface AdminSectionProps {
   isAdminMode: boolean;
@@ -160,6 +162,7 @@ export default function AdminSection({
     { id: "content", label: al("Content", "Content", "İçerik"), icon: FileText },
     { id: "accounting", label: al("Omzet & Export", "Revenue & Export", "Ciro ve Dışa Aktarma"), icon: Database },
     { id: "diagnostics", label: al("Systeemdiagnose", "System Diagnostics", "Sistem Teşhisi"), icon: ShieldAlert },
+    { id: "maintenance", label: al("Onderhoud & Schade", "Maintenance & Damage", "Bakım ve Hasar"), icon: Wrench },
     { id: "logs", label: tAdmin("adminTabLogs"), icon: Terminal },
     { id: "users", label: al("Beheerders", "Administrators", "Yöneticiler"), icon: ShieldCheck },
   ];
@@ -619,13 +622,16 @@ export default function AdminSection({
                   <AdminAccounting key="accounting" adminLanguage={adminLanguage} />
                 )}
                 {subTab === "diagnostics" && (
-                  <AdminDiagnostics 
-                    key="diagnostics" 
-                    systemLogs={systemLogs} 
-                    userProfiles={userProfiles || []} 
-                    onAddSystemLog={onAddSystemLog} 
+                  <AdminDiagnostics
+                    key="diagnostics"
+                    systemLogs={systemLogs}
+                    userProfiles={userProfiles || []}
+                    onAddSystemLog={onAddSystemLog}
                     adminLanguage={adminLanguage}
                   />
+                )}
+                {subTab === "maintenance" && (
+                  <AdminMaintenance key="maintenance" adminLanguage={adminLanguage} />
                 )}
                 {subTab === "logs" && (
                   <AdminLogs key="logs" adminLanguage={adminLanguage} />

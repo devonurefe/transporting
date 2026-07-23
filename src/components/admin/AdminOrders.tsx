@@ -268,13 +268,14 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
   const [isSubmittingDamage, setIsSubmittingDamage] = useState<boolean>(false);
   const [damageError, setDamageError] = useState<string | null>(null);
 
+  const MAX_DAMAGE_PHOTOS = 6;
   const handleDamagePhotoUpload = (files: FileList | null) => {
     if (!files) return;
-    Array.from(files).slice(0, 10 - damagePhotos.length).forEach(file => {
+    Array.from(files).slice(0, MAX_DAMAGE_PHOTOS - damagePhotos.length).forEach(file => {
       const reader = new FileReader();
       reader.onload = () => {
         if (typeof reader.result === "string") {
-          setDamagePhotos(prev => prev.length < 10 ? [...prev, reader.result as string] : prev);
+          setDamagePhotos(prev => prev.length < MAX_DAMAGE_PHOTOS ? [...prev, reader.result as string] : prev);
         }
       };
       reader.readAsDataURL(file);

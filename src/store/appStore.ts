@@ -95,6 +95,28 @@ interface BlockedDate {
   reason: string;
 }
 
+export interface DamageReport {
+  id: string;
+  orderId: string | null;
+  machineId: string;
+  machineName: string;
+  description: string;
+  photos: string[] | null;
+  repairCost: number | null;
+  reportedAt: string;
+  resolvedAt: string | null;
+}
+
+export interface MaintenanceEvent {
+  id: string;
+  machineId: string;
+  machineName: string;
+  description: string;
+  cost: number | null;
+  scheduledDate: string;
+  completedDate: string | null;
+}
+
 interface AppState {
   machines: Machine[];
   orders: Order[];
@@ -106,6 +128,8 @@ interface AppState {
   siteConfigLoaded: boolean;
   blockedDates: BlockedDate[];
   blogPosts: BlogPost[];
+  damageReports: DamageReport[];
+  maintenanceEvents: MaintenanceEvent[];
   cartItems: CartItem[];
   isLoading: boolean;
   error: string | null;
@@ -142,6 +166,15 @@ interface AppState {
   updateBlogPost: (id: string, data: Partial<BlogPost>) => Promise<boolean>;
   deleteBlogPost: (id: string) => Promise<boolean>;
   toggleBlogPostPublished: (id: string) => Promise<boolean>;
+
+  // Onderhoud & Schade (Maintenance & Damage) admin actions — see
+  // server/utils/machineStatus.ts for how open records block a machine.
+  fetchDamageReports: () => Promise<void>;
+  addDamageReport: (data: { machineId: string; description: string; repairCost?: number }) => Promise<boolean>;
+  resolveDamageReport: (id: string, repairCost?: number) => Promise<boolean>;
+  fetchMaintenanceEvents: () => Promise<void>;
+  addMaintenanceEvent: (data: { machineId: string; description: string; cost?: number }) => Promise<boolean>;
+  resolveMaintenanceEvent: (id: string, cost?: number) => Promise<boolean>;
 
   // Cart actions
   addToCart: (machine: Machine, startDate: string, endDate: string) => void;
@@ -227,6 +260,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   })(),
   blockedDates: [],
   blogPosts: [],
+  damageReports: [],
+  maintenanceEvents: [],
   cartItems: (() => {
     try {
       const stored = localStorage.getItem("hwh_cart");
@@ -744,6 +779,104 @@ export const useAppStore = create<AppState>((set, get) => ({
       }
     } catch (e) {
       console.error(e);
+    }
+    return false;
+  },
+
+  fetchDamageReports: async () => {
+    try {
+      const res = await fetch("/api/damage-reports", { headers: getAuthHeaders() });
+      if (res.ok) set({ damageReports: await res.json(), error: null });
+    } catch (e) {
+      devWarn("Damage reports fetch failed.");
+    }
+  },
+
+  addDamageReport: async (data) => {
+    try {
+      const res = await fetch("/api/damage-reports", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+        body: JSON.stringify(data)
+      });
+      if (res.ok) {
+        await get().fetchDamageReports();
+        await get().fetchMachines();
+        return true;
+      }
+      const err = await res.json().catch(() => ({}));
+      set({ error: err.error || "Fout bij aanmaken schademelding." });
+    } catch (e: any) {
+      set({ error: e.message || "Netwerkfout bij aanmaken schademelding." });
+    }
+    return false;
+  },
+
+  resolveDamageReport: async (id, repairCost) => {
+    try {
+      const res = await fetch(`/api/damage-reports/${id}/resolve`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+        body: JSON.stringify({ repairCost })
+      });
+      if (res.ok) {
+        await get().fetchDamageReports();
+        await get().fetchMachines();
+        return true;
+      }
+      const err = await res.json().catch(() => ({}));
+      set({ error: err.error || "Fout bij afhandelen schademelding." });
+    } catch (e: any) {
+      set({ error: e.message || "Netwerkfout bij afhandelen schademelding." });
+    }
+    return false;
+  },
+
+  fetchMaintenanceEvents: async () => {
+    try {
+      const res = await fetch("/api/maintenance", { headers: getAuthHeaders() });
+      if (res.ok) set({ maintenanceEvents: await res.json(), error: null });
+    } catch (e) {
+      devWarn("Maintenance events fetch failed.");
+    }
+  },
+
+  addMaintenanceEvent: async (data) => {
+    try {
+      const res = await fetch("/api/maintenance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+        body: JSON.stringify(data)
+      });
+      if (res.ok) {
+        await get().fetchMaintenanceEvents();
+        await get().fetchMachines();
+        return true;
+      }
+      const err = await res.json().catch(() => ({}));
+      set({ error: err.error || "Fout bij aanmaken onderhoud." });
+    } catch (e: any) {
+      set({ error: e.message || "Netwerkfout bij aanmaken onderhoud." });
+    }
+    return false;
+  },
+
+  resolveMaintenanceEvent: async (id, cost) => {
+    try {
+      const res = await fetch(`/api/maintenance/${id}/resolve`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+        body: JSON.stringify({ cost })
+      });
+      if (res.ok) {
+        await get().fetchMaintenanceEvents();
+        await get().fetchMachines();
+        return true;
+      }
+      const err = await res.json().catch(() => ({}));
+      set({ error: err.error || "Fout bij afronden onderhoud." });
+    } catch (e: any) {
+      set({ error: e.message || "Netwerkfout bij afronden onderhoud." });
     }
     return false;
   },

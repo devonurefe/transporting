@@ -398,6 +398,7 @@ machinesRouter.put("/:id", requireAdmin as any, async (req: AuthenticatedRequest
         additionalImages: Array.isArray(additionalImages) ? sanitizeImageUrls(additionalImages) : [],
         specs: specsUpdate === undefined ? undefined : (specsUpdate ?? Prisma.JsonNull),
         isActive: req.body.isActive !== undefined ? Boolean(req.body.isActive) : undefined,
+        isRetired: req.body.isRetired !== undefined ? Boolean(req.body.isRetired) : undefined,
         bufferDays: req.body.bufferDays !== undefined ? Math.min(2, Math.max(0, Math.round(Number(req.body.bufferDays)))) : undefined,
         minRentalDays: req.body.minRentalDays !== undefined && req.body.minRentalDays !== null && req.body.minRentalDays !== "" ? Math.round(Number(req.body.minRentalDays)) : null,
         weeklyOnly: Boolean(req.body.weeklyOnly),
@@ -438,6 +439,25 @@ machinesRouter.patch("/:id/toggle-active", requireAdmin as any, async (req: Auth
     res.json({ id: updated.id, isActive: updated.isActive });
   } catch (error: any) {
     console.error("Error toggling machine status:", error);
+    res.status(500).json({ error: "Status wijzigen mislukt" });
+  }
+});
+
+// Permanent out-of-fleet flag — distinct from isActive (catalog visibility) and
+// from the temporary damage/maintenance blocks (see server/utils/machineStatus.ts).
+machinesRouter.patch("/:id/toggle-retired", requireAdmin as any, async (req: AuthenticatedRequest, res: Response) => {
+  const { id } = req.params;
+  try {
+    const machine = await prisma.machine.findUnique({ where: { id }, select: { isRetired: true } });
+    if (!machine) return res.status(404).json({ error: "Machine niet gevonden" });
+    const updated = await prisma.machine.update({
+      where: { id },
+      data: { isRetired: !machine.isRetired }
+    });
+    audit(req, "machine.updated", { entity: "Machine", entityId: id, meta: { isRetired: updated.isRetired } });
+    res.json({ id: updated.id, isRetired: updated.isRetired });
+  } catch (error: any) {
+    console.error("Error toggling machine retired status:", error);
     res.status(500).json({ error: "Status wijzigen mislukt" });
   }
 });

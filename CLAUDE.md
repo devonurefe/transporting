@@ -84,6 +84,21 @@ Single-package full-stack monorepo — one `package.json` for both React fronten
 - Schema models: `Machine`, `Category`, `BlockedDate`, `Order`, `Customer`, `Admin`, `SiteConfig`, `Notification`, `InvoiceCounter`, `OrderRating`.
 - Indexes on `Order`: `[machineId]`, `[customerId]`, `[status]`, `[machineId, startDate, endDate, status]`, `[createdAt]`. On `BlockedDate`: `[machineId, date]`.
 
+### Backups
+
+- **`scripts/backup.sh`** — nightly `pg_dump` (gzip) + `uploads/` tarball, run via
+  a cron entry installed by `scripts/vps-setup.sh` (03:00 daily). Local retention:
+  `BACKUP_RETENTION_DAYS` (default 14) days of daily backups; the 1st-of-month
+  backup is copied to `backups/monthly/` and kept 180 days.
+- **Offsite copy is opt-in via `RCLONE_REMOTE`** (e.g. `b2:huurgo-backups`) — until
+  that's configured, backups only protect against DB corruption/bad migrations,
+  **not** VPS/disk loss. See the header of `scripts/backup.sh` for the one-time
+  `rclone config` setup. `BACKUP_HEARTBEAT_URL` (optional, healthchecks.io-style)
+  pings on success/failure so a silently-broken backup job doesn't go unnoticed.
+- Restores are manual: `gunzip -c backups/db-<ts>.sql.gz | docker compose exec -T postgres psql -U huurgo huurgo`.
+  **Untested restores aren't backups** — verify this works against a scratch
+  environment periodically, not just on the day you need it.
+
 ---
 
 ## Pricing System — CRITICAL
@@ -415,6 +430,9 @@ All builders in `src/utils/whatsapp.ts`. Sign-off emoji: **🦾** (never 🙏).
 | `APP_URL` | Production base URL (used in email links) |
 | `REMINDER_SECRET` | Secret for cron reminder endpoint |
 | `CALENDAR_FEED_TOKEN` | Secret gating the read-only iCal feed at `/api/calendar/<token>/huurgo.ics` (blocked dates + bookings, for Google/iPhone calendar subscription). Empty = feature disabled. |
+| `RCLONE_REMOTE` | Read only by `scripts/backup.sh`, not the app. rclone remote+path for offsite backup uploads (e.g. `b2:huurgo-backups`). Empty = backups stay local-only on the VPS disk. |
+| `BACKUP_RETENTION_DAYS` | Read only by `scripts/backup.sh`. Days of daily backups to keep before deletion (default 14); the 1st-of-month backup is kept separately for 180 days. |
+| `BACKUP_HEARTBEAT_URL` | Read only by `scripts/backup.sh`. Optional healthchecks.io-style ping URL, pinged on backup success/failure. |
 
 `GEMINI_API_KEY` is no longer used — Gemini was fully removed.
 

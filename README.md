@@ -342,6 +342,38 @@ Required repository secrets:
    - Verify database connectivity: `docker compose exec app npx prisma db push`
    - Test email flow: Create order → check Resend dashboard or server logs
 
+### Backups & Disaster Recovery
+
+`scripts/backup.sh` runs nightly (cron installed by `scripts/vps-setup.sh`,
+03:00 server time) and:
+
+1. Dumps Postgres via `pg_dump`, gzipped, to `backups/db-<timestamp>.sql.gz`
+2. Tarballs `uploads/` to `backups/uploads-<timestamp>.tar.gz`
+3. Copies both offsite if `RCLONE_REMOTE` is set in `.env` (e.g.
+   `b2:huurgo-backups` on Backblaze B2) — **this step is what actually
+   protects against losing the VPS itself**; without it, backups just sit on
+   the same disk they're meant to protect against
+4. Deletes daily backups older than `BACKUP_RETENTION_DAYS` (default 14);
+   keeps the 1st-of-month backup for 180 days in `backups/monthly/`
+5. Pings `BACKUP_HEARTBEAT_URL` (optional, healthchecks.io-style) on
+   success/failure so a broken backup job surfaces instead of failing silently
+
+**One-time offsite setup** (see the full walkthrough in `scripts/backup.sh`'s
+header comment):
+```bash
+curl https://rclone.org/install.sh | sudo bash
+rclone config                 # set up your storage provider as remote "b2"
+echo 'RCLONE_REMOTE="b2:huurgo-backups"' >> .env
+bash scripts/backup.sh        # run once manually, confirm the file lands in the bucket
+```
+
+**Restore:**
+```bash
+gunzip -c backups/db-2026-07-23_0300.sql.gz | docker compose exec -T postgres psql -U huurgo huurgo
+```
+Test this against a scratch environment periodically — an untested backup is
+a hypothesis, not a disaster recovery plan.
+
 ### Auto-Scaling & Optimization
 
 | Concern | Strategy |

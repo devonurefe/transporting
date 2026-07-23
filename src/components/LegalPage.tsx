@@ -59,7 +59,7 @@ export default function LegalPage({ slug, title }: LegalPageProps) {
       ) : (
         <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center space-y-2">
           <p className="text-sm text-slate-600">Inhoud volgt binnenkort.</p>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-slate-500">
             Vragen? Neem contact op via{" "}
             <a href={`mailto:${contactEmail}`} className="text-orange-600 font-semibold hover:underline">
               {contactEmail}

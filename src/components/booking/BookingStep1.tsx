@@ -515,7 +515,7 @@ export default function BookingStep1({
                 <>Kies minimaal 1 dag · {euroCompact(fees.trailerPerDay)} per dag</>
               )}
             </p>
-            <p className="text-[11px] text-slate-400 mt-1">
+            <p className="text-[11px] text-slate-500 mt-1">
               Maximaal {maxTrailerDays} {maxTrailerDays === 1 ? "dag" : "dagen"} (uw huurperiode). Langer nodig? Neem contact op via WhatsApp.
             </p>
           </div>
@@ -595,14 +595,7 @@ export default function BookingStep1({
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {/* Global safety set — not relevant for a furniture-moving ladderlift */}
           {!!selectedMachine && !GLOBAL_ADDON_EXCLUDED_CATEGORIES.safety.includes(selectedMachine.category) && (
-          <div
-            onClick={() => {
-              if (selectedAddons.includes("safety")) {
-                setSelectedAddons(selectedAddons.filter(x => x !== "safety"));
-              } else {
-                setSelectedAddons([...selectedAddons, "safety"]);
-              }
-            }}
+          <label
             className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between ${
               selectedAddons.includes("safety")
                 ? "bg-slate-50 border-slate-400 shadow-sm"
@@ -615,7 +608,13 @@ export default function BookingStep1({
                 <input
                   type="checkbox"
                   checked={selectedAddons.includes("safety")}
-                  onChange={()=>{}}
+                  onChange={() => {
+                    if (selectedAddons.includes("safety")) {
+                      setSelectedAddons(selectedAddons.filter(x => x !== "safety"));
+                    } else {
+                      setSelectedAddons([...selectedAddons, "safety"]);
+                    }
+                  }}
                   className="h-4 w-4 accent-orange-500 rounded cursor-pointer"
                 />
               </div>
@@ -624,22 +623,13 @@ export default function BookingStep1({
               </p>
             </div>
             <span className="text-xs font-bold text-slate-700 mt-3 block">€{gAddons.safety.pricePerWeek},- / week (elke 7 dagen +€{gAddons.safety.pricePerWeek})</span>
-          </div>
+          </label>
           )}
 
           {/* Ground protection plates — only for platforms that stand directly on the
               terrain; not relevant for a trailer unit, scaffolding, or manual lift. */}
           {!!selectedMachine && !GLOBAL_ADDON_EXCLUDED_CATEGORIES.rijplaten.includes(selectedMachine.category) && (
-          <div
-            onClick={() => {
-              if (selectedAddons.includes("rijplaten")) {
-                setSelectedAddons(selectedAddons.filter(x => x !== "rijplaten"));
-              } else {
-                setSelectedAddons([...selectedAddons, "rijplaten"]);
-                setRijplatenQty(4);
-                setRijplatenQtyText("4");
-              }
-            }}
+          <label
             className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between ${
               selectedAddons.includes("rijplaten")
                 ? "bg-slate-50 border-slate-400 shadow-sm"
@@ -658,7 +648,15 @@ export default function BookingStep1({
                 <input
                   type="checkbox"
                   checked={selectedAddons.includes("rijplaten")}
-                  onChange={()=>{}}
+                  onChange={() => {
+                    if (selectedAddons.includes("rijplaten")) {
+                      setSelectedAddons(selectedAddons.filter(x => x !== "rijplaten"));
+                    } else {
+                      setSelectedAddons([...selectedAddons, "rijplaten"]);
+                      setRijplatenQty(4);
+                      setRijplatenQtyText("4");
+                    }
+                  }}
                   className="h-4 w-4 accent-orange-500 rounded cursor-pointer"
                 />
               </div>
@@ -759,20 +757,13 @@ export default function BookingStep1({
               )}
             </div>
             <span className="text-xs font-bold text-slate-700 mt-3 block">€6,- per week per stuk (elke 7 dagen +€6)</span>
-          </div>
+          </label>
           )}
 
           {/* Product-specific cross-sell extras (per week) */}
           {selectedMachine?.crossSellAddons?.map((addon) => (
-            <div
+            <label
               key={addon.id}
-              onClick={() => {
-                if (selectedAddons.includes(addon.id)) {
-                  setSelectedAddons(selectedAddons.filter(x => x !== addon.id));
-                } else {
-                  setSelectedAddons([...selectedAddons, addon.id]);
-                }
-              }}
               className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between ${
                 selectedAddons.includes(addon.id)
                   ? "bg-slate-50 border-slate-400 shadow-sm"
@@ -785,7 +776,13 @@ export default function BookingStep1({
                   <input
                     type="checkbox"
                     checked={selectedAddons.includes(addon.id)}
-                    onChange={()=>{}}
+                    onChange={() => {
+                      if (selectedAddons.includes(addon.id)) {
+                        setSelectedAddons(selectedAddons.filter(x => x !== addon.id));
+                      } else {
+                        setSelectedAddons([...selectedAddons, addon.id]);
+                      }
+                    }}
                     className="h-4 w-4 accent-orange-500 rounded cursor-pointer shrink-0"
                   />
                 </div>
@@ -798,7 +795,7 @@ export default function BookingStep1({
                 {!selectedMachine?.weeklyOnly && addon.pricePerTwoDay ? <span className="text-slate-500 font-normal"> · €{addon.pricePerTwoDay},- / 2 dgn</span> : null}
                 {!selectedMachine?.weeklyOnly && addon.pricePerDay ? <span className="text-slate-500 font-normal"> · €{addon.pricePerDay},- / dag</span> : null}
               </span>
-            </div>
+            </label>
           ))}
 
         </div>

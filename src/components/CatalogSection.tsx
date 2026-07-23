@@ -10,6 +10,7 @@ import {
   Tag,
   ChevronRight,
   Star,
+  ShieldCheck,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Link } from "react-router-dom";
@@ -498,6 +499,11 @@ export default function CatalogSection({
                                 <div className="text-[10px] text-slate-500 mt-0.5">
                                   <span className="line-through">{formatPrice(vp(machine.pricePerDay))}</span> per dag {vatLabel}
                                 </div>
+                                {machine.weeklyPrice ? (
+                                  <div className="text-[10px] text-emerald-700 font-semibold mt-0.5">
+                                    v.a. {formatPrice(vp(machine.weeklyPrice))}/week
+                                  </div>
+                                ) : null}
                               </>
                             ) : machine.weeklyPrice && machine.minRentalDays && machine.minRentalDays >= 2 ? (
                               <>
@@ -512,6 +518,11 @@ export default function CatalogSection({
                                   {formatPrice(vp(machine.pricePerDay))}
                                 </div>
                                 <div className="text-[10px] text-slate-500 mt-0.5">per dag {vatLabel}</div>
+                                {machine.weeklyPrice ? (
+                                  <div className="text-[10px] text-emerald-700 font-semibold mt-0.5">
+                                    v.a. {formatPrice(vp(machine.weeklyPrice))}/week
+                                  </div>
+                                ) : null}
                               </>
                             )}
                           </div>
@@ -572,6 +583,10 @@ export default function CatalogSection({
                               {machine.reach}m
                             </span>
                           )}
+                          <span className="flex items-center gap-1 shrink-0 text-emerald-700" title="Geen borg vereist">
+                            <ShieldCheck className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+                            <span className="font-bold">Zonder borg</span>
+                          </span>
                         </div>
 
                         {/* Campaign badge */}

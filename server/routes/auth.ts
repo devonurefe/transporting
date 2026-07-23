@@ -22,6 +22,17 @@ function totpVerify(secret: string, code: string): boolean {
 
 export const authRouter = Router();
 
+// Addons zijn een JSON-string-kolom — spiegelt safeParseAddons in orders.ts
+// (apart gehouden i.p.v. geïmporteerd om de twee routers ontkoppeld te houden).
+function safeParseOrderAddons(raw: string | null): unknown[] {
+  try {
+    const parsed = JSON.parse(raw || "[]");
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
 // Account-lockout leeft in de DB (Admin/Customer.failedLoginCount + lockedUntil)
 // en overleeft dus restarts. Alleen voor ONBEKENDE e-mailadressen — waar geen
 // rij bestaat om op te tellen — blijft een kleine in-memory throttle nodig.
@@ -548,6 +559,62 @@ authRouter.put("/notifications", requireAuth as any, async (req: AuthenticatedRe
   } catch (error) {
     console.error("Notification preference update error:", error);
     res.status(500).json({ error: "Voorkeuren bijwerken mislukt" });
+  }
+});
+
+// GET /api/auth/me/export — GDPR-dataportabiliteit (art. 20): één download met
+// alles wat we over de ingelogde gebruiker vasthouden. Combineert bestaande,
+// losse endpoints (/me, /orders) tot één bundel zodat een verzoek niet meer
+// handmatig door een beheerder hoeft te worden samengesteld. Wachtwoordhash en
+// reset-/verificatietokens worden nooit meegenomen (expliciete select, geen
+// spread van de rauwe rij).
+authRouter.get("/me/export", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const filename = `huurgo-gegevens-${req.user!.id}.json`;
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+
+    if (req.user!.role === "admin") {
+      const admin = await prisma.admin.findUnique({
+        where: { id: req.user!.id },
+        select: { id: true, email: true, name: true, role: true, createdAt: true, lastLoginAt: true, twoFactorEnabled: true }
+      });
+      if (!admin) return res.status(404).json({ error: "Gebruiker niet gevonden" });
+      return res.json({ exportedAt: new Date().toISOString(), profile: admin });
+    }
+
+    const customer = await prisma.customer.findUnique({
+      where: { id: req.user!.id },
+      select: {
+        id: true, email: true, name: true, phone: true, profile: true, companyName: true,
+        address: true, avatarUrl: true, isEmailVerified: true, marketingConsent: true,
+        emailOptIn: true, createdAt: true
+      }
+    });
+    if (!customer) return res.status(404).json({ error: "Gebruiker niet gevonden" });
+
+    const orders = await prisma.order.findMany({
+      where: { customerId: customer.id },
+      orderBy: { createdAt: "desc" }
+    });
+    const orderIds = orders.map(o => o.id);
+    const ratings = orderIds.length > 0
+      ? await prisma.orderRating.findMany({ where: { orderId: { in: orderIds } } })
+      : [];
+
+    return res.json({
+      exportedAt: new Date().toISOString(),
+      profile: customer,
+      orders: orders.map(o => ({
+        ...o,
+        startDate: o.startDate.toISOString().split("T")[0],
+        endDate: o.endDate.toISOString().split("T")[0],
+        addons: safeParseOrderAddons(o.addons)
+      })),
+      ratings
+    });
+  } catch (error) {
+    console.error("Data export error:", error);
+    return res.status(500).json({ error: "Gegevens exporteren mislukt" });
   }
 });
 

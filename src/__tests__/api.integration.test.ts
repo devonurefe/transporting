@@ -236,4 +236,30 @@ describe.skipIf(!HAS_DB)("API integration", () => {
     expect(res.status).toBe(400);
     expect(res.body?.error).toMatch(/aanhangerdagen/i);
   });
+
+  it("Twee gelijktijdige boekingen op dezelfde machine/datum → precies één 201, de ander 409 (geen dubbele boeking)", async () => {
+    // Eigen datum (dag 20) zodat dit niet botst met de andere tests op TEST_MACHINE_ID.
+    const day = isoDay(20);
+    const base = { ...validOrder(), startDate: day, endDate: day };
+    const [resA, resB] = await Promise.all([
+      request(app)
+        .post("/api/orders")
+        .set("X-Forwarded-For", "10.9.0.30")
+        .send({ ...base, customerName: "Klant A", customerEmail: "concurrent.a@example.com" }),
+      request(app)
+        .post("/api/orders")
+        .set("X-Forwarded-For", "10.9.0.31")
+        .send({ ...base, customerName: "Klant B", customerEmail: "concurrent.b@example.com" }),
+    ]);
+
+    // De SERIALIZABLE-transactie + retry in assertMachineAvailableInTx (orders.ts)
+    // mag maar één van de twee laten winnen — nooit allebei 201, nooit allebei falen.
+    const statuses = [resA.status, resB.status].sort((x, y) => x - y);
+    expect(statuses).toEqual([201, 409]);
+
+    const winner = resA.status === 201 ? resA : resB;
+    const loser = resA.status === 201 ? resB : resA;
+    expect(winner.body?.id).toBeTruthy();
+    expect(loser.body?.error).toMatch(/al gereserveerd/i);
+  });
 });

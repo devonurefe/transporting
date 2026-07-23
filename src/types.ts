@@ -43,6 +43,8 @@ export interface Machine {
   pickupOnly?: boolean; // only "Afhalen" logistics offered — no delivery / trailer
   stockQuantity?: number; // physical units of this exact row available for overlapping bookings; default 1
   crossSellAddons?: CrossSellAddon[]; // product-specific optional extras shown in the cart
+  isRetired?: boolean; // permanent out-of-fleet flag (admin-set), distinct from isActive (catalog visibility)
+  operationallyBlocked?: boolean; // computed server-side: isRetired OR an unresolved DamageReport OR an open MaintenanceEvent — never bookable regardless of stock/dates
 }
 
 // Optional per-week extra shown only for the machine it belongs to (e.g. Altrex Uitbreidingsset).

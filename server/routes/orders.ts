@@ -97,10 +97,24 @@ async function assertMachineAvailableInTx(
 ): Promise<void> {
   const machineCapacity = await tx.machine.findUnique({
     where: { id: machineId },
-    select: { bufferDays: true, stockQuantity: true }
+    select: { bufferDays: true, stockQuantity: true, isRetired: true }
   });
   const bufferMs = (machineCapacity?.bufferDays ?? 0) * 24 * 60 * 60 * 1000;
   const stockQuantity = machineCapacity?.stockQuantity ?? 1;
+
+  // Retired, or an unresolved DamageReport/open MaintenanceEvent exists —
+  // blocks the whole machine regardless of dates/stock. Mirrors the client-side
+  // check in src/utils/availability.ts (operationallyBlocked param).
+  if (machineCapacity?.isRetired) {
+    throw new Error("OPERATIONALLY_BLOCKED");
+  }
+  const [openDamage, openMaintenance] = await Promise.all([
+    tx.damageReport.findFirst({ where: { machineId, resolvedAt: null }, select: { id: true } }),
+    tx.maintenanceEvent.findFirst({ where: { machineId, completedDate: null }, select: { id: true } })
+  ]);
+  if (openDamage || openMaintenance) {
+    throw new Error("OPERATIONALLY_BLOCKED");
+  }
 
   const potentialConflicts = await tx.order.findMany({
     where: {
@@ -571,6 +585,9 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
         blockedDates: [{ date: error.date, reason: error.reason }]
       });
     }
+    if (error?.message === "OPERATIONALLY_BLOCKED") {
+      return res.status(409).json({ error: "Deze machine is tijdelijk niet beschikbaar (onderhoud/reparatie)" });
+    }
     if (error?.code === "P2034" || error?.code === "40001") {
       return res.status(409).json({ error: "Er is veel vraag naar deze machine. Probeer het over enkele seconden opnieuw." });
     }
@@ -684,6 +701,7 @@ ordersRouter.post("/admin", requireAdmin as any, async (req: AuthenticatedReques
   } catch (error: any) {
     if (error?.message === "CONFLICT_ORDER") return res.status(409).json({ error: "Deze machine is al gereserveerd in de opgegeven periode", conflictingDates: error.conflictingDates });
     if (error?.message === "BLOCKED_DATE") return res.status(409).json({ error: "De machine is niet beschikbaar op bepaalde datums in de opgegeven periode", blockedDates: [{ date: error.date, reason: error.reason }] });
+    if (error?.message === "OPERATIONALLY_BLOCKED") return res.status(409).json({ error: "Deze machine is tijdelijk niet beschikbaar (onderhoud/reparatie)" });
     if (error?.code === "P2034" || error?.code === "40001") return res.status(409).json({ error: "Er is veel vraag naar deze machine. Probeer het over enkele seconden opnieuw." });
     console.error("Error creating manual order:", error);
     return res.status(500).json({ error: "Kon bestelling niet aanmaken" });
@@ -828,6 +846,7 @@ ordersRouter.patch("/:id", requireAdmin as any, async (req: AuthenticatedRequest
   } catch (error: any) {
     if (error?.message === "CONFLICT_ORDER") return res.status(409).json({ error: "Deze machine is al gereserveerd in de opgegeven periode", conflictingDates: error.conflictingDates });
     if (error?.message === "BLOCKED_DATE") return res.status(409).json({ error: "De machine is niet beschikbaar op bepaalde datums in de opgegeven periode", blockedDates: [{ date: error.date, reason: error.reason }] });
+    if (error?.message === "OPERATIONALLY_BLOCKED") return res.status(409).json({ error: "Deze machine is tijdelijk niet beschikbaar (onderhoud/reparatie)" });
     if (error?.code === "P2034" || error?.code === "40001") return res.status(409).json({ error: "Er is veel vraag naar deze machine. Probeer het over enkele seconden opnieuw." });
     console.error("Error updating order:", error);
     return res.status(500).json({ error: "Kon bestelling niet bijwerken" });

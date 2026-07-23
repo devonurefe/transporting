@@ -35,7 +35,7 @@ export default function AdminAvailabilityWidget() {
       const freeUnits = units.filter(unit =>
         checkAvailability(
           unit.id, startDate, endDate, orders, blockedDates, todayStr,
-          unit.bufferDays ?? 0, unit.stockQuantity ?? 1
+          unit.bufferDays ?? 0, unit.stockQuantity ?? 1, unit.operationallyBlocked ?? false
         ).available
       );
 

@@ -29,9 +29,16 @@ export function checkAvailability(
   blockedDates: SimpleBlockedDate[],
   todayStr?: string,
   bufferDays: number = 0,
-  stockQuantity: number = 1
+  stockQuantity: number = 1,
+  operationallyBlocked: boolean = false
 ) {
   if (!start || !end) return { available: false, blocked: false, overlap: false, reason: "Selecteer een begin- en einddatum." };
+
+  // Retired, damaged, or under open maintenance — blocks every date, regardless
+  // of order overlap/stock. See server/utils/machineStatus.ts (server mirror).
+  if (operationallyBlocked) {
+    return { available: false, blocked: true, overlap: false, reason: "Tijdelijk niet beschikbaar (onderhoud/reparatie)." };
+  }
 
   const requestedStart = new Date(start).getTime();
   const requestedEnd = new Date(end).getTime();
@@ -110,6 +117,7 @@ export function checkAvailability(
 export interface UnitAvailabilityInput {
   id: string;
   stockQuantity?: number; // physical units of this exact row available for overlapping bookings; default 1
+  operationallyBlocked?: boolean; // retired / damaged / under open maintenance; default false
 }
 
 /**
@@ -129,6 +137,6 @@ export function someUnitAvailable(
   bufferDays: number = 0
 ): boolean {
   return units.some(
-    (u) => checkAvailability(u.id, start, end, orders, blockedDates, todayStr, bufferDays, u.stockQuantity ?? 1).available
+    (u) => checkAvailability(u.id, start, end, orders, blockedDates, todayStr, bufferDays, u.stockQuantity ?? 1, u.operationallyBlocked ?? false).available
   );
 }

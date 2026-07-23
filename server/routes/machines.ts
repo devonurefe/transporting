@@ -5,6 +5,7 @@ import { requireAdmin } from "../middleware/auth.js";
 import { AuthenticatedRequest } from "../middleware/auth.js";
 import { publicReadLimiter, softOriginGuard } from "../middleware/publicGuard.js";
 import { audit } from "../utils/audit.js";
+import { getOperationallyBlockedMachineIds } from "../utils/machineStatus.js";
 
 export const machinesRouter = Router();
 
@@ -75,11 +76,17 @@ machinesRouter.get("/", publicReadLimiter, softOriginGuard, async (req: Authenti
     // Admins editing machines need the raw base64 image data back; everyone else
     // gets the lightweight feed (base64 images replaced by binary-proxy URLs).
     const wantsFull = req.query.full === "1" && req.user?.role === "admin";
+    // Computed, not stored on Machine: true when retired, or an unresolved
+    // DamageReport/open MaintenanceEvent exists for this machine (see
+    // server/utils/machineStatus.ts). Consumed by src/utils/availability.ts
+    // on the client to block booking regardless of stock/date overlap.
+    const blockedIds = await getOperationallyBlockedMachineIds();
     const shape = (m: any) => {
       const base = {
         ...m,
         suitableFor: Array.isArray(m.suitableFor) ? m.suitableFor : [],
-        additionalImages: Array.isArray(m.additionalImages) ? m.additionalImages : []
+        additionalImages: Array.isArray(m.additionalImages) ? m.additionalImages : [],
+        operationallyBlocked: blockedIds.has(m.id)
       };
       return wantsFull ? base : toPublicMachine(base);
     };

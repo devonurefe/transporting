@@ -277,10 +277,11 @@ ordersRouter.get("/", requireAuth as any, async (req: AuthenticatedRequest, res:
 // correct at any volume. Cancelled orders are excluded from revenue.
 ordersRouter.get("/stats", requireAdmin as any, async (_req: AuthenticatedRequest, res: Response) => {
   try {
-    const [statusGroups, revenueAgg, paidAgg] = await Promise.all([
+    const [statusGroups, revenueAgg, paidAgg, overdueCount] = await Promise.all([
       prisma.order.groupBy({ by: ["status"], _count: { _all: true } }),
       prisma.order.aggregate({ _sum: { totalAmount: true }, where: { status: { not: "Geannuleerd" } } }),
-      prisma.order.aggregate({ _sum: { totalAmount: true }, where: { status: { not: "Geannuleerd" }, paymentStatus: "paid" } })
+      prisma.order.aggregate({ _sum: { totalAmount: true }, where: { status: { not: "Geannuleerd" }, paymentStatus: "paid" } }),
+      prisma.order.count({ where: { status: "Onderweg", endDate: { lt: new Date() } } })
     ]);
     const byStatus: Record<string, number> = {};
     let totalOrders = 0;
@@ -298,6 +299,7 @@ ordersRouter.get("/stats", requireAdmin as any, async (_req: AuthenticatedReques
       // "Retour" = physically back, not yet inspected — distinct from active
       // (still with the customer) and pending (not yet approved).
       awaitingInspection: (byStatus["Retour"] ?? 0) + (byStatus["Schade gemeld"] ?? 0),
+      overdueCount,
       byStatus
     });
   } catch (error) {

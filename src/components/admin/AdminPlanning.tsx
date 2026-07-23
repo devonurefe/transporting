@@ -473,6 +473,14 @@ export default function AdminPlanning({ adminLanguage }: AdminPlanningProps) {
     [orders]
   );
 
+  // Still "Onderweg" past its endDate — invisible to the day-grouped panels
+  // below (their endDate isn't today/tomorrow), so surfaced separately.
+  // See docs/admin-platform-audit-2026-07.md §3/§14 (overdue detection).
+  const overdueOrders = useMemo(
+    () => orders.filter((o) => o.status === "Onderweg" && o.endDate < todayStr),
+    [orders, todayStr]
+  );
+
   const departingToday    = useMemo(() => activeOrders.filter((o) => o.startDate === todayStr),    [activeOrders, todayStr]);
   const returningToday    = useMemo(() => activeOrders.filter((o) => o.endDate   === todayStr),    [activeOrders, todayStr]);
   const departingTomorrow = useMemo(() => activeOrders.filter((o) => o.startDate === tomorrowStr), [activeOrders, tomorrowStr]);
@@ -544,6 +552,32 @@ export default function AdminPlanning({ adminLanguage }: AdminPlanningProps) {
           ))}
         </div>
       </div>
+
+      {/* Overdue banner — still "Onderweg" past endDate, needs admin follow-up */}
+      {overdueOrders.length > 0 && (
+        <div className="bg-rose-50 border border-rose-200 rounded-2xl p-4 space-y-2">
+          <p className="text-xs font-black text-rose-800">
+            {al(
+              `${overdueOrders.length} huur${overdueOrders.length !== 1 ? "en" : ""} te laat`,
+              `${overdueOrders.length} rental${overdueOrders.length !== 1 ? "s" : ""} overdue`,
+              `${overdueOrders.length} kiralama gecikmiş`
+            )}
+          </p>
+          <div className="space-y-1.5">
+            {overdueOrders.map((o) => (
+              <button
+                key={o.id}
+                type="button"
+                onClick={() => handleSelectOrder(o)}
+                className="w-full text-left flex items-center justify-between gap-2 p-2 bg-white rounded-xl border border-rose-100 hover:bg-rose-100/50 transition-colors cursor-pointer"
+              >
+                <span className="text-xs font-bold text-slate-800 truncate">{o.machineName} — {o.customerName}</span>
+                <span className="text-[10px] text-rose-600 font-mono shrink-0">{al("verwacht", "expected", "beklenen")} {fmt(o.endDate)}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* ── TODAY VIEW ─────────────────────────────────────────────── */}
       {view === "today" && (

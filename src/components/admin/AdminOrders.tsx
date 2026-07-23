@@ -91,6 +91,9 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
   const getBaseName = (name: string) => name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "").trim();
 
   const todayISO = new Date().toISOString().split("T")[0];
+  // "Onderweg" past its endDate — still with the customer, expected back already.
+  // See docs/admin-platform-audit-2026-07.md §3/§14 (overdue detection).
+  const isOverdue = (o: any) => o.status === "Onderweg" && o.endDate < todayISO;
   const tomorrowISO = (() => { const d = new Date(); d.setDate(d.getDate() + 1); return d.toISOString().split("T")[0]; })();
   const weekStartISO = (() => {
     const d = new Date(); const dow = d.getDay(); d.setDate(d.getDate() - (dow === 0 ? 6 : dow - 1));
@@ -636,7 +639,14 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                     <div className="font-bold text-sm text-slate-900 truncate">{o.customerName}</div>
                     <div className="text-[10px] text-slate-400 font-mono mt-0.5">{o.id}</div>
                   </div>
-                  <AdminStatusBadge status={o.status} adminLanguage={adminLanguage} className="flex-shrink-0" />
+                  <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                    <AdminStatusBadge status={o.status} adminLanguage={adminLanguage} />
+                    {isOverdue(o) && (
+                      <span className="text-[9px] font-mono px-2 py-0.5 rounded-full font-extrabold uppercase tracking-wider bg-rose-100 text-rose-700 border border-rose-200">
+                        {t("Te laat", "Overdue", "Gecikmiş")}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-xs font-semibold text-slate-700">{getBaseName(o.machineName)}</span>
@@ -815,6 +825,11 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                       <td className="py-3 px-3 text-center">
                         <div className="flex flex-col gap-2.5 justify-center items-center">
                           <AdminStatusBadge status={o.status} adminLanguage={adminLanguage} variant="translucent" />
+                          {isOverdue(o) && (
+                            <span className="text-[9px] font-mono px-2 py-0.5 rounded-full font-extrabold uppercase tracking-wider bg-rose-100 text-rose-700 border border-rose-200">
+                              {t("Te laat", "Overdue", "Gecikmiş")}
+                            </span>
+                          )}
 
                           <div className="flex space-x-1.5 mt-0.5">
                             <button
@@ -1269,6 +1284,11 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                     a different width than everything else). */}
                 <div className="flex items-center gap-2">
                   <AdminStatusBadge status={selectedDetailOrder.status} adminLanguage={adminLanguage} />
+                  {isOverdue(selectedDetailOrder) && (
+                    <span className="text-[9.5px] font-mono px-3 py-1 rounded-full font-extrabold uppercase tracking-wider bg-rose-100 text-rose-700 border border-rose-200">
+                      {t("Te laat", "Overdue", "Gecikmiş")}
+                    </span>
+                  )}
                 </div>
                 {selectedDetailOrder.paymentStatus !== "paid" && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">

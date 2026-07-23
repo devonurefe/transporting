@@ -205,7 +205,7 @@ export default function CityLandingPage({ onSelectMachineForBooking }: CityLandi
                 <div className="min-w-0">
                   <h3 className="text-sm font-bold text-slate-900">{c.listLabel || c.label} in {city.name}</h3>
                   {c.desc && <p className="text-xs text-slate-500 mt-0.5 line-clamp-2">{c.desc}</p>}
-                  <p className="text-[11px] text-slate-400 mt-1">{c.heights} · {c.price}</p>
+                  <p className="text-[11px] text-slate-500 mt-1">{c.heights} · {c.price}</p>
                 </div>
                 <ArrowRight className="h-4 w-4 text-slate-300 group-hover:text-orange-500 group-hover:translate-x-0.5 transition-all shrink-0" />
               </Link>

@@ -114,6 +114,11 @@ export default function BookingStep2({
   // Set once the customer tries to submit — gates the red "missing field"
   // highlights below so they never show before the first attempt.
   const [attempted, setAttempted] = React.useState(false);
+  // Explicit terms/privacy + cancellation-policy acknowledgement — required
+  // before the order can be submitted. Local (not lifted): re-confirming on
+  // every visit to this step is the correct behaviour, not a bug.
+  const [termsAccepted, setTermsAccepted] = React.useState(false);
+  const termsBlocked = attempted && !termsAccepted;
 
   const emailOk = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/.test(customerEmail);
   const phoneOk = /^\d{7,15}$/.test(customerPhone.replace(/[\s\-().+]/g, ""));
@@ -146,7 +151,8 @@ export default function BookingStep2({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-xl mx-auto pt-4">
           {/* Guest Card */}
-          <div 
+          <button
+            type="button"
             onClick={() => setIsGuestConfirmed(true)}
             className="p-5 rounded-2xl border border-slate-200 hover:border-slate-400 bg-slate-50/50 hover:bg-slate-50 cursor-pointer transition-all flex flex-col items-center text-center space-y-3 group"
           >
@@ -159,13 +165,14 @@ export default function BookingStep2({
                 Snel boeken zonder account. U vult alleen uw contactgegevens in.
               </p>
             </div>
-            <button className="text-xs font-bold text-slate-600 group-hover:text-slate-800 mt-2 bg-transparent border-none cursor-pointer">
+            <span className="text-xs font-bold text-slate-600 group-hover:text-slate-800 mt-2">
               Gast Verder &rarr;
-            </button>
-          </div>
+            </span>
+          </button>
 
           {/* Login Card — redirects to customer portal */}
-          <div
+          <button
+            type="button"
             onClick={() => setActiveTab && setActiveTab("orders")}
             className="p-5 rounded-2xl border border-slate-200 hover:border-slate-400 bg-slate-50/50 hover:bg-slate-50 cursor-pointer transition-all flex flex-col items-center text-center space-y-3 group"
           >
@@ -178,10 +185,10 @@ export default function BookingStep2({
                 Log in via het klantportaal — uw gegevens worden automatisch ingevuld.
               </p>
             </div>
-            <button className="text-xs font-bold text-slate-600 group-hover:text-slate-800 mt-2 bg-transparent border-none cursor-pointer">
+            <span className="text-xs font-bold text-slate-600 group-hover:text-slate-800 mt-2">
               Naar klantportaal &rarr;
-            </button>
-          </div>
+            </span>
+          </button>
         </div>
 
         {sums && (
@@ -470,6 +477,38 @@ export default function BookingStep2({
         </div>
       )}
 
+      {/* Terms/privacy acknowledgement + cancellation policy — required before
+          the order can be submitted. */}
+      <div className={`space-y-2 pt-4 border-t-2 border-slate-200 rounded-xl ${termsBlocked ? "ring-1 ring-rose-200 bg-rose-50/40 -mx-2 px-2 py-2" : ""}`}>
+        <label className="flex items-start gap-2.5 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={termsAccepted}
+            onChange={(e) => setTermsAccepted(e.target.checked)}
+            className="mt-0.5 h-4 w-4 shrink-0 accent-emerald-600 rounded cursor-pointer"
+          />
+          <span className="text-xs text-slate-700 leading-relaxed">
+            Ik ga akkoord met de{" "}
+            <a href="/voorwaarden" target="_blank" rel="noopener noreferrer" className="font-bold text-slate-900 underline hover:text-emerald-700">
+              algemene voorwaarden
+            </a>{" "}
+            en het{" "}
+            <a href="/privacy" target="_blank" rel="noopener noreferrer" className="font-bold text-slate-900 underline hover:text-emerald-700">
+              privacybeleid
+            </a>.
+          </span>
+        </label>
+        <p className="text-[11px] text-slate-500 leading-relaxed pl-6.5">
+          Gratis annuleren kan tot 48 uur voor de startdatum. Bij annulering binnen 48 uur kunnen annuleringskosten in rekening worden gebracht.
+        </p>
+        {termsBlocked && (
+          <p className="text-xs font-bold text-rose-600 flex items-center gap-1.5 pl-6.5">
+            <ShieldAlert className="h-3.5 w-3.5 shrink-0" />
+            Bevestig de voorwaarden om door te gaan
+          </p>
+        )}
+      </div>
+
       <div className="pt-4 border-t border-slate-200">
         <div className="flex flex-row items-stretch justify-between gap-3">
           <button
@@ -484,7 +523,7 @@ export default function BookingStep2({
           </button>
 
           <button
-            onClick={() => { setAttempted(true); handleNextStep(); }}
+            onClick={() => { setAttempted(true); if (!termsAccepted) return; handleNextStep(); }}
             disabled={isSubmitting || !!(deliveryDistanceKm && deliveryDistanceKm > 20)}
             className="cta-shine font-extrabold text-xs px-4 sm:px-7 py-3.5 rounded-xl transition-all flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer border-none shadow-md flex-1 sm:flex-initial bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-emerald-100/50"
           >

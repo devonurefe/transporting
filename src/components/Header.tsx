@@ -175,11 +175,13 @@ export default function Header({
         <div className="mx-auto relative flex max-w-7xl h-14 sm:h-20 items-center justify-between px-5 sm:px-6 lg:px-8">
         
         {/* Brand Logo & State Indicator */}
-        <div 
+        <button
+          type="button"
           onClick={() => {
             setActiveTab(isAdminMode ? "admin" : "home");
           }}
-          className="flex cursor-pointer items-center hover:opacity-90 active:scale-95 transition-all shrink-0"
+          aria-label={isAdminMode ? "Naar beheerdashboard" : "Naar homepage"}
+          className="flex cursor-pointer items-center hover:opacity-90 active:scale-95 transition-all shrink-0 bg-transparent border-none p-0"
         >
           {isAdminMode ? (
             <div className="flex items-center space-x-2.5">
@@ -201,7 +203,7 @@ export default function Header({
           ) : (
             <HuurGoLogo className="h-7 sm:h-10 w-auto" />
           )}
-        </div>        {/* Dynamic Desktop Navigation */}
+        </button>        {/* Dynamic Desktop Navigation */}
         <nav className="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center space-x-1 lg:space-x-2">
           {isAdminMode ? (
             // Admin Mode Navigation Indicator (Simple, informative)
@@ -396,8 +398,10 @@ export default function Header({
 
               {/* Customer Avatar indicator */}
               {currentUser ? (
-                <div 
+                <button
+                  type="button"
                   onClick={() => setActiveTab("orders")}
+                  aria-label="Naar mijn account"
                   className="flex items-center bg-slate-50 hover:bg-slate-100 border border-slate-200 p-1.5 sm:py-1.5 sm:px-3 rounded-xl cursor-pointer transition-all active:scale-95 shrink-0"
                 >
                   {currentUser.avatarUrl ? (
@@ -415,7 +419,7 @@ export default function Header({
                   <span className="hidden lg:inline-block text-xs font-bold text-slate-700 truncate max-w-[100px] ml-2" title={currentUser.name}>
                     {currentUser.name.split(' ')[0]}
                   </span>
-                </div>
+                </button>
               ) : (
                 <button
                   onClick={() => setActiveTab("orders")}

@@ -166,7 +166,7 @@ export default function MachineDetailPage({ onSelectMachineForBooking }: Machine
             </button>
           </div>
 
-          <p className="flex items-center gap-1.5 text-[11px] text-slate-400">
+          <p className="flex items-center gap-1.5 text-[11px] text-slate-500">
             <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" /> Zonder borg · direct online geregeld · snel geleverd in Zuid-Holland
           </p>
         </div>

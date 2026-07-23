@@ -270,13 +270,16 @@ app.get("/sitemap.xml", async (_req, res) => {
     { loc: `${base}/adviestool`, priority: "0.8", changefreq: "monthly" },
     { loc: `${base}/kenniscentrum`, priority: "0.7", changefreq: "weekly" },
     { loc: `${base}/veelgestelde-vragen`, priority: "0.7", changefreq: "monthly" },
-    { loc: `${base}/catalog?category=schaarlift`, priority: "0.85", changefreq: "daily" },
-    { loc: `${base}/catalog?category=spin`, priority: "0.85", changefreq: "daily" },
-    { loc: `${base}/catalog?category=aanhanger`, priority: "0.80", changefreq: "daily" },
-    { loc: `${base}/catalog?category=mastlift`, priority: "0.80", changefreq: "daily" },
-    { loc: `${base}/catalog?category=ladderlift`, priority: "0.80", changefreq: "daily" },
-    { loc: `${base}/catalog?category=ecolift`, priority: "0.75", changefreq: "weekly" },
-    { loc: `${base}/catalog?category=kamersteiger`, priority: "0.75", changefreq: "weekly" },
+    // Param must be "cat" — App.tsx only reads ?cat=/?q= (see initialFilters in
+    // App.tsx). A stray "?category=" here previously landed crawlers on the
+    // unfiltered catalog instead of the intended category.
+    { loc: `${base}/catalog?cat=schaarlift-group`, priority: "0.85", changefreq: "daily" },
+    { loc: `${base}/catalog?cat=spin`, priority: "0.85", changefreq: "daily" },
+    { loc: `${base}/catalog?cat=aanhanger`, priority: "0.80", changefreq: "daily" },
+    { loc: `${base}/catalog?cat=mastlift`, priority: "0.80", changefreq: "daily" },
+    { loc: `${base}/catalog?cat=ladderlift`, priority: "0.80", changefreq: "daily" },
+    { loc: `${base}/catalog?cat=ecolift`, priority: "0.75", changefreq: "weekly" },
+    { loc: `${base}/catalog?cat=kamersteiger`, priority: "0.75", changefreq: "weekly" },
   ];
   // Local-SEO city landing pages
   for (const c of SERVICE_CITIES) {

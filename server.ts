@@ -105,6 +105,7 @@ app.use("/api/calendar", calendarLimiter);
 app.use("/api/upload",      express.json({ limit: "10mb" }));
 app.use("/api/machines",    express.json({ limit: "10mb" })); // PUT with base64 imageUrl
 app.use("/api/site-config", express.json({ limit: "10mb" })); // may store base64 hero image
+app.use("/api/orders",      express.json({ limit: "15mb" })); // POST :id/report-damage carries base64 photos
 app.use(express.json({ limit: "256kb" })); // Default for all other API routes
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 app.use(authenticateToken);
@@ -733,6 +734,31 @@ async function startServer() {
   process.on("SIGINT", () => gracefulShutdown("SIGINT"));
 }
 
+// Flags rentals still "Onderweg" (out with the customer) past their endDate —
+// the audit's overdue-detection gap (docs/admin-platform-audit-2026-07.md §3).
+// Sends one admin alert per order (Order.overdueAlertSentAt idempotency marker,
+// same pattern as the payment-reminder flow in server/routes/orders.ts) so a
+// still-overdue order doesn't re-alert every day.
+async function checkOverdueRentals() {
+  const overdue = await prisma.order.findMany({
+    where: { status: "Onderweg", endDate: { lt: new Date() }, overdueAlertSentAt: null }
+  });
+  for (const order of overdue) {
+    const ok = await emailService.sendOverdueAlert({
+      ...order,
+      startDate: order.startDate.toISOString().split("T")[0],
+      endDate: order.endDate.toISOString().split("T")[0],
+      customerPhone: order.customerPhone || ""
+    });
+    if (ok) {
+      await prisma.order.update({ where: { id: order.id }, data: { overdueAlertSentAt: new Date() } });
+    }
+  }
+  if (overdue.length > 0) {
+    console.log(`[Overdue] Flagged ${overdue.length} overdue rental(s).`);
+  }
+}
+
 function scheduleDailyReminders() {
   // Last-sent date persisted in InvoiceCounter (lastNumber = YYYYMMDD): a restart
   // around 07:00 neither skips that day's reminders nor sends them twice
@@ -814,6 +840,8 @@ function scheduleDailyReminders() {
     await sendBatch();
     // Piggyback op de dagelijkse cron: audittrail-retentie (180 dagen)
     pruneAuditLogs().catch(() => {});
+    // Piggyback: flag rentals still "Onderweg" past their endDate (docs/admin-platform-audit-2026-07.md §3/§14)
+    checkOverdueRentals().catch(err => console.error("[Overdue] Failed to check overdue rentals:", err));
     // Schedule next run at the next 07:00 Amsterdam time
     setTimeout(fireReminders, msUntilAmsterdam7am() + 60_000); // +60s buffer past the hour
   };

@@ -97,10 +97,24 @@ async function assertMachineAvailableInTx(
 ): Promise<void> {
   const machineCapacity = await tx.machine.findUnique({
     where: { id: machineId },
-    select: { bufferDays: true, stockQuantity: true }
+    select: { bufferDays: true, stockQuantity: true, isRetired: true }
   });
   const bufferMs = (machineCapacity?.bufferDays ?? 0) * 24 * 60 * 60 * 1000;
   const stockQuantity = machineCapacity?.stockQuantity ?? 1;
+
+  // Retired, or an unresolved DamageReport/open MaintenanceEvent exists —
+  // blocks the whole machine regardless of dates/stock. Mirrors the client-side
+  // check in src/utils/availability.ts (operationallyBlocked param).
+  if (machineCapacity?.isRetired) {
+    throw new Error("OPERATIONALLY_BLOCKED");
+  }
+  const [openDamage, openMaintenance] = await Promise.all([
+    tx.damageReport.findFirst({ where: { machineId, resolvedAt: null }, select: { id: true } }),
+    tx.maintenanceEvent.findFirst({ where: { machineId, completedDate: null }, select: { id: true } })
+  ]);
+  if (openDamage || openMaintenance) {
+    throw new Error("OPERATIONALLY_BLOCKED");
+  }
 
   const potentialConflicts = await tx.order.findMany({
     where: {
@@ -263,10 +277,11 @@ ordersRouter.get("/", requireAuth as any, async (req: AuthenticatedRequest, res:
 // correct at any volume. Cancelled orders are excluded from revenue.
 ordersRouter.get("/stats", requireAdmin as any, async (_req: AuthenticatedRequest, res: Response) => {
   try {
-    const [statusGroups, revenueAgg, paidAgg] = await Promise.all([
+    const [statusGroups, revenueAgg, paidAgg, overdueCount] = await Promise.all([
       prisma.order.groupBy({ by: ["status"], _count: { _all: true } }),
       prisma.order.aggregate({ _sum: { totalAmount: true }, where: { status: { not: "Geannuleerd" } } }),
-      prisma.order.aggregate({ _sum: { totalAmount: true }, where: { status: { not: "Geannuleerd" }, paymentStatus: "paid" } })
+      prisma.order.aggregate({ _sum: { totalAmount: true }, where: { status: { not: "Geannuleerd" }, paymentStatus: "paid" } }),
+      prisma.order.count({ where: { status: "Onderweg", endDate: { lt: new Date() } } })
     ]);
     const byStatus: Record<string, number> = {};
     let totalOrders = 0;
@@ -281,6 +296,10 @@ ordersRouter.get("/stats", requireAdmin as any, async (_req: AuthenticatedReques
       paidRevenue: paidAgg._sum.totalAmount ?? 0,
       activeRentals: (byStatus["Goedgekeurd"] ?? 0) + (byStatus["Onderweg"] ?? 0),
       pending: byStatus["In behandeling"] ?? 0,
+      // "Retour" = physically back, not yet inspected — distinct from active
+      // (still with the customer) and pending (not yet approved).
+      awaitingInspection: (byStatus["Retour"] ?? 0) + (byStatus["Schade gemeld"] ?? 0),
+      overdueCount,
       byStatus
     });
   } catch (error) {
@@ -571,6 +590,9 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
         blockedDates: [{ date: error.date, reason: error.reason }]
       });
     }
+    if (error?.message === "OPERATIONALLY_BLOCKED") {
+      return res.status(409).json({ error: "Deze machine is tijdelijk niet beschikbaar (onderhoud/reparatie)" });
+    }
     if (error?.code === "P2034" || error?.code === "40001") {
       return res.status(409).json({ error: "Er is veel vraag naar deze machine. Probeer het over enkele seconden opnieuw." });
     }
@@ -684,6 +706,7 @@ ordersRouter.post("/admin", requireAdmin as any, async (req: AuthenticatedReques
   } catch (error: any) {
     if (error?.message === "CONFLICT_ORDER") return res.status(409).json({ error: "Deze machine is al gereserveerd in de opgegeven periode", conflictingDates: error.conflictingDates });
     if (error?.message === "BLOCKED_DATE") return res.status(409).json({ error: "De machine is niet beschikbaar op bepaalde datums in de opgegeven periode", blockedDates: [{ date: error.date, reason: error.reason }] });
+    if (error?.message === "OPERATIONALLY_BLOCKED") return res.status(409).json({ error: "Deze machine is tijdelijk niet beschikbaar (onderhoud/reparatie)" });
     if (error?.code === "P2034" || error?.code === "40001") return res.status(409).json({ error: "Er is veel vraag naar deze machine. Probeer het over enkele seconden opnieuw." });
     console.error("Error creating manual order:", error);
     return res.status(500).json({ error: "Kon bestelling niet aanmaken" });
@@ -828,6 +851,7 @@ ordersRouter.patch("/:id", requireAdmin as any, async (req: AuthenticatedRequest
   } catch (error: any) {
     if (error?.message === "CONFLICT_ORDER") return res.status(409).json({ error: "Deze machine is al gereserveerd in de opgegeven periode", conflictingDates: error.conflictingDates });
     if (error?.message === "BLOCKED_DATE") return res.status(409).json({ error: "De machine is niet beschikbaar op bepaalde datums in de opgegeven periode", blockedDates: [{ date: error.date, reason: error.reason }] });
+    if (error?.message === "OPERATIONALLY_BLOCKED") return res.status(409).json({ error: "Deze machine is tijdelijk niet beschikbaar (onderhoud/reparatie)" });
     if (error?.code === "P2034" || error?.code === "40001") return res.status(409).json({ error: "Er is veel vraag naar deze machine. Probeer het over enkele seconden opnieuw." });
     console.error("Error updating order:", error);
     return res.status(500).json({ error: "Kon bestelling niet bijwerken" });
@@ -1188,10 +1212,16 @@ ordersRouter.get("/export", requireAdmin as any, async (req: AuthenticatedReques
   }
 });
 
+// "Onderweg" no longer jumps straight to "Voltooid" — the machine must first
+// come back to "Retour" (physically returned, unverified) before an admin
+// either clears it ("Voltooid") or logs damage via POST /:id/report-damage
+// (which itself sets "Schade gemeld"). See docs/admin-platform-audit-2026-07.md §3/§9.
 const VALID_STATUS_TRANSITIONS: Record<string, string[]> = {
   "In behandeling": ["Goedgekeurd", "Geannuleerd"],
   "Goedgekeurd": ["Onderweg", "Geannuleerd"],
-  "Onderweg": ["Voltooid"],
+  "Onderweg": ["Retour"],
+  "Retour": ["Voltooid", "Schade gemeld"],
+  "Schade gemeld": ["Voltooid"],
   "Voltooid": [],
   "Geannuleerd": []
 };
@@ -1250,6 +1280,100 @@ ordersRouter.put("/:id/status", requireAdmin as any, async (req: AuthenticatedRe
   } catch (error) {
     console.error("Error updating order status:", error);
     res.status(500).json({ error: "Kon bestelstatus niet bijwerken" });
+  }
+});
+
+// Admin-only photos array for a damage report — base64 data: URLs, same storage
+// pattern as Machine.imageUrl but never exposed on any public endpoint. Caps
+// count and per-item length to bound abuse; returns null (reject) if malformed.
+// Bounded to stay well under the 15mb body limit registered in server.ts
+// for /api/orders (POST :id/report-damage) — 6 × 2M chars ≈ 12MB base64 max.
+function sanitizeDamagePhotos(raw: unknown): string[] | null {
+  if (raw === undefined || raw === null) return [];
+  if (!Array.isArray(raw)) return null;
+  if (raw.length > 6) return null;
+  const cleaned: string[] = [];
+  for (const p of raw) {
+    if (typeof p !== "string" || p.length === 0) return null;
+    if (p.length > 2_000_000) return null; // ~1.5MB decoded per photo
+    cleaned.push(p);
+  }
+  return cleaned;
+}
+
+// POST /api/orders/:id/report-damage — logs a DamageReport for the order's
+// machine and moves the order to "Schade gemeld" in one transaction, so the
+// machine is blocked (see server/utils/machineStatus.ts) the instant damage
+// is recorded, never in a partially-applied state. Only legal from "Retour"
+// (mirrors VALID_STATUS_TRANSITIONS — this is the only path into "Schade gemeld").
+ordersRouter.post("/:id/report-damage", requireAdmin as any, async (req: AuthenticatedRequest, res: Response) => {
+  const { id } = req.params;
+  const description = String(req.body?.description ?? "").trim();
+  if (!description || description.length > 2000) {
+    return res.status(400).json({ error: "Omschrijving is verplicht (max 2000 tekens)" });
+  }
+  const photos = sanitizeDamagePhotos(req.body?.photos);
+  if (photos === null) {
+    return res.status(400).json({ error: "Ongeldige foto's (max 10, elk te groot bestand)" });
+  }
+  let repairCost: number | null = null;
+  if (req.body?.repairCost !== undefined && req.body?.repairCost !== null && req.body?.repairCost !== "") {
+    const v = Number(req.body.repairCost);
+    if (isNaN(v) || v < 0 || v > 1_000_000) return res.status(400).json({ error: "Ongeldig herstelbedrag" });
+    repairCost = Math.round(v * 100) / 100;
+  }
+
+  try {
+    const order = await prisma.order.findUnique({ where: { id } });
+    if (!order) return res.status(404).json({ error: "Bestelling niet gevonden" });
+
+    const allowed = VALID_STATUS_TRANSITIONS[order.status] ?? [];
+    if (!allowed.includes("Schade gemeld")) {
+      return res.status(400).json({ error: `Schade melden kan niet vanuit status '${order.status}'` });
+    }
+
+    const [damageReport, updatedOrder] = await prisma.$transaction([
+      prisma.damageReport.create({
+        data: {
+          orderId: id,
+          machineId: order.machineId,
+          machineName: order.machineName,
+          description,
+          photos: photos.length > 0 ? photos : undefined,
+          repairCost: repairCost ?? undefined
+        }
+      }),
+      prisma.order.update({ where: { id }, data: { status: "Schade gemeld" } })
+    ]);
+
+    audit(req, "order.damage_reported", {
+      entity: "Order",
+      entityId: id,
+      meta: { machineId: order.machineId, damageReportId: damageReport.id, hasPhotos: photos.length > 0 }
+    });
+
+    if (await customerWantsEmail(updatedOrder.customerId)) {
+      const emailData = {
+        ...updatedOrder,
+        startDate: updatedOrder.startDate.toISOString().split("T")[0],
+        endDate: updatedOrder.endDate.toISOString().split("T")[0],
+        customerPhone: updatedOrder.customerPhone || ""
+      };
+      emailService.sendStatusUpdate(emailData).catch(err => console.error("Damage-report status email error:", err));
+    }
+
+    res.status(201).json({
+      damageReport,
+      order: {
+        ...updatedOrder,
+        startDate: updatedOrder.startDate.toISOString().split("T")[0],
+        endDate: updatedOrder.endDate.toISOString().split("T")[0],
+        addons: safeParseAddons(updatedOrder.addons)
+      }
+    });
+  } catch (error) {
+    console.error("Error reporting damage:", error);
+    res.status(500).json({ error: "Kon schademelding niet opslaan" });
   }
 });
 

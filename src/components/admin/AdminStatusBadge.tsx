@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-export type OrderStatus = "In behandeling" | "Goedgekeurd" | "Onderweg" | "Voltooid" | "Geannuleerd" | string;
+export type OrderStatus = "In behandeling" | "Goedgekeurd" | "Onderweg" | "Retour" | "Schade gemeld" | "Voltooid" | "Geannuleerd" | string;
 
 interface StatusStyle {
   solid: string;
@@ -28,6 +28,16 @@ export const ORDER_STATUS_STYLES: Record<string, StatusStyle> = {
     solid: "bg-blue-100 text-blue-700 border border-blue-200",
     translucent: "bg-blue-500/20 text-blue-500 border border-blue-400/30",
     label: { nl: "Onderweg", en: "Dispatched", tr: "Yolda" },
+  },
+  "Retour": {
+    solid: "bg-indigo-100 text-indigo-700 border border-indigo-200",
+    translucent: "bg-indigo-500/20 text-indigo-500 border border-indigo-400/30",
+    label: { nl: "Retour — controle", en: "Returned — inspection", tr: "İade — kontrol" },
+  },
+  "Schade gemeld": {
+    solid: "bg-orange-100 text-orange-700 border border-orange-200",
+    translucent: "bg-orange-500/20 text-orange-500 border border-orange-400/30",
+    label: { nl: "Schade gemeld", en: "Damage reported", tr: "Hasar bildirildi" },
   },
   "Geannuleerd": {
     solid: "bg-rose-100 text-rose-700 border border-rose-200",

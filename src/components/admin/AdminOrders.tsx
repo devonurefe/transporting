@@ -91,6 +91,9 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
   const getBaseName = (name: string) => name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "").trim();
 
   const todayISO = new Date().toISOString().split("T")[0];
+  // "Onderweg" past its endDate — still with the customer, expected back already.
+  // See docs/admin-platform-audit-2026-07.md §3/§14 (overdue detection).
+  const isOverdue = (o: any) => o.status === "Onderweg" && o.endDate < todayISO;
   const tomorrowISO = (() => { const d = new Date(); d.setDate(d.getDate() + 1); return d.toISOString().split("T")[0]; })();
   const weekStartISO = (() => {
     const d = new Date(); const dow = d.getDay(); d.setDate(d.getDate() - (dow === 0 ? 6 : dow - 1));
@@ -258,6 +261,60 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
   const [showRefundConfirm, setShowRefundConfirm] = useState<boolean>(false);
   const [showCreateForm, setShowCreateForm] = useState<boolean>(false);
   const [editingOrder, setEditingOrder] = useState<any | null>(null);
+
+  // Damage-report inline form (shown from the "Retour" step — see reportOrderDamage in appStore)
+  const reportOrderDamage = useAppStore((state) => state.reportOrderDamage);
+  const [showDamageForm, setShowDamageForm] = useState<boolean>(false);
+  const [damageDescription, setDamageDescription] = useState<string>("");
+  const [damageRepairCost, setDamageRepairCost] = useState<string>("");
+  const [damagePhotos, setDamagePhotos] = useState<string[]>([]);
+  const [isSubmittingDamage, setIsSubmittingDamage] = useState<boolean>(false);
+  const [damageError, setDamageError] = useState<string | null>(null);
+
+  const MAX_DAMAGE_PHOTOS = 6;
+  const handleDamagePhotoUpload = (files: FileList | null) => {
+    if (!files) return;
+    Array.from(files).slice(0, MAX_DAMAGE_PHOTOS - damagePhotos.length).forEach(file => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (typeof reader.result === "string") {
+          setDamagePhotos(prev => prev.length < MAX_DAMAGE_PHOTOS ? [...prev, reader.result as string] : prev);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const closeDamageForm = () => {
+    setShowDamageForm(false);
+    setDamageDescription("");
+    setDamageRepairCost("");
+    setDamagePhotos([]);
+    setDamageError(null);
+  };
+
+  const submitDamageReport = async () => {
+    if (!selectedDetailOrder) return;
+    if (!damageDescription.trim()) {
+      setDamageError(t("Omschrijving is verplicht.", "Description is required.", "Açıklama zorunludur."));
+      return;
+    }
+    setIsSubmittingDamage(true);
+    setDamageError(null);
+    const result = await reportOrderDamage(selectedDetailOrder.id, {
+      description: damageDescription.trim(),
+      photos: damagePhotos,
+      repairCost: damageRepairCost ? Number(damageRepairCost) : undefined
+    });
+    setIsSubmittingDamage(false);
+    if (result === true) {
+      onAddSystemLog("status", adminUser?.name ?? "Admin", `Schade gemeld voor bestelling ${selectedDetailOrder.id}: ${damageDescription.trim().slice(0, 80)}`);
+      setSelectedDetailOrder((prev: any) => prev ? { ...prev, status: "Schade gemeld" } : prev);
+      closeDamageForm();
+    } else {
+      setDamageError(result);
+    }
+  };
 
   const confirmRefundOrder = () => {
     if (!selectedDetailOrder) return;
@@ -582,7 +639,14 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                     <div className="font-bold text-sm text-slate-900 truncate">{o.customerName}</div>
                     <div className="text-[10px] text-slate-400 font-mono mt-0.5">{o.id}</div>
                   </div>
-                  <AdminStatusBadge status={o.status} adminLanguage={adminLanguage} className="flex-shrink-0" />
+                  <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                    <AdminStatusBadge status={o.status} adminLanguage={adminLanguage} />
+                    {isOverdue(o) && (
+                      <span className="text-[9px] font-mono px-2 py-0.5 rounded-full font-extrabold uppercase tracking-wider bg-rose-100 text-rose-700 border border-rose-200">
+                        {t("Te laat", "Overdue", "Gecikmiş")}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-xs font-semibold text-slate-700">{getBaseName(o.machineName)}</span>
@@ -639,11 +703,20 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                   )}
                   {o.status === "Onderweg" && (
                     <button
-                      onClick={() => handleUpdateStatus(o.id, "Voltooid", `Contract afgerond: ${o.id}.`, o)}
+                      onClick={() => handleUpdateStatus(o.id, "Retour", `Machine terug ontvangen, controle vereist: ${o.id}.`, o)}
                       disabled={isUpdatingStatus}
                       className={`flex-1 text-[11px] font-black py-2 rounded-xl transition-colors border-none ${isUpdatingStatus ? "bg-slate-200 text-slate-400 cursor-not-allowed" : "bg-indigo-600 hover:bg-indigo-500 text-white cursor-pointer"}`}
                     >
-                      {isUpdatingStatus ? "…" : t("Huur afronden", "Complete", "Tamamla")}
+                      {isUpdatingStatus ? "…" : t("Terug ontvangen", "Mark returned", "İade alındı")}
+                    </button>
+                  )}
+                  {o.status === "Retour" && (
+                    <button
+                      onClick={() => { setSelectedDetailOrder(o); setIsProposingDate(false); }}
+                      disabled={isUpdatingStatus}
+                      className="flex-1 text-[11px] font-black py-2 rounded-xl transition-colors border-none bg-amber-500 hover:bg-amber-600 text-slate-950 cursor-pointer"
+                    >
+                      {t("Controleren", "Inspect", "Kontrol et")}
                     </button>
                   )}
                 </div>
@@ -752,6 +825,11 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                       <td className="py-3 px-3 text-center">
                         <div className="flex flex-col gap-2.5 justify-center items-center">
                           <AdminStatusBadge status={o.status} adminLanguage={adminLanguage} variant="translucent" />
+                          {isOverdue(o) && (
+                            <span className="text-[9px] font-mono px-2 py-0.5 rounded-full font-extrabold uppercase tracking-wider bg-rose-100 text-rose-700 border border-rose-200">
+                              {t("Te laat", "Overdue", "Gecikmiş")}
+                            </span>
+                          )}
 
                           <div className="flex space-x-1.5 mt-0.5">
                             <button
@@ -803,14 +881,23 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                               <button
                                 onClick={() => handleUpdateStatus(
                                   o.id,
-                                  "Voltooid",
-                                  `Verhuurcontract succesvol afgerond: ${o.id}.`,
+                                  "Retour",
+                                  `Machine terug ontvangen, controle vereist: ${o.id}.`,
                                   o
                                 )}
                                 disabled={isUpdatingStatus}
                                 className={`text-[10px] font-black px-3.5 py-1.5 rounded-xl leading-none transition-all border-none shadow-md ${isUpdatingStatus ? "bg-slate-200 text-slate-400 cursor-not-allowed" : "bg-indigo-600 hover:bg-indigo-500 text-white cursor-pointer hover:scale-[1.02] active:scale-95"}`}
                               >
-                                {isUpdatingStatus ? "…" : t("Huur afronden", "Complete", "Tamamla")}
+                                {isUpdatingStatus ? "…" : t("Terug ontvangen", "Mark returned", "İade alındı")}
+                              </button>
+                            )}
+                            {o.status === "Retour" && (
+                              <button
+                                onClick={() => { setSelectedDetailOrder(o); setIsProposingDate(false); }}
+                                disabled={isUpdatingStatus}
+                                className="text-[10px] font-black px-3.5 py-1.5 rounded-xl leading-none transition-all border-none shadow-md bg-amber-500 hover:bg-amber-600 text-slate-950 cursor-pointer hover:scale-[1.02] active:scale-95"
+                              >
+                                {t("Controleren", "Inspect", "Kontrol et")}
                               </button>
                             )}
                           </div>
@@ -1197,6 +1284,11 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                     a different width than everything else). */}
                 <div className="flex items-center gap-2">
                   <AdminStatusBadge status={selectedDetailOrder.status} adminLanguage={adminLanguage} />
+                  {isOverdue(selectedDetailOrder) && (
+                    <span className="text-[9.5px] font-mono px-3 py-1 rounded-full font-extrabold uppercase tracking-wider bg-rose-100 text-rose-700 border border-rose-200">
+                      {t("Te laat", "Overdue", "Gecikmiş")}
+                    </span>
+                  )}
                 </div>
                 {selectedDetailOrder.paymentStatus !== "paid" && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -1277,15 +1369,126 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                         disabled={isUpdatingStatus}
                         onClick={() => handleUpdateStatus(
                           selectedDetailOrder.id,
-                          "Voltooid",
-                          `Verhuurcontract succesvol afgerond: ${selectedDetailOrder.id}.`,
+                          "Retour",
+                          `Machine terug ontvangen, controle vereist: ${selectedDetailOrder.id}.`,
                           selectedDetailOrder
                         )}
                         className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-black py-3 rounded-xl cursor-pointer transition-all active:scale-[0.98] border-none flex items-center justify-center gap-2 disabled:opacity-60 shadow-md shadow-indigo-500/20"
                       >
-                        <Check className="h-5 w-5 shrink-0" />
-                        <span>{t("Huur afgerond", "Mark complete", "Tamamlandı")}</span>
+                        <Truck className="h-5 w-5 shrink-0" />
+                        <span>{t("Terug ontvangen", "Mark returned", "İade alındı")}</span>
                       </button>
+                    )}
+
+                    {/* Retour = physically back, unverified — admin must explicitly
+                        clear it or log damage before it can reach "Voltooid".
+                        See docs/admin-platform-audit-2026-07.md §3/§9. */}
+                    {selectedDetailOrder.status === "Retour" && !showDamageForm && (
+                      <div className="space-y-2">
+                        <button
+                          type="button"
+                          disabled={isUpdatingStatus}
+                          onClick={() => handleUpdateStatus(
+                            selectedDetailOrder.id,
+                            "Voltooid",
+                            `Controle uitgevoerd, geen schade — huur afgerond: ${selectedDetailOrder.id}.`,
+                            selectedDetailOrder
+                          )}
+                          className="w-full bg-teal-500 hover:bg-teal-600 text-white text-sm font-black py-3 rounded-xl cursor-pointer transition-all active:scale-[0.98] border-none flex items-center justify-center gap-2 disabled:opacity-60 shadow-md shadow-teal-500/20"
+                        >
+                          <Check className="h-5 w-5 shrink-0" />
+                          <span>{t("Alles in orde — afronden", "All good — complete", "Sorun yok — tamamla")}</span>
+                        </button>
+                        <button
+                          type="button"
+                          disabled={isUpdatingStatus}
+                          onClick={() => setShowDamageForm(true)}
+                          className="w-full py-2.5 text-orange-700 hover:text-orange-800 border border-orange-200 hover:border-orange-300 hover:bg-orange-50 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 bg-white"
+                        >
+                          <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                          <span>{t("Schade melden", "Report damage", "Hasar bildir")}</span>
+                        </button>
+                      </div>
+                    )}
+
+                    {selectedDetailOrder.status === "Retour" && showDamageForm && (
+                      <div className="space-y-2.5 bg-orange-50 border border-orange-200 rounded-xl p-3">
+                        <p className="text-xs font-black text-orange-800">{t("Schademelding", "Damage report", "Hasar bildirimi")}</p>
+                        <textarea
+                          value={damageDescription}
+                          onChange={(e) => setDamageDescription(e.target.value)}
+                          placeholder={t("Omschrijf de schade...", "Describe the damage...", "Hasarı açıklayın...")}
+                          rows={3}
+                          maxLength={2000}
+                          className="w-full text-xs rounded-lg border border-orange-200 p-2.5 focus:outline-none focus:ring-2 focus:ring-orange-300"
+                        />
+                        <input
+                          type="number"
+                          min={0}
+                          value={damageRepairCost}
+                          onChange={(e) => setDamageRepairCost(e.target.value)}
+                          placeholder={t("Geschat herstelbedrag (optioneel)", "Estimated repair cost (optional)", "Tahmini onarım bedeli (opsiyonel)")}
+                          className="w-full text-xs rounded-lg border border-orange-200 p-2.5 focus:outline-none focus:ring-2 focus:ring-orange-300"
+                        />
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          onChange={(e) => handleDamagePhotoUpload(e.target.files)}
+                          className="w-full text-[11px]"
+                        />
+                        {damagePhotos.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5">
+                            {damagePhotos.map((p, i) => (
+                              <img key={i} src={p} alt="" className="h-12 w-12 object-cover rounded-lg border border-orange-200" />
+                            ))}
+                          </div>
+                        )}
+                        {damageError && <p className="text-[11px] font-bold text-rose-600">{damageError}</p>}
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={closeDamageForm}
+                            className="flex-1 py-2 text-slate-600 border border-slate-200 rounded-lg text-xs font-bold bg-white cursor-pointer"
+                          >
+                            {t("Annuleren", "Cancel", "İptal")}
+                          </button>
+                          <button
+                            type="button"
+                            disabled={isSubmittingDamage}
+                            onClick={submitDamageReport}
+                            className="flex-1 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-xs font-bold cursor-pointer disabled:opacity-60"
+                          >
+                            {isSubmittingDamage ? "…" : t("Schademelding opslaan", "Save damage report", "Hasar bildirimini kaydet")}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {selectedDetailOrder.status === "Schade gemeld" && (
+                      <div className="space-y-1.5">
+                        <p className="text-[10.5px] text-slate-500 leading-snug">
+                          {t(
+                            "Let op: dit sluit alleen deze huur af. De machine blijft geblokkeerd tot de schademelding is opgelost in het Onderhoud & Schade-paneel.",
+                            "Note: this only closes this rental. The machine stays blocked until the damage report is resolved in the Maintenance & Damage panel.",
+                            "Not: bu sadece bu kirayı kapatır. Hasar bildirimi Bakım ve Hasar panelinde çözülene kadar makine bloke kalır."
+                          )}
+                        </p>
+                        <button
+                          type="button"
+                          disabled={isUpdatingStatus}
+                          onClick={() => handleUpdateStatus(
+                            selectedDetailOrder.id,
+                            "Voltooid",
+                            `Schade afgehandeld, huur afgerond: ${selectedDetailOrder.id}.`,
+                            selectedDetailOrder
+                          )}
+                          className="w-full bg-slate-600 hover:bg-slate-700 text-white text-sm font-black py-3 rounded-xl cursor-pointer transition-all active:scale-[0.98] border-none flex items-center justify-center gap-2 disabled:opacity-60"
+                        >
+                          <Check className="h-5 w-5 shrink-0" />
+                          <span>{t("Huur afronden", "Close rental", "Kirayı kapat")}</span>
+                        </button>
+                      </div>
                     )}
 
                     {/* Cancel — destructive, separated below primary. Only shown for

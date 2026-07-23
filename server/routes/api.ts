@@ -3,6 +3,8 @@ import rateLimit from "express-rate-limit";
 import { machinesRouter } from "./machines.js";
 import { ordersRouter } from "./orders.js";
 import { blockedDatesRouter } from "./blockedDates.js";
+import { maintenanceRouter } from "./maintenance.js";
+import { damageReportsRouter } from "./damageReports.js";
 import { siteConfigRouter } from "./siteConfig.js";
 import { calendarRouter } from "./calendar.js";
 import { blogPostsRouter } from "./blog.js";
@@ -91,6 +93,8 @@ apiRouter.post("/admin/test-email", testEmailLimiter, requireAdmin as any, async
 apiRouter.use("/machines", machinesRouter);
 apiRouter.use("/orders", ordersRouter);
 apiRouter.use("/blocked-dates", blockedDatesRouter);
+apiRouter.use("/maintenance", maintenanceRouter);
+apiRouter.use("/damage-reports", damageReportsRouter);
 apiRouter.use("/calendar", calendarRouter);
 apiRouter.use("/blog-posts", blogPostsRouter);
 apiRouter.use("/admin/audit-logs", adminAuditRouter);

@@ -82,6 +82,32 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
     setTogglingId(null);
   };
 
+  // Toggle machine retired/active-fleet — permanent out-of-fleet flag, distinct
+  // from isActive (catalog visibility) and from damage/maintenance blocks
+  // (server/utils/machineStatus.ts, badge shown via m.operationallyBlocked).
+  const [togglingRetiredId, setTogglingRetiredId] = useState<string | null>(null);
+  const handleToggleRetired = async (m: Machine) => {
+    setTogglingRetiredId(m.id);
+    try {
+      const res = await fetch(`/api/machines/${m.id}/toggle-retired`, {
+        method: "PATCH",
+        headers: getAdminAuthHeaders()
+      });
+      if (res.ok) {
+        const { isRetired } = await res.json();
+        useAppStore.setState((state) => ({
+          machines: state.machines.map(mc => mc.id === m.id ? { ...mc, isRetired } : mc)
+        }));
+        onAddSystemLog("fleet", adminUser?.name ?? "Admin", `Machine ${m.name} ${isRetired ? "hors service (retired)" : "weer in de vloot"}`);
+      } else {
+        showAdminToast(t("Fout bij het wijzigen van de machinestatus.", "Error toggling machine status.", "Makine durumu değiştirilirken hata oluştu."), "error");
+      }
+    } catch {
+      showAdminToast(t("Netwerkfout bij het wijzigen van de machinestatus.", "Network error toggling machine status.", "Makine durumu değiştirilirken ağ hatası."), "error");
+    }
+    setTogglingRetiredId(null);
+  };
+
   // Duplicate a machine: clones every field (price tiers, image, gallery, specs,
   // cross-sell extras, package contents) into a new row via the same POST the
   // "Toevoegen" form uses — the server assigns a fresh id, so this never collides
@@ -497,6 +523,12 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                     <span className="font-mono text-teal-600 font-bold text-xs shrink-0">€ {m.pricePerDay}</span>
                   </div>
 
+                  {(m.isRetired || m.operationallyBlocked) && (
+                    <span className={`inline-block text-[9.5px] font-mono px-2.5 py-1 rounded-full font-extrabold uppercase tracking-wider ${m.isRetired ? "bg-slate-200 text-slate-600" : "bg-orange-100 text-orange-700 border border-orange-200"}`}>
+                      {m.isRetired ? t("Hors service", "Retired", "Hizmet dışı") : t("Geblokkeerd — onderhoud/schade", "Blocked — maintenance/damage", "Bloke — bakım/hasar")}
+                    </span>
+                  )}
+
                   <div className="grid grid-cols-3 gap-2 text-[10px] text-slate-600 font-mono">
                     <div><span className="text-slate-400">{t("Hoogte", "Height", "Yükseklik")}:</span> {m.height} m</div>
                     <div><span className="text-slate-400">{t("Bereik", "Reach", "Erişim")}:</span> {m.reach || "--"} m</div>
@@ -521,6 +553,15 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                       } disabled:opacity-50`}
                     >
                       {togglingId === m.id ? "..." : inactive ? t("Activeer", "Activate", "Etkinleştir") : t("Deactiveer", "Deactivate", "Devre Dışı")}
+                    </button>
+                    <button
+                      onClick={() => handleToggleRetired(m)}
+                      disabled={togglingRetiredId === m.id}
+                      className={`font-bold text-[10.5px] px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer border-none shadow-sm ${
+                        m.isRetired ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100" : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+                      } disabled:opacity-50`}
+                    >
+                      {togglingRetiredId === m.id ? "..." : m.isRetired ? t("Terug in vloot", "Un-retire", "Filoya döndür") : t("Hors service", "Retire", "Hizmet dışı")}
                     </button>
                     <button
                       onClick={() => handleStartEdit(m)}
@@ -593,7 +634,14 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                           }}
                         />
                       </div>
-                      <span className="whitespace-normal break-words leading-snug max-w-[200px] sm:max-w-[320px]" title={m.name}>{m.name}</span>
+                      <div className="min-w-0">
+                        <span className="whitespace-normal break-words leading-snug max-w-[200px] sm:max-w-[320px] block" title={m.name}>{m.name}</span>
+                        {(m.isRetired || m.operationallyBlocked) && (
+                          <span className={`inline-block mt-1 text-[9px] font-mono px-2 py-0.5 rounded-full font-extrabold uppercase tracking-wider ${m.isRetired ? "bg-slate-200 text-slate-600" : "bg-orange-100 text-orange-700 border border-orange-200"}`}>
+                            {m.isRetired ? t("Hors service", "Retired", "Hizmet dışı") : t("Geblokkeerd", "Blocked", "Bloke")}
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="py-3 pr-4 uppercase font-mono text-[9px] text-slate-500 font-extrabold">{m.category}</td>
                     <td className="py-3 pr-4 text-slate-700 font-mono">{m.height} m</td>
@@ -624,6 +672,19 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                           } disabled:opacity-50`}
                         >
                           {togglingId === m.id ? "..." : inactive ? t("Activeer", "Activate", "Etkinleştir") : t("Deactiveer", "Deactivate", "Devre Dışı")}
+                        </button>
+
+                        <button
+                          onClick={() => handleToggleRetired(m)}
+                          disabled={togglingRetiredId === m.id}
+                          title={m.isRetired ? t("Terug in vloot", "Un-retire", "Filoya döndür") : t("Hors service zetten", "Retire machine", "Hizmet dışı bırak")}
+                          className={`font-bold text-xs px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer border-none shadow-sm ${
+                            m.isRetired
+                              ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                              : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+                          } disabled:opacity-50`}
+                        >
+                          {togglingRetiredId === m.id ? "..." : m.isRetired ? t("Terug", "Restore", "Geri al") : t("Hors service", "Retire", "Hizmet dışı")}
                         </button>
 
                         <button

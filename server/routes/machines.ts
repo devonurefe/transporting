@@ -5,6 +5,7 @@ import { requireAdmin } from "../middleware/auth.js";
 import { AuthenticatedRequest } from "../middleware/auth.js";
 import { publicReadLimiter, softOriginGuard } from "../middleware/publicGuard.js";
 import { audit } from "../utils/audit.js";
+import { getOperationallyBlockedMachineIds } from "../utils/machineStatus.js";
 
 export const machinesRouter = Router();
 
@@ -75,11 +76,17 @@ machinesRouter.get("/", publicReadLimiter, softOriginGuard, async (req: Authenti
     // Admins editing machines need the raw base64 image data back; everyone else
     // gets the lightweight feed (base64 images replaced by binary-proxy URLs).
     const wantsFull = req.query.full === "1" && req.user?.role === "admin";
+    // Computed, not stored on Machine: true when retired, or an unresolved
+    // DamageReport/open MaintenanceEvent exists for this machine (see
+    // server/utils/machineStatus.ts). Consumed by src/utils/availability.ts
+    // on the client to block booking regardless of stock/date overlap.
+    const blockedIds = await getOperationallyBlockedMachineIds();
     const shape = (m: any) => {
       const base = {
         ...m,
         suitableFor: Array.isArray(m.suitableFor) ? m.suitableFor : [],
-        additionalImages: Array.isArray(m.additionalImages) ? m.additionalImages : []
+        additionalImages: Array.isArray(m.additionalImages) ? m.additionalImages : [],
+        operationallyBlocked: blockedIds.has(m.id)
       };
       return wantsFull ? base : toPublicMachine(base);
     };
@@ -391,6 +398,7 @@ machinesRouter.put("/:id", requireAdmin as any, async (req: AuthenticatedRequest
         additionalImages: Array.isArray(additionalImages) ? sanitizeImageUrls(additionalImages) : [],
         specs: specsUpdate === undefined ? undefined : (specsUpdate ?? Prisma.JsonNull),
         isActive: req.body.isActive !== undefined ? Boolean(req.body.isActive) : undefined,
+        isRetired: req.body.isRetired !== undefined ? Boolean(req.body.isRetired) : undefined,
         bufferDays: req.body.bufferDays !== undefined ? Math.min(2, Math.max(0, Math.round(Number(req.body.bufferDays)))) : undefined,
         minRentalDays: req.body.minRentalDays !== undefined && req.body.minRentalDays !== null && req.body.minRentalDays !== "" ? Math.round(Number(req.body.minRentalDays)) : null,
         weeklyOnly: Boolean(req.body.weeklyOnly),
@@ -431,6 +439,25 @@ machinesRouter.patch("/:id/toggle-active", requireAdmin as any, async (req: Auth
     res.json({ id: updated.id, isActive: updated.isActive });
   } catch (error: any) {
     console.error("Error toggling machine status:", error);
+    res.status(500).json({ error: "Status wijzigen mislukt" });
+  }
+});
+
+// Permanent out-of-fleet flag — distinct from isActive (catalog visibility) and
+// from the temporary damage/maintenance blocks (see server/utils/machineStatus.ts).
+machinesRouter.patch("/:id/toggle-retired", requireAdmin as any, async (req: AuthenticatedRequest, res: Response) => {
+  const { id } = req.params;
+  try {
+    const machine = await prisma.machine.findUnique({ where: { id }, select: { isRetired: true } });
+    if (!machine) return res.status(404).json({ error: "Machine niet gevonden" });
+    const updated = await prisma.machine.update({
+      where: { id },
+      data: { isRetired: !machine.isRetired }
+    });
+    audit(req, "machine.updated", { entity: "Machine", entityId: id, meta: { isRetired: updated.isRetired } });
+    res.json({ id: updated.id, isRetired: updated.isRetired });
+  } catch (error: any) {
+    console.error("Error toggling machine retired status:", error);
     res.status(500).json({ error: "Status wijzigen mislukt" });
   }
 });

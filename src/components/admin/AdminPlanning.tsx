@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { CalendarDays, Truck, RotateCcw, Lock, ChevronLeft, ChevronRight, X, Phone, Mail, MapPin, Package } from "lucide-react";
 import { useAppStore } from "../../store/appStore";
 import { euro } from "../../utils/format";
+import { getTodaysLogistics } from "../../utils/logistics";
 import AdminStatusBadge from "./AdminStatusBadge";
 
 type AnyOrder = any;
@@ -481,10 +482,8 @@ export default function AdminPlanning({ adminLanguage }: AdminPlanningProps) {
     [orders, todayStr]
   );
 
-  const departingToday    = useMemo(() => activeOrders.filter((o) => o.startDate === todayStr),    [activeOrders, todayStr]);
-  const returningToday    = useMemo(() => activeOrders.filter((o) => o.endDate   === todayStr),    [activeOrders, todayStr]);
-  const departingTomorrow = useMemo(() => activeOrders.filter((o) => o.startDate === tomorrowStr), [activeOrders, tomorrowStr]);
-  const returningTomorrow = useMemo(() => activeOrders.filter((o) => o.endDate   === tomorrowStr), [activeOrders, tomorrowStr]);
+  const { departing: departingToday, returning: returningToday } = useMemo(() => getTodaysLogistics(orders, todayStr), [orders, todayStr]);
+  const { departing: departingTomorrow, returning: returningTomorrow } = useMemo(() => getTodaysLogistics(orders, tomorrowStr), [orders, tomorrowStr]);
 
   const blockedToday = useMemo(
     () => blockedDates.filter((b) => b.date === todayStr).map((b) => ({ ...b, machineName: machineMap.get(b.machineId) || b.machineId })),

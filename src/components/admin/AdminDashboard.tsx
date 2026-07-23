@@ -9,6 +9,7 @@ import { motion } from "motion/react";
 import { useAppStore } from "../../store/appStore";
 import { useAuthStore } from "../../store/authStore";
 import { euro } from "../../utils/format";
+import { getTodaysLogistics } from "../../utils/logistics";
 import type { AdminSubTab } from "../AdminSection";
 
 interface AdminDashboardProps {
@@ -22,7 +23,13 @@ export default function AdminDashboard({ setSubTab, setOrdersFilter, adminLangua
   const orders = useAppStore((state) => state.orders);
   const fetchOrders = useAppStore((state) => state.fetchOrders);
   const loadAllOrders = useAppStore((state) => state.loadAllOrders);
+  const maintenanceEvents = useAppStore((state) => state.maintenanceEvents);
+  const damageReports = useAppStore((state) => state.damageReports);
+  const fetchMaintenanceEvents = useAppStore((state) => state.fetchMaintenanceEvents);
+  const fetchDamageReports = useAppStore((state) => state.fetchDamageReports);
   const token = useAuthStore((state) => state.token);
+
+  useEffect(() => { fetchMaintenanceEvents(); fetchDamageReports(); }, [fetchMaintenanceEvents, fetchDamageReports]);
 
   const [hoveredSector, setHoveredSector] = useState<string | null>(null);
   const [hoveredTrendMonth, setHoveredTrendMonth] = useState<string | null>(null);
@@ -35,7 +42,7 @@ export default function AdminDashboard({ setSubTab, setOrdersFilter, adminLangua
   // Server-side aggregates over ALL orders — the order list is paginated (max 100),
   // so headline KPIs computed from the loaded window under-count at scale. Prefer
   // these when available, fall back to the store-derived numbers otherwise.
-  const [orderStats, setOrderStats] = useState<{ totalRevenue: number; paidRevenue: number; activeRentals: number; pending: number; awaitingInspection: number; totalOrders: number } | null>(null);
+  const [orderStats, setOrderStats] = useState<{ totalRevenue: number; paidRevenue: number; activeRentals: number; pending: number; awaitingInspection: number; overdueCount: number; totalOrders: number } | null>(null);
 
   const refreshOrderStats = useCallback(() => {
     if (!token) return;
@@ -103,6 +110,31 @@ export default function AdminDashboard({ setSubTab, setOrdersFilter, adminLangua
   const kpiActive = orderStats?.activeRentals ?? activeRentals;
   const kpiPending = orderStats?.pending ?? pendingRegistrations;
   const kpiAwaitingInspection = orderStats?.awaitingInspection ?? awaitingInspection;
+  const kpiOverdue = orderStats?.overdueCount ?? orders.filter(o => o.status === "Onderweg" && o.endDate < new Date().toISOString().split("T")[0]).length;
+  const openMaintenanceCount = maintenanceEvents.filter(e => !e.completedDate).length;
+  const openDamageCount = damageReports.filter(d => !d.resolvedAt).length;
+
+  // Today's departures/returns — same grouping AdminPlanning's day view uses
+  // (src/utils/logistics.ts), so the two never disagree on what "today" means.
+  const todayStr = useMemo(() => new Date().toISOString().split("T")[0], []);
+  const todaysLogistics = useMemo(() => getTodaysLogistics(orders, todayStr), [orders, todayStr]);
+
+  // Cancellation rate — cheap ratio over orders already loaded via loadAllOrders().
+  const cancellationRate = useMemo(() => {
+    if (orders.length === 0) return 0;
+    return Math.round((orders.filter(o => o.status === "Geannuleerd").length / orders.length) * 100);
+  }, [orders]);
+
+  const revenueByCategory = useMemo(() => {
+    const machineCategory = new Map(machines.map(m => [m.id, m.categoryLabel || m.category]));
+    const acc: Record<string, number> = {};
+    orders.forEach(o => {
+      if (o.status === "Geannuleerd") return;
+      const cat = machineCategory.get(o.machineId) || t("Onbekend", "Unknown", "Bilinmeyen");
+      acc[cat] = (acc[cat] || 0) + o.totalAmount;
+    });
+    return Object.entries(acc).sort((a, b) => b[1] - a[1]).slice(0, 6);
+  }, [orders, machines]);
 
   const categoryCount = machines.reduce((acc, machine) => {
     const cat = machine.category;
@@ -269,6 +301,45 @@ export default function AdminDashboard({ setSubTab, setOrdersFilter, adminLangua
         </div>
       </div>
 
+      {/* Operational snapshot — today's logistics, overdue, open maintenance/damage,
+          cancellation rate. Deliberately not "vanity" — every tile links to the
+          panel that acts on it. See docs/admin-platform-audit-2026-07.md §12. */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div onClick={() => setSubTab("planning")} className="p-3.5 rounded-xl bg-white border border-slate-200 shadow-sm cursor-pointer hover:shadow-md transition-all">
+          <span className="text-[9px] uppercase font-bold text-slate-500 font-mono tracking-wider block">{t("Vertrek vandaag", "Departing today", "Bugün çıkış")}</span>
+          <span className="text-lg font-display font-extrabold text-slate-900 block mt-1">{todaysLogistics.departing.length}</span>
+        </div>
+        <div onClick={() => setSubTab("planning")} className="p-3.5 rounded-xl bg-white border border-slate-200 shadow-sm cursor-pointer hover:shadow-md transition-all">
+          <span className="text-[9px] uppercase font-bold text-slate-500 font-mono tracking-wider block">{t("Retour vandaag", "Returning today", "Bugün iade")}</span>
+          <span className="text-lg font-display font-extrabold text-slate-900 block mt-1">{todaysLogistics.returning.length}</span>
+        </div>
+        <div
+          onClick={() => { setSubTab("orders"); setOrdersFilter?.(["Onderweg"]); }}
+          className={`p-3.5 rounded-xl border shadow-sm cursor-pointer hover:shadow-md transition-all ${kpiOverdue > 0 ? "bg-rose-50 border-rose-200" : "bg-white border-slate-200"}`}
+        >
+          <span className={`text-[9px] uppercase font-bold font-mono tracking-wider block ${kpiOverdue > 0 ? "text-rose-600" : "text-slate-500"}`}>{t("Te laat", "Overdue", "Gecikmiş")}</span>
+          <span className={`text-lg font-display font-extrabold block mt-1 ${kpiOverdue > 0 ? "text-rose-800" : "text-slate-900"}`}>{kpiOverdue}</span>
+        </div>
+        <div
+          onClick={() => setSubTab("maintenance")}
+          className={`p-3.5 rounded-xl border shadow-sm cursor-pointer hover:shadow-md transition-all ${openMaintenanceCount > 0 ? "bg-indigo-50 border-indigo-200" : "bg-white border-slate-200"}`}
+        >
+          <span className={`text-[9px] uppercase font-bold font-mono tracking-wider block ${openMaintenanceCount > 0 ? "text-indigo-600" : "text-slate-500"}`}>{t("In onderhoud", "In maintenance", "Bakımda")}</span>
+          <span className={`text-lg font-display font-extrabold block mt-1 ${openMaintenanceCount > 0 ? "text-indigo-800" : "text-slate-900"}`}>{openMaintenanceCount}</span>
+        </div>
+        <div
+          onClick={() => setSubTab("maintenance")}
+          className={`p-3.5 rounded-xl border shadow-sm cursor-pointer hover:shadow-md transition-all ${openDamageCount > 0 ? "bg-orange-50 border-orange-200" : "bg-white border-slate-200"}`}
+        >
+          <span className={`text-[9px] uppercase font-bold font-mono tracking-wider block ${openDamageCount > 0 ? "text-orange-600" : "text-slate-500"}`}>{t("Schade open", "Damage open", "Açık hasar")}</span>
+          <span className={`text-lg font-display font-extrabold block mt-1 ${openDamageCount > 0 ? "text-orange-800" : "text-slate-900"}`}>{openDamageCount}</span>
+        </div>
+        <div className="p-3.5 rounded-xl bg-white border border-slate-200 shadow-sm">
+          <span className="text-[9px] uppercase font-bold text-slate-500 font-mono tracking-wider block">{t("Annuleringspercentage", "Cancellation rate", "İptal oranı")}</span>
+          <span className="text-lg font-display font-extrabold text-slate-900 block mt-1">{cancellationRate}%</span>
+        </div>
+      </div>
+
       {/* VISUAL ANALYTICS GRAPHICS */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Panel 1: Revenue by Industry/Profile */}
@@ -415,6 +486,34 @@ export default function AdminDashboard({ setSubTab, setOrdersFilter, adminLangua
           </div>
         </div>
       </div>
+
+      {/* Omzet per Categorie — computed from the same loaded orders as the
+          profile/utilization panels above, no schema change needed. */}
+      {revenueByCategory.length > 0 && (
+        <div className="glass-panel p-6 rounded-3xl space-y-3 bg-white border border-slate-200 shadow-sm">
+          <div>
+            <h4 className="font-display font-bold text-xs uppercase text-slate-500 tracking-wider">{t("Omzet per Categorie", "Revenue by Category", "Kategoriye Göre Ciro")}</h4>
+            <p className="text-[10px] text-slate-500 font-mono mt-0.5">{t("Gebaseerd op alle geladen contracten", "Based on all loaded contracts", "Yüklenen tüm sözleşmelere dayalı")}</p>
+          </div>
+          <div className="space-y-2">
+            {revenueByCategory.map(([cat, val]) => {
+              const maxVal = revenueByCategory[0][1];
+              const pct = maxVal > 0 ? (val / maxVal) * 100 : 0;
+              return (
+                <div key={cat} className="space-y-1">
+                  <div className="flex items-center justify-between text-[10.5px]">
+                    <span className="text-slate-700 font-extrabold">{cat}</span>
+                    <span className="text-slate-500 font-mono text-[10px]">{euro(val)}</span>
+                  </div>
+                  <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                    <div style={{ width: `${pct}%` }} className="h-full rounded-full bg-amber-500" />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Panel 3: Monthly Revenue Spline Area Chart */}
       <div className="glass-panel p-6 rounded-3xl space-y-4 bg-white border border-slate-200 shadow-sm">

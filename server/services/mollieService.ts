@@ -22,10 +22,13 @@ export interface CreatedPaymentLink {
 }
 
 /**
- * Creates a single-use Mollie payment link for an order. The order's own ID is
- * stored verbatim as the Mollie `description` — Payment Links have no metadata
- * field, so the webhook handler matches the incoming payment back to our Order
- * by re-fetching the payment and comparing its `description` to `Order.id`.
+ * Creates a single-use Mollie payment link for an order. `Order.molliePaymentId`
+ * stores this link's own ID (pl_...) — that is exactly the ID Mollie's webhook
+ * hands back (confirmed empirically: the webhook does NOT send the underlying
+ * payment's tr_... id, it sends the payment link's own pl_... id), so the
+ * webhook handler can match straight on `molliePaymentId`. The order's own ID
+ * is also stored verbatim as the Mollie `description`, purely for the merchant's
+ * benefit (shown on Mollie's own checkout/dashboard pages) — not used for matching.
  *
  * Returns null on any failure (missing API key, network error, Mollie rejecting
  * the request) — callers must treat that as "no link yet" and keep today's
@@ -47,25 +50,21 @@ async function createPaymentLink(order: { id: string; totalAmount: number }): Pr
   }
 }
 
-export interface FetchedPayment {
-  status: string;
-  description: string;
-}
-
 /**
- * Re-fetches a payment by ID from Mollie's API — the webhook handler must never
- * trust the POST body's contents for the payment status, only the ID, per
- * Mollie's documented security model.
+ * Re-fetches a payment LINK by its own ID (pl_...) from Mollie's API — the
+ * webhook handler must never trust the POST body's contents for the actual
+ * status, only the ID, per Mollie's documented security model. `paidAt` is set
+ * by Mollie the moment the link's (single-use) payment completes.
  */
-async function getPayment(paymentId: string): Promise<FetchedPayment | null> {
+async function isPaymentLinkPaid(linkId: string): Promise<boolean | null> {
   if (!mollieClient) return null;
   try {
-    const payment = await mollieClient.payments.get(paymentId);
-    return { status: payment.status, description: payment.description };
+    const paymentLink = await mollieClient.paymentLinks.get(linkId);
+    return !!paymentLink.paidAt;
   } catch (err) {
-    console.error("[Mollie] Betaling ophalen mislukt voor id", paymentId, ":", err);
+    console.error("[Mollie] Betaallink ophalen mislukt voor id", linkId, ":", err);
     return null;
   }
 }
 
-export const mollieService = { createPaymentLink, getPayment };
+export const mollieService = { createPaymentLink, isPaymentLinkPaid };

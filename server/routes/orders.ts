@@ -14,6 +14,48 @@ import { buildUblInvoiceXml } from "../utils/ublInvoice.js";
 
 export const ordersRouter = Router();
 
+// Genereert — of vernieuwt — de Mollie-betaallink van een order. Fire-and-forget:
+// dit mag nooit een order-request laten falen of vertragen. Lukt het niet (geen
+// MOLLIE_API_KEY, netwerkfout), dan blijft mollieCheckoutUrl leeg en valt de
+// admin-UI terug op de handmatige "[PLAK HIER DE BETAALLINK]"-placeholder.
+//
+// Wordt aangeroepen vanuit alle drie de paden die een te betalen bedrag opleveren:
+// de klant-checkout, de handmatige admin-order, en een prijswijziging via PATCH.
+function syncMolliePaymentLink(order: {
+  id: string;
+  totalAmount: number;
+  paymentMethod?: string | null;
+  paymentStatus?: string | null;
+  molliePaymentId?: string | null;
+}): void {
+  // "on_location" krijgt per definitie geen link, en een al betaalde order mag er
+  // nooit een nieuwe (opnieuw betaalbare) link bij krijgen.
+  if (order.paymentMethod === "on_location") return;
+  if (order.paymentStatus === "paid") return;
+
+  void (async () => {
+    // Bestaat er al een link, dan moet die eerst ongeldig worden: de klant heeft
+    // de oude URL nog in WhatsApp staan en zou anders het oude (mogelijk veel
+    // lagere) bedrag kunnen afrekenen en als volledig betaald gelden.
+    // Best-effort — mislukt archiveren, dan loggen we dat en maken we alsnog de
+    // nieuwe link aan; geen link is een slechter resultaat dan een oude erbij.
+    if (order.molliePaymentId) {
+      const archived = await mollieService.archivePaymentLink(order.molliePaymentId);
+      if (!archived) {
+        console.warn("[Mollie] Oude betaallink", order.molliePaymentId, "niet gearchiveerd voor order", order.id, "— die blijft mogelijk betaalbaar.");
+      }
+    }
+    const result = await mollieService.createPaymentLink(order);
+    if (!result) return;
+    await prisma.order.update({
+      where: { id: order.id },
+      data: { molliePaymentId: result.id, mollieCheckoutUrl: result.checkoutUrl }
+    });
+  })().catch(err => {
+    console.error("[Mollie] Betaallink synchroniseren mislukt voor order", order.id, ":", err);
+  });
+}
+
 // Sequential invoice number, format "Factuur YYNNNN" (2-digit year + 4-digit
 // sequence, e.g. "Factuur 260013"). The counter is global (not reset per year),
 // matching the historical INV-YYYY-NNNN scheme it replaces. Shared by both order
@@ -583,21 +625,8 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
       console.error("[EMAIL] Admin alert permanently failed for order", newOrder.id, ":", err);
     });
 
-    // Generate a real Mollie payment link asynchronously for "link"-orders — never
-    // blocks the response. On any failure (missing MOLLIE_API_KEY, network error)
-    // mollieService returns null and the admin's "Betaallink sturen" button simply
-    // keeps today's manual placeholder, unchanged behaviour.
-    if (newOrder.paymentMethod === "link") {
-      mollieService.createPaymentLink(newOrder).then(result => {
-        if (!result) return;
-        return prisma.order.update({
-          where: { id: newOrder.id },
-          data: { molliePaymentId: result.id, mollieCheckoutUrl: result.checkoutUrl }
-        });
-      }).catch(err => {
-        console.error("[Mollie] Betaallink verwerken mislukt voor order", newOrder.id, ":", err);
-      });
-    }
+    // Genereer asynchroon een echte Mollie-betaallink (zie syncMolliePaymentLink).
+    syncMolliePaymentLink(newOrder);
 
     res.status(201).json({
       ...newOrder,
@@ -725,6 +754,11 @@ ordersRouter.post("/admin", requireAdmin as any, async (req: AuthenticatedReques
     }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }));
 
     audit(req, "order.created_manual", { entity: "Order", entityId: created.id, meta: { machineId: body.machineId, total } });
+    // Ook een telefonisch opgenomen order krijgt een echte betaallink, anders zou
+    // "Betaallink sturen" hier altijd de handmatige placeholder tonen terwijl een
+    // klant-order dat niet doet. paymentMethod is hier null (het handmatige
+    // formulier vraagt er niet naar) — dat telt overal als "link", net als in de UI.
+    syncMolliePaymentLink(created);
     return res.status(201).json({
       ...created,
       startDate: created.startDate.toISOString().split("T")[0],
@@ -870,6 +904,13 @@ ordersRouter.patch("/:id", requireAdmin as any, async (req: AuthenticatedRequest
     }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }));
 
     audit(req, "order.updated", { entity: "Order", entityId: id, meta: { fields: changed.slice(0, 40) } });
+    // Is het te betalen bedrag gewijzigd, dan klopt een eerder verstuurde betaallink
+    // niet meer: die staat nog op het oude bedrag. Oude link archiveren + nieuwe
+    // aanmaken. Bewust alléén bij een bedragwijziging — bij bv. een getypte
+    // naamcorrectie zou je anders de link die de klant al heeft ongeldig maken.
+    if (Math.abs(updated.totalAmount - existing.totalAmount) > 0.01) {
+      syncMolliePaymentLink(updated);
+    }
     return res.json({
       ...updated,
       startDate: updated.startDate.toISOString().split("T")[0],

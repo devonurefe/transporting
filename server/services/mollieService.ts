@@ -51,6 +51,26 @@ async function createPaymentLink(order: { id: string; totalAmount: number }): Pr
 }
 
 /**
+ * Archives a payment link so Mollie will no longer accept payments on it.
+ * Used when an order's total changes after the link was already sent: the
+ * customer still has the old URL in WhatsApp, and without archiving they could
+ * settle the old (possibly much lower) amount and be marked as fully paid.
+ *
+ * Returns true on success, false on any failure — never throws, so a failed
+ * archive can be logged without blocking creation of the replacement link.
+ */
+async function archivePaymentLink(linkId: string): Promise<boolean> {
+  if (!mollieClient) return false;
+  try {
+    await mollieClient.paymentLinks.update(linkId, { archived: true });
+    return true;
+  } catch (err) {
+    console.error("[Mollie] Betaallink archiveren mislukt voor id", linkId, ":", err);
+    return false;
+  }
+}
+
+/**
  * Re-fetches a payment LINK by its own ID (pl_...) from Mollie's API — the
  * webhook handler must never trust the POST body's contents for the actual
  * status, only the ID, per Mollie's documented security model. `paidAt` is set
@@ -67,4 +87,4 @@ async function isPaymentLinkPaid(linkId: string): Promise<boolean | null> {
   }
 }
 
-export const mollieService = { createPaymentLink, isPaymentLinkPaid };
+export const mollieService = { createPaymentLink, archivePaymentLink, isPaymentLinkPaid };

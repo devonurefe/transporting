@@ -3,7 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import createMollieClient from "@mollie/api-client";
+// Named import, not default — the package's CJS default export doesn't resolve
+// correctly as a callable under this project's ESM/tsx runtime (verified: the
+// default binding resolves to the whole module namespace object, not the function).
+import { createMollieClient } from "@mollie/api-client";
 
 // Same fail-soft shape as emailService's Resend init: if MOLLIE_API_KEY is unset,
 // every method below becomes a no-op and the caller falls back to the pre-Mollie

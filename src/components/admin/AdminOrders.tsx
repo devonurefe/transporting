@@ -838,7 +838,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                       disabled={isUpdatingStatus}
                       className={`flex-1 text-[11px] font-black py-2 rounded-xl transition-colors border-none ${isUpdatingStatus ? "bg-slate-200 text-slate-400 cursor-not-allowed" : "bg-indigo-600 hover:bg-indigo-500 text-white cursor-pointer"}`}
                     >
-                      {isUpdatingStatus ? "…" : t("Terug ontvangen", "Mark returned", "İade alındı")}
+                      {isUpdatingStatus ? "…" : t("Terug ontvangen", "Mark returned", "Teslim Alındı")}
                     </button>
                   )}
                   {o.status === "Retour" && (
@@ -1028,7 +1028,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                                 disabled={isUpdatingStatus}
                                 className={`text-[10px] font-black px-3.5 py-1.5 rounded-xl leading-none transition-all border-none shadow-md ${isUpdatingStatus ? "bg-slate-200 text-slate-400 cursor-not-allowed" : "bg-indigo-600 hover:bg-indigo-500 text-white cursor-pointer hover:scale-[1.02] active:scale-95"}`}
                               >
-                                {isUpdatingStatus ? "…" : t("Terug ontvangen", "Mark returned", "İade alındı")}
+                                {isUpdatingStatus ? "…" : t("Terug ontvangen", "Mark returned", "Teslim Alındı")}
                               </button>
                             )}
                             {o.status === "Retour" && (
@@ -1553,7 +1553,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                         className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-black py-3 rounded-xl cursor-pointer transition-all active:scale-[0.98] border-none flex items-center justify-center gap-2 disabled:opacity-60 shadow-md shadow-indigo-500/20"
                       >
                         <Truck className="h-5 w-5 shrink-0" />
-                        <span>{t("Terug ontvangen", "Mark returned", "İade alındı")}</span>
+                        <span>{t("Terug ontvangen", "Mark returned", "Teslim Alındı")}</span>
                       </button>
                     )}
 

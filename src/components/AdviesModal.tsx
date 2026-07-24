@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { X, Sparkles, ChevronLeft, ChevronRight, MessageCircle, RotateCcw } from "lucide-react";
 import { useAppStore } from "../store/appStore";
 import { useModalA11y } from "../hooks/useModalA11y";
+import { BrandedText } from "./Header";
 import { euroCompact } from "../utils/format";
 import {
   resolveFlow,
@@ -96,7 +97,7 @@ export default function AdviesModal({ open, onClose }: AdviesModalProps) {
                 <Sparkles className="h-4.5 w-4.5" />
               </span>
               <div className="min-w-0">
-                <p className="text-sm font-bold text-slate-900 leading-tight">HuurGo Keuzehulp</p>
+                <p className="text-sm font-bold text-slate-900 leading-tight"><BrandedText text="HuurGo Keuzehulp" /></p>
                 <p className="text-xs text-slate-500">Wij denken met u mee</p>
               </div>
               <button

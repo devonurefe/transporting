@@ -8,6 +8,7 @@ import { Coffee } from "lucide-react";
 import { motion } from "motion/react";
 import { Link } from "react-router-dom";
 import { useAppStore } from "../store/appStore";
+import { BrandedText } from "./Header";
 
 // Admin-editable homepage block (Admin → Customizer) shown just above the
 // footer: a company photo + inviting copy, with an optional CTA button.
@@ -63,17 +64,17 @@ export default function CoffeeCornerSection() {
               <Coffee className="h-4 w-4" /> Coffee Corner
             </span>
             <h2 className="font-display font-black text-lg sm:text-xl text-slate-900 mb-2.5">
-              {siteConfig.coffeeCornerTitle}
+              <BrandedText text={siteConfig.coffeeCornerTitle} />
             </h2>
             <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line mb-5">
-              {siteConfig.coffeeCornerDescription}
+              <BrandedText text={siteConfig.coffeeCornerDescription} />
             </p>
             {isInternalCta ? (
               <Link
                 to={ctaHref}
                 className="self-center sm:self-start inline-flex items-center px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-xs rounded-xl shadow-sm hover:shadow-md transition-all no-underline"
               >
-                {ctaLabel}
+                <BrandedText text={ctaLabel} dark />
               </Link>
             ) : (
               <a
@@ -82,7 +83,7 @@ export default function CoffeeCornerSection() {
                 rel={ctaHref.startsWith("http") ? "noopener noreferrer" : undefined}
                 className="self-center sm:self-start inline-flex items-center px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-xs rounded-xl shadow-sm hover:shadow-md transition-all no-underline"
               >
-                {ctaLabel}
+                <BrandedText text={ctaLabel} dark />
               </a>
             )}
           </div>

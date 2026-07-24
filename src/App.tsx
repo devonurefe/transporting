@@ -18,7 +18,7 @@ import { clearChunkReloadFlag } from "./utils/chunkError";
 import { Machine, Order, OrderStatus, AppNotification, UserProfile, CartItem } from "./types";
 import { useAuthStore } from "./store/authStore";
 import { useAppStore } from "./store/appStore";
-import { buildWhatsAppGeneralUrl, buildWhatsAppOrderStatusUrl, buildWhatsAppPaymentLinkUrl, buildWhatsAppAdviceUrl } from "./utils/whatsapp";
+import { buildWhatsAppGeneralUrl, buildWhatsAppOrderStatusUrl, buildWhatsAppPaymentLinkUrl, buildWhatsAppAdviceUrl, getWhatsAppNumber } from "./utils/whatsapp";
 import { resolveFaqItems } from "./data/faq";
 import { useModalA11y } from "./hooks/useModalA11y";
 
@@ -1094,6 +1094,12 @@ export default function App() {
                     label: "Advies over machine",
                     sub: "Welke machine past bij mijn klus?",
                     url: buildWhatsAppAdviceUrl(),
+                  },
+                  {
+                    icon: "💬",
+                    label: "Overig",
+                    sub: "Iets anders? Stuur ons gewoon een bericht",
+                    url: `https://wa.me/${getWhatsAppNumber()}`,
                   },
                 ].map((item) => (
                   <a

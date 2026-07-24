@@ -78,7 +78,7 @@ export default function AboutSection() {
           Maak kennis met <BrandedText text="HuurGo" />
         </h1>
         <p className="text-sm sm:text-base text-slate-600 max-w-2xl mx-auto leading-relaxed">
-          {siteConfig.heroSubtitle || "HuurGo verhuurt gecertificeerde hoogwerkers, schaarliften, mastliften en ladderliften aan ZZP'ers, aannemers en particulieren in heel Nederland. Direct online geregeld, zonder gedoe."}
+          <BrandedText text={siteConfig.heroSubtitle || "HuurGo verhuurt gecertificeerde hoogwerkers, schaarliften, mastliften en ladderliften aan ZZP'ers, aannemers en particulieren in heel Nederland. Direct online geregeld, zonder gedoe."} />
         </p>
       </motion.header>
 
@@ -143,8 +143,8 @@ export default function AboutSection() {
             <span className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-600 mb-2">
               <Coffee className="h-4 w-4" /> Coffee Corner
             </span>
-            <h2 className="font-display font-black text-lg text-slate-900 mb-2">{siteConfig.coffeeCornerTitle}</h2>
-            <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">{siteConfig.coffeeCornerDescription}</p>
+            <h2 className="font-display font-black text-lg text-slate-900 mb-2"><BrandedText text={siteConfig.coffeeCornerTitle || ""} /></h2>
+            <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line"><BrandedText text={siteConfig.coffeeCornerDescription || ""} /></p>
           </div>
         </section>
       )}

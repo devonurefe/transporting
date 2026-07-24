@@ -64,6 +64,12 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
   const adminUser = useAuthStore((state) => state.user);
 
   const [dateFilter, setDateFilter] = useState<"all" | "today" | "tomorrow" | "week">("all");
+  // Betaalstatus is een aparte as dan de status-chips hierboven: "Onaylandı"/"Yolda"/
+  // "Tamamlandı" zijn per definitie altijd betaald (de "Goedkeuren"-gate laat niets
+  // anders toe), dus dit filter is vrijwel alleen zinvol binnen "İşlemde" — maar we
+  // houden 'm globaal zodat een enkele onbetaalde uitzondering elders (bv. een
+  // geannuleerde order die nooit betaald is) ook vindbaar blijft.
+  const [paymentFilter, setPaymentFilter] = useState<"all" | "paid" | "awaiting">("all");
   const [searchText, setSearchText] = useState(initialOrderId ?? "");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [localStatusFilter, setLocalStatusFilter] = useState<string>(
@@ -111,7 +117,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
   // Filters draaien client-side over de geladen orders. Zodra een filter
   // actief is, laden we daarom automatisch ALLE pagina's — anders zijn
   // orders buiten de eerste pagina onvindbaar voor de admin.
-  const filtersActive = searchText.trim() !== "" || dateFilter !== "all" || localStatusFilter !== "all";
+  const filtersActive = searchText.trim() !== "" || dateFilter !== "all" || localStatusFilter !== "all" || paymentFilter !== "all";
   const allLoaded = ordersPage >= ordersTotalPages;
   const [loadingAll, setLoadingAll] = useState(false);
   useEffect(() => {
@@ -126,16 +132,22 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
     ? orders.filter(o => o.status === localStatusFilter)
     : orders;
 
+  const paymentFiltered = paymentFilter === "all"
+    ? statusFiltered
+    : paymentFilter === "paid"
+    ? statusFiltered.filter(o => o.paymentStatus === "paid")
+    : statusFiltered.filter(o => o.paymentStatus === "awaiting");
+
   const q = searchText.trim().toLowerCase();
   const textFiltered = q
-    ? statusFiltered.filter(o =>
+    ? paymentFiltered.filter(o =>
         o.id.toLowerCase().includes(q) ||
         o.customerName.toLowerCase().includes(q) ||
         (o.customerEmail || "").toLowerCase().includes(q) ||
         (o.customerPhone || "").includes(q) ||
         getBaseName(o.machineName).toLowerCase().includes(q)
       )
-    : statusFiltered;
+    : paymentFiltered;
 
   const displayOrders = dateFilter === "today"
     ? textFiltered.filter(o => o.startDate <= todayISO && o.endDate >= todayISO)
@@ -669,6 +681,39 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                 }`}
               >
                 {label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Payment-status filter — a separate axis from the status chips above:
+            "Onaylandı"/"Yolda"/"Tamamlandı" are by definition always paid (the
+            "Goedkeuren"-gate enforces it), so this mostly matters inside "İşlemde"
+            (which orders are ready to approve vs. still waiting on the customer).
+            Kept as its own slim row rather than a 7th status chip so the main
+            row never wraps to a 3rd line. Counts reflect the active status filter. */}
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {([
+            { key: "all",      nl: "Alle betalingen", en: "All payments",   tr: "Tüm ödemeler" },
+            { key: "paid",     nl: "Betaald",          en: "Paid",          tr: "Ödendi" },
+            { key: "awaiting", nl: "In afwachting",    en: "Awaiting",      tr: "Ödeme Bekliyor" },
+          ] as const).map((f) => {
+            const label = adminLanguage === "tr" ? f.tr : adminLanguage === "en" ? f.en : f.nl;
+            const count = f.key === "all" ? statusFiltered.length : statusFiltered.filter(o => o.paymentStatus === f.key).length;
+            const isActive = paymentFilter === f.key;
+            const colorClass = isActive
+              ? f.key === "paid" ? "bg-emerald-500 text-white border-emerald-600"
+              : f.key === "awaiting" ? "bg-amber-500 text-white border-amber-600"
+              : "bg-slate-700 text-white border-slate-800"
+              : "bg-white text-slate-500 border-slate-200 hover:border-slate-300 hover:text-slate-700";
+            return (
+              <button
+                key={f.key}
+                type="button"
+                onClick={() => setPaymentFilter(f.key)}
+                className={`px-3 py-1.5 rounded-full text-[11px] font-bold transition-all border cursor-pointer shadow-sm ${colorClass}`}
+              >
+                {label} <span className={`ml-0.5 tabular-nums ${isActive ? "opacity-90" : "opacity-60"}`}>({count})</span>
               </button>
             );
           })}

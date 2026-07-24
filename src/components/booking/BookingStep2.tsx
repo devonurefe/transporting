@@ -4,7 +4,7 @@
  */
 
 import React from "react";
-import { User, Mail, Phone, MapPin, Search, Check, ShieldAlert, ArrowLeft, ArrowRight, X, LogIn, Paintbrush, Leaf, Droplets, HardHat, Zap, Hammer, Settings, Home, HelpCircle, ChevronDown, Lock } from "lucide-react";
+import { User, Mail, Phone, MapPin, Search, Check, ShieldAlert, ArrowLeft, ArrowRight, X, LogIn, Paintbrush, Leaf, Droplets, HardHat, Zap, Hammer, Settings, Home, HelpCircle, ChevronDown, Lock, CreditCard, Banknote } from "lucide-react";
 import { motion } from "motion/react";
 import { UserProfile, Machine } from "../../types";
 import BookingPriceSummary from "./BookingPriceSummary";
@@ -24,6 +24,8 @@ interface BookingStep2Props {
   setCustomerProfile: (profile: string) => void;
   poNumber: string;
   setPoNumber: (po: string) => void;
+  paymentMethod: "link" | "on_location";
+  setPaymentMethod: (method: "link" | "on_location") => void;
   deliveryType: "self_pickup" | "delivery_by_us" | "trailer_rental";
   postcode: string;
   setPostcode: (pc: string) => void;
@@ -84,6 +86,8 @@ export default function BookingStep2({
   setCustomerProfile,
   poNumber,
   setPoNumber,
+  paymentMethod,
+  setPaymentMethod,
   deliveryType,
   postcode,
   setPostcode,
@@ -476,6 +480,61 @@ export default function BookingStep2({
           {bookingError}
         </div>
       )}
+
+      {/* Betaalwijze — de klant kiest of hij online via een betaallink betaalt of
+          op locatie (bij ophalen/levering). Bij "link" stuurt de admin later een
+          iDEAL/Tikkie-betaallink; bij "op locatie" is dat niet nodig. */}
+      <div className="pt-4 border-t-2 border-slate-200 space-y-3">
+        <label className="text-xs text-slate-700 block font-bold flex items-center gap-1.5">
+          <CreditCard className="h-4 w-4 text-slate-500" />
+          <span>Hoe wilt u betalen?</span>
+        </label>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {/* Betaal via link */}
+          <button
+            type="button"
+            onClick={() => setPaymentMethod("link")}
+            aria-pressed={paymentMethod === "link"}
+            className={`text-left p-4 rounded-2xl border transition-all cursor-pointer flex items-start gap-3 ${
+              paymentMethod === "link"
+                ? "border-emerald-500 bg-emerald-50/60 ring-1 ring-emerald-200"
+                : "border-slate-200 bg-white hover:border-slate-300"
+            }`}
+          >
+            <span className={`h-9 w-9 rounded-xl flex items-center justify-center shrink-0 ${paymentMethod === "link" ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500"}`}>
+              <CreditCard className="h-4.5 w-4.5" />
+            </span>
+            <span className="min-w-0">
+              <span className="block text-sm font-bold text-slate-900">Betaal via link</span>
+              <span className="block text-[11px] text-slate-500 leading-snug mt-0.5">
+                U ontvangt een iDEAL/Tikkie betaallink via WhatsApp om online te betalen.
+              </span>
+            </span>
+          </button>
+
+          {/* Betaal op locatie */}
+          <button
+            type="button"
+            onClick={() => setPaymentMethod("on_location")}
+            aria-pressed={paymentMethod === "on_location"}
+            className={`text-left p-4 rounded-2xl border transition-all cursor-pointer flex items-start gap-3 ${
+              paymentMethod === "on_location"
+                ? "border-emerald-500 bg-emerald-50/60 ring-1 ring-emerald-200"
+                : "border-slate-200 bg-white hover:border-slate-300"
+            }`}
+          >
+            <span className={`h-9 w-9 rounded-xl flex items-center justify-center shrink-0 ${paymentMethod === "on_location" ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500"}`}>
+              <Banknote className="h-4.5 w-4.5" />
+            </span>
+            <span className="min-w-0">
+              <span className="block text-sm font-bold text-slate-900">Betaal op locatie</span>
+              <span className="block text-[11px] text-slate-500 leading-snug mt-0.5">
+                U betaalt bij ophalen of levering (pin of contant) — geen link nodig.
+              </span>
+            </span>
+          </button>
+        </div>
+      </div>
 
       {/* Terms/privacy acknowledgement + cancellation policy — required before
           the order can be submitted. */}

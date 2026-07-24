@@ -24,7 +24,10 @@ import {
   Bell,
   Undo2,
   PlusCircle,
-  Pencil
+  Pencil,
+  Send,
+  Banknote,
+  CreditCard
 } from "lucide-react";
 import { useAppStore } from "../../store/appStore";
 import { useAuthStore } from "../../store/authStore";
@@ -229,6 +232,40 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
     a.click();
     setTimeout(() => document.body.removeChild(a), 200);
     onAddSystemLog("system", adminUser?.name ?? "Admin", `Betalingsherinnering via WhatsApp gestuurd voor order ${order.id} (${order.customerName}).`);
+  };
+
+  // Kant-en-klaar sjabloon om de klant een betaallink te sturen. De admin plakt de
+  // daadwerkelijke iDEAL/Tikkie-link op de gemarkeerde plek voordat het bericht wordt
+  // verzonden. De 48-uurstermijn komt overeen met de "stale pending"-check hierboven,
+  // zodat de belofte in het bericht klopt met wat er gebeurt als er niet op tijd wordt
+  // betaald. Puur een WhatsApp-bericht — er wordt geen status of e-mail gewijzigd.
+  const sendPaymentLink = (order: any) => {
+    if (!order?.customerPhone) return;
+    const machine = getBaseName(order.machineName);
+    const lines = [
+      `Beste ${order.customerName}, ✅`,
+      "",
+      `Uw reservering *${order.id}* voor de *${machine}* is bevestigd!`,
+      "",
+      "U kunt de betaling voldoen via onderstaande link:",
+      "[PLAK HIER DE BETAALLINK]",
+      "",
+      `Let op: als de betaling niet binnen ${STALE_PENDING_HOURS} uur is voldaan, vervalt de reservering automatisch.`,
+      "",
+      "Heeft u een andere betaalwens? Laat het ons gerust weten.",
+      "",
+      "Met vriendelijke groet,",
+      "*huurgo*"
+    ];
+    const phone = formatPhoneForWA(order.customerPhone);
+    const url = `https://wa.me/${phone}?text=${encodeURIComponent(lines.join("\n"))}`;
+    const a = document.createElement("a");
+    a.href = url; a.target = "_blank"; a.rel = "noopener noreferrer";
+    a.style.display = "none";
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => document.body.removeChild(a), 200);
+    onAddSystemLog("system", adminUser?.name ?? "Admin", `Betaallink via WhatsApp gestuurd voor order ${order.id} (${order.customerName}).`);
   };
 
   // Modal and custom date proposal state
@@ -1151,7 +1188,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                           <span className="font-mono text-teal-600 font-black text-base">{euro(selectedDetailOrder.totalAmount)}</span>
                         </div>
 
-                        <div className="border-t border-slate-200 pt-2 mt-1">
+                        <div className="border-t border-slate-200 pt-2 mt-1 space-y-1.5">
                           <div className="flex items-center justify-between">
                             <span className="text-[11px] text-slate-600">Betaalstatus:</span>
                             <span className={`text-[9px] font-mono px-2 py-0.5 rounded-full font-bold uppercase ${
@@ -1160,6 +1197,18 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                               : "bg-amber-100 text-amber-700"
                             }`}>
                               {selectedDetailOrder.paymentStatus === "paid" ? "Betaald" : selectedDetailOrder.paymentStatus === "refunded" ? "Teruggestort" : "In Afwachting"}
+                            </span>
+                          </div>
+                          {/* Door de klant gekozen betaalwijze — bepaalt of de admin een
+                              betaallink stuurt (link) of op locatie int (op locatie). */}
+                          <div className="flex items-center justify-between">
+                            <span className="text-[11px] text-slate-600">Betaalwijze:</span>
+                            <span className={`text-[9px] font-mono px-2 py-0.5 rounded-full font-bold uppercase inline-flex items-center gap-1 ${
+                              selectedDetailOrder.paymentMethod === "on_location" ? "bg-indigo-100 text-indigo-700" : "bg-slate-100 text-slate-600"
+                            }`}>
+                              {selectedDetailOrder.paymentMethod === "on_location"
+                                ? <><Banknote className="h-2.5 w-2.5" /> Op locatie</>
+                                : <><CreditCard className="h-2.5 w-2.5" /> Betaallink</>}
                             </span>
                           </div>
                         </div>
@@ -1291,26 +1340,51 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                   )}
                 </div>
                 {selectedDetailOrder.paymentStatus !== "paid" && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      disabled={isUpdatingPayment}
-                      onClick={() => handleUpdatePaymentStatus(selectedDetailOrder.id, "paid")}
-                      className={`bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-bold py-2.5 px-3 transition-all cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50 ${!selectedDetailOrder.customerPhone ? "sm:col-span-2" : ""}`}
-                    >
-                      <DollarSign className="h-3.5 w-3.5 shrink-0" />
-                      <span>{t("Betaling Ontvangen ✓", "Payment Received ✓", "Ödeme Alındı Onay Ver")}</span>
-                    </button>
-                    {selectedDetailOrder.customerPhone && (
+                  <div className="space-y-2">
+                    {/* Stap 1 — Betaallink sturen. Groene primaire knop bovenaan het
+                        betaalblok: opent een kant-en-klaar WhatsApp-bericht met een
+                        placeholder voor de link. Alleen bij een telefoonnummer én wanneer
+                        de klant NIET "op locatie" heeft gekozen (dan is een link overbodig).
+                        Verstuurt alleen een WhatsApp — geen status of e-mail wijzigt. */}
+                    {selectedDetailOrder.customerPhone && selectedDetailOrder.paymentMethod !== "on_location" && (
                       <button
                         type="button"
-                        onClick={() => sendPaymentReminder(selectedDetailOrder)}
-                        className="bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 rounded-xl text-xs font-bold py-2.5 px-3 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                        onClick={() => sendPaymentLink(selectedDetailOrder)}
+                        className="w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold py-2.5 px-3 transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-sm border-none"
                       >
-                        <Bell className="h-3.5 w-3.5 shrink-0" />
-                        <span>{t("Betalingsherinnering Sturen", "Send Payment Reminder", "Ödeme Hatırlatma Gönder")}</span>
+                        <Send className="h-3.5 w-3.5 shrink-0" />
+                        <span>{t("Betaallink sturen", "Send payment link", "Ödeme Linki Gönder")}</span>
                       </button>
                     )}
+                    {/* Klant betaalt op locatie — dan is een betaallink niet nodig. */}
+                    {selectedDetailOrder.paymentMethod === "on_location" && (
+                      <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-[11px] font-semibold text-slate-600">
+                        <Banknote className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                        <span>{t("Klant betaalt op locatie (bij ophalen/levering) — geen betaallink nodig.", "Customer pays on location (at pickup/delivery) — no payment link needed.", "Müşteri lokasyonda ödeyecek (teslim alma/teslimat) — ödeme linki gerekmez.")}</span>
+                      </div>
+                    )}
+                    {/* Stap 2 & 3 — markeer betaling ontvangen / stuur een herinnering. */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        disabled={isUpdatingPayment}
+                        onClick={() => handleUpdatePaymentStatus(selectedDetailOrder.id, "paid")}
+                        className={`bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-bold py-2.5 px-3 transition-all cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50 ${!selectedDetailOrder.customerPhone ? "sm:col-span-2" : ""}`}
+                      >
+                        <DollarSign className="h-3.5 w-3.5 shrink-0" />
+                        <span>{t("Betaling Ontvangen ✓", "Payment Received ✓", "Ödeme Alındı Onay Ver")}</span>
+                      </button>
+                      {selectedDetailOrder.customerPhone && (
+                        <button
+                          type="button"
+                          onClick={() => sendPaymentReminder(selectedDetailOrder)}
+                          className="bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 rounded-xl text-xs font-bold py-2.5 px-3 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                        >
+                          <Bell className="h-3.5 w-3.5 shrink-0" />
+                          <span>{t("Betalingsherinnering Sturen", "Send Payment Reminder", "Ödeme Hatırlatma Gönder")}</span>
+                        </button>
+                      )}
+                    </div>
                   </div>
                 )}
                 {/* Refund — only for a paid order. Records paymentStatus "refunded"

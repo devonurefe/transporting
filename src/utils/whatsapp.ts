@@ -28,7 +28,11 @@ interface OrderTotals {
 }
 
 /**
- * Builds a WhatsApp click-to-chat URL with a pre-filled rental inquiry message requesting an iDeal payment link.
+ * Builds a WhatsApp click-to-chat URL with a pre-filled rental inquiry message.
+ * The closing block depends on the customer's chosen payment method:
+ *   - "link" (default): asks for an iDEAL betaallink so the customer can pay online.
+ *   - "on_location": confirms the booking and states the customer pays on location
+ *     (bij ophalen/levering) — no payment link is requested.
  */
 export function buildWhatsAppUrl(
   cartItems: CartItem[],
@@ -36,7 +40,8 @@ export function buildWhatsAppUrl(
   customerName?: string,
   customerEmail?: string,
   customerPhone?: string,
-  totals?: OrderTotals
+  totals?: OrderTotals,
+  paymentMethod: "link" | "on_location" = "link"
 ): string {
   const lines: string[] = [];
 
@@ -116,11 +121,21 @@ export function buildWhatsAppUrl(
     lines.push("");
   }
 
-  lines.push("💳 *Verzoek:*");
-  lines.push("Stuur mij een iDEAL betaallink zodat ik");
-  lines.push("de betaling direct kan afronden.");
-  lines.push("");
-  lines.push("Alvast bedankt! 🦾");
+  if (paymentMethod === "on_location") {
+    lines.push("💶 *Betaling:*");
+    lines.push("Ik betaal graag op locatie bij ophalen/levering");
+    lines.push("(pin of contant).");
+    lines.push("");
+    lines.push("Graag hoor ik of de reservering bevestigd is.");
+    lines.push("");
+    lines.push("Alvast bedankt! 🦾");
+  } else {
+    lines.push("💳 *Verzoek:*");
+    lines.push("Stuur mij een iDEAL betaallink zodat ik");
+    lines.push("de betaling direct kan afronden.");
+    lines.push("");
+    lines.push("Alvast bedankt! 🦾");
+  }
 
   const encodedText = encodeURIComponent(lines.join("\n"));
   return `https://wa.me/${getWhatsAppNumber()}?text=${encodedText}`;

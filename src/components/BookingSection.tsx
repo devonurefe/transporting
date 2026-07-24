@@ -109,6 +109,11 @@ export default function BookingSection({
   const [customerPhone, setCustomerPhone] = useState<string>(currentUser ? currentUser.phone : "");
   const [customerProfile, setCustomerProfile] = useState<string>(currentUser ? currentUser.profileType : "Particulier");
   const [poNumber, setPoNumber] = useState<string>("");
+  // Klant-gekozen betaalwijze bij het afrekenen (laatste stap): "link" = online
+  // iDEAL/Tikkie-betaallink (admin stuurt een link), "on_location" = betalen bij
+  // ophalen/levering. Bepaalt zowel het WhatsApp-bericht op de succespagina als de
+  // knop "Betaallink sturen" in het adminpaneel.
+  const [paymentMethod, setPaymentMethod] = useState<"link" | "on_location">("link");
   // Lifted out of BookingStep2 (was local useState there) — that component is
   // conditionally rendered ({step === 2 && <BookingStep2 .../>}) so it fully
   // unmounts when the customer steps back to Logistiek, wiping local state on
@@ -799,6 +804,7 @@ export default function BookingSection({
               customerPhone,
               customerProfile,
               poNumber: poNumber.trim() || undefined,
+              paymentMethod,
               subtotal: itemSubtotal,
               transportCost: transport + trailerCost,
               driverCost: parseFloat(driver.toFixed(2)),
@@ -832,7 +838,7 @@ export default function BookingSection({
                 vat: placedOrders.reduce((s, o) => s + o.vatAmount, 0),
                 total: placedOrders.reduce((s, o) => s + o.totalAmount, 0)
               };
-              const waUrl = buildWhatsAppUrl(checkoutItems, deliveryType, customerName, customerEmail, customerPhone || undefined, orderTotals);
+              const waUrl = buildWhatsAppUrl(checkoutItems, deliveryType, customerName, customerEmail, customerPhone || undefined, orderTotals, paymentMethod);
               setWhatsappUrl(waUrl);
             } else {
               setWhatsappUrl("");
@@ -1031,6 +1037,8 @@ export default function BookingSection({
                     setCustomerProfile={setCustomerProfile}
                     poNumber={poNumber}
                     setPoNumber={setPoNumber}
+                    paymentMethod={paymentMethod}
+                    setPaymentMethod={setPaymentMethod}
                     deliveryType={deliveryType}
                     postcode={postcode}
                     setPostcode={setPostcode}

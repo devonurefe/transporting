@@ -90,6 +90,10 @@ export interface Order {
   weekendWork?: "ja" | "nee" | null;
   invoiceNumber?: string;
   paymentStatus?: string;
+  // Door de klant gekozen betaalwijze bij het afrekenen: "link" = online iDEAL/
+  // Tikkie-betaallink (admin stuurt een link), "on_location" = betalen bij ophalen/
+  // levering. Null/leeg voor legacy-orders van vóór deze keuze (behandeld als "link").
+  paymentMethod?: "link" | "on_location";
   // Admin-voorgestelde herplan-datums (ISO). Beide leeg = geen openstaand voorstel.
   proposedStartDate?: string | null;
   proposedEndDate?: string | null;

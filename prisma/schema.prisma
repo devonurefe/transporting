@@ -162,6 +162,10 @@ model Order {
   weekendWork     String?
   invoiceNumber   String?   @unique
   paymentStatus   String    @default("awaiting")
+  // Door de klant gekozen betaalwijze bij het afrekenen: "link" (online iDEAL/Tikkie-
+  // betaallink) of "on_location" (betalen bij ophalen/levering). Null voor legacy-orders
+  // van vóór deze keuze — de admin-UI behandelt null als "link".
+  paymentMethod   String?
   paymentReminderSentAt DateTime?
   // Door de admin voorgestelde herplan-datums (WhatsApp-datumvoorstel). Beide null
   // = geen openstaand voorstel. Puur ter opvolging in het adminpaneel; de echte

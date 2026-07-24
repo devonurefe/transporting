@@ -29,6 +29,7 @@ interface BookingPriceSummaryProps {
     vat: number;
     total: number;
     deliveryType?: string;
+    trailerDays?: number;
     weekendDays?: number;
     sundayBlockTotal?: number;
     effectiveDailyRate?: number | null;
@@ -195,7 +196,12 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
     : t("priceSummaryDayRate");
 
   const transportFree = sums.transport === 0 && sums.driver === 0;
-  const transportName = sums.deliveryType === "trailer_rental" ? t("priceSummaryTrailerOnLocation")
+  // Trailer is billed per customer-chosen day count (not the rental period) —
+  // surface that count the same way the Rijplaten add-on shows "(6 stuks)".
+  const trailerDaysSuffix = sums.trailerDays
+    ? ` (${sums.trailerDays} ${sums.trailerDays === 1 ? "dag" : "dagen"})`
+    : "";
+  const transportName = sums.deliveryType === "trailer_rental" ? `${t("priceSummaryTrailerOnLocation")}${trailerDaysSuffix}`
     : sums.deliveryType === "delivery_by_us" ? t("priceSummaryDelivery")
     : t("priceSummaryPickup");
   const transportValue = transportFree ? t("priceSummaryPickupFree") : euro(sums.transport + sums.driver);
@@ -408,7 +414,7 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
             <div className="space-y-2.5">
               {sums.transport > 0 || sums.driver > 0 ? (
                 <Row
-                  label={sums.deliveryType === "trailer_rental" ? t("priceSummaryTrailer")
+                  label={sums.deliveryType === "trailer_rental" ? `${t("priceSummaryTrailer")}${trailerDaysSuffix}`
                     : t("priceSummaryDelivery")}
                   value={euro(sums.transport + sums.driver)}
                 />

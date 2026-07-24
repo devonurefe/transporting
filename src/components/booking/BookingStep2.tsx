@@ -46,7 +46,7 @@ interface BookingStep2Props {
   sums?: {
     days: number; rawSubtotal: number; subtotal: number; discountAmount: number; discountLabel: string;
     transport: number; driver: number; addonCost: number; addonDetails: { id: string; name: string; price: number }[];
-    vat: number; total: number; deliveryType?: string;
+    vat: number; total: number; deliveryType?: string; trailerDays?: number;
     weekendDays?: number; sundayBlockTotal?: number; effectiveDailyRate?: number | null;
     tierLabel?: string | null; isFlatRate?: boolean;
     weeklyBreakdown?: { weeks: number; pricePerWeek: number; remainder: number; dailyRate: number; remainderCost?: number } | null;

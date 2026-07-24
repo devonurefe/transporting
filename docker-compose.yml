@@ -42,6 +42,7 @@ services:
       - APP_URL=${APP_URL:-https://huurgo.nl}
       - REMINDER_SECRET=${REMINDER_SECRET}
       - CALENDAR_FEED_TOKEN=${CALENDAR_FEED_TOKEN}
+      - MOLLIE_API_KEY=${MOLLIE_API_KEY}
     volumes:
       # The app container runs as the non-root "node" user (uid 1000). Run
       # `chown -R 1000:1000 uploads` on the host once before first start,

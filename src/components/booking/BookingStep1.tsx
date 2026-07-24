@@ -635,11 +635,10 @@ export default function BookingStep1({
                 ? "bg-slate-50 border-slate-400 shadow-sm"
                 : "bg-white border-slate-200 hover:border-slate-300 shadow-sm"
             } ${
-              // Expanded "Meer info" text used to just push this single grid column
-              // taller and taller while an unused column of blank space sat next to
-              // it (the grid is md:grid-cols-3 but often only 2 addons render) —
-              // span the free width instead so the text reflows wider and shorter.
-              selectedAddons.includes("rijplaten") && rijplatenInfoOpen ? "md:col-span-2" : ""
+              // The grid is md:grid-cols-3 but often only the safety + rijplaten
+              // cards render, leaving an unused third column — give rijplaten that
+              // free width on desktop (mobile stays grid-cols-1, unaffected).
+              "md:col-span-2"
             }`}
           >
             <div>

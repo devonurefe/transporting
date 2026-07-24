@@ -168,7 +168,7 @@ export default function AdminRentalTimeline({ adminLanguage }: AdminRentalTimeli
         <div>
           <h2 className="text-lg font-extrabold text-slate-900 flex items-center gap-2">
             <CalendarRange className="h-5 w-5 text-indigo-600" />
-            {al("Verhuurkalender", "Rental calendar", "Kiralama Takvimi")}
+            {al("Bezettingskalender", "Occupancy Calendar", "Doluluk Takvimi")}
           </h2>
           <p className="text-xs text-slate-500 mt-0.5">
             {al(

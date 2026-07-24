@@ -151,8 +151,12 @@ export default function AdminSection({
     { id: "orders", label: tAdmin("adminTabOrders"), icon: Truck, count: orders.length },
     { id: "machines", label: tAdmin("adminTabMachines"), icon: Layers, count: machines.length },
     { id: "calendar", label: tAdmin("adminTabCalendar"), icon: Calendar, count: blockedDates.length },
-    { id: "planning", label: al("Planning", "Planning", "Planlama"), icon: CalendarDays },
-    { id: "timeline", label: al("Verhuurkalender", "Rental calendar", "Kiralama Takvimi"), icon: CalendarRange },
+    // De drie datum-panelen heetten alle drie iets met "kalender/planning", terwijl
+    // ze verschillende dingen doen: adminTabCalendar = datums blokkeren,
+    // planning = wat vertrekt/keert terug vandaag, timeline = bezetting per machine
+    // over tijd. Namen zeggen nu wát het paneel doet i.p.v. dat het "een kalender" is.
+    { id: "planning", label: al("Dagplanning", "Daily Planning", "Günlük Sevkiyat"), icon: CalendarDays },
+    { id: "timeline", label: al("Bezettingskalender", "Occupancy Calendar", "Doluluk Takvimi"), icon: CalendarRange },
     { id: "customers", label: al("Klanten", "Customers", "Müşteriler"), icon: Users },
   ];
   const advancedTabs: { id: AdminSubTab; label: string; icon: typeof Settings; count?: number }[] = [
@@ -454,7 +458,7 @@ export default function AdminSection({
                         >
                           <div className="flex items-center space-x-2.5">
                             <Settings className="h-4.5 w-4.5 text-amber-500/80" />
-                            <span>Geavanceerd</span>
+                            <span>{al("Geavanceerd", "Advanced", "Gelişmiş")}</span>
                           </div>
                           <span className="text-[10px] text-slate-500">{showAdvancedSubmenu ? "▼" : "▶"}</span>
                         </button>
@@ -540,7 +544,7 @@ export default function AdminSection({
               >
                 <div className="flex items-center space-x-2.5">
                   <Settings className="h-4.5 w-4.5 text-amber-500/80" />
-                  <span>Geavanceerd</span>
+                  <span>{al("Geavanceerd", "Advanced", "Gelişmiş")}</span>
                 </div>
                 <span className="text-[10px] text-slate-400 ml-1">{showAdvancedSubmenu ? "▼" : "▶"}</span>
               </button>

@@ -200,10 +200,19 @@ const dictionary: TranslationDictionary = {
   adminTabDashboard: { nl: "Dashboard", en: "Dashboard", tr: "Panel" },
   adminTabOrders: { nl: "Huurcontracten", en: "Rental Contracts", tr: "Sözleşmeler" },
   adminTabMachines: { nl: "Machine Beheer", en: "Manage Machines", tr: "Makine Yönetimi" },
-  adminTabCalendar: { nl: "Kalender & Datums", en: "Calendar & Dates", tr: "Takvim & Planlama" },
+  // Dit paneel blokkeert/deblokkeert datums per machine (onderhoud, sluitingen).
+  // Heette eerder "Kalender & Datums" / TR "Takvim & Planlama" — die TR-vertaling
+  // botste met het losse tabblad "Planlama" (AdminPlanning) en met "Kiralama
+  // Takvimi" (AdminRentalTimeline), waardoor drie verschillende panelen alle drie
+  // "takvim/planlama" heetten. Naam nu naar wat het paneel écht doet.
+  adminTabCalendar: { nl: "Geblokkeerde Dagen", en: "Blocked Days", tr: "Bloke Günler" },
   adminTabAdd: { nl: "Machine Toevoegen", en: "Add Machine", tr: "Makine Ekle" },
   adminTabCustomizer: { nl: "Beheer Storefront", en: "Manage Storefront", tr: "Mağaza Ayarları" },
-  adminTabLogs: { nl: "Bezoekers & Activiteit", en: "Visitors & Activity", tr: "Ziyaretçi & Aktivite" },
+  // AdminLogs toont de echte audit trail (GET /api/admin/audit-logs): welke
+  // beheerder wat wijzigde. Het label "Bezoekers & Activiteit" stamt nog uit de
+  // tijd dat dit paneel een client-side demo-bezoekersfeed was en suggereerde
+  // ten onrechte website-analytics.
+  adminTabLogs: { nl: "Auditlog", en: "Audit Log", tr: "Denetim Kaydı" },
   cookieText: {
     nl: "Wij gebruiken functionele cookies en — met uw toestemming — analytische cookies om de site te verbeteren.",
     en: "We use functional cookies and — with your consent — analytics cookies to improve the site.",

@@ -106,20 +106,27 @@ export function CardBrandWatermark({ size = "sm" }: { size?: "xs" | "sm" | "lg" 
  * was typed. Note: only used on prose without domains/emails (huurgo.nl etc.).
  * A missing space before the match (e.g. an admin-typed "metHuurGo") is repaired
  * so the wordmark never visually fuses with the preceding word.
+ *
+ * Renders into a single wrapping <span>, not a bare Fragment: callers that sit
+ * inside a flex container (e.g. the Coffee Corner CTA button, `inline-flex`)
+ * would otherwise have their text run and the wordmark <span> split into two
+ * separate anonymous flex items, and flex silently trims the trailing space
+ * at the end of the text-only item — the exact "methuurgo." bug this once
+ * caused. A single wrapper keeps it all inside one normal inline flow.
  */
 export function BrandedText({ text, dark = false }: { text: string; dark?: boolean }) {
   const normalized = text.replace(/(\S)(huur\s?go)/gi, "$1 $2");
   const parts = normalized.split(/huur\s?go/gi);
   if (parts.length === 1) return <>{text}</>;
   return (
-    <>
+    <span>
       {parts.map((part, i) => (
         <React.Fragment key={i}>
           {part}
           {i < parts.length - 1 && <HuurGoText dark={dark} />}
         </React.Fragment>
       ))}
-    </>
+    </span>
   );
 }
 

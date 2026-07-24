@@ -113,6 +113,7 @@ export default function BookingSuccess({
       : []
     ),
     ...(successOrder.deliveryAddress ? [{ label: t("specAddress"), value: successOrder.deliveryAddress }] : []),
+    { label: "Betaalwijze", value: successOrder.paymentMethod === "on_location" ? "Op locatie (bij ophalen/levering)" : "Via betaallink" },
     { label: t("specTotal"), value: euro(combinedTotal), price: true },
   ];
 

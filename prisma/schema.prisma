@@ -162,6 +162,18 @@ model Order {
   weekendWork     String?
   invoiceNumber   String?   @unique
   paymentStatus   String    @default("awaiting")
+  // Door de klant gekozen betaalwijze bij het afrekenen: "link" (online iDEAL/Tikkie-
+  // betaallink) of "on_location" (betalen bij ophalen/levering). Null voor legacy-orders
+  // van vóór deze keuze — de admin-UI behandelt null als "link".
+  paymentMethod   String?
+  // Mollie payment-link ID (pl_...), aangemaakt vlak na het plaatsen van een "link"-order.
+  // Puur informatief/dedup (voorkomt een tweede link aanmaken bij een retry) — de webhook
+  // matcht een binnengekomen betaling NIET op dit veld maar op payment.description
+  // (= deze Order.id), omdat Mollie's Payment Links API geen metadata-veld ondersteunt.
+  molliePaymentId   String?
+  // De echte, klantklare betaal-URL die Mollie teruggeeft — vervangt de handmatige
+  // "[PLAK HIER DE BETAALLINK]" placeholder in het WhatsApp-sjabloon van de admin.
+  mollieCheckoutUrl String?
   paymentReminderSentAt DateTime?
   // Door de admin voorgestelde herplan-datums (WhatsApp-datumvoorstel). Beide null
   // = geen openstaand voorstel. Puur ter opvolging in het adminpaneel; de echte

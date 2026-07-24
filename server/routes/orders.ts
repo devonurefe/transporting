@@ -6,6 +6,7 @@ import { prisma } from "../../prisma/client.js";
 import { AuthenticatedRequest, requireAdmin, requireAuth } from "../middleware/auth.js";
 import { publicReadLimiter } from "../middleware/publicGuard.js";
 import { emailService } from "../services/emailService.js";
+import { mollieService } from "../services/mollieService.js";
 import { audit } from "../utils/audit.js";
 import { resolveFees } from "../utils/fees.js";
 import { computeOrderSubtotal, computeTransport, computeAddonsTotal, computeVatAndTotal, buildStoredAddons, computeRentalDays, clampTrailerDays, CampaignRuleLike } from "../utils/orderPricing.js";
@@ -409,6 +410,13 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
     return res.status(400).json({ error: "Ongeldig bezorgmoment" });
   }
 
+  // paymentMethod enum validation — "link" (online betaallink) of "on_location"
+  // (betalen bij ophalen/levering). Optioneel; leeg wordt als "link" opgeslagen.
+  const VALID_PAYMENT_METHODS = ["link", "on_location"];
+  if (orderData.paymentMethod && !VALID_PAYMENT_METHODS.includes(String(orderData.paymentMethod))) {
+    return res.status(400).json({ error: "Ongeldige betaalwijze" });
+  }
+
   // customerPhone format validation (optional field, but if provided must look like a phone number)
   if (orderData.customerPhone) {
     const phoneClean = String(orderData.customerPhone).replace(/[\s\-().+]/g, "");
@@ -547,7 +555,10 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
           addons: JSON.stringify(buildStoredAddons(machine, rentalDays, orderData.addons, fees)),
           weekendWork: null, // legacy field — weekend work toggle removed; weekend handling is now automatic (package + Sunday block)
           invoiceNumber,
-          paymentStatus: "awaiting"
+          paymentStatus: "awaiting",
+          // Klant-gekozen betaalwijze; standaard "link" (online betaallink) als de
+          // client niets meestuurt, zodat legacy-gedrag behouden blijft.
+          paymentMethod: orderData.paymentMethod === "on_location" ? "on_location" : "link"
         }
       });
     }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }));
@@ -571,6 +582,22 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
     emailService.sendAdminAlert(emailData).catch(err => {
       console.error("[EMAIL] Admin alert permanently failed for order", newOrder.id, ":", err);
     });
+
+    // Generate a real Mollie payment link asynchronously for "link"-orders — never
+    // blocks the response. On any failure (missing MOLLIE_API_KEY, network error)
+    // mollieService returns null and the admin's "Betaallink sturen" button simply
+    // keeps today's manual placeholder, unchanged behaviour.
+    if (newOrder.paymentMethod === "link") {
+      mollieService.createPaymentLink(newOrder).then(result => {
+        if (!result) return;
+        return prisma.order.update({
+          where: { id: newOrder.id },
+          data: { molliePaymentId: result.id, mollieCheckoutUrl: result.checkoutUrl }
+        });
+      }).catch(err => {
+        console.error("[Mollie] Betaallink verwerken mislukt voor order", newOrder.id, ":", err);
+      });
+    }
 
     res.status(201).json({
       ...newOrder,
@@ -1175,7 +1202,7 @@ ordersRouter.get("/export", requireAdmin as any, async (req: AuthenticatedReques
       "Order ID","Naam","E-mail","Telefoon","Profiel",
       "Machine","Dagtarief","Startdatum","Einddatum","Dagen",
       "Levertype","Adres","Subtotaal","Transport","Chauffeur","BTW","Totaal",
-      "Status","Betaalstatus","Aangemaakt op"
+      "Status","Betaalstatus","Betaalwijze","Aangemaakt op"
     ];
 
     const rows = orders.map(o => [
@@ -1198,6 +1225,7 @@ ordersRouter.get("/export", requireAdmin as any, async (req: AuthenticatedReques
       o.totalAmount.toFixed(2),
       o.status,
       o.paymentStatus ?? "",
+      (o as any).paymentMethod === "on_location" ? "Op locatie" : (o as any).paymentMethod === "link" ? "Betaallink" : "",
       o.createdAt.toISOString().split("T")[0]
     ].map(escape).join(","));
 

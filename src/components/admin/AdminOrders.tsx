@@ -237,24 +237,30 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
 
   // Kant-en-klaar sjabloon om de klant een betaallink te sturen. De admin plakt de
   // daadwerkelijke iDEAL/Tikkie-link op de gemarkeerde plek voordat het bericht wordt
-  // verzonden. De 48-uurstermijn komt overeen met de "stale pending"-check hierboven,
-  // zodat de belofte in het bericht klopt met wat er gebeurt als er niet op tijd wordt
-  // betaald. Puur een WhatsApp-bericht — er wordt geen status of e-mail gewijzigd.
+  // verzonden (of Mollie heeft 'm al automatisch ingevuld). De 48-uurstermijn komt
+  // overeen met de "stale pending"-check hierboven, zodat de belofte in het bericht
+  // klopt met wat er gebeurt als er niet op tijd wordt betaald.
+  // Bewust GEEN "is bevestigd/goedgekeurd" taal hier — de order is op dit punt nog
+  // "In behandeling", niet goedgekeurd. Die belofte hoort bij de aparte "Goedgekeurd"
+  // WhatsApp (openWhatsAppToCustomer hierboven), die pas verstuurd wordt zodra de admin
+  // écht op "Onayla" drukt. Vóór deze fix beloofden beide berichten een bevestiging,
+  // wat voor de klant als tegenstrijdig/dubbelop overkwam (zie ook 2026-07 audit).
+  // Puur een WhatsApp-bericht — er wordt geen status of e-mail gewijzigd.
   const sendPaymentLink = (order: any) => {
     if (!order?.customerPhone) return;
     const machine = getBaseName(order.machineName);
     const lines = [
-      `Beste ${order.customerName}, ✅`,
+      `Beste ${order.customerName},`,
       "",
-      `Uw reservering *${order.id}* voor de *${machine}* is bevestigd!`,
+      `Bedankt voor uw aanvraag *${order.id}* voor de *${machine}*!`,
       "",
-      "U kunt de betaling voldoen via onderstaande link:",
+      "Om uw reservering te bevestigen, rondt u de betaling af via onderstaande link:",
       // Echte Mollie-link zodra beschikbaar (meestal binnen enkele seconden na het
       // plaatsen van de bestelling); anders de placeholder die de admin zelf invult —
       // dekt legacy orders en het geval dat MOLLIE_API_KEY niet ingesteld is.
       order.mollieCheckoutUrl || "[PLAK HIER DE BETAALLINK]",
       "",
-      `Let op: als de betaling niet binnen ${STALE_PENDING_HOURS} uur is voldaan, vervalt de reservering automatisch.`,
+      `Let op: als de betaling niet binnen ${STALE_PENDING_HOURS} uur is voldaan, vervalt de aanvraag automatisch.`,
       "",
       "Heeft u een andere betaalwens? Laat het ons gerust weten.",
       "",

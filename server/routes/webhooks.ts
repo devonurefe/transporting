@@ -21,7 +21,9 @@ const mollieBodyParser = urlencoded({ extended: false });
 // status is re-fetched from Mollie's own API before anything is persisted.
 webhooksRouter.post("/mollie", mollieBodyParser, async (req: AuthenticatedRequest, res) => {
   const paymentId = req.body?.id;
+  console.log("[Mollie] Webhook ontvangen, payment id:", paymentId);
   if (!paymentId || typeof paymentId !== "string") {
+    console.warn("[Mollie] Webhook zonder geldig 'id' veld in body:", req.body);
     return res.sendStatus(400);
   }
 
@@ -30,8 +32,10 @@ webhooksRouter.post("/mollie", mollieBodyParser, async (req: AuthenticatedReques
     if (!payment) {
       // Unknown to Mollie (or MOLLIE_API_KEY unset) — nothing to do, but don't
       // make Mollie retry forever on something that will never resolve.
+      console.warn("[Mollie] Payment", paymentId, "kon niet worden opgehaald bij Mollie — genegeerd.");
       return res.sendStatus(200);
     }
+    console.log("[Mollie] Payment", paymentId, "status:", payment.status, "description:", payment.description);
 
     if (payment.status === "paid") {
       // Match back to our Order via the description we set at link-creation time
@@ -49,6 +53,11 @@ webhooksRouter.post("/mollie", mollieBodyParser, async (req: AuthenticatedReques
           meta: { to: "paid", source: "mollie_webhook" },
           actor: { role: "system", email: "mollie-webhook" }
         });
+        console.log("[Mollie] Order", order.id, "gemarkeerd als betaald via webhook.");
+      } else {
+        // Either the order is already paid (idempotent retry — fine) or no order
+        // has this exact description — worth knowing which, so log the raw value.
+        console.warn("[Mollie] Geen (onbetaalde) order gevonden met id ===", JSON.stringify(payment.description));
       }
     }
 

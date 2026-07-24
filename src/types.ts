@@ -94,6 +94,11 @@ export interface Order {
   // Tikkie-betaallink (admin stuurt een link), "on_location" = betalen bij ophalen/
   // levering. Null/leeg voor legacy-orders van vóór deze keuze (behandeld als "link").
   paymentMethod?: "link" | "on_location";
+  // Mollie payment-link ID + the real checkout URL, populated asynchronously shortly
+  // after order creation for "link" orders (null while pending, on "on_location"
+  // orders, or if MOLLIE_API_KEY is unset — admin UI falls back to a manual placeholder).
+  molliePaymentId?: string | null;
+  mollieCheckoutUrl?: string | null;
   // Admin-voorgestelde herplan-datums (ISO). Beide leeg = geen openstaand voorstel.
   proposedStartDate?: string | null;
   proposedEndDate?: string | null;

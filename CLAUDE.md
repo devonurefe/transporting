@@ -73,6 +73,7 @@ Single-package full-stack monorepo — one `package.json` for both React fronten
 - **Auth** (`server/middleware/auth.ts`): JWT validation, `requireAdmin` guard.
 - **Rate limits**: 300 req/min global on `/api/`; 10 attempts/15 min on auth endpoints.
 - **Email** (`server/services/emailService.ts`): Resend with `sendWithRetry(payload, retries=3)` exponential backoff. Falls back to mock/log if `RESEND_API_KEY` absent. Flows: order confirmation, status update, verification, daily reminder (cron 07:00), password reset. No deposit/borg is charged anywhere in the app — there is no deposit refund flow.
+- **Payments** (`server/services/mollieService.ts`): for orders with `paymentMethod: "link"`, a real single-use Mollie payment link is generated asynchronously right after order creation (`server/routes/orders.ts`, fire-and-forget — never blocks the response) and stored on `Order.mollieCheckoutUrl`/`molliePaymentId`. `POST /api/webhooks/mollie` (`server/routes/webhooks.ts`) receives Mollie's status-change callback, **re-fetches the payment from Mollie's API** (never trusts the webhook body), and matches it back to our `Order` via `payment.description === Order.id` (Mollie's Payment Links API has no metadata field). On `"paid"`, `Order.paymentStatus` flips automatically — the existing "Goedkeuren" gate (`paymentStatus !== "paid"` blocks approval) needs no change, it already reads that field. Falls back to today's fully-manual flow (placeholder link, manual "Betaling Ontvangen ✓" click) whenever `MOLLIE_API_KEY` is unset. `paymentMethod: "on_location"` orders never call Mollie at all.
 - **Security** (`server.ts`): Helmet with HSTS (prod), frameguard deny, noSniff, CSP, referrer policy. Serializable transactions on order creation (prevents double-booking race condition). Crypto order IDs: `HWH-${crypto.randomBytes(4).toString("hex").toUpperCase()}`.
 
 ### Database (`prisma/`)
@@ -372,7 +373,12 @@ protect these invariants:
 4. `BookingStep3.tsx` — customer details, address lookup, order submit
 5. `BookingSuccess.tsx` — order confirmed, WhatsApp button to request iDEAL link
 
-Payment flow: customer sends WhatsApp → admin sends Tikkie/iDEAL link → payment confirmed → admin sets status "Goedgekeurd".
+Payment flow: customer picks "Betaal via link" or "Betaal op locatie" in step 2
+(`paymentMethod` on the order). For "link" orders a real Mollie payment link is generated
+automatically; the admin's "Betaallink sturen" WhatsApp button sends it (or falls back to a
+manual placeholder if `MOLLIE_API_KEY` is unset) → Mollie's webhook confirms payment
+automatically (`paymentStatus: "paid"`) → admin sets status "Goedgekeurd". "On location"
+orders skip the link step entirely — the customer pays at pickup/delivery.
 
 Transport costs: delivery €150 flat, trailer rental €25/day, self pickup free —
 these are the **defaults**; admin-editable via AdminContent → Tarieven (see
@@ -415,6 +421,7 @@ All builders in `src/utils/whatsapp.ts`. Sign-off emoji: **🦾** (never 🙏).
 | `APP_URL` | Production base URL (used in email links) |
 | `REMINDER_SECRET` | Secret for cron reminder endpoint |
 | `CALENDAR_FEED_TOKEN` | Secret gating the read-only iCal feed at `/api/calendar/<token>/huurgo.ics` (blocked dates + bookings, for Google/iPhone calendar subscription). Empty = feature disabled. |
+| `MOLLIE_API_KEY` | Mollie API key (`test_...`/`live_...`) for automatic payment links (`server/services/mollieService.ts`). Empty = falls back to the manual `[PLAK HIER DE BETAALLINK]` placeholder in the admin WhatsApp template. |
 
 `GEMINI_API_KEY` is no longer used — Gemini was fully removed.
 

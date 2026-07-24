@@ -248,7 +248,10 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
       `Uw reservering *${order.id}* voor de *${machine}* is bevestigd!`,
       "",
       "U kunt de betaling voldoen via onderstaande link:",
-      "[PLAK HIER DE BETAALLINK]",
+      // Echte Mollie-link zodra beschikbaar (meestal binnen enkele seconden na het
+      // plaatsen van de bestelling); anders de placeholder die de admin zelf invult —
+      // dekt legacy orders en het geval dat MOLLIE_API_KEY niet ingesteld is.
+      order.mollieCheckoutUrl || "[PLAK HIER DE BETAALLINK]",
       "",
       `Let op: als de betaling niet binnen ${STALE_PENDING_HOURS} uur is voldaan, vervalt de reservering automatisch.`,
       "",

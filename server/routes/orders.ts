@@ -6,6 +6,7 @@ import { prisma } from "../../prisma/client.js";
 import { AuthenticatedRequest, requireAdmin, requireAuth } from "../middleware/auth.js";
 import { publicReadLimiter } from "../middleware/publicGuard.js";
 import { emailService } from "../services/emailService.js";
+import { mollieService } from "../services/mollieService.js";
 import { audit } from "../utils/audit.js";
 import { resolveFees } from "../utils/fees.js";
 import { computeOrderSubtotal, computeTransport, computeAddonsTotal, computeVatAndTotal, buildStoredAddons, computeRentalDays, clampTrailerDays, CampaignRuleLike } from "../utils/orderPricing.js";
@@ -580,6 +581,22 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
     emailService.sendAdminAlert(emailData).catch(err => {
       console.error("[EMAIL] Admin alert permanently failed for order", newOrder.id, ":", err);
     });
+
+    // Generate a real Mollie payment link asynchronously for "link"-orders — never
+    // blocks the response. On any failure (missing MOLLIE_API_KEY, network error)
+    // mollieService returns null and the admin's "Betaallink sturen" button simply
+    // keeps today's manual placeholder, unchanged behaviour.
+    if (newOrder.paymentMethod === "link") {
+      mollieService.createPaymentLink(newOrder).then(result => {
+        if (!result) return;
+        return prisma.order.update({
+          where: { id: newOrder.id },
+          data: { molliePaymentId: result.id, mollieCheckoutUrl: result.checkoutUrl }
+        });
+      }).catch(err => {
+        console.error("[Mollie] Betaallink verwerken mislukt voor order", newOrder.id, ":", err);
+      });
+    }
 
     res.status(201).json({
       ...newOrder,

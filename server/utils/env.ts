@@ -19,7 +19,8 @@ const ENV_CHECKS: EnvCheck[] = [
   { key: "ADMIN_EMAIL", required: false, description: "Admin notification email" },
   { key: "PORT", required: false, defaultValue: "3000", description: "Server listening port" },
   { key: "REMINDER_SECRET", required: false, description: "Secret for the cron reminder endpoint (disabled if unset)" },
-  { key: "CALENDAR_FEED_TOKEN", required: false, description: "Secret gating the read-only iCal feed (disabled if unset)" }
+  { key: "CALENDAR_FEED_TOKEN", required: false, description: "Secret gating the read-only iCal feed (disabled if unset)" },
+  { key: "MOLLIE_API_KEY", required: false, description: "Mollie API key (test_... or live_...) for automatic payment links — falls back to manual placeholder link if unset" }
 ];
 
 export function validateEnvironment(): void {

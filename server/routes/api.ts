@@ -10,6 +10,7 @@ import { calendarRouter } from "./calendar.js";
 import { blogPostsRouter } from "./blog.js";
 import { adminAuditRouter } from "./adminAudit.js";
 import { adminUsersRouter } from "./admins.js";
+import { webhooksRouter } from "./webhooks.js";
 import { prisma } from "../../prisma/client.js";
 import { requireAdmin, AuthenticatedRequest } from "../middleware/auth.js";
 import { emailService, getEmailDiagnostics } from "../services/emailService.js";
@@ -99,6 +100,7 @@ apiRouter.use("/calendar", calendarRouter);
 apiRouter.use("/blog-posts", blogPostsRouter);
 apiRouter.use("/admin/audit-logs", adminAuditRouter);
 apiRouter.use("/admin/users", adminUsersRouter);
+apiRouter.use("/webhooks", webhooksRouter);
 apiRouter.use("/", siteConfigRouter);
 
 import path from "path";

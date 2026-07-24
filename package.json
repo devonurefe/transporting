@@ -12,6 +12,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@mollie/api-client": "^4.6.0",
     "@prisma/client": "^6.19.3",
     "@tailwindcss/vite": "^4.1.14",
     "@types/qrcode": "^1.5.6",

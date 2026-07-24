@@ -175,11 +175,20 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
   };
   const isStalePending = (o: any): boolean => {
     if (o.status !== "In behandeling" || o.paymentStatus === "paid") return false;
+    // Een "op locatie"-order is per definitie nog niet betaald tot ophalen/levering;
+    // die als "onbetaald blijft hangen" markeren is ruis, geen signaal.
+    if (o.paymentMethod === "on_location") return false;
     const created = new Date(o.createdAt).getTime();
     if (isNaN(created)) return false;
     return Date.now() - created > STALE_PENDING_HOURS * 60 * 60 * 1000;
   };
   const staleCount = orders.filter(isStalePending).length;
+
+  // Spiegelt de server-side goedkeurgate (PUT /:id/status): vooruitbetaling is
+  // verplicht, behalve bij "betalen op locatie" — die klant betaalt pas bij
+  // ophalen/levering, dus daar is "nog niet betaald" geen blokkade.
+  const canApprove = (o: any): boolean =>
+    o?.paymentStatus === "paid" || o?.paymentMethod === "on_location";
 
   const formatPhoneForWA = (phone: string): string => {
     const digits = phone.replace(/\D/g, "");
@@ -216,13 +225,28 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
   };
 
   // Kant-en-klaar sjabloon om een klant te herinneren aan een nog openstaande
-  // betaling — gebruikt dezelfde 48-uurstermijn die de "stale pending"-check
-  // hierboven al hanteert, zodat de belofte in het bericht klopt met wat er
-  // daadwerkelijk gebeurt als er niet op tijd wordt betaald.
+  // betaling. Twee varianten, want het bericht moet kloppen met de gekozen
+  // betaalwijze: bij "op locatie" is er nooit een betaallink verstuurd én wordt
+  // de order niet automatisch geannuleerd (zie de cron in server/routes/orders.ts),
+  // dus dan zou de link-tekst naar iets verwijzen dat niet bestaat en zou de
+  // 48-uursdreiging een loze belofte zijn. De link-variant gebruikt wél dezelfde
+  // 48-uurstermijn die de "stale pending"-check en de auto-annulering hanteren.
   const sendPaymentReminder = (order: any) => {
     if (!order?.customerPhone) return;
     const machine = getBaseName(order.machineName);
-    const lines = [
+    const onLocation = order.paymentMethod === "on_location";
+    const lines = onLocation ? [
+      "Vriendelijke herinnering ⏰",
+      "",
+      `Voor uw boeking *${order.id}* (*${machine}*) staat de betaling nog open.`,
+      "",
+      "U kunt dit bedrag voldoen op locatie bij ophalen of levering (pin of contant).",
+      "",
+      "Heeft u een vraag of wilt u toch liever vooraf betalen? Neem gerust contact met ons op.",
+      "",
+      "Met vriendelijke groet,",
+      "*huurgo*"
+    ] : [
       "Vriendelijke herinnering ⏰",
       "",
       `We hebben nog geen betaling ontvangen voor uw boeking *${order.id}* (*${machine}*).`,
@@ -432,8 +456,8 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
   };
 
   const handleUpdateStatus = async (orderId: string, nextStatus: OrderStatus, logMsg: string, order?: any) => {
-    // Pre-validate: "Goedkeuren" requires payment marked first
-    if (nextStatus === "Goedgekeurd" && order?.paymentStatus !== "paid") {
+    // Pre-validate: "Goedkeuren" requires payment marked first (behalve op locatie)
+    if (nextStatus === "Goedgekeurd" && !canApprove(order)) {
       setStatusError(t(
         "Markeer eerst de betaling als ontvangen (knop 'Betaling Ontvangen ✓') voordat u de bestelling kunt goedkeuren.",
         "Mark payment as received ('Payment Received ✓') before approving the order.",
@@ -817,8 +841,8 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                     <button
                       onClick={() => handleUpdateStatus(o.id, "Goedgekeurd", `Bestelling goedgekeurd: ${o.id} voor ${o.customerName}.`, o)}
                       disabled={isUpdatingStatus}
-                      title={o.paymentStatus !== "paid" ? t("Markeer eerst betaling als ontvangen", "Mark payment received first", "Önce ödemeyi alındı olarak işaretle") : undefined}
-                      className={`flex-1 text-[11px] font-black py-2 rounded-xl transition-colors border-none ${isUpdatingStatus ? "bg-slate-200 text-slate-400 cursor-not-allowed" : o.paymentStatus !== "paid" ? "bg-teal-200 text-teal-700 cursor-not-allowed opacity-60" : "bg-teal-500 hover:bg-teal-600 text-slate-950 cursor-pointer"}`}
+                      title={!canApprove(o) ? t("Markeer eerst betaling als ontvangen", "Mark payment received first", "Önce ödemeyi alındı olarak işaretle") : undefined}
+                      className={`flex-1 text-[11px] font-black py-2 rounded-xl transition-colors border-none ${isUpdatingStatus ? "bg-slate-200 text-slate-400 cursor-not-allowed" : !canApprove(o) ? "bg-teal-200 text-teal-700 cursor-not-allowed opacity-60" : "bg-teal-500 hover:bg-teal-600 text-slate-950 cursor-pointer"}`}
                     >
                       {isUpdatingStatus ? "…" : t("Goedkeuren", "Approve", "Onayla")}
                     </button>
@@ -997,8 +1021,8 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                                   o
                                 )}
                                 disabled={isUpdatingStatus}
-                                title={o.paymentStatus !== "paid" ? t("Markeer eerst betaling als ontvangen", "Mark payment received first", "Önce ödemeyi alındı olarak işaretle") : undefined}
-                                className={`text-[10px] font-black px-3.5 py-1.5 rounded-xl leading-none transition-all border-none shadow-md ${isUpdatingStatus ? "bg-slate-200 text-slate-400 cursor-not-allowed" : o.paymentStatus !== "paid" ? "bg-teal-200 text-teal-700 cursor-not-allowed opacity-60" : "bg-teal-500 hover:bg-teal-600 text-slate-950 cursor-pointer hover:scale-[1.02] active:scale-95"}`}
+                                title={!canApprove(o) ? t("Markeer eerst betaling als ontvangen", "Mark payment received first", "Önce ödemeyi alındı olarak işaretle") : undefined}
+                                className={`text-[10px] font-black px-3.5 py-1.5 rounded-xl leading-none transition-all border-none shadow-md ${isUpdatingStatus ? "bg-slate-200 text-slate-400 cursor-not-allowed" : !canApprove(o) ? "bg-teal-200 text-teal-700 cursor-not-allowed opacity-60" : "bg-teal-500 hover:bg-teal-600 text-slate-950 cursor-pointer hover:scale-[1.02] active:scale-95"}`}
                               >
                                 {isUpdatingStatus ? "…" : t("Goedkeuren", "Approve", "Onayla")}
                               </button>
@@ -1090,7 +1114,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
             <button
               type="button"
               onClick={async () => {
-                const targets = displayOrders.filter(o => selectedIds.has(o.id) && o.status === "In behandeling" && o.paymentStatus === "paid");
+                const targets = displayOrders.filter(o => selectedIds.has(o.id) && o.status === "In behandeling" && canApprove(o));
                 for (const o of targets) {
                   await handleUpdateStatus(o.id, "Goedgekeurd", `Bulk goedgekeurd: ${o.id} voor ${o.customerName}.`, o);
                 }
@@ -1098,7 +1122,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
               }}
               className="px-3 py-1.5 bg-teal-500 hover:bg-teal-400 text-slate-950 rounded-lg text-[11px] font-black transition-colors cursor-pointer border-none shrink-0"
             >
-              Goedkeuren ({displayOrders.filter(o => selectedIds.has(o.id) && o.status === "In behandeling" && o.paymentStatus === "paid").length})
+              Goedkeuren ({displayOrders.filter(o => selectedIds.has(o.id) && o.status === "In behandeling" && canApprove(o)).length})
             </button>
             <button
               type="button"

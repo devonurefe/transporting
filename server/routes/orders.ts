@@ -1375,8 +1375,12 @@ ordersRouter.put("/:id/status", requireAdmin as any, async (req: AuthenticatedRe
       });
     }
 
-    // Require payment received before approving
-    if (status === "Goedgekeurd" && order.paymentStatus !== "paid") {
+    // Vooruitbetaling verplicht vóór goedkeuring — behalve bij "betalen op
+    // locatie": daar betaalt de klant per definitie pas bij ophalen/levering, dus
+    // die order kan nooit betaald zijn op het moment van goedkeuren. Zonder deze
+    // uitzondering moest de admin eerst "Betaling ontvangen" aanklikken voor geld
+    // dat nog niet binnen was, wat de omzetcijfers vervuilt.
+    if (status === "Goedgekeurd" && order.paymentStatus !== "paid" && order.paymentMethod !== "on_location") {
       return res.status(400).json({
         error: "Betaling moet eerst als ontvangen worden gemarkeerd voordat de bestelling kan worden goedgekeurd"
       });
@@ -1536,11 +1540,19 @@ ordersRouter.post("/send-reminders", async (req: AuthenticatedRequest, res: Resp
     // Auto-cancel stale orders: "In behandeling" + unpaid + startDate already passed.
     // These are bookings where the customer never paid and the rental window is gone —
     // keeping them blocks the calendar for no reason.
+    // "on_location" uitgesloten: die klant betaalt pas bij ophalen/levering, dus
+    // "nog niet betaald" is daar de normale toestand en geen reden tot annuleren.
+    // De null-tak is essentieel: legacy orders van vóór paymentMethod hebben NULL
+    // en tellen als "link". Prisma's `not` laat NULL-rijen buiten de match (empirisch
+    // geverifieerd), dus zonder die tak zouden juist die orders stilletjes uit de
+    // auto-annulering vallen.
+    const notOnLocation = [{ paymentMethod: null }, { paymentMethod: { not: "on_location" } }];
     const staleOrders = await prisma.order.findMany({
       where: {
         status: "In behandeling",
         paymentStatus: "awaiting",
-        startDate: { lt: todayStart }
+        startDate: { lt: todayStart },
+        OR: notOnLocation
       }
     });
 
@@ -1579,12 +1591,16 @@ ordersRouter.post("/send-reminders", async (req: AuthenticatedRequest, res: Resp
     // haven't already gotten one. Skipped entirely once paid or reminded --
     // never re-sent on every daily cron run.
     const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    // Ook hier "on_location" uitsluiten: een betaalherinnering sturen naar iemand
+    // die bewust "ik betaal op locatie" koos, is een onjuist bericht. Zelfde
+    // null-tak als hierboven zodat legacy orders wél een herinnering krijgen.
     const unpaidOrders = await prisma.order.findMany({
       where: {
         status: "In behandeling",
         paymentStatus: "awaiting",
         createdAt: { lte: dayAgo },
-        paymentReminderSentAt: null
+        paymentReminderSentAt: null,
+        OR: notOnLocation
       }
     });
 

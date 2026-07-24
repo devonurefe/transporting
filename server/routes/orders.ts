@@ -9,6 +9,7 @@ import { emailService } from "../services/emailService.js";
 import { audit } from "../utils/audit.js";
 import { resolveFees } from "../utils/fees.js";
 import { computeOrderSubtotal, computeTransport, computeAddonsTotal, computeVatAndTotal, buildStoredAddons, computeRentalDays, clampTrailerDays, CampaignRuleLike } from "../utils/orderPricing.js";
+import { buildUblInvoiceXml } from "../utils/ublInvoice.js";
 
 export const ordersRouter = Router();
 
@@ -1208,6 +1209,64 @@ ordersRouter.get("/export", requireAdmin as any, async (req: AuthenticatedReques
     res.send("﻿" + csv); // BOM for Excel UTF-8 detection
   } catch (error) {
     console.error("Error exporting orders:", error);
+    res.status(500).json({ error: "Export mislukt" });
+  }
+});
+
+// GET /api/orders/:id/export/ubl — single-order UBL 2.1 e-invoice XML, the
+// standard NL/EU e-factuur format most accounting packages (incl. Exact
+// Online) can import directly as a purchase invoice on the customer's side.
+// "Stage 1" Exact integration — no OAuth/API connection needed, see CLAUDE.md.
+ordersRouter.get("/:id/export/ubl", requireAdmin as any, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const order = await prisma.order.findUnique({ where: { id: req.params.id } });
+    if (!order) return res.status(404).json({ error: "Bestelling niet gevonden" });
+
+    const cfg = await prisma.siteConfig.findUnique({
+      where: { id: "default" },
+      select: { companyLegalName: true, companyAddress: true, kvkNumber: true, btwNumber: true, contactEmail: true, contactPhone: true }
+    });
+
+    const company = {
+      legalName: cfg?.companyLegalName || "MB Hoogwerkers B.V.",
+      address: cfg?.companyAddress || "Produktieweg 20, 2382 PB Zoeterwoude",
+      kvkNumber: cfg?.kvkNumber || "67438237",
+      btwNumber: cfg?.btwNumber || "NL856990656B01",
+      email: cfg?.contactEmail || "info@huurgo.nl",
+      phone: cfg?.contactPhone || "071 542 8114"
+    };
+
+    const xml = buildUblInvoiceXml(
+      {
+        id: order.id,
+        invoiceNumber: order.invoiceNumber,
+        customerName: order.customerName,
+        customerEmail: order.customerEmail,
+        customerPhone: order.customerPhone,
+        deliveryAddress: order.deliveryAddress,
+        poNumber: order.poNumber,
+        machineName: order.machineName,
+        machinePrice: order.machinePrice,
+        startDate: order.startDate,
+        endDate: order.endDate,
+        rentalDays: order.rentalDays,
+        subtotal: order.subtotal,
+        transportCost: order.transportCost,
+        driverCost: order.driverCost,
+        vatAmount: order.vatAmount,
+        totalAmount: order.totalAmount,
+        createdAt: order.createdAt,
+        addons: safeParseAddons(order.addons)
+      },
+      company
+    );
+
+    const safeName = (order.invoiceNumber || order.id).replace(/[^a-zA-Z0-9-_ ]/g, "").replace(/\s+/g, "-");
+    res.setHeader("Content-Type", "application/xml; charset=utf-8");
+    res.setHeader("Content-Disposition", `attachment; filename="${safeName}-ubl.xml"`);
+    res.send(xml);
+  } catch (error) {
+    console.error("Error exporting order to UBL:", error);
     res.status(500).json({ error: "Export mislukt" });
   }
 });

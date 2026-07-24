@@ -104,9 +104,12 @@ export function CardBrandWatermark({ size = "sm" }: { size?: "xs" | "sm" | "lg" 
  * optional space ("HuurGo", "huurGo", "huurgo", "Huur Go"), so admin-editable
  * site config / translations render the logo wordmark regardless of how the brand
  * was typed. Note: only used on prose without domains/emails (huurgo.nl etc.).
+ * A missing space before the match (e.g. an admin-typed "metHuurGo") is repaired
+ * so the wordmark never visually fuses with the preceding word.
  */
 export function BrandedText({ text, dark = false }: { text: string; dark?: boolean }) {
-  const parts = text.split(/huur\s?go/gi);
+  const normalized = text.replace(/(\S)(huur\s?go)/gi, "$1 $2");
+  const parts = normalized.split(/huur\s?go/gi);
   if (parts.length === 1) return <>{text}</>;
   return (
     <>

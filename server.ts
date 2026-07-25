@@ -47,10 +47,15 @@ app.use(helmet({
       fontSrc: ["'self'"],
       imgSrc: ["'self'", "data:", "https:", "blob:"],
       connectSrc: ["'self'", "https:"],
-      // 'self' (not 'none') so the machine datasheet PDF viewer's <iframe> — which
-      // only ever points at our own /machine-datasheet/:id proxy — can load. Doesn't
-      // weaken clickjacking protection: that's frameguard (X-Frame-Options) below,
-      // which governs embedding *this* site in *other* pages, not the reverse.
+      // The datasheet viewer renders PDFs onto a canvas via pdf.js, whose worker
+      // Vite emits as a same-origin /assets bundle. Without this, the worker load
+      // falls back to script-src and pdf.js silently degrades to main-thread
+      // parsing (or fails outright on stricter browsers).
+      workerSrc: ["'self'", "blob:"],
+      // 'self' (not 'none') so anything we ever embed can only come from our own
+      // origin. Doesn't weaken clickjacking protection: that's frameguard
+      // (X-Frame-Options) below, which governs embedding *this* site in *other*
+      // pages, not the reverse.
       frameSrc: ["'self'"],
       objectSrc: ["'none'"],
     }

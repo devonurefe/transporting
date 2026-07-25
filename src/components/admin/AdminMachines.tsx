@@ -1387,6 +1387,13 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                       className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500"
                     />
                     <p className="text-[11px] text-slate-500">{t("Bij meerdere stuks kunnen meerdere klanten dezelfde (overlappende) data boeken, tot de voorraad op is.", "With more than one unit, multiple customers can book the same (overlapping) dates until stock runs out.", "Birden fazla stok varsa, stok bitene kadar farklı müşteriler aynı (çakışan) tarihleri kiralayabilir.")}</p>
+                    <p className="text-[11px] text-slate-400 italic">
+                      {t(
+                        "Gebruik dit alleen voor identieke units (zelfde prijs, foto's, beschrijving). Heeft een unit een andere prijs, foto of conditie? Voeg die dan apart toe als \"Naam (Unit 2)\" bij Machine Toevoegen — dat groepeert wél samen op de catalogus, maar blijft los te bewerken.",
+                        "Only use this for identical units (same price, photos, description). Does one unit need a different price, photo or condition? Add it separately as \"Name (Unit 2)\" under Add Machine — that still groups together on the catalog, but stays individually editable.",
+                        "Bunu yalnızca birebir aynı birimler için kullanın (aynı fiyat, fotoğraf, açıklama). Bir birimin fiyatı/fotoğrafı/durumu farklıysa, \"Makine Ekle\"den ayrı bir \"İsim (Unit 2)\" olarak ekleyin — katalogda yine gruplanır ama ayrı ayrı düzenlenebilir kalır."
+                      )}
+                    </p>
                   </div>
 
                   <div className="space-y-2">

@@ -66,6 +66,24 @@ function formatInvoiceNumber(seq: number): string {
   return `Factuur ${yy}${String(seq).padStart(4, "0")}`;
 }
 
+// Kent — binnen een transactie — een echt sequentieel factuurnummer toe aan een
+// order, maar alleen als die er nog geen heeft. Aangeroepen op het moment van
+// goedkeuring (PUT /:id/status → "Goedgekeurd"), niet bij het plaatsen van de
+// order: anders trekt elk nooit-goedgekeurd of geannuleerd verzoek ook een
+// nummer uit de wettelijk doorlopende factuurreeks, wat gaten erin slaat die een
+// boekhouder moet kunnen verklaren.
+async function assignInvoiceNumberInTx(tx: Prisma.TransactionClient, orderId: string): Promise<void> {
+  const counter = await tx.invoiceCounter.upsert({
+    where: { id: "default" },
+    create: { id: "default", lastNumber: 1 },
+    update: { lastNumber: { increment: 1 } }
+  });
+  await tx.order.update({
+    where: { id: orderId },
+    data: { invoiceNumber: formatInvoiceNumber(counter.lastNumber) }
+  });
+}
+
 // Optional customer purchase-order (PO) reference, shown on the invoice.
 // Free text, capped and trimmed; empty/whitespace becomes null.
 function sanitizePoNumber(raw: unknown): string | null {
@@ -560,13 +578,10 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
       // PATCH/manual-create via assertMachineAvailableInTx.
       await assertMachineAvailableInTx(tx, orderData.machineId, startDate, endDate);
 
-      // Atomic sequential invoice number (Dutch BTW wetgeving)
-      const counter = await tx.invoiceCounter.upsert({
-        where: { id: "default" },
-        create: { id: "default", lastNumber: 1 },
-        update: { lastNumber: { increment: 1 } }
-      });
-      const invoiceNumber = formatInvoiceNumber(counter.lastNumber);
+      // Geen factuurnummer hier — dat wordt pas toegekend bij goedkeuring
+      // (PUT /:id/status → "Goedgekeurd", zie assignInvoiceNumberInTx). Een
+      // factuurnummer op een nog niet bevestigd of straks geannuleerd verzoek
+      // zou een gat in de wettelijk verplichte doorlopende factuurreeks slaan.
 
       return tx.order.create({
         data: {
@@ -596,7 +611,6 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
           // Reconstruct from server-side data — never persist client-sent names or prices
           addons: JSON.stringify(buildStoredAddons(machine, rentalDays, orderData.addons, fees)),
           weekendWork: null, // legacy field — weekend work toggle removed; weekend handling is now automatic (package + Sunday block)
-          invoiceNumber,
           paymentStatus: "awaiting",
           // Klant-gekozen betaalwijze; standaard "link" (online betaallink) als de
           // client niets meestuurt, zodat legacy-gedrag behouden blijft.
@@ -722,10 +736,7 @@ ordersRouter.post("/admin", requireAdmin as any, async (req: AuthenticatedReques
 
     const created = await withSerializableRetry(() => prisma.$transaction(async (tx) => {
       await assertMachineAvailableInTx(tx, body.machineId, startDate, endDate);
-      const counter = await tx.invoiceCounter.upsert({
-        where: { id: "default" }, create: { id: "default", lastNumber: 1 }, update: { lastNumber: { increment: 1 } }
-      });
-      const invoiceNumber = formatInvoiceNumber(counter.lastNumber);
+      // Geen factuurnummer hier — pas bij goedkeuring, zie assignInvoiceNumberInTx.
       return tx.order.create({
         data: {
           id: `HWH-${crypto.randomBytes(4).toString("hex").toUpperCase()}`,
@@ -747,7 +758,6 @@ ordersRouter.post("/admin", requireAdmin as any, async (req: AuthenticatedReques
           customerId: matchedCustomer?.id ?? null,
           addons: JSON.stringify(storedAddons),
           weekendWork: null,
-          invoiceNumber,
           paymentStatus: "awaiting"
         }
       });
@@ -1290,6 +1300,15 @@ ordersRouter.get("/:id/export/ubl", requireAdmin as any, async (req: Authenticat
   try {
     const order = await prisma.order.findUnique({ where: { id: req.params.id } });
     if (!order) return res.status(404).json({ error: "Bestelling niet gevonden" });
+    // Een UBL-bestand is een formeel e-factuurdocument voor de boekhouding — nooit
+    // exporteren voor een order die nog niet is goedgekeurd (nog maar een verzoek,
+    // geen bevestigde huur) of die geannuleerd is (er is niets te factureren).
+    if (order.status === "In behandeling") {
+      return res.status(400).json({ error: "Bestelling moet eerst goedgekeurd worden voordat deze naar Exact geëxporteerd kan worden" });
+    }
+    if (order.status === "Geannuleerd") {
+      return res.status(400).json({ error: "Geannuleerde bestellingen kunnen niet naar Exact geëxporteerd worden" });
+    }
 
     const cfg = await prisma.siteConfig.findUnique({
       where: { id: "default" },
@@ -1386,10 +1405,15 @@ ordersRouter.put("/:id/status", requireAdmin as any, async (req: AuthenticatedRe
       });
     }
 
-    const updatedOrder = await prisma.order.update({
-      where: { id },
-      data: { status }
-    });
+    // Bij goedkeuring wordt in dezelfde transactie een echt factuurnummer
+    // toegekend (alleen als de order er nog geen heeft — puur defensief, in de
+    // praktijk kan "Goedgekeurd" maar één keer bereikt worden per order).
+    const updatedOrder = await withSerializableRetry(() => prisma.$transaction(async (tx) => {
+      if (status === "Goedgekeurd" && !order.invoiceNumber) {
+        await assignInvoiceNumberInTx(tx, id);
+      }
+      return tx.order.update({ where: { id }, data: { status } });
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }));
     audit(req, "order.status", { entity: "Order", entityId: id, meta: { from: order.status, to: status } });
 
     // Trigger status update email asynchronously — respects the customer's live-update preference

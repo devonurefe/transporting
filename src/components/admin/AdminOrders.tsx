@@ -190,6 +190,21 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
   const canApprove = (o: any): boolean =>
     o?.paymentStatus === "paid" || o?.paymentMethod === "on_location";
 
+  // Spiegelt de server-side guard op GET /:id/export/ubl: een UBL-bestand is een
+  // formeel e-factuurdocument, dat mag nooit voor een nog niet goedgekeurd
+  // verzoek of een geannuleerde order — er is dan niets (bevestigds) te factureren.
+  const canExportUbl = (o: any): boolean =>
+    o?.status !== "In behandeling" && o?.status !== "Geannuleerd";
+
+  // Een geannuleerde order die nog als "paid" geregistreerd staat, is geld dat
+  // administratief nog moet worden teruggestort (de "Terugstorting registreren"-
+  // knop) — makkelijk te vergeten omdat annuleren zelf de betaalstatus niet
+  // aanpast. Persistente badge in plaats van alleen de eenmalige waarschuwing in
+  // de annuleer-confirmatie, zodat dit niet stilletjes blijft liggen.
+  const needsRefund = (o: any): boolean =>
+    o?.status === "Geannuleerd" && o?.paymentStatus === "paid";
+  const refundPendingCount = orders.filter(needsRefund).length;
+
   const formatPhoneForWA = (phone: string): string => {
     const digits = phone.replace(/\D/g, "");
     if (digits.startsWith("00")) return digits.slice(2);
@@ -371,6 +386,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
   const [isUpdatingPayment, setIsUpdatingPayment] = useState<boolean>(false);
   const [statusError, setStatusError] = useState<string | null>(null);
   const [staleDismissed, setStaleDismissed] = useState<boolean>(false);
+  const [refundBannerDismissed, setRefundBannerDismissed] = useState<boolean>(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState<boolean>(false);
   const [showRefundConfirm, setShowRefundConfirm] = useState<boolean>(false);
   const [showCreateForm, setShowCreateForm] = useState<boolean>(false);
@@ -772,6 +788,30 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
           </div>
         )}
 
+        {/* Refund pending — cancelling an order never touches paymentStatus, so a
+            paid-then-cancelled order is easy to lose track of until someone
+            manually clicks "Terugstorting registreren". */}
+        {refundPendingCount > 0 && !refundBannerDismissed && (
+          <div className="flex items-start gap-2 bg-violet-50 border border-violet-200 rounded-xl px-3.5 py-3 text-xs text-violet-800 font-medium animate-fade-in">
+            <Undo2 className="h-4 w-4 shrink-0 mt-0.5 text-violet-500" />
+            <span className="flex-1">
+              {t(
+                `${refundPendingCount} geannuleerde bestelling(en) staan nog als "betaald" — registreer de terugstorting zodra het bedrag daadwerkelijk is teruggeboekt.`,
+                `${refundPendingCount} cancelled order(s) still show as "paid" — register the refund once the amount has actually been sent back.`,
+                `${refundPendingCount} adet iptal edilmiş sipariş hâlâ "ödendi" görünüyor — tutarı gerçekten iade ettiğinizde iadeyi kaydedin.`
+              )}
+            </span>
+            <button
+              type="button"
+              onClick={() => setRefundBannerDismissed(true)}
+              className="shrink-0 text-violet-500 hover:text-violet-700 bg-transparent border-none cursor-pointer p-0"
+              aria-label={t("Sluiten", "Dismiss", "Kapat")}
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        )}
+
         {/* Mobile card layout */}
         <div className="md:hidden space-y-3">
           {displayOrders.length === 0 ? (
@@ -791,6 +831,11 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                     {isOverdue(o) && (
                       <span className="text-[9px] font-mono px-2 py-0.5 rounded-full font-extrabold uppercase tracking-wider bg-rose-100 text-rose-700 border border-rose-200">
                         {t("Te laat", "Overdue", "Gecikmiş")}
+                      </span>
+                    )}
+                    {needsRefund(o) && (
+                      <span className="text-[9px] font-mono px-2 py-0.5 rounded-full font-extrabold uppercase tracking-wider bg-violet-100 text-violet-700 border border-violet-200">
+                        {t("Terugstorting open", "Refund pending", "İade Bekliyor")}
                       </span>
                     )}
                   </div>
@@ -826,17 +871,19 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                   >
                     {t("Beheer", "Manage", "Yönet")}
                   </button>
-                  <button onClick={() => printInvoice(o, undefined, false, siteConfig)} className="text-[11px] font-bold px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors border border-slate-200 cursor-pointer flex items-center justify-center">
+                  <button onClick={() => printInvoice(o, undefined, o.status === "In behandeling", siteConfig)} className="text-[11px] font-bold px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors border border-slate-200 cursor-pointer flex items-center justify-center">
                     <Printer className="h-3.5 w-3.5 text-indigo-600" />
                   </button>
-                  <button
-                    onClick={() => handleExportUbl(o)}
-                    disabled={exportingUblId === o.id}
-                    title={t("Exporteer naar Exact (UBL)", "Export to Exact (UBL)", "Exact'a aktar (UBL)")}
-                    className="text-[11px] font-bold px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors border border-slate-200 cursor-pointer flex items-center justify-center disabled:opacity-50"
-                  >
-                    {exportingUblId === o.id ? <Loader2 className="h-3.5 w-3.5 text-emerald-600 animate-spin" /> : <FileDown className="h-3.5 w-3.5 text-emerald-600" />}
-                  </button>
+                  {canExportUbl(o) && (
+                    <button
+                      onClick={() => handleExportUbl(o)}
+                      disabled={exportingUblId === o.id}
+                      title={t("Exporteer naar Exact (UBL)", "Export to Exact (UBL)", "Exact'a aktar (UBL)")}
+                      className="text-[11px] font-bold px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors border border-slate-200 cursor-pointer flex items-center justify-center disabled:opacity-50"
+                    >
+                      {exportingUblId === o.id ? <Loader2 className="h-3.5 w-3.5 text-emerald-600 animate-spin" /> : <FileDown className="h-3.5 w-3.5 text-emerald-600" />}
+                    </button>
+                  )}
                   {o.status === "In behandeling" && (
                     <button
                       onClick={() => handleUpdateStatus(o.id, "Goedgekeurd", `Bestelling goedgekeurd: ${o.id} voor ${o.customerName}.`, o)}
@@ -985,6 +1032,11 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                               {t("Te laat", "Overdue", "Gecikmiş")}
                             </span>
                           )}
+                          {needsRefund(o) && (
+                            <span className="text-[9px] font-mono px-2 py-0.5 rounded-full font-extrabold uppercase tracking-wider bg-violet-100 text-violet-700 border border-violet-200">
+                              {t("Terugstorting open", "Refund pending", "İade Bekliyor")}
+                            </span>
+                          )}
 
                           <div className="flex space-x-1.5 mt-0.5">
                             <button
@@ -995,21 +1047,23 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                             </button>
  
                             <button
-                              onClick={() => printInvoice(o, undefined, false, siteConfig)}
+                              onClick={() => printInvoice(o, undefined, o.status === "In behandeling", siteConfig)}
                               className="text-[10px] font-extrabold px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors border border-slate-200/60 shadow-sm cursor-pointer flex items-center justify-center hover:scale-[1.02] active:scale-98"
                               title={t("Factuur Afdrukken", "Print Invoice", "Faturayı Yazdır")}
                             >
                               <Printer className="h-4 w-4 text-indigo-600" />
                             </button>
 
-                            <button
-                              onClick={() => handleExportUbl(o)}
-                              disabled={exportingUblId === o.id}
-                              className="text-[10px] font-extrabold px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors border border-slate-200/60 shadow-sm cursor-pointer flex items-center justify-center hover:scale-[1.02] active:scale-98 disabled:opacity-50"
-                              title={t("Exporteer naar Exact (UBL)", "Export to Exact (UBL)", "Exact'a aktar (UBL)")}
-                            >
-                              {exportingUblId === o.id ? <Loader2 className="h-4 w-4 text-emerald-600 animate-spin" /> : <FileDown className="h-4 w-4 text-emerald-600" />}
-                            </button>
+                            {canExportUbl(o) && (
+                              <button
+                                onClick={() => handleExportUbl(o)}
+                                disabled={exportingUblId === o.id}
+                                className="text-[10px] font-extrabold px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors border border-slate-200/60 shadow-sm cursor-pointer flex items-center justify-center hover:scale-[1.02] active:scale-98 disabled:opacity-50"
+                                title={t("Exporteer naar Exact (UBL)", "Export to Exact (UBL)", "Exact'a aktar (UBL)")}
+                              >
+                                {exportingUblId === o.id ? <Loader2 className="h-4 w-4 text-emerald-600 animate-spin" /> : <FileDown className="h-4 w-4 text-emerald-600" />}
+                              </button>
+                            )}
 
                             {/* Handle action buttons */}
                             {o.status === "In behandeling" && (
@@ -1465,6 +1519,11 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                       {t("Te laat", "Overdue", "Gecikmiş")}
                     </span>
                   )}
+                  {needsRefund(selectedDetailOrder) && (
+                    <span className="text-[9.5px] font-mono px-3 py-1 rounded-full font-extrabold uppercase tracking-wider bg-violet-100 text-violet-700 border border-violet-200">
+                      {t("Terugstorting open", "Refund pending", "İade Bekliyor")}
+                    </span>
+                  )}
                 </div>
                 {selectedDetailOrder.paymentStatus !== "paid" && (
                   <div className="space-y-2">
@@ -1729,26 +1788,28 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                 <div className="flex items-center gap-2 pt-1">
                   <button
                     type="button"
-                    onClick={() => printInvoice(selectedDetailOrder, undefined, false, siteConfig)}
+                    onClick={() => printInvoice(selectedDetailOrder, undefined, selectedDetailOrder.status === "In behandeling", siteConfig)}
                     className="flex-1 px-3 py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200 rounded-xl text-[10px] font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5"
                   >
                     <Printer className="h-3.5 w-3.5 shrink-0" />
                     <span>{t("PDF / Afdruk", "PDF / Print", "PDF / Yazdır")}</span>
                   </button>
-                  <button
-                    type="button"
-                    disabled={exportingUblId === selectedDetailOrder.id}
-                    onClick={() => handleExportUbl(selectedDetailOrder)}
-                    title={t(
-                      "Downloadt een UBL e-factuur XML die uw klant rechtstreeks kan importeren in Exact Online (of vergelijkbare boekhoudsoftware).",
-                      "Downloads a UBL e-invoice XML your customer can import directly into Exact Online (or similar accounting software).",
-                      "Müşterinizin doğrudan Exact Online'a (veya benzer muhasebe yazılımına) aktarabileceği bir UBL e-fatura XML dosyası indirir."
-                    )}
-                    className="flex-1 px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl text-[10px] font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50"
-                  >
-                    {exportingUblId === selectedDetailOrder.id ? <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" /> : <FileDown className="h-3.5 w-3.5 shrink-0" />}
-                    <span>{t("Exporteer naar Exact", "Export to Exact", "Exact'a aktar")}</span>
-                  </button>
+                  {canExportUbl(selectedDetailOrder) && (
+                    <button
+                      type="button"
+                      disabled={exportingUblId === selectedDetailOrder.id}
+                      onClick={() => handleExportUbl(selectedDetailOrder)}
+                      title={t(
+                        "Downloadt een UBL e-factuur XML die uw klant rechtstreeks kan importeren in Exact Online (of vergelijkbare boekhoudsoftware).",
+                        "Downloads a UBL e-invoice XML your customer can import directly into Exact Online (or similar accounting software).",
+                        "Müşterinizin doğrudan Exact Online'a (veya benzer muhasebe yazılımına) aktarabileceği bir UBL e-fatura XML dosyası indirir."
+                      )}
+                      className="flex-1 px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl text-[10px] font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50"
+                    >
+                      {exportingUblId === selectedDetailOrder.id ? <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" /> : <FileDown className="h-3.5 w-3.5 shrink-0" />}
+                      <span>{t("Exporteer naar Exact", "Export to Exact", "Exact'a aktar")}</span>
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={() => closeModal()}

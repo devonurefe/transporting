@@ -226,6 +226,26 @@ Also out of scope: the full i18n dictionary (`languageStore.ts`), homepage
 - `printInvoice(order)` in `src/utils/invoice.ts`
 - Opens `window.open("", "_blank")`, writes full HTML, calls `printWindow.print()` after 900 ms
 - **Do not add `opacity:0` font-loading trick** — it caused blank print pages
+- `isProforma` param renders "PRO-FORMA FACTUUR / OFFERTE" instead of the official
+  title — admin prints pass `order.status === "In behandeling"` so a not-yet-approved
+  request never reads as an official invoice
+
+### Invoice numbering & Exact (UBL) export — CRITICAL
+- `Order.invoiceNumber` is assigned **only on approval** (`PUT /:id/status` →
+  `"Goedgekeurd"`, via `assignInvoiceNumberInTx` in `server/routes/orders.ts`), not at
+  order creation. An order sits at `invoiceNumber: null` while `"In behandeling"`.
+  **Never move this back to creation time** — a numbered-but-never-approved or
+  cancelled order would burn a gap in the legally required sequential Dutch invoice
+  series (`Factuur YYNNNN`, `formatInvoiceNumber`).
+- `GET /:id/export/ubl` (Exact e-invoice XML, "Stage 1" — see `server/utils/ublInvoice.ts`)
+  and the "Exact'a aktar" button reject `"In behandeling"` and `"Geannuleerd"` orders —
+  mirrored client-side via `canExportUbl()` in `AdminOrders.tsx` so the button doesn't
+  even render instead of erroring after the fact.
+- Cancelling an order never touches `paymentStatus` — a paid-then-cancelled order needs
+  a manual "Terugstorting registreren" (real refund isn't wired to Mollie's refund API).
+  `needsRefund()` in `AdminOrders.tsx` surfaces this as a persistent violet "Terugstorting
+  open" badge (list rows + detail modal) plus a dismissible banner — not just a one-time
+  warning in the cancel confirmation, which was too easy to miss.
 
 ---
 

@@ -423,7 +423,7 @@ export default function MyOrdersSection({
               Welkom op het <span className="text-slate-900">Klant Portaal</span>
             </h1>
             <p className="text-xs sm:text-sm text-slate-500 text-slate-600 max-w-xl mx-auto leading-relaxed">
-              Log in om uw actieve huurcontracten te beheren, transportstatussen te volgen, live BMWT-certificaten te downloaden en facturen in te zien.
+              Log in om uw actieve huurcontracten te beheren, transportstatussen te volgen, live ABOMA-certificaten te downloaden en facturen in te zien.
             </p>
           </div>
 

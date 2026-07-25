@@ -795,7 +795,7 @@ const defaultSiteConfig = {
   siteName: "huurgo",
   heroTagline: "Professionele Hoogwerker Verhuur",
   heroTitle: "De juiste machine, snel en veilig geregeld.",
-  heroSubtitle: "HuurGo verhuurt gecertificeerde hoogwerkers, schaarliften, mastliften en ladderliften aan ZZP'ers, aannemers en particulieren in heel Nederland. Meer dan 50 BMWT-gecertificeerde machines, direct beschikbaar.",
+  heroSubtitle: "HuurGo verhuurt gecertificeerde hoogwerkers, schaarliften, mastliften en ladderliften aan ZZP'ers, aannemers en particulieren in heel Nederland. Meer dan 50 ABOMA-gecertificeerde machines, direct beschikbaar.",
   menuHomeLabel: "Home",
   menuCatalogLabel: "Catalogus",
   menuAdvisorLabel: "Snel Advies", // legacy/unused; retained so the schema column stays populated

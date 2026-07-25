@@ -63,8 +63,8 @@ async function getCompanyDetails(): Promise<CompanyDetails> {
   const value: CompanyDetails = {
     legalName,
     address,
-    footerLong: `© ${year} huurgo / ${legalName} • BMWT-gecertificeerd verhuurnetwerk • Zoeterwoude, Nederland`,
-    footerShort: `© ${year} huurgo / ${legalName} • BMWT-gecertificeerd verhuurnetwerk`
+    footerLong: `© ${year} huurgo / ${legalName} • ABOMA-gecertificeerd verhuurnetwerk • Zoeterwoude, Nederland`,
+    footerShort: `© ${year} huurgo / ${legalName} • ABOMA-gecertificeerd verhuurnetwerk`
   };
   companyDetailsCache = { value, expiresAt: Date.now() + 60_000 };
   return value;

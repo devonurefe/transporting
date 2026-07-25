@@ -98,7 +98,7 @@ function getDefaultPackageItems(id: string): string[] {
       "1x Professionele en gekeurde machine",
       "1x Volle tank brandstof of 100% opgeladen accupakket",
       "1x Hub service inspectie voorafgaand aan aflevering",
-      "BMWT Veiligheidscertificaat handleiding in de werkbak",
+      "ABOMA Veiligheidscertificaat handleiding in de werkbak",
       "24/7 Technische storingshulp & backup service",
     ];
   }
@@ -433,7 +433,7 @@ export default function MachineDetailModal({
           {/* H — Compliance */}
           <div className="flex flex-col sm:flex-row justify-between items-center bg-slate-50 border border-slate-200 p-3 rounded-xl text-xs text-slate-500 gap-2">
             <div className="flex items-center gap-2">
-              <span className="bg-amber-100 border border-amber-200 text-amber-900 px-2 py-0.5 rounded text-[10px] uppercase tracking-wider font-extrabold">BMWT</span>
+              <span className="bg-amber-100 border border-amber-200 text-amber-900 px-2 py-0.5 rounded text-[10px] uppercase tracking-wider font-extrabold">ABOMA</span>
               <span>Jaarlijks veilig gekeurd</span>
             </div>
             <span className="font-mono text-slate-500">Art. {machine.id}</span>

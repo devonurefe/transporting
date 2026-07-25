@@ -4,10 +4,11 @@
  */
 
 import React, { useState } from "react";
-import { PlusCircle, Sparkles, Trash2, Plus, X } from "lucide-react";
+import { PlusCircle, Sparkles, Trash2, Plus, X, FileText } from "lucide-react";
 import { motion } from "motion/react";
 import { useAppStore } from "../../store/appStore";
 import { resizeImage } from "../../utils/image";
+import { readFileAsDataUrl } from "../../utils/file";
 import { showAdminToast } from "./AdminToast";
 import type { AdminSubTab } from "../AdminSection";
 
@@ -61,6 +62,8 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
   const [additionalImages, setAdditionalImages] = useState<string[]>([]);
   const [isUploadingAdditional, setIsUploadingAdditional] = useState(false);
   const [packageContents, setPackageContents] = useState("");
+  const [datasheetUrl, setDatasheetUrl] = useState("");
+  const [isUploadingDatasheet, setIsUploadingDatasheet] = useState(false);
   const [newSpecs, setNewSpecs] = useState<{ label: string; value: string }[]>([]);
   const [minRentalDays, setMinRentalDays] = useState("");
   const [newStockQuantity, setNewStockQuantity] = useState("1");
@@ -141,6 +144,40 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
       showAdminToast(t("Fout bij uploaden afbeelding.", "Error uploading image.", "Resim yükleme hatası."), "error");
     } finally {
       setIsUploading(false);
+      e.target.value = "";
+    }
+  };
+
+  const handleDatasheetFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingDatasheet(true);
+    try {
+      const base64 = await readFileAsDataUrl(file);
+      const token = localStorage.getItem("hwh_admin_token") || localStorage.getItem("hwh_token");
+      const res = await fetch("/api/upload-pdf", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({ fileName: file.name, base64Data: base64 })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setDatasheetUrl(data.url);
+        onAddSystemLog("fleet", "Beheerder", t("Datasheet (PDF) geüpload: ", "Datasheet (PDF) uploaded: ", "Teknik döküman (PDF) yüklendi: ") + file.name);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        showAdminToast(data.error || t("Uploaden mislukt.", "Upload failed.", "Yükleme başarısız."), "error");
+      }
+    } catch (err) {
+      console.error(err);
+      showAdminToast(t("Fout bij uploaden PDF.", "Error uploading PDF.", "PDF yükleme hatası."), "error");
+    } finally {
+      setIsUploadingDatasheet(false);
       e.target.value = "";
     }
   };
@@ -237,6 +274,7 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
       campaignDiscountAmount: campaignDiscountAmount ? Number(campaignDiscountAmount) : undefined,
       packageContents: packageContents.trim() || undefined,
       additionalImages: additionalImages,
+      datasheetUrl: datasheetUrl || undefined,
       specs: newSpecs.filter(s => s.label.trim() && s.value.trim()).length > 0
         ? newSpecs.filter(s => s.label.trim() && s.value.trim())
         : undefined,
@@ -824,6 +862,46 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
                     ))}
                   </div>
                 )}
+              </div>
+
+              {/* Datasheet PDF Section */}
+              <div className="col-span-1 md:col-span-2 border-t border-slate-200/80 pt-4 mt-2 space-y-2">
+                <span className="text-xs text-slate-700 block font-bold">
+                  {t("Technische fiche (PDF, optioneel)", "Technical datasheet (PDF, optional)", "Teknik döküman (PDF, isteğe bağlı)")}
+                </span>
+                <span className="text-[10px] text-slate-400 italic block">
+                  {t("Zichtbaar als 'Datasheet (PDF)'-knop bij de specificaties in de detailpopup.", "Shown as a 'Datasheet (PDF)' button next to the specs in the detail popup.", "Detay popup'ta özelliklerin yanında 'Datasheet (PDF)' butonu olarak gösterilir.")}
+                </span>
+                {datasheetUrl ? (
+                  <div className="flex items-center gap-2 w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs">
+                    <FileText className="h-3.5 w-3.5 text-teal-600 shrink-0" />
+                    <span className="flex-1 truncate text-slate-600">
+                      {t("PDF geüpload", "PDF uploaded", "PDF yüklendi")}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setDatasheetUrl("")}
+                      className="p-0.5 text-slate-400 hover:text-red-500 cursor-pointer border-none bg-transparent shrink-0"
+                      title={t("PDF wissen", "Clear PDF", "PDF'yi temizle")}
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="relative">
+                    <input
+                      type="file"
+                      accept="application/pdf"
+                      disabled={isUploadingDatasheet}
+                      onChange={handleDatasheetFileChange}
+                      className="w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-[10.5px] file:font-black file:bg-teal-50 file:text-teal-700 file:cursor-pointer hover:file:bg-teal-100 transition-all border border-dashed border-slate-300 rounded-xl p-3 bg-white"
+                    />
+                    {isUploadingDatasheet && (
+                      <div className="absolute right-6 top-5 h-5 w-5 border-2 border-teal-600 border-t-transparent rounded-full animate-spin" />
+                    )}
+                  </div>
+                )}
+                <p className="text-[10px] text-slate-400">{t("Max. 8 MB.", "Max. 8 MB.", "Maks. 8 MB.")}</p>
               </div>
 
             </div>

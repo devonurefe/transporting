@@ -159,3 +159,45 @@ apiRouter.post("/upload", uploadBodyParser, requireAdmin as any, async (req, res
     res.status(500).json({ error: "Afbeelding kon niet worden verwerkt" });
   }
 });
+
+// POST /api/upload-pdf - Stores a machine datasheet PDF as base64 data URL in the
+// DB, same "no disk writes" reasoning as /api/upload. Body-size limit for this
+// path is registered separately in server.ts (app.use("/api/upload-pdf", ...)).
+// 5MB (decoded) — datasheets are typically a few hundred KB to ~2MB. Kept well
+// under the /api/machines JSON body limit (see server.ts) since the base64-encoded
+// datasheetUrl travels inside the full machine payload alongside imageUrl/additionalImages.
+const MAX_PDF_SIZE_BYTES = 5 * 1024 * 1024;
+
+apiRouter.post("/upload-pdf", requireAdmin as any, async (req, res) => {
+  const { fileName, base64Data } = req.body;
+  if (!fileName || !base64Data) {
+    return res.status(400).json({ error: "fileName en base64Data zijn verplicht" });
+  }
+
+  const ext = path.extname(fileName).toLowerCase();
+  if (ext !== ".pdf") {
+    return res.status(400).json({ error: "Alleen PDF-bestanden zijn toegestaan." });
+  }
+
+  try {
+    const base64Content = base64Data.replace(/^data:application\/pdf;base64,/, "");
+    const byteLength = Math.ceil(base64Content.length * 0.75); // approximate decoded size
+
+    if (byteLength > MAX_PDF_SIZE_BYTES) {
+      return res.status(400).json({ error: `Bestand te groot. Maximum grootte: ${MAX_PDF_SIZE_BYTES / (1024 * 1024)}MB` });
+    }
+
+    const header = Buffer.from(base64Content.slice(0, 12), "base64");
+    if (header.length < 5 || header.toString("ascii", 0, 5) !== "%PDF-") {
+      return res.status(400).json({ error: "Bestandsinhoud komt niet overeen met het bestandstype (geen geldige PDF)." });
+    }
+
+    const dataUrl = `data:application/pdf;base64,${base64Content}`;
+    console.log(`[Upload] PDF stored as data URL (${(byteLength / 1024).toFixed(1)}KB)`);
+
+    res.json({ success: true, url: dataUrl });
+  } catch (error: any) {
+    console.error("Error processing uploaded PDF:", error);
+    res.status(500).json({ error: "PDF kon niet worden verwerkt" });
+  }
+});

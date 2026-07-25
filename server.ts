@@ -233,6 +233,12 @@ async function serveStoredPdf(res: express.Response, url: string | null | undefi
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", `inline; filename="${safeName}.pdf"`);
     res.setHeader("Cache-Control", "public, max-age=2592000");
+    // Helmet's global frameguard sets X-Frame-Options: DENY on every response,
+    // which blocks this PDF from rendering inside the viewer's own same-origin
+    // <iframe> (CSP frameSrc: 'self' alone isn't enough — X-Frame-Options is a
+    // second, older gate some browsers still enforce). Override to SAMEORIGIN
+    // just for this route; every other response keeps the stricter DENY.
+    res.setHeader("X-Frame-Options", "SAMEORIGIN");
     return res.send(buf);
   }
   if (url.startsWith("/")) return res.redirect(url);

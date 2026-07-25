@@ -196,11 +196,14 @@ export default function MachineDetailModal({
 
         {/* Operationally blocked — unresolved DamageReport/MaintenanceEvent or retired
             (server/utils/machineStatus.ts). Every date is rejected regardless of stock,
-            so this is surfaced up front instead of only after the customer picks dates. */}
+            so this is surfaced up front instead of only after the customer picks dates.
+            Deliberately reads the same as an ordinary fully-booked machine — no mention
+            of damage/maintenance — the customer doesn't need that detail, only staff do
+            (visible in the admin Bakım ve Hasar panel). */}
         {machine.operationallyBlocked && (
-          <div className="mb-4 -mt-2 shrink-0 flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2.5 text-xs font-bold text-rose-700">
-            <span className="h-1.5 w-1.5 rounded-full shrink-0 bg-rose-500" />
-            Tijdelijk niet beschikbaar (onderhoud/reparatie)
+          <div className="mb-4 -mt-2 shrink-0 flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs font-bold text-slate-600">
+            <span className="h-1.5 w-1.5 rounded-full shrink-0 bg-slate-400" />
+            Niet beschikbaar
           </div>
         )}
 

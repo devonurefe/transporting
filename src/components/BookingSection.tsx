@@ -249,7 +249,7 @@ export default function BookingSection({
     if (realtimeMachine?.operationallyBlocked) {
       setIsAvailable(false);
       setIsDateBlocked(true);
-      setBlockingReason("Tijdelijk niet beschikbaar (onderhoud/reparatie).");
+      setBlockingReason("Niet beschikbaar voor deze periode.");
       setOverlappingOrders([]);
       return;
     }

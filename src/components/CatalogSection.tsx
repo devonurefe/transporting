@@ -17,7 +17,6 @@ import { Link } from "react-router-dom";
 import { Machine } from "../types";
 import { useLanguageStore } from "../store/languageStore";
 import { useAppStore } from "../store/appStore";
-import { someUnitAvailable, UnitAvailabilityInput } from "../utils/availability";
 import { withVat, priceNum } from "../utils/format";
 import { computeDiscounts, buildPricingTierRows } from "../utils/pricing";
 import VatToggle from "./VatToggle";
@@ -102,39 +101,14 @@ export default function CatalogSection({
   currentUser,
 }: CatalogSectionProps) {
   const t = useLanguageStore((state) => state.t);
-  const orders = useAppStore((state) => state.orders);
-  const blockedDates = useAppStore((state) => state.blockedDates);
   const vatDisplay = useAppStore((state) => state.vatDisplay);
   // Display-only VAT conversion for every price shown in this section
   const vp = (p: number) => withVat(p, vatDisplay);
   const vatLabel = vatDisplay === "incl" ? "incl. btw" : "excl. btw";
 
-  const today = new Date().toISOString().split("T")[0];
-  const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
-
-  // Model-aware: a model is "Beschikbaar" if ANY of its physical units still has
-  // remaining stock. Stock counts stay server-side — the customer only sees
-  // available / vol.
-  const isModelAvailableThisWeek = (units: UnitAvailabilityInput[]): boolean =>
-    someUnitAvailable(units, today, nextWeek, orders, blockedDates);
-
-  const getNextAvailableDate = (units: UnitAvailabilityInput[]): string | null => {
-    for (let i = 1; i <= 90; i++) {
-      const d = new Date(Date.now() + i * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
-      if (someUnitAvailable(units, d, d, orders, blockedDates)) return d;
-    }
-    return null;
-  };
-
   // Renders the € sign joined to the number so every price on the catalog
   // (day rate, actie, tariff table) reads consistently — "€60,50".
   const formatPrice = (p: number): string => "€" + priceNum(p);
-
-  const formatShortDate = (iso: string): string => {
-    const d = new Date(iso);
-    const months = ["jan","feb","mrt","apr","mei","jun","jul","aug","sep","okt","nov","dec"];
-    return `${d.getDate()} ${months[d.getMonth()]}`;
-  };
 
   const [selectedDetailMachine, setSelectedDetailMachine] = useState<Machine | null>(null);
   const [detailSource, setDetailSource] = useState<"pricing" | "info">("pricing");
@@ -220,17 +194,6 @@ export default function CatalogSection({
       const base = getBaseName(m.name);
       if (!map[base]) map[base] = [];
       map[base].push(m.id);
-    });
-    return map;
-  }, [activeMachines]);
-
-  // Map base name → unit id + stock quantity (used for capacity-aware availability)
-  const unitsByBase = useMemo(() => {
-    const map: Record<string, UnitAvailabilityInput[]> = {};
-    activeMachines.forEach(m => {
-      const base = getBaseName(m.name);
-      if (!map[base]) map[base] = [];
-      map[base].push({ id: m.id, stockQuantity: m.stockQuantity ?? 1 });
     });
     return map;
   }, [activeMachines]);
@@ -421,21 +384,6 @@ export default function CatalogSection({
                       key={machine.id}
                       className="group relative overflow-hidden rounded-2xl border bg-white flex flex-col border-slate-200 shadow-sm hover:shadow-xl hover:shadow-orange-500/5 hover:border-orange-200 hover:-translate-y-1.5 transition-all duration-300"
                     >
-                      {/* Top-left badge: only shown when NOT available — no "Beschikbaar" label on available units */}
-                      {(() => {
-                        const units = unitsByBase[getBaseName(machine.name)] ?? [{ id: machine.id, stockQuantity: machine.stockQuantity ?? 1 }];
-                        const available = isModelAvailableThisWeek(units);
-                        if (available) return null;
-                        const nextDate = getNextAvailableDate(units);
-                        const availText = nextDate ? `Vrij ${formatShortDate(nextDate)}` : "Vol geboekt";
-                        return (
-                          <div className="absolute top-3 left-3 z-20 flex items-center gap-1.5 py-1 px-2.5 rounded-md text-[10px] font-bold shadow-sm backdrop-blur-sm bg-white/90 border border-amber-200 text-amber-700">
-                            <span className="h-1.5 w-1.5 rounded-full shrink-0 bg-amber-400" />
-                            {availText}
-                          </div>
-                        );
-                      })()}
-
                       {/* IMAGE with powerType overlay — clickable to open detail modal */}
                       <div
                         className="relative aspect-[3/2] w-full overflow-hidden bg-white cursor-pointer"

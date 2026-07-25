@@ -39,6 +39,11 @@ model Machine {
   packageContents         String?
   additionalImages        Json?
   specs                   Json?
+  // Admin-uploaded technical datasheet PDF (e.g. manufacturer spec sheet), stored
+  // as a base64 data:application/pdf URL — same pattern as imageUrl. Never exposed
+  // raw on the public /api/machines feed; served via /machine-datasheet/:id (see
+  // toPublicMachine in server/routes/machines.ts and the proxy in server.ts).
+  datasheetUrl             String?
   bufferDays              Int           @default(0)
   minRentalDays           Int?
   weeklyOnly              Boolean       @default(false)

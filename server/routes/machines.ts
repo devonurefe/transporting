@@ -40,6 +40,20 @@ function sanitizeImageUrl(url: unknown): string {
   return ""; // reject javascript:, file:, and other executable schemes
 }
 
+// Mirrors sanitizeImageUrl's allow-list, but for the datasheet PDF field
+// (data:application/pdf uploads instead of data:image/).
+function sanitizeDatasheetUrl(url: unknown): string {
+  if (typeof url !== "string") return "";
+  if (!url) return "";
+  if (url.startsWith("/")) return url;
+  if (url.startsWith("data:application/pdf")) return url;
+  try {
+    const u = new URL(url);
+    if (u.protocol === "https:" || u.protocol === "http:") return url;
+  } catch { /* invalid URL */ }
+  return "";
+}
+
 // Replace inline base64 (data:) image URLs with lightweight binary-proxy URLs so
 // the public catalog feed stays small (base64 images can balloon /api/machines to
 // >1 MB). File paths (/images/...) and http(s) URLs are already efficient — kept
@@ -48,6 +62,7 @@ function sanitizeImageUrl(url: unknown): string {
 function toPublicMachine(m: any) {
   const mainIsData = typeof m.imageUrl === "string" && m.imageUrl.startsWith("data:image/");
   const gallery: string[] = Array.isArray(m.additionalImages) ? m.additionalImages : [];
+  const datasheetIsData = typeof m.datasheetUrl === "string" && m.datasheetUrl.startsWith("data:application/pdf");
   return {
     ...m,
     imageUrl: mainIsData ? `/machine-image/${m.id}` : m.imageUrl,
@@ -56,6 +71,7 @@ function toPublicMachine(m: any) {
         ? `/machine-image/${m.id}/gallery/${idx}`
         : url
     ),
+    datasheetUrl: datasheetIsData ? `/machine-datasheet/${m.id}` : m.datasheetUrl,
   };
 }
 
@@ -247,6 +263,7 @@ machinesRouter.post("/", requireAdmin as any, async (req: AuthenticatedRequest, 
     monthlyPrice,
     packageContents,
     additionalImages,
+    datasheetUrl,
     specs: rawSpecsCreate
   } = req.body;
 
@@ -294,6 +311,7 @@ machinesRouter.post("/", requireAdmin as any, async (req: AuthenticatedRequest, 
         weekendRulesEnabled: Boolean(req.body.weekendRulesEnabled),
         packageContents: packageContents || null,
         additionalImages: Array.isArray(additionalImages) ? sanitizeImageUrls(additionalImages) : [],
+        datasheetUrl: sanitizeDatasheetUrl(datasheetUrl) || null,
         specs: Array.isArray(specs) && specs.length > 0 ? specs : Prisma.JsonNull,
         bufferDays: req.body.bufferDays !== undefined ? Math.min(2, Math.max(0, Math.round(Number(req.body.bufferDays)))) : 0,
         minRentalDays: req.body.minRentalDays !== undefined && req.body.minRentalDays !== null && req.body.minRentalDays !== "" ? Math.round(Number(req.body.minRentalDays)) : null,
@@ -350,6 +368,7 @@ machinesRouter.put("/:id", requireAdmin as any, async (req: AuthenticatedRequest
     monthlyPrice,
     packageContents,
     additionalImages,
+    datasheetUrl,
     specs: rawSpecsPut
   } = req.body;
 
@@ -396,6 +415,7 @@ machinesRouter.put("/:id", requireAdmin as any, async (req: AuthenticatedRequest
         weekendRulesEnabled: Boolean(req.body.weekendRulesEnabled),
         packageContents: packageContents !== undefined ? packageContents : null,
         additionalImages: Array.isArray(additionalImages) ? sanitizeImageUrls(additionalImages) : [],
+        datasheetUrl: datasheetUrl !== undefined && datasheetUrl !== null ? (sanitizeDatasheetUrl(datasheetUrl) || null) : undefined,
         specs: specsUpdate === undefined ? undefined : (specsUpdate ?? Prisma.JsonNull),
         isActive: req.body.isActive !== undefined ? Boolean(req.body.isActive) : undefined,
         isRetired: req.body.isRetired !== undefined ? Boolean(req.body.isRetired) : undefined,

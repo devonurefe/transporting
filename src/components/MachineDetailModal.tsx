@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect } from "react";
 import {
-  X, ShoppingCart, ChevronLeft, ChevronRight, Package, Zap, Info,
+  X, ShoppingCart, ChevronLeft, ChevronRight, Package, Zap, Info, FileText,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Machine } from "../types";
@@ -17,6 +17,7 @@ import { useLanguageStore } from "../store/languageStore";
 import { useModalA11y } from "../hooks/useModalA11y";
 import VatToggle from "./VatToggle";
 import { CardBrandWatermark } from "./Header";
+import PdfViewerModal from "./PdfViewerModal";
 
 type CategoryInfoEntry = {
   id: string;
@@ -114,6 +115,7 @@ export default function MachineDetailModal({
 }: MachineDetailModalProps) {
   const t = useLanguageStore((state) => state.t);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [showDatasheet, setShowDatasheet] = useState(false);
   const dialogRef = useModalA11y(true, onClose);
 
   useEffect(() => {
@@ -323,7 +325,19 @@ export default function MachineDetailModal({
 
           {/* D — Technical specs */}
           <div className="space-y-2">
-            <p className="text-xs text-slate-500 uppercase tracking-wider font-bold">Technische Specificaties</p>
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-xs text-slate-500 uppercase tracking-wider font-bold">Technische Specificaties</p>
+              {machine.datasheetUrl && (
+                <button
+                  type="button"
+                  onClick={() => setShowDatasheet(true)}
+                  className="flex items-center gap-1.5 text-[11px] font-bold text-teal-700 bg-teal-50 hover:bg-teal-100 border border-teal-200 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer shrink-0"
+                >
+                  <FileText className="h-3.5 w-3.5" />
+                  Datasheet (PDF)
+                </button>
+              )}
+            </div>
             <div className="divide-y divide-slate-100 rounded-xl border border-slate-200 overflow-hidden">
               <div className="flex items-center justify-between px-3 py-2.5 bg-white">
                 <span className="text-xs text-slate-500 font-medium">Type machine</span>
@@ -469,6 +483,14 @@ export default function MachineDetailModal({
           </div>
         </div>
       </motion.div>
+
+      {showDatasheet && machine.datasheetUrl && (
+        <PdfViewerModal
+          url={machine.datasheetUrl}
+          title={`${machine.name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "")} — Technische fiche`}
+          onClose={() => setShowDatasheet(false)}
+        />
+      )}
     </div>
   );
 }

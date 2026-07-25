@@ -103,7 +103,10 @@ app.use("/api/calendar", calendarLimiter);
 
 // These endpoints carry base64 image payloads — must be registered before the global 256kb parser
 app.use("/api/upload",      express.json({ limit: "10mb" }));
-app.use("/api/machines",    express.json({ limit: "10mb" })); // PUT with base64 imageUrl
+app.use("/api/upload-pdf",  express.json({ limit: "10mb" })); // POST with base64 datasheet PDF
+// 15mb (not 10mb): a machine PUT/POST payload can carry imageUrl + additionalImages
+// + datasheetUrl all base64-encoded at once, which adds up beyond a single upload.
+app.use("/api/machines",    express.json({ limit: "15mb" })); // PUT with base64 imageUrl/datasheetUrl
 app.use("/api/site-config", express.json({ limit: "10mb" })); // may store base64 hero image
 app.use("/api/orders",      express.json({ limit: "15mb" })); // POST :id/report-damage carries base64 photos
 app.use(express.json({ limit: "256kb" })); // Default for all other API routes
@@ -209,6 +212,38 @@ app.get("/machine-image/:id/gallery/:idx", async (req, res) => {
     return await serveStoredImage(res, url, { defaultWidth: 1000, reqWidth: req.query.w });
   } catch {
     return res.redirect(DEFAULT_OG_IMAGE);
+  }
+});
+
+// Resolve a stored datasheet URL to a PDF response: decode base64 data: URLs
+// (no resizing — PDFs pass through as-is) and redirect file/http paths, same
+// reasoning as serveStoredImage. 404s instead of falling back to an OG image
+// since there's no sensible default datasheet to show.
+async function serveStoredPdf(res: express.Response, url: string | null | undefined, machineName?: string | null) {
+  if (!url) return res.status(404).end();
+  if (url.startsWith("data:application/pdf")) {
+    const commaIdx = url.indexOf(",");
+    if (commaIdx < 0) return res.status(404).end();
+    const buf = Buffer.from(url.slice(commaIdx + 1), "base64");
+    const safeName = (machineName || "datasheet").replace(/[^a-zA-Z0-9-_ ]/g, "").trim().slice(0, 60) || "datasheet";
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `inline; filename="${safeName}.pdf"`);
+    res.setHeader("Cache-Control", "public, max-age=2592000");
+    return res.send(buf);
+  }
+  if (url.startsWith("/")) return res.redirect(url);
+  if (/^https?:\/\//.test(url)) return res.redirect(url);
+  return res.status(404).end();
+}
+
+// Serve a machine's technical datasheet PDF by ID, so the public catalog can
+// load it as binary instead of shipping inline base64 in the /api/machines feed.
+app.get("/machine-datasheet/:id", async (req, res) => {
+  try {
+    const m = await prisma.machine.findUnique({ where: { id: req.params.id }, select: { datasheetUrl: true, name: true } });
+    return await serveStoredPdf(res, m?.datasheetUrl, m?.name);
+  } catch {
+    return res.status(404).end();
   }
 });
 

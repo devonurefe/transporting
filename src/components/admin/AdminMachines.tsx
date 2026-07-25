@@ -4,11 +4,12 @@
  */
 
 import React, { useState, useMemo } from "react";
-import { Plus, Trash2, Wrench, X, Sparkles, Image as ImageIcon, Copy } from "lucide-react";
+import { Plus, Trash2, Wrench, X, Sparkles, Image as ImageIcon, Copy, FileText } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useAppStore } from "../../store/appStore";
 import { useAuthStore } from "../../store/authStore";
 import { resizeImage } from "../../utils/image";
+import { readFileAsDataUrl } from "../../utils/file";
 import { Machine } from "../../types";
 import { getSpecsForMachine } from "../../utils/machineSpecs";
 import { showAdminToast } from "./AdminToast";
@@ -174,6 +175,8 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
   const [editAdditionalImages, setEditAdditionalImages] = useState<string[]>([]);
   const [isUploadingEditAdditional, setIsUploadingEditAdditional] = useState(false);
   const [editPackageContents, setEditPackageContents] = useState("");
+  const [editDatasheetUrl, setEditDatasheetUrl] = useState("");
+  const [isUploadingEditDatasheet, setIsUploadingEditDatasheet] = useState(false);
   const [editSpecs, setEditSpecs] = useState<{ label: string; value: string }[]>([]);
   const [editBufferDays, setEditBufferDays] = useState(0);
   const [editMinRentalDays, setEditMinRentalDays] = useState("");
@@ -261,6 +264,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
     setEditCampaignDiscountAmount(m.campaignDiscountAmount ? String(m.campaignDiscountAmount) : "");
     setEditAdditionalImages(m.additionalImages || []);
     setEditPackageContents(m.packageContents || "");
+    setEditDatasheetUrl(m.datasheetUrl || "");
     setEditSpecs(getSpecsForMachine(m.id, m.specs));
     setEditBufferDays(m.bufferDays ?? 0);
     setEditMinRentalDays(m.minRentalDays ? String(m.minRentalDays) : "");
@@ -300,6 +304,35 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
       showAdminToast(t("Fout bij uploaden afbeelding.", "Error uploading image.", "Resim yükleme hatası."), "error");
     } finally {
       setIsUploadingEditImage(false);
+      e.target.value = "";
+    }
+  };
+
+  const handleEditDatasheetFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingEditDatasheet(true);
+    try {
+      const base64 = await readFileAsDataUrl(file);
+      const res = await fetch("/api/upload-pdf", {
+        method: "POST",
+        headers: getAdminAuthHeaders(true),
+        body: JSON.stringify({ fileName: file.name, base64Data: base64 })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setEditDatasheetUrl(data.url);
+        onAddSystemLog("fleet", "Beheerder", t("Datasheet (PDF) vervangen: ", "Datasheet (PDF) replaced: ", "Teknik döküman (PDF) değiştirildi: ") + file.name);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        showAdminToast(data.error || t("Uploaden mislukt.", "Upload failed.", "Yükleme başarısız."), "error");
+      }
+    } catch (err) {
+      console.error(err);
+      showAdminToast(t("Fout bij uploaden PDF.", "Error uploading PDF.", "PDF yükleme hatası."), "error");
+    } finally {
+      setIsUploadingEditDatasheet(false);
       e.target.value = "";
     }
   };
@@ -395,6 +428,7 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
       campaignDiscountAmount: editCampaignDiscountAmount ? Number(editCampaignDiscountAmount) : undefined,
       packageContents: editPackageContents.trim() || undefined,
       additionalImages: editAdditionalImages,
+      datasheetUrl: editDatasheetUrl,
       // Always send the array (even empty) so clearing all rows actually clears the
       // field server-side — `undefined` is dropped by JSON.stringify and the old
       // specs would silently survive in the database.
@@ -1006,6 +1040,46 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                             ))}
                           </div>
                         )}
+                      </div>
+
+                      {/* Datasheet PDF Section */}
+                      <div className="border-t border-slate-200/80 pt-4 space-y-2 mt-3">
+                        <span className="text-xs text-slate-700 block font-bold">
+                          {t("Technische fiche (PDF, optioneel)", "Technical datasheet (PDF, optional)", "Teknik döküman (PDF, isteğe bağlı)")}
+                        </span>
+                        <span className="text-[10px] text-slate-400 italic block">
+                          {t("Zichtbaar als 'Datasheet (PDF)'-knop bij de specificaties in de detailpopup.", "Shown as a 'Datasheet (PDF)' button next to the specs in the detail popup.", "Detay popup'ta özelliklerin yanında 'Datasheet (PDF)' butonu olarak gösterilir.")}
+                        </span>
+                        {editDatasheetUrl ? (
+                          <div className="flex items-center gap-2 w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs">
+                            <FileText className="h-3.5 w-3.5 text-teal-600 shrink-0" />
+                            <span className="flex-1 truncate text-slate-600">
+                              {t("PDF geüpload", "PDF uploaded", "PDF yüklendi")}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => setEditDatasheetUrl("")}
+                              className="p-0.5 text-slate-400 hover:text-red-500 cursor-pointer border-none bg-transparent shrink-0"
+                              title={t("PDF wissen", "Clear PDF", "PDF'yi temizle")}
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="relative">
+                            <input
+                              type="file"
+                              accept="application/pdf"
+                              disabled={isUploadingEditDatasheet}
+                              onChange={handleEditDatasheetFileChange}
+                              className="w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-[10.5px] file:font-black file:bg-teal-50 file:text-teal-700 file:cursor-pointer hover:file:bg-teal-100 transition-all border border-dashed border-slate-300 rounded-xl p-3 bg-white"
+                            />
+                            {isUploadingEditDatasheet && (
+                              <div className="absolute right-6 top-5 h-5 w-5 border-2 border-teal-600 border-t-transparent rounded-full animate-spin" />
+                            )}
+                          </div>
+                        )}
+                        <p className="text-[10px] text-slate-400">{t("Max. 8 MB.", "Max. 8 MB.", "Maks. 8 MB.")}</p>
                       </div>
                     </div>
 

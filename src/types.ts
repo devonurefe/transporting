@@ -35,6 +35,7 @@ export interface Machine {
   packageContents?: string; // Semicolon separated included items checklist
   additionalImages?: string[];
   specs?: { label: string; value: string }[];
+  datasheetUrl?: string; // admin-uploaded technical datasheet PDF (manufacturer spec sheet)
   isActive?: boolean;
   showInWeeklyOffers?: boolean; // display in "Weekaanbiedingen" section on catalog
   bufferDays?: number; // 0=no buffer, 1=1-day maintenance buffer after each rental

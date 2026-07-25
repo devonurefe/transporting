@@ -1163,6 +1163,44 @@ async function applyDataMigrations() {
       await prisma.invoiceCounter.create({ data: { id: GOOGLE_REVIEWS_SEED, lastNumber: 1 } });
     }
 
+    // Add Skyjack SJ12 to an already-seeded production DB — prisma/seed.ts's
+    // upsert is create-only and runs via `npx prisma db seed`, which nothing in
+    // the deploy pipeline invokes against a populated database (autoSeedIfEmpty
+    // only fires when the machines table is empty, and `npm run start` only runs
+    // `prisma db push`). New machines therefore need an explicit create-if-missing
+    // migration here, same as every other post-launch catalog change in this file.
+    const sj12 = await prisma.machine.findUnique({ where: { id: "skyjack-sj12" } });
+    if (!sj12) {
+      await prisma.machine.create({
+        data: {
+          id: "skyjack-sj12",
+          name: "Skyjack SJ12 Verticale Mastlift",
+          category: "mastlift",
+          categoryLabel: "Mastlift",
+          height: 5.65,
+          reach: 0,
+          weight: 863,
+          pricePerDay: 45,
+          powerType: "Elektrisch",
+          imageUrl: "/images/machines/skyjack-sj16.webp",
+          imageAlt: "Skyjack SJ12 verticale mastlift",
+          description: "Volledig gemotoriseerde verticale mastlift voor compacte werkruimtes. In tegenstelling tot een handmatige lift kan deze op volledige werkhoogte worden verplaatst — dankzij de 90°-besturing zelfs op de plek draaien, en smal genoeg voor standaard deuropeningen.",
+          suitableFor: ["Schilder", "Installateur", "Particulier"],
+          // Zelfde tarief als JLG 1230ES. Zondagblokkade €25 (= 3d − 2d), dus Vr+Za = 3-daagse prijs €105.
+          weekendPrice: 70,
+          twoDayPrice: 80,
+          threeDayPrice: 105,
+          fourDayPrice: 115,
+          weeklyPrice: 120,
+          extraDayPrice: 28,
+          monthlyPrice: 320,
+          sundayBlockFee: 25,
+          weekendRulesEnabled: true,
+        } as any,
+      });
+      console.log("[Migration] Added Skyjack SJ12 to the fleet catalog.");
+    }
+
     // Loud warning if the admin account still uses the old seeded default password
     const seededAdmin = await prisma.admin.findUnique({ where: { email: "admin@huurgo.nl" } });
     if (seededAdmin) {

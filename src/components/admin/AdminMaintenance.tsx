@@ -134,6 +134,13 @@ export default function AdminMaintenance({ adminLanguage }: AdminMaintenanceProp
 
       {showForm && (
         <div className={cardCls}>
+          <p className="text-[10.5px] text-slate-500 leading-snug">
+            {t(
+              "Geen datum nodig: dit blokkeert de machine direct na opslaan, voor onbepaalde tijd — tot u het als afgerond/hersteld markeert.",
+              "No date needed: this blocks the machine immediately on save, indefinitely — until you mark it done/repaired.",
+              "Tarih gerekmez: kaydettiğiniz an makine hemen ve süresiz bloke olur — siz onu tamam/onarıldı olarak işaretleyene kadar."
+            )}
+          </p>
           <select value={formMachineId} onChange={(e) => setFormMachineId(e.target.value)} className="w-full text-xs border border-slate-200 rounded-lg p-2.5">
             <option value="">{t("Kies een machine...", "Select a machine...", "Bir makine seçin...")}</option>
             {machineOptions.map(m => <option key={m.id} value={m.id}>{m.label}</option>)}

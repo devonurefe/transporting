@@ -1736,6 +1736,13 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                     {selectedDetailOrder.status === "Retour" && showDamageForm && (
                       <div className="space-y-2.5 bg-orange-50 border border-orange-200 rounded-xl p-3">
                         <p className="text-xs font-black text-orange-800">{t("Schademelding", "Damage report", "Hasar bildirimi")}</p>
+                        <p className="text-[10.5px] text-orange-700/80 leading-snug -mt-1">
+                          {t(
+                            "Geen datum nodig: dit blokkeert de machine direct na opslaan, voor onbepaalde tijd — tot u het als 'Hersteld' markeert in het Onderhoud & Schade-paneel.",
+                            "No date needed: this blocks the machine immediately on save, indefinitely — until you mark it 'Repaired' in the Maintenance & Damage panel.",
+                            "Tarih gerekmez: kaydettiğiniz an makine hemen ve süresiz bloke olur — siz Bakım ve Hasar panelinden 'Onarıldı' olarak işaretleyene kadar."
+                          )}
+                        </p>
                         <textarea
                           value={damageDescription}
                           onChange={(e) => setDamageDescription(e.target.value)}

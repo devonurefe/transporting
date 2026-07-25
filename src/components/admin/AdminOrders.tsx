@@ -205,6 +205,19 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
     o?.status === "Geannuleerd" && o?.paymentStatus === "paid";
   const refundPendingCount = orders.filter(needsRefund).length;
 
+  // "Betalingsherinnering Sturen" heeft geen zin op een order die net geplaatst is
+  // — er is nog niets om aan te herinneren. Zelfde 24-uursdrempel als de
+  // automatische betaalherinnering in de cron (server/routes/orders.ts
+  // send-reminders, dayAgo = 24u): de handmatige knop verschijnt pas op het
+  // moment dat het systeem zelf ook een herinnering zou overwegen, in plaats van
+  // vanaf minuut nul naast "Betaallink sturen" te staan.
+  const REMINDER_ELIGIBLE_HOURS = 24;
+  const canRemindPayment = (o: any): boolean => {
+    const created = new Date(o?.createdAt).getTime();
+    if (isNaN(created)) return false;
+    return Date.now() - created > REMINDER_ELIGIBLE_HOURS * 60 * 60 * 1000;
+  };
+
   const formatPhoneForWA = (phone: string): string => {
     const digits = phone.replace(/\D/g, "");
     if (digits.startsWith("00")) return digits.slice(2);
@@ -1399,7 +1412,22 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
 
                 </div>
 
-                {/* Date Proposal Section */}
+                {/* Date Proposal Section — collapsed to a single slim link by default.
+                    This is a rare action (only used on a scheduling conflict), but the
+                    full bordered panel used to always render at full height regardless
+                    of state, permanently pushing every action button below it down the
+                    page. Now it only expands into the full card when there's an actual
+                    pending proposal to track, or the admin has opened the form. */}
+                {!isProposingDate && !(selectedDetailOrder.proposedStartDate && selectedDetailOrder.proposedEndDate) ? (
+                  <button
+                    type="button"
+                    onClick={() => setIsProposingDate(true)}
+                    className="w-full flex items-center justify-center gap-1.5 text-[11px] font-bold text-amber-700 hover:text-amber-900 hover:bg-amber-50 py-2 rounded-xl transition-colors cursor-pointer border border-dashed border-amber-200 bg-transparent"
+                  >
+                    <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                    <span>{t("Alternatieve datum voorstellen", "Propose alternative date", "Alternatif Tarih Öner")}</span>
+                  </button>
+                ) : (
                 <div className="p-4 bg-amber-500/5 border border-amber-500/20 rounded-2xl space-y-3">
                   <div className="flex items-center justify-between">
                     <h5 className="text-xs font-bold text-amber-700 uppercase tracking-wider flex items-center space-x-1.5">
@@ -1494,6 +1522,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                     )}
                   </AnimatePresence>
                 </div>
+                )}
 
               </div>
 
@@ -1549,18 +1578,22 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                         <span>{t("Klant betaalt op locatie (bij ophalen/levering) — geen betaallink nodig.", "Customer pays on location (at pickup/delivery) — no payment link needed.", "Müşteri lokasyonda ödeyecek (teslim alma/teslimat) — ödeme linki gerekmez.")}</span>
                       </div>
                     )}
-                    {/* Stap 2 & 3 — markeer betaling ontvangen / stuur een herinnering. */}
+                    {/* Stap 2 & 3 — markeer betaling ontvangen / stuur een herinnering.
+                        De herinnering verschijnt pas na 24u (canRemindPayment) — een
+                        order van net geplaatst heeft nog niets om aan te herinneren,
+                        en dat was hiervoor vanaf minuut nul al naast "Betaallink
+                        sturen" te zien, met exact dezelfde nadruk. */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <button
                         type="button"
                         disabled={isUpdatingPayment}
                         onClick={() => handleUpdatePaymentStatus(selectedDetailOrder.id, "paid")}
-                        className={`bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-bold py-2.5 px-3 transition-all cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50 ${!selectedDetailOrder.customerPhone ? "sm:col-span-2" : ""}`}
+                        className={`bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-bold py-2.5 px-3 transition-all cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50 ${(!selectedDetailOrder.customerPhone || !canRemindPayment(selectedDetailOrder)) ? "sm:col-span-2" : ""}`}
                       >
                         <DollarSign className="h-3.5 w-3.5 shrink-0" />
                         <span>{t("Betaling Ontvangen ✓", "Payment Received ✓", "Ödeme Alındı Onay Ver")}</span>
                       </button>
-                      {selectedDetailOrder.customerPhone && (
+                      {selectedDetailOrder.customerPhone && canRemindPayment(selectedDetailOrder) && (
                         <button
                           type="button"
                           onClick={() => sendPaymentReminder(selectedDetailOrder)}
@@ -1571,6 +1604,19 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                         </button>
                       )}
                     </div>
+                    {/* Verduidelijking bij "link"-orders: Mollie zet dit zelf op "paid"
+                        zodra de klant betaalt (webhook) — de knop hierboven is dan een
+                        handmatige uitzondering, geen verplichte volgende stap. Zonder
+                        dit leest de knop als "dit moet u zelf aanklikken". */}
+                    {selectedDetailOrder.paymentMethod !== "on_location" && (
+                      <p className="text-[10px] text-slate-400 px-0.5">
+                        {t(
+                          "Wordt automatisch op \"Betaald\" gezet zodra de klant via de link betaalt — bovenstaande knop is alleen voor handmatige uitzonderingen.",
+                          "Automatically flips to \"Paid\" once the customer pays via the link — the button above is only for manual exceptions.",
+                          "Müşteri linkten ödediğinde otomatik olarak \"Ödendi\" olur — yukarıdaki buton sadece manuel istisnalar içindir."
+                        )}
+                      </p>
+                    )}
                   </div>
                 )}
                 {/* Refund — only for a paid order. Records paymentStatus "refunded"
@@ -1751,28 +1797,13 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                       </div>
                     )}
 
-                    {/* Cancel — destructive, separated below primary. Only shown for
-                        statuses the server actually allows to cancel
-                        (VALID_STATUS_TRANSITIONS in server/routes/orders.ts:
-                        In behandeling / Goedgekeurd → Geannuleerd). A dispatched
-                        ("Onderweg") order can no longer be cancelled, so hiding the
-                        button here prevents a guaranteed server rejection. */}
-                    {(selectedDetailOrder.status === "In behandeling" || selectedDetailOrder.status === "Goedgekeurd") && (
-                      <button
-                        type="button"
-                        disabled={isUpdatingStatus}
-                        onClick={() => setShowCancelConfirm(true)}
-                        className="w-full py-2 text-rose-600 hover:text-rose-700 border border-rose-200 hover:border-rose-300 hover:bg-rose-50 rounded-xl text-[11px] font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed bg-white"
-                      >
-                        <X className="h-3.5 w-3.5 shrink-0" />
-                        <span>{t("Bestelling annuleren", "Cancel order", "Siparişi İptal Et")}</span>
-                      </button>
-                    )}
                   </div>
                 )}
 
                 {/* Edit — reschedule / fix customer details / change delivery.
-                    Only while the order can still change (not completed/cancelled). */}
+                    Only while the order can still change (not completed/cancelled).
+                    Placed before Cancel: common/constructive action first, rare/
+                    destructive one last. */}
                 {selectedDetailOrder.status !== "Voltooid" && selectedDetailOrder.status !== "Geannuleerd" && (
                   <button
                     type="button"
@@ -1781,6 +1812,24 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                   >
                     <Pencil className="h-3.5 w-3.5 shrink-0" />
                     <span>{t("Bestelling bewerken", "Edit order", "Siparişi düzenle")}</span>
+                  </button>
+                )}
+
+                {/* Cancel — destructive, separated below primary/edit. Only shown for
+                    statuses the server actually allows to cancel
+                    (VALID_STATUS_TRANSITIONS in server/routes/orders.ts:
+                    In behandeling / Goedgekeurd → Geannuleerd). A dispatched
+                    ("Onderweg") order can no longer be cancelled, so hiding the
+                    button here prevents a guaranteed server rejection. */}
+                {(selectedDetailOrder.status === "In behandeling" || selectedDetailOrder.status === "Goedgekeurd") && (
+                  <button
+                    type="button"
+                    disabled={isUpdatingStatus}
+                    onClick={() => setShowCancelConfirm(true)}
+                    className="w-full py-2 text-rose-600 hover:text-rose-700 border border-rose-200 hover:border-rose-300 hover:bg-rose-50 rounded-xl text-[11px] font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed bg-white"
+                  >
+                    <X className="h-3.5 w-3.5 shrink-0" />
+                    <span>{t("Bestelling annuleren", "Cancel order", "Siparişi İptal Et")}</span>
                   </button>
                 )}
 

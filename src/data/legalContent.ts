@@ -162,7 +162,7 @@ Bij bezorging kiest u een gewenst tijdvak (ochtend of middag); wij spannen ons i
 ## Huurperiode en gebruik van de machine
 
 - De huurperiode telt vanaf de afgesproken startdatum tot en met de afgesproken einddatum (beide dagen inbegrepen).
-- Onze machines zijn BMWT-gecertificeerd (categorie 1-3B) en worden bedrijfsklaar en goed onderhouden afgeleverd.
+- Onze machines zijn ABOMA-gecertificeerd (categorie 1-3B) en worden bedrijfsklaar en goed onderhouden afgeleverd.
 - U gebruikt de machine uitsluitend voor het doel waarvoor deze is bestemd, conform de bijgeleverde instructies en geldende veiligheidsvoorschriften, en uitsluitend door personen die daartoe bevoegd en bekwaam zijn.
 - Onderverhuur of het in gebruik geven van de machine aan derden is niet toegestaan zonder onze schriftelijke toestemming.
 - U levert de machine bij het einde van de huurperiode terug in dezelfde staat als waarin u deze ontvangen heeft, behoudens normale slijtage.

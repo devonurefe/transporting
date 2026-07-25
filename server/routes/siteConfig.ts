@@ -15,7 +15,7 @@ import {
 
 export const siteConfigRouter = Router();
 
-const CORRECT_SUBTITLE = "HuurGo verhuurt gecertificeerde hoogwerkers, schaarliften, mastliften en ladderliften aan ZZP'ers, aannemers en particulieren in heel Nederland. Meer dan 50 BMWT-gecertificeerde machines, direct beschikbaar.";
+const CORRECT_SUBTITLE = "HuurGo verhuurt gecertificeerde hoogwerkers, schaarliften, mastliften en ladderliften aan ZZP'ers, aannemers en particulieren in heel Nederland. Meer dan 50 ABOMA-gecertificeerde machines, direct beschikbaar.";
 
 const defaultSiteConfig = {
   id: "default",

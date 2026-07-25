@@ -986,7 +986,13 @@ async function applyDataMigrations() {
       if (restored > 0) console.log(`[Migration] Restored ${restored} empty machine image URLs.`);
     }
 
-    // One-time fix: stale heroSubtitle from old AI-advisor era — idempotent, runs once per deploy
+    // One-time fix: stale heroSubtitle from old AI-advisor era — idempotent, runs once per deploy.
+    // Also catches the old "BMWT-gecertificeerd" wording: the machines' periodic
+    // inspections are actually done by ABOMA, not BMWT (BMWT is a trade
+    // association, not the keuring body) — corrected 2026-07 per owner feedback.
+    // Only rewrites the still-stock/stale text, never a custom admin-edited
+    // subtitle that doesn't match these patterns (same seed-safety principle
+    // as the machine/siteConfig upserts elsewhere).
     const staleSubtitleConfig = await prisma.siteConfig.findFirst({
       where: {
         OR: [
@@ -994,11 +1000,12 @@ async function applyDataMigrations() {
           { heroSubtitle: { contains: "AI assistant" } },
           { heroSubtitle: { contains: "MB Hoogwerkers" } },
           { heroSubtitle: { contains: "door heel Nederland" } },
+          { heroSubtitle: { contains: "BMWT-gecertificeerde" } },
         ]
       }
     });
     if (staleSubtitleConfig) {
-      const CORRECT_SUBTITLE = "HuurGo verhuurt gecertificeerde hoogwerkers, schaarliften, mastliften en ladderliften aan ZZP'ers, aannemers en particulieren in heel Nederland. Meer dan 50 BMWT-gecertificeerde machines, direct beschikbaar.";
+      const CORRECT_SUBTITLE = "HuurGo verhuurt gecertificeerde hoogwerkers, schaarliften, mastliften en ladderliften aan ZZP'ers, aannemers en particulieren in heel Nederland. Meer dan 50 ABOMA-gecertificeerde machines, direct beschikbaar.";
       await prisma.siteConfig.update({ where: { id: "default" }, data: { heroSubtitle: CORRECT_SUBTITLE } });
       console.log("[Migration] Fixed stale heroSubtitle.");
     }

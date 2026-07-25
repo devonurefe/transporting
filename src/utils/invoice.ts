@@ -648,9 +648,9 @@ export function printInvoice(orderOrOrders: Order | Order[], clientCompanyName?:
         
         <!-- Safety Banner Compliance -->
         <div class="compliance-banner">
-          <span class="compliance-badge">BMWT Gecertificeerd</span>
+          <span class="compliance-badge">ABOMA Gecertificeerd</span>
           <div class="compliance-text">
-            <strong>Veiligheidscertificering NEN-EN 280:</strong> Dit leidende verhuurobject voldoet aan de strengste Europese veiligheidsvoorwaarden. De periodieke keuring is verricht onder toezicht van de BMWT keuringsinstantie.
+            <strong>Veiligheidscertificering NEN-EN 280:</strong> Dit leidende verhuurobject voldoet aan de strengste Europese veiligheidsvoorwaarden. De periodieke keuring is verricht onder toezicht van de ABOMA keuringsinstantie.
           </div>
         </div>
         

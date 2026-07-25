@@ -1247,6 +1247,11 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                           className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
                         />
                         <p className="text-[10px] text-slate-400">{t("Alleen als geen vaste weekprijs", "Only if no fixed week price", "Yalnızca sabit hafta fiyatı yoksa")}</p>
+                        {editWeeklyPrice && editWeeklyDiscountPercent && (
+                          <p className="text-[10px] text-amber-600 font-semibold">
+                            {t("⚠ Vaste weekprijs is ingevuld — dit % wordt genegeerd.", "⚠ Fixed week price is set — this % will be ignored.", "⚠ Sabit hafta fiyatı girilmiş — bu yüzde uygulanmayacak.")}
+                          </p>
+                        )}
                       </div>
 
                       <div className="space-y-1">
@@ -1260,6 +1265,11 @@ export default function AdminMachines({ setSubTab, onAddSystemLog, adminLanguage
                           className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
                         />
                         <p className="text-[10px] text-slate-400">{t("Alleen als geen vaste maandprijs", "Only if no fixed month price", "Yalnızca sabit ay fiyatı yoksa")}</p>
+                        {editMonthlyFlatPrice && editMonthlyDiscountPercent && (
+                          <p className="text-[10px] text-amber-600 font-semibold">
+                            {t("⚠ Vaste maandprijs is ingevuld — dit % wordt genegeerd.", "⚠ Fixed month price is set — this % will be ignored.", "⚠ Sabit ay fiyatı girilmiş — bu yüzde uygulanmayacak.")}
+                          </p>
+                        )}
                       </div>
 
                       <div className="space-y-1">

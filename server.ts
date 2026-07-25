@@ -18,6 +18,7 @@ import { pruneAuditLogs } from "./server/utils/audit.js";
 import { requestLogger } from "./server/middleware/logger.js";
 import { errorHandler } from "./server/middleware/errorHandler.js";
 import { validateEnvironment } from "./server/utils/env.js";
+import { ResizedImageCache } from "./server/utils/imageCache.js";
 import { SERVICE_CITIES, getCityBySlug } from "./src/data/serviceCities.js";
 import { FAQ_ITEMS } from "./src/data/faq.js";
 
@@ -153,6 +154,21 @@ function pickWidth(reqWidth: unknown, defaultWidth: number): number {
   return Number.isFinite(n) && ALLOWED_IMAGE_WIDTHS.includes(n) ? n : defaultWidth;
 }
 
+// Bounded LRU of already-resized image bytes — see server/utils/imageCache.ts
+// for why this exists (it fixes photos intermittently falling back to the
+// placeholder on reload).
+const resizedImageCache = new ResizedImageCache(80);
+const resizedCacheGet = (key: string) => resizedImageCache.get(key);
+const resizedCacheSet = (key: string, value: { buf: Buffer; contentType: string }) =>
+  resizedImageCache.set(key, value);
+
+function sendImageBuffer(res: express.Response, buf: Buffer, contentType: string, etag?: string) {
+  res.setHeader("Content-Type", contentType);
+  res.setHeader("Cache-Control", "public, max-age=2592000");
+  if (etag) res.setHeader("ETag", etag);
+  return res.send(buf);
+}
+
 // Resolve a stored image URL to an HTTP response: decode base64 data: URLs and,
 // when a defaultWidth is given, resize + re-encode to WebP via sharp (cached 30d)
 // so oversized admin uploads don't ship full-res to every visitor. Redirects
@@ -160,7 +176,7 @@ function pickWidth(reqWidth: unknown, defaultWidth: number): number {
 async function serveStoredImage(
   res: express.Response,
   url: string | null | undefined,
-  opts?: { defaultWidth?: number; reqWidth?: unknown }
+  opts?: { defaultWidth?: number; reqWidth?: unknown; cacheKey?: string; etag?: string }
 ) {
   if (!url) return res.redirect(DEFAULT_OG_IMAGE);
   if (url.startsWith("data:image/")) {
@@ -179,18 +195,15 @@ async function serveStoredImage(
             .resize({ width, withoutEnlargement: true })
             .webp({ quality: 78 })
             .toBuffer();
-          res.setHeader("Content-Type", "image/webp");
-          res.setHeader("Cache-Control", "public, max-age=2592000");
-          return res.send(out);
+          if (opts.cacheKey) resizedCacheSet(opts.cacheKey, { buf: out, contentType: "image/webp" });
+          return sendImageBuffer(res, out, "image/webp", opts.etag);
         } catch (e) {
           // Corrupt image or sharp error — fall through to the raw buffer.
           console.warn("sharp resize failed, serving raw image:", (e as Error)?.message);
         }
       }
     }
-    res.setHeader("Content-Type", mimeMatch[1]);
-    res.setHeader("Cache-Control", "public, max-age=2592000");
-    return res.send(buf);
+    return sendImageBuffer(res, buf, mimeMatch[1], opts?.etag);
   }
   if (url.startsWith("/")) return res.redirect(url);
   if (/^https?:\/\//.test(url)) return res.redirect(url);
@@ -202,8 +215,23 @@ async function serveStoredImage(
 // and so the public catalog can load images as binary instead of inline base64.
 app.get("/machine-image/:id", async (req, res) => {
   try {
+    // Fetch only updatedAt first: it's a primary-key lookup of one small column,
+    // and it yields both the ETag and the cache key. A conditional request or a
+    // warm cache is then answered without ever touching the heavy base64 column
+    // or running sharp.
+    const meta = await prisma.machine.findUnique({ where: { id: req.params.id }, select: { updatedAt: true } });
+    if (!meta) return res.redirect(DEFAULT_OG_IMAGE);
+
+    const width = pickWidth(req.query.w, 800);
+    const key = `m:${req.params.id}:${meta.updatedAt.getTime()}:${width}`;
+    const etag = `W/"${key}"`;
+    if (req.headers["if-none-match"] === etag) return res.status(304).end();
+
+    const cached = resizedCacheGet(key);
+    if (cached) return sendImageBuffer(res, cached.buf, cached.contentType, etag);
+
     const m = await prisma.machine.findUnique({ where: { id: req.params.id }, select: { imageUrl: true } });
-    return await serveStoredImage(res, m?.imageUrl, { defaultWidth: 800, reqWidth: req.query.w });
+    return await serveStoredImage(res, m?.imageUrl, { defaultWidth: 800, reqWidth: req.query.w, cacheKey: key, etag });
   } catch {
     return res.redirect(DEFAULT_OG_IMAGE);
   }
@@ -215,10 +243,23 @@ app.get("/machine-image/:id/gallery/:idx", async (req, res) => {
   try {
     const idx = Number(req.params.idx);
     if (!Number.isInteger(idx) || idx < 0) return res.redirect(DEFAULT_OG_IMAGE);
+
+    // Same two-step lookup as the main image route above.
+    const meta = await prisma.machine.findUnique({ where: { id: req.params.id }, select: { updatedAt: true } });
+    if (!meta) return res.redirect(DEFAULT_OG_IMAGE);
+
+    const width = pickWidth(req.query.w, 1000);
+    const key = `g:${req.params.id}:${idx}:${meta.updatedAt.getTime()}:${width}`;
+    const etag = `W/"${key}"`;
+    if (req.headers["if-none-match"] === etag) return res.status(304).end();
+
+    const cached = resizedCacheGet(key);
+    if (cached) return sendImageBuffer(res, cached.buf, cached.contentType, etag);
+
     const m = await prisma.machine.findUnique({ where: { id: req.params.id }, select: { additionalImages: true } });
     const gallery = Array.isArray(m?.additionalImages) ? (m!.additionalImages as unknown[]) : [];
     const url = typeof gallery[idx] === "string" ? (gallery[idx] as string) : null;
-    return await serveStoredImage(res, url, { defaultWidth: 1000, reqWidth: req.query.w });
+    return await serveStoredImage(res, url, { defaultWidth: 1000, reqWidth: req.query.w, cacheKey: key, etag });
   } catch {
     return res.redirect(DEFAULT_OG_IMAGE);
   }

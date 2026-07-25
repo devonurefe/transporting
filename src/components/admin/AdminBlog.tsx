@@ -10,6 +10,7 @@ import {
   Bold, Heading, List,
 } from "lucide-react";
 import { useAppStore, type BlogPost } from "../../store/appStore";
+import { useAuthStore } from "../../store/authStore";
 import AdminConfirmDialog from "./AdminConfirmDialog";
 import { showAdminToast } from "./AdminToast";
 
@@ -51,6 +52,7 @@ export default function AdminBlog({ adminLanguage, onAddSystemLog }: AdminBlogPr
   const updateBlogPost = useAppStore((s) => s.updateBlogPost);
   const deleteBlogPost = useAppStore((s) => s.deleteBlogPost);
   const togglePublished = useAppStore((s) => s.toggleBlogPostPublished);
+  const adminUser = useAuthStore((state) => state.user);
 
   const [draft, setDraft] = useState<Draft | null>(null);
   const [saving, setSaving] = useState(false);
@@ -123,7 +125,7 @@ export default function AdminBlog({ adminLanguage, onAddSystemLog }: AdminBlogPr
     setSaving(false);
     if (ok) {
       showAdminToast(draft.id ? t("Artikel bijgewerkt.", "Article updated.", "Yazı güncellendi.") : t("Artikel toegevoegd.", "Article added.", "Yazı eklendi."), "success");
-      onAddSystemLog?.("system", "huurgo Admin", `Kenniscentrum: "${draft.title.trim()}" ${draft.id ? "bijgewerkt" : "toegevoegd"}`);
+      onAddSystemLog?.("system", adminUser?.name ?? "Admin", `Kenniscentrum: "${draft.title.trim()}" ${draft.id ? "bijgewerkt" : "toegevoegd"}`);
       setDraft(null);
     } else {
       showAdminToast(useAppStore.getState().error || t("Opslaan mislukt.", "Save failed.", "Kaydetme başarısız."), "error");
@@ -135,7 +137,7 @@ export default function AdminBlog({ adminLanguage, onAddSystemLog }: AdminBlogPr
     const ok = await deleteBlogPost(confirmDelete.id);
     if (ok) {
       showAdminToast(t("Artikel verwijderd.", "Article deleted.", "Yazı silindi."), "success");
-      onAddSystemLog?.("system", "huurgo Admin", `Kenniscentrum: "${confirmDelete.title}" verwijderd`);
+      onAddSystemLog?.("system", adminUser?.name ?? "Admin", `Kenniscentrum: "${confirmDelete.title}" verwijderd`);
     } else {
       showAdminToast(useAppStore.getState().error || t("Verwijderen mislukt.", "Delete failed.", "Silme başarısız."), "error");
     }
@@ -151,6 +153,9 @@ export default function AdminBlog({ adminLanguage, onAddSystemLog }: AdminBlogPr
           : t("Artikel gepubliceerd.", "Article published.", "Yazı yayınlandı."),
         "success"
       );
+      onAddSystemLog?.("system", adminUser?.name ?? "Admin", `Kenniscentrum: "${p.title}" ${p.published ? "offline gehaald" : "gepubliceerd"}`);
+    } else {
+      showAdminToast(useAppStore.getState().error || t("Bijwerken mislukt.", "Update failed.", "Güncelleme başarısız."), "error");
     }
   };
 

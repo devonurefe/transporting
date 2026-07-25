@@ -27,12 +27,10 @@ import { showAdminToast } from "./AdminToast";
 
 interface AdminDiagnosticsProps {
   systemLogs: any[];
-  userProfiles: any[];
-  onAddSystemLog: (type: "login" | "logout" | "signup" | "booking" | "fleet" | "status" | "system", user: string, description: string) => void;
   adminLanguage?: string;
 }
 
-export default function AdminDiagnostics({ systemLogs, userProfiles, onAddSystemLog, adminLanguage }: AdminDiagnosticsProps) {
+export default function AdminDiagnostics({ systemLogs, adminLanguage }: AdminDiagnosticsProps) {
   const t = (nl: string, en: string, tr: string) => {
     if (adminLanguage === "tr") return tr;
     if (adminLanguage === "en") return en;
@@ -276,6 +274,7 @@ export default function AdminDiagnostics({ systemLogs, userProfiles, onAddSystem
           <div className="flex items-center space-x-2 pb-3 border-b border-slate-200">
             <ShieldCheck className="h-4.5 w-4.5 text-indigo-600" />
             <h3 className="font-display font-bold text-sm text-slate-900">{t("Beveiliging & Access Token Audits", "Security & Access Token Audits", "Güvenlik & Erişim Belirteci Denetimleri")}</h3>
+            <span className="ml-auto text-[9px] text-slate-400 font-mono">{t("Codebase-configuratie, geen live meting", "Codebase configuration, not a live probe", "Kod tabanı yapılandırması, canlı ölçüm değil")}</span>
           </div>
 
           <div className="space-y-3.5 pt-2 text-xs">

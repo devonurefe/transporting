@@ -103,7 +103,7 @@ Machines have two pricing mechanisms. **Flat rates take priority over percentage
 
 ### Weekend rules (per-machine, `weekendRulesEnabled`) — depot closed Sat+Sun
 Enabled per machine. **On** for the vertical-mast and scissor-lift groups: Bravi Leonardo,
-JLG 1230, Skyjack SJ16, Star 10, Dingli 6m, Optimum 8, Compact 8, Compact 10N — and (2026-07)
+JLG 1230, Skyjack SJ12, Skyjack SJ16, Star 10, Dingli 6m, Optimum 8, Compact 8, Compact 10N — and (2026-07)
 also for the aanhanger group Nifty 120/170 and the Hinowa spider lifts 15.70/17.75. The Nifty
 1-day campaign price (60/70) stays aggressive, but every 2+-day tier and the weekend are formulated
 on the normal standard day rate (120/185). **Off** for Ladderlift, Altrex kamersteigers and

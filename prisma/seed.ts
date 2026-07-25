@@ -677,6 +677,36 @@ const defaultMachines = [
     sundayBlockFee: 25,
     weekendRulesEnabled: true
   },
+  {
+    id: "skyjack-sj12",
+    name: "Skyjack SJ12 Verticale Mastlift",
+    category: "mastlift",
+    categoryLabel: "Mastlift",
+    height: 5.65,
+    reach: 0,
+    weight: 863,
+    pricePerDay: 45,
+    powerType: "Elektrisch",
+    imageUrl: "/images/machines/skyjack-sj16.webp",
+    imageAlt: "Skyjack SJ12 verticale mastlift",
+    description: "Volledig gemotoriseerde verticale mastlift voor compacte werkruimtes. In tegenstelling tot een handmatige lift kan deze op volledige werkhoogte worden verplaatst — dankzij de 90°-besturing zelfs op de plek draaien, en smal genoeg voor standaard deuropeningen.",
+    suitableFor: ["Schilder", "Installateur", "Particulier"],
+    weeklyDiscountPercent: null,
+    monthlyDiscountPercent: null,
+    campaignText: null,
+    campaignDiscountPercent: null,
+    campaignDiscountAmount: null,
+    // Zelfde tarief als JLG 1230ES. Zondagblokkade €25 (= 3d − 2d), dus Vr+Za = 3-daagse prijs €105.
+    weekendPrice: 70,
+    twoDayPrice: 80,
+    threeDayPrice: 105,
+    fourDayPrice: 115,
+    weeklyPrice: 120,
+    extraDayPrice: 28,
+    monthlyPrice: 320,
+    sundayBlockFee: 25,
+    weekendRulesEnabled: true
+  },
 
   // CATEGORIE 6: Verhuisliften / Ladderliften
   {

@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { Calendar, RefreshCw, Plus, Copy, Check, Link2 } from "lucide-react";
+import { Calendar, RefreshCw, Plus, Copy, Check, Link2, Wrench, ShieldAlert } from "lucide-react";
 import { motion } from "motion/react";
 import { useAppStore } from "../../store/appStore";
 import { useAuthStore } from "../../store/authStore";
@@ -22,6 +22,24 @@ export default function AdminCalendar({ onAddSystemLog, adminLanguage }: AdminCa
   const unblockDateAction = useAppStore((state) => state.unblockDate);
   const fetchBlockedDates = useAppStore((state) => state.fetchBlockedDates);
   const adminUser = useAuthStore((state) => state.user);
+
+  // Operational blocks (open DamageReport/MaintenanceEvent — server/utils/
+  // machineStatus.ts) shut a machine's ENTIRE calendar, indefinitely, and are
+  // invisible on this page otherwise: an admin blocking just 1-2 days here
+  // could see the whole calendar red on the customer side with no clue why,
+  // since that cause lives in a different panel (Bakım ve Hasar) entirely.
+  const maintenanceEvents = useAppStore((state) => state.maintenanceEvents);
+  const damageReports = useAppStore((state) => state.damageReports);
+  const fetchMaintenanceEvents = useAppStore((state) => state.fetchMaintenanceEvents);
+  const fetchDamageReports = useAppStore((state) => state.fetchDamageReports);
+  useEffect(() => {
+    fetchMaintenanceEvents();
+    fetchDamageReports();
+  }, [fetchMaintenanceEvents, fetchDamageReports]);
+  const openOperationalBlocks = [
+    ...maintenanceEvents.filter(e => !e.completedDate).map(e => ({ id: e.id, machineName: e.machineName, kind: "maintenance" as const })),
+    ...damageReports.filter(d => !d.resolvedAt).map(d => ({ id: d.id, machineName: d.machineName, kind: "damage" as const })),
+  ];
 
   const t = (nl: string, en: string, tr: string) => {
     if (adminLanguage === "tr") return tr;
@@ -238,6 +256,39 @@ export default function AdminCalendar({ onAddSystemLog, adminLanguage }: AdminCa
 
           {/* Right: show active blocked list */}
           <div className="lg:col-span-7 space-y-4">
+            {/* Operational blocks — a completely separate mechanism (Bakım ve
+                Hasar panel) that also shuts a machine's calendar, but for its
+                ENTIRE date range, indefinitely, not just the days blocked here.
+                Surfaced so a "why is the whole calendar red" question doesn't
+                need a trip to another panel to answer. */}
+            {openOperationalBlocks.length > 0 && (
+              <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 space-y-2.5">
+                <p className="text-xs font-extrabold text-rose-700 flex items-center gap-1.5">
+                  <ShieldAlert className="h-3.5 w-3.5 shrink-0" />
+                  {t(
+                    "Let op: onderstaande machines zijn volledig geblokkeerd (Bakım ve Hasar), niet slechts op datum",
+                    "Note: the machines below are fully blocked (Maintenance & Damage), not just for specific dates",
+                    "Dikkat: aşağıdaki makineler belirli bir tarih için değil, tamamen bloke (Bakım ve Hasar panelinden)"
+                  )}
+                </p>
+                <div className="space-y-1.5">
+                  {openOperationalBlocks.map((b) => (
+                    <div key={`${b.kind}-${b.id}`} className="flex items-center gap-2 text-xs text-rose-800">
+                      {b.kind === "maintenance" ? <Wrench className="h-3 w-3 shrink-0" /> : <ShieldAlert className="h-3 w-3 shrink-0" />}
+                      <span className="font-semibold">{b.machineName.replace(/\s*\(Unit\s+\d+\)\s*$/i, "")}</span>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-[10.5px] text-rose-600/80">
+                  {t(
+                    "Beheer dit in het Onderhoud & Schade-paneel.",
+                    "Manage this in the Maintenance & Damage panel.",
+                    "Bunu Bakım ve Hasar panelinden yönetin."
+                  )}
+                </p>
+              </div>
+            )}
+
             <h4 className="text-sm font-bold text-slate-700 flex items-center justify-between">
               <span>{t("Actieve Systeemsluitingen", "Active System Closures", "Aktif Sistem Kapatmaları")} ({blockedDates.length})</span>
               <span className="text-xs font-normal text-slate-400">{t("realtime", "real-time", "gerçek zamanlı veri tabanına göre")}</span>

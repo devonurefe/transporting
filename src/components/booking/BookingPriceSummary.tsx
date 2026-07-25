@@ -4,7 +4,7 @@
  */
 
 import React from "react";
-import { ShieldCheck, TrendingDown, Package, ChevronDown, Calendar, Truck, Tag, MessageCircle, BadgeCheck } from "lucide-react";
+import { ShieldCheck, TrendingDown, Package, ChevronDown, Calendar, Truck, Tag, MessageCircle, BadgeCheck, Umbrella } from "lucide-react";
 import { Machine } from "../../types";
 import { useLanguageStore } from "../../store/languageStore";
 import { euro, euroCompact } from "../../utils/format";
@@ -456,6 +456,10 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
           <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
             <BadgeCheck className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
             <span>{t("priceSummaryCertified")}</span>
+          </div>
+          <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
+            <Umbrella className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+            <span>{t("priceSummaryInsuranceIncluded")}</span>
           </div>
         </div>
       </div>

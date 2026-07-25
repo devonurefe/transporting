@@ -47,7 +47,11 @@ app.use(helmet({
       fontSrc: ["'self'"],
       imgSrc: ["'self'", "data:", "https:", "blob:"],
       connectSrc: ["'self'", "https:"],
-      frameSrc: ["'none'"],
+      // 'self' (not 'none') so the machine datasheet PDF viewer's <iframe> — which
+      // only ever points at our own /machine-datasheet/:id proxy — can load. Doesn't
+      // weaken clickjacking protection: that's frameguard (X-Frame-Options) below,
+      // which governs embedding *this* site in *other* pages, not the reverse.
+      frameSrc: ["'self'"],
       objectSrc: ["'none'"],
     }
   } : false,

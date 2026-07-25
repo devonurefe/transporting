@@ -20,7 +20,6 @@ import {
   Loader2,
 } from "lucide-react";
 
-const WHATSAPP_NUMBER = (import.meta as any).env?.VITE_WHATSAPP_NUMBER ?? "";
 import { useAuthStore } from "../../store/authStore";
 import { useLanguageStore } from "../../store/languageStore";
 import { showAdminToast } from "./AdminToast";

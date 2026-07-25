@@ -26,7 +26,6 @@ import {
   Wrench
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { UserProfile } from "../types";
 import { useAuthStore } from "../store/authStore";
 import { useAppStore } from "../store/appStore";
 import { useLanguageStore } from "../store/languageStore";
@@ -74,7 +73,6 @@ const ADVANCED_TAB_IDS: AdminSubTab[] = ["add", "blog", "customizer", "content",
 interface AdminSectionProps {
   isAdminMode: boolean;
   setIsAdminMode: (adminMode: boolean) => void;
-  userProfiles?: UserProfile[];
   systemLogs: any[];
   onAddSystemLog: (type: "login" | "logout" | "signup" | "booking" | "fleet" | "status" | "system", user: string, description: string) => void;
 }
@@ -82,7 +80,6 @@ interface AdminSectionProps {
 export default function AdminSection({
   isAdminMode,
   setIsAdminMode,
-  userProfiles,
   systemLogs,
   onAddSystemLog,
 }: AdminSectionProps) {
@@ -635,8 +632,6 @@ export default function AdminSection({
                   <AdminDiagnostics
                     key="diagnostics"
                     systemLogs={systemLogs}
-                    userProfiles={userProfiles || []}
-                    onAddSystemLog={onAddSystemLog}
                     adminLanguage={adminLanguage}
                   />
                 )}

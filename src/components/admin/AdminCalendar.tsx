@@ -18,7 +18,6 @@ interface AdminCalendarProps {
 export default function AdminCalendar({ onAddSystemLog, adminLanguage }: AdminCalendarProps) {
   const machines = useAppStore((state) => state.machines);
   const blockedDates = useAppStore((state) => state.blockedDates);
-  const orders = useAppStore((state) => state.orders);
   const blockDateAction = useAppStore((state) => state.blockDate);
   const unblockDateAction = useAppStore((state) => state.unblockDate);
   const fetchBlockedDates = useAppStore((state) => state.fetchBlockedDates);

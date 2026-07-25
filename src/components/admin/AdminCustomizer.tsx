@@ -334,6 +334,8 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
     if (success) {
       setEditingInfoCatId(null);
       onAddSystemLog("system", adminUser?.name ?? "Admin", t(`Info-inhoud opgeslagen voor categorie: ${catId}`, `Info content saved for category: ${catId}`, `Kategori bilgi içeriği kaydedildi: ${catId}`));
+    } else {
+      showAdminToast(t("Fout bij opslaan van info-inhoud.", "Error saving info content.", "Bilgi içeriği kaydedilirken hata oluştu."), "error");
     }
   };
 
@@ -349,6 +351,8 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
     const success = await updateCategories(updated);
     if (success) {
       onAddSystemLog("system", adminUser?.name ?? "Admin", t("Categorie verwijderd: ", "Category deleted: ", "Kategori silindi: ") + `${label} (${id}).`);
+    } else {
+      showAdminToast(t("Fout bij verwijderen van categorie.", "Error deleting category.", "Kategori silinirken hata oluştu."), "error");
     }
     setPendingDeleteCategory(null);
   };

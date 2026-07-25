@@ -191,6 +191,16 @@ export default function MachineDetailModal({
           </button>
         </div>
 
+        {/* Operationally blocked — unresolved DamageReport/MaintenanceEvent or retired
+            (server/utils/machineStatus.ts). Every date is rejected regardless of stock,
+            so this is surfaced up front instead of only after the customer picks dates. */}
+        {machine.operationallyBlocked && (
+          <div className="mb-4 -mt-2 shrink-0 flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2.5 text-xs font-bold text-rose-700">
+            <span className="h-1.5 w-1.5 rounded-full shrink-0 bg-rose-500" />
+            Tijdelijk niet beschikbaar (onderhoud/reparatie)
+          </div>
+        )}
+
         {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto space-y-7 sm:space-y-6 pr-1 pb-4 scrollbar-thin scrollbar-thumb-slate-200">
 
@@ -476,10 +486,11 @@ export default function MachineDetailModal({
             </div>
             <button
               onClick={() => onBook(machine)}
-              className="cta-shine flex-1 sm:flex-none flex items-center justify-center gap-2 py-3 px-4 sm:px-8 rounded-xl bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white text-sm font-bold transition-all shadow-md cursor-pointer active:scale-[0.98]"
+              disabled={machine.operationallyBlocked}
+              className="cta-shine flex-1 sm:flex-none flex items-center justify-center gap-2 py-3 px-4 sm:px-8 rounded-xl bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white text-sm font-bold transition-all shadow-md cursor-pointer active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none disabled:hover:bg-orange-500"
             >
               <ShoppingCart className="h-4 w-4" />
-              Huur Nu
+              {machine.operationallyBlocked ? "Niet beschikbaar" : "Huur Nu"}
             </button>
           </div>
         </div>

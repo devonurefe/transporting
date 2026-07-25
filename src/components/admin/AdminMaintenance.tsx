@@ -4,9 +4,9 @@
  */
 
 import React, { useEffect, useState } from "react";
-import { motion } from "motion/react";
-import { Wrench, ShieldAlert, CheckCircle2, Plus } from "lucide-react";
-import { useAppStore } from "../../store/appStore";
+import { motion, AnimatePresence } from "motion/react";
+import { Wrench, ShieldAlert, CheckCircle2, Plus, X, Pencil } from "lucide-react";
+import { useAppStore, MaintenanceEvent, DamageReport } from "../../store/appStore";
 import { euro, formatDateNL } from "../../utils/format";
 import AdminConfirmDialog from "./AdminConfirmDialog";
 import { showAdminToast } from "./AdminToast";
@@ -16,6 +16,7 @@ interface AdminMaintenanceProps {
 }
 
 type Tab = "maintenance" | "damage";
+type DetailRef = { kind: Tab; id: string };
 
 export default function AdminMaintenance({ adminLanguage }: AdminMaintenanceProps) {
   const t = (nl: string, en: string, tr: string) =>
@@ -27,8 +28,10 @@ export default function AdminMaintenance({ adminLanguage }: AdminMaintenanceProp
   const fetchMaintenanceEvents = useAppStore((s) => s.fetchMaintenanceEvents);
   const fetchDamageReports = useAppStore((s) => s.fetchDamageReports);
   const addMaintenanceEvent = useAppStore((s) => s.addMaintenanceEvent);
+  const updateMaintenanceEvent = useAppStore((s) => s.updateMaintenanceEvent);
   const resolveMaintenanceEvent = useAppStore((s) => s.resolveMaintenanceEvent);
   const addDamageReport = useAppStore((s) => s.addDamageReport);
+  const updateDamageReport = useAppStore((s) => s.updateDamageReport);
   const resolveDamageReport = useAppStore((s) => s.resolveDamageReport);
 
   useEffect(() => {
@@ -43,6 +46,7 @@ export default function AdminMaintenance({ adminLanguage }: AdminMaintenanceProp
   const [formCost, setFormCost] = useState("");
   const [saving, setSaving] = useState(false);
   const [confirmResolve, setConfirmResolve] = useState<{ kind: Tab; id: string; machineName: string } | null>(null);
+  const [detailItem, setDetailItem] = useState<DetailRef | null>(null);
 
   const getBaseName = (name: string) => name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "").trim();
   const machineOptions = [...machines]
@@ -87,6 +91,7 @@ export default function AdminMaintenance({ adminLanguage }: AdminMaintenanceProp
       : await resolveDamageReport(confirmResolve.id);
     if (ok) {
       showAdminToast(t("Afgerond gemarkeerd.", "Marked resolved.", "Çözüldü olarak işaretlendi."), "success");
+      setDetailItem(null);
     } else {
       showAdminToast(useAppStore.getState().error || t("Bijwerken mislukt.", "Update failed.", "Güncelleme başarısız."), "error");
     }
@@ -173,14 +178,18 @@ export default function AdminMaintenance({ adminLanguage }: AdminMaintenanceProp
             ) : (
               <div className="space-y-2">
                 {openMaintenance.map(e => (
-                  <div key={e.id} className={cardCls + " flex items-start justify-between gap-3"}>
+                  <div
+                    key={e.id}
+                    onClick={() => setDetailItem({ kind: "maintenance", id: e.id })}
+                    className={cardCls + " flex items-start justify-between gap-3 cursor-pointer hover:border-slate-300 transition-colors"}
+                  >
                     <div>
                       <p className="text-xs font-black text-slate-800">{getBaseName(e.machineName)}</p>
                       <p className="text-xs text-slate-600 mt-0.5">{e.description}</p>
                       <p className="text-[10px] text-slate-400 mt-1">{formatDateNL(e.scheduledDate)}{e.cost != null ? ` · ${euro(e.cost)}` : ""}</p>
                     </div>
                     <button
-                      onClick={() => setConfirmResolve({ kind: "maintenance", id: e.id, machineName: getBaseName(e.machineName) })}
+                      onClick={(ev) => { ev.stopPropagation(); setConfirmResolve({ kind: "maintenance", id: e.id, machineName: getBaseName(e.machineName) }); }}
                       className="shrink-0 flex items-center gap-1 text-[11px] font-bold px-3 py-1.5 rounded-lg bg-teal-500 hover:bg-teal-600 text-white cursor-pointer"
                     >
                       <CheckCircle2 className="h-3.5 w-3.5" /> {t("Afgerond", "Done", "Tamam")}
@@ -195,7 +204,11 @@ export default function AdminMaintenance({ adminLanguage }: AdminMaintenanceProp
               <h4 className="text-[10px] uppercase font-bold text-slate-500 tracking-wider mb-2">{t("Afgerond", "Resolved", "Çözüldü")}</h4>
               <div className="space-y-1.5">
                 {resolvedMaintenance.slice(0, 20).map(e => (
-                  <div key={e.id} className="text-xs text-slate-500 border-b border-slate-100 pb-1.5">
+                  <div
+                    key={e.id}
+                    onClick={() => setDetailItem({ kind: "maintenance", id: e.id })}
+                    className="text-xs text-slate-500 border-b border-slate-100 pb-1.5 cursor-pointer hover:text-slate-700"
+                  >
                     {getBaseName(e.machineName)} — {e.description} <span className="text-slate-400">({formatDateNL(e.completedDate!)})</span>
                   </div>
                 ))}
@@ -212,7 +225,11 @@ export default function AdminMaintenance({ adminLanguage }: AdminMaintenanceProp
             ) : (
               <div className="space-y-2">
                 {openDamage.map(d => (
-                  <div key={d.id} className={cardCls}>
+                  <div
+                    key={d.id}
+                    onClick={() => setDetailItem({ kind: "damage", id: d.id })}
+                    className={cardCls + " cursor-pointer hover:border-slate-300 transition-colors"}
+                  >
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <p className="text-xs font-black text-slate-800">{getBaseName(d.machineName)}{d.orderId ? <span className="text-slate-400 font-normal"> · {d.orderId}</span> : null}</p>
@@ -220,7 +237,7 @@ export default function AdminMaintenance({ adminLanguage }: AdminMaintenanceProp
                         <p className="text-[10px] text-slate-400 mt-1">{formatDateNL(d.reportedAt)}{d.repairCost != null ? ` · ${euro(d.repairCost)}` : ""}</p>
                       </div>
                       <button
-                        onClick={() => setConfirmResolve({ kind: "damage", id: d.id, machineName: getBaseName(d.machineName) })}
+                        onClick={(ev) => { ev.stopPropagation(); setConfirmResolve({ kind: "damage", id: d.id, machineName: getBaseName(d.machineName) }); }}
                         className="shrink-0 flex items-center gap-1 text-[11px] font-bold px-3 py-1.5 rounded-lg bg-teal-500 hover:bg-teal-600 text-white cursor-pointer"
                       >
                         <CheckCircle2 className="h-3.5 w-3.5" /> {t("Hersteld", "Repaired", "Onarıldı")}
@@ -241,7 +258,11 @@ export default function AdminMaintenance({ adminLanguage }: AdminMaintenanceProp
               <h4 className="text-[10px] uppercase font-bold text-slate-500 tracking-wider mb-2">{t("Afgerond", "Resolved", "Çözüldü")}</h4>
               <div className="space-y-1.5">
                 {resolvedDamage.slice(0, 20).map(d => (
-                  <div key={d.id} className="text-xs text-slate-500 border-b border-slate-100 pb-1.5">
+                  <div
+                    key={d.id}
+                    onClick={() => setDetailItem({ kind: "damage", id: d.id })}
+                    className="text-xs text-slate-500 border-b border-slate-100 pb-1.5 cursor-pointer hover:text-slate-700"
+                  >
                     {getBaseName(d.machineName)} — {d.description} <span className="text-slate-400">({formatDateNL(d.resolvedAt!)})</span>
                   </div>
                 ))}
@@ -265,6 +286,207 @@ export default function AdminMaintenance({ adminLanguage }: AdminMaintenanceProp
         onCancel={() => setConfirmResolve(null)}
         danger={false}
       />
+
+      <AnimatePresence>
+        {detailItem && (
+          <AdminMaintenanceDetailModal
+            detailRef={detailItem}
+            getBaseName={getBaseName}
+            t={t}
+            onClose={() => setDetailItem(null)}
+            onRequestResolve={(kind, id, machineName) => setConfirmResolve({ kind, id, machineName })}
+          />
+        )}
+      </AnimatePresence>
     </motion.div>
+  );
+}
+
+// Click-through detail/edit view for a single maintenance event or damage
+// report. Looks the record up live from the store by id (rather than taking
+// the object as a prop) so it stays in sync — e.g. immediately flips to the
+// read-only "resolved" view once Onarıldı/Afgerond is confirmed, without
+// needing to close and reopen.
+function AdminMaintenanceDetailModal({
+  detailRef,
+  getBaseName,
+  t,
+  onClose,
+  onRequestResolve,
+}: {
+  detailRef: DetailRef;
+  getBaseName: (name: string) => string;
+  t: (nl: string, en: string, tr: string) => string;
+  onClose: () => void;
+  onRequestResolve: (kind: Tab, id: string, machineName: string) => void;
+}) {
+  const maintenanceEvents = useAppStore((s) => s.maintenanceEvents);
+  const damageReports = useAppStore((s) => s.damageReports);
+  const updateMaintenanceEvent = useAppStore((s) => s.updateMaintenanceEvent);
+  const updateDamageReport = useAppStore((s) => s.updateDamageReport);
+
+  const isMaintenance = detailRef.kind === "maintenance";
+  const maintenanceItem = isMaintenance ? maintenanceEvents.find((e) => e.id === detailRef.id) : undefined;
+  const damageItem = !isMaintenance ? damageReports.find((d) => d.id === detailRef.id) : undefined;
+  const item = maintenanceItem ?? damageItem;
+
+  const initialDescription = item?.description ?? "";
+  const initialCost = isMaintenance
+    ? (maintenanceItem?.cost != null ? String(maintenanceItem.cost) : "")
+    : (damageItem?.repairCost != null ? String(damageItem.repairCost) : "");
+
+  const [description, setDescription] = useState(initialDescription);
+  const [cost, setCost] = useState(initialCost);
+  const [saving, setSaving] = useState(false);
+
+  // Not found (e.g. the list refetched between click and render) — close silently.
+  useEffect(() => {
+    if (!item) onClose();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [item]);
+  if (!item) return null;
+
+  const isResolved = isMaintenance ? !!maintenanceItem!.completedDate : !!damageItem!.resolvedAt;
+  const machineName = getBaseName(item.machineName);
+  const dateLabel = isMaintenance ? formatDateNL(maintenanceItem!.scheduledDate) : formatDateNL(damageItem!.reportedAt);
+  const resolvedDateLabel = isMaintenance
+    ? (maintenanceItem!.completedDate ? formatDateNL(maintenanceItem!.completedDate) : null)
+    : (damageItem!.resolvedAt ? formatDateNL(damageItem!.resolvedAt) : null);
+  const orderId = damageItem?.orderId ?? null;
+  const photos = damageItem?.photos ?? null;
+  const dirty = description.trim() !== initialDescription || cost !== initialCost;
+
+  const handleSave = async () => {
+    if (!description.trim()) {
+      showAdminToast(t("Omschrijving is verplicht.", "Description is required.", "Açıklama zorunludur."), "error");
+      return;
+    }
+    setSaving(true);
+    const costValue = cost ? Number(cost) : undefined;
+    const ok = isMaintenance
+      ? await updateMaintenanceEvent(item.id, { description: description.trim(), cost: costValue })
+      : await updateDamageReport(item.id, { description: description.trim(), repairCost: costValue });
+    setSaving(false);
+    if (ok) {
+      showAdminToast(t("Bijgewerkt.", "Updated.", "Güncellendi."), "success");
+    } else {
+      showAdminToast(useAppStore.getState().error || t("Bijwerken mislukt.", "Update failed.", "Güncelleme başarısız."), "error");
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 10 }}
+        className="relative w-full max-w-md bg-white border border-slate-200 rounded-2xl p-6 shadow-2xl max-h-[85vh] overflow-y-auto"
+      >
+        <div className="flex items-start justify-between gap-3 mb-4">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className={`h-9 w-9 rounded-xl flex items-center justify-center shrink-0 ${isMaintenance ? "bg-indigo-50 text-indigo-600" : "bg-orange-50 text-orange-600"}`}>
+              {isMaintenance ? <Wrench className="h-4 w-4" /> : <ShieldAlert className="h-4 w-4" />}
+            </div>
+            <div className="min-w-0">
+              <h3 className="text-sm font-extrabold text-slate-900 truncate">{machineName}</h3>
+              {orderId && <p className="text-[10px] text-slate-400">{orderId}</p>}
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            aria-label={t("Sluiten", "Close", "Kapat")}
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer border-none bg-transparent shrink-0"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <span className={`inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full mb-4 ${isResolved ? "bg-teal-50 text-teal-700" : "bg-rose-50 text-rose-700"}`}>
+          <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${isResolved ? "bg-teal-500" : "bg-rose-500"}`} />
+          {isResolved
+            ? t("Opgelost — machine weer beschikbaar", "Resolved — machine available again", "Çözüldü — makine tekrar müsait")
+            : t("Open — machine geblokkeerd", "Open — machine blocked", "Açık — makine bloke")}
+        </span>
+
+        {isResolved ? (
+          <div className="space-y-3">
+            <p className="text-xs text-slate-700 leading-relaxed whitespace-pre-line">{item.description}</p>
+            <p className="text-[10px] text-slate-400">
+              {t("Gemeld", "Reported", "Bildirildi")}: {dateLabel}
+              {resolvedDateLabel ? ` · ${t("Opgelost", "Resolved", "Çözüldü")}: ${resolvedDateLabel}` : ""}
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <div>
+              <label className="text-[10px] font-bold uppercase tracking-wide text-slate-500 mb-1 block">{t("Omschrijving", "Description", "Açıklama")}</label>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                rows={4}
+                maxLength={2000}
+                className="w-full text-xs border border-slate-200 rounded-lg p-2.5"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] font-bold uppercase tracking-wide text-slate-500 mb-1 block">
+                {isMaintenance ? t("Kosten", "Cost", "Maliyet") : t("Herstelbedrag", "Repair cost", "Onarım bedeli")}
+              </label>
+              <input
+                type="number"
+                min={0}
+                value={cost}
+                onChange={(e) => setCost(e.target.value)}
+                className="w-full text-xs border border-slate-200 rounded-lg p-2.5"
+              />
+            </div>
+            <p className="text-[10px] text-slate-400">{t("Gemeld", "Reported", "Bildirildi")}: {dateLabel}</p>
+          </div>
+        )}
+
+        {photos && photos.length > 0 && (
+          <div className="mt-4">
+            <label className="text-[10px] font-bold uppercase tracking-wide text-slate-500 mb-1.5 block">{t("Foto's", "Photos", "Fotoğraflar")}</label>
+            <div className="flex flex-wrap gap-2">
+              {photos.map((p, i) => <img key={i} src={p} alt="" className="h-24 w-24 object-cover rounded-lg border border-slate-200" />)}
+            </div>
+          </div>
+        )}
+
+        <div className="flex gap-2 pt-5">
+          {isResolved ? (
+            <button
+              onClick={onClose}
+              className="flex-1 py-2.5 text-xs font-bold rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer border-none"
+            >
+              {t("Sluiten", "Close", "Kapat")}
+            </button>
+          ) : (
+            <>
+              <button
+                onClick={() => onRequestResolve(detailRef.kind, item.id, machineName)}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-bold rounded-xl bg-teal-500 hover:bg-teal-600 text-white cursor-pointer border-none"
+              >
+                <CheckCircle2 className="h-3.5 w-3.5" /> {isMaintenance ? t("Afgerond", "Done", "Tamam") : t("Hersteld", "Repaired", "Onarıldı")}
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={saving || !dirty}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-bold rounded-xl bg-slate-900 hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed text-white cursor-pointer border-none"
+              >
+                <Pencil className="h-3.5 w-3.5" /> {saving ? "…" : t("Opslaan", "Save", "Kaydet")}
+              </button>
+            </>
+          )}
+        </div>
+      </motion.div>
+    </div>
   );
 }

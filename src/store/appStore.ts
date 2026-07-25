@@ -171,9 +171,11 @@ interface AppState {
   // server/utils/machineStatus.ts for how open records block a machine.
   fetchDamageReports: () => Promise<void>;
   addDamageReport: (data: { machineId: string; description: string; repairCost?: number }) => Promise<boolean>;
+  updateDamageReport: (id: string, data: { description: string; repairCost?: number }) => Promise<boolean>;
   resolveDamageReport: (id: string, repairCost?: number) => Promise<boolean>;
   fetchMaintenanceEvents: () => Promise<void>;
   addMaintenanceEvent: (data: { machineId: string; description: string; cost?: number }) => Promise<boolean>;
+  updateMaintenanceEvent: (id: string, data: { description: string; cost?: number }) => Promise<boolean>;
   resolveMaintenanceEvent: (id: string, cost?: number) => Promise<boolean>;
 
   // Cart actions
@@ -812,6 +814,25 @@ export const useAppStore = create<AppState>((set, get) => ({
     return false;
   },
 
+  updateDamageReport: async (id, data) => {
+    try {
+      const res = await fetch(`/api/damage-reports/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+        body: JSON.stringify(data)
+      });
+      if (res.ok) {
+        await get().fetchDamageReports();
+        return true;
+      }
+      const err = await res.json().catch(() => ({}));
+      set({ error: err.error || "Fout bij bijwerken schademelding." });
+    } catch (e: any) {
+      set({ error: e.message || "Netwerkfout bij bijwerken schademelding." });
+    }
+    return false;
+  },
+
   resolveDamageReport: async (id, repairCost) => {
     try {
       const res = await fetch(`/api/damage-reports/${id}/resolve`, {
@@ -857,6 +878,25 @@ export const useAppStore = create<AppState>((set, get) => ({
       set({ error: err.error || "Fout bij aanmaken onderhoud." });
     } catch (e: any) {
       set({ error: e.message || "Netwerkfout bij aanmaken onderhoud." });
+    }
+    return false;
+  },
+
+  updateMaintenanceEvent: async (id, data) => {
+    try {
+      const res = await fetch(`/api/maintenance/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+        body: JSON.stringify(data)
+      });
+      if (res.ok) {
+        await get().fetchMaintenanceEvents();
+        return true;
+      }
+      const err = await res.json().catch(() => ({}));
+      set({ error: err.error || "Fout bij bijwerken onderhoud." });
+    } catch (e: any) {
+      set({ error: e.message || "Netwerkfout bij bijwerken onderhoud." });
     }
     return false;
   },

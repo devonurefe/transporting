@@ -59,11 +59,11 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
     const base = baseName(machine.name);
     const matched = allMachines
       .filter((m) => m.isActive !== false && baseName(m.name) === base)
-      .map((m) => ({ id: m.id, stockQuantity: m.stockQuantity ?? 1 }));
-    return matched.length ? matched : [{ id: machine.id, stockQuantity: machine.stockQuantity ?? 1 }];
+      .map((m) => ({ id: m.id, stockQuantity: m.stockQuantity ?? 1, operationallyBlocked: m.operationallyBlocked ?? false }));
+    return matched.length ? matched : [{ id: machine.id, stockQuantity: machine.stockQuantity ?? 1, operationallyBlocked: machine.operationallyBlocked ?? false }];
   }, [allMachines, machine.id, machine.name, machine.stockQuantity]);
   const unitIds = useMemo(() => units.map((u) => u.id), [units]);
-  const unitKey = units.map((u) => `${u.id}:${u.stockQuantity}`).join(",");
+  const unitKey = units.map((u) => `${u.id}:${u.stockQuantity}:${u.operationallyBlocked ?? false}`).join(",");
 
   const today = todayStr || new Date().toISOString().split("T")[0];
   const todayYear = Number(today.split("-")[0]);

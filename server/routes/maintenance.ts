@@ -56,6 +56,38 @@ maintenanceRouter.post("/", requireAdmin as any, async (req: AuthenticatedReques
   }
 });
 
+// PATCH /api/maintenance/:id — edit description/cost while still open. Once
+// completedDate is set the record is a closed historical entry — resolve it
+// again via a new maintenance event instead of rewriting the old one.
+maintenanceRouter.patch("/:id", requireAdmin as any, async (req: AuthenticatedRequest, res: Response) => {
+  const { id } = req.params;
+  try {
+    const existing = await prisma.maintenanceEvent.findUnique({ where: { id } });
+    if (!existing) return res.status(404).json({ error: "Onderhoud niet gevonden" });
+    if (existing.completedDate) return res.status(400).json({ error: "Afgeronde onderhoud kan niet meer bewerkt worden" });
+
+    const description = String(req.body?.description ?? "").trim();
+    if (!description || description.length > 2000) {
+      return res.status(400).json({ error: "Omschrijving (max 2000 tekens) is verplicht" });
+    }
+    let cost = existing.cost;
+    if (req.body?.cost !== undefined && req.body?.cost !== null && req.body?.cost !== "") {
+      const v = Number(req.body.cost);
+      if (isNaN(v) || v < 0 || v > 1_000_000) return res.status(400).json({ error: "Ongeldig bedrag" });
+      cost = Math.round(v * 100) / 100;
+    } else if (req.body?.cost === "") {
+      cost = null;
+    }
+
+    const updated = await prisma.maintenanceEvent.update({ where: { id }, data: { description, cost } });
+    audit(req, "maintenance.updated", { entity: "MaintenanceEvent", entityId: id, meta: { machineId: existing.machineId } });
+    res.json(updated);
+  } catch (error) {
+    console.error("Error updating maintenance event:", error);
+    res.status(500).json({ error: "Kon onderhoud niet bijwerken" });
+  }
+});
+
 // PATCH /api/maintenance/:id/resolve — marks maintenance done, unblocking the
 // machine (unless another open damage/maintenance record remains).
 maintenanceRouter.patch("/:id/resolve", requireAdmin as any, async (req: AuthenticatedRequest, res: Response) => {

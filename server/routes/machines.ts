@@ -71,7 +71,13 @@ function toPublicMachine(m: any) {
         ? `/machine-image/${m.id}/gallery/${idx}`
         : url
     ),
-    datasheetUrl: datasheetIsData ? `/machine-datasheet/${m.id}` : m.datasheetUrl,
+    // ?v= cache-buster tied to updatedAt: the proxy is cached 30 days (see
+    // server.ts), so without a version param a client that already fetched a
+    // machine's datasheet (e.g. from before a header/content fix, or before an
+    // admin re-uploaded a new PDF) would keep serving the stale cached response
+    // for the rest of that window. Changing the machine bumps updatedAt, which
+    // changes the URL, which forces a fresh fetch.
+    datasheetUrl: datasheetIsData ? `/machine-datasheet/${m.id}?v=${new Date(m.updatedAt).getTime()}` : m.datasheetUrl,
   };
 }
 

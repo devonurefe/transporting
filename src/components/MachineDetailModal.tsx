@@ -173,12 +173,12 @@ export default function MachineDetailModal({
         <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-emerald-400 via-orange-400 to-amber-400" />
 
         {/* Header */}
-        <div className="flex justify-between items-start mb-6 shrink-0">
+        <div className="flex justify-between items-start mb-5 sm:mb-6 shrink-0">
           <div>
-            <span className="text-xs text-teal-600 uppercase tracking-widest block font-bold">
+            <span className="text-[10.5px] sm:text-xs text-teal-600 uppercase tracking-widest block font-bold">
               {machine.categoryLabel || "Vloot Details"} • {machine.powerType}
             </span>
-            <h3 className="font-display text-2xl font-black text-slate-900 tracking-tight mt-0.5">
+            <h3 className="font-display text-xl sm:text-2xl font-black text-slate-900 tracking-tight mt-0.5">
               {machine.name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "")}
             </h3>
           </div>
@@ -192,7 +192,7 @@ export default function MachineDetailModal({
         </div>
 
         {/* Scrollable content */}
-        <div className="flex-1 overflow-y-auto space-y-5 pr-1 pb-4 scrollbar-thin scrollbar-thumb-slate-200">
+        <div className="flex-1 overflow-y-auto space-y-7 sm:space-y-6 pr-1 pb-4 scrollbar-thin scrollbar-thumb-slate-200">
 
           {/* A — Images */}
           <div className="space-y-2">

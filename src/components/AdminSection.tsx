@@ -146,16 +146,22 @@ export default function AdminSection({
   // drie keer gedupliceerd — een tabwijziging vereiste drie edits).
   const al = (nl: string, en: string, tr: string) =>
     adminLanguage === "tr" ? tr : adminLanguage === "en" ? en : nl;
+  // Volgorde is gegroepeerd op werkstroom i.p.v. losse chronologie: Sözleşmeler
+  // (bestellingen) direct gevolgd door Dagplanning omdat die laatste een pure
+  // afgeleide dagweergave ván bestellingen is (wat vertrekt/keert terug vandaag) —
+  // stond voorheen los tussen Machines en Bezettingskalender. Machines/Bloke
+  // Günler/Bezettingskalender staan nu bij elkaar (alle drie vloot-gerelateerd),
+  // Klanten sluit de kernlijst af. Zie ook de audit die tot deze herindeling leidde.
   const coreTabs: { id: AdminSubTab; label: string; icon: typeof Settings; count?: number }[] = [
     { id: "dashboard", label: tAdmin("adminTabDashboard"), icon: BarChart3 },
     { id: "orders", label: tAdmin("adminTabOrders"), icon: Truck, count: orders.length },
+    { id: "planning", label: al("Dagplanning", "Daily Planning", "Günlük Sevkiyat"), icon: CalendarDays },
     { id: "machines", label: tAdmin("adminTabMachines"), icon: Layers, count: machines.length },
-    { id: "calendar", label: tAdmin("adminTabCalendar"), icon: Calendar, count: blockedDates.length },
     // De drie datum-panelen heetten alle drie iets met "kalender/planning", terwijl
     // ze verschillende dingen doen: adminTabCalendar = datums blokkeren,
     // planning = wat vertrekt/keert terug vandaag, timeline = bezetting per machine
     // over tijd. Namen zeggen nu wát het paneel doet i.p.v. dat het "een kalender" is.
-    { id: "planning", label: al("Dagplanning", "Daily Planning", "Günlük Sevkiyat"), icon: CalendarDays },
+    { id: "calendar", label: tAdmin("adminTabCalendar"), icon: Calendar, count: blockedDates.length },
     { id: "timeline", label: al("Bezettingskalender", "Occupancy Calendar", "Doluluk Takvimi"), icon: CalendarRange },
     { id: "customers", label: al("Klanten", "Customers", "Müşteriler"), icon: Users },
   ];

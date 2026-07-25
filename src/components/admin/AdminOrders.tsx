@@ -663,7 +663,12 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
           </button>
         </div>
 
-        {/* Status filter chips */}
+        {/* Status filter chips — three filter rows (status/date/payment) used to run
+            together with no visual separation, reading as one long undifferentiated
+            stack of pills. Each row now has its own micro-label so it's clear these
+            are three independent filter axes, not one confusing list. */}
+        <div className="space-y-1">
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-0.5">{t("Status", "Status", "Durum")}</p>
         <div className="flex items-center gap-1.5 flex-wrap">
           {([
             { key: "all",           nl: "Alle",          en: "All",        tr: "Tümü" },
@@ -697,6 +702,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
             );
           })}
         </div>
+        </div>
 
         {/* Free-text search */}
         <div className="relative">
@@ -719,6 +725,8 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
         </div>
 
         {/* Date filter */}
+        <div className="space-y-1">
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-0.5">{t("Datum", "Date", "Tarih")}</p>
         <div className="flex items-center gap-1.5 flex-wrap">
           {(["all", "today", "tomorrow", "week"] as const).map((f) => {
             const label = f === "all" ? t("Alle", "All", "Tümü") : f === "today" ? t("Vandaag", "Today", "Bugün") : f === "tomorrow" ? t("Morgen", "Tomorrow", "Yarın") : t("Deze Week", "This Week", "Bu Hafta");
@@ -738,13 +746,20 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
             );
           })}
         </div>
+        </div>
 
         {/* Payment-status filter — a separate axis from the status chips above:
             "Onaylandı"/"Yolda"/"Tamamlandı" are by definition always paid (the
             "Goedkeuren"-gate enforces it), so this mostly matters inside "İşlemde"
             (which orders are ready to approve vs. still waiting on the customer).
             Kept as its own slim row rather than a 7th status chip so the main
-            row never wraps to a 3rd line. Counts reflect the active status filter. */}
+            row never wraps to a 3rd line. Counts reflect the active status filter —
+            labelled explicitly below so "Tüm ödemeler (2)" next to "İşlemde"
+            doesn't read as if only 2 of the whole order book are ever paid. */}
+        <div className="space-y-1">
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-0.5">
+            {t("Betaalstatus (binnen bovenstaande status)", "Payment status (within status above)", "Ödeme Durumu (yukarıdaki duruma göre)")}
+          </p>
         <div className="flex items-center gap-1.5 flex-wrap">
           {([
             { key: "all",      nl: "Alle betalingen", en: "All payments",   tr: "Tüm ödemeler" },
@@ -770,6 +785,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
               </button>
             );
           })}
+        </div>
         </div>
 
         {statusError && (

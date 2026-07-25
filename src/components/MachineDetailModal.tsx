@@ -325,19 +325,20 @@ export default function MachineDetailModal({
 
           {/* D — Technical specs */}
           <div className="space-y-2">
-            <div className="flex items-center justify-between gap-2">
-              <p className="text-xs text-slate-500 uppercase tracking-wider font-bold">Technische Specificaties</p>
-              {machine.datasheetUrl && (
-                <button
-                  type="button"
-                  onClick={() => setShowDatasheet(true)}
-                  className="flex items-center gap-1.5 text-[11px] font-bold text-teal-700 bg-teal-50 hover:bg-teal-100 border border-teal-200 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer shrink-0"
-                >
-                  <FileText className="h-3.5 w-3.5" />
-                  Datasheet (PDF)
-                </button>
-              )}
-            </div>
+            <p className="text-xs text-slate-500 uppercase tracking-wider font-bold">Technische Specificaties</p>
+            {machine.datasheetUrl && (
+              <button
+                type="button"
+                onClick={() => setShowDatasheet(true)}
+                className="w-full flex items-center justify-between gap-2 bg-teal-600 hover:bg-teal-700 active:bg-teal-800 text-white px-4 py-3 rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer active:scale-[0.99]"
+              >
+                <span className="flex items-center gap-2 text-xs font-bold">
+                  <FileText className="h-4 w-4 shrink-0" />
+                  Bekijk technische fiche (PDF)
+                </span>
+                <ChevronRight className="h-4 w-4 shrink-0" />
+              </button>
+            )}
             <div className="divide-y divide-slate-100 rounded-xl border border-slate-200 overflow-hidden">
               <div className="flex items-center justify-between px-3 py-2.5 bg-white">
                 <span className="text-xs text-slate-500 font-medium">Type machine</span>

@@ -881,9 +881,25 @@ authRouter.get("/customers", authenticateToken, requireAdmin, async (req: Authen
       prisma.customer.count()
     ]);
 
+    // Lifetime value (CLAUDE.md documents this panel as showing it, but it was
+    // never actually computed — the list only ever rendered the order count).
+    // One extra groupBy for the whole page instead of an aggregate per customer
+    // row, same cancelled-orders exclusion as the dashboard's revenue KPI
+    // (GET /api/orders/stats) so the two numbers stay consistent.
+    const customerIds = customers.map(c => c.id);
+    const spendByCustomer = customerIds.length > 0
+      ? await prisma.order.groupBy({
+          by: ["customerId"],
+          where: { customerId: { in: customerIds }, status: { not: "Geannuleerd" } },
+          _sum: { totalAmount: true }
+        })
+      : [];
+    const spendMap = new Map(spendByCustomer.map(s => [s.customerId, s._sum.totalAmount ?? 0]));
+    const customersWithSpend = customers.map(c => ({ ...c, lifetimeValue: spendMap.get(c.id) ?? 0 }));
+
     res.setHeader("X-Total-Pages", String(Math.ceil(totalCount / limit)));
     res.setHeader("X-Total-Count", String(totalCount));
-    return res.json({ customers, totalCount, page, totalPages: Math.ceil(totalCount / limit) });
+    return res.json({ customers: customersWithSpend, totalCount, page, totalPages: Math.ceil(totalCount / limit) });
   } catch (error) {
     console.error("Get customers error:", error);
     return res.status(500).json({ error: "Klanten ophalen mislukt." });

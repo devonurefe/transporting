@@ -39,6 +39,9 @@ interface Customer {
   lockedUntil?: string | null;
   createdAt: string;
   _count: { orders: number };
+  // Som van totalAmount over alle niet-geannuleerde orders — zelfde uitsluiting
+  // als de omzet-KPI op het dashboard, zodat de cijfers niet uiteenlopen.
+  lifetimeValue: number;
 }
 
 // A customer is considered "blocked" when lockedUntil is set far in the future
@@ -285,7 +288,7 @@ export default function AdminCustomers({ adminLanguage, onViewOrder }: AdminCust
   // CSV export
   const exportCSV = () => {
     const rows = [
-      ["Naam", "E-mail", "Telefoon", "Bedrijf", "Profiel", "Bestellingen", "Marketing", "Geverifieerd", "Aangemeld op"],
+      ["Naam", "E-mail", "Telefoon", "Bedrijf", "Profiel", "Bestellingen", "Levenslange waarde", "Marketing", "Geverifieerd", "Aangemeld op"],
       ...filtered.map((c) => [
         c.name,
         c.email,
@@ -293,6 +296,7 @@ export default function AdminCustomers({ adminLanguage, onViewOrder }: AdminCust
         c.companyName || "",
         c.profile || "",
         String(c._count.orders),
+        c.lifetimeValue.toFixed(2),
         c.marketingConsent ? "Ja" : "Nee",
         c.isEmailVerified ? "Ja" : "Nee",
         new Date(c.createdAt).toLocaleDateString("nl-NL"),
@@ -526,6 +530,11 @@ export default function AdminCustomers({ adminLanguage, onViewOrder }: AdminCust
                         <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${c._count.orders > 0 ? "bg-slate-100 text-slate-600" : "bg-slate-50 text-slate-400"}`}>
                           {c._count.orders} {c._count.orders === 1 ? "bestelling" : "bestellingen"}
                         </span>
+                        {c.lifetimeValue > 0 && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-teal-50 text-teal-700 font-mono">
+                            {euro(c.lifetimeValue)}
+                          </span>
+                        )}
                         {c.marketingConsent && (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700">
                             <CheckCircle className="h-3 w-3" /> Marketing
@@ -563,7 +572,7 @@ export default function AdminCustomers({ adminLanguage, onViewOrder }: AdminCust
           {/* ── Desktop table view (hidden below md) ── */}
           <div className="hidden md:block bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
             {/* Table header */}
-            <div className="grid grid-cols-[auto_auto_1fr_1fr_auto_auto_auto_auto_auto] gap-2 px-4 py-2.5 bg-slate-50 border-b border-slate-100 text-[10px] font-black text-slate-500 uppercase tracking-wider">
+            <div className="grid grid-cols-[auto_auto_1fr_1fr_auto_auto_auto_auto_auto_auto] gap-2 px-4 py-2.5 bg-slate-50 border-b border-slate-100 text-[10px] font-black text-slate-500 uppercase tracking-wider">
               <input
                 type="checkbox"
                 checked={allFilteredSelected}
@@ -574,6 +583,7 @@ export default function AdminCustomers({ adminLanguage, onViewOrder }: AdminCust
               <span>{t("Naam / Bedrijf", "Name / Company", "İsim / Şirket")}</span>
               <span>{t("E-mail", "Email", "E-posta")}</span>
               <span className="text-center">{t("Orders", "Orders", "Siparişler")}</span>
+              <span className="text-right">{t("Waarde", "Value", "Değer")}</span>
               <span className="text-center">Mktg</span>
               <span className="text-center">✓</span>
               <span>{t("Datum", "Date", "Tarih")}</span>
@@ -585,7 +595,7 @@ export default function AdminCustomers({ adminLanguage, onViewOrder }: AdminCust
                 return (
                   <div
                     key={c.id}
-                    className={`grid grid-cols-[auto_auto_1fr_1fr_auto_auto_auto_auto_auto] gap-2 items-center px-4 py-3 text-xs transition-colors ${selectedIds.has(c.id) ? "bg-amber-50/60" : isBlocked(c) ? "bg-rose-50/40" : "hover:bg-slate-50/80"}`}
+                    className={`grid grid-cols-[auto_auto_1fr_1fr_auto_auto_auto_auto_auto_auto] gap-2 items-center px-4 py-3 text-xs transition-colors ${selectedIds.has(c.id) ? "bg-amber-50/60" : isBlocked(c) ? "bg-rose-50/40" : "hover:bg-slate-50/80"}`}
                   >
                     <input
                       type="checkbox"
@@ -620,6 +630,7 @@ export default function AdminCustomers({ adminLanguage, onViewOrder }: AdminCust
                       )}
                     </div>
                     <span className="text-center font-mono font-bold text-slate-700 text-[11px]">{c._count.orders}</span>
+                    <span className="text-right font-mono font-bold text-teal-600 text-[11px]">{c.lifetimeValue > 0 ? euro(c.lifetimeValue) : "—"}</span>
                     <span className="flex justify-center">
                       {c.marketingConsent ? <CheckCircle className="h-4 w-4 text-emerald-500" /> : <XCircle className="h-4 w-4 text-slate-300" />}
                     </span>
@@ -816,7 +827,14 @@ export default function AdminCustomers({ adminLanguage, onViewOrder }: AdminCust
           <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" onClick={() => setOrdersFor(null)} />
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="relative w-full sm:max-w-lg bg-white sm:rounded-2xl rounded-t-2xl shadow-2xl max-h-[85vh] overflow-y-auto">
             <div className="sticky top-0 bg-white border-b border-slate-100 px-5 py-3.5 flex items-center justify-between">
-              <h3 className="text-sm font-extrabold text-slate-900">{t("Bestellingen van", "Orders of", "Siparişleri")} {ordersFor.name}</h3>
+              <div>
+                <h3 className="text-sm font-extrabold text-slate-900">{t("Bestellingen van", "Orders of", "Siparişleri")} {ordersFor.name}</h3>
+                {ordersFor.lifetimeValue > 0 && (
+                  <p className="text-[11px] text-teal-600 font-mono font-bold mt-0.5">
+                    {t("Levenslange waarde", "Lifetime value", "Toplam değer")}: {euro(ordersFor.lifetimeValue)}
+                  </p>
+                )}
+              </div>
               <button onClick={() => setOrdersFor(null)} className="h-8 w-8 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-500 cursor-pointer"><X className="h-4 w-4" /></button>
             </div>
             <div className="p-4 space-y-2">

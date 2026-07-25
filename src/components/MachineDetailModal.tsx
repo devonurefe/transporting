@@ -17,7 +17,10 @@ import { useLanguageStore } from "../store/languageStore";
 import { useModalA11y } from "../hooks/useModalA11y";
 import VatToggle from "./VatToggle";
 import { CardBrandWatermark } from "./Header";
-import PdfViewerModal from "./PdfViewerModal";
+
+// Lazy: pulls in pdf.js (~350 KB), which must never land in the initial bundle —
+// it's only needed once someone actually opens a datasheet.
+const PdfViewerModal = React.lazy(() => import("./PdfViewerModal"));
 
 type CategoryInfoEntry = {
   id: string;
@@ -497,11 +500,13 @@ export default function MachineDetailModal({
       </motion.div>
 
       {showDatasheet && machine.datasheetUrl && (
-        <PdfViewerModal
-          url={machine.datasheetUrl}
-          title={`${machine.name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "")} — Technische fiche`}
-          onClose={() => setShowDatasheet(false)}
-        />
+        <React.Suspense fallback={null}>
+          <PdfViewerModal
+            url={machine.datasheetUrl}
+            title={`${machine.name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "")} — Technische fiche`}
+            onClose={() => setShowDatasheet(false)}
+          />
+        </React.Suspense>
       )}
     </div>
   );

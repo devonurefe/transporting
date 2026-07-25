@@ -25,6 +25,10 @@ export default defineConfig(() => {
             if (id.includes('node_modules/motion') || id.includes('framer-motion')) return 'motion';
             if (id.includes('node_modules/lucide-react')) return 'icons';
             if (id.includes('node_modules/recharts') || id.includes('node_modules/d3')) return 'charts';
+            // pdf.js is ~350 KB and only ever needed by the lazy-loaded datasheet
+            // viewer. Without its own chunk it lands in 'vendor', which every
+            // visitor downloads on first paint.
+            if (id.includes('node_modules/pdfjs-dist')) return 'pdfjs';
             return 'vendor';
           },
         },

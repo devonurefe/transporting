@@ -36,8 +36,11 @@ export function checkAvailability(
 
   // Retired, damaged, or under open maintenance — blocks every date, regardless
   // of order overlap/stock. See server/utils/machineStatus.ts (server mirror).
+  // Reason deliberately says nothing about damage/maintenance — reads exactly
+  // like an ordinary fully-booked machine to the customer; staff see the real
+  // reason in the admin Bakım ve Hasar panel.
   if (operationallyBlocked) {
-    return { available: false, blocked: true, overlap: false, reason: "Tijdelijk niet beschikbaar (onderhoud/reparatie)." };
+    return { available: false, blocked: true, overlap: false, reason: "Niet beschikbaar voor deze periode." };
   }
 
   const requestedStart = new Date(start).getTime();

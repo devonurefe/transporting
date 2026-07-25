@@ -173,25 +173,31 @@ export default function AdminCalendar({ onAddSystemLog, adminLanguage }: AdminCa
               </select>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2.5 min-w-0">
+            {/* flex, not grid: iOS Safari doesn't reliably shrink a native
+                <input type="date"> down to its CSS Grid track width — the
+                control keeps its own intrinsic content width and spills out
+                of its cell to the right. A flex row with min-w-0 + flex-1 on
+                each child forces the same 50/50 split without that native
+                sizing bug. */}
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1 min-w-0 space-y-2.5">
                 <label className="text-xs text-slate-600 block font-semibold truncate">{t("Begindatum *", "Start Date *", "Başlangıç Tarihi *")}</label>
                 <input
                   type="date"
                   required
                   value={blockDate}
                   onChange={(e) => { setBlockDate(e.target.value); if (blockEndDate && blockEndDate < e.target.value) setBlockEndDate(""); }}
-                  className="bg-white border border-slate-200 text-slate-800 w-full rounded-xl px-3.5 py-3.5 text-sm text-center outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 cursor-pointer transition-colors min-w-0"
+                  className="bg-white border border-slate-200 text-slate-800 w-full max-w-full rounded-xl px-2.5 py-3.5 text-sm text-center outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 cursor-pointer transition-colors min-w-0 box-border"
                 />
               </div>
-              <div className="space-y-2.5 min-w-0">
+              <div className="flex-1 min-w-0 space-y-2.5">
                 <label className="text-xs text-slate-600 block font-semibold truncate">{t("Einddatum", "End Date", "Bitiş Tarihi")}</label>
                 <input
                   type="date"
                   value={blockEndDate}
                   min={blockDate}
                   onChange={(e) => setBlockEndDate(e.target.value)}
-                  className="bg-white border border-slate-200 text-slate-800 w-full rounded-xl px-3.5 py-3.5 text-sm text-center outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 cursor-pointer transition-colors min-w-0"
+                  className="bg-white border border-slate-200 text-slate-800 w-full max-w-full rounded-xl px-2.5 py-3.5 text-sm text-center outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 cursor-pointer transition-colors min-w-0 box-border"
                 />
               </div>
             </div>

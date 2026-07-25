@@ -107,6 +107,15 @@ export default function AdminDashboard({ setSubTab, setOrdersFilter, adminLangua
   // Effective headline KPIs: server aggregate (all orders) wins over the
   // store-derived value (loaded window only) so counts/revenue stay correct >100 orders.
   const kpiEarnings = orderStats?.totalRevenue ?? totalEarnings;
+  // "Cumulatieve Omzet" below is a booked total (every non-cancelled order,
+  // including still-pending "In behandeling" requests and unpaid approved
+  // ones) — same definition Accounting's "Totale omzet" uses, just all-time
+  // instead of date-ranged. Without also surfacing the paid portion here,
+  // this card reads as "money in the bank" when it can include quotes that
+  // were never paid yet — show both, same distinction Accounting already
+  // makes, so the two panels never appear to disagree.
+  const kpiPaidEarnings = orderStats?.paidRevenue
+    ?? orders.reduce((acc, o) => (o.status !== "Geannuleerd" && o.paymentStatus === "paid" ? acc + o.totalAmount : acc), 0);
   const kpiActive = orderStats?.activeRentals ?? activeRentals;
   const kpiPending = orderStats?.pending ?? pendingRegistrations;
   const kpiAwaitingInspection = orderStats?.awaitingInspection ?? awaitingInspection;
@@ -247,7 +256,7 @@ export default function AdminDashboard({ setSubTab, setOrdersFilter, adminLangua
       {/* Glowing Premium KPI Card deck */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {[
-          { title: t("Cumulatieve Omzet", "Cumulative Revenue", "Toplam Ciro"), value: `${euro(kpiEarnings)}`, trend: revenueTrend, color: "bg-amber-50 border border-amber-200 text-amber-900 shadow-sm", tab: "accounting" as const, filter: [] as string[] },
+          { title: t("Cumulatieve Omzet", "Cumulative Revenue", "Toplam Ciro"), value: `${euro(kpiEarnings)}`, paidValue: kpiPaidEarnings, trend: revenueTrend, color: "bg-amber-50 border border-amber-200 text-amber-900 shadow-sm", tab: "accounting" as const, filter: [] as string[] },
           { title: t("Actieve Huren", "Active Rentals", "Aktif Kiralamalar"), value: `${kpiActive} ${t("machines", "machines", "makine")}`, trend: t("Klik voor details →", "Click for details →", "Detay için tıkla →"), color: "border border-slate-200 bg-slate-50 text-slate-800 shadow-sm", tab: "orders" as const, filter: ["Goedgekeurd", "Onderweg"] as string[] },
           { title: t("Vloot Bezetting", "Fleet Occupancy", "Filo Doluluk Oranı"), value: `${machines.length > 0 ? Math.round((kpiActive / machines.length) * 100) : 0}% ${t("bezet", "occupied", "dolu")}`, trend: `${machines.length} ${t("units totaal", "total units", "toplam adet")}`, color: "border border-slate-200 bg-slate-50 text-slate-800 shadow-sm", tab: "machines" as const, filter: [] as string[] },
           { title: t("Ter Beoordeling", "To Review", "Onay Bekleyenler"), value: `${kpiPending} ${t("aanvragen", "requests", "başvuru")}`, trend: t("Klik voor details →", "Click for details →", "Detay için tıkla →"), color: kpiPending > 0 ? "border border-amber-200 bg-amber-50 text-amber-950 shadow-sm" : "border border-slate-200 bg-slate-50 text-slate-500 shadow-sm", tab: "orders" as const, filter: ["In behandeling"] as string[] },
@@ -266,6 +275,11 @@ export default function AdminDashboard({ setSubTab, setOrdersFilter, adminLangua
                 <span className="text-xl font-display font-extrabold text-slate-900 mt-3.5 block">
                   {card.value}
                 </span>
+                {card.paidValue !== undefined && (
+                  <span className="text-[10px] font-mono text-emerald-700 mt-1 block">
+                    {t("Waarvan ontvangen", "Of which received", "Bunun ödeneni")}: {euro(card.paidValue)}
+                  </span>
+                )}
               </div>
               <span className="text-[10px] font-mono text-slate-500 block mt-auto leading-none pt-4">
                 {card.trend}

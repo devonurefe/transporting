@@ -23,12 +23,43 @@ export interface PdfViewerModalProps {
 const MIN_ZOOM = 1;
 const MAX_ZOOM = 3;
 
-// Renders one PDF page onto its own canvas at the requested CSS width.
-function PdfPage({ doc, pageNumber, cssWidth }: { doc: PDFDocumentProxy; pageNumber: number; cssWidth: number }) {
+// Renders one PDF page onto its own canvas at the requested CSS width, but only
+// once it scrolls near the viewport. Datasheets run to 20+ image-heavy pages, and
+// drawing them all upfront made opening the viewer crawl.
+function PdfPage({
+  doc,
+  pageNumber,
+  cssWidth,
+  fallbackAspect,
+}: {
+  doc: PDFDocumentProxy;
+  pageNumber: number;
+  cssWidth: number;
+  fallbackAspect: number;
+}) {
+  const holderRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    if (cssWidth <= 0) return;
+    const el = holderRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((e) => e.isIntersecting)) return;
+        setVisible(true);
+        // One-shot: once a page has been drawn it stays drawn.
+        observer.disconnect();
+      },
+      // Start a screenful early so scrolling lands on drawn pages, not blanks.
+      { rootMargin: "800px 0px" }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!visible || cssWidth <= 0) return;
     let cancelled = false;
     let task: { cancel: () => void } | null = null;
 
@@ -64,9 +95,19 @@ function PdfPage({ doc, pageNumber, cssWidth }: { doc: PDFDocumentProxy; pageNum
       cancelled = true;
       task?.cancel();
     };
-  }, [doc, pageNumber, cssWidth]);
+  }, [visible, doc, pageNumber, cssWidth]);
 
-  return <canvas ref={canvasRef} className="block mx-auto bg-white shadow-sm rounded-sm" />;
+  return (
+    <div
+      ref={holderRef}
+      className="bg-white shadow-sm rounded-sm mx-auto"
+      // Reserve the page's space before it renders so the scrollbar doesn't jump
+      // around as pages fill in.
+      style={visible ? undefined : { width: cssWidth, height: cssWidth * fallbackAspect }}
+    >
+      <canvas ref={canvasRef} className="block" />
+    </div>
+  );
 }
 
 /**
@@ -84,6 +125,8 @@ export default function PdfViewerModal({ url, title = "Technische fiche", onClos
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [zoom, setZoom] = useState(1);
   const [baseWidth, setBaseWidth] = useState(0);
+  // A4 portrait, used to size not-yet-drawn pages until the real ratio is known.
+  const [pageAspect, setPageAspect] = useState(1.414);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Track the available width so pages render to fit, and re-fit on rotation.
@@ -120,6 +163,26 @@ export default function PdfViewerModal({ url, title = "Technische fiche", onClos
       task.destroy();
     };
   }, [url]);
+
+  // Measure page 1 only: pages in a datasheet share a size in practice, so this
+  // one cheap lookup sizes every placeholder without touching the other pages.
+  useEffect(() => {
+    if (!doc) return;
+    let cancelled = false;
+    doc
+      .getPage(1)
+      .then((page) => {
+        if (cancelled) return;
+        const viewport = page.getViewport({ scale: 1 });
+        if (viewport.width > 0) setPageAspect(viewport.height / viewport.width);
+      })
+      .catch(() => {
+        /* Keep the A4 default — placeholders are cosmetic. */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [doc]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -217,7 +280,13 @@ export default function PdfViewerModal({ url, title = "Technische fiche", onClos
           {status === "ready" && doc && pageWidth > 0 && (
             <div className="space-y-3 w-fit mx-auto">
               {Array.from({ length: doc.numPages }, (_, i) => (
-                <PdfPage key={i} doc={doc} pageNumber={i + 1} cssWidth={pageWidth} />
+                <PdfPage
+                  key={i}
+                  doc={doc}
+                  pageNumber={i + 1}
+                  cssWidth={pageWidth}
+                  fallbackAspect={pageAspect}
+                />
               ))}
             </div>
           )}

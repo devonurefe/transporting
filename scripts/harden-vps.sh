@@ -13,6 +13,10 @@
 # İdempotent: paket zaten kuruluysa atlar, tekrar çalıştırmak güvenlidir.
 set -e
 
+# apt'ın (bekleyen çekirdek güncellemesi gibi) ilgisiz konularda konsolda
+# whiptail penceresi açıp script'i durdurmasını engeller — tamamen sessiz kurulum.
+export DEBIAN_FRONTEND=noninteractive
+
 echo "=========================================="
 echo " HuurGo VPS Sertleştirme Başlıyor"
 echo "=========================================="

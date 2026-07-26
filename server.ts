@@ -1295,6 +1295,26 @@ async function applyDataMigrations() {
       console.log("[Migration] Added Skyjack SJ12 to the fleet catalog.");
     }
 
+    // Owner request: match Pecolift's pricing to the 4m Altrex kamersteiger
+    // (altrex-rs44-4m) exactly. Guarded on the previous known pricePerDay so
+    // this only fires once and a later admin price edit is never overwritten.
+    const pecoliftPriceMatch = await prisma.machine.updateMany({
+      where: { id: "ecolift", pricePerDay: 39 },
+      data: {
+        pricePerDay: 35,
+        weekendPrice: null,
+        twoDayPrice: 25,
+        threeDayPrice: 35,
+        fourDayPrice: 35,
+        weeklyPrice: 35,
+        extraDayPrice: 7,
+        monthlyPrice: null,
+      },
+    });
+    if (pecoliftPriceMatch.count > 0) {
+      console.log("[Migration] Pecolift pricing matched to the 4m Altrex kamersteiger.");
+    }
+
     // Loud warning if the admin account still uses the old seeded default password
     const seededAdmin = await prisma.admin.findUnique({ where: { email: "admin@huurgo.nl" } });
     if (seededAdmin) {

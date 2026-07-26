@@ -4,7 +4,8 @@
 # Amaç: 26 Temmuz'daki kesintide görülen senaryoyu (ens3 ağ arayüzü DHCP
 # rotasını kaybediyor, sunucu içeriden sağlıklı ama dışarıdan erişilemez hale
 # geliyor) elle müdahale beklemeden kendi kendine düzeltmek. Ayrıca uygulama
-# konteyneri ayakta ama yanıt vermiyor durumuna karşı ikinci bir güvenlik ağı.
+# konteyneri ayakta ama yanıt vermiyor durumuna ve disk doluluğuna karşı ek
+# güvenlik ağları.
 #
 # Kurulum (VPS'te bir kere, root olarak):
 #   chmod +x /opt/huurgo/scripts/watchdog.sh
@@ -16,10 +17,10 @@
 # ayrıca ne yaptığını da yazar. Geçmişi görmek için: tail -50 /var/log/huurgo-watchdog.log
 #
 # Bildirim: bir sorun tespit edildiğinde (düzelse de düzelmese de) ALERT_EMAIL
-# adresine e-posta gönderir — uygulamanın zaten kullandığı Resend API'sini
-# (RESEND_API_KEY/EMAIL_FROM, /opt/huurgo/.env içinden okunur) kullanır, VPS'e
-# ayrı bir mail sunucusu kurmaya gerek kalmaz. Aynı sorun art arda tetiklenirse
-# spam olmasın diye 30 dakikada bir kereden fazla e-posta atılmaz.
+# adresine e-posta gönderir (bkz. notify.sh — uygulamanın zaten kullandığı
+# Resend hesabını yeniden kullanır, VPS'e ayrı bir mail sunucusu gerekmez).
+# Aynı sorun art arda tetiklenirse spam olmasın diye 30 dakikada bir kereden
+# fazla e-posta atılmaz (anahtar bazlı, sorun tipleri birbirinden bağımsız).
 
 set -u
 
@@ -27,36 +28,23 @@ LOG_FILE="/var/log/huurgo-watchdog.log"
 STATE_FILE="/var/log/huurgo-watchdog.notified"
 APP_DIR="/opt/huurgo"
 APP_URL="http://localhost:3000"
-ALERT_EMAIL="huurgomb@gmail.com"
+DISK_WARN_PERCENT=85
 NOTIFY_COOLDOWN_SECONDS=1800
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=./notify.sh
+source "$SCRIPT_DIR/notify.sh"
 
 log() {
   echo "$(date '+%Y-%m-%d %H:%M:%S') $1" >> "$LOG_FILE"
 }
 
-# Uygulamanın zaten kullandığı Resend hesabını yeniden kullan — .env'de
-# tanımlı değilse (ör. RESEND_API_KEY hiç girilmemişse) sessizce atla, sadece
-# log dosyasına yazmaya devam et.
-RESEND_API_KEY=""
-EMAIL_FROM="onboarding@resend.dev"
-if [ -f "$APP_DIR/.env" ]; then
-  val=$(grep -E '^RESEND_API_KEY=' "$APP_DIR/.env" | head -1 | cut -d'=' -f2-)
-  [ -n "$val" ] && RESEND_API_KEY="$val"
-  val=$(grep -E '^EMAIL_FROM=' "$APP_DIR/.env" | head -1 | cut -d'=' -f2-)
-  [ -n "$val" ] && EMAIL_FROM="$val"
-fi
-
 # notify <anahtar> <konu> <govde>
 # <anahtar>: aynı sorun tipi için tekrar bildirim göndermeden önce bekleme
-# süresini takip eden basit bir dosya adı (ör. "network", "app").
+# süresini takip eden basit bir dosya adı (ör. "network", "app", "disk").
 notify() {
   local key="$1" subject="$2" body="$3"
   local now last_ts=0
-
-  if [ -z "$RESEND_API_KEY" ]; then
-    log "BILGI: RESEND_API_KEY tanimli degil, '$subject' icin e-posta gonderilemedi."
-    return
-  fi
 
   now=$(date +%s)
   if [ -f "$STATE_FILE" ]; then
@@ -67,21 +55,20 @@ notify() {
     return
   fi
 
-  curl -s -m 10 -X POST "https://api.resend.com/emails" \
-    -H "Authorization: Bearer ${RESEND_API_KEY}" \
-    -H "Content-Type: application/json" \
-    -d "{\"from\":\"${EMAIL_FROM}\",\"to\":[\"${ALERT_EMAIL}\"],\"subject\":\"${subject}\",\"text\":\"${body}\"}" \
-    >> "$LOG_FILE" 2>&1
+  send_alert "$subject" "$body" >> "$LOG_FILE" 2>&1
 
   # Bu anahtar için son bildirim zamanını güncelle (dosyayı satır satır yeniden yaz).
   { [ -f "$STATE_FILE" ] && grep -v "^${key}:" "$STATE_FILE"; echo "${key}:${now}"; } > "${STATE_FILE}.tmp" 2>/dev/null
   mv "${STATE_FILE}.tmp" "$STATE_FILE"
 }
 
+PROBLEM_FOUND=0
+
 # --- 1. Ağ kontrolü: varsayılan rota var mı? ---
 # "ip route show" boş dönerse (default satırı yoksa) sunucu dışarıyla
 # konuşamıyor demektir — tam olarak 26 Temmuz'daki DHCP rota kaybı.
 if ! ip route show | grep -q '^default'; then
+  PROBLEM_FOUND=1
   log "UYARI: varsayılan ağ rotası yok. 'netplan apply' deneniyor..."
   netplan apply >> "$LOG_FILE" 2>&1
   sleep 5
@@ -97,12 +84,14 @@ fi
 # İnternete gerçekten çıkabiliyor muyuz? (rota var görünüp de trafik
 # geçmeyebilir — kısa bir bağlantı testiyle doğrula.)
 if ! ping -c 1 -W 3 8.8.8.8 > /dev/null 2>&1; then
+  PROBLEM_FOUND=1
   log "UYARI: internet erişimi yok (ping 8.8.8.8 başarısız). Ağ tarafı hala sorunlu olabilir."
   notify "internet" "huurgo.nl: internet erisimi yok" "Sunucu rotasi var gorunuyor ama disariya ping atamiyor. Ag tarafinda hala bir sorun olabilir, TransIP konsolundan bakin."
 fi
 
 # --- 2. Docker servisi ayakta mı? ---
 if ! systemctl is-active --quiet docker; then
+  PROBLEM_FOUND=1
   log "UYARI: docker servisi çalışmıyor. Başlatılıyor..."
   systemctl start docker >> "$LOG_FILE" 2>&1
   sleep 5
@@ -117,6 +106,7 @@ fi
 # Konteyner "Up" görünse bile uygulama içeride takılı kalmış olabilir —
 # gerçek bir HTTP isteğiyle doğrula, sadece "docker ps" ile yetinme.
 if ! curl -sf -m 5 -o /dev/null "$APP_URL"; then
+  PROBLEM_FOUND=1
   log "UYARI: uygulama $APP_URL adresinden yanıt vermiyor. Sadece 'app' konteyneri yeniden başlatılıyor..."
   cd "$APP_DIR" && docker compose up -d --force-recreate --no-deps app >> "$LOG_FILE" 2>&1
   sleep 10
@@ -127,6 +117,19 @@ if ! curl -sf -m 5 -o /dev/null "$APP_URL"; then
     log "HATA: app konteynerini yeniden başlattıktan sonra hala yanıt yok. Elle bakılmalı: docker compose logs app"
     notify "app" "ACIL: huurgo.nl uygulama yaniti yok" "Uygulama konteyneri yeniden baslatildi ama hala yanit vermiyor. Elle bakin: docker compose logs app"
   fi
-else
-  log "OK: ağ ve uygulama sağlıklı."
+fi
+
+# --- 4. Disk doluluğu ---
+# Otomatik düzeltme yok (silinecek "güvenli" bir şey watchdog'un bilebileceği
+# bir konu değil) — sadece eşiği geçince erken uyarı, disk tamamen dolup
+# Postgres/Docker/yedekleme aynı anda bozulmadan önce.
+disk_percent=$(df --output=pcent / 2>/dev/null | tail -1 | tr -dc '0-9')
+if [ -n "$disk_percent" ] && [ "$disk_percent" -ge "$DISK_WARN_PERCENT" ]; then
+  PROBLEM_FOUND=1
+  log "UYARI: disk kullanimi %${disk_percent} (esik: %${DISK_WARN_PERCENT})."
+  notify "disk" "UYARI: huurgo.nl disk doluluğu %${disk_percent}" "Sunucu diski %${disk_percent} dolu. 'docker system prune -af' ile eski imajlari temizlemeyi (ASLA --volumes eklemeyin, veritabani siliniyor) veya TransIP'ten disk buyutmeyi dusunun."
+fi
+
+if [ "$PROBLEM_FOUND" -eq 0 ]; then
+  log "OK: ağ, uygulama ve disk sağlıklı."
 fi

@@ -156,8 +156,11 @@ function pickWidth(reqWidth: unknown, defaultWidth: number): number {
 
 // Bounded LRU of already-resized image bytes — see server/utils/imageCache.ts
 // for why this exists (it fixes photos intermittently falling back to the
-// placeholder on reload).
-const resizedImageCache = new ResizedImageCache(80);
+// placeholder on reload). Kept modest (worst case a few MB) because this VPS
+// runs with only 1GB RAM alongside Postgres/Docker/nginx, which has already hit
+// an OOM once — 30 entries comfortably covers one catalog page's worth of
+// photos without meaningfully competing for memory.
+const resizedImageCache = new ResizedImageCache(30);
 const resizedCacheGet = (key: string) => resizedImageCache.get(key);
 const resizedCacheSet = (key: string, value: { buf: Buffer; contentType: string }) =>
   resizedImageCache.set(key, value);

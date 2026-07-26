@@ -800,7 +800,7 @@ const defaultMachines = [
     height: 3.5,
     reach: 0,
     weight: 180,
-    pricePerDay: 39,
+    pricePerDay: 35,
     powerType: "Handmatig",
     imageUrl: "/images/machines/ecolift.webp",
     imageAlt: "Pecolift handmatig lage toegangsplatform",
@@ -811,9 +811,14 @@ const defaultMachines = [
     campaignText: null,
     campaignDiscountPercent: null,
     campaignDiscountAmount: null,
-    weekendPrice: 59,
-    weeklyPrice: 99,
-    monthlyPrice: 290
+    // Op klantverzoek gelijkgetrokken met de 4m Altrex-kamersteiger (altrex-rs44-4m).
+    weekendPrice: null,
+    twoDayPrice: 25,
+    threeDayPrice: 35,
+    fourDayPrice: 35,
+    weeklyPrice: 35,
+    extraDayPrice: 7,
+    monthlyPrice: null
   },
 
 ];

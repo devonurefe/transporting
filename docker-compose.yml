@@ -1,10 +1,21 @@
 version: "3.8"
 
+# Caps each container's log file (json-file driver, docker's default) at
+# 10MB x 3 files. Without this, container logs accumulate unbounded on disk
+# forever — harmless for a while, but a slow leak that eventually competes
+# with everything else for the VPS's disk space.
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   postgres:
     image: postgres:16-alpine
     container_name: huurgo-db
     restart: always
+    logging: *default-logging
     environment:
       POSTGRES_DB: huurgo
       POSTGRES_USER: huurgo
@@ -26,6 +37,7 @@ services:
       dockerfile: Dockerfile
     container_name: huurgo-app
     restart: always
+    logging: *default-logging
     ports:
       - "127.0.0.1:3000:3000"
     depends_on:
@@ -53,6 +65,7 @@ services:
     image: nginx:alpine
     container_name: huurgo-proxy
     restart: always
+    logging: *default-logging
     ports:
       - "80:80"
       - "443:443"
@@ -66,6 +79,7 @@ services:
   certbot:
     image: certbot/certbot
     container_name: huurgo-certbot
+    logging: *default-logging
     volumes:
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot

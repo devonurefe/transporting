@@ -11,6 +11,8 @@ import { audit } from "../utils/audit.js";
 import { resolveFees } from "../utils/fees.js";
 import { computeOrderSubtotal, computeTransport, computeAddonsTotal, computeVatAndTotal, buildStoredAddons, computeRentalDays, clampTrailerDays, normalizeRentalDate, CampaignRuleLike } from "../utils/orderPricing.js";
 import { buildUblInvoiceXml } from "../utils/ublInvoice.js";
+import { customerWantsEmail, batchCustomerEmailOptIns, wantsEmailFromBatch } from "../utils/emailOptIn.js";
+import { releaseUnpaidOrders, sendPaymentReminders, UNPAID_RELEASE_HOURS } from "../services/orderMaintenance.js";
 
 export const ordersRouter = Router();
 
@@ -102,36 +104,6 @@ function safeParseAddons(raw: string | null): any[] {
     console.error("Corrupt addons JSON in order row:", raw?.slice(0, 100));
     return [];
   }
-}
-
-// Guests (no customerId) never had a preference to set, so they keep receiving
-// live-update emails by default; only a registered customer can opt out.
-async function customerWantsEmail(customerId: string | null): Promise<boolean> {
-  if (!customerId) return true;
-  const customer = await prisma.customer.findUnique({
-    where: { id: customerId },
-    select: { emailOptIn: true }
-  });
-  return customer?.emailOptIn !== false;
-}
-
-// Batched variant of customerWantsEmail for loops over many orders (the daily
-// reminder cron) — one query for every distinct customer instead of one query
-// per order. Same null/fallback semantics as customerWantsEmail: no customerId
-// (guest) or no matching row both default to "wants email".
-async function batchCustomerEmailOptIns(customerIds: (string | null)[]): Promise<Map<string, boolean>> {
-  const ids = Array.from(new Set(customerIds.filter((id): id is string => !!id)));
-  if (ids.length === 0) return new Map();
-  const customers = await prisma.customer.findMany({
-    where: { id: { in: ids } },
-    select: { id: true, emailOptIn: true }
-  });
-  return new Map(customers.map(c => [c.id, c.emailOptIn !== false]));
-}
-
-function wantsEmailFromBatch(optIns: Map<string, boolean>, customerId: string | null): boolean {
-  if (!customerId) return true;
-  return optIns.get(customerId) ?? true;
 }
 
 // Serializable transactions abort with P2034 when two bookings race on the same
@@ -1598,44 +1570,18 @@ ordersRouter.post("/send-reminders", async (req: AuthenticatedRequest, res: Resp
 
   try {
     const today = new Date();
-    const todayStr = today.toISOString().split("T")[0];
-    const todayStart = new Date(todayStr + "T00:00:00.000Z");
-
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
     const tomorrowStr = tomorrow.toISOString().split("T")[0];
     const tomorrowStart = new Date(tomorrowStr + "T00:00:00.000Z");
     const tomorrowEnd = new Date(tomorrowStr + "T23:59:59.999Z");
 
-    // Auto-cancel stale orders: "In behandeling" + unpaid + startDate already passed.
-    // These are bookings where the customer never paid and the rental window is gone —
-    // keeping them blocks the calendar for no reason.
-    // "on_location" uitgesloten: die klant betaalt pas bij ophalen/levering, dus
-    // "nog niet betaald" is daar de normale toestand en geen reden tot annuleren.
-    // De null-tak is essentieel: legacy orders van vóór paymentMethod hebben NULL
-    // en tellen als "link". Prisma's `not` laat NULL-rijen buiten de match (empirisch
-    // geverifieerd), dus zonder die tak zouden juist die orders stilletjes uit de
-    // auto-annulering vallen.
-    const notOnLocation = [{ paymentMethod: null }, { paymentMethod: { not: "on_location" } }];
-    const staleOrders = await prisma.order.findMany({
-      where: {
-        status: "In behandeling",
-        paymentStatus: "awaiting",
-        startDate: { lt: todayStart },
-        OR: notOnLocation
-      }
-    });
-
-    if (staleOrders.length > 0) {
-      await prisma.order.updateMany({
-        where: { id: { in: staleOrders.map(o => o.id) } },
-        data: { status: "Geannuleerd" }
-      });
-      for (const order of staleOrders) {
-        console.log(`[AutoCancel] ${order.id} — startDate ${order.startDate.toISOString().split("T")[0]} passed, never paid → Geannuleerd`);
-      }
-    }
-    const autoCancelled = staleOrders.length;
+    // Auto-annuleren en betaalherinneringen draaien via de gedeelde helpers in
+    // server/services/orderMaintenance.ts, zodat deze route exact hetzelfde doet
+    // als de in-process scheduler in server.ts (die in productie de enige is die
+    // daadwerkelijk draait). Eerst herinneren, dan pas vrijgeven.
+    const { sent: paymentRemindersSent, total: paymentRemindersTotal } = await sendPaymentReminders();
+    const { released: autoCancelled } = await releaseUnpaidOrders();
 
     // Send rental reminders for tomorrow's confirmed orders
     const orders = await prisma.order.findMany({
@@ -1659,42 +1605,8 @@ ordersRouter.post("/send-reminders", async (req: AuthenticatedRequest, res: Resp
       if (ok) sent++;
     }
 
-    // Payment reminders: unpaid "In behandeling" orders placed 24h+ ago that
-    // haven't already gotten one. Skipped entirely once paid or reminded --
-    // never re-sent on every daily cron run.
-    const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    // Ook hier "on_location" uitsluiten: een betaalherinnering sturen naar iemand
-    // die bewust "ik betaal op locatie" koos, is een onjuist bericht. Zelfde
-    // null-tak als hierboven zodat legacy orders wél een herinnering krijgen.
-    const unpaidOrders = await prisma.order.findMany({
-      where: {
-        status: "In behandeling",
-        paymentStatus: "awaiting",
-        createdAt: { lte: dayAgo },
-        paymentReminderSentAt: null,
-        OR: notOnLocation
-      }
-    });
-
-    const paymentOptIns = await batchCustomerEmailOptIns(unpaidOrders.map(o => o.customerId));
-    let paymentRemindersSent = 0;
-    for (const order of unpaidOrders) {
-      if (!wantsEmailFromBatch(paymentOptIns, order.customerId)) continue;
-      const emailData = {
-        ...order,
-        startDate: order.startDate.toISOString().split("T")[0],
-        endDate: order.endDate.toISOString().split("T")[0],
-        customerPhone: order.customerPhone || ""
-      };
-      const ok = await emailService.sendPaymentReminder(emailData);
-      if (ok) {
-        paymentRemindersSent++;
-        await prisma.order.update({ where: { id: order.id }, data: { paymentReminderSentAt: new Date() } });
-      }
-    }
-
-    console.log(`[Reminders] Sent ${sent}/${orders.length} rental reminders for ${tomorrowStr}, ${paymentRemindersSent}/${unpaidOrders.length} payment reminders`);
-    res.json({ sent, total: orders.length, date: tomorrowStr, autoCancelled, paymentRemindersSent, paymentRemindersTotal: unpaidOrders.length });
+    console.log(`[Reminders] Sent ${sent}/${orders.length} rental reminders for ${tomorrowStr}, ${paymentRemindersSent}/${paymentRemindersTotal} payment reminders`);
+    res.json({ sent, total: orders.length, date: tomorrowStr, autoCancelled, paymentRemindersSent, paymentRemindersTotal });
   } catch (error) {
     console.error("Error sending reminders:", error);
     res.status(500).json({ error: "Kon herinneringen niet verzenden" });

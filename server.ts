@@ -902,8 +902,32 @@ function scheduleDailyReminders() {
           }
         });
 
+        // Respect the customer's email opt-out. This scheduler is the only
+        // reminder path that actually runs in production (the equivalent HTTP
+        // endpoint POST /api/orders/send-reminders needs REMINDER_SECRET and is
+        // not wired to any cron), and it used to mail everyone unconditionally —
+        // so a customer who switched the toggle off in "Mijn Reserveringen" kept
+        // receiving reminders anyway. Batched into one query rather than one per
+        // order, same as the HTTP endpoint.
+        const optInIds = Array.from(
+          new Set(orders.map(o => o.customerId).filter((id): id is string => !!id))
+        );
+        const optInRows = optInIds.length
+          ? await prisma.customer.findMany({
+              where: { id: { in: optInIds } },
+              select: { id: true, emailOptIn: true }
+            })
+          : [];
+        const optIns = new Map(optInRows.map(c => [c.id, c.emailOptIn !== false]));
+        // Guests (no customerId) never had a preference to set, so they keep
+        // receiving reminders — mirrors customerWantsEmail() in orders.ts.
+        const wantsEmail = (customerId: string | null) =>
+          !customerId || (optIns.get(customerId) ?? true);
+
         let sent = 0;
+        let skipped = 0;
         for (const order of orders) {
+          if (!wantsEmail(order.customerId)) { skipped++; continue; }
           const ok = await emailService.sendRentalReminder({
             ...order,
             startDate: order.startDate.toISOString().split("T")[0],
@@ -912,6 +936,7 @@ function scheduleDailyReminders() {
           });
           if (ok) sent++;
         }
+        if (skipped > 0) console.log(`[Reminders] Skipped ${skipped} order(s) — customer opted out of email.`);
 
         await prisma.invoiceCounter.upsert({
           where: { id: REMINDER_MARKER },

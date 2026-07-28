@@ -36,6 +36,20 @@ function safeParseOrderAddons(raw: string | null): unknown[] {
 // Account-lockout leeft in de DB (Admin/Customer.failedLoginCount + lockedUntil)
 // en overleeft dus restarts. Alleen voor ONBEKENDE e-mailadressen — waar geen
 // rij bestaat om op te tellen — blijft een kleine in-memory throttle nodig.
+// Base URL for links we email out. APP_URL is authoritative; the request's own
+// Host header is only a dev-time fallback.
+//
+// Never derive an emailed link from the Host header alone: that header is
+// attacker-controlled, so a forged Host would make us send a genuine,
+// huurgo-branded email containing a VALID token pointing at the attacker's
+// domain — handing them the recipient's verification/reset token if clicked.
+// (forgot-password already did this correctly; the two verification paths did not.)
+function emailLinkOrigin(req: Request): string {
+  if (process.env.APP_URL) return process.env.APP_URL.replace(/\/$/, "");
+  const protocol = req.secure || req.headers["x-forwarded-proto"] === "https" ? "https" : "http";
+  return `${protocol}://${req.get("host") || "localhost:3000"}`;
+}
+
 const MAX_LOGIN_ATTEMPTS = 5;
 const LOGIN_LOCK_MS = 15 * 60 * 1000; // 15 minutes
 
@@ -130,9 +144,7 @@ authRouter.post("/register", async (req: AuthenticatedRequest, res: Response) =>
     });
 
     if (!autoVerify) {
-      const protocol = req.secure || req.headers["x-forwarded-proto"] === "https" ? "https" : "http";
-      const host = req.get("host") || "localhost:3000";
-      const origin = `${protocol}://${host}`;
+      const origin = emailLinkOrigin(req);
 
       try {
         await emailService.sendVerificationEmail(
@@ -662,7 +674,7 @@ authRouter.post("/forgot-password", async (req: Request, res: Response) => {
   const SUCCESS_MSG = { success: true, message: "Als dit e-mailadres bekend is, ontvangt u een resetlink." };
 
   try {
-    const appUrl = process.env.APP_URL || `${req.secure || req.headers["x-forwarded-proto"] === "https" ? "https" : "http"}://${req.get("host") || "localhost:3000"}`;
+    const appUrl = emailLinkOrigin(req);
     const resetToken = crypto.randomBytes(32).toString("hex");
     const resetExpiry = new Date(Date.now() + 60 * 60 * 1000);
 
@@ -831,9 +843,7 @@ authRouter.post("/resend-verification", async (req: Request, res: Response) => {
       data: { verificationToken: hashToken(newToken), verificationExpiry: new Date(Date.now() + 24 * 60 * 60 * 1000) }
     });
 
-    const protocol = req.secure || req.headers["x-forwarded-proto"] === "https" ? "https" : "http";
-    const host = req.get("host") || "localhost:3000";
-    const origin = `${protocol}://${host}`;
+    const origin = emailLinkOrigin(req);
 
     await emailService.sendVerificationEmail(
       { name: customer.name, email: customer.email },

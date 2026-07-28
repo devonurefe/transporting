@@ -77,7 +77,21 @@ export function buildUnpaidReleaseWhere(now: Date) {
     paymentStatus: "awaiting",
     AND: [
       { OR: NOT_ON_LOCATION },
-      { OR: [{ createdAt: { lte: cutoff } }, { startDate: { lt: startOfUtcDay(now) } }] }
+      {
+        OR: [
+          // Verlopen wachttijd — maar alleen als er ooit een betaallink is
+          // aangemaakt. Zonder die eis zou dit klanten afstraffen die nooit een
+          // manier hadden om te betalen: de link wordt asynchroon bij Mollie
+          // opgehaald en kan ontbreken (Mollie plat, geen MOLLIE_API_KEY, of een
+          // netwerkfout in de fire-and-forget aanroep). Draait de shop volledig
+          // handmatig, dan vervalt er dus nooit iets automatisch — dat is de
+          // juiste, voorzichtige uitkomst.
+          { AND: [{ createdAt: { lte: cutoff } }, { mollieCheckoutUrl: { not: null } }] },
+          // Startdatum voorbij: de huurperiode is hoe dan ook weg, dus hier
+          // speelt de betaallink geen rol meer. Dit is puur agenda-opruiming.
+          { startDate: { lt: startOfUtcDay(now) } }
+        ]
+      }
     ]
   };
 }

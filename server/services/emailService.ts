@@ -98,6 +98,12 @@ interface EmailOrderData {
   // Optional/null for legacy orders from before the choice existed, which the
   // rest of the app treats as "link".
   paymentMethod?: string | null;
+  // De echte Mollie-betaallink. Zonder deze kon de klant alleen betalen door via
+  // WhatsApp om een link te vrágen, die een medewerker vervolgens handmatig
+  // moest versturen — er was dus geen enkel pad naar betalen zonder dat er
+  // iemand meekeek. Null wanneer de link (nog) niet is aangemaakt; de mails
+  // vallen dan terug op die WhatsApp-route.
+  mollieCheckoutUrl?: string | null;
 }
 
 type EmailPayload = Parameters<NonNullable<typeof resend>["emails"]["send"]>[0];
@@ -231,6 +237,14 @@ export const emailService = {
               <p style="font-size: 13px; line-height: 1.6; color: #15803d; margin: 8px 0 0;">
                 U hoeft nu niets te doen. ${isPickup ? "U rekent af bij het ophalen van de machine." : "U rekent af bij de bezorging van de machine."}
               </p>
+            </div>
+            ` : order.mollieCheckoutUrl ? `
+            <div style="margin: 28px 0; padding: 20px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 16px; text-align: center;">
+              <div style="font-size: 14px; font-weight: 700; color: #166534;">Laatste stap: uw betaling</div>
+              <p style="font-size: 13px; line-height: 1.6; color: #15803d; margin: 8px 0 16px;">
+                Rond uw reservering af met iDEAL. Zodra de betaling binnen is, bevestigen wij uw reservering automatisch.
+              </p>
+              <a href="${order.mollieCheckoutUrl}" style="display:inline-block; background:#4f46e5; color:#ffffff !important; text-decoration:none; padding:14px 32px; border-radius:12px; font-weight:bold; font-size:15px;">Nu betalen — €${order.totalAmount.toFixed(2)}</a>
             </div>
             ` : WHATSAPP_NUMBER ? `
             <div style="margin: 28px 0; padding: 20px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 16px; text-align: center;">
@@ -722,7 +736,9 @@ export const emailService = {
                  Promising a 48-hour deadline was simply untrue for anyone booking
                  further ahead than that. -->
             <p style="font-size: 13px; color: #475569;"><strong>Let op:</strong> uw reservering is pas definitief zodra de betaling is ontvangen. Zonder betaling kunnen wij de machine niet voor u vasthouden.</p>
-            ${WHATSAPP_NUMBER ? `<p style="text-align:center;"><a href="${paymentWaLink}" class="btn">💬 Betaallink opnieuw aanvragen</a></p>` : ""}
+            ${order.mollieCheckoutUrl
+              ? `<p style="text-align:center;"><a href="${order.mollieCheckoutUrl}" style="display:inline-block; background:#4f46e5; color:#ffffff !important; text-decoration:none; padding:14px 32px; border-radius:12px; font-weight:bold; font-size:15px; margin:20px 0;">Nu betalen — €${order.totalAmount.toFixed(2)}</a></p>`
+              : WHATSAPP_NUMBER ? `<p style="text-align:center;"><a href="${paymentWaLink}" class="btn">💬 Betaallink opnieuw aanvragen</a></p>` : ""}
             <p style="font-size: 13px; color: #475569;">Loopt er iets mis of heeft u een vraag? Neem gerust contact met ons op via WhatsApp.</p>
           </div>
           <div class="footer">${company.footerShort}</div>

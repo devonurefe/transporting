@@ -41,13 +41,34 @@ describe("buildUnpaidReleaseWhere", () => {
     // 72 uur ná het plaatsen van de aanvraag — niet ná de startdatum. Dat is het
     // hele punt: een boeking die op 27 juli voor 12 augustus wordt geplaatst en
     // nooit betaald wordt, blokkeerde anders ruim twee weken de agenda.
-    expect(byAge.createdAt.lte.getTime()).toBe(
+    const ageCondition = byAge.AND.find((c: any) => c.createdAt);
+    expect(ageCondition.createdAt.lte.getTime()).toBe(
       now.getTime() - UNPAID_RELEASE_HOURS * 60 * 60 * 1000
     );
 
     // Tweede klok vangt de kortetermijnboeking af (vandaag geplaatst voor
     // morgen), die anders pas ver ná de huurperiode zou vervallen.
     expect(byStartDate.startDate.lt.getTime()).toBe(startOfUtcDay(now).getTime());
+  });
+
+  it("never expires a request on age alone when the customer never got a payment link", () => {
+    // De betaallink wordt asynchroon bij Mollie opgehaald en kan ontbreken
+    // (Mollie plat, netwerkfout, of geen MOLLIE_API_KEY). Zo'n klant had geen
+    // enkele manier om te betalen, dus mag zijn aanvraag niet verlopen — anders
+    // annuleert deze cron in een handmatig draaiende shop élke boeking.
+    const [, timingClause] = where.AND;
+    const [byAge] = timingClause.OR as any[];
+    expect(byAge.AND).toEqual(
+      expect.arrayContaining([{ mollieCheckoutUrl: { not: null } }])
+    );
+  });
+
+  it("still clears requests whose rental window has passed, link or not", () => {
+    // Puur agenda-opruiming: de huurperiode is hoe dan ook weg, dus hier speelt
+    // de betaallink geen rol — anders blijven die datums voor altijd bezet.
+    const [, timingClause] = where.AND;
+    const [, byStartDate] = timingClause.OR as any[];
+    expect(byStartDate).toEqual({ startDate: { lt: startOfUtcDay(now) } });
   });
 
   it("gives the customer a reminder window before anything expires", () => {

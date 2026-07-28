@@ -536,6 +536,13 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
         if (selectedDetailOrder?.id === orderId) {
           setSelectedDetailOrder((prev: any) => ({ ...prev, paymentStatus: updated.paymentStatus }));
         }
+      } else {
+        // Without this branch a 4xx/5xx was completely silent — no toast, no state
+        // change — so an admin clicking "Betaling Ontvangen ✓" or "Terugstorting
+        // registreren" had no way to tell the update hadn't actually happened.
+        const data = await res.json().catch(() => ({}));
+        setStatusError(data.error || "Betaling bijwerken mislukt. Probeer het opnieuw.");
+        setTimeout(() => setStatusError(null), 6000);
       }
     } catch (e) {
       console.error("Payment status update error:", e);

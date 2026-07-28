@@ -11,8 +11,19 @@ import { createMollieClient } from "@mollie/api-client";
 // Same fail-soft shape as emailService's Resend init: if MOLLIE_API_KEY is unset,
 // every method below becomes a no-op and the caller falls back to the pre-Mollie
 // behaviour (manual placeholder link, manual "Betaling Ontvangen" click).
+//
+// Only a "live_" key activates the client — a "test_" key is treated the same
+// as no key at all. Mollie's test-mode checkout lets the visitor pick
+// "Paid"/"Failed"/"Expired" themselves with no money moving, so a test key
+// automatically emailing that link to real customers (added alongside the
+// unpaid-order auto-release) would let anyone self-approve a free rental, and
+// would let the release cron auto-cancel real bookings once a "live_" key is
+// finally configured but a stray "test_" one from onboarding was left in
+// place. Whoever pastes a "test_" key here during onboarding gets today's
+// known-safe manual-placeholder-link behaviour, not a live payment surface —
+// no separate flag to remember to flip when the account goes live.
 const mollieApiKey = process.env.MOLLIE_API_KEY || "";
-const mollieClient = mollieApiKey ? createMollieClient({ apiKey: mollieApiKey }) : null;
+const mollieClient = mollieApiKey.startsWith("live_") ? createMollieClient({ apiKey: mollieApiKey }) : null;
 
 const APP_URL = process.env.APP_URL || "https://localhost:3000";
 

@@ -115,6 +115,25 @@ async function customerWantsEmail(customerId: string | null): Promise<boolean> {
   return customer?.emailOptIn !== false;
 }
 
+// Batched variant of customerWantsEmail for loops over many orders (the daily
+// reminder cron) — one query for every distinct customer instead of one query
+// per order. Same null/fallback semantics as customerWantsEmail: no customerId
+// (guest) or no matching row both default to "wants email".
+async function batchCustomerEmailOptIns(customerIds: (string | null)[]): Promise<Map<string, boolean>> {
+  const ids = Array.from(new Set(customerIds.filter((id): id is string => !!id)));
+  if (ids.length === 0) return new Map();
+  const customers = await prisma.customer.findMany({
+    where: { id: { in: ids } },
+    select: { id: true, emailOptIn: true }
+  });
+  return new Map(customers.map(c => [c.id, c.emailOptIn !== false]));
+}
+
+function wantsEmailFromBatch(optIns: Map<string, boolean>, customerId: string | null): boolean {
+  if (!customerId) return true;
+  return optIns.get(customerId) ?? true;
+}
+
 // Serializable transactions abort with P2034 when two bookings race on the same
 // machine — retry with backoff instead of surfacing a 500 to the customer
 async function withSerializableRetry<T>(fn: () => Promise<T>, retries = 3): Promise<T> {
@@ -1580,15 +1599,16 @@ ordersRouter.post("/send-reminders", async (req: AuthenticatedRequest, res: Resp
       }
     });
 
-    let autoCancelled = 0;
-    for (const order of staleOrders) {
-      await prisma.order.update({
-        where: { id: order.id },
+    if (staleOrders.length > 0) {
+      await prisma.order.updateMany({
+        where: { id: { in: staleOrders.map(o => o.id) } },
         data: { status: "Geannuleerd" }
       });
-      autoCancelled++;
-      console.log(`[AutoCancel] ${order.id} — startDate ${order.startDate.toISOString().split("T")[0]} passed, never paid → Geannuleerd`);
+      for (const order of staleOrders) {
+        console.log(`[AutoCancel] ${order.id} — startDate ${order.startDate.toISOString().split("T")[0]} passed, never paid → Geannuleerd`);
+      }
     }
+    const autoCancelled = staleOrders.length;
 
     // Send rental reminders for tomorrow's confirmed orders
     const orders = await prisma.order.findMany({
@@ -1598,9 +1618,10 @@ ordersRouter.post("/send-reminders", async (req: AuthenticatedRequest, res: Resp
       }
     });
 
+    const reminderOptIns = await batchCustomerEmailOptIns(orders.map(o => o.customerId));
     let sent = 0;
     for (const order of orders) {
-      if (!(await customerWantsEmail(order.customerId))) continue;
+      if (!wantsEmailFromBatch(reminderOptIns, order.customerId)) continue;
       const emailData = {
         ...order,
         startDate: order.startDate.toISOString().split("T")[0],
@@ -1628,9 +1649,10 @@ ordersRouter.post("/send-reminders", async (req: AuthenticatedRequest, res: Resp
       }
     });
 
+    const paymentOptIns = await batchCustomerEmailOptIns(unpaidOrders.map(o => o.customerId));
     let paymentRemindersSent = 0;
     for (const order of unpaidOrders) {
-      if (!(await customerWantsEmail(order.customerId))) continue;
+      if (!wantsEmailFromBatch(paymentOptIns, order.customerId)) continue;
       const emailData = {
         ...order,
         startDate: order.startDate.toISOString().split("T")[0],

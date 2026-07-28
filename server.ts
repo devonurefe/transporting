@@ -1,7 +1,7 @@
 import express from "express";
 import path from "path";
 import fs from "fs";
-import { randomBytes } from "crypto";
+import crypto, { randomBytes } from "crypto";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
 import { createServer as createViteServer } from "vite";
@@ -306,13 +306,52 @@ app.get("/machine-datasheet/:id", async (req, res) => {
   }
 });
 
+// Shared tail for the three SiteConfig image proxies (hero / coffee / gallery).
+//
+// Unlike /machine-image, these have no cheap version column to key on —
+// SiteConfig has no updatedAt — so the row is read first and the cache key is
+// derived from a hash of the stored data URL itself. That still avoids the
+// expensive half: without a key, every single cold request re-ran sharp on a
+// ~500 KB base64 hero on this 1-vCPU VPS, which is exactly the load that makes
+// pages intermittently fail to render. Reading the column is cheap by
+// comparison; re-encoding it is not.
+//
+// Note these URLs stay unversioned on purpose: HomeSection/AboutSection/
+// CoffeeCornerSection compare heroImageUrl === "/site-hero-image" to decide
+// whether an admin hero is configured, and server.ts's heroPreloadUrl mirrors
+// that. A replaced hero therefore still sits in visitors' browser caches for up
+// to the 30-day max-age — acceptable because these images change rarely,
+// whereas machine photos (which are versioned, see toPublicMachine) do not.
+async function serveSiteImage(
+  res: express.Response,
+  url: string | null | undefined,
+  slot: string,
+  defaultWidth: number,
+  req: express.Request
+) {
+  if (!url || !url.startsWith("data:image/")) {
+    // File path / external URL / unset — nothing to resize or cache.
+    return await serveStoredImage(res, url, { defaultWidth, reqWidth: req.query.w });
+  }
+  const width = pickWidth(req.query.w, defaultWidth);
+  const digest = crypto.createHash("sha1").update(url).digest("base64url").slice(0, 16);
+  const key = `s:${slot}:${digest}:${width}`;
+  const etag = `W/"${key}"`;
+  if (req.headers["if-none-match"] === etag) return res.status(304).end();
+
+  const cached = resizedCacheGet(key);
+  if (cached) return sendImageBuffer(res, cached.buf, cached.contentType, etag);
+
+  return await serveStoredImage(res, url, { defaultWidth, reqWidth: req.query.w, cacheKey: key, etag });
+}
+
 // Serve the admin-configured hero image (SiteConfig.heroImageUrl) as binary, so
 // the public site-config feed stays small and the LCP hero loads as a cacheable
 // image instead of a ~500 KB base64 string embedded in the JSON.
 app.get("/site-hero-image", async (req, res) => {
   try {
     const cfg = await prisma.siteConfig.findUnique({ where: { id: "default" }, select: { heroImageUrl: true } });
-    return await serveStoredImage(res, cfg?.heroImageUrl, { defaultWidth: 1600, reqWidth: req.query.w });
+    return await serveSiteImage(res, cfg?.heroImageUrl, "hero", 1600, req);
   } catch {
     return res.redirect(DEFAULT_OG_IMAGE);
   }
@@ -324,7 +363,7 @@ app.get("/site-hero-image", async (req, res) => {
 app.get("/site-coffee-image", async (req, res) => {
   try {
     const cfg = await prisma.siteConfig.findUnique({ where: { id: "default" }, select: { coffeeCornerImageUrl: true } });
-    return await serveStoredImage(res, cfg?.coffeeCornerImageUrl, { defaultWidth: 768, reqWidth: req.query.w });
+    return await serveSiteImage(res, cfg?.coffeeCornerImageUrl, "coffee", 768, req);
   } catch {
     return res.redirect(DEFAULT_OG_IMAGE);
   }
@@ -340,7 +379,7 @@ app.get("/site-gallery-image/:idx", async (req, res) => {
     const cfg = await prisma.siteConfig.findUnique({ where: { id: "default" }, select: { galleryImages: true } });
     const images = Array.isArray(cfg?.galleryImages) ? (cfg!.galleryImages as unknown[]) : [];
     const url = typeof images[idx] === "string" ? (images[idx] as string) : null;
-    return await serveStoredImage(res, url, { defaultWidth: 900, reqWidth: req.query.w });
+    return await serveSiteImage(res, url, `gal:${idx}`, 900, req);
   } catch {
     return res.redirect(DEFAULT_OG_IMAGE);
   }
@@ -766,6 +805,18 @@ async function startServer() {
     let INDEX_HTML = "";
     try { INDEX_HTML = fs.readFileSync(indexPath, "utf-8"); } catch { /* fall back to sendFile */ }
     app.get("*", async (req, res) => {
+      // A request for a build artefact that express.static didn't find is a
+      // stale client asking for a chunk from a previous deploy — never a SPA
+      // route. Answering it with index.html (status 200) is what turns a
+      // routine deploy into a white screen: the browser refuses HTML as a
+      // module script, so the app never boots, and public/sw.js caches any
+      // 200 response — pinning that HTML under the .js URL until CACHE_NAME is
+      // bumped by hand. A 404 keeps it a transient error the client recovers
+      // from on its next reload.
+      if (/^\/(assets|fonts)\//.test(req.path)) {
+        res.setHeader("Cache-Control", "no-store");
+        return res.status(404).type("text/plain").send("Not found");
+      }
       res.setHeader("Cache-Control", "no-cache");
       if (!INDEX_HTML) return res.sendFile(indexPath);
       try {
@@ -826,6 +877,28 @@ async function startServer() {
   };
   process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
   process.on("SIGINT", () => gracefulShutdown("SIGINT"));
+
+  // Node 20 terminates the process on an unhandled promise rejection. Without a
+  // handler, one stray un-awaited promise anywhere (a fire-and-forget email, a
+  // Mollie call, an audit write) takes the whole site down; Docker's
+  // `restart: always` brings it back, but every in-flight request is dropped and
+  // visitors see a dead site for the restart window. For an unattended
+  // deployment that trade is wrong — an isolated broken promise should not cost
+  // availability. Log it loudly and keep serving.
+  process.on("unhandledRejection", (reason) => {
+    console.error(
+      "[FATAL-GUARD] Unhandled promise rejection — server kept alive deliberately:",
+      reason instanceof Error ? `${reason.message}\n${reason.stack}` : reason
+    );
+  });
+
+  // uncaughtException is treated differently on purpose: after one, the process
+  // state may genuinely be corrupt, so we log and let it exit (Docker restarts
+  // it) rather than serving from an unknown state.
+  process.on("uncaughtException", (err) => {
+    console.error("[FATAL] Uncaught exception — exiting for a clean restart:", err);
+    gracefulShutdown("uncaughtException");
+  });
 }
 
 // Flags rentals still "Onderweg" (out with the customer) past their endDate —

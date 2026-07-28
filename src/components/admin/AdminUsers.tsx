@@ -141,8 +141,13 @@ export default function AdminUsers({ adminLanguage }: AdminUsersProps) {
       });
       const data = await res.json();
       if (res.ok) {
-        setPwMessage({ ok: true, text: t("Wachtwoord succesvol gewijzigd.", "Password changed successfully.", "Şifre başarıyla değiştirildi.") });
+        // Net als bij 2FA uitschakelen bumpt de server hier tokenVersion, dus
+        // deze sessie is vanaf nu ongeldig. Zonder de expliciete uitlog bleef
+        // het paneel gewoon staan en liep de eerstvolgende klik tegen een
+        // onverklaarbare 401 aan.
+        setPwMessage({ ok: true, text: t("Wachtwoord succesvol gewijzigd. Log opnieuw in.", "Password changed successfully. Log in again.", "Şifre başarıyla değiştirildi. Tekrar giriş yapın.") });
         setPwCurrent(""); setPwNew(""); setPwRepeat("");
+        setTimeout(() => useAuthStore.getState().logout(), 1500);
       } else {
         setPwMessage({ ok: false, text: data.error || t("Wachtwoord wijzigen mislukt.", "Password change failed.", "Şifre değiştirilemedi.") });
       }

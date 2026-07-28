@@ -104,6 +104,9 @@ export interface Order {
   proposedStartDate?: string | null;
   proposedEndDate?: string | null;
   proposedAt?: string | null;
+  // Al gegeven sterwaardering (1-5), meegestuurd door GET /api/orders. Null als
+  // de klant deze bestelling nog niet heeft beoordeeld.
+  rating?: number | null;
 }
 
 export interface AppNotification {

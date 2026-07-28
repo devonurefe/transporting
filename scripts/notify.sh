@@ -64,13 +64,27 @@ send_alert_with_attachment() {
     echo "BILGI: $(basename "$file") $((size_bytes / 1024 / 1024))MB, e-posta ekine gore cok buyuk (limit $((max_bytes / 1024 / 1024))MB) - sadece sunucuda duruyor."
     return 1
   fi
-  local b64 filename resp
+  local filename tmp_payload resp
   filename=$(basename "$file")
-  b64=$(base64 -w0 "$file")
+  tmp_payload=$(mktemp)
+  # JSON gövdesini geçici bir dosyaya yaz, komut satırı argümanı olarak DEĞİL.
+  # Base64 içerik birkaç MB'a kolayca çıkar; curl'a -d "..." ile (bir process
+  # argümanı olarak) verirsek kernel'in tek argüman için koyduğu üst sınırı
+  # (ARG_MAX, tipik olarak ~2MB) aşıp "Argument list too long" hatası alırız —
+  # tam olarak 28 Temmuz'daki ilk canlı denemede olan buydu. Dosyadan okumanın
+  # (-d @dosya) böyle bir sınırı yok.
+  {
+    printf '{"from":"%s","to":["%s"],"subject":"%s","text":"%s","attachments":[{"filename":"%s","content":"' \
+      "$EMAIL_FROM" "$ALERT_EMAIL" "$subject" "$body" "$filename"
+    base64 -w0 "$file"
+    printf '"}]}'
+  } > "$tmp_payload"
+
   resp=$(curl -s -m 60 -X POST "https://api.resend.com/emails" \
     -H "Authorization: Bearer ${RESEND_API_KEY}" \
     -H "Content-Type: application/json" \
-    -d "{\"from\":\"${EMAIL_FROM}\",\"to\":[\"${ALERT_EMAIL}\"],\"subject\":\"${subject}\",\"text\":\"${body}\",\"attachments\":[{\"filename\":\"${filename}\",\"content\":\"${b64}\"}]}")
+    -d @"$tmp_payload")
+  rm -f "$tmp_payload"
   echo "$resp"
   echo "$resp" | grep -q '"id"'
 }

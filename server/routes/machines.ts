@@ -42,11 +42,30 @@ function sanitizeImageUrl(url: unknown): string {
 
 // Mirrors sanitizeImageUrl's allow-list, but for the datasheet PDF field
 // (data:application/pdf uploads instead of data:image/).
+//
+// The magic-byte + size checks below duplicate what POST /api/upload-pdf
+// already enforces (server/routes/api.ts) — necessarily, since an admin can
+// set datasheetUrl directly via POST/PUT /api/machines without ever going
+// through the upload endpoint. Without re-checking here, that direct path
+// bypassed both checks entirely: any base64 blob merely prefixed
+// "data:application/pdf;base64," would be stored and served publicly with
+// Content-Type: application/pdf from /machine-datasheet/:id.
+const MAX_DATASHEET_BYTES = 5 * 1024 * 1024; // keep in sync with MAX_PDF_SIZE_BYTES in api.ts
+
 function sanitizeDatasheetUrl(url: unknown): string {
   if (typeof url !== "string") return "";
   if (!url) return "";
   if (url.startsWith("/")) return url;
-  if (url.startsWith("data:application/pdf")) return url;
+  if (url.startsWith("data:application/pdf")) {
+    const commaIdx = url.indexOf(",");
+    if (commaIdx < 0) return "";
+    const base64Content = url.slice(commaIdx + 1);
+    const byteLength = Math.ceil(base64Content.length * 0.75);
+    if (byteLength > MAX_DATASHEET_BYTES) return "";
+    const header = Buffer.from(base64Content.slice(0, 12), "base64");
+    if (header.length < 5 || header.toString("ascii", 0, 5) !== "%PDF-") return "";
+    return url;
+  }
   try {
     const u = new URL(url);
     if (u.protocol === "https:" || u.protocol === "http:") return url;

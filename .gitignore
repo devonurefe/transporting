@@ -18,3 +18,5 @@ prisma/dev.db
 huurgo-iyilestirme-rehberi.pdf
 
 .claude
+uploads/*
+!uploads/.gitkeep

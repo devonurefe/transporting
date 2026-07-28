@@ -23,19 +23,22 @@ export const ordersRouter = Router();
 //
 // Wordt aangeroepen vanuit alle drie de paden die een te betalen bedrag opleveren:
 // de klant-checkout, de handmatige admin-order, en een prijswijziging via PATCH.
+// Resolvet naar de nieuwe checkout-URL, of null wanneer er geen link is (of kon
+// worden) aangemaakt — zodat de aanroeper die in de bevestigingsmail kan zetten.
+// De belofte faalt nooit; fouten worden hier gelogd en als null teruggegeven.
 function syncMolliePaymentLink(order: {
   id: string;
   totalAmount: number;
   paymentMethod?: string | null;
   paymentStatus?: string | null;
   molliePaymentId?: string | null;
-}): void {
+}): Promise<string | null> {
   // "on_location" krijgt per definitie geen link, en een al betaalde order mag er
   // nooit een nieuwe (opnieuw betaalbare) link bij krijgen.
-  if (order.paymentMethod === "on_location") return;
-  if (order.paymentStatus === "paid") return;
+  if (order.paymentMethod === "on_location") return Promise.resolve(null);
+  if (order.paymentStatus === "paid") return Promise.resolve(null);
 
-  void (async () => {
+  return (async () => {
     // Bestaat er al een link, dan moet die eerst ongeldig worden: de klant heeft
     // de oude URL nog in WhatsApp staan en zou anders het oude (mogelijk veel
     // lagere) bedrag kunnen afrekenen en als volledig betaald gelden.
@@ -48,13 +51,15 @@ function syncMolliePaymentLink(order: {
       }
     }
     const result = await mollieService.createPaymentLink(order);
-    if (!result) return;
+    if (!result) return null;
     await prisma.order.update({
       where: { id: order.id },
       data: { molliePaymentId: result.id, mollieCheckoutUrl: result.checkoutUrl }
     });
+    return result.checkoutUrl;
   })().catch(err => {
     console.error("[Mollie] Betaallink synchroniseren mislukt voor order", order.id, ":", err);
+    return null;
   });
 }
 
@@ -639,16 +644,29 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
       endDate: newOrder.endDate.toISOString().split("T")[0],
       customerPhone: newOrder.customerPhone || ""
     };
-    emailService.sendOrderConfirmation(emailData).catch(err => {
-      console.error("[EMAIL] Customer confirmation permanently failed for order", newOrder.id, ":", err);
-      emailService.sendEmailFailureAlert(newOrder.id, newOrder.customerEmail, String(err)).catch(() => {});
-    });
     emailService.sendAdminAlert(emailData).catch(err => {
       console.error("[EMAIL] Admin alert permanently failed for order", newOrder.id, ":", err);
     });
 
-    // Genereer asynchroon een echte Mollie-betaallink (zie syncMolliePaymentLink).
-    syncMolliePaymentLink(newOrder);
+    // De bevestigingsmail wacht kort op de Mollie-betaallink zodat die er als
+    // "Nu betalen"-knop in kan. Dat is het verschil tussen een klant die zelf
+    // kan afrekenen en een klant die eerst via WhatsApp om een link moet vragen
+    // die een medewerker handmatig moet sturen — dat laatste werkt niet als er
+    // even niemand is, terwijl de aanvraag ondertussen wél verloopt.
+    //
+    // Losgekoppeld van de response (de klant ziet zijn bevestigingsscherm
+    // meteen) en begrensd: blijft Mollie hangen, dan gaat de mail alsnog, met
+    // de WhatsApp-route als terugval.
+    void (async () => {
+      const checkoutUrl = await Promise.race([
+        syncMolliePaymentLink(newOrder),
+        new Promise<null>(resolve => setTimeout(() => resolve(null), 6000))
+      ]);
+      await emailService.sendOrderConfirmation({ ...emailData, mollieCheckoutUrl: checkoutUrl });
+    })().catch(err => {
+      console.error("[EMAIL] Customer confirmation permanently failed for order", newOrder.id, ":", err);
+      emailService.sendEmailFailureAlert(newOrder.id, newOrder.customerEmail, String(err)).catch(() => {});
+    });
 
     res.status(201).json({
       ...newOrder,
@@ -784,7 +802,7 @@ ordersRouter.post("/admin", requireAdmin as any, async (req: AuthenticatedReques
     // "Betaallink sturen" hier altijd de handmatige placeholder tonen terwijl een
     // klant-order dat niet doet. paymentMethod is hier null (het handmatige
     // formulier vraagt er niet naar) — dat telt overal als "link", net als in de UI.
-    syncMolliePaymentLink(created);
+    void syncMolliePaymentLink(created);
     return res.status(201).json({
       ...created,
       startDate: created.startDate.toISOString().split("T")[0],
@@ -937,7 +955,7 @@ ordersRouter.patch("/:id", requireAdmin as any, async (req: AuthenticatedRequest
     // aanmaken. Bewust alléén bij een bedragwijziging — bij bv. een getypte
     // naamcorrectie zou je anders de link die de klant al heeft ongeldig maken.
     if (Math.abs(updated.totalAmount - existing.totalAmount) > 0.01) {
-      syncMolliePaymentLink(updated);
+      void syncMolliePaymentLink(updated);
     }
     return res.json({
       ...updated,

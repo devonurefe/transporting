@@ -94,21 +94,48 @@ interface EmailOrderData {
   deliveryTimeSlot?: string | null;
   totalAmount: number;
   status: string;
+  // "link" (online payment link) or "on_location" (pays at pickup/delivery).
+  // Optional/null for legacy orders from before the choice existed, which the
+  // rest of the app treats as "link".
+  paymentMethod?: string | null;
 }
 
 type EmailPayload = Parameters<NonNullable<typeof resend>["emails"]["send"]>[0];
 
+// Consecutive permanent failures across all recipients. A wrong/expired API key
+// or an unverified sender domain fails every send identically, and since these
+// helpers only ever return false (never throw), that outage is otherwise
+// invisible — nothing surfaces it and no caller can react. Counting it lets the
+// log say "this is systemic, not one bad address", which matters when nobody is
+// watching the box for weeks at a time.
+let consecutiveEmailFailures = 0;
+
 async function sendWithRetry(payload: EmailPayload, retries = 3): Promise<boolean> {
+  let lastError: unknown;
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
       const { error } = await resend!.emails.send(payload);
       if (error) throw error;
+      consecutiveEmailFailures = 0;
       return true;
     } catch (err) {
+      lastError = err;
       if (attempt < retries) await new Promise(r => setTimeout(r, 2 ** attempt * 1000));
     }
   }
-  console.error("[EmailService] Permanently failed after", retries, "attempts:", payload.to);
+  consecutiveEmailFailures++;
+  // Log the actual reason: a 401 (bad key), 403 (unverified domain) and 422
+  // (malformed address) are wildly different problems and used to be
+  // indistinguishable here, since the caught error was discarded entirely.
+  const reason =
+    (lastError as { message?: string })?.message ??
+    (typeof lastError === "string" ? lastError : JSON.stringify(lastError));
+  console.error(
+    `[EmailService] Permanently failed after ${retries} attempts to ${payload.to} — reason: ${reason}` +
+      (consecutiveEmailFailures >= 3
+        ? ` | WARNING: ${consecutiveEmailFailures} consecutive failures — email delivery looks broken account-wide (check RESEND_API_KEY and that EMAIL_FROM's domain is verified in Resend).`
+        : "")
+  );
   return false;
 }
 
@@ -120,6 +147,9 @@ export const emailService = {
     const company = await getCompanyDetails();
     const isPickup = order.deliveryType === "self_pickup";
     const deliveryMethodText = isPickup ? "Zelf Afhalen (Gratis)" : "Bezorgservice op locatie";
+    // Legacy orders predate the paymentMethod choice and are treated as "link"
+    // everywhere else in the app, so only an explicit "on_location" counts here.
+    const payOnLocation = order.paymentMethod === "on_location";
 
     const htmlContent = `
       <!DOCTYPE html>
@@ -195,7 +225,14 @@ export const emailService = {
               <div class="price-amount">€${order.totalAmount.toFixed(2)}</div>
             </div>
 
-            ${WHATSAPP_NUMBER ? `
+            ${payOnLocation ? `
+            <div style="margin: 28px 0; padding: 20px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 16px; text-align: center;">
+              <div style="font-size: 14px; font-weight: 700; color: #166534;">U betaalt op locatie</div>
+              <p style="font-size: 13px; line-height: 1.6; color: #15803d; margin: 8px 0 0;">
+                U hoeft nu niets te doen. ${isPickup ? "U rekent af bij het ophalen van de machine." : "U rekent af bij de bezorging van de machine."}
+              </p>
+            </div>
+            ` : WHATSAPP_NUMBER ? `
             <div style="margin: 28px 0; padding: 20px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 16px; text-align: center;">
               <div style="font-size: 14px; font-weight: 700; color: #166534;">Laatste stap: bevestig via WhatsApp</div>
               <p style="font-size: 13px; line-height: 1.6; color: #15803d; margin: 8px 0 16px;">
@@ -215,9 +252,14 @@ export const emailService = {
             <div style="margin: 24px 0; padding: 0 4px;">
               <div class="label" style="margin-bottom: 10px;">Wat gebeurt er nu?</div>
               <table role="presentation" cellpadding="0" cellspacing="0" style="width: 100%; font-size: 13px; color: #475569; line-height: 1.5;">
+                ${payOnLocation ? `
+                <tr><td style="padding: 4px 0; vertical-align: top; width: 24px;"><strong style="color:#4f46e5;">1.</strong></td><td style="padding: 4px 0;">Wij bevestigen uw reservering.</td></tr>
+                <tr><td style="padding: 4px 0; vertical-align: top;"><strong style="color:#4f46e5;">2.</strong></td><td style="padding: 4px 0;">${isPickup ? "U haalt de machine op op de afgesproken datum en rekent daar af." : "Wij bezorgen de machine op het afgesproken moment en u rekent daar af."}</td></tr>
+                ` : `
                 <tr><td style="padding: 4px 0; vertical-align: top; width: 24px;"><strong style="color:#4f46e5;">1.</strong></td><td style="padding: 4px 0;">U vraagt de betaallink aan${WHATSAPP_NUMBER ? " via WhatsApp" : ""}.</td></tr>
                 <tr><td style="padding: 4px 0; vertical-align: top;"><strong style="color:#4f46e5;">2.</strong></td><td style="padding: 4px 0;">Na betaling zetten wij uw reservering op <strong>Goedgekeurd</strong>.</td></tr>
                 <tr><td style="padding: 4px 0; vertical-align: top;"><strong style="color:#4f46e5;">3.</strong></td><td style="padding: 4px 0;">${isPickup ? "U haalt de machine op op de afgesproken datum." : "Wij bezorgen de machine op het afgesproken moment."}</td></tr>
+                `}
               </table>
             </div>
 
@@ -659,7 +701,12 @@ export const emailService = {
               <div class="details-item"><div class="label">Machine</div><div class="value">${esc(order.machineName)}</div></div>
               <div class="details-item"><div class="label">Startdatum</div><div class="value">${order.startDate}</div></div>
             </div>
-            <p style="font-size: 13px; color: #475569;"><strong>Let op:</strong> als de betaling niet binnen 48 uur is ontvangen, wordt de boeking helaas automatisch geannuleerd.</p>
+            <!-- Deliberately no "cancelled within 48 hours" warning here: the actual
+                 auto-cancellation (server/routes/orders.ts) only triggers once the
+                 rental's startDate has already passed, not 48 hours after booking.
+                 Promising a 48-hour deadline was simply untrue for anyone booking
+                 further ahead than that. -->
+            <p style="font-size: 13px; color: #475569;"><strong>Let op:</strong> uw reservering is pas definitief zodra de betaling is ontvangen. Zonder betaling kunnen wij de machine niet voor u vasthouden.</p>
             ${WHATSAPP_NUMBER ? `<p style="text-align:center;"><a href="${paymentWaLink}" class="btn">💬 Betaallink opnieuw aanvragen</a></p>` : ""}
             <p style="font-size: 13px; color: #475569;">Loopt er iets mis of heeft u een vraag? Neem gerust contact met ons op via WhatsApp.</p>
           </div>

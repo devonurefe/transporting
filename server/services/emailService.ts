@@ -385,7 +385,11 @@ export const emailService = {
   /**
    * Send Order Status Update Email to Customer (e.g. Approved, Out for delivery)
    */
-  sendStatusUpdate: async (order: EmailOrderData) => {
+  // opts.expiredUnpaid: deze annulering is niet door een mens gedaan maar door de
+  // automatische opruiming van onbetaald gebleven aanvragen (zie
+  // server/services/orderMaintenance.ts). Dat vraagt een andere toon — het is
+  // geen afwijzing, de klant mag gewoon opnieuw boeken.
+  sendStatusUpdate: async (order: EmailOrderData, opts?: { expiredUnpaid?: boolean }) => {
     const company = await getCompanyDetails();
     let statusTitle = "Status bijgewerkt";
     let statusDescription = `De status van uw reservering ${order.id} is bijgewerkt naar: <strong>${order.status}</strong>.`;
@@ -403,6 +407,17 @@ export const emailService = {
       statusTitle = "Huurcontract Voltooid";
       statusDescription = "De huurperiode is beëindigd en het materieel is succesvol retour ontvangen. Bedankt voor uw vertrouwen in huurgo!";
       headerColor = "linear-gradient(135deg, #64748b, #475569)";
+    } else if (order.status === "Geannuleerd") {
+      if (opts?.expiredUnpaid) {
+        statusTitle = "Aanvraag vervallen";
+        statusDescription =
+          "Uw aanvraag is komen te vervallen omdat wij de betaling niet hebben ontvangen. De gereserveerde datums zijn weer vrijgegeven, zodat ze voor andere klanten beschikbaar zijn." +
+          "<br><br>Wilt u de machine alsnog huren? Plaats gerust een nieuwe aanvraag, of neem contact met ons op — dan regelen we het samen.";
+      } else {
+        statusTitle = "Reservering geannuleerd";
+        statusDescription = "Uw reservering is geannuleerd. De gereserveerde datums zijn weer vrijgegeven. Heeft u vragen of wilt u een nieuwe datum plannen? Neem gerust contact met ons op.";
+      }
+      headerColor = "linear-gradient(135deg, #f43f5e, #e11d48)";
     }
 
     // Approval only fires after payment is marked "paid" (enforced server-side in

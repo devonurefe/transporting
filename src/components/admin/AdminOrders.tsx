@@ -170,11 +170,18 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
     return nl;
   };
 
-  // Zombie/stale pending detection. An "In behandeling" order that is unpaid
-  // blocks the machine's availability indefinitely (server/routes/orders.ts only
-  // excludes "Geannuleerd" from conflict checks). We don't auto-cancel — the
-  // WhatsApp payment flow is manual — but we flag stale ones so an admin can act.
+  // Zombie/stale pending detection. Een onbetaalde "In behandeling"-order bezet
+  // de agenda (server/routes/orders.ts sluit alleen "Geannuleerd" uit bij de
+  // conflictcheck). Sinds de dagelijkse opruiming in
+  // server/services/orderMaintenance.ts komen die datums na 72 uur vanzelf vrij;
+  // deze markering op 48 uur is het wáárschuwingsvenster dáárvoor, zodat je nog
+  // kunt bellen of de klant extra tijd kunt geven voordat het automatisch
+  // vervalt — of juist meteen kunt vrijgeven met de knop hieronder.
   const STALE_PENDING_HOURS = 48;
+  // Moet gelijk blijven aan UNPAID_RELEASE_HOURS in
+  // server/services/orderMaintenance.ts — dit is het venster dat we de klant in
+  // de WhatsApp-sjablonen beloven én waarop de agenda daadwerkelijk vrijkomt.
+  const UNPAID_RELEASE_HOURS = 72;
   const daysOpen = (o: any): number => {
     const created = new Date(o.createdAt).getTime();
     if (isNaN(created)) return 0;
@@ -288,7 +295,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
       "",
       "U kunt de betaling alsnog voldoen via de eerder verzonden betaallink.",
       "",
-      `Let op: als de betaling niet binnen ${STALE_PENDING_HOURS} uur is ontvangen, wordt de boeking helaas automatisch geannuleerd.`,
+      `Let op: als de betaling niet binnen ${UNPAID_RELEASE_HOURS} uur na uw aanvraag is ontvangen, vervalt de boeking automatisch en komen de datums weer vrij.`,
       "",
       "Loopt er iets mis met de betaallink of heeft u een vraag? Neem gerust contact met ons op.",
       "",
@@ -331,7 +338,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
       // dekt legacy orders en het geval dat MOLLIE_API_KEY niet ingesteld is.
       order.mollieCheckoutUrl || "[PLAK HIER DE BETAALLINK]",
       "",
-      `Let op: als de betaling niet binnen ${STALE_PENDING_HOURS} uur is voldaan, vervalt de aanvraag automatisch.`,
+      `Let op: als de betaling niet binnen ${UNPAID_RELEASE_HOURS} uur na uw aanvraag is voldaan, vervalt de aanvraag automatisch en komen de datums weer vrij.`,
       "",
       "Heeft u een andere betaalwens? Laat het ons gerust weten.",
       "",
@@ -408,6 +415,10 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
   const [staleDismissed, setStaleDismissed] = useState<boolean>(false);
   const [refundBannerDismissed, setRefundBannerDismissed] = useState<boolean>(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState<boolean>(false);
+  // Doelorder voor "Datums vrijgeven" — losstaand van showCancelConfirm, omdat
+  // die aan het detailvenster hangt en deze knop juist direct vanuit de lijst
+  // werkt (zonder de order eerst te openen).
+  const [releaseTarget, setReleaseTarget] = useState<any>(null);
   const [showRefundConfirm, setShowRefundConfirm] = useState<boolean>(false);
   const [showCreateForm, setShowCreateForm] = useState<boolean>(false);
   const [editingOrder, setEditingOrder] = useState<any | null>(null);
@@ -489,6 +500,21 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
       selectedDetailOrder
     );
     setShowCancelConfirm(false);
+  };
+
+  // Onbetaalde aanvraag nu al vrijgeven in plaats van te wachten tot de
+  // dagelijkse opruiming hem na UNPAID_RELEASE_HOURS oppakt. Technisch is dit
+  // een annulering — beschikbaarheid wordt uit de orderstatus afgeleid, dus
+  // "Geannuleerd" ís wat de datums teruggeeft aan de agenda.
+  const confirmReleaseDates = () => {
+    if (!releaseTarget) return;
+    handleUpdateStatus(
+      releaseTarget.id,
+      "Geannuleerd",
+      `Onbetaalde aanvraag vrijgegeven door verhuurder: ${releaseTarget.id} — datums weer beschikbaar.`,
+      releaseTarget
+    );
+    setReleaseTarget(null);
   };
 
   const handleUpdateStatus = async (orderId: string, nextStatus: OrderStatus, logMsg: string, order?: any) => {
@@ -815,9 +841,9 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
             <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 text-amber-500" />
             <span className="flex-1">
               {t(
-                `${staleCount} openstaande boeking(en) langer dan ${STALE_PENDING_HOURS} uur niet bevestigd en onbetaald — deze blokkeren mogelijk onnodig de agenda. Controleer of ze geannuleerd kunnen worden.`,
-                `${staleCount} pending booking(s) unconfirmed and unpaid for over ${STALE_PENDING_HOURS}h — these may be needlessly blocking the calendar. Review whether they can be cancelled.`,
-                `${staleCount} adet bekleyen rezervasyon ${STALE_PENDING_HOURS} saatten uzun süredir onaylanmadı ve ödenmedi — takvimi gereksiz yere bloke ediyor olabilir. İptal edilebilir mi kontrol edin.`
+                `${staleCount} openstaande boeking(en) langer dan ${STALE_PENDING_HOURS} uur onbetaald — deze blokkeren nu nog de agenda. Ze vervallen automatisch ${UNPAID_RELEASE_HOURS} uur na de aanvraag; met "Datums vrijgeven" doet u het meteen.`,
+                `${staleCount} pending booking(s) unpaid for over ${STALE_PENDING_HOURS}h — still blocking the calendar. They expire automatically ${UNPAID_RELEASE_HOURS}h after the request; use "Release dates" to do it now.`,
+                `${staleCount} adet bekleyen rezervasyon ${STALE_PENDING_HOURS} saatten uzun süredir ödenmedi — takvimi hâlâ bloke ediyor. Sipariş üzerinden ${UNPAID_RELEASE_HOURS} saat geçince otomatik düşer; "Tarihleri serbest bırak" ile hemen açabilirsiniz.`
               )}
             </span>
             <button
@@ -935,6 +961,16 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                       className={`flex-1 text-[11px] font-black py-2 rounded-xl transition-colors border-none ${isUpdatingStatus ? "bg-slate-200 text-slate-400 cursor-not-allowed" : !canApprove(o) ? "bg-teal-200 text-teal-700 cursor-not-allowed opacity-60" : "bg-teal-500 hover:bg-teal-600 text-slate-950 cursor-pointer"}`}
                     >
                       {isUpdatingStatus ? "…" : t("Goedkeuren", "Approve", "Onayla")}
+                    </button>
+                  )}
+                  {isStalePending(o) && (
+                    <button
+                      onClick={() => setReleaseTarget(o)}
+                      disabled={isUpdatingStatus}
+                      title={t("Annuleert deze onbetaalde aanvraag en maakt de datums weer boekbaar", "Cancels this unpaid request and frees the dates", "Bu ödenmemiş talebi iptal eder ve tarihleri tekrar açar")}
+                      className="text-[11px] font-bold px-3 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 transition-colors cursor-pointer disabled:opacity-50"
+                    >
+                      {t("Datums vrijgeven", "Release dates", "Tarihleri aç")}
                     </button>
                   )}
                   {o.status === "Goedgekeurd" && (
@@ -1122,6 +1158,16 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                                 className={`text-[10px] font-black px-3.5 py-1.5 rounded-xl leading-none transition-all border-none shadow-md ${isUpdatingStatus ? "bg-slate-200 text-slate-400 cursor-not-allowed" : !canApprove(o) ? "bg-teal-200 text-teal-700 cursor-not-allowed opacity-60" : "bg-teal-500 hover:bg-teal-600 text-slate-950 cursor-pointer hover:scale-[1.02] active:scale-95"}`}
                               >
                                 {isUpdatingStatus ? "…" : t("Goedkeuren", "Approve", "Onayla")}
+                              </button>
+                            )}
+                            {isStalePending(o) && (
+                              <button
+                                onClick={() => setReleaseTarget(o)}
+                                disabled={isUpdatingStatus}
+                                title={t("Annuleert deze onbetaalde aanvraag en maakt de datums weer boekbaar", "Cancels this unpaid request and frees the dates", "Bu ödenmemiş talebi iptal eder ve tarihleri tekrar açar")}
+                                className="text-[10px] font-black px-3.5 py-1.5 rounded-xl leading-none transition-all border border-rose-200 shadow-sm bg-rose-50 hover:bg-rose-100 text-rose-700 cursor-pointer hover:scale-[1.02] active:scale-95 disabled:opacity-50"
+                              >
+                                {t("Datums vrijgeven", "Release dates", "Tarihleri aç")}
                               </button>
                             )}
                             {o.status === "Goedgekeurd" && (
@@ -1917,6 +1963,19 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
         cancelLabel={t("Terug", "Back", "Geri")}
         onConfirm={confirmCancelOrder}
         onCancel={() => setShowCancelConfirm(false)}
+      />
+      <AdminConfirmDialog
+        open={!!releaseTarget}
+        title={t("Datums vrijgeven", "Release dates", "Tarihleri serbest bırak")}
+        message={t(
+          `Deze aanvraag is nog niet betaald en houdt ${releaseTarget ? `${releaseTarget.startDate} t/m ${releaseTarget.endDate}` : "de gekozen datums"} bezet. Vrijgeven annuleert de aanvraag en maakt die datums meteen weer boekbaar. De klant krijgt hiervan bericht.`,
+          `This request is still unpaid and is holding ${releaseTarget ? `${releaseTarget.startDate} – ${releaseTarget.endDate}` : "the selected dates"}. Releasing cancels it and makes those dates bookable again. The customer is notified.`,
+          `Bu talep henüz ödenmedi ve ${releaseTarget ? `${releaseTarget.startDate} – ${releaseTarget.endDate}` : "seçilen tarihleri"} bloke ediyor. Serbest bırakmak talebi iptal eder ve tarihleri anında tekrar rezervasyona açar. Müşteriye bilgi gider.`
+        )}
+        confirmLabel={t("Vrijgeven bevestigen", "Confirm release", "Serbest bırakmayı onayla")}
+        cancelLabel={t("Terug", "Back", "Geri")}
+        onConfirm={confirmReleaseDates}
+        onCancel={() => setReleaseTarget(null)}
       />
       <AdminConfirmDialog
         open={showRefundConfirm}

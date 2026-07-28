@@ -13,6 +13,8 @@ import { apiRouter } from "./server/routes/api.js";
 import { authRouter } from "./server/routes/auth.js";
 import { prisma } from "./prisma/client.js";
 import { emailService } from "./server/services/emailService.js";
+import { releaseUnpaidOrders, sendPaymentReminders } from "./server/services/orderMaintenance.js";
+import { batchCustomerEmailOptIns, wantsEmailFromBatch } from "./server/utils/emailOptIn.js";
 import { authenticateToken } from "./server/middleware/auth.js";
 import { pruneAuditLogs } from "./server/utils/audit.js";
 import { requestLogger } from "./server/middleware/logger.js";
@@ -975,27 +977,11 @@ function scheduleDailyReminders() {
           }
         });
 
-        // Respect the customer's email opt-out. This scheduler is the only
-        // reminder path that actually runs in production (the equivalent HTTP
-        // endpoint POST /api/orders/send-reminders needs REMINDER_SECRET and is
-        // not wired to any cron), and it used to mail everyone unconditionally —
-        // so a customer who switched the toggle off in "Mijn Reserveringen" kept
-        // receiving reminders anyway. Batched into one query rather than one per
-        // order, same as the HTTP endpoint.
-        const optInIds = Array.from(
-          new Set(orders.map(o => o.customerId).filter((id): id is string => !!id))
-        );
-        const optInRows = optInIds.length
-          ? await prisma.customer.findMany({
-              where: { id: { in: optInIds } },
-              select: { id: true, emailOptIn: true }
-            })
-          : [];
-        const optIns = new Map(optInRows.map(c => [c.id, c.emailOptIn !== false]));
-        // Guests (no customerId) never had a preference to set, so they keep
-        // receiving reminders — mirrors customerWantsEmail() in orders.ts.
-        const wantsEmail = (customerId: string | null) =>
-          !customerId || (optIns.get(customerId) ?? true);
+        // Respect the customer's email opt-out — gedeelde helper, zodat deze
+        // scheduler dezelfde semantiek hanteert als elke andere mailflow (zie
+        // server/utils/emailOptIn.ts).
+        const optIns = await batchCustomerEmailOptIns(orders.map(o => o.customerId));
+        const wantsEmail = (customerId: string | null) => wantsEmailFromBatch(optIns, customerId);
 
         let sent = 0;
         let skipped = 0;
@@ -1030,6 +1016,15 @@ function scheduleDailyReminders() {
 
   const fireReminders = async () => {
     await sendBatch();
+    // Betaalherinnering (24u) en het vrijgeven van onbetaalde aanvragen (72u).
+    // Beide bestonden alleen in POST /api/orders/send-reminders, dat
+    // REMINDER_SECRET vereist en door geen enkele cron wordt aangeroepen — in
+    // productie draaide er dus nooit iets van, en bleef een nooit-betaalde
+    // boeking de agenda permanent blokkeren. Volgorde is bewust: eerst
+    // herinneren, dan pas vrijgeven, zodat niemand vervalt zonder ooit een
+    // herinnering te hebben gehad.
+    await sendPaymentReminders().catch(err => console.error("[PaymentReminder] Mislukt:", err));
+    await releaseUnpaidOrders().catch(err => console.error("[Release] Mislukt:", err));
     // Piggyback op de dagelijkse cron: audittrail-retentie (180 dagen)
     pruneAuditLogs().catch(() => {});
     // Piggyback: flag rentals still "Onderweg" past their endDate (docs/admin-platform-audit-2026-07.md §3/§14)

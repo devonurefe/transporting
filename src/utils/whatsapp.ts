@@ -104,7 +104,22 @@ export function buildWhatsAppUrl(
     lines.push("─────────────────────────────");
     lines.push("💰 *PRIJSOVERZICHT*");
     lines.push("─────────────────────────────");
-    lines.push(`   Subtotaal (excl. BTW) :  ${euro(totals.subtotal)}`);
+    lines.push(`   Huurprijs (excl. BTW) :  ${euro(totals.subtotal)}`);
+    // Transport and add-ons must be itemised here, not silently folded into the
+    // total: totals.subtotal is the machine hire ONLY, while totals.vat/.total
+    // include transport and add-ons. Printing just subtotal + BTW made the
+    // arithmetic visibly wrong to the customer (e.g. €268 + €87,78 shown against
+    // a €505,78 total — the €150 delivery fee had simply vanished from the
+    // breakdown). Delivery is the default option, so most orders hit this.
+    if (totals.transport > 0) {
+      lines.push(`   Transportkosten       :  ${euro(totals.transport)}`);
+    }
+    // Whatever the itemised lines above don't account for is add-ons; derived
+    // rather than passed so this stays correct without changing every call site.
+    const addonTotal = totals.total - totals.vat - totals.subtotal - totals.transport;
+    if (addonTotal > 0.01) {
+      lines.push(`   Toebehoren            :  ${euro(addonTotal)}`);
+    }
     lines.push(`   BTW 21%               :  ${euro(totals.vat)}`);
     lines.push("─────────────────────────────");
     lines.push(`✅ *Totaal incl. BTW :  ${euro(totals.total)}*`);

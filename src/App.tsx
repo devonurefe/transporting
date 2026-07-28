@@ -879,7 +879,6 @@ export default function App() {
                 onTriggerNotification={triggerNotification}
                 currentUser={currentUser}
                 setCurrentUser={setCurrentUser}
-                onUpdateOrderStatus={handleUpdateOrderStatus}
                 onAddSystemLog={handleAddSystemLog}
                 setActiveTab={setActiveTab}
               />

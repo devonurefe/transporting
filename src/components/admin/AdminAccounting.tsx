@@ -13,10 +13,16 @@ interface AdminAccountingProps {
   adminLanguage?: string;
 }
 
+// Elke OrderStatus moet hier staan, anders is er geen enkele manier om die
+// orders in de omzetrapportage of de CSV te krijgen. "Retour" en "Schade
+// gemeld" ontbraken: teruggebrachte maar nog niet afgeronde verhuren vielen
+// daardoor volledig uit de cijfers.
 const STATUS_OPTIONS = [
   "In behandeling",
   "Goedgekeurd",
   "Onderweg",
+  "Retour",
+  "Schade gemeld",
   "Voltooid",
   "Geannuleerd",
 ];
@@ -35,7 +41,7 @@ export default function AdminAccounting({ adminLanguage }: AdminAccountingProps)
   const [fromDate, setFromDate] = useState(firstOfMonthISO);
   const [toDate, setToDate] = useState(todayISO);
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([
-    "Goedgekeurd", "Onderweg", "Voltooid",
+    "Goedgekeurd", "Onderweg", "Retour", "Schade gemeld", "Voltooid",
   ]);
   const [isDownloading, setIsDownloading] = useState(false);
   const [lastDownload, setLastDownload] = useState<string | null>(null);

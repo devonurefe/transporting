@@ -212,7 +212,10 @@ export default function AdminDashboard({ setSubTab, setOrdersFilter, adminLangua
   // Fetch customer count once on mount
   useEffect(() => {
     if (!token) return;
-    fetch("/api/auth/customers", { headers: { Authorization: `Bearer ${token}` } })
+    // limit=100 (het servermaximum) zodat "nieuw deze maand" ook bij een drukke
+    // maand klopt; het totaal komt uit totalCount, niet uit de paginalengte —
+    // dat las met 200 klanten hardnekkig "50 totaal geregistreerd".
+    fetch("/api/auth/customers?limit=100", { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.ok ? r.json() : null)
       .then(data => {
         if (!data?.customers) return;
@@ -221,7 +224,7 @@ export default function AdminDashboard({ setSubTab, setOrdersFilter, adminLangua
           const d = new Date(c.createdAt);
           return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
         }).length;
-        setCustomerStats({ total: data.customers.length, newThisMonth: thisMonth });
+        setCustomerStats({ total: Number(data.totalCount) || data.customers.length, newThisMonth: thisMonth });
       })
       .catch(() => {});
   }, [token]);

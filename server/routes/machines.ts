@@ -82,12 +82,19 @@ function toPublicMachine(m: any) {
   const mainIsData = typeof m.imageUrl === "string" && m.imageUrl.startsWith("data:image/");
   const gallery: string[] = Array.isArray(m.additionalImages) ? m.additionalImages : [];
   const datasheetIsData = typeof m.datasheetUrl === "string" && m.datasheetUrl.startsWith("data:application/pdf");
+  // Same ?v= cache-buster as the datasheet below — the image proxies are cached
+  // 30 days too, so a constant URL means a visitor who once loaded a machine
+  // keeps seeing that photo for a month after the admin replaces it. The ETag
+  // and the server-side resize cache can't help: with a fresh cache entry the
+  // browser never sends the request at all. Any write to the machine bumps
+  // updatedAt, so a new photo always lands on a new URL.
+  const v = new Date(m.updatedAt).getTime();
   return {
     ...m,
-    imageUrl: mainIsData ? `/machine-image/${m.id}` : m.imageUrl,
+    imageUrl: mainIsData ? `/machine-image/${m.id}?v=${v}` : m.imageUrl,
     additionalImages: gallery.map((url, idx) =>
       typeof url === "string" && url.startsWith("data:image/")
-        ? `/machine-image/${m.id}/gallery/${idx}`
+        ? `/machine-image/${m.id}/gallery/${idx}?v=${v}`
         : url
     ),
     // ?v= cache-buster tied to updatedAt: the proxy is cached 30 days (see

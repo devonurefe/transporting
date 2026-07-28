@@ -9,7 +9,7 @@ import { emailService } from "../services/emailService.js";
 import { mollieService } from "../services/mollieService.js";
 import { audit } from "../utils/audit.js";
 import { resolveFees } from "../utils/fees.js";
-import { computeOrderSubtotal, computeTransport, computeAddonsTotal, computeVatAndTotal, buildStoredAddons, computeRentalDays, clampTrailerDays, CampaignRuleLike } from "../utils/orderPricing.js";
+import { computeOrderSubtotal, computeTransport, computeAddonsTotal, computeVatAndTotal, buildStoredAddons, computeRentalDays, clampTrailerDays, normalizeRentalDate, CampaignRuleLike } from "../utils/orderPricing.js";
 import { buildUblInvoiceXml } from "../utils/ublInvoice.js";
 
 export const ordersRouter = Router();
@@ -338,11 +338,25 @@ ordersRouter.get("/", requireAuth as any, async (req: AuthenticatedRequest, res:
     res.setHeader("X-Total-Pages", String(Math.ceil(totalCount / limit)));
     res.setHeader("X-Total-Count", String(totalCount));
 
+    // Een al gegeven waardering meesturen. OrderRating heeft geen Prisma-relatie
+    // met Order (alleen een unieke orderId-kolom), vandaar deze tweede query in
+    // plaats van een include. Zonder dit stonden de sterren na elke refresh weer
+    // leeg — GET /:id/rating bestond wel, maar werd nergens aangeroepen — en
+    // waardeerden klanten dezelfde bestelling telkens opnieuw.
+    const ratingRows = dbOrders.length
+      ? await prisma.orderRating.findMany({
+          where: { orderId: { in: dbOrders.map(o => o.id) } },
+          select: { orderId: true, rating: true }
+        })
+      : [];
+    const ratingByOrderId = new Map(ratingRows.map(r => [r.orderId, r.rating]));
+
     const formatted = dbOrders.map(o => ({
       ...o,
       startDate: o.startDate.toISOString().split("T")[0],
       endDate: o.endDate.toISOString().split("T")[0],
-      addons: safeParseAddons(o.addons)
+      addons: safeParseAddons(o.addons),
+      rating: ratingByOrderId.get(o.id) ?? null
     }));
     return res.json(formatted);
   } catch (error) {
@@ -450,11 +464,14 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
   if (!orderData.startDate || !orderData.endDate) {
     return res.status(400).json({ error: "Start- en einddatum zijn verplicht" });
   }
-  const startDate = new Date(orderData.startDate);
-  const endDate = new Date(orderData.endDate);
-  if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+  const rawStart = new Date(orderData.startDate);
+  const rawEnd = new Date(orderData.endDate);
+  if (isNaN(rawStart.getTime()) || isNaN(rawEnd.getTime())) {
     return res.status(400).json({ error: "Ongeldige datumnotatie" });
   }
+  // Naar UTC-middernacht vóór élke controle — zie normalizeRentalDate.
+  const startDate = normalizeRentalDate(rawStart);
+  const endDate = normalizeRentalDate(rawEnd);
   if (endDate < startDate) {
     return res.status(400).json({ error: "Einddatum moet na de startdatum liggen" });
   }
@@ -675,13 +692,19 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
       });
     }
     if (error?.message === "BLOCKED_DATE") {
+      // Bewust zónder de interne reden: dat is een vrij invulbaar admin-veld
+      // ("Noodonderhoud / Reparatie", of los ingetypte tekst) en dit endpoint is
+      // publiek. Naar buiten toe leest een geblokkeerde datum hetzelfde als een
+      // volgeboekte — dezelfde keuze als in checkAvailability op de client. De
+      // echte reden staat in het Planning-/Bakım-paneel.
       return res.status(409).json({
         error: "De machine is niet beschikbaar op bepaalde datums in de opgegeven periode",
-        blockedDates: [{ date: error.date, reason: error.reason }]
+        blockedDates: [{ date: error.date }]
       });
     }
     if (error?.message === "OPERATIONALLY_BLOCKED") {
-      return res.status(409).json({ error: "Deze machine is tijdelijk niet beschikbaar (onderhoud/reparatie)" });
+      // Idem: geen "onderhoud/reparatie" naar een anonieme beller.
+      return res.status(409).json({ error: "Deze machine is niet beschikbaar voor de opgegeven periode" });
     }
     if (error?.code === "P2034" || error?.code === "40001") {
       return res.status(409).json({ error: "Er is veel vraag naar deze machine. Probeer het over enkele seconden opnieuw." });
@@ -707,9 +730,11 @@ ordersRouter.post("/admin", requireAdmin as any, async (req: AuthenticatedReques
       return res.status(400).json({ error: "Profiel type niet ondersteund" });
     }
     if (!body.startDate || !body.endDate) return res.status(400).json({ error: "Start- en einddatum zijn verplicht" });
-    const startDate = new Date(body.startDate);
-    const endDate = new Date(body.endDate);
-    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return res.status(400).json({ error: "Ongeldige datumnotatie" });
+    const rawStart = new Date(body.startDate);
+    const rawEnd = new Date(body.endDate);
+    if (isNaN(rawStart.getTime()) || isNaN(rawEnd.getTime())) return res.status(400).json({ error: "Ongeldige datumnotatie" });
+    const startDate = normalizeRentalDate(rawStart);
+    const endDate = normalizeRentalDate(rawEnd);
     if (endDate < startDate) return res.status(400).json({ error: "Einddatum moet na de startdatum liggen" });
     if (!ORDER_VALID_DELIVERY_TYPES.includes(body.deliveryType)) return res.status(400).json({ error: "Ongeldig bezorgtype" });
     if (body.deliveryAddress && String(body.deliveryAddress).length > 500) return res.status(400).json({ error: "Bezorgadres is te lang (max 500 tekens)" });
@@ -825,9 +850,11 @@ ordersRouter.patch("/:id", requireAdmin as any, async (req: AuthenticatedRequest
     let startDate = existing.startDate;
     let endDate = existing.endDate;
     if (body.startDate !== undefined || body.endDate !== undefined) {
-      const s = new Date(body.startDate ?? existing.startDate);
-      const e = new Date(body.endDate ?? existing.endDate);
-      if (isNaN(s.getTime()) || isNaN(e.getTime())) return res.status(400).json({ error: "Ongeldige datumnotatie" });
+      const rawS = new Date(body.startDate ?? existing.startDate);
+      const rawE = new Date(body.endDate ?? existing.endDate);
+      if (isNaN(rawS.getTime()) || isNaN(rawE.getTime())) return res.status(400).json({ error: "Ongeldige datumnotatie" });
+      const s = normalizeRentalDate(rawS);
+      const e = normalizeRentalDate(rawE);
       if (e < s) return res.status(400).json({ error: "Einddatum moet na de startdatum liggen" });
       if (s.getTime() !== existing.startDate.getTime()) { startDate = s; changed.push("startDate"); }
       if (e.getTime() !== existing.endDate.getTime()) { endDate = e; changed.push("endDate"); }

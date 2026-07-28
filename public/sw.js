@@ -3,7 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const CACHE_NAME = "huurgo-cache-v5";
+// Bumped v5 → v6 to flush caches poisoned by the old server behaviour: an
+// /assets/*.js request for a chunk from a previous deploy used to be answered
+// with index.html at status 200, and the handler below stored it under that .js
+// URL — a permanently white screen for that client. The server now 404s those,
+// but already-poisoned clients only recover when the cache name changes.
+const CACHE_NAME = "huurgo-cache-v6";
 const OFFLINE_URL = "/offline.html";
 
 const ASSETS_TO_CACHE = [
@@ -87,7 +92,14 @@ self.addEventListener("fetch", (event) => {
     caches.match(event.request).then((cachedResponse) => {
       const fetchPromise = fetch(event.request)
         .then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200) {
+          // Never persist an HTML body under a non-navigation URL. A server
+          // that answers a missing /assets/*.js with the SPA shell would
+          // otherwise get that shell pinned here until CACHE_NAME changes,
+          // leaving the client permanently white-screened. Serve it through
+          // (the browser will reject it and reload), but don't store it.
+          const type = networkResponse && networkResponse.headers.get("content-type");
+          const isHtml = typeof type === "string" && type.includes("text/html");
+          if (networkResponse && networkResponse.status === 200 && !isHtml) {
             const responseToCache = networkResponse.clone();
             caches.open(CACHE_NAME).then((cache) => {
               cache.put(event.request, responseToCache);

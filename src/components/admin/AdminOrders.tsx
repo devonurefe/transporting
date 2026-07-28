@@ -114,19 +114,26 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
     return d.toISOString().split("T")[0];
   })();
 
-  // Filters draaien client-side over de geladen orders. Zodra een filter
-  // actief is, laden we daarom automatisch ALLE pagina's — anders zijn
-  // orders buiten de eerste pagina onvindbaar voor de admin.
-  const filtersActive = searchText.trim() !== "" || dateFilter !== "all" || localStatusFilter !== "all" || paymentFilter !== "all";
+  // Filters draaien client-side over de geladen orders, dus laden we
+  // automatisch ALLE pagina's — anders zijn orders buiten de eerste pagina
+  // onvindbaar voor de admin.
+  //
+  // Dit gebeurt direct bij het openen van het paneel, niet pas zodra er een
+  // filter actief is: de twee waarschuwingsbanners hieronder (openstaande
+  // terugstortingen, vastgelopen onbetaalde aanvragen) tellen over dezelfde
+  // client-side lijst, en je leest ze juist in de ongefilterde standaard-
+  // weergave. Daar zag de teller alleen de eerste 100 orders, dus een vorig
+  // jaar aangemaakte en vandaag geannuleerde betaalde order gaf geen enkel
+  // signaal. loadAllOrders() is begrensd op 50 pagina's en draait één keer.
   const allLoaded = ordersPage >= ordersTotalPages;
   const [loadingAll, setLoadingAll] = useState(false);
   useEffect(() => {
-    if (!filtersActive || allLoaded || loadingAll) return;
+    if (allLoaded || loadingAll) return;
     let active = true;
     setLoadingAll(true);
     loadAllOrders().finally(() => { if (active) setLoadingAll(false); });
     return () => { active = false; };
-  }, [filtersActive, allLoaded, loadingAll, loadAllOrders]);
+  }, [allLoaded, loadingAll, loadAllOrders]);
 
   const statusFiltered = localStatusFilter !== "all"
     ? orders.filter(o => o.status === localStatusFilter)
@@ -1165,20 +1172,10 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
           </table>
         </div>
 
-        {/* Pagination: handmatig bijladen zonder filters; met een actief
-            filter laden we automatisch alles en tonen we de voortgang. */}
-        {ordersPage < ordersTotalPages && !filtersActive && (
-          <div className="flex flex-col items-center gap-1.5 pt-1">
-            <button
-              type="button"
-              onClick={() => loadMoreOrders()}
-              className="px-5 py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition-colors cursor-pointer"
-            >
-              {t("Meer laden", "Load more", "Daha fazla yükle")} ({orders.length} / {ordersTotalCount})
-            </button>
-          </div>
-        )}
-        {filtersActive && loadingAll && (
+        {/* Alle pagina's worden automatisch geladen (zie hierboven); hier
+            alleen de voortgang. De handmatige "Meer laden"-knop is daarmee
+            overbodig geworden. */}
+        {loadingAll && (
           <div className="flex items-center justify-center gap-2 pt-1 text-xs font-semibold text-slate-500">
             <Loader2 className="h-3.5 w-3.5 animate-spin" />
             {t("Alle bestellingen doorzoeken…", "Searching all orders…", "Tüm siparişler taranıyor…")} ({orders.length} / {ordersTotalCount})

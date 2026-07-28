@@ -25,7 +25,7 @@ import {
   AlertTriangle
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { Order, OrderStatus, UserProfile } from "../types";
+import { Order, UserProfile } from "../types";
 import { useAuthStore } from "../store/authStore";
 import { useAppStore } from "../store/appStore";
 import { printInvoice } from "../utils/invoice";
@@ -37,7 +37,6 @@ interface MyOrdersSectionProps {
   currentUser: UserProfile | null;
   setCurrentUser: (user: UserProfile | null) => void;
   userProfiles?: UserProfile[];
-  onUpdateOrderStatus: (orderId: string, nextStatus: OrderStatus) => void;
   onAddSystemLog?: (type: "login" | "logout" | "signup" | "booking" | "fleet" | "status" | "system", user: string, description: string) => void;
   setActiveTab?: (tab: string) => void;
 }
@@ -48,11 +47,11 @@ export default function MyOrdersSection({
   currentUser,
   setCurrentUser,
   userProfiles,
-  onUpdateOrderStatus,
   onAddSystemLog,
   setActiveTab,
 }: MyOrdersSectionProps) {
   const siteConfig = useAppStore((state) => state.siteConfig);
+  const refreshOrders = useAppStore((state) => state.fetchOrders);
 
   React.useEffect(() => {
     window.scrollTo(0, 0);
@@ -208,7 +207,13 @@ export default function MyOrdersSection({
         }
       });
       if (res.ok) {
-        onUpdateOrderStatus(orderId, "Geannuleerd");
+        // Alleen opnieuw ophalen — NIET onUpdateOrderStatus aanroepen. Die route
+        // loopt via appStore.updateOrderStatus → PUT /api/orders/:id/status, en
+        // dat endpoint is requireAdmin. Voor een klant gaf dat een 403 met een
+        // rollback naar "In behandeling", zodat de annulering wél in de database
+        // stond maar de kaart nog steeds als openstaand werd getoond, mét een
+        // actieve Annuleren-knop die daarna "Annulering Mislukt" opleverde.
+        await refreshOrders();
         onAddSystemLog?.("status", currentUser?.name || "Klant", `Bestelling ${orderId} geannuleerd door klant.`);
         onTriggerNotification("Bestelling Geannuleerd", "Uw bestelling is geannuleerd. U ontvangt een bevestiging per e-mail.", "info");
       } else {
@@ -778,8 +783,16 @@ export default function MyOrdersSection({
     );
   }
 
-  // Under visitor mode: Filter orders based on currently logged in user email and status filter
-  const userFilteredOrders = orders.filter(o => o.customerEmail.toLowerCase() === currentUser.email.toLowerCase());
+  // GET /api/orders is server-side al op customerId gescoped (zie
+  // server/routes/orders.ts) en dit scherm rendert alleen met een ingelogde
+  // klant, dus hier nog eens op e-mailadres filteren voegt geen beveiliging toe
+  // — het verbergt alleen eigen bestellingen. Het e-mailveld in de checkout is
+  // vrij invulbaar (bijv. boekhouding@…), en een admin kan het adres later
+  // corrigeren; in beide gevallen viel de bestelling uit dit overzicht terwijl
+  // ze wel degelijk van deze klant is.
+  const userFilteredOrders = orders;
+
+  const completedRentalsCount = userFilteredOrders.filter(o => o.status === "Voltooid").length;
 
   const filteredOrders = userFilteredOrders.filter(o => {
     if (activeFilter === "all") return true;
@@ -836,7 +849,10 @@ export default function MyOrdersSection({
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center space-x-2.5 text-xs bg-slate-50 px-3.5 py-2 rounded-xl border border-slate-200 font-mono">
               <span className="text-slate-500 font-bold">Eerdere huren:</span>
-              <span className="text-slate-800 font-extrabold">{currentUser.pastRentalsCount} afgerond</span>
+              {/* Afgeleid van de daadwerkelijk opgehaalde bestellingen. Stond
+                  eerder op currentUser.pastRentalsCount, dat overal hard op 0
+                  wordt gezet — een klant met tien afgeronde huren las "0". */}
+              <span className="text-slate-800 font-extrabold">{completedRentalsCount} afgerond</span>
             </div>
 
             {/* Logout Customer Profile */}
@@ -914,7 +930,10 @@ export default function MyOrdersSection({
                 </div>
               ) : (
                 filteredOrders.map((o) => {
-                  const stars = ratings[o.id] || 0;
+                  // Lokale state wint (net gegeven waardering), anders de
+                  // opgeslagen waardering uit de API — zonder die fallback
+                  // stonden de sterren na elke refresh weer op nul.
+                  const stars = ratings[o.id] ?? o.rating ?? 0;
                   return (
                     <div
                       key={o.id}

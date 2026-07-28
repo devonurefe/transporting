@@ -24,6 +24,25 @@ export function computeRentalDays(startDate: Date, endDate: Date): number {
   return Math.max(1, Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24)) + 1);
 }
 
+// Zet een binnenkomende huurdatum om naar UTC-middernacht.
+//
+// Een huurdag is in dit systeem een hele kalenderdag: BlockedDate-rijen staan op
+// UTC-middernacht, de beschikbaarheids-dagloop stapt met hele dagen, en de
+// prijs-tiers kijken naar getUTCDay(). Zonder normalisatie erft al die logica de
+// tijd-van-dag uit het request, en dat is exploiteerbaar: een verzoek met
+// startDate "2026-08-10T23:00:00Z" / endDate "2026-08-12T00:00:00Z" levert
+// exact dezelfde rentalDays (3) en dus dezelfde prijs op als het eerlijke
+// 10 t/m 12, maar valt buiten `date >= startDate` van de blocked-date-query en
+// buiten de overlap-vergelijking met een bestaande boeking op de 10e — de klant
+// boekt een machine die geblokkeerd of al verhuurd is. Normaliseren vóór elke
+// validatie sluit dat af; eerlijke "YYYY-MM-DD"-payloads veranderen niet, want
+// die parsen al naar UTC-middernacht.
+export function normalizeRentalDate(value: Date): Date {
+  const normalized = new Date(value.getTime());
+  normalized.setUTCHours(0, 0, 0, 0);
+  return normalized;
+}
+
 // Autoritatieve transportkosten voor een bezorgtype. Spiegelt de POST-logica.
 //
 // trailer_rental: de klant kiest zelf hoeveel dagen hij de aanhanger houdt (hij

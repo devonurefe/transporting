@@ -109,13 +109,33 @@ if ! curl -sf -m 5 -o /dev/null "$APP_URL"; then
   PROBLEM_FOUND=1
   log "UYARI: uygulama $APP_URL adresinden yanıt vermiyor. Sadece 'app' konteyneri yeniden başlatılıyor..."
   cd "$APP_DIR" && docker compose up -d --force-recreate --no-deps app >> "$LOG_FILE" 2>&1
-  sleep 10
-  if curl -sf -m 5 -o /dev/null "$APP_URL"; then
+
+  # docker-compose.yml'deki app healthcheck'i start_period: 40s tanımlıyor —
+  # yani container'ın kendisi bile ilk 40 saniye boyunca "henüz hazırlanıyor"
+  # kabul ediyor. Tek seferlik bir "sleep 10" + tek curl, tam da bu normal
+  # açılış penceresinde yanlış "ACIL" e-postası atıyordu: elle yapılan bir
+  # `docker compose up -d --force-recreate` sırasında (mesela Mollie anahtarı
+  # gibi bir env değişikliği için) cron aynı ana denk gelirse, watchdog kendi
+  # restart'ını da üstüne bindiriyor, 10 saniye sonra uygulama Express/Prisma
+  # başlatmayı bitirmemiş oluyor ve gerçekte birkaç saniye içinde düzelecek bir
+  # durum "hala yanit yok" olarak bildiriliyordu. Healthcheck'in kendi
+  # toleransıyla eşleşen bir yeniden-deneme penceresi (45s, 5s aralıklarla)
+  # kullanıyoruz artık.
+  RECOVERED=0
+  for _ in $(seq 1 9); do
+    sleep 5
+    if curl -sf -m 5 -o /dev/null "$APP_URL"; then
+      RECOVERED=1
+      break
+    fi
+  done
+
+  if [ "$RECOVERED" = "1" ]; then
     log "DUZELDI: app konteyneri yeniden başlatıldı, artık yanıt veriyor."
     notify "app" "huurgo.nl: uygulama yaniti kesildi, otomatik duzeltildi" "Uygulama konteyneri yanit vermiyordu, watchdog yeniden baslatti ve duzeldi."
   else
-    log "HATA: app konteynerini yeniden başlattıktan sonra hala yanıt yok. Elle bakılmalı: docker compose logs app"
-    notify "app" "ACIL: huurgo.nl uygulama yaniti yok" "Uygulama konteyneri yeniden baslatildi ama hala yanit vermiyor. Elle bakin: docker compose logs app"
+    log "HATA: app konteynerini yeniden başlattıktan sonra hala yanıt yok (45s bekleyerek denendi). Elle bakılmalı: docker compose logs app"
+    notify "app" "ACIL: huurgo.nl uygulama yaniti yok" "Uygulama konteyneri yeniden baslatildi ama 45 saniye boyunca hala yanit vermedi. Elle bakin: docker compose logs app"
   fi
 fi
 

@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { PlusCircle, Sparkles, Trash2, Plus, X, FileText } from "lucide-react";
+import { PlusCircle, Sparkles, Trash2, Plus, X, FileText, Image as ImageIcon } from "lucide-react";
 import { motion } from "motion/react";
 import { useAppStore } from "../../store/appStore";
 import { resizeImage } from "../../utils/image";
@@ -810,13 +810,45 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
 
               <div className="space-y-1">
                 <span className="text-[10px] text-slate-500 font-bold block mb-1">{t("Optie B: Plak een externe afbeeldings-URL", "Option B: Paste an external image URL", "Seçenek B: Harici resim URL'si yapıştır")}</span>
-                <input
-                  type="text"
-                  value={imageUrl}
-                  onChange={(e) => setImageUrl(e.target.value)}
-                  placeholder="https://…/foto.webp"
-                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500"
-                />
+                {imageUrl.startsWith("data:") ? (
+                  // Embedded base64 image (from Option A upload): show a readable chip
+                  // instead of the raw (huge) data-URI string, with a clear X button —
+                  // mirrors AdminMachines.tsx's edit-form treatment of the same field.
+                  <div className="flex items-center gap-2 w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs">
+                    <ImageIcon className="h-3.5 w-3.5 text-amber-600 shrink-0" />
+                    <span className="flex-1 truncate text-slate-600">
+                      {t("Geüploade afbeelding (ingesloten data)", "Uploaded image (embedded data)", "Yüklenmiş resim (gömülü veri)")}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setImageUrl("")}
+                      className="p-0.5 text-slate-400 hover:text-red-500 cursor-pointer border-none bg-transparent shrink-0"
+                      title={t("Afbeelding wissen", "Clear image", "Resmi temizle")}
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={imageUrl}
+                      onChange={(e) => setImageUrl(e.target.value)}
+                      placeholder="https://…/foto.webp"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 pr-8 text-xs text-slate-800 outline-none focus:border-amber-500"
+                    />
+                    {imageUrl && (
+                      <button
+                        type="button"
+                        onClick={() => setImageUrl("")}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 text-slate-400 hover:text-red-500 cursor-pointer border-none bg-transparent"
+                        title={t("URL wissen", "Clear URL", "URL'yi temizle")}
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
 
               {imageUrl && (
@@ -824,10 +856,14 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
                   <div className="h-10 w-16 bg-slate-100 rounded-lg overflow-hidden border border-slate-200 shrink-0">
                     <img src={imageUrl} alt={t("Voorbeeld", "Preview", "Önizleme")} className="h-full w-full object-cover" loading="lazy" />
                   </div>
-                  <div>
-                    <span className="text-[9px] text-slate-400 font-mono block">{t("Actieve URL:", "Active URL:", "Aktif URL:")}</span>
-                    <span className="text-[10px] text-teal-700 font-bold font-mono truncate max-w-[280px] block">{imageUrl}</span>
-                  </div>
+                  {imageUrl.startsWith("data:") ? (
+                    <span className="text-[10px] text-teal-700 font-bold">{t("Geüploade afbeelding actief", "Uploaded image active", "Yüklenmiş resim aktif")}</span>
+                  ) : (
+                    <div>
+                      <span className="text-[9px] text-slate-400 font-mono block">{t("Actieve URL:", "Active URL:", "Aktif URL:")}</span>
+                      <span className="text-[10px] text-teal-700 font-bold font-mono truncate max-w-[280px] block">{imageUrl}</span>
+                    </div>
+                  )}
                 </div>
               )}
 

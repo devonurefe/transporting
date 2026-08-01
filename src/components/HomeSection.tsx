@@ -552,10 +552,9 @@ export default function HomeSection({
       } else if (specialDiscountPct > 0 || m.campaignDiscountAmount) {
         badge = "actie"; badgePct = specialDiscountPct;
       } else {
-        // kamersteiger's "day" price field is really its flat week rate (see
-        // WEEKLY_PRICED_CATEGORIES), so a day-vs-week comparison there would be
-        // comparing the same number to itself — skip the tier badge for it.
-        const weekly = WEEKLY_PRICED_CATEGORIES.has(m.category) ? 0 : computeDiscounts(m).weekly;
+        // computeDiscounts() itself suppresses the derived badge for flat-tier
+        // categories (kamersteiger/ecolift) where "day" price == week price.
+        const weekly = computeDiscounts(m).weekly;
         badge = weekly >= 5 ? "tier" : "none"; badgePct = weekly;
       }
 

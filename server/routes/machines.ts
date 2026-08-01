@@ -188,6 +188,10 @@ function validateMachineInput(body: any): { valid: boolean; error?: string } {
   if (!name?.trim() || !category?.trim() || !height || !pricePerDay) {
     return { valid: false, error: "Verplichte machinevelden ontbreken" };
   }
+  // Mirror the 200-char cap the admin UI's own name field enforces
+  // (AdminMachines.tsx/AdminAddMachine.tsx) — an unbounded name was only
+  // capped client-side before, and also leaked into the imageAlt fallback.
+  body.name = name.trim().slice(0, 200);
 
   const numHeight = Number(height);
   const numReach = Number(reach || 0);

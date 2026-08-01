@@ -378,6 +378,7 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
             <input
               type="text"
               required
+              maxLength={200}
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
               placeholder={t("Bijv. Elektrische Schaarlift Pro 140", "e.g., Electric Scissor Lift Pro 140", "örn: Elektrikli Makaslı Platform Pro 140")}

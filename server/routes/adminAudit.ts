@@ -8,7 +8,7 @@ export const adminAuditRouter = Router();
 const GROUP_PREFIXES: Record<string, string[]> = {
   auth: ["login.", "password.", "admin.", "2fa."],
   orders: ["order."],
-  machines: ["machine.", "blockeddate."],
+  machines: ["machine.", "blockeddate.", "maintenance.", "damagereport."],
   customers: ["customer."],
   settings: ["siteconfig.", "campaignrules.", "categories.", "advisorconfig.", "blog."]
 };

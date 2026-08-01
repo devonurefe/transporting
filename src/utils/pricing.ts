@@ -481,12 +481,20 @@ export function buildPricingTierRows(machine: Machine): PricingTierRow[] {
   return rows;
 }
 
+// Categories whose "day" price field is really a flat short-tier rate (e.g.
+// a full week costs the same as 3-4 days) rather than a genuine per-day rate
+// — comparing weeklyPrice/monthlyPrice against pricePerDay×N there would show
+// a fabricated discount against what's effectively the same number. Confirmed
+// on the seeded Altrex Kamersteiger (pricePerDay 19/35 == weeklyPrice 19/35)
+// and the Pecolift (pricePerDay 35 == weeklyPrice 35).
+const FLAT_TIER_CATEGORIES = new Set(["kamersteiger", "ecolift"]);
+
 // Derives discount percentages for badge display from flat-rate fields.
 // Used by CatalogSection cards and MachineDetailModal.
 export function computeDiscounts(m: Machine): { weekly: number; monthly: number } {
   // Weekly-only products price per week, not per day — derived day-discount
   // badges would be meaningless, so suppress them.
-  if (m.weeklyOnly) return { weekly: 0, monthly: 0 };
+  if (m.weeklyOnly || FLAT_TIER_CATEGORIES.has(m.category)) return { weekly: 0, monthly: 0 };
   const weekly = m.weeklyPrice && m.pricePerDay > 0
     ? Math.round((1 - m.weeklyPrice / (5 * m.pricePerDay)) * 100)
     : (m.weeklyDiscountPercent ?? 0);

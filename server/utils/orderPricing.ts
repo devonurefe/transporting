@@ -247,15 +247,17 @@ export function computeAddonsTotal(
   return { total };
 }
 
-// Bouwt de op te slaan add-on-records ({ id, name, price, quantity? }) uit
+// Bouwt de op te slaan add-on-records ({ id, name, price, quantity?, billing }) uit
 // server-side data — nooit client-namen/prijzen persisteren. Roep dit pas aan
 // nadat computeAddonsTotal de invoer heeft goedgekeurd (zelfde tarieven/aantallen).
+// `billing` records HOE de prijs is bepaald (daily/flat/weekly) — nodig voor
+// ublInvoice.ts om de juiste hoeveelheid/eenheid per factuurregel te tonen.
 export function buildStoredAddons(
   machine: any,
   rentalDays: number,
   addons: unknown,
   fees: ResolvedFees
-): Array<{ id: string; name: string; price: number; quantity?: number }> {
+): Array<{ id: string; name: string; price: number; quantity?: number; billing: "daily" | "flat" | "weekly" }> {
   const m = machine as any;
   const crossSell: Array<{ id: string; name?: string; pricePerWeek: number; pricePerDay?: number; pricePerTwoDay?: number }> =
     Array.isArray(m.crossSellAddons) ? m.crossSellAddons : [];
@@ -271,17 +273,24 @@ export function buildStoredAddons(
     }
     return Number(sa.pricePerWeek || 0) * addonWeeks;
   };
+  const addonBilling = (sa: { pricePerDay?: number; pricePerTwoDay?: number }): "daily" | "flat" | "weekly" => {
+    if (!machineWeeklyOnly) {
+      if (rentalDays === 1 && sa.pricePerDay != null && sa.pricePerDay > 0) return "daily";
+      if (rentalDays === 2 && sa.pricePerTwoDay != null && sa.pricePerTwoDay > 0) return "flat";
+    }
+    return "weekly";
+  };
   const rawAddons = Array.isArray(addons) ? addons : [];
   return rawAddons.map((a: any) => {
     const id = String(a?.id ?? "");
-    if (id === "safety") return { id: "safety", name: fees.addons.safety.name, price: fees.addons.safety.pricePerWeek * addonWeeks };
+    if (id === "safety") return { id: "safety", name: fees.addons.safety.name, price: fees.addons.safety.pricePerWeek * addonWeeks, billing: "weekly" as const };
     if (id === "rijplaten") {
       const q = Number(a?.quantity);
       const qty = Number.isInteger(q) && q >= 1 && q <= 999 ? q : 1;
-      return { id: "rijplaten", name: `${fees.addons.rijplaten.name} (${qty} ${qty === 1 ? "stuk" : "stuks"})`, price: fees.addons.rijplaten.pricePerWeek * addonWeeks * qty, quantity: qty };
+      return { id: "rijplaten", name: `${fees.addons.rijplaten.name} (${qty} ${qty === 1 ? "stuk" : "stuks"})`, price: fees.addons.rijplaten.pricePerWeek * addonWeeks * qty, quantity: qty, billing: "weekly" as const };
     }
     const sa = crossSellMap.get(id);
-    return { id, name: sa?.name ?? id, price: sa ? addonPrice(sa) : 0 };
+    return { id, name: sa?.name ?? id, price: sa ? addonPrice(sa) : 0, billing: sa ? addonBilling(sa) : "weekly" as const };
   });
 }
 

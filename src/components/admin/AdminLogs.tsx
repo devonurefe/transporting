@@ -56,6 +56,8 @@ function describeLog(log: AuditLogRow): string {
     case "order.payment": return `Bestelling${id}: betaalstatus → ${meta.to ?? "?"}`;
     case "order.updated": return `Bestelling${id} bewerkt${Array.isArray(meta.fields) ? ` (${(meta.fields as string[]).length} velden)` : ""}`;
     case "order.created_manual": return `Bestelling${id} handmatig aangemaakt${meta.total ? ` (${meta.total} €)` : ""}`;
+    case "order.date_proposal": return `Bestelling${id}: alternatieve datum voorgesteld${meta.start ? ` (${meta.start} t/m ${meta.end})` : " ingetrokken"}`;
+    case "order.damage_reported": return `Bestelling${id}: schade gemeld${meta.hasPhotos ? " (met foto's)" : ""}`;
     case "customer.updated": return `Klant${id} bijgewerkt${Array.isArray(meta.fields) ? ` (${(meta.fields as string[]).length} velden)` : ""}`;
     case "customer.blocked": return `Klant${id} geblokkeerd`;
     case "customer.unblocked": return `Klant${id} gedeblokkeerd`;
@@ -65,6 +67,12 @@ function describeLog(log: AuditLogRow): string {
     case "machine.deleted": return `Machine${id} verwijderd`;
     case "blockeddate.created": return `Datum geblokkeerd (machine${id}${meta.date ? `, ${meta.date}` : ""})`;
     case "blockeddate.deleted": return `Datum gedeblokkeerd (machine${id}${meta.date ? `, ${meta.date}` : ""})`;
+    case "maintenance.created": return `Onderhoud gepland${meta.machineId ? ` (machine ${meta.machineId})` : ""}`;
+    case "maintenance.updated": return `Onderhoud${id} bijgewerkt${meta.machineId ? ` (machine ${meta.machineId})` : ""}`;
+    case "maintenance.resolved": return `Onderhoud${id} afgerond${meta.machineId ? ` (machine ${meta.machineId})` : ""}`;
+    case "damagereport.created": return `Schademelding aangemaakt${meta.machineId ? ` (machine ${meta.machineId})` : ""}`;
+    case "damagereport.updated": return `Schademelding${id} bijgewerkt${meta.machineId ? ` (machine ${meta.machineId})` : ""}`;
+    case "damagereport.resolved": return `Schademelding${id} afgehandeld${meta.machineId ? ` (machine ${meta.machineId})` : ""}`;
     case "siteconfig.updated": return "Site-instellingen bijgewerkt";
     case "campaignrules.updated": return "Campagneregels bijgewerkt";
     case "categories.updated": return "Categorieën bijgewerkt";

@@ -6,6 +6,7 @@
 import { Router, urlencoded } from "express";
 import { prisma } from "../../prisma/client.js";
 import { mollieService } from "../services/mollieService.js";
+import { emailService } from "../services/emailService.js";
 import { audit } from "../utils/audit.js";
 import type { AuthenticatedRequest } from "../middleware/auth.js";
 
@@ -60,6 +61,28 @@ webhooksRouter.post("/mollie", mollieBodyParser, async (req: AuthenticatedReques
           actor: { role: "system", email: "mollie-webhook" }
         });
         console.log("[Mollie] Order", order.id, "gemarkeerd als betaald via webhook.");
+        // Nobody is watching the panel when a payment link is paid unattended —
+        // without this alert the "Goedkeuren" step would just sit there until
+        // someone happened to open the order. Fire-and-forget: never let a mail
+        // failure turn an already-successful payment into a 500 for Mollie.
+        emailService.sendPaymentReceivedAlert({
+          id: order.id,
+          machineName: order.machineName,
+          startDate: order.startDate.toISOString().split("T")[0],
+          endDate: order.endDate.toISOString().split("T")[0],
+          rentalDays: order.rentalDays,
+          customerName: order.customerName,
+          customerEmail: order.customerEmail,
+          customerPhone: order.customerPhone || "",
+          customerProfile: order.customerProfile,
+          deliveryType: order.deliveryType,
+          deliveryAddress: order.deliveryAddress,
+          deliveryTimeSlot: order.deliveryTimeSlot,
+          totalAmount: order.totalAmount,
+          status: order.status,
+          paymentMethod: order.paymentMethod,
+          mollieCheckoutUrl: order.mollieCheckoutUrl
+        }, "mollie").catch(err => console.error("[Mollie] Payment received alert-email mislukt:", err));
       } else {
         // Either the order is already paid (idempotent retry — fine) or no order
         // has this molliePaymentId — worth knowing which, so log the raw value.

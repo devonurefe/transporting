@@ -992,6 +992,29 @@ ordersRouter.put("/:id/payment", requireAdmin as any, async (req: AuthenticatedR
       data: { paymentStatus }
     });
     audit(req, "order.payment", { entity: "Order", entityId: id, meta: { to: paymentStatus } });
+    // Only on the actual awaiting/refunded → paid transition, mirroring the
+    // Mollie webhook's own idempotency guard — mainly useful in a multi-admin
+    // shop so a colleague finds out the order is now ready to approve.
+    if (paymentStatus === "paid" && existing.paymentStatus !== "paid") {
+      emailService.sendPaymentReceivedAlert({
+        id: updatedOrder.id,
+        machineName: updatedOrder.machineName,
+        startDate: updatedOrder.startDate.toISOString().split("T")[0],
+        endDate: updatedOrder.endDate.toISOString().split("T")[0],
+        rentalDays: updatedOrder.rentalDays,
+        customerName: updatedOrder.customerName,
+        customerEmail: updatedOrder.customerEmail,
+        customerPhone: updatedOrder.customerPhone || "",
+        customerProfile: updatedOrder.customerProfile,
+        deliveryType: updatedOrder.deliveryType,
+        deliveryAddress: updatedOrder.deliveryAddress,
+        deliveryTimeSlot: updatedOrder.deliveryTimeSlot,
+        totalAmount: updatedOrder.totalAmount,
+        status: updatedOrder.status,
+        paymentMethod: updatedOrder.paymentMethod,
+        mollieCheckoutUrl: updatedOrder.mollieCheckoutUrl
+      }, "manual").catch(err => console.error("Payment received alert-email mislukt:", err));
+    }
     res.json({
       ...updatedOrder,
       startDate: updatedOrder.startDate.toISOString().split("T")[0],

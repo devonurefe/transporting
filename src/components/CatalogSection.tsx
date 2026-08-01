@@ -561,10 +561,11 @@ export default function CatalogSection({
                           </button>
                           <button
                             onClick={() => onSelectMachineForBooking(machine)}
-                            className="cta-shine flex-1 py-3 rounded-xl bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white text-xs font-bold transition-all duration-200 active:scale-[0.97] cursor-pointer flex items-center justify-center gap-1.5 shadow-sm hover:shadow-md"
+                            disabled={machine.operationallyBlocked}
+                            className="cta-shine flex-1 py-3 rounded-xl bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white text-xs font-bold transition-all duration-200 active:scale-[0.97] cursor-pointer flex items-center justify-center gap-1.5 shadow-sm hover:shadow-md disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none disabled:hover:bg-orange-500"
                           >
                             <ShoppingCart className="h-3.5 w-3.5" />
-                            {t("btnRentNow")}
+                            {machine.operationallyBlocked ? t("btnUnavailable") : t("btnRentNow")}
                           </button>
                         </div>
 
@@ -710,10 +711,11 @@ export default function CatalogSection({
                   <button
                     type="button"
                     onClick={() => { setPricingPreviewMachine(null); onSelectMachineForBooking(m); }}
-                    className="w-full py-3 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-sm transition-all cursor-pointer flex items-center justify-center gap-2 shadow-md"
+                    disabled={m.operationallyBlocked}
+                    className="w-full py-3 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-sm transition-all cursor-pointer flex items-center justify-center gap-2 shadow-md disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none disabled:hover:bg-orange-500"
                   >
                     <ShoppingCart className="h-4 w-4" />
-                    Huur Nu
+                    {m.operationallyBlocked ? t("btnUnavailable") : t("btnRentNow")}
                   </button>
                 </div>
               </motion.div>

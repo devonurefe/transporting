@@ -406,6 +406,9 @@ app.get("/sitemap.xml", async (_req, res) => {
     { loc: `${base}/adviestool`, priority: "0.8", changefreq: "monthly" },
     { loc: `${base}/kenniscentrum`, priority: "0.7", changefreq: "weekly" },
     { loc: `${base}/veelgestelde-vragen`, priority: "0.7", changefreq: "monthly" },
+    { loc: `${base}/over-ons`, priority: "0.6", changefreq: "monthly" },
+    { loc: `${base}/privacy`, priority: "0.3", changefreq: "yearly" },
+    { loc: `${base}/voorwaarden`, priority: "0.3", changefreq: "yearly" },
     // Param must be "cat" — App.tsx only reads ?cat=/?q= (see initialFilters in
     // App.tsx). A stray "?category=" here previously landed crawlers on the
     // unfiltered catalog instead of the intended category.
@@ -480,6 +483,9 @@ function staticMeta(pathname: string): RouteMeta {
     "/veelgestelde-vragen": { title: "Veelgestelde vragen — Hoogwerker huren | huurgo", description: "Antwoorden op veelgestelde vragen over hoogwerker huren: kosten, bezorging, borg, certificaten en betaling. Persoonlijk advies via WhatsApp." },
     "/adviestool": { title: "Welke hoogwerker heb ik nodig? · Keuzehulp | huurgo", description: "Twijfelt u tussen een schaarlift, mastlift of spinhoogwerker? Beantwoord een paar korte vragen en zie direct welke machine uit ons verhuurpark bij uw klus past." },
     "/kenniscentrum": { title: "Kenniscentrum — Tips, gidsen & handleidingen | huurgo", description: "Alles over hoogwerkers huren: keuzehulp, kosten, veilig werken op hoogte en praktische handleidingen. Deskundige tips van huurgo (MB Hoogwerkers)." },
+    "/over-ons": { title: "Over ons | huurgo", description: "Maak kennis met huurgo (MB Hoogwerkers B.V.) — ABOMA-gecertificeerd verhuurnetwerk voor hoogwerkers, schaarliften en meer in Zuid-Holland." },
+    "/privacy": { title: "Privacybeleid | huurgo", description: "Lees hoe huurgo omgaat met uw persoonsgegevens." },
+    "/voorwaarden": { title: "Algemene voorwaarden | huurgo", description: "De algemene voorwaarden voor het huren van machines bij huurgo." },
     "/orders": { title: "Mijn Reserveringen | huurgo", description: "Beheer uw huurcontracten, volg de status en download facturen.", noindex: true },
     "/admin": { title: "Beheer | huurgo", description: "Beheeromgeving.", noindex: true },
   };

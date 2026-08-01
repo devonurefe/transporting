@@ -53,6 +53,7 @@ const dictionary: TranslationDictionary = {
   btnSelect: { nl: "Dit Model Kiezen", en: "Choose This Model", tr: "Bu Modeli Seç" },
   btnSpecifications: { nl: "Geschikt voor mij?", en: "Is this right for me?", tr: "Bana uygun mu?" },
   btnRentNow: { nl: "Huur Nu", en: "Rent Now", tr: "Kirala" },
+  btnUnavailable: { nl: "Niet beschikbaar", en: "Not available", tr: "Kullanılamıyor" },
   btnMoreInfo: { nl: "Geschikt voor mijn klus?", en: "Is this right for my job?", tr: "İşime uygun mu?" },
   infoUseCases: { nl: "Waarvoor", en: "Use Cases", tr: "Kullanım Alanları" },
   infoAdvantages: { nl: "Voordelen", en: "Advantages", tr: "Avantajlar" },

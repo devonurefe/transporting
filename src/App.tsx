@@ -19,7 +19,6 @@ import { Machine, Order, OrderStatus, AppNotification, UserProfile, CartItem } f
 import { useAuthStore } from "./store/authStore";
 import { useAppStore } from "./store/appStore";
 import { buildWhatsAppGeneralUrl, buildWhatsAppOrderStatusUrl, buildWhatsAppPaymentLinkUrl, buildWhatsAppAdviceUrl, getWhatsAppNumber } from "./utils/whatsapp";
-import { resolveFaqItems } from "./data/faq";
 import { useModalA11y } from "./hooks/useModalA11y";
 
 // Escape </script> inside JSON-LD so an admin-supplied string cannot break out of the script tag.
@@ -178,10 +177,23 @@ export default function App() {
 
   // SEO: per-route title, meta description and canonical (SPA fallback)
   useEffect(() => {
-    // Machine pages (/hoogwerker/:id) and city pages (/hoogwerker-huren/:stad) set
-    // their own title from data; let those components own the head so this generic
-    // map doesn't overwrite it.
-    if (location.pathname.startsWith("/hoogwerker/") || location.pathname.startsWith("/hoogwerker-huren/") || location.pathname.startsWith("/kenniscentrum")) return;
+    // Machine pages (/hoogwerker/:id), city pages (/hoogwerker-huren/:stad),
+    // Kenniscentrum, About, the legal pages and the advisor tool all set their
+    // own title/description via their own effect; let those components own the
+    // head. Missing a route here doesn't just skip a title update — this effect
+    // still runs on every route change and falls back to seo["/"], so on a
+    // client-side navigation the home title would win the effect-ordering race
+    // and silently overwrite whatever the page component just set (About,
+    // Privacy, Voorwaarden and the advisor tool were missing from this list).
+    if (
+      location.pathname.startsWith("/hoogwerker/") ||
+      location.pathname.startsWith("/hoogwerker-huren/") ||
+      location.pathname.startsWith("/kenniscentrum") ||
+      location.pathname === "/over-ons" ||
+      location.pathname === "/privacy" ||
+      location.pathname === "/voorwaarden" ||
+      location.pathname === "/adviestool"
+    ) return;
     const seo: Record<string, { title: string; desc: string; noindex?: boolean }> = {
       "/": {
         title: "huurgo — Hoogwerkers Huren | Leiden, Den Haag, Alphen a/d Rijn",
@@ -762,21 +774,13 @@ export default function App() {
         }}
       />
 
-      {/* FAQ JSON-LD for Google rich results */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: safeJsonLd({
-            "@context": "https://schema.org",
-            "@type": "FAQPage",
-            "mainEntity": resolveFaqItems(siteConfig.faqItems).map((item) => ({
-              "@type": "Question",
-              "name": item.q,
-              "acceptedAnswer": { "@type": "Answer", "text": item.a }
-            }))
-          })
-        }}
-      />
+      {/* FAQ JSON-LD lives server-side only (server.ts metaForRequest), gated to
+          /veelgestelde-vragen and built from the same live siteConfig.faqItems
+          via resolveFaqItems there. This client-rendered copy used to run
+          unconditionally on every route (home, /admin, /booking, city pages,
+          blog — none of which show FAQ content), which is exactly the kind of
+          structured-data/visible-content mismatch Google's guidelines warn
+          about, and duplicated the server one on the actual FAQ page itself. */}
 
       {/* Background ambient lighting */}
       <div className="absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-slate-100/60 to-transparent pointer-events-none -z-10" />
@@ -859,18 +863,24 @@ export default function App() {
             <Route path="/adviestool" element={<AdviesSection />} />
 
             <Route path="/booking" element={
-              <BookingSection
-                selectedMachine={selectedMachine}
-                onCreateReservation={handleCreateReservation}
-                setActiveTab={setActiveTab}
-                machines={machines}
-                onSelectMachine={setSelectedMachine}
-                currentUser={currentUser}
-                cartItems={cartItems}
-                onRemoveCartItem={handleRemoveCartItem}
-                onUpdateCartItemDates={handleUpdateCartItemDates}
-                onClearCart={handleClearCart}
-              />
+              // Checkout is the revenue-critical path — same local recovery as
+              // /admin below, instead of only the app-wide boundary in main.tsx
+              // (whose fallback blanks the entire app, header/footer included,
+              // for a render error anywhere in this multi-step flow).
+              <ErrorBoundary>
+                <BookingSection
+                  selectedMachine={selectedMachine}
+                  onCreateReservation={handleCreateReservation}
+                  setActiveTab={setActiveTab}
+                  machines={machines}
+                  onSelectMachine={setSelectedMachine}
+                  currentUser={currentUser}
+                  cartItems={cartItems}
+                  onRemoveCartItem={handleRemoveCartItem}
+                  onUpdateCartItemDates={handleUpdateCartItemDates}
+                  onClearCart={handleClearCart}
+                />
+              </ErrorBoundary>
             } />
 
             <Route path="/orders" element={

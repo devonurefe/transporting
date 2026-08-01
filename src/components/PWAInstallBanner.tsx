@@ -7,8 +7,10 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { HuurGoText } from "./Header";
 import { devLog } from "../utils/log";
+import { useLanguageStore } from "../store/languageStore";
 
 export default function PWAInstallBanner() {
+  const t = useLanguageStore((state) => state.t);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showInstallBanner, setShowInstallBanner] = useState<boolean>(false);
 
@@ -55,22 +57,26 @@ export default function PWAInstallBanner() {
             🏗️
           </div>
           <div className="flex-1 min-w-0">
-            <h4 className="text-xs font-bold font-display leading-tight"><HuurGoText dark /> installeren?</h4>
+            <h4 className="text-xs font-bold font-display leading-tight"><HuurGoText dark /> {t("installeren?", "install?", "yükle?")}</h4>
             <p className="text-[10px] text-slate-400 mt-1 leading-snug">
-              Installeer onze PWA voor snellere laadtijden, realtime push-notificaties en offline kalenderinzicht.
+              {t(
+                "Installeer onze PWA voor snellere laadtijden, realtime push-notificaties en offline kalenderinzicht.",
+                "Install our PWA for faster load times, real-time push notifications and offline calendar access.",
+                "Daha hızlı yükleme süreleri, gerçek zamanlı push bildirimleri ve çevrimdışı takvim erişimi için PWA'mızı yükleyin."
+              )}
             </p>
             <div className="flex items-center space-x-2 mt-3">
               <button
                 onClick={handleInstallClick}
                 className="bg-orange-500 hover:bg-orange-600 text-white text-[10px] font-extrabold px-3.5 py-1.5 rounded-xl border-none cursor-pointer shadow-sm active:scale-95 transition-all"
               >
-                Nu installeren
+                {t("Nu installeren", "Install now", "Şimdi yükle")}
               </button>
               <button
                 onClick={handleDismissBanner}
                 className="bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white text-[10px] font-bold px-3 py-1.5 rounded-xl border-none cursor-pointer transition-all"
               >
-                Later
+                {t("Later", "Later", "Sonra")}
               </button>
             </div>
           </div>

@@ -7,6 +7,7 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { X, MessageSquare, Phone, Mail, CheckCircle } from "lucide-react";
 import { useAppStore } from "../store/appStore";
+import { useLanguageStore } from "../store/languageStore";
 import { getWhatsAppNumber } from "../utils/whatsapp";
 import { useModalA11y } from "../hooks/useModalA11y";
 
@@ -19,6 +20,8 @@ interface ContactModalProps {
 
 export default function ContactModal({ isOpen, onClose, onShowToast, onAddSystemLog }: ContactModalProps) {
   const siteConfig = useAppStore((state) => state.siteConfig);
+  const t = useLanguageStore((state) => state.t);
+  const language = useLanguageStore((state) => state.language);
   const contactEmail = siteConfig.contactEmail || "info@huurgo.nl";
   const contactPhone = siteConfig.contactPhone || "+31 (0)6 11 84 88 99";
   const dialogRef = useModalA11y<HTMLDivElement>(isOpen, onClose);
@@ -42,7 +45,7 @@ export default function ContactModal({ isOpen, onClose, onShowToast, onAddSystem
             ref={dialogRef}
             role="dialog"
             aria-modal="true"
-            aria-label="Support & contact"
+            aria-label={t("Support & contact", "Support & contact", "Destek & iletişim")}
             tabIndex={-1}
             initial={{ opacity: 0, scale: 0.95, y: 15 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -55,12 +58,12 @@ export default function ContactModal({ isOpen, onClose, onShowToast, onAddSystem
             
             <div className="flex justify-between items-start">
               <div className="space-y-1">
-                <span className="text-[10px] text-slate-500 font-display uppercase tracking-wider block font-bold">Klantenservice en Ondersteuning</span>
-                <h3 className="font-display text-2xl font-black text-slate-900 tracking-tight">Support & Live Advies Center</h3>
+                <span className="text-[10px] text-slate-500 font-display uppercase tracking-wider block font-bold">{t("Klantenservice en Ondersteuning", "Customer Service & Support", "Müşteri Hizmetleri ve Destek")}</span>
+                <h3 className="font-display text-2xl font-black text-slate-900 tracking-tight">{t("Support & Live Advies Center", "Support & Live Advice Center", "Destek & Canlı Danışma Merkezi")}</h3>
               </div>
               <button
                 onClick={onClose}
-                aria-label="Sluiten"
+                aria-label={t("Sluiten", "Close", "Kapat")}
                 className="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 transition-colors cursor-pointer border-none"
               >
                 <X className="h-5 w-5" />
@@ -71,9 +74,13 @@ export default function ContactModal({ isOpen, onClose, onShowToast, onAddSystem
               {/* Left Pane: Direct WhatsApp & Call channels */}
               <div className="md:col-span-5 flex flex-col justify-between space-y-5 bg-slate-50 p-4 rounded-2xl border border-slate-100">
                 <div className="space-y-3">
-                  <span className="text-[10px] font-display font-semibold text-slate-500 uppercase tracking-wider block">Directe Communicatie</span>
+                  <span className="text-[10px] font-display font-semibold text-slate-500 uppercase tracking-wider block">{t("Directe Communicatie", "Direct Communication", "Doğrudan İletişim")}</span>
                   <p className="text-[11.5px] leading-relaxed text-slate-500 font-medium">
-                    Heeft u direct antwoord of advies nodig over de inzetbaarheid van een hoogwerker? Start direct een gesprek of bel ons hoofdkantoor.
+                    {t(
+                      "Heeft u direct antwoord of advies nodig over de inzetbaarheid van een hoogwerker? Start direct een gesprek of bel ons hoofdkantoor.",
+                      "Need a direct answer or advice on whether a lift suits your job? Start a chat right away or call our head office.",
+                      "Bir platformun işinize uygunluğu hakkında hemen cevap veya tavsiye mi istiyorsunuz? Hemen bir sohbet başlatın veya merkez ofisimizi arayın."
+                    )}
                   </p>
                 </div>
                 
@@ -89,8 +96,8 @@ export default function ContactModal({ isOpen, onClose, onShowToast, onAddSystem
                       <MessageSquare className="h-4 w-4" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <span className="text-[10px] text-emerald-100 block font-bold leading-none mb-0.5 uppercase tracking-wide">WhatsApp Expert</span>
-                      <span className="font-bold text-white text-[11.5px] block truncate">Start Live Chat 💬</span>
+                      <span className="text-[10px] text-emerald-100 block font-bold leading-none mb-0.5 uppercase tracking-wide">{t("WhatsApp Expert", "WhatsApp Expert", "WhatsApp Uzmanı")}</span>
+                      <span className="font-bold text-white text-[11.5px] block truncate">{t("Start Live Chat 💬", "Start Live Chat 💬", "Canlı Sohbeti Başlat 💬")}</span>
                     </div>
                   </a>
 
@@ -103,7 +110,7 @@ export default function ContactModal({ isOpen, onClose, onShowToast, onAddSystem
                       <Phone className="h-4 w-4" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <span className="text-[10px] text-slate-400 block font-bold leading-none mb-0.5 uppercase tracking-wide">Bellen Regionaal</span>
+                      <span className="text-[10px] text-slate-400 block font-bold leading-none mb-0.5 uppercase tracking-wide">{t("Bellen Regionaal", "Call Regional Office", "Bölge Ofisini Ara")}</span>
                       <span className="font-sans font-semibold text-slate-800 text-[11.5px]">{contactPhone}</span>
                     </div>
                   </a>
@@ -117,7 +124,7 @@ export default function ContactModal({ isOpen, onClose, onShowToast, onAddSystem
                       <Mail className="h-4 w-4" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <span className="text-[10px] text-slate-400 block font-bold leading-none mb-0.5 uppercase tracking-wide">E-mail Servicedesk</span>
+                      <span className="text-[10px] text-slate-400 block font-bold leading-none mb-0.5 uppercase tracking-wide">{t("E-mail Servicedesk", "Email Service Desk", "E-posta Destek Hattı")}</span>
                       <span className="text-slate-800 text-[11px] block break-all font-semibold truncate">{contactEmail}</span>
                     </div>
                   </a>
@@ -139,7 +146,7 @@ export default function ContactModal({ isOpen, onClose, onShowToast, onAddSystem
                           : "text-slate-500 hover:text-slate-700"
                       }`}
                     >
-                      {tab === "ticket" ? "Supportvraag" : "Bel mij terug"}
+                      {tab === "ticket" ? t("Supportvraag", "Support request", "Destek talebi") : t("Bel mij terug", "Call me back", "Beni geri arayın")}
                     </button>
                   ))}
                 </div>
@@ -163,8 +170,10 @@ export default function ContactModal({ isOpen, onClose, onShowToast, onAddSystem
                           onClose();
                           onShowToast({
                             id: `support-${Date.now()}`,
-                            title: "Supportvraag Ontvangen",
-                            message: `Beste ${name}, uw vraag over '${topic}' is in behandeling. We nemen binnen 15 minuten contact op!`,
+                            title: t("Supportvraag Ontvangen", "Support Request Received", "Destek Talebi Alındı"),
+                            message: language === "en"
+                              ? `Dear ${name}, your question about '${topic}' is being processed. We'll be in touch within 15 minutes!`
+                              : `Beste ${name}, uw vraag over '${topic}' is in behandeling. We nemen binnen 15 minuten contact op!`,
                             type: "success"
                           });
                           onAddSystemLog("system", name, `Supportvraag [${topic}]: ${message} (Contact: ${contact})`);
@@ -177,30 +186,30 @@ export default function ContactModal({ isOpen, onClose, onShowToast, onAddSystem
                           type="text"
                           name="ticketName"
                           required
-                          placeholder="Uw Volledige Naam (of Bedrijfsnaam)"
+                          placeholder={t("Uw Volledige Naam (of Bedrijfsnaam)", "Your Full Name (or Company Name)", "Ad Soyad (veya Şirket Adı)")}
                           className="w-full bg-slate-50 border border-slate-200 focus:border-slate-400 rounded-xl px-3 py-2 text-xs text-slate-800 placeholder-slate-400 outline-none focus:ring-1 focus:ring-slate-300 font-medium"
                         />
                         <input
                           type="text"
                           name="ticketContact"
                           required
-                          placeholder="E-mail of telefoonnummer"
+                          placeholder={t("E-mail of telefoonnummer", "Email or phone number", "E-posta veya telefon numarası")}
                           className="w-full bg-slate-50 border border-slate-200 focus:border-slate-400 rounded-xl px-3 py-2 text-xs text-slate-800 placeholder-slate-400 outline-none focus:ring-1 focus:ring-slate-300 font-medium"
                         />
                         <select
                           name="ticketTopic"
                           className="w-full bg-slate-50 border border-slate-200 focus:border-slate-400 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:ring-1 focus:ring-slate-300 font-semibold cursor-pointer"
                         >
-                          <option value="Klantenservice">Klantenservice & Hulp</option>
-                          <option value="Transport & Logistiek">Transport & Logistieke Vraag</option>
-                          <option value="Vloot & Tarieven">Zakelijke Vloot Aanvraag</option>
-                          <option value="Overig">Overig / Technisch probleem</option>
+                          <option value="Klantenservice">{t("Klantenservice & Hulp", "Customer Service & Help", "Müşteri Hizmetleri & Yardım")}</option>
+                          <option value="Transport & Logistiek">{t("Transport & Logistieke Vraag", "Transport & Logistics Question", "Nakliye & Lojistik Sorusu")}</option>
+                          <option value="Vloot & Tarieven">{t("Zakelijke Vloot Aanvraag", "Business Fleet Request", "Kurumsal Filo Talebi")}</option>
+                          <option value="Overig">{t("Overig / Technisch probleem", "Other / Technical issue", "Diğer / Teknik sorun")}</option>
                         </select>
                         <textarea
                           name="ticketMsg"
                           required
                           rows={3}
-                          placeholder="Wat is uw specifieke vraag over de inzetbaarheid van ons materieel?"
+                          placeholder={t("Wat is uw specifieke vraag over de inzetbaarheid van ons materieel?", "What's your specific question about our equipment's suitability?", "Ekipmanımızın uygunluğu hakkında özel sorunuz nedir?")}
                           className="w-full bg-slate-50 border border-slate-200 focus:border-slate-400 rounded-xl px-3 py-2 text-xs text-slate-800 placeholder-slate-400 outline-none focus:ring-1 focus:ring-slate-300 resize-none font-sans font-medium"
                         />
                       </div>
@@ -209,7 +218,7 @@ export default function ContactModal({ isOpen, onClose, onShowToast, onAddSystem
                         className="w-full py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-semibold text-xs rounded-xl shadow-sm hover:shadow transition-all cursor-pointer font-display shrink-0 border-none flex items-center justify-center space-x-1.5"
                       >
                         <CheckCircle className="h-4 w-4 shrink-0 text-emerald-300" />
-                        <span>Verstuur Bericht</span>
+                        <span>{t("Verstuur Bericht", "Send Message", "Mesaj Gönder")}</span>
                       </button>
                     </motion.form>
                   ) : (
@@ -227,8 +236,10 @@ export default function ContactModal({ isOpen, onClose, onShowToast, onAddSystem
                           onClose();
                           onShowToast({
                             id: `callback-${Date.now()}`,
-                            title: "Belaanvraag Ontvangen",
-                            message: `Onze logistieke adviseur belt u binnen 10 minuten terug op ${phone}. Hartelijk dank!`,
+                            title: t("Belaanvraag Ontvangen", "Callback Request Received", "Geri Arama Talebi Alındı"),
+                            message: language === "en"
+                              ? `Our logistics advisor will call you back on ${phone} within 10 minutes. Thank you!`
+                              : `Onze logistieke adviseur belt u binnen 10 minuten terug op ${phone}. Hartelijk dank!`,
                             type: "success"
                           });
                           onAddSystemLog("system", "Bezoeker", `Belaanvraag geregistreerd voor nummer: ${phone} (Zoeterwoude hub).`);
@@ -238,13 +249,17 @@ export default function ContactModal({ isOpen, onClose, onShowToast, onAddSystem
                     >
                       <div className="space-y-3">
                         <p className="text-xs text-slate-500 leading-relaxed">
-                          Liever direct spraak? Laat uw nummer achter en onze logistieke adviseur belt u terug binnen kantooruren.
+                          {t(
+                            "Liever direct spraak? Laat uw nummer achter en onze logistieke adviseur belt u terug binnen kantooruren.",
+                            "Prefer to talk directly? Leave your number and our logistics advisor will call you back during office hours.",
+                            "Doğrudan konuşmayı mı tercih edersiniz? Numaranızı bırakın, lojistik danışmanımız mesai saatleri içinde sizi geri arasın."
+                          )}
                         </p>
                         <input
                           type="tel"
                           name="callbackPhone"
                           required
-                          placeholder="Uw telefoonnummer (bijv. +31 6 ...)"
+                          placeholder={t("Uw telefoonnummer (bijv. +31 6 ...)", "Your phone number (e.g. +31 6 ...)", "Telefon numaranız (örn. +90 5xx ...)")}
                           className="w-full bg-slate-50 border border-slate-200 focus:border-slate-400 rounded-xl px-3 py-2.5 text-xs text-slate-800 placeholder-slate-400 outline-none focus:ring-1 focus:ring-slate-300 font-medium"
                         />
                       </div>
@@ -252,7 +267,7 @@ export default function ContactModal({ isOpen, onClose, onShowToast, onAddSystem
                         type="submit"
                         className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs rounded-xl shadow-sm hover:shadow transition-all cursor-pointer font-display shrink-0 border-none"
                       >
-                        Bel mij terug
+                        {t("Bel mij terug", "Call me back", "Beni geri arayın")}
                       </button>
                     </motion.form>
                   )}

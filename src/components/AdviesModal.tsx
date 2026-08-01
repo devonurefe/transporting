@@ -34,7 +34,7 @@ interface AdviesModalProps {
 export default function AdviesModal({ open, onClose }: AdviesModalProps) {
   const navigate = useNavigate();
   const machines = useAppStore((s) => s.machines);
-  const advisorConfig = useAppStore((s) => (s.siteConfig as { advisorConfig?: unknown }).advisorConfig);
+  const advisorConfig = useAppStore((s) => (s.siteConfig as { advisorConfig?: { enabled?: boolean } }).advisorConfig);
 
   const flow = useMemo(() => resolveFlow(advisorConfig as never), [advisorConfig]);
 
@@ -124,7 +124,19 @@ export default function AdviesModal({ open, onClose }: AdviesModalProps) {
 
             {/* Body */}
             <div className="px-5 py-4 overflow-y-auto">
-              {current ? (
+              {advisorConfig?.enabled === false ? (
+                // AdviesStrip already hides its own entry point when disabled,
+                // but AdviesSection's /adviestool page (and its own CTAs) stays
+                // reachable/crawlable by design — this was the only actual gate
+                // on the admin's on/off toggle, so it belongs on the shared
+                // modal both consumers open, not duplicated in each of them.
+                <div className="text-center py-6">
+                  <p className="text-sm font-bold text-slate-900">Keuzehulp tijdelijk niet beschikbaar</p>
+                  <p className="text-xs text-slate-500 mt-1.5">
+                    Bekijk ons volledige assortiment of neem contact op via WhatsApp voor persoonlijk advies.
+                  </p>
+                </div>
+              ) : current ? (
                 <>
                   <p className="text-xs font-semibold text-slate-400 tracking-wide">
                     Vraag {step + 1} van {totalSteps}

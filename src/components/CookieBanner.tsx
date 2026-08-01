@@ -5,6 +5,7 @@
 
 import React, { useState } from "react";
 import { motion } from "motion/react";
+import { Link } from "react-router-dom";
 import { Cookie } from "lucide-react";
 import { useLanguageStore } from "../store/languageStore";
 import { loadClarity } from "../utils/analytics";
@@ -62,17 +63,12 @@ export default function CookieBanner() {
           </span>
           <span>
           {t("cookieText")}{" "}
-          <a
-            href="#privacy"
+          <Link
+            to="/privacy"
             className="underline text-slate-600 hover:text-slate-800 transition-colors"
-            onClick={(e) => {
-              e.preventDefault();
-              const el = document.getElementById("privacy");
-              if (el) el.scrollIntoView({ behavior: "smooth" });
-            }}
           >
             {t("cookieMoreInfo")}
-          </a>
+          </Link>
           </span>
         </p>
         <div className="flex items-center gap-2 shrink-0">

@@ -4,6 +4,7 @@
  */
 
 import { useAppStore } from "../store/appStore";
+import { useLanguageStore } from "../store/languageStore";
 
 interface VatToggleProps {
   size?: "xs" | "sm";
@@ -18,6 +19,7 @@ interface VatToggleProps {
 export default function VatToggle({ size = "sm", block = false }: VatToggleProps) {
   const vatDisplay = useAppStore((s) => s.vatDisplay);
   const setVatDisplay = useAppStore((s) => s.setVatDisplay);
+  const t = useLanguageStore((s) => s.t);
 
   // Default ("sm") matches the search bar next to it: rounded-xl, text-xs,
   // py-1 so the overall height lines up. "xs" keeps the compact pill used
@@ -30,7 +32,7 @@ export default function VatToggle({ size = "sm", block = false }: VatToggleProps
   return (
     <div
       role="group"
-      aria-label="Prijsweergave incl. of excl. BTW"
+      aria-label={t("Prijsweergave incl. of excl. BTW", "Price display incl. or excl. VAT", "Fiyat gösterimi KDV dahil veya hariç")}
       className={`items-center ${outerRadius} border border-slate-200/80 bg-white ${outerPad} ${
         block ? "flex w-full sm:inline-flex sm:w-auto" : "inline-flex shrink-0"
       }`}
@@ -49,7 +51,7 @@ export default function VatToggle({ size = "sm", block = false }: VatToggleProps
               : "text-slate-500 hover:text-slate-800"
           }`}
         >
-          {mode === "excl" ? "excl. btw" : "incl. btw"}
+          {mode === "excl" ? t("excl. btw", "excl. VAT", "KDV hariç") : t("incl. btw", "incl. VAT", "KDV dahil")}
         </button>
       ))}
     </div>

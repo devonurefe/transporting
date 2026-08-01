@@ -9,7 +9,7 @@ import { ArrowLeft, ArrowUpToLine, ArrowRightLeft, Weight, Zap, ShoppingCart, Sh
 import { Machine } from "../types";
 import { useAppStore } from "../store/appStore";
 import { euro, euroCompact } from "../utils/format";
-import { computeDiscounts } from "../utils/pricing";
+import { buildPricingTierRows } from "../utils/pricing";
 import { useSeo, SEO_BASE_URL } from "../utils/seo";
 import MachineDetailModal from "./MachineDetailModal";
 
@@ -79,7 +79,13 @@ export default function MachineDetailPage({ onSelectMachineForBooking }: Machine
     );
   }
 
-  const disc = computeDiscounts(machine);
+  // Same row-builder as MachineDetailModal/CatalogSection's tariff table — this
+  // page used to hand-roll its own (Dagtarief/Werkweektarief/Maandtarief only),
+  // which drifted from the real pricing engine: it ignored oneDayPrice/twoDay/
+  // threeDay/fourDay/weekendPrice tiers entirely and didn't respect
+  // minRentalDays, exactly the class of bug buildPricingTierRows() was created
+  // to prevent (see its own comment in pricing.ts).
+  const pricingRows = buildPricingTierRows(machine);
   const book = () => { onSelectMachineForBooking(machine); navigate("/booking"); };
 
   return (
@@ -131,32 +137,31 @@ export default function MachineDetailPage({ onSelectMachineForBooking }: Machine
             </span>
           </div>
 
-          {/* Price tiers */}
+          {/* Price tiers — full tariff table (1-dag actie, weekend, per-day tiers,
+              werkweek/maand + korting-badges), identical to the modal's table */}
           <div className="rounded-2xl border border-slate-200 divide-y divide-slate-100 text-sm">
             <div className="flex justify-between px-4 py-2.5">
               <span className="text-slate-600">Dagtarief</span>
               <span className="font-bold text-slate-800 font-mono">{euro(machine.pricePerDay)}</span>
             </div>
-            {machine.weeklyPrice ? (
-              <div className="flex justify-between px-4 py-2.5">
-                <span className="text-slate-600">Werkweektarief (5 dgn){disc.weekly > 0 ? ` · −${disc.weekly}%` : ""}</span>
-                <span className="font-bold text-slate-800 font-mono">{euro(machine.weeklyPrice)}</span>
+            {pricingRows.map((row, i) => (
+              <div key={i} className="flex justify-between items-center px-4 py-2.5">
+                <div>
+                  <span className="text-slate-600">{row.period}</span>
+                  {row.badge && <span className="ml-1.5 text-[10px] font-black px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700">{row.badge}</span>}
+                </div>
+                <span className="font-bold text-slate-800 font-mono">{row.pricePrefix ?? ""}{euro(row.price)}</span>
               </div>
-            ) : null}
-            {machine.monthlyPrice ? (
-              <div className="flex justify-between px-4 py-2.5">
-                <span className="text-slate-600">Maandtarief (28 dgn){disc.monthly > 0 ? ` · −${disc.monthly}%` : ""}</span>
-                <span className="font-bold text-slate-800 font-mono">{euro(machine.monthlyPrice)}</span>
-              </div>
-            ) : null}
+            ))}
           </div>
 
           <div className="flex gap-2">
             <button
               onClick={book}
-              className="cta-shine flex-1 py-3 rounded-xl bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white text-sm font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm"
+              disabled={machine.operationallyBlocked}
+              className="cta-shine flex-1 py-3 rounded-xl bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white text-sm font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none disabled:hover:bg-orange-500"
             >
-              <ShoppingCart className="h-4 w-4" /> Huur Nu
+              <ShoppingCart className="h-4 w-4" /> {machine.operationallyBlocked ? "Niet beschikbaar" : "Huur Nu"}
             </button>
             <button
               onClick={() => setShowModal(true)}

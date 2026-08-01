@@ -7,6 +7,12 @@ import React, { ErrorInfo, ReactNode } from "react";
 import { ShieldAlert, RefreshCw, Home } from "lucide-react";
 import { motion } from "motion/react";
 import { isChunkLoadError, tryAutoReloadOnce } from "../utils/chunkError";
+import { useLanguageStore } from "../store/languageStore";
+
+// Class components can't use hooks, so this reads the store directly via
+// getState() rather than subscribing — an error screen doesn't need to react
+// live to a language toggle, it just needs the language current at crash time.
+const t = (nl: string, en: string, tr: string) => useLanguageStore.getState().t(nl, en, tr);
 
 interface Props {
   children?: ReactNode;
@@ -75,7 +81,7 @@ export default class ErrorBoundary extends React.Component<Props, State> {
           <div className="min-h-[80vh] flex items-center justify-center px-4">
             <div className="text-center">
               <LiftAnimation />
-              <p className="text-sm text-slate-500 font-medium">Nieuwste versie laden...</p>
+              <p className="text-sm text-slate-500 font-medium">{t("Nieuwste versie laden...", "Loading latest version...", "En son sürüm yükleniyor...")}</p>
             </div>
           </div>
         );
@@ -94,14 +100,17 @@ export default class ErrorBoundary extends React.Component<Props, State> {
 
               <div>
                 <span className="text-[10px] font-mono uppercase bg-orange-50 border border-orange-200 text-orange-700 px-3 py-1 rounded-full font-extrabold tracking-wider">
-                  Onderhoud bezig
+                  {t("Onderhoud bezig", "Maintenance in progress", "Bakım devam ediyor")}
                 </span>
                 <h1 className="font-display text-2xl font-black text-slate-900 mt-4 leading-tight">
-                  Onze hoogwerkers zijn in actie!
+                  {t("Onze hoogwerkers zijn in actie!", "Our lifts are hard at work!", "Platformlarımız çalışıyor!")}
                 </h1>
                 <p className="text-xs text-slate-600 font-medium mt-2 max-w-md mx-auto leading-relaxed">
-                  We zijn de site aan het bijwerken naar de nieuwste versie. Een moment
-                  geduld, we zijn zo weer online.
+                  {t(
+                    "We zijn de site aan het bijwerken naar de nieuwste versie. Een moment geduld, we zijn zo weer online.",
+                    "We're updating the site to the latest version. Just a moment, we'll be back online shortly.",
+                    "Siteyi en son sürüme güncelliyoruz. Bir dakika bekleyin, kısa süre içinde tekrar çevrimiçi olacağız."
+                  )}
                 </p>
               </div>
 
@@ -111,7 +120,7 @@ export default class ErrorBoundary extends React.Component<Props, State> {
                   className="bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold px-6 py-3 rounded-xl transition-all shadow-md shadow-orange-100 cursor-pointer flex items-center justify-center space-x-1.5 border-none"
                 >
                   <RefreshCw className="h-4 w-4" />
-                  <span>Pagina herladen</span>
+                  <span>{t("Pagina herladen", "Reload page", "Sayfayı yeniden yükle")}</span>
                 </button>
 
                 <button
@@ -119,7 +128,7 @@ export default class ErrorBoundary extends React.Component<Props, State> {
                   className="bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold text-xs px-5 py-3 rounded-xl transition-all border border-slate-200 cursor-pointer flex items-center justify-center space-x-1.5 shadow-sm"
                 >
                   <Home className="h-3.5 w-3.5" />
-                  <span>Terug naar Home</span>
+                  <span>{t("Terug naar Home", "Back to Home", "Ana Sayfaya Dön")}</span>
                 </button>
               </div>
             </div>
@@ -139,17 +148,21 @@ export default class ErrorBoundary extends React.Component<Props, State> {
 
             <div>
               <span className="text-[10px] font-mono uppercase bg-rose-50 border border-rose-200 text-rose-700 px-3 py-1 rounded-full font-extrabold tracking-wider">
-                Systeembeveiliging Geactiveerd
+                {t("Systeembeveiliging Geactiveerd", "System Safeguard Activated", "Sistem Koruması Etkinleştirildi")}
               </span>
               <h1 className="font-display text-2xl font-black text-slate-900 mt-4 leading-tight">
-                Er is een onverwachte fout opgetreden
+                {t("Er is een onverwachte fout opgetreden", "An unexpected error occurred", "Beklenmeyen bir hata oluştu")}
               </h1>
               <p className="text-xs text-slate-600 font-medium mt-2 max-w-md mx-auto leading-relaxed">
-                Onze systemen hebben de fout veilig geïsoleerd om uw gegevens en actieve sessie te beschermen.
+                {t(
+                  "Onze systemen hebben de fout veilig geïsoleerd om uw gegevens en actieve sessie te beschermen.",
+                  "Our systems have safely isolated the error to protect your data and active session.",
+                  "Sistemlerimiz, verilerinizi ve aktif oturumunuzu korumak için hatayı güvenli bir şekilde izole etti."
+                )}
               </p>
               {this.state.error && (
                 <div className="mt-4 p-3 bg-slate-900 rounded-xl border border-slate-950 text-left">
-                  <span className="text-[9px] font-mono text-rose-400 font-bold uppercase tracking-wider block">Foutmelding log</span>
+                  <span className="text-[9px] font-mono text-rose-400 font-bold uppercase tracking-wider block">{t("Foutmelding log", "Error log", "Hata günlüğü")}</span>
                   <code className="text-[10.5px] font-mono text-slate-300 break-all leading-normal">
                     {this.state.error.message}
                   </code>
@@ -163,7 +176,7 @@ export default class ErrorBoundary extends React.Component<Props, State> {
                 className="bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold px-6 py-3 rounded-xl transition-all shadow-md shadow-orange-100 cursor-pointer flex items-center justify-center space-x-1.5 border-none"
               >
                 <Home className="h-4 w-4" />
-                <span>Terug naar Home</span>
+                <span>{t("Terug naar Home", "Back to Home", "Ana Sayfaya Dön")}</span>
               </button>
 
               <button
@@ -171,7 +184,7 @@ export default class ErrorBoundary extends React.Component<Props, State> {
                 className="bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold text-xs px-5 py-3 rounded-xl transition-all border border-slate-200 cursor-pointer flex items-center justify-center space-x-1.5 shadow-sm"
               >
                 <RefreshCw className="h-3.5 w-3.5" />
-                <span>Pagina herladen</span>
+                <span>{t("Pagina herladen", "Reload page", "Sayfayı yeniden yükle")}</span>
               </button>
             </div>
           </div>

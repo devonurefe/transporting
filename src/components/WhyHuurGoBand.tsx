@@ -8,28 +8,7 @@ import { ShieldCheck, Truck, MessageCircle, Star, Clock, BadgeCheck, Euro, Phone
 import { motion } from "motion/react";
 import { BrandedText } from "./Header";
 import { useAppStore } from "../store/appStore";
-
-// Verhuisd uit de Footer naar de homepage-body, zodat bezoekers de
-// USP's zien vóór ze bij de FAQ zijn — niet pas helemaal onderaan.
-// Admin-override via SiteConfig.uspItems (AdminContent → USP's); deze lijst
-// is de fallback zolang de eigenaar niets heeft opgeslagen.
-const TRUST_POINTS = [
-  {
-    Icon: ShieldCheck,
-    title: "Gecertificeerd materieel",
-    body: "TÜV-gekeurde hoogwerkers (cat. 1-3B), goed onderhouden en bedrijfsklaar afgeleverd.",
-  },
-  {
-    Icon: Truck,
-    title: "Snelle levering in heel NL",
-    body: "Bezorging door eigen chauffeur of zelf ophalen in Zoeterwoude — u kiest wat past.",
-  },
-  {
-    Icon: MessageCircle,
-    title: "Persoonlijk advies via WhatsApp",
-    body: "Twijfelt u over de juiste machine? Wij denken vrijblijvend met u mee, vóór u boekt.",
-  },
-];
+import { useLanguageStore } from "../store/languageStore";
 
 // Icon-whitelist — spiegel van USP_ICONS in server/utils/sanitizeContent.ts
 const USP_ICON_MAP: Record<string, typeof ShieldCheck> = {
@@ -42,8 +21,42 @@ const USP_ICON_MAP: Record<string, typeof ShieldCheck> = {
 };
 
 export default function WhyHuurGoBand() {
-  // Admin-beheerde USP's (AdminContent) — fallback: de hard-coded TRUST_POINTS
+  const t = useLanguageStore((state) => state.t);
+  // Admin-beheerde USP's (AdminContent) — fallback: de hard-coded TRUST_POINTS.
+  // The fallback is translated below; an admin-entered override is a single
+  // plain string with no per-language variant, same as every other admin-
+  // editable content field in this app (FAQ, hero text, ...) — untranslated
+  // by design, not an oversight.
   const uspItems = useAppStore((state) => state.siteConfig.uspItems);
+  const TRUST_POINTS = [
+    {
+      Icon: ShieldCheck,
+      title: t("Gecertificeerd materieel", "Certified equipment", "Sertifikalı ekipman"),
+      body: t(
+        "TÜV-gekeurde hoogwerkers (cat. 1-3B), goed onderhouden en bedrijfsklaar afgeleverd.",
+        "TÜV-approved aerial platforms (cat. 1-3B), well maintained and delivered ready to work.",
+        "TÜV onaylı platformlar (kat. 1-3B), iyi bakımlı ve kullanıma hazır teslim edilir."
+      ),
+    },
+    {
+      Icon: Truck,
+      title: t("Snelle levering in heel NL", "Fast delivery across the Netherlands", "Hollanda genelinde hızlı teslimat"),
+      body: t(
+        "Bezorging door eigen chauffeur of zelf ophalen in Zoeterwoude — u kiest wat past.",
+        "Delivery by our own driver or pick up yourself in Zoeterwoude — you choose what suits you.",
+        "Kendi şoförümüzle teslimat veya Zoeterwoude'dan kendiniz alın — size uygun olanı seçin."
+      ),
+    },
+    {
+      Icon: MessageCircle,
+      title: t("Persoonlijk advies via WhatsApp", "Personal advice via WhatsApp", "WhatsApp üzerinden kişisel tavsiye"),
+      body: t(
+        "Twijfelt u over de juiste machine? Wij denken vrijblijvend met u mee, vóór u boekt.",
+        "Not sure which machine is right? We're happy to think along with you, free of charge, before you book.",
+        "Doğru makineden emin değil misiniz? Rezervasyon yapmadan önce sizinle ücretsiz düşünmekten memnuniyet duyarız."
+      ),
+    },
+  ];
   const trustPoints = Array.isArray(uspItems) && uspItems.length > 0
     ? uspItems.map((it) => ({ Icon: USP_ICON_MAP[it.icon] ?? ShieldCheck, title: it.title, body: it.text }))
     : TRUST_POINTS;
@@ -73,16 +86,18 @@ export default function WhyHuurGoBand() {
         >
           <div>
             <h3 className="font-display text-lg sm:text-xl font-black text-slate-900 tracking-tight">
-              Waarom <BrandedText text="HuurGo" />
+              {t("Waarom", "Why", "Neden")} <BrandedText text="HuurGo" />
             </h3>
-            <p className="text-xs text-slate-500 mt-1.5">Betrouwbaar materieel, eerlijk advies en scherpe tarieven in heel Nederland.</p>
+            <p className="text-xs text-slate-500 mt-1.5">{t("Betrouwbaar materieel, eerlijk advies en scherpe tarieven in heel Nederland.", "Reliable equipment, honest advice and sharp rates across the Netherlands.", "Hollanda genelinde güvenilir ekipman, dürüst tavsiye ve uygun fiyatlar.")}</p>
           </div>
           {rating && (
             <div className="flex items-center gap-2.5 bg-white border border-amber-100 shadow-sm rounded-2xl px-4 py-2.5 shrink-0">
               <Star className="h-5 w-5 text-amber-400 fill-amber-400 shrink-0" />
               <div className="leading-none">
                 <span className="text-slate-900 font-black text-lg">{rating.average.toFixed(1)}</span>
-                <span className="text-slate-500 text-xs ml-1.5">gemiddeld · {rating.count} {rating.count === 1 ? "beoordeling" : "beoordelingen"}</span>
+                <span className="text-slate-500 text-xs ml-1.5">
+                  {t("gemiddeld", "average", "ortalama")} · {rating.count} {rating.count === 1 ? t("beoordeling", "review", "değerlendirme") : t("beoordelingen", "reviews", "değerlendirme")}
+                </span>
               </div>
             </div>
           )}

@@ -122,7 +122,6 @@ app.use("/api/machines",    express.json({ limit: "15mb" })); // PUT with base64
 app.use("/api/site-config", express.json({ limit: "10mb" })); // may store base64 hero image
 app.use("/api/orders",      express.json({ limit: "15mb" })); // POST :id/report-damage carries base64 photos
 app.use(express.json({ limit: "256kb" })); // Default for all other API routes
-app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 app.use(authenticateToken);
 
 // Mount Modular API routers
@@ -489,8 +488,14 @@ function staticMeta(pathname: string): RouteMeta {
     "/orders": { title: "Mijn Reserveringen | huurgo", description: "Beheer uw huurcontracten, volg de status en download facturen.", noindex: true },
     "/admin": { title: "Beheer | huurgo", description: "Beheeromgeving.", noindex: true },
   };
-  const e = map[pathname] ?? map["/"];
-  const meta: RouteMeta = { title: e.title, description: e.description, canonical: url, ogImage: DEFAULT_OG_IMAGE, noindex: e.noindex };
+  // An unrecognized pathname (typo, stale link, a client-only route added to
+  // App.tsx without a matching entry here) must never silently serve as
+  // crawlable, self-canonicalized homepage content — that's duplicate
+  // content with a wrong canonical. Fall back to the homepage copy but force
+  // noindex so it's never treated as a real, indexable page.
+  const known = map[pathname];
+  const e = known ?? map["/"];
+  const meta: RouteMeta = { title: e.title, description: e.description, canonical: url, ogImage: DEFAULT_OG_IMAGE, noindex: known ? e.noindex : true };
   if (pathname === "/veelgestelde-vragen") {
     meta.jsonLd = JSON.stringify({
       "@context": "https://schema.org",
@@ -824,6 +829,14 @@ async function startServer() {
       if (/^\/(assets|fonts)\//.test(req.path)) {
         res.setHeader("Cache-Control", "no-store");
         return res.status(404).type("text/plain").send("Not found");
+      }
+      // A GET to an unmatched /api/... route (typo, removed endpoint) would
+      // otherwise fall all the way through to the SPA HTML below — a 200 with
+      // an HTML body where the client expects JSON, turning a clear 404 into
+      // a confusing "Unexpected token '<'" parse failure client-side.
+      if (req.path.startsWith("/api/")) {
+        res.setHeader("Cache-Control", "no-store");
+        return res.status(404).json({ error: "Niet gevonden" });
       }
       res.setHeader("Cache-Control", "no-cache");
       if (!INDEX_HTML) return res.sendFile(indexPath);

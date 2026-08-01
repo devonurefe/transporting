@@ -1,6 +1,6 @@
 import { Router, Response } from "express";
 import { prisma } from "../../prisma/client.js";
-import { requireAdmin } from "../middleware/auth.js";
+import { requireAdmin, isValidAdminSession } from "../middleware/auth.js";
 import { AuthenticatedRequest } from "../middleware/auth.js";
 import { publicReadLimiter } from "../middleware/publicGuard.js";
 import { audit } from "../utils/audit.js";
@@ -42,7 +42,7 @@ siteConfigRouter.get("/site-config", publicReadLimiter, async (req: Authenticate
     const config = await prisma.siteConfig.findUnique({ where: { id: "default" } });
     // Admins editing the site need the raw base64 hero back; the public feed
     // replaces it with the binary-proxy URL so the JSON stays small.
-    const wantsFull = req.query.full === "1" && req.user?.role === "admin";
+    const wantsFull = req.query.full === "1" && await isValidAdminSession(req);
     if (wantsFull) {
       res.setHeader("Cache-Control", "no-store");
       return res.json(config || defaultSiteConfig);

@@ -292,7 +292,7 @@ export default function AdminAccounting({ adminLanguage }: AdminAccountingProps)
             </p>
 
             <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3 text-[10.5px] text-slate-500 font-mono leading-relaxed">
-              {t("Kolommen:", "Columns:", "Sütunlar:")} Order ID · Naam · E-mail · Telefoon · Profiel · Machine · Dagtarief · Startdatum · Einddatum · Dagen · Levertype · Adres · Subtotaal · Transport · Chauffeur · BTW · Totaal · Status · Betaalstatus · Aangemaakt op
+              {t("Kolommen:", "Columns:", "Sütunlar:")} Order ID · Naam · E-mail · Telefoon · Profiel · Machine · Dagtarief · Startdatum · Einddatum · Dagen · Levertype · Adres · Subtotaal · Transport · Chauffeur · BTW · Totaal · Status · Betaalstatus · Betaalwijze · Aangemaakt op
             </div>
 
             <button

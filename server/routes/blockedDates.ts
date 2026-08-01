@@ -1,6 +1,6 @@
 import { Router, Response } from "express";
 import { prisma } from "../../prisma/client.js";
-import { requireAdmin } from "../middleware/auth.js";
+import { requireAdmin, isValidAdminSession } from "../middleware/auth.js";
 import { AuthenticatedRequest } from "../middleware/auth.js";
 import { audit } from "../utils/audit.js";
 
@@ -9,7 +9,7 @@ export const blockedDatesRouter = Router();
 // GET blocked dates — public for the availability calendar, but reason is admin-only
 blockedDatesRouter.get("/", async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const isAdmin = req.user?.role === "admin";
+    const isAdmin = await isValidAdminSession(req);
     const blocked = await prisma.blockedDate.findMany();
     const formatted = blocked.map(b => ({
       machineId: b.machineId,

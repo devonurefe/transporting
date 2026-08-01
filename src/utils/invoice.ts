@@ -138,7 +138,7 @@ export function printInvoice(orderOrOrders: Order | Order[], clientCompanyName?:
           <div class="item-spec">Huurperiode: ${o.startDate} t/m ${o.endDate}</div>
           <div style="font-size: 10px; color: #64748b; margin-top: 2px;">Inclusief BMWT machine-verzekering & klusgids checklist pakket.</div>
         </td>
-        <td style="text-align: right; font-family: monospace;">€${o.machinePrice.toFixed(2)}</td>
+        <td style="text-align: right; font-family: monospace;">€${(o.subtotal / o.rentalDays).toFixed(2)}</td>
         <td style="text-align: center;">${o.rentalDays}</td>
         <td style="text-align: right; font-family: monospace;">€${o.subtotal.toFixed(2)}</td>
       </tr>
@@ -658,7 +658,10 @@ export function printInvoice(orderOrOrders: Order | Order[], clientCompanyName?:
         <!-- Proforma notice -->
         <div style="background: #fffbeb; border: 1px dashed #fbbf24; border-radius: 12px; padding: 16px 20px; margin-bottom: 35px; font-size: 11px; color: #92400e; line-height: 1.6;">
           <strong style="display: block; margin-bottom: 4px; font-size: 12px;">⚠️ Dit is een pro-forma offerte — geen officiële factuur</strong>
-          Betaling vindt plaats na ontvangst van een iDEAL-betaallink via WhatsApp. Zodra de betaling is ontvangen, maakt ${escapeHtml(companyName)} een officiële factuur op en stuurt deze per e-mail toe.
+          ${primaryOrder.paymentMethod === "on_location"
+            ? `U betaalt bij ophalen/levering. Zodra de betaling is ontvangen, maakt ${escapeHtml(companyName)} een officiële factuur op en stuurt deze per e-mail toe.`
+            : `Betaling vindt plaats na ontvangst van een iDEAL-betaallink via WhatsApp. Zodra de betaling is ontvangen, maakt ${escapeHtml(companyName)} een officiële factuur op en stuurt deze per e-mail toe.`
+          }
         </div>
         ` : ''}
 
@@ -666,8 +669,12 @@ export function printInvoice(orderOrOrders: Order | Order[], clientCompanyName?:
         <footer class="footer-terms">
           <p>Op alle huurovereenkomsten zijn de algemene <span class="footer-highlight">BMWT-verhuurvoorwaarden 2026</span> van toepassing.</p>
           ${isProforma
-            ? `<p>Betaling via WhatsApp — u ontvangt een Tikkie of Mollie iDEAL-betaallink. Na betaling is uw boeking definitief bevestigd.</p>`
-            : `<p>Betalingswijze: Voldaan via iDEAL / Tikkie betaallink. Factuurkenmerk: ${primaryOrder.invoiceNumber || primaryOrder.id}</p>`
+            ? (primaryOrder.paymentMethod === "on_location"
+                ? `<p>Betaling bij ophalen/levering. Na betaling is uw boeking definitief bevestigd.</p>`
+                : `<p>Betaling via WhatsApp — u ontvangt een Tikkie of Mollie iDEAL-betaallink. Na betaling is uw boeking definitief bevestigd.</p>`)
+            : (primaryOrder.paymentMethod === "on_location"
+                ? `<p>Betalingswijze: Voldaan bij ophalen/levering. Factuurkenmerk: ${primaryOrder.invoiceNumber || primaryOrder.id}</p>`
+                : `<p>Betalingswijze: Voldaan via iDEAL / Tikkie betaallink. Factuurkenmerk: ${primaryOrder.invoiceNumber || primaryOrder.id}</p>`)
           }
           <p style="margin-top: 8px;">Dank u voor uw vertrouwen in de hoogste en veiligste kwaliteit van <strong>Huurgo</strong>, onderdeel van MB Hoogwerkers.</p>
         </footer>

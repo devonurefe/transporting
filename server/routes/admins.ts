@@ -88,6 +88,7 @@ adminUsersRouter.put("/:id", requireAdmin as any, async (req: AuthenticatedReque
       data: { name: name.trim().slice(0, 100) },
       select: ADMIN_SELECT
     });
+    audit(req, "admin.updated", { entity: "Admin", entityId: admin.id });
     return res.json({ admin });
   } catch (error: any) {
     if (error?.code === "P2025") return res.status(404).json({ error: "Beheerder niet gevonden" });

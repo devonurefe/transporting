@@ -49,3 +49,16 @@ export async function requireAdmin(req: AuthenticatedRequest, res: Response, nex
   }
   next();
 }
+
+// For routes that stay reachable without auth (public feeds) but branch to a
+// richer/admin-only response when the caller IS an admin — e.g. ?full=1 on
+// GET /site-config or GET /machines, ?all=1 on GET /blog. A plain
+// `req.user?.role === "admin"` check only verifies the JWT's role claim, not
+// tokenVersion, so a just-disabled admin's still-cryptographically-valid
+// token (up to 12h left) would keep unlocking the admin branch even though
+// every mutating endpoint (via requireAdmin) already revokes them
+// immediately. Use this instead wherever that branch exposes non-public data.
+export async function isValidAdminSession(req: AuthenticatedRequest): Promise<boolean> {
+  if (!req.user || req.user.role !== "admin") return false;
+  return isTokenVersionValid(req.user.id, req.user.role, req.user.v ?? 0);
+}

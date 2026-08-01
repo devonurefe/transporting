@@ -1,6 +1,6 @@
 import { Router, Response } from "express";
 import { prisma } from "../../prisma/client.js";
-import { requireAdmin } from "../middleware/auth.js";
+import { requireAdmin, isValidAdminSession } from "../middleware/auth.js";
 import { AuthenticatedRequest } from "../middleware/auth.js";
 import { publicReadLimiter, softOriginGuard } from "../middleware/publicGuard.js";
 import { audit } from "../utils/audit.js";
@@ -88,7 +88,7 @@ function validate(body: any): { error?: string; data?: CleanInput } {
 // Admins pass ?all=1 to also get drafts back for the management panel.
 blogPostsRouter.get("/", publicReadLimiter, softOriginGuard, async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const wantsAll = req.query.all === "1" && req.user?.role === "admin";
+    const wantsAll = req.query.all === "1" && await isValidAdminSession(req);
     if (wantsAll) {
       res.setHeader("Cache-Control", "no-store");
     } else {
@@ -110,7 +110,7 @@ blogPostsRouter.get("/:slug", publicReadLimiter, softOriginGuard, async (req: Au
   try {
     const post = await prisma.blogPost.findUnique({ where: { slug: req.params.slug } });
     if (!post) return res.status(404).json({ error: "Artikel niet gevonden" });
-    const isAdmin = req.user?.role === "admin";
+    const isAdmin = await isValidAdminSession(req);
     if (!post.published && !isAdmin) return res.status(404).json({ error: "Artikel niet gevonden" });
     res.setHeader("Cache-Control", isAdmin ? "no-store" : "public, max-age=60, stale-while-revalidate=300");
     res.json(post);

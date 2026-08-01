@@ -81,6 +81,7 @@ function describeLog(log: AuditLogRow): string {
     case "blog.updated": return `Kenniscentrum-artikel${id} bijgewerkt`;
     case "blog.deleted": return `Kenniscentrum-artikel${id} verwijderd`;
     case "admin.created": return "Nieuwe beheerder aangemaakt";
+    case "admin.updated": return `Beheerder${id} naam gewijzigd`;
     case "admin.disabled": return `Beheerder${id} gedeactiveerd`;
     case "admin.enabled": return `Beheerder${id} geactiveerd`;
     case "admin.password_reset": return `Wachtwoord van beheerder${id} gereset`;

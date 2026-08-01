@@ -7,7 +7,7 @@ import React, { useState, useEffect } from "react";
 import { Calendar, Building2, X, Truck, ShieldAlert, ArrowRight, MessageCircle, ChevronLeft, Info } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { CartItem, DeliveryType, Machine } from "../../types";
-import { buildWhatsAppUrl, buildWhatsAppTransportInquiryUrl, buildWhatsAppAlternativeDatesUrl } from "../../utils/whatsapp";
+import { buildWhatsAppTransportInquiryUrl, buildWhatsAppAlternativeDatesUrl } from "../../utils/whatsapp";
 import { withImageWidth } from "../../utils/image";
 import BookingPriceSummary from "./BookingPriceSummary";
 import DateRangeCalendar from "./DateRangeCalendar";

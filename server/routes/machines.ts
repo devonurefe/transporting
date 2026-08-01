@@ -1,7 +1,7 @@
 import { Router, Response } from "express";
 import { Prisma } from "@prisma/client";
 import { prisma } from "../../prisma/client.js";
-import { requireAdmin } from "../middleware/auth.js";
+import { requireAdmin, isValidAdminSession } from "../middleware/auth.js";
 import { AuthenticatedRequest } from "../middleware/auth.js";
 import { publicReadLimiter, softOriginGuard } from "../middleware/publicGuard.js";
 import { audit } from "../utils/audit.js";
@@ -130,7 +130,7 @@ machinesRouter.get("/", publicReadLimiter, softOriginGuard, async (req: Authenti
 
     // Admins editing machines need the raw base64 image data back; everyone else
     // gets the lightweight feed (base64 images replaced by binary-proxy URLs).
-    const wantsFull = req.query.full === "1" && req.user?.role === "admin";
+    const wantsFull = req.query.full === "1" && await isValidAdminSession(req);
     // Computed, not stored on Machine: true when retired, or an unresolved
     // DamageReport/open MaintenanceEvent exists for this machine (see
     // server/utils/machineStatus.ts). Consumed by src/utils/availability.ts

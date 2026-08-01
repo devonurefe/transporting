@@ -984,6 +984,9 @@ ordersRouter.put("/:id/payment", requireAdmin as any, async (req: AuthenticatedR
   }
 
   try {
+    const existing = await prisma.order.findUnique({ where: { id } });
+    if (!existing) return res.status(404).json({ error: "Bestelling niet gevonden" });
+
     const updatedOrder = await prisma.order.update({
       where: { id },
       data: { paymentStatus }

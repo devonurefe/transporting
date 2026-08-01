@@ -72,18 +72,18 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
   const [paymentFilter, setPaymentFilter] = useState<"all" | "paid" | "awaiting">("all");
   const [searchText, setSearchText] = useState(initialOrderId ?? "");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [localStatusFilter, setLocalStatusFilter] = useState<string>(
-    statusFilter && statusFilter.length > 0 ? statusFilter[0] : "all"
+  // One or more statuses to show at once (empty = "all"). Kept as a set rather
+  // than a single value so a KPI card that spans multiple statuses (e.g.
+  // "Wacht op Controle" = Retour + Schade gemeld) actually filters to both
+  // instead of silently collapsing to just the first one.
+  const [localStatusFilter, setLocalStatusFilter] = useState<string[]>(
+    statusFilter && statusFilter.length > 0 ? statusFilter : []
   );
 
   // Sync when external statusFilter prop changes (e.g. KPI card click from dashboard)
   const statusFilterKey = statusFilter?.join(",") ?? "";
   useEffect(() => {
-    if (statusFilter && statusFilter.length > 0) {
-      setLocalStatusFilter(statusFilter[0]);
-    } else {
-      setLocalStatusFilter("all");
-    }
+    setLocalStatusFilter(statusFilter && statusFilter.length > 0 ? statusFilter : []);
   }, [statusFilterKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Sync when the initialOrderId prop changes (deep-link from AdminCustomers'
@@ -135,8 +135,8 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
     return () => { active = false; };
   }, [allLoaded, loadingAll, loadAllOrders]);
 
-  const statusFiltered = localStatusFilter !== "all"
-    ? orders.filter(o => o.status === localStatusFilter)
+  const statusFiltered = localStatusFilter.length > 0
+    ? orders.filter(o => localStatusFilter.includes(o.status))
     : orders;
 
   const paymentFiltered = paymentFilter === "all"
@@ -715,18 +715,25 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
             { key: "In behandeling",nl: "In behandeling",en: "Pending",    tr: "İşlemde",   color: "amber"  },
             { key: "Goedgekeurd",   nl: "Goedgekeurd",   en: "Approved",   tr: "Onaylandı", color: "teal"   },
             { key: "Onderweg",      nl: "Onderweg",      en: "Delivery",   tr: "Yolda",     color: "blue"   },
+            { key: "Retour",        nl: "Retour",        en: "Returned",   tr: "İade",      color: "indigo" },
+            { key: "Schade gemeld",nl: "Schade gemeld",  en: "Damage",     tr: "Hasar",     color: "orange" },
             { key: "Voltooid",      nl: "Voltooid",      en: "Completed",  tr: "Tamamlandı",color: "slate"  },
             { key: "Geannuleerd",   nl: "Geannuleerd",   en: "Cancelled",  tr: "İptal",     color: "rose"   },
           ] as const).map((s) => {
             const label = adminLanguage === "tr" ? s.tr : adminLanguage === "en" ? s.en : s.nl;
             // Count per status from the loaded orders window (same scope as the list itself).
             const count = s.key === "all" ? orders.length : orders.filter(o => o.status === s.key).length;
-            const isActive = localStatusFilter === s.key;
+            // "all" is active when no filter is set; a status chip is active whenever
+            // its status is part of the current filter set — this lets a multi-status
+            // KPI drill-down (e.g. Retour + Schade gemeld) highlight both chips at once.
+            const isActive = s.key === "all" ? localStatusFilter.length === 0 : localStatusFilter.includes(s.key);
             const colorClass = isActive
               ? s.key === "all"           ? "bg-indigo-600 text-white border-indigo-700"
               : s.key === "In behandeling"? "bg-amber-500 text-white border-amber-600"
               : s.key === "Goedgekeurd"   ? "bg-teal-500 text-white border-teal-600"
               : s.key === "Onderweg"      ? "bg-blue-600 text-white border-blue-700"
+              : s.key === "Retour"        ? "bg-indigo-500 text-white border-indigo-600"
+              : s.key === "Schade gemeld" ? "bg-orange-500 text-white border-orange-600"
               : s.key === "Voltooid"      ? "bg-slate-600 text-white border-slate-700"
               : "bg-rose-600 text-white border-rose-700"
               : "bg-white text-slate-500 border-slate-200 hover:border-slate-300 hover:text-slate-700";
@@ -734,7 +741,7 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
               <button
                 key={s.key}
                 type="button"
-                onClick={() => { setLocalStatusFilter(s.key); if (s.key === "all") onClearStatusFilter?.(); }}
+                onClick={() => { setLocalStatusFilter(s.key === "all" ? [] : [s.key]); if (s.key === "all") onClearStatusFilter?.(); }}
                 className={`px-3 py-1.5 rounded-full text-[11px] font-bold transition-all border cursor-pointer shadow-sm ${colorClass}`}
               >
                 {label} <span className={`ml-0.5 tabular-nums ${isActive ? "opacity-90" : "opacity-60"}`}>({count})</span>

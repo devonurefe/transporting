@@ -85,6 +85,7 @@ export default function AdviesModal({ open, onClose }: AdviesModalProps) {
             role="dialog"
             aria-modal="true"
             aria-label="Keuzehulp"
+            tabIndex={-1}
             className="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-full"
             initial={{ opacity: 0, y: 24, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}

@@ -95,17 +95,20 @@ function drawToDataUrl(
   let width = img.width;
   let height = img.height;
 
-  // Calculate aspect ratio bounds
-  if (width > height) {
-    if (width > maxWidth) {
-      height = Math.round((height * maxWidth) / width);
-      width = maxWidth;
-    }
-  } else {
-    if (height > maxHeight) {
-      width = Math.round((width * maxHeight) / height);
-      height = maxHeight;
-    }
+  // Scale down (never up) to fit within both maxWidth and maxHeight while
+  // preserving aspect ratio. The previous version picked only ONE bound to
+  // check based on the source image's own orientation (landscape → width
+  // only, portrait/square → height only), which silently ignored the other
+  // bound whenever the target box wasn't 1:1 — e.g. a 2000×1500 photo into a
+  // 1600×900 hero box landed at 1600×1200, 33% over the height bound. Taking
+  // the smaller of both ratios respects whichever bound is actually binding,
+  // and is a no-op change for every symmetric (square) target box already in
+  // use elsewhere (900×900, 1200×1200, 1400×1400) since one ratio always
+  // dominates there too.
+  const scale = Math.min(1, maxWidth / width, maxHeight / height);
+  if (scale < 1) {
+    width = Math.round(width * scale);
+    height = Math.round(height * scale);
   }
 
   canvas.width = width;

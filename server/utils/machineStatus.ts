@@ -5,15 +5,6 @@
 // stockQuantity/date overlap — see docs/admin-platform-audit-2026-07.md §9.
 import { prisma } from "../../prisma/client.js";
 
-export async function isMachineOperationallyBlocked(machineId: string): Promise<boolean> {
-  const [machine, openDamage, openMaintenance] = await Promise.all([
-    prisma.machine.findUnique({ where: { id: machineId }, select: { isRetired: true } }),
-    prisma.damageReport.findFirst({ where: { machineId, resolvedAt: null }, select: { id: true } }),
-    prisma.maintenanceEvent.findFirst({ where: { machineId, completedDate: null }, select: { id: true } })
-  ]);
-  return Boolean(machine?.isRetired) || Boolean(openDamage) || Boolean(openMaintenance);
-}
-
 // Bulk variant for list endpoints (public machine catalog, admin machine list) —
 // one query per source instead of N+1 per machine.
 export async function getOperationallyBlockedMachineIds(): Promise<Set<string>> {

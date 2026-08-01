@@ -13,6 +13,7 @@ import { computeOrderSubtotal, computeTransport, computeAddonsTotal, computeVatA
 import { buildUblInvoiceXml } from "../utils/ublInvoice.js";
 import { customerWantsEmail, batchCustomerEmailOptIns, wantsEmailFromBatch } from "../utils/emailOptIn.js";
 import { releaseUnpaidOrders, sendPaymentReminders, UNPAID_RELEASE_HOURS } from "../services/orderMaintenance.js";
+import { sanitizeImageDataUrl } from "../utils/sanitizeImage.js";
 
 export const ordersRouter = Router();
 
@@ -1530,6 +1531,12 @@ ordersRouter.put("/:id/status", requireAdmin as any, async (req: AuthenticatedRe
 // count and per-item length to bound abuse; returns null (reject) if malformed.
 // Bounded to stay well under the 15mb body limit registered in server.ts
 // for /api/orders (POST :id/report-damage) — 6 × 2M chars ≈ 12MB base64 max.
+// Also re-verified through sanitizeImageDataUrl (magic bytes + SVG exclusion),
+// the same check every other direct-write image field goes through
+// (machines.ts, siteConfig.ts) — this one was missed when that check was
+// added elsewhere, leaving DamageReport.photos the one write path that
+// accepted any string as-is, including a data:image/svg+xml payload.
+const MAX_DAMAGE_PHOTO_BYTES = 1_500_000; // ~1.5MB decoded, matches the existing per-item char cap below
 function sanitizeDamagePhotos(raw: unknown): string[] | null {
   if (raw === undefined || raw === null) return [];
   if (!Array.isArray(raw)) return null;
@@ -1538,7 +1545,10 @@ function sanitizeDamagePhotos(raw: unknown): string[] | null {
   for (const p of raw) {
     if (typeof p !== "string" || p.length === 0) return null;
     if (p.length > 2_000_000) return null; // ~1.5MB decoded per photo
-    cleaned.push(p);
+    if (!p.startsWith("data:image/")) return null;
+    const validated = sanitizeImageDataUrl(p, MAX_DAMAGE_PHOTO_BYTES);
+    if (!validated) return null;
+    cleaned.push(validated);
   }
   return cleaned;
 }

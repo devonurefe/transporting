@@ -31,8 +31,14 @@ export default function MachineDetailPage({ onSelectMachineForBooking }: Machine
 
   const machine = useMemo(() => machines.find((m) => m.id === id), [machines, id]);
 
-  // Client-side title/canonical/OG + BreadcrumbList for SPA navigation (server
-  // already injects Product JSON-LD + meta for crawlers on direct/shared links).
+  // Client-side title/canonical/OG + structured data for SPA navigation.
+  // useSeo (src/utils/seo.ts) REPLACES the server-injected #seo-jsonld tag's
+  // content rather than merging into it — this used to send only a bare
+  // BreadcrumbList here, which overwrote (not supplemented) the server's
+  // Product+BreadcrumbList @graph (server.ts's machineMeta()) the instant
+  // this effect ran, on every load including the crawler-relevant first
+  // one. Mirror the same @graph shape here so the Product schema survives
+  // hydration too.
   useSeo(
     machine
       ? {
@@ -43,11 +49,34 @@ export default function MachineDetailPage({ onSelectMachineForBooking }: Machine
           path: `/hoogwerker/${machine.id}`,
           jsonLd: {
             "@context": "https://schema.org",
-            "@type": "BreadcrumbList",
-            itemListElement: [
-              { "@type": "ListItem", position: 1, name: "Home", item: SEO_BASE_URL },
-              { "@type": "ListItem", position: 2, name: "Catalogus", item: `${SEO_BASE_URL}/catalog` },
-              { "@type": "ListItem", position: 3, name: machine.name, item: `${SEO_BASE_URL}/hoogwerker/${machine.id}` },
+            "@graph": [
+              {
+                "@type": "Product",
+                name: machine.name,
+                description: machine.description
+                  ? machine.description.replace(/\s+/g, " ").trim().slice(0, 155)
+                  : `${machine.name} huren bij huurgo. Werkhoogte ${machine.height}m. Direct online reserveren, zonder borg.`,
+                image: machine.imageUrl
+                  ? (/^https?:\/\//.test(machine.imageUrl) ? machine.imageUrl : `${SEO_BASE_URL}${machine.imageUrl}`)
+                  : `${SEO_BASE_URL}/og-image.png`,
+                category: machine.categoryLabel || machine.category,
+                brand: { "@type": "Brand", name: "huurgo" },
+                offers: {
+                  "@type": "Offer",
+                  priceCurrency: "EUR",
+                  price: String(Math.round(machine.pricePerDay || 0)),
+                  availability: "https://schema.org/InStock",
+                  url: `${SEO_BASE_URL}/hoogwerker/${machine.id}`,
+                },
+              },
+              {
+                "@type": "BreadcrumbList",
+                itemListElement: [
+                  { "@type": "ListItem", position: 1, name: "Home", item: SEO_BASE_URL },
+                  { "@type": "ListItem", position: 2, name: "Catalogus", item: `${SEO_BASE_URL}/catalog` },
+                  { "@type": "ListItem", position: 3, name: machine.name, item: `${SEO_BASE_URL}/hoogwerker/${machine.id}` },
+                ],
+              },
             ],
           },
         }

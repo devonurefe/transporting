@@ -98,8 +98,20 @@ function sanitizeGoogleReview(r: any): { author: string; rating: number; text: s
   };
 }
 
-function pickSiteConfigFields(body: any): Record<string, string | number | boolean | null | unknown[]> {
+// Dutch labels for the JSON-content fields below — used only to name a field
+// in the 400 error when its sanitizer rejects it, so the admin never sees a
+// raw camelCase identifier (faqItems/transportFees/...) mid-sentence.
+const JSON_CONTENT_FIELD_LABELS: Record<string, string> = {
+  faqItems: "FAQ",
+  uspItems: "USP's",
+  openingHours: "Openingstijden",
+  transportFees: "Transportkosten",
+  globalAddons: "Add-ontarieven"
+};
+
+function pickSiteConfigFields(body: any): { data: Record<string, string | number | boolean | null | unknown[]>; invalidFields: string[] } {
   const data: Record<string, string | number | boolean | null | unknown[]> = {};
+  const invalidFields: string[] = [];
   for (const field of SITE_CONFIG_FIELDS) {
     // heroImageUrl/coffeeCornerImageUrl store a base64 data URL — allow up to 5 MB;
     // all other fields max 1 KB (coffeeCornerDescription/galleryDescription get a bit more room).
@@ -204,6 +216,10 @@ function pickSiteConfigFields(body: any): Record<string, string | number | boole
       } else {
         const cleaned = sanitize(raw);
         if (cleaned !== null) (data as any)[field] = cleaned;
+        // Rejected (e.g. a fee outside [0,1000]) — track it instead of silently
+        // dropping the field, otherwise the response still says success:true
+        // while the old value stays live and the admin has no idea it failed.
+        else invalidFields.push(field);
       }
     }
   }
@@ -219,13 +235,17 @@ function pickSiteConfigFields(body: any): Record<string, string | number | boole
     }
   }
 
-  return data;
+  return { data, invalidFields };
 }
 
 // POST site config
 siteConfigRouter.post("/site-config", requireAdmin as any, async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const data = pickSiteConfigFields(req.body);
+    const { data, invalidFields } = pickSiteConfigFields(req.body);
+    if (invalidFields.length > 0) {
+      const labels = invalidFields.map(f => JSON_CONTENT_FIELD_LABELS[f] ?? f).join(", ");
+      return res.status(400).json({ error: `Ongeldige waarde voor: ${labels}. Controleer de ingevoerde bedragen/velden.` });
+    }
     const updated = await prisma.siteConfig.upsert({
       where: { id: "default" },
       update: data,

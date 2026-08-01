@@ -182,9 +182,23 @@ export default function AdminCampaignRules({ onAddSystemLog, adminLanguage }: Ad
                         <span className="font-mono bg-slate-100 px-1 py-0.5 rounded text-[10px] text-slate-700">
                           {rule.scope === "global" && t("Globaal", "Global", "Genel")}
                           {rule.scope === "category" && `${t("Categorie", "Category", "Kategori")} (${rule.scopeValue})`}
-                          {rule.scope === "product" && `${t("Product ID", "Product ID", "Ürün ID")} (${rule.scopeValue})`}
+                          {rule.scope === "product" && (() => {
+                            const target = machines.find((m) => m.id === rule.scopeValue);
+                            return target
+                              ? `${t("Product", "Product", "Ürün")} (${target.name})`
+                              : `${t("Product ID", "Product ID", "Ürün ID")} (${rule.scopeValue})`;
+                          })()}
                           {rule.scope === "role" && `${t("Gebruikersrol", "User Role", "Kullanıcı Rolü")} (${rule.scopeValue})`}
                         </span>
+                        {/* The referenced machine was soft-deleted — this rule can never
+                            match anything anymore (pricing.ts only matches live machine
+                            ids), but it still showed "Actief" with no indication it was
+                            dead, so an admin had no way to notice or clean it up. */}
+                        {rule.scope === "product" && !machines.some((m) => m.id === rule.scopeValue) && (
+                          <span className="ml-1.5 font-mono bg-rose-100 text-rose-700 px-1 py-0.5 rounded text-[10px] font-bold uppercase">
+                            {t("product verwijderd", "product deleted", "ürün silindi")}
+                          </span>
+                        )}
                       </div>
                       <div>
                         <span className="font-semibold text-slate-700">{t("Korting: ", "Discount: ", "İndirim: ")}</span>
@@ -444,6 +458,14 @@ export default function AdminCampaignRules({ onAddSystemLog, adminLanguage }: Ad
                       onChange={(e) => setEditScopeValue(e.target.value)}
                       className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500"
                     >
+                      {/* The rule's current product was soft-deleted — without this
+                          placeholder the <select> shows no matching <option> and looks
+                          blank, giving no hint of what needs to be re-picked. */}
+                      {editScopeValue && !machines.some((m) => m.id === editScopeValue) && (
+                        <option value={editScopeValue} disabled>
+                          {t("(verwijderd product)", "(deleted product)", "(silinmiş ürün)")} — {editScopeValue}
+                        </option>
+                      )}
                       {machines.map((m) => (
                         <option key={m.id} value={m.id}>{m.name} ({m.categoryLabel})</option>
                       ))}

@@ -77,8 +77,10 @@ export default function AdminContent({ adminLanguage, onAddSystemLog }: AdminCon
     setSaving(true);
     const ok = await updateSiteConfig(payload as any);
     setSaving(false);
+    // Specific server error (e.g. "Ongeldige waarde voor: Transportkosten") —
+    // a generic fallback here would hide exactly which field was rejected.
     showAdminToast(
-      ok ? successMsg : t("Opslaan mislukt.", "Save failed.", "Kaydetme başarısız."),
+      ok ? successMsg : (useAppStore.getState().error || t("Opslaan mislukt.", "Save failed.", "Kaydetme başarısız.")),
       ok ? "success" : "error"
     );
   };

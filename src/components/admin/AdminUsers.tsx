@@ -430,13 +430,22 @@ export default function AdminUsers({ adminLanguage }: AdminUsersProps) {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-1.5">
-                  <button
-                    onClick={() => { setResetPwFor(a); setResetPwValue(""); }}
-                    className="flex items-center gap-1 text-[10px] font-bold text-slate-600 hover:text-indigo-700 bg-slate-50 hover:bg-indigo-50 border border-slate-200 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer"
-                  >
-                    <KeyRound className="h-3 w-3" />
-                    {t("Wachtwoord", "Password", "Şifre")}
-                  </button>
+                  {/* This reset skips the current-password check (it's meant for
+                      resetting a colleague's forgotten password) and doesn't log
+                      the caller out, unlike the "Mijn beveiliging" self-service
+                      flow below — using it on your own row would bump your own
+                      tokenVersion server-side and silently break the session on
+                      the very next request. "Mijn beveiliging" is the correct,
+                      already-safe path for changing your own password. */}
+                  {a.id !== user?.id && (
+                    <button
+                      onClick={() => { setResetPwFor(a); setResetPwValue(""); }}
+                      className="flex items-center gap-1 text-[10px] font-bold text-slate-600 hover:text-indigo-700 bg-slate-50 hover:bg-indigo-50 border border-slate-200 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer"
+                    >
+                      <KeyRound className="h-3 w-3" />
+                      {t("Wachtwoord", "Password", "Şifre")}
+                    </button>
+                  )}
                   {a.twoFactorEnabled && a.id !== user?.id && (
                     <button
                       onClick={() => setConfirmAction({ id: a.id, kind: "reset-2fa" })}

@@ -142,6 +142,14 @@ adminUsersRouter.post("/:id/enable", requireAdmin as any, async (req: Authentica
 // POST /api/admin/users/:id/reset-password — eigenaar zet direct een nieuw wachtwoord
 // (geen invite-mailmachinerie nodig voor een door de eigenaar beheerde winkel)
 adminUsersRouter.post("/:id/reset-password", requireAdmin as any, async (req: AuthenticatedRequest, res: Response) => {
+  // This path skips the current-password check (it's meant for resetting a
+  // colleague's forgotten password) and doesn't tell the caller their own
+  // session just died — unlike /api/auth/change-password, which does both
+  // correctly. Using it on yourself would bump your own tokenVersion and
+  // silently 401 your very next request.
+  if (req.params.id === req.user!.id) {
+    return res.status(400).json({ error: "Gebruik 'Mijn beveiliging' om uw eigen wachtwoord te wijzigen." });
+  }
   const pwResult = PASSWORD_POLICY.safeParse(req.body?.newPassword);
   if (!pwResult.success) {
     return res.status(400).json({ error: pwResult.error.issues[0].message });
@@ -168,6 +176,12 @@ adminUsersRouter.post("/:id/reset-password", requireAdmin as any, async (req: Au
 
 // POST /api/admin/users/:id/reset-2fa — herstelroute wanneer een telefoon kwijt is
 adminUsersRouter.post("/:id/reset-2fa", requireAdmin as any, async (req: AuthenticatedRequest, res: Response) => {
+  // Same reasoning as reset-password above: this is the no-proof-required
+  // recovery path for a colleague's lost phone. Your own 2FA disable should
+  // go through /api/auth/2fa/disable (password + current code required).
+  if (req.params.id === req.user!.id) {
+    return res.status(400).json({ error: "Gebruik 'Mijn beveiliging' om uw eigen 2FA uit te schakelen." });
+  }
   try {
     await prisma.admin.update({
       where: { id: req.params.id },

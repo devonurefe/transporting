@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { PlusCircle, Sparkles, Trash2, Plus, X, FileText } from "lucide-react";
 import { motion } from "motion/react";
 import { useAppStore } from "../../store/appStore";
@@ -30,7 +30,13 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
 
   // New Machine form state
   const [newName, setNewName] = useState("");
-  const [newCategory, setNewCategory] = useState("schaarlift");
+  // "schaarlift" is only a fallback for the (should-never-happen) case where
+  // customCategories is completely empty — the real default is the first live
+  // category, so a controlled <select> below never silently holds an id that
+  // isn't actually one of its own <option>s (e.g. right after that category
+  // was deleted via AdminCustomizer, which lets any category be removed with
+  // no protection).
+  const [newCategory, setNewCategory] = useState(() => customCategories[0]?.id ?? "schaarlift");
   const [newHeight, setNewHeight] = useState("16");
   const [newReach, setNewReach] = useState("12");
   const [newWeight, setNewWeight] = useState("3200");
@@ -71,6 +77,17 @@ export default function AdminAddMachine({ setSubTab, onAddSystemLog, adminLangua
   const [pickupOnly, setPickupOnly] = useState(false);
   const [showInWeeklyOffers, setShowInWeeklyOffers] = useState(false);
   const [crossSell, setCrossSell] = useState<{ id: string; name: string; description: string; pricePerWeek: string; pricePerDay: string; pricePerTwoDay: string }[]>([]);
+
+  // Keep the category selection valid if customCategories loads/changes after
+  // mount (async fetch on first load, or a category deleted while this tab is
+  // open) — otherwise the controlled <select> above could silently keep an id
+  // that no longer has a matching <option>.
+  useEffect(() => {
+    if (customCategories.length > 0 && !customCategories.some((c) => c.id === newCategory)) {
+      setNewCategory(customCategories[0].id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [customCategories]);
 
   const handleAdditionalImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;

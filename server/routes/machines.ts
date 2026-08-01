@@ -209,11 +209,26 @@ function validateMachineInput(body: any): { valid: boolean; error?: string } {
     if (isNaN(v) || v < 0) return { valid: false, error: "Campagne kortingsbedrag moet 0 of groter zijn." };
   }
 
+  // Dutch labels matching the exact field labels in AdminAddMachine.tsx/AdminMachines.tsx
+  // (e.g. "2 Dagen (doordeweeks)") so a rejected save shows the same wording the
+  // admin sees on the form, never the raw camelCase field name.
+  const FLAT_RATE_FIELD_LABELS: Record<string, string> = {
+    weekendPrice: "Weekendpakket",
+    twoDayPrice: "2 Dagen (doordeweeks)",
+    threeDayPrice: "3 Dagen",
+    fourDayPrice: "4 Dagen",
+    weeklyPrice: "Werkweek (5 dgn)",
+    extraDayPrice: "Extra Dag",
+    monthlyPrice: "4 Weken",
+    oneDayPrice: "1 Dag Actie",
+    sundayBlockFee: "Zondagblokkade"
+  };
   for (const f of ["weekendPrice", "twoDayPrice", "threeDayPrice", "fourDayPrice", "weeklyPrice", "extraDayPrice", "monthlyPrice", "oneDayPrice", "sundayBlockFee"] as const) {
     if (body[f] !== undefined && body[f] !== null && body[f] !== "") {
       const v = Number(body[f]);
-      if (isNaN(v) || v <= 0) return { valid: false, error: `${f} moet een positief getal groter dan 0 zijn.` };
-      if (v > 100000) return { valid: false, error: `${f} mag maximaal €100.000 zijn.` };
+      const label = FLAT_RATE_FIELD_LABELS[f];
+      if (isNaN(v) || v <= 0) return { valid: false, error: `${label} moet een positief getal groter dan 0 zijn.` };
+      if (v > 100000) return { valid: false, error: `${label} mag maximaal €100.000 zijn.` };
     }
   }
 

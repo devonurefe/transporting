@@ -687,6 +687,11 @@ export const useAppStore = create<AppState>((set, get) => ({
       if (res.ok) {
         await get().fetchSiteConfig();
         return true;
+      } else {
+        // e.g. a fee outside [0,1000] — surface the specific reason instead of
+        // a generic failure, mirroring addMachine/updateMachine below.
+        const data = await res.json().catch(() => ({}));
+        set({ error: data.error || "Fout bij opslaan configuratie." });
       }
     } catch (e) {
       console.error(e);

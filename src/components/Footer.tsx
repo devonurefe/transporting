@@ -115,7 +115,7 @@ export default function Footer({ siteName, setActiveTab, setShowContactModal }: 
               </div>
             </div>
             <a
-              href="https://www.google.com/maps/search/?api=1&query=MB+Hoogwerkers+bv+Zoeterwoude"
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((siteConfig.companyLegalName || "MB Hoogwerkers B.V.") + " Zoeterwoude")}`}
               target="_blank"
               rel="noopener noreferrer"
               className="text-xs text-slate-500 hover:text-slate-900 transition-colors no-underline sm:ml-auto"
@@ -210,7 +210,7 @@ export default function Footer({ siteName, setActiveTab, setShowContactModal }: 
                 </div>
               </div>
               <a
-                href="https://www.google.com/maps/search/?api=1&query=Produktieweg+20%2C+2382+PB+Zoeterwoude"
+                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((siteConfig.companyAddress || "Produktieweg 20, 2382 PB") + " Zoeterwoude")}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group flex items-center gap-3 no-underline"

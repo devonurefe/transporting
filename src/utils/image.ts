@@ -66,7 +66,14 @@ function resizeImageViaImgElement(
       const img = new Image();
       img.onload = () => {
         const result = drawToDataUrl(img, maxWidth, maxHeight, quality, enhance);
-        resolve(result ?? (e.target?.result as string));
+        // No 2D canvas context available (rare — locked-down/sandboxed browsers) —
+        // resolving with the raw, unresized FileReader data URL here used to
+        // silently bypass every documented compression bound (e.g. hero's
+        // 1600px/0.80) and could upload a multi-MB original straight into
+        // Postgres. Reject instead so every call site's existing try/catch
+        // shows a clear upload-failed message rather than a silent violation.
+        if (result) resolve(result);
+        else reject(new Error("Afbeelding comprimeren wordt niet ondersteund in deze browser."));
       };
       img.onerror = () => reject(new Error("Afbeelding kon niet worden geladen."));
       img.src = e.target?.result as string;

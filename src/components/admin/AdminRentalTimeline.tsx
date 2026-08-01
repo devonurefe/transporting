@@ -42,6 +42,15 @@ interface Lane {
     end: Date; // inclusive last rental day
     leftPct: number;
     widthPct: number;
+    // The machine's bufferDays (maintenance/charging) after this booking's end
+    // date, visible in the window — null when the machine has no buffer or it
+    // falls entirely outside the visible range. Without this the timeline
+    // showed a machine as free the instant a rental bar ended, while
+    // assertMachineAvailableInTx/checkAvailability actually keep it
+    // unavailable for bufferDays more days — a real "app says booked, timeline
+    // says free" discrepancy for an admin trying to schedule the next rental.
+    bufferLeftPct: number | null;
+    bufferWidthPct: number | null;
     order: Order; // full order, so a tap can open the same quick-view used in Planning
   }[];
   lastEnd: number; // day-offset of the last booking's end, for greedy lane packing
@@ -123,6 +132,21 @@ export default function AdminRentalTimeline({ adminLanguage }: AdminRentalTimeli
         const clampedEnd = Math.min(b.endOff + 1, winEndOff);
         const leftPct = (clampedStart / windowDays) * 100;
         const widthPct = Math.max(((clampedEnd - clampedStart) / windowDays) * 100, 1.2);
+        // Buffer window: [endOff+1, endOff+1+bufferDays), clamped the same way
+        // as the booking bar itself. Only computed for a real (non-cancelled)
+        // booking that's actually visible — a buffer entirely before/after the
+        // window renders nothing.
+        const bufferDays = (m as any).bufferDays ?? 0;
+        let bufferLeftPct: number | null = null;
+        let bufferWidthPct: number | null = null;
+        if (bufferDays > 0) {
+          const bufStart = Math.max(b.endOff + 1, winStartOff);
+          const bufEnd = Math.min(b.endOff + 1 + bufferDays, winEndOff);
+          if (bufEnd > bufStart) {
+            bufferLeftPct = (bufStart / windowDays) * 100;
+            bufferWidthPct = ((bufEnd - bufStart) / windowDays) * 100;
+          }
+        }
         const entry = {
           id: b.o.id,
           customerName: b.o.customerName,
@@ -131,6 +155,8 @@ export default function AdminRentalTimeline({ adminLanguage }: AdminRentalTimeli
           end: b.end,
           leftPct,
           widthPct,
+          bufferLeftPct,
+          bufferWidthPct,
           order: b.o,
         };
         let lane = lanes.find((l) => l.lastEnd < b.startOff);
@@ -283,16 +309,27 @@ export default function AdminRentalTimeline({ adminLanguage }: AdminRentalTimeli
                       lane.bookings.map((b) => {
                         const style = STATUS_STYLE[b.status] ?? STATUS_STYLE["Voltooid"];
                         return (
-                          <button
-                            key={b.id}
-                            type="button"
-                            onClick={() => setSelectedOrder(b.order)}
-                            className={`absolute h-[26px] rounded-md border px-1.5 flex items-center overflow-hidden cursor-pointer appearance-none transition-transform hover:scale-[1.03] hover:z-20 ${style.bar}`}
-                            style={{ left: `${b.leftPct}%`, width: `${b.widthPct}%`, top: 6 + li * 30 }}
-                            title={`${machine.name}\n${b.customerName}\n${b.start.toLocaleDateString("nl-NL")} t/m ${b.end.toLocaleDateString("nl-NL")}\n${b.status} · ${b.id}`}
-                          >
-                            <span className="text-[10px] font-bold truncate">{b.customerName}</span>
-                          </button>
+                          <React.Fragment key={b.id}>
+                            <button
+                              type="button"
+                              onClick={() => setSelectedOrder(b.order)}
+                              className={`absolute h-[26px] rounded-md border px-1.5 flex items-center overflow-hidden cursor-pointer appearance-none transition-transform hover:scale-[1.03] hover:z-20 ${style.bar}`}
+                              style={{ left: `${b.leftPct}%`, width: `${b.widthPct}%`, top: 6 + li * 30 }}
+                              title={`${machine.name}\n${b.customerName}\n${b.start.toLocaleDateString("nl-NL")} t/m ${b.end.toLocaleDateString("nl-NL")}\n${b.status} · ${b.id}`}
+                            >
+                              <span className="text-[10px] font-bold truncate">{b.customerName}</span>
+                            </button>
+                            {/* Buffer days (maintenance/charging) — same days assertMachineAvailableInTx
+                                keeps unavailable for a new booking, shown as a hatched extension of the
+                                bar so the timeline doesn't read as "free" the instant the rental ends. */}
+                            {b.bufferLeftPct !== null && b.bufferWidthPct !== null && (
+                              <div
+                                className="absolute h-[26px] rounded-md border border-slate-300 bg-[repeating-linear-gradient(45deg,#f1f5f9_0,#f1f5f9_3px,#e2e8f0_3px,#e2e8f0_6px)] opacity-80"
+                                style={{ left: `${b.bufferLeftPct}%`, width: `${b.bufferWidthPct}%`, top: 6 + li * 30 }}
+                                title={al("Onderhoud/laadbuffer — nog niet beschikbaar", "Maintenance/charging buffer — not yet available", "Bakım/şarj tamponu — henüz uygun değil")}
+                              />
+                            )}
+                          </React.Fragment>
                         );
                       })
                     )}

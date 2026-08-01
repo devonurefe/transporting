@@ -278,7 +278,7 @@ export function buildWhatsAppAdviceUrl(jobDescription?: string): string {
     jobDescription ? `Klus: ${jobDescription}` : "",
     "",
     "Kunt u mij adviseren welke machine het meest geschikt is?",
-    "Alvast bedankt!",
+    "Alvast bedankt! 🦾",
   ].filter(Boolean);
   return `https://wa.me/${getWhatsAppNumber()}?text=${encodeURIComponent(lines.join("\n"))}`;
 }

@@ -70,8 +70,16 @@ export default function AdminDashboard({ setSubTab, setOrdersFilter, adminLangua
   const monthlyRevenue = useMemo(() => last6Months.map((m) => {
     const amount = orders.reduce((sum, order) => {
       if (order.status === "Geannuleerd") return sum;
-      const orderDate = new Date(order.createdAt);
-      if (orderDate.getMonth() === m.monthIndex && orderDate.getFullYear() === m.year) {
+      // Bucketed by rental startDate, not createdAt — AdminAccounting's own
+      // date-range filter (server/routes/orders.ts GET /export) filters by
+      // startDate too. Bucketing by createdAt here meant an order created in
+      // one month for a rental starting the next could show up in a different
+      // month on this trend chart than in Accounting's report for the same
+      // month — two different "August revenue" figures for identical data.
+      // startDate is a "YYYY-MM-DD" string, parsed as UTC midnight — read it
+      // back with UTC getters to match.
+      const orderDate = new Date(order.startDate);
+      if (orderDate.getUTCMonth() === m.monthIndex && orderDate.getUTCFullYear() === m.year) {
         return sum + order.totalAmount;
       }
       return sum;
@@ -107,13 +115,17 @@ export default function AdminDashboard({ setSubTab, setOrdersFilter, adminLangua
   // Effective headline KPIs: server aggregate (all orders) wins over the
   // store-derived value (loaded window only) so counts/revenue stay correct >100 orders.
   const kpiEarnings = orderStats?.totalRevenue ?? totalEarnings;
-  // "Cumulatieve Omzet" below is a booked total (every non-cancelled order,
-  // including still-pending "In behandeling" requests and unpaid approved
-  // ones) — same definition Accounting's "Totale omzet" uses, just all-time
-  // instead of date-ranged. Without also surfacing the paid portion here,
-  // this card reads as "money in the bank" when it can include quotes that
-  // were never paid yet — show both, same distinction Accounting already
-  // makes, so the two panels never appear to disagree.
+  // "Cumulatieve Omzet" below is a booked total: every non-cancelled order,
+  // all-time, including still-pending "In behandeling" requests and unpaid
+  // approved ones. This is DELIBERATELY a wider scope than AdminAccounting's
+  // "Totale omzet" — Accounting defaults to the current month AND excludes
+  // "In behandeling" by default (it's a real financial report; an unconfirmed
+  // quote shouldn't count as recognized revenue there). Don't "fix" this card
+  // to match Accounting's numbers — they're intentionally different metrics.
+  // What DOES need to match, and previously didn't: showing the paid portion
+  // alongside the booked total here (same paid/booked distinction Accounting
+  // makes), and using the same date FIELD (startDate) as Accounting's own
+  // date-range filter for the monthly trend chart below — see monthlyRevenue.
   const kpiPaidEarnings = orderStats?.paidRevenue
     ?? orders.reduce((acc, o) => (o.status !== "Geannuleerd" && o.paymentStatus === "paid" ? acc + o.totalAmount : acc), 0);
   const kpiActive = orderStats?.activeRentals ?? activeRentals;
@@ -259,7 +271,7 @@ export default function AdminDashboard({ setSubTab, setOrdersFilter, adminLangua
       {/* Glowing Premium KPI Card deck */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {[
-          { title: t("Cumulatieve Omzet", "Cumulative Revenue", "Toplam Ciro"), value: `${euro(kpiEarnings)}`, paidValue: kpiPaidEarnings, trend: revenueTrend, color: "bg-amber-50 border border-amber-200 text-amber-900 shadow-sm", tab: "accounting" as const, filter: [] as string[] },
+          { title: t("Cumulatieve Omzet", "Cumulative Revenue", "Toplam Ciro"), value: `${euro(kpiEarnings)}`, paidValue: kpiPaidEarnings, scopeNote: t("Alle tijd, incl. nog niet bevestigd", "All-time, incl. not yet confirmed", "Tüm zamanlar, henüz onaylanmamış dahil"), trend: revenueTrend, color: "bg-amber-50 border border-amber-200 text-amber-900 shadow-sm", tab: "accounting" as const, filter: [] as string[] },
           { title: t("Actieve Huren", "Active Rentals", "Aktif Kiralamalar"), value: `${kpiActive} ${t("machines", "machines", "makine")}`, trend: t("Klik voor details →", "Click for details →", "Detay için tıkla →"), color: "border border-slate-200 bg-slate-50 text-slate-800 shadow-sm", tab: "orders" as const, filter: ["Goedgekeurd", "Onderweg"] as string[] },
           { title: t("Vloot Bezetting", "Fleet Occupancy", "Filo Doluluk Oranı"), value: `${machines.length > 0 ? Math.round((kpiActive / machines.length) * 100) : 0}% ${t("bezet", "occupied", "dolu")}`, trend: `${machines.length} ${t("units totaal", "total units", "toplam adet")}`, color: "border border-slate-200 bg-slate-50 text-slate-800 shadow-sm", tab: "machines" as const, filter: [] as string[] },
           { title: t("Ter Beoordeling", "To Review", "Onay Bekleyenler"), value: `${kpiPending} ${t("aanvragen", "requests", "başvuru")}`, trend: t("Klik voor details →", "Click for details →", "Detay için tıkla →"), color: kpiPending > 0 ? "border border-amber-200 bg-amber-50 text-amber-950 shadow-sm" : "border border-slate-200 bg-slate-50 text-slate-500 shadow-sm", tab: "orders" as const, filter: ["In behandeling"] as string[] },
@@ -281,6 +293,16 @@ export default function AdminDashboard({ setSubTab, setOrdersFilter, adminLangua
                 {card.paidValue !== undefined && (
                   <span className="text-[10px] font-mono text-emerald-700 mt-1 block">
                     {t("Waarvan ontvangen", "Of which received", "Bunun ödeneni")}: {euro(card.paidValue)}
+                  </span>
+                )}
+                {"scopeNote" in card && card.scopeNote && (
+                  // This card's total is intentionally a wider scope than
+                  // Accounting's "Totale omzet" (all-time, every non-cancelled
+                  // status vs. Accounting's default current-month + confirmed-
+                  // only view) — without this note the two screens showing
+                  // different numbers for "revenue" read as a data bug.
+                  <span className="text-[10px] font-mono text-slate-400 mt-0.5 block">
+                    {card.scopeNote}
                   </span>
                 )}
               </div>

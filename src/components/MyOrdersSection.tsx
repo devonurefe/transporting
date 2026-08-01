@@ -52,6 +52,11 @@ export default function MyOrdersSection({
 }: MyOrdersSectionProps) {
   const siteConfig = useAppStore((state) => state.siteConfig);
   const refreshOrders = useAppStore((state) => state.fetchOrders);
+  // App.tsx's initial fetchAllData() populates `orders` asynchronously (store
+  // starts at []) — without checking this, "Geen reserveringen gevonden" could
+  // flash for a customer who actually has bookings, on a slow connection or a
+  // Render cold start, before the real list arrives.
+  const isLoadingOrders = useAppStore((state) => state.isLoading);
 
   React.useEffect(() => {
     window.scrollTo(0, 0);
@@ -369,12 +374,19 @@ export default function MyOrdersSection({
       setRegError("U dient akkoord te gaan met de privacyverklaring om door te gaan.");
       return;
     }
-    if (regPassword.trim().length < 8) {
-      onTriggerNotification("Registratie Mislukt", "Wachtwoord moet minimaal 8 tekens bevatten.", "warning");
+    // Must match server/routes/auth.ts's PASSWORD_POLICY (min 10 chars) — this
+    // used to check for only 8, so a password that passed this client check
+    // and matched the on-screen placeholder text still bounced off the server
+    // with a "minimaal 10 tekens" error the form never warned about. Routed
+    // through setRegError (persistent inline box) rather than a toast, same
+    // as the other checks above — the toast auto-dismissed after 5s, unlike
+    // every other registration validation error on this form.
+    if (regPassword.trim().length < 10) {
+      setRegError("Wachtwoord moet minimaal 10 tekens bevatten.");
       return;
     }
     if (!/[a-zA-Z]/.test(regPassword) || !/[0-9]/.test(regPassword)) {
-      onTriggerNotification("Registratie Mislukt", "Wachtwoord moet minimaal één letter en één cijfer bevatten.", "warning");
+      setRegError("Wachtwoord moet minimaal één letter en één cijfer bevatten.");
       return;
     }
 
@@ -684,7 +696,7 @@ export default function MyOrdersSection({
                         required
                         value={regPassword}
                         onChange={(e) => setRegPassword(e.target.value)}
-                        placeholder="Min. 8 tekens, 1 letter, 1 cijfer"
+                        placeholder="Min. 10 tekens, 1 letter, 1 cijfer"
                         className="w-full text-xs bg-transparent border-none outline-none text-slate-800 placeholder-slate-400 font-medium"
                       />
                     </div>
@@ -910,7 +922,14 @@ export default function MyOrdersSection({
 
             {/* List Deck */}
             <div className="space-y-4">
-              {filteredOrders.length === 0 ? (
+              {filteredOrders.length === 0 && isLoadingOrders ? (
+                <div className="bg-white border border-slate-200 shadow-sm p-12 text-center rounded-2xl flex flex-col items-center justify-center space-y-4 animate-fade-in">
+                  <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center animate-pulse">
+                    <Clock className="h-5 w-5 text-slate-400" />
+                  </div>
+                  <p className="text-[11px] text-slate-500 font-semibold">Reserveringen laden…</p>
+                </div>
+              ) : filteredOrders.length === 0 ? (
                 <div className="bg-white border border-slate-200 shadow-sm p-12 text-center rounded-2xl flex flex-col items-center justify-center space-y-4 animate-fade-in">
                   <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center">
                     <Clock className="h-5 w-5 text-slate-400" />

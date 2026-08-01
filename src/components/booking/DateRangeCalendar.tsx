@@ -65,7 +65,13 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
   const unitIds = useMemo(() => units.map((u) => u.id), [units]);
   const unitKey = units.map((u) => `${u.id}:${u.stockQuantity}:${u.operationallyBlocked ?? false}`).join(",");
 
-  const today = todayStr || new Date().toISOString().split("T")[0];
+  // "Today" must be the customer's own local calendar day — .toISOString()
+  // converts through UTC first, which is exactly the shift this file's own
+  // comment above warns against (e.g. early morning in a timezone east of UTC
+  // would show yesterday's date, making today's cell read as unselectable
+  // "past"). Local getters avoid that conversion entirely.
+  const now = new Date();
+  const today = todayStr || toKey(now.getFullYear(), now.getMonth(), now.getDate());
   const todayYear = Number(today.split("-")[0]);
   const todayMonth = Number(today.split("-")[1]) - 1;
 

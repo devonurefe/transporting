@@ -5,6 +5,11 @@
 
 import { Resend } from "resend";
 import { prisma } from "../../prisma/client.js";
+// Dutch-locale formatting (comma decimal, e.g. "€1.234,56") — every amount in
+// these templates used raw .toFixed(2) instead (US-style "€1234.56"), showing
+// customers a differently-formatted total in email than what they saw on the
+// site/WhatsApp for the same order. Same helper the frontend uses everywhere.
+import { euro } from "../../src/utils/format.js";
 
 // Initialize Resend with env key
 // In local development, if RESEND_API_KEY is not defined, we fallback to mocking
@@ -225,10 +230,10 @@ export const emailService = {
             </div>
 
             <div class="price-block">
-              <div style="font-size:12px; color:#64748b;">Subtotaal (excl. 21% BTW): &nbsp; €${(order.totalAmount / 1.21).toFixed(2)}</div>
-              <div style="font-size:12px; color:#64748b; margin-top:4px;">BTW 21%: &nbsp; €${(order.totalAmount - order.totalAmount / 1.21).toFixed(2)}</div>
+              <div style="font-size:12px; color:#64748b;">Subtotaal (excl. 21% BTW): &nbsp; ${euro(order.totalAmount / 1.21)}</div>
+              <div style="font-size:12px; color:#64748b; margin-top:4px;">BTW 21%: &nbsp; ${euro(order.totalAmount - order.totalAmount / 1.21)}</div>
               <div class="label" style="margin-top:12px;">Totaal Overeenkomst (incl. BTW)</div>
-              <div class="price-amount">€${order.totalAmount.toFixed(2)}</div>
+              <div class="price-amount">${euro(order.totalAmount)}</div>
             </div>
 
             ${payOnLocation ? `
@@ -244,7 +249,7 @@ export const emailService = {
               <p style="font-size: 13px; line-height: 1.6; color: #15803d; margin: 8px 0 16px;">
                 Rond uw reservering af met iDEAL. Zodra de betaling binnen is, bevestigen wij uw reservering automatisch.
               </p>
-              <a href="${order.mollieCheckoutUrl}" style="display:inline-block; background:#4f46e5; color:#ffffff !important; text-decoration:none; padding:14px 32px; border-radius:12px; font-weight:bold; font-size:15px;">Nu betalen — €${order.totalAmount.toFixed(2)}</a>
+              <a href="${order.mollieCheckoutUrl}" style="display:inline-block; background:#4f46e5; color:#ffffff !important; text-decoration:none; padding:14px 32px; border-radius:12px; font-weight:bold; font-size:15px;">Nu betalen — ${euro(order.totalAmount)}</a>
             </div>
             ` : WHATSAPP_NUMBER ? `
             <div style="margin: 28px 0; padding: 20px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 16px; text-align: center;">
@@ -358,7 +363,7 @@ export const emailService = {
               </div>
               <div class="details-item">
                 <div class="label">Huurcontract Waarde</div>
-                <div class="value" style="color: #10b981; font-size: 15px;">€${order.totalAmount.toFixed(2)}</div>
+                <div class="value" style="color: #10b981; font-size: 15px;">${euro(order.totalAmount)}</div>
               </div>
             </div>
 
@@ -391,7 +396,7 @@ export const emailService = {
       to: ADMIN_ALERT_EMAIL,
       // Reply straight to the customer from the alert, not to the info-box
       replyTo: order.customerEmail || REPLY_TO_ADDRESS,
-      subject: `🚨 Nieuwe Reservering ${order.id} - €${order.totalAmount.toFixed(2)} - ${order.customerName}`,
+      subject: `🚨 Nieuwe Reservering ${order.id} - ${euro(order.totalAmount)} - ${order.customerName}`,
       html: htmlContent,
     });
   },
@@ -417,6 +422,20 @@ export const emailService = {
       statusTitle = "🚚 Uw Hoogwerker is Onderweg!";
       statusDescription = "De transporteur heeft de machine geladen en is onderweg naar uw afleveradres. Zorg ervoor dat de opstelplaats vrij is voor levering.";
       headerColor = "linear-gradient(135deg, #3b82f6, #1d4ed8)";
+    } else if (order.status === "Retour") {
+      // Reachable status (VALID_STATUS_TRANSITIONS: Onderweg → Retour) that
+      // previously fell through to the generic "Status bijgewerkt naar: Retour"
+      // default — no context on what happens next.
+      statusTitle = "📦 Machine Retour Ontvangen";
+      statusDescription = "Wij hebben de machine retour ontvangen en voeren nu de gebruikelijke controle uit. Zodra dit is afgerond, ronden wij de huurovereenkomst voor u af.";
+      headerColor = "linear-gradient(135deg, #6366f1, #4338ca)";
+    } else if (order.status === "Schade gemeld") {
+      // Reachable status (VALID_STATUS_TRANSITIONS: Retour → Schade gemeld),
+      // also sent from the damage-report flow (orders.ts) — same generic
+      // fallback gap as Retour above.
+      statusTitle = "⚠️ Schade Geconstateerd Bij Controle";
+      statusDescription = "Bij de retourcontrole hebben wij schade aan de machine geconstateerd. Wij nemen hierover persoonlijk contact met u op om dit verder te bespreken.";
+      headerColor = "linear-gradient(135deg, #f97316, #ea580c)";
     } else if (order.status === "Voltooid") {
       statusTitle = "Huurcontract Voltooid";
       statusDescription = "De huurperiode is beëindigd en het materieel is succesvol retour ontvangen. Bedankt voor uw vertrouwen in huurgo!";
@@ -440,7 +459,7 @@ export const emailService = {
     const paymentBlock = order.status === "Goedgekeurd" ? `
       <div style="text-align: center; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 16px; padding: 16px 20px; margin-top: 24px;">
         <p style="font-size: 14px; font-weight: 700; color: #166534; margin: 0;">✓ Betaling ontvangen</p>
-        <p style="font-size: 12px; color: #15803d; margin: 6px 0 0;">Uw betaling van €${order.totalAmount.toFixed(2)} is verwerkt. Uw reservering is nu definitief bevestigd.</p>
+        <p style="font-size: 12px; color: #15803d; margin: 6px 0 0;">Uw betaling van ${euro(order.totalAmount)} is verwerkt. Uw reservering is nu definitief bevestigd.</p>
       </div>` : "";
 
     const ratingUrl = `${APP_URL}/?rate=${encodeURIComponent(order.id)}&email=${encodeURIComponent(order.customerEmail)}`;
@@ -505,7 +524,7 @@ export const emailService = {
               ` : ''}
               <div class="details-item">
                 <div class="label">Totaalsom</div>
-                <div class="value" style="color: #10b981;">€${order.totalAmount.toFixed(2)}</div>
+                <div class="value" style="color: #10b981;">${euro(order.totalAmount)}</div>
               </div>
             </div>
 
@@ -737,7 +756,7 @@ export const emailService = {
                  further ahead than that. -->
             <p style="font-size: 13px; color: #475569;"><strong>Let op:</strong> uw reservering is pas definitief zodra de betaling is ontvangen. Zonder betaling kunnen wij de machine niet voor u vasthouden.</p>
             ${order.mollieCheckoutUrl
-              ? `<p style="text-align:center;"><a href="${order.mollieCheckoutUrl}" style="display:inline-block; background:#4f46e5; color:#ffffff !important; text-decoration:none; padding:14px 32px; border-radius:12px; font-weight:bold; font-size:15px; margin:20px 0;">Nu betalen — €${order.totalAmount.toFixed(2)}</a></p>`
+              ? `<p style="text-align:center;"><a href="${order.mollieCheckoutUrl}" style="display:inline-block; background:#4f46e5; color:#ffffff !important; text-decoration:none; padding:14px 32px; border-radius:12px; font-weight:bold; font-size:15px; margin:20px 0;">Nu betalen — ${euro(order.totalAmount)}</a></p>`
               : WHATSAPP_NUMBER ? `<p style="text-align:center;"><a href="${paymentWaLink}" class="btn">💬 Betaallink opnieuw aanvragen</a></p>` : ""}
             <p style="font-size: 13px; color: #475569;">Loopt er iets mis of heeft u een vraag? Neem gerust contact met ons op via WhatsApp.</p>
           </div>
@@ -857,7 +876,7 @@ export const emailService = {
               <div class="details-item"><div class="label">Klant</div><div class="value">${esc(order.customerName)} — ${esc(order.customerEmail)}</div></div>
               <div class="details-item"><div class="label">Machine</div><div class="value">${esc(order.machineName)}</div></div>
               <div class="details-item"><div class="label">Periode</div><div class="value">${order.startDate} t/m ${order.endDate} (${order.rentalDays}d)</div></div>
-              <div class="details-item"><div class="label">Waarde (vervallen)</div><div class="value" style="color:#dc2626;">€${order.totalAmount.toFixed(2)}</div></div>
+              <div class="details-item"><div class="label">Waarde (vervallen)</div><div class="value" style="color:#dc2626;">${euro(order.totalAmount)}</div></div>
             </div>
             <div style="text-align:center;"><a href="${APP_URL}/admin" class="btn">Bekijk in Admin Dashboard</a></div>
           </div>
@@ -875,7 +894,7 @@ export const emailService = {
       from: SENDER_EMAIL,
       to: ADMIN_ALERT_EMAIL,
       replyTo: order.customerEmail || REPLY_TO_ADDRESS,
-      subject: `❌ Annulering ${order.id} — ${order.customerName} — €${order.totalAmount.toFixed(2)}`,
+      subject: `❌ Annulering ${order.id} — ${order.customerName} — ${euro(order.totalAmount)}`,
       html: htmlContent,
     });
   },
@@ -978,7 +997,7 @@ export const emailService = {
               <div class="details-item"><div class="label">Klant</div><div class="value">${esc(order.customerName)} — ${esc(order.customerEmail)}</div></div>
               <div class="details-item"><div class="label">Machine</div><div class="value">${esc(order.machineName)}</div></div>
               <div class="details-item"><div class="label">Periode</div><div class="value">${order.startDate} t/m ${order.endDate} (${order.rentalDays}d)</div></div>
-              <div class="details-item"><div class="label">Bedrag</div><div class="value" style="color:#059669;">€${order.totalAmount.toFixed(2)}</div></div>
+              <div class="details-item"><div class="label">Bedrag</div><div class="value" style="color:#059669;">${euro(order.totalAmount)}</div></div>
             </div>
             <div style="text-align:center;"><a href="${APP_URL}/admin" class="btn">Bekijk in Admin Dashboard</a></div>
           </div>
@@ -996,7 +1015,7 @@ export const emailService = {
       from: SENDER_EMAIL,
       to: ADMIN_ALERT_EMAIL,
       replyTo: order.customerEmail || REPLY_TO_ADDRESS,
-      subject: `💰 Betaling ontvangen ${order.id} — ${order.customerName} — €${order.totalAmount.toFixed(2)}`,
+      subject: `💰 Betaling ontvangen ${order.id} — ${order.customerName} — ${euro(order.totalAmount)}`,
       html: htmlContent,
     });
   },

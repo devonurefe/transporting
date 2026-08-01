@@ -7,7 +7,8 @@ import React from "react";
 import { ShieldCheck, TrendingDown, Package, ChevronDown, Calendar, Truck, Tag, MessageCircle, BadgeCheck, Umbrella } from "lucide-react";
 import { Machine } from "../../types";
 import { useLanguageStore } from "../../store/languageStore";
-import { euro, euroCompact } from "../../utils/format";
+import { useAppStore } from "../../store/appStore";
+import { euro, euroCompact, withVat } from "../../utils/format";
 import { withImageWidth } from "../../utils/image";
 
 interface BookingPriceSummaryProps {
@@ -117,6 +118,15 @@ function formatShortDate(iso: string): string {
 
 export default function BookingPriceSummary({ selectedMachine, machineCount = 1, startDate, endDate, multiplePeriods, sums }: BookingPriceSummaryProps) {
   const t = useLanguageStore((state) => state.t);
+  // The catalog, machine detail views and the booking calendar's own live price
+  // preview (DateRangeCalendar.tsx) all respect this global toggle — this
+  // summary previously always showed the incl.-VAT total with a hardcoded
+  // "incl. BTW" label regardless of the toggle, a ~21% jump with a wrong label
+  // right after the calendar's excl.-VAT preview when the default ("excl") is
+  // active.
+  const vatDisplay = useAppStore((s) => s.vatDisplay);
+  const vp = (amount: number) => withVat(amount, vatDisplay);
+  const vatLabel = vatDisplay === "incl" ? t("priceSummaryInclVAT") : t("priceSummaryExclVAT");
   // Open by default — customers (and staff relaying prices over the phone)
   // should see what's in the total immediately, not have to find the toggle.
   const [breakdownOpen, setBreakdownOpen] = React.useState(true);
@@ -204,7 +214,7 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
   const transportName = sums.deliveryType === "trailer_rental" ? `${t("priceSummaryTrailerOnLocation")}${trailerDaysSuffix}`
     : sums.deliveryType === "delivery_by_us" ? t("priceSummaryDelivery")
     : t("priceSummaryPickup");
-  const transportValue = transportFree ? t("priceSummaryPickupFree") : euro(sums.transport + sums.driver);
+  const transportValue = transportFree ? t("priceSummaryPickupFree") : euro(vp(sums.transport + sums.driver));
 
   return (
     <div className="bg-white border border-slate-200 shadow-sm rounded-2xl overflow-hidden">
@@ -235,20 +245,20 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
           {machineCount === 1 && (
             selectedMachine.weeklyOnly && selectedMachine.weeklyPrice ? (
               <span className="text-sm font-black text-slate-800 font-mono">
-                {euroCompact(selectedMachine.weeklyPrice)}{t("priceSummaryPerWeek")}
+                {euroCompact(vp(selectedMachine.weeklyPrice))}{t("priceSummaryPerWeek")}
               </span>
             ) : isWeekendPkg ? (
               <span className="text-sm font-black text-amber-700 font-mono">
-                {euroCompact(baseSubtotal)} · {sums.tierLabel}
+                {euroCompact(vp(baseSubtotal))} · {sums.tierLabel}
               </span>
             ) : hasTierDeal ? (
               <span className="font-mono flex items-baseline gap-1.5 flex-wrap">
-                <span className="text-sm font-black text-emerald-600">{euroCompact(effectivePerDay)}{t("priceSummaryPerDay")}</span>
-                <span className="text-xs line-through text-slate-400 font-semibold">{euroCompact(selectedMachine.pricePerDay)}{t("priceSummaryPerDay")}</span>
+                <span className="text-sm font-black text-emerald-600">{euroCompact(vp(effectivePerDay))}{t("priceSummaryPerDay")}</span>
+                <span className="text-xs line-through text-slate-400 font-semibold">{euroCompact(vp(selectedMachine.pricePerDay))}{t("priceSummaryPerDay")}</span>
               </span>
             ) : (
               <span className="text-sm font-black text-slate-800 font-mono">
-                {euroCompact(selectedMachine.pricePerDay)}{t("priceSummaryPerDay")}
+                {euroCompact(vp(selectedMachine.pricePerDay))}{t("priceSummaryPerDay")}
               </span>
             )
           )}
@@ -260,9 +270,9 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
         {/* ── TOTAAL (prominent) ──────────────────── */}
         <div>
           <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">{t("priceSummaryTotal")}</p>
-          <p className="text-3xl font-black text-slate-900 font-mono leading-none tracking-tight">{euro(sums.total)}</p>
+          <p className="text-3xl font-black text-slate-900 font-mono leading-none tracking-tight">{euro(vp(sums.total - sums.vat))}</p>
           <p className="text-[11px] font-normal text-slate-400 mt-2.5 leading-snug">
-            {t("priceSummaryInclVAT")} · {isWeekendPkg
+            {vatLabel} · {isWeekendPkg
               ? sums.tierLabel
               : `${sums.days} ${sums.days === 1 ? t("priceSummaryDayRental") : t("priceSummaryDaysRental")}`}
           </p>
@@ -293,7 +303,7 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
                 ? <Tag className="h-3.5 w-3.5" />
                 : <TrendingDown className="h-3.5 w-3.5" />}
               label={(sums.isFlatRate || !!sums.weeklyBreakdown) ? t("priceSummaryCampaignDiscount") : t("priceSummaryYouSave")}
-              value={`− ${euro(totalSavings)}`}
+              value={`− ${euro(vp(totalSavings))}`}
               accent={(sums.isFlatRate || !!sums.weeklyBreakdown) ? "amber" : "emerald"}
             />
           )}
@@ -301,7 +311,7 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
             <SummaryRow
               icon={<Calendar className="h-3.5 w-3.5" />}
               label={<SundayBlockLabel t={t} />}
-              value={euro(blockFee)}
+              value={euro(vp(blockFee))}
               accent="amber"
             />
           )}
@@ -310,7 +320,7 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
               key={addon.id}
               icon={<Tag className="h-3.5 w-3.5" />}
               label={addon.name}
-              value={euro(Number(addon.price))}
+              value={euro(vp(Number(addon.price)))}
             />
           ))}
         </div>
@@ -370,6 +380,17 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
                 </>
               ) : sums.isFlatRate && sums.tierLabel ? (
                 <Row label={`1× ${sums.tierLabel}`} value={euro(baseSubtotal)} />
+              ) : machineCount > 1 ? (
+                // sums.days/rawSubtotal are summed across every cart item, but
+                // selectedMachine is only item 0 — showing "N dagen × item 0's
+                // price/day" implied a multiplication that didn't match the
+                // displayed value for any multi-machine cart. No per-machine
+                // rate to show honestly here, so just label it as a combined
+                // subtotal instead of a false single-rate breakdown.
+                <Row
+                  label={`${machineCount} ${t("priceSummaryMachinesReserved")}`}
+                  value={euro(sums.rawSubtotal)}
+                />
               ) : (
                 <Row
                   label={`${sums.days} ${sums.days === 1 ? t("priceSummaryDay") : t("priceSummaryDays")} × ${euroCompact(selectedMachine.pricePerDay)}`}

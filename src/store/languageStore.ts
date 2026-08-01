@@ -67,6 +67,7 @@ const dictionary: TranslationDictionary = {
   priceSummaryPickupFree: { nl: "Zelf ophalen (gratis)", en: "Self-pickup (free)", tr: "Kendi alım (ücretsiz)" },
   priceSummaryTotal: { nl: "Totaal te betalen", en: "Total to pay", tr: "Ödenecek Toplam" },
   priceSummaryInclVAT: { nl: "incl. BTW", en: "incl. VAT", tr: "KDV dahil" },
+  priceSummaryExclVAT: { nl: "excl. BTW", en: "excl. VAT", tr: "KDV hariç" },
   priceSummaryChooseMachine: { nl: "Kies een machine", en: "Choose a machine", tr: "Makine seçin" },
   priceSummaryNoHidden: { nl: "Geen verborgen kosten · Veilige betaling", en: "No hidden costs · Secure payment", tr: "Gizli maliyet yok · Güvenli ödeme" },
   priceSummaryWhatsAppSupport: { nl: "WhatsApp-ondersteuning tijdens uw huurperiode", en: "WhatsApp support during your rental", tr: "Kiralama süresince WhatsApp desteği" },

@@ -331,7 +331,6 @@ export default function App() {
       setIsAdminMode(false);
       // Guests default to excl. BTW (lower, more attractive price); VAT is added at checkout.
       setVatDisplay("excl");
-      localStorage.setItem("hwh_vat_display", "excl");
     }
     // When authChecked=false (still loading), don't touch isAdminMode
     // so the admin panel stays visible while the token is being verified
@@ -347,7 +346,6 @@ export default function App() {
     ]);
     const mode = PROFESSIONAL.has(currentUser.profileType) ? "excl" : "incl";
     setVatDisplay(mode);
-    localStorage.setItem("hwh_vat_display", mode);
   }, [currentUser?.id, setVatDisplay]);
 
   // System and Activity Logs
@@ -1152,6 +1150,10 @@ export default function App() {
 
       {/* Cookie consent banner */}
       <CookieBanner />
+
+      {/* PWA install prompt — only ever renders once the browser fires
+          beforeinstallprompt and the user hasn't dismissed it before */}
+      <PWAInstallBanner />
 
     </div>
   );

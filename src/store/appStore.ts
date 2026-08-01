@@ -288,7 +288,6 @@ export const useAppStore = create<AppState>((set, get) => ({
   vatDisplay: "excl" as const,
 
   setVatDisplay: (mode) => {
-    try { localStorage.setItem("hwh_vat_display", mode); } catch { /* ignore */ }
     set({ vatDisplay: mode });
   },
 

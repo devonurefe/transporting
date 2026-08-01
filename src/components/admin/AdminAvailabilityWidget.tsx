@@ -11,7 +11,11 @@ export default function AdminAvailabilityWidget() {
   const orders = useAppStore((s) => s.orders);
   const blockedDates = useAppStore((s) => s.blockedDates);
 
-  const todayStr = new Date().toISOString().split("T")[0];
+  // Local calendar day, not UTC — toISOString() can show "yesterday" as
+  // "today" for an NL admin shortly after local midnight (same fix already
+  // applied to AdminCalendar.tsx/AdminPlanning.tsx/AdminDiagnostics.tsx).
+  const now = new Date();
+  const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 
   const getBaseName = (name: string) => name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "").trim();
 

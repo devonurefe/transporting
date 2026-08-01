@@ -10,11 +10,31 @@ import { useAppStore } from "../../store/appStore";
 import { useAuthStore } from "../../store/authStore";
 import { CampaignRule } from "../../types";
 import AdminConfirmDialog from "./AdminConfirmDialog";
+import { showAdminToast } from "./AdminToast";
 
 interface AdminCampaignRulesProps {
   onAddSystemLog: (type: "login" | "logout" | "signup" | "booking" | "fleet" | "status" | "system", user: string, description: string) => void;
   adminLanguage?: string;
 }
+
+// Must match the exact customerProfile values BookingStep2.tsx actually
+// produces (src/components/booking/BookingStep2.tsx) — src/utils/pricing.ts
+// matches a "role"-scoped rule with a strict, case-insensitive equality
+// check, so a scopeValue that doesn't exactly match a real profile string
+// can never apply. This previously listed "Hovenier"/"Glazenwasser", which
+// server/routes/orders.ts documents as legacy-only values no current
+// booking can produce — those rules were silently dead.
+const ROLE_SCOPE_OPTIONS: { value: string; nl: string; en: string; tr: string }[] = [
+  { value: "Schilder", nl: "Schilder", en: "Painter", tr: "Boyacı" },
+  { value: "Hovenier / Groenverzorging", nl: "Hovenier / Groenverzorging", en: "Gardener / Green Care", tr: "Bahçıvan / Yeşil Alan Bakımı" },
+  { value: "Glazenwasser / Gevelreiniger", nl: "Glazenwasser / Gevelreiniger", en: "Window Cleaner / Facade Cleaner", tr: "Cam Temizlikçisi / Cephe Temizliği" },
+  { value: "Aannemer", nl: "Aannemer", en: "Contractor", tr: "Müteahhit" },
+  { value: "Installateur / Elektricien", nl: "Installateur / Elektricien", en: "Installer / Electrician", tr: "Tesisatçı / Elektrikçi" },
+  { value: "Dakdekker / Gevelwerker", nl: "Dakdekker / Gevelwerker", en: "Roofer / Facade Worker", tr: "Çatı Ustası / Cephe İşçisi" },
+  { value: "Industrieel Onderhoud", nl: "Industrieel Onderhoud", en: "Industrial Maintenance", tr: "Endüstriyel Bakım" },
+  { value: "Particulier", nl: "Particulier", en: "Private Individual", tr: "Bireysel Müşteri" },
+  { value: "Overig / Anders", nl: "Overig / Anders", en: "Other", tr: "Diğer" },
+];
 
 // Verplaatst uit AdminCustomizer.tsx (Mağaza Ayarları) naar het Tarieven-gebied van
 // AdminContent — kortingsregels horen inhoudelijk bij de andere prijs-/tariefinstellingen,
@@ -42,7 +62,11 @@ export default function AdminCampaignRules({ onAddSystemLog, adminLanguage }: Ad
   const handleToggleRule = async (id: string) => {
     const updated = campaignRules.map(r => r.id === id ? { ...r, isActive: !r.isActive } : r);
     const ok = await updateCampaignRules(updated);
-    if (ok) onAddSystemLog("system", adminUser?.name ?? "Admin", t("Campagneregel status bijgewerkt.", "Campaign rule status updated.", "Kampanya kuralı durumu güncellendi."));
+    if (ok) {
+      onAddSystemLog("system", adminUser?.name ?? "Admin", t("Campagneregel status bijgewerkt.", "Campaign rule status updated.", "Kampanya kuralı durumu güncellendi."));
+    } else {
+      showAdminToast(useAppStore.getState().error || t("Bijwerken mislukt.", "Update failed.", "Güncelleme başarısız."), "error");
+    }
   };
 
   const handleDeleteRule = (id: string, name: string) => {
@@ -54,8 +78,14 @@ export default function AdminCampaignRules({ onAddSystemLog, adminLanguage }: Ad
     const { id, name } = pendingDeleteRule;
     const updated = campaignRules.filter(r => r.id !== id);
     const ok = await updateCampaignRules(updated);
-    if (ok) onAddSystemLog("system", adminUser?.name ?? "Admin", t("Campagneregel verwijderd: ", "Campaign rule deleted: ", "Kampanya kuralı silindi: ") + name);
-    setPendingDeleteRule(null);
+    if (ok) {
+      onAddSystemLog("system", adminUser?.name ?? "Admin", t("Campagneregel verwijderd: ", "Campaign rule deleted: ", "Kampanya kuralı silindi: ") + name);
+      setPendingDeleteRule(null);
+    } else {
+      showAdminToast(useAppStore.getState().error || t("Verwijderen mislukt.", "Delete failed.", "Silme başarısız."), "error");
+      // Keep the confirm dialog open on failure — closing it would read as
+      // "deleted" when the rule is still there.
+    }
   };
 
   const [addRuleError, setAddRuleError] = useState<string>("");
@@ -81,7 +111,10 @@ export default function AdminCampaignRules({ onAddSystemLog, adminLanguage }: Ad
     };
 
     const ok = await updateCampaignRules([...campaignRules, newRule]);
-    if (!ok) return;
+    if (!ok) {
+      showAdminToast(useAppStore.getState().error || t("Opslaan mislukt.", "Save failed.", "Kaydetme başarısız."), "error");
+      return;
+    }
     onAddSystemLog("system", adminUser?.name ?? "Admin", t("Nieuwe campagneregel toegevoegd: ", "New campaign rule added: ", "Yeni kampanya kuralı eklendi: ") + newRule.name);
 
     // reset form
@@ -126,7 +159,10 @@ export default function AdminCampaignRules({ onAddSystemLog, adminLanguage }: Ad
     );
 
     const ok = await updateCampaignRules(updated);
-    if (!ok) return;
+    if (!ok) {
+      showAdminToast(useAppStore.getState().error || t("Opslaan mislukt.", "Save failed.", "Kaydetme başarısız."), "error");
+      return;
+    }
     onAddSystemLog("system", adminUser?.name ?? "Admin", t("Campagneregel gewijzigd: ", "Campaign rule edited: ", "Kampanya kuralı düzenlendi: ") + trimmed);
     setEditingRule(null);
   };
@@ -321,11 +357,9 @@ export default function AdminCampaignRules({ onAddSystemLog, adminLanguage }: Ad
                   onChange={(e) => setRuleScopeValue(e.target.value)}
                   className="w-full bg-white border border-slate-200 rounded-lg p-2 text-xs text-slate-800 outline-none focus:border-amber-500"
                 >
-                  <option value="Schilder">{t("Schilder", "Painter", "Boyacı")}</option>
-                  <option value="Hovenier">{t("Hovenier", "Gardener", "Bahçıvan")}</option>
-                  <option value="Glazenwasser">{t("Glazenwasser", "Window Cleaner", "Cam Temizlikçisi")}</option>
-                  <option value="Aannemer">{t("Aannemer", "Contractor", "Müteahhit")}</option>
-                  <option value="Particulier">{t("Particulier", "Private Individual", "Bireysel Müşteri")}</option>
+                  {ROLE_SCOPE_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>{t(opt.nl, opt.en, opt.tr)}</option>
+                  ))}
                 </select>
               )}
             </div>
@@ -478,11 +512,16 @@ export default function AdminCampaignRules({ onAddSystemLog, adminLanguage }: Ad
                       onChange={(e) => setEditScopeValue(e.target.value)}
                       className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-amber-500"
                     >
-                      <option value="Schilder">{t("Schilder", "Painter", "Boyacı")}</option>
-                      <option value="Hovenier">{t("Hovenier", "Gardener", "Bahçıvan")}</option>
-                      <option value="Glazenwasser">{t("Glazenwasser", "Window Cleaner", "Cam Temizlikçisi")}</option>
-                      <option value="Aannemer">{t("Aannemer", "Contractor", "Müteahhit")}</option>
-                      <option value="Particulier">{t("Particulier", "Private Individual", "Bireysel Müşteri")}</option>
+                      {ROLE_SCOPE_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>{t(opt.nl, opt.en, opt.tr)}</option>
+                      ))}
+                      {!ROLE_SCOPE_OPTIONS.some((opt) => opt.value === editScopeValue) && editScopeValue && (
+                        // Legacy value from an older rule (e.g. "Hovenier"/"Glazenwasser" —
+                        // see server/routes/orders.ts) that no current customer profile can
+                        // match anymore. Keep it selectable so editing the rule doesn't
+                        // silently jump it to a different scope value.
+                        <option value={editScopeValue}>{editScopeValue} ({t("verouderd", "legacy", "eski")})</option>
+                      )}
                     </select>
                   )}
                 </div>

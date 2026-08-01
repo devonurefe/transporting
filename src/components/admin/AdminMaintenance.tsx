@@ -6,7 +6,7 @@
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Wrench, ShieldAlert, CheckCircle2, Plus, X, Pencil } from "lucide-react";
-import { useAppStore, MaintenanceEvent, DamageReport } from "../../store/appStore";
+import { useAppStore } from "../../store/appStore";
 import { euro, formatDateNL } from "../../utils/format";
 import AdminConfirmDialog from "./AdminConfirmDialog";
 import { showAdminToast } from "./AdminToast";

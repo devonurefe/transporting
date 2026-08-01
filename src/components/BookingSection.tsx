@@ -247,89 +247,48 @@ export default function BookingSection({
   // Strip " (Unit N)" suffix — same logic as CatalogSection grouping
   const getBaseName = (name: string) => name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "").trim();
 
-  // Real-time capacity and collision checking logic
+  // Real-time capacity and collision checking logic — delegates to the same
+  // canonical checkAvailability() getItemAvailability uses below, instead of
+  // a separately hand-rolled overlap/blocked-date check that used to ignore
+  // stockQuantity concurrency, bufferDays, and operationallyBlocked on
+  // sibling candidates (that duplicate logic also independently drives the
+  // auto-swap-to-a-sibling-unit decision, so those gaps could silently swap
+  // a customer away from a unit that was actually still bookable, or onto
+  // one that wasn't).
   const checkRealtimeAvailability = (machineId: string, start: string, end: string) => {
     if (!start || !end) return;
     setValidationError(null);
 
-    const requestedStart = new Date(start).getTime();
-    const requestedEnd = new Date(end).getTime();
-    const todayStr = new Date().toISOString().split('T')[0];
-    const todayTime = new Date(todayStr).getTime();
-
-    if (requestedStart > requestedEnd) {
-      setIsAvailable(false);
-      setValidationError("De retourdatum moet na de begindatum liggen.");
-      return;
-    }
-
-    if (requestedStart < todayTime) {
-      setIsAvailable(false);
-      setValidationError("De begindatum kan niet in het verleden liggen.");
-      return;
-    }
-
     const realtimeMachine = machines.find(m => m.id === machineId);
-    if (realtimeMachine?.operationallyBlocked) {
-      setIsAvailable(false);
-      setIsDateBlocked(true);
-      setBlockingReason("Niet beschikbaar voor deze periode.");
-      setOverlappingOrders([]);
-      return;
-    }
-
-    const overlaps = allOrders.filter(o => {
-      if (o.machineId !== machineId) return false;
-
-      const orderStart = new Date(o.startDate).getTime();
-      const orderEnd = new Date(o.endDate).getTime();
-
-      return (requestedStart <= orderEnd && requestedEnd >= orderStart);
-    });
-
-    let dateIsBlocked = false;
-    let reasonTxt = "";
-
-    // O(1) per-day lookup instead of O(n) find() inside the iteration loop
-    const blockedMap = new Map<string, string>(
-      blockedDaysList
-        .filter((b: any) => b.machineId === machineId)
-        .map((b: any) => [b.date as string, (b.reason as string) || "Geblokkeerd door beheerder / Onderhoud"])
+    const result = checkAvailability(
+      machineId, start, end, allOrders, blockedDaysList, undefined,
+      realtimeMachine?.bufferDays ?? 0, realtimeMachine?.stockQuantity ?? 1, realtimeMachine?.operationallyBlocked ?? false
     );
 
-    const sDate = new Date(start);
-    const eDate = new Date(end);
-    let curr = new Date(sDate);
-    let safetyCounter = 0;
-    while (curr <= eDate && safetyCounter < 1000) {
-      safetyCounter++;
-      const currStr = curr.toISOString().split('T')[0];
-      const reason = blockedMap.get(currStr);
-      if (reason !== undefined) {
-        dateIsBlocked = true;
-        reasonTxt = reason;
-        break;
+    if (!result.available) {
+      if (!result.blocked && !result.overlap) {
+        // Plain validation rejection (missing/reversed dates, past start date)
+        setIsAvailable(false);
+        setIsDateBlocked(false);
+        setBlockingReason("");
+        setOverlappingOrders([]);
+        setValidationError(result.reason);
+        return;
       }
-      curr.setUTCDate(curr.getUTCDate() + 1);
-    }
 
-    setIsDateBlocked(dateIsBlocked);
-    setBlockingReason(reasonTxt);
+      setIsDateBlocked(result.blocked);
+      setBlockingReason(result.blocked ? result.reason : "");
 
-    if (overlaps.length > 0) {
-      // Auto-assign: try a sibling unit (same base model, different ID) for this period
-      if (selectedMachine) {
+      if (result.overlap && selectedMachine) {
+        // Auto-assign: try a sibling unit (same base model, different ID) for this period
         const base = getBaseName(selectedMachine.name);
         const sibling = machines.find(m => {
           if (m.id === machineId) return false;
           if (getBaseName(m.name) !== base) return false;
-          const siblingOverlaps = allOrders.filter(o => {
-            if (o.machineId !== m.id) return false;
-            const os = new Date(o.startDate).getTime();
-            const oe = new Date(o.endDate).getTime();
-            return requestedStart <= oe && requestedEnd >= os;
-          });
-          return siblingOverlaps.length === 0;
+          return checkAvailability(
+            m.id, start, end, allOrders, blockedDaysList, undefined,
+            m.bufferDays ?? 0, m.stockQuantity ?? 1, m.operationallyBlocked ?? false
+          ).available;
         });
         if (sibling) {
           onSelectMachine(sibling);
@@ -337,11 +296,10 @@ export default function BookingSection({
         }
       }
       setIsAvailable(false);
-      setOverlappingOrders(overlaps);
-    } else if (dateIsBlocked) {
-      setIsAvailable(false);
       setOverlappingOrders([]);
     } else {
+      setIsDateBlocked(false);
+      setBlockingReason("");
       setIsAvailable(true);
       setOverlappingOrders([]);
     }

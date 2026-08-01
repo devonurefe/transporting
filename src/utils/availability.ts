@@ -46,7 +46,15 @@ export function checkAvailability(
   const requestedStart = new Date(start).getTime();
   const requestedEnd = new Date(end).getTime();
 
-  const resolvedTodayStr = todayStr || new Date().toISOString().split('T')[0];
+  // "Today" must be the CALLER's own local calendar day, not UTC —
+  // .toISOString() converts through UTC first, so e.g. shortly after local
+  // midnight in a timezone west of UTC it still reports yesterday's date,
+  // which would let a real "past" start date slip through, or (as seen in
+  // practice) reject a legitimate same-day booking a few hours later. Every
+  // caller should really pass an explicit locally-computed todayStr; this
+  // fallback only covers the rare caller that doesn't.
+  const now = new Date();
+  const resolvedTodayStr = todayStr || `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
   const todayTime = new Date(resolvedTodayStr).getTime();
 
   if (requestedStart > requestedEnd) {

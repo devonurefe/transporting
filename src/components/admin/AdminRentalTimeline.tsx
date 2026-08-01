@@ -5,7 +5,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { ChevronLeft, ChevronRight, CalendarRange, X, Phone, Mail, MapPin, Package } from "lucide-react";
+import { ChevronLeft, ChevronRight, CalendarRange, X, Phone, Mail, MapPin, Package, Wrench } from "lucide-react";
 import { useAppStore } from "../../store/appStore";
 import { euro } from "../../utils/format";
 import { Order } from "../../types";
@@ -289,12 +289,31 @@ export default function AdminRentalTimeline({ adminLanguage }: AdminRentalTimeli
               const rowHeight = laneCount * 26 + (laneCount - 1) * 4 + 12;
               return (
                 <div key={machine.id} className="flex items-stretch border-b border-slate-100 hover:bg-slate-50/60">
-                  <div className="w-40 shrink-0 pr-3 py-2 flex items-center">
+                  <div className="w-40 shrink-0 pr-3 py-2 flex items-center gap-1">
                     <span className="text-[11px] font-bold text-slate-700 leading-snug line-clamp-2" title={machine.name}>
                       {machine.name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "").trim()}
                     </span>
+                    {machine.operationallyBlocked && (
+                      <span
+                        className="shrink-0"
+                        title={al("Buiten dienst — onderhoud of schade (zie Onderhoud-paneel)", "Out of service — maintenance or damage (see Maintenance panel)", "Hizmet dışı — bakım veya hasar (Bakım paneline bakın)")}
+                      >
+                        <Wrench className="h-3 w-3 text-rose-500" />
+                      </span>
+                    )}
                   </div>
                   <div className="relative flex-1" style={{ minHeight: rowHeight }}>
+                    {/* Operationally blocked (retired/damaged/under open maintenance) —
+                        unavailable for every date regardless of orders/blocked-dates, so
+                        a single full-row hatch communicates that instead of the timeline
+                        misleadingly reading as free. Mirrors availability.ts's own
+                        operationallyBlocked short-circuit. */}
+                    {machine.operationallyBlocked && (
+                      <div
+                        className="absolute inset-y-0.5 inset-x-0 bg-[repeating-linear-gradient(45deg,#fecdd3_0,#fecdd3_4px,transparent_4px,transparent_9px)] rounded-sm opacity-60 pointer-events-none"
+                        title={al("Buiten dienst — niet beschikbaar", "Out of service — unavailable", "Hizmet dışı — kullanılamaz")}
+                      />
+                    )}
                     {/* blocked-date markers */}
                     {blocks.map((off, i) => (
                       <div

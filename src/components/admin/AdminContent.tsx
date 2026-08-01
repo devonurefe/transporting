@@ -128,12 +128,14 @@ export default function AdminContent({ adminLanguage, onAddSystemLog }: AdminCon
         <div className="glass-panel p-5.5 rounded-3xl space-y-4">
           <div className="flex items-center justify-between border-b border-slate-200 pb-3">
             <h3 className="font-display font-bold text-sm text-slate-900">{t("Veelgestelde vragen", "FAQ", "Sıkça Sorulan Sorular")}</h3>
-            <button
-              onClick={() => setFaqItems((prev) => [...prev, { q: "", a: "" }])}
-              className="flex items-center gap-1 text-[10px] font-bold text-slate-600 bg-slate-50 hover:bg-slate-100 border border-slate-200 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer"
-            >
-              <Plus className="h-3 w-3" /> {t("Vraag toevoegen", "Add question", "Soru ekle")}
-            </button>
+            {faqItems.length < 40 && (
+              <button
+                onClick={() => setFaqItems((prev) => [...prev, { q: "", a: "" }])}
+                className="flex items-center gap-1 text-[10px] font-bold text-slate-600 bg-slate-50 hover:bg-slate-100 border border-slate-200 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer"
+              >
+                <Plus className="h-3 w-3" /> {t("Vraag toevoegen", "Add question", "Soru ekle")}
+              </button>
+            )}
           </div>
           <div className="space-y-3">
             {faqItems.map((item, i) => (

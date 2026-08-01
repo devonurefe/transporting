@@ -68,7 +68,7 @@ Single-package full-stack monorepo — one `package.json` for both React fronten
 
 ### Backend (`server/`)
 
-- **Routes** under `/api/*`: `auth`, `machines`, `orders`, `blockedDates`, `siteConfig`, plus general `api` router (health, uploads).
+- **Routes** under `/api/*`: `auth`, `machines`, `orders`, `blockedDates`, `siteConfig`, `admins`, `adminAudit`, `blog`, `maintenance`, `damageReports`, `calendar` (iCal feed), `webhooks` (Mollie), plus general `api` router (health, uploads).
 - **Gemini/AI advisor**: completely removed. No `server/routes/gemini.ts`, no `AdvisorSection.tsx`, no `geminiEnabled` state in App.tsx.
 - **Auth** (`server/middleware/auth.ts`): JWT validation, `requireAdmin` guard.
 - **Rate limits**: 300 req/min global on `/api/`; 10 attempts/15 min on auth endpoints.
@@ -189,6 +189,9 @@ Thirteen lazy-loaded panels inside `src/components/admin/`:
 | Content | `AdminContent.tsx` | FAQ, USPs, opening hours, transport/add-on fees, SEO, legal pages (`/privacy`, `/voorwaarden`) — see "Admin-manageable content" below |
 | Beheerders | `AdminUsers.tsx` | Own 2FA setup, admin account list, create/disable/reset-password/reset-2FA |
 | Accounting | `AdminAccounting.tsx` | Revenue reporting + CSV export |
+| Maintenance | `AdminMaintenance.tsx` | Open/close maintenance events + damage reports per machine — sets `operationallyBlocked`, blocks bookings regardless of stock/dates |
+| Timeline | `AdminRentalTimeline.tsx` | Gantt-style per-machine rental timeline across a date range |
+| Blog | `AdminBlog.tsx` | Kenniscentrum blog post CRUD |
 
 Shared admin widgets (not panels): `AdminStatusBadge.tsx`, `AdminConfirmDialog.tsx`, `AdminAvailabilityWidget.tsx`.
 

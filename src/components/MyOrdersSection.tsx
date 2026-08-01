@@ -796,7 +796,7 @@ export default function MyOrdersSection({
 
   const filteredOrders = userFilteredOrders.filter(o => {
     if (activeFilter === "all") return true;
-    if (activeFilter === "active") return o.status === "Goedgekeurd" || o.status === "Onderweg";
+    if (activeFilter === "active") return o.status === "Goedgekeurd" || o.status === "Onderweg" || o.status === "Retour" || o.status === "Schade gemeld";
     if (activeFilter === "pending") return o.status === "In behandeling";
     if (activeFilter === "completed") return o.status === "Voltooid";
     return true;
@@ -958,13 +958,19 @@ export default function MyOrdersSection({
 
                         <div className="flex items-center space-x-2 shrink-0">
                           <span className={`inline-block text-[10px] font-mono px-2.5 py-0.5 rounded-full font-bold uppercase border ${
-                            o.status === "In behandeling" 
-                              ? "bg-amber-50 text-amber-700 border-amber-200" 
+                            o.status === "In behandeling"
+                              ? "bg-amber-50 text-amber-700 border-amber-200"
                               : o.status === "Goedgekeurd"
                                 ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                                 : o.status === "Onderweg"
                                   ? "bg-blue-50 text-blue-700 border-blue-200"
-                                  : "bg-slate-100 text-slate-600 border border-slate-200"
+                                  : o.status === "Retour"
+                                    ? "bg-indigo-50 text-indigo-700 border-indigo-200"
+                                    : o.status === "Schade gemeld"
+                                      ? "bg-orange-50 text-orange-700 border-orange-200"
+                                      : o.status === "Geannuleerd"
+                                        ? "bg-rose-50 text-rose-700 border-rose-200"
+                                        : "bg-slate-100 text-slate-600 border border-slate-200"
                           }`}>
                             {o.status}
                           </span>
@@ -1008,12 +1014,22 @@ export default function MyOrdersSection({
                       <div className="bg-slate-50 p-3 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border border-slate-100">
                         
                         <div className="flex items-center space-x-2 flex-grow max-w-md w-full">
-                          {[
-                            { label: "Raming", active: true },
-                            { label: "Ingepland", active: o.status !== "In behandeling" },
-                            { label: "Onderweg", active: o.status === "Onderweg" || o.status === "Voltooid" },
-                            { label: "Gereed", active: o.status === "Voltooid" }
-                          ].map((step, idx) => {
+                          {(() => {
+                            // A cancelled order never progresses past the initial estimate — showing
+                            // later steps as reached would read as "in progress" to the customer.
+                            // "Retour"/"Schade gemeld" both sit after "Onderweg" in the real status
+                            // flow (order.ts VALID_STATUS_TRANSITIONS), so the "Onderweg" step must
+                            // stay lit for them too — otherwise a returned/inspected rental looks like
+                            // it regressed compared to when it was simply out for delivery.
+                            const isCancelled = o.status === "Geannuleerd";
+                            const reachedOnderweg = ["Onderweg", "Retour", "Schade gemeld", "Voltooid"].includes(o.status);
+                            return [
+                              { label: "Raming", active: true },
+                              { label: "Ingepland", active: !isCancelled && o.status !== "In behandeling" },
+                              { label: "Onderweg", active: !isCancelled && reachedOnderweg },
+                              { label: "Gereed", active: !isCancelled && o.status === "Voltooid" }
+                            ];
+                          })().map((step, idx) => {
                             return (
                               <React.Fragment key={idx}>
                                 {idx > 0 && (

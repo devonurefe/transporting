@@ -22,16 +22,32 @@ function escapeICalText(s: string): string {
     .replace(/\r?\n/g, "\\n");
 }
 
-// Fold lines to <=75 octets per RFC 5545 (continuation lines start with a space).
-function foldLine(line: string): string {
-  if (line.length <= 73) return line;
-  const out: string[] = [line.slice(0, 73)];
-  let rest = line.slice(73);
-  while (rest.length > 72) {
-    out.push(" " + rest.slice(0, 72));
-    rest = rest.slice(72);
+// Fold lines to <=75 octets per RFC 5545 (continuation lines start with a
+// space). Byte-aware (UTF-8) and codepoint-safe: folding by JS string
+// .length (UTF-16 code units) undercounts multi-byte characters (e.g. Dutch
+// names with "é") and can split a surrogate pair — like the 🔒 emoji below —
+// across the boundary, corrupting it into U+FFFD once sent as UTF-8 bytes.
+export function foldLine(line: string): string {
+  if (Buffer.byteLength(line, "utf8") <= 73) return line;
+  const chars = Array.from(line); // codepoint-safe — keeps surrogate pairs together
+  const out: string[] = [];
+  let current = "";
+  let currentBytes = 0;
+  let isFirst = true;
+  const flush = () => {
+    out.push(isFirst ? current : " " + current);
+    isFirst = false;
+    current = "";
+    currentBytes = 0;
+  };
+  for (const ch of chars) {
+    const chBytes = Buffer.byteLength(ch, "utf8");
+    const budget = isFirst ? 73 : 72;
+    if (currentBytes + chBytes > budget && current.length > 0) flush();
+    current += ch;
+    currentBytes += chBytes;
   }
-  if (rest.length) out.push(" " + rest);
+  if (current.length > 0) flush();
   return out.join("\r\n");
 }
 

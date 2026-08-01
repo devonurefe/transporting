@@ -72,9 +72,13 @@ export default function AdminDiagnostics({ systemLogs, adminLanguage }: AdminDia
         }, 0) / completed.length).toFixed(1)
       : null;
 
-    const todayStr = new Date().toISOString().split("T")[0];
+    // Local calendar day, not UTC — toISOString() shows "yesterday" as
+    // "today" for an NL admin shortly after local midnight (mirrors
+    // todayLocalISO() in AdminCalendar.tsx / fmtLocalDate() in AdminPlanning.tsx).
+    const fmtLocal = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    const todayStr = fmtLocal(new Date());
     const todayOrders = orders.filter(o => {
-      const created = o.createdAt ? o.createdAt.split("T")[0] : null;
+      const created = o.createdAt ? fmtLocal(new Date(o.createdAt)) : null;
       return created === todayStr;
     }).length;
 

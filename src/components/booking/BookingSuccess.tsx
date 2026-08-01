@@ -6,9 +6,8 @@
 import React, { useState } from "react";
 import { CheckCircle2, Download, MessageCircle, ClipboardList, ArrowLeft, Copy, Check as CheckIcon } from "lucide-react";
 import { motion } from "motion/react";
-import { Order, UserProfile } from "../../types";
+import { Order } from "../../types";
 import { printInvoice } from "../../utils/invoice";
-import { useAuthStore } from "../../store/authStore";
 import { useAppStore } from "../../store/appStore";
 import { useLanguageStore } from "../../store/languageStore";
 import { euro } from "../../utils/format";
@@ -20,7 +19,6 @@ interface BookingSuccessProps {
   setStep: (step: number) => void;
   setSuccessOrder: (order: Order | null) => void;
   setActiveTab: (tab: string) => void;
-  currentUser: UserProfile | null;
   whatsappUrl?: string;
   bookingError?: string | null;
 }
@@ -32,17 +30,12 @@ export default function BookingSuccess({
   setStep,
   setSuccessOrder,
   setActiveTab,
-  currentUser,
   whatsappUrl,
   bookingError
 }: BookingSuccessProps) {
   const t = useLanguageStore((state) => state.t);
   const siteConfig = useAppStore((state) => state.siteConfig);
   const [copied, setCopied] = useState(false);
-  const [password, setPassword] = useState("");
-  const [isRegistering, setIsRegistering] = useState(false);
-  const [registerSuccess, setRegisterSuccess] = useState(false);
-  const [registerError, setRegisterError] = useState("");
 
   if (!successOrder) return (
     <div className="flex flex-col items-center justify-center py-24 gap-4 text-slate-500">
@@ -50,34 +43,6 @@ export default function BookingSuccess({
       <p className="text-sm font-medium">Bestelling verwerken...</p>
     </div>
   );
-
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!password || password.length < 8) {
-      setRegisterError("Wachtwoord moet minimaal 8 tekens bevatten.");
-      return;
-    }
-    setIsRegistering(true);
-    setRegisterError("");
-    try {
-      const success = await useAuthStore.getState().register({
-        email: successOrder.customerEmail,
-        password,
-        name: successOrder.customerName,
-        phone: successOrder.customerPhone || undefined,
-        profile: successOrder.customerProfile || undefined,
-      });
-      if (success) {
-        setRegisterSuccess(true);
-      } else {
-        setRegisterError(useAuthStore.getState().error || "Registratie mislukt.");
-      }
-    } catch {
-      setRegisterError("Er is een netwerkfout opgetreden. Probeer het opnieuw.");
-    } finally {
-      setIsRegistering(false);
-    }
-  };
 
   const allOrders = successOrders.length > 0 ? successOrders : [successOrder];
   const combinedTotal = allOrders.reduce((sum, o) => sum + o.totalAmount, 0);
@@ -184,7 +149,11 @@ export default function BookingSuccess({
         <div className="px-6 py-5 border-t border-slate-100 space-y-4">
           {/* Steps */}
           <ol className="space-y-2">
-            {[t("successWAStep1"), t("successWAStep2"), t("successWAStep3")].map((step, i) => (
+            {[
+              t("successWAStep1"),
+              successOrder.paymentMethod === "on_location" ? t("successWAStep2OnLocation") : t("successWAStep2"),
+              t("successWAStep3"),
+            ].map((step, i) => (
               <li key={i} className="flex items-start gap-2.5 text-xs text-slate-700">
                 <span className="shrink-0 h-5 w-5 rounded-full bg-emerald-100 text-emerald-700 font-bold font-mono text-[10px] flex items-center justify-center mt-0.5">
                   {i + 1}

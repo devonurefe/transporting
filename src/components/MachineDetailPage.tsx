@@ -8,7 +8,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { ArrowLeft, ArrowUpToLine, ArrowRightLeft, Weight, Zap, ShoppingCart, ShieldCheck } from "lucide-react";
 import { Machine } from "../types";
 import { useAppStore } from "../store/appStore";
-import { euro, euroCompact } from "../utils/format";
+import { euro, euroCompact, withVat } from "../utils/format";
 import { buildPricingTierRows } from "../utils/pricing";
 import { useSeo, SEO_BASE_URL } from "../utils/seo";
 import MachineDetailModal from "./MachineDetailModal";
@@ -61,7 +61,7 @@ export default function MachineDetailPage({ onSelectMachineForBooking }: Machine
   // Still loading the catalog
   if (machines.length === 0) {
     return (
-      <div className="max-w-3xl mx-auto px-4 py-20 text-center text-slate-400 text-sm">Laden…</div>
+      <div className="max-w-3xl mx-auto px-4 py-20 text-center text-slate-500 text-sm">Laden…</div>
     );
   }
 
@@ -86,6 +86,10 @@ export default function MachineDetailPage({ onSelectMachineForBooking }: Machine
   // minRentalDays, exactly the class of bug buildPricingTierRows() was created
   // to prevent (see its own comment in pricing.ts).
   const pricingRows = buildPricingTierRows(machine);
+  // Mirrors MachineDetailModal.tsx's vp()/vatLabel exactly, so the same
+  // machine shows the same price whether viewed here or in the modal.
+  const vp = (p: number) => withVat(p, vatDisplay);
+  const vatLabel = vatDisplay === "incl" ? "incl. btw" : "excl. btw";
   const book = () => { onSelectMachineForBooking(machine); navigate("/booking"); };
 
   return (
@@ -109,12 +113,12 @@ export default function MachineDetailPage({ onSelectMachineForBooking }: Machine
 
         {/* Summary */}
         <div className="space-y-4">
-          <p className="text-xs font-bold uppercase tracking-wider text-slate-400">{machine.categoryLabel || machine.category}</p>
+          <p className="text-xs font-bold uppercase tracking-wider text-slate-500">{machine.categoryLabel || machine.category}</p>
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 leading-tight">{machine.name} huren</h1>
 
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-black text-slate-900 font-mono">{euroCompact(machine.pricePerDay)}</span>
-            <span className="text-sm text-slate-500">per dag (excl. btw)</span>
+            <span className="text-2xl font-black text-slate-900 font-mono">{euroCompact(vp(machine.pricePerDay))}</span>
+            <span className="text-sm text-slate-500">per dag ({vatLabel})</span>
           </div>
 
           {/* Spec chips */}
@@ -142,7 +146,7 @@ export default function MachineDetailPage({ onSelectMachineForBooking }: Machine
           <div className="rounded-2xl border border-slate-200 divide-y divide-slate-100 text-sm">
             <div className="flex justify-between px-4 py-2.5">
               <span className="text-slate-600">Dagtarief</span>
-              <span className="font-bold text-slate-800 font-mono">{euro(machine.pricePerDay)}</span>
+              <span className="font-bold text-slate-800 font-mono">{euro(vp(machine.pricePerDay))}</span>
             </div>
             {pricingRows.map((row, i) => (
               <div key={i} className="flex justify-between items-center px-4 py-2.5">
@@ -150,7 +154,7 @@ export default function MachineDetailPage({ onSelectMachineForBooking }: Machine
                   <span className="text-slate-600">{row.period}</span>
                   {row.badge && <span className="ml-1.5 text-[10px] font-black px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700">{row.badge}</span>}
                 </div>
-                <span className="font-bold text-slate-800 font-mono">{row.pricePrefix ?? ""}{euro(row.price)}</span>
+                <span className="font-bold text-slate-800 font-mono">{row.pricePrefix ?? ""}{euro(vp(row.price))}</span>
               </div>
             ))}
           </div>

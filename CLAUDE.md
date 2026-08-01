@@ -62,7 +62,7 @@ Single-package full-stack monorepo — one `package.json` for both React fronten
 - **State**: Three Zustand stores — `appStore` (machines, orders, cart, blocked dates), `authStore` (JWT + user), `languageStore` (i18n NL/EN/TR strings).
 - **Code splitting**: All main sections + all admin panels are `React.lazy()` + Suspense.
 - **Availability** (`src/utils/availability.ts`): runs client-side using orders + blocked dates from API. Uses `Map<string,string>` for O(1) blocked-date lookup. Supports 1000-day window.
-- **Booking flow**: `BookingSection.tsx` → step components `BookingStep1/2/3.tsx` → `BookingSuccess.tsx`. Cart supports multiple machines.
+- **Booking flow**: `BookingSection.tsx` → step components `BookingStep1.tsx` (cart, dates, delivery type, add-ons) / `BookingStep2.tsx` (customer details, address lookup, payment method, submit) → `BookingSuccess.tsx`. Cart supports multiple machines.
 - **Invoice/print**: `src/utils/invoice.ts` — `printInvoice(order)` opens a new window with full HTML invoice and calls `printWindow.print()` after 900 ms (never use opacity:0 trick — causes blank prints).
 - **WhatsApp utils**: `src/utils/whatsapp.ts` — all WA message builders. Use 🦾 not 🙏 in sign-offs.
 
@@ -390,11 +390,11 @@ protect these invariants:
 ## Booking Flow
 
 1. Customer selects machine from catalog → adds to cart
-2. `BookingStep1.tsx` — cart review, date selection, availability check
+2. `BookingStep1.tsx` — cart review, date selection, availability check, delivery type
+   (self pickup / trailer / delivery), add-ons
    - If unavailable: warning + WhatsApp button for alternative dates
-3. `BookingStep2.tsx` — delivery type (self pickup / trailer / delivery), addons
-4. `BookingStep3.tsx` — customer details, address lookup, order submit
-5. `BookingSuccess.tsx` — order confirmed, WhatsApp button to request iDEAL link
+3. `BookingStep2.tsx` — customer details, address lookup, payment method, order submit
+4. `BookingSuccess.tsx` — order confirmed, WhatsApp button to request iDEAL link
 
 Payment flow: customer picks "Betaal via link" or "Betaal op locatie" in step 2
 (`paymentMethod` on the order). For "link" orders a real Mollie payment link is generated

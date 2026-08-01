@@ -17,6 +17,13 @@ import { calculateItemSubtotal, isStrictWeekend, countWeekendDays, hasSundayBloc
 // Names/prices come from SiteConfig via getGlobalAddons (admin-editable, defaults
 // = historical literals). Mirrored by server/routes/orders.ts — keep identical.
 const GLOBAL_ADDON_IDS = ["safety", "rijplaten"] as const;
+// Mirrors BookingStep1.tsx's own copy exactly (needed here to keep
+// selectedAddons in sync when the cart's lead item changes — see the
+// cleanup effect near its declaration below).
+const GLOBAL_ADDON_EXCLUDED_CATEGORIES: Record<"safety" | "rijplaten", string[]> = {
+  safety: ["ladderlift"],
+  rijplaten: ["aanhanger", "kamersteiger", "ecolift", "ladderlift"],
+};
 // qty is the customer-chosen amount (currently only Rijplaten is quantity-based —
 // the customer types how many plates they need). Every other global add-on uses qty 1.
 function globalAddonLine(id: string, days: number, qty = 1): { id: string; name: string; price: number } {
@@ -170,6 +177,23 @@ export default function BookingSection({
 
   // Addon / Shopping Cart Options state
   const [selectedAddons, setSelectedAddons] = useState<string[]>([]);
+  // BookingStep1 only renders addon checkboxes for the cart's lead item
+  // (cartItems[0]/selectedMachine) — if the customer switches to a machine
+  // whose category excludes a previously-checked global add-on, or that
+  // doesn't offer a previously-checked cross-sell extra, the checkbox
+  // disappears with no way to untoggle it while the stale id stays selected
+  // and gets rejected by the server on submit. Drop it here instead.
+  const leadMachine = cartItems[0]?.machine ?? selectedMachine;
+  useEffect(() => {
+    if (!leadMachine) return;
+    setSelectedAddons((prev) => prev.filter((id) => {
+      if (id === "safety" || id === "rijplaten") {
+        return !GLOBAL_ADDON_EXCLUDED_CATEGORIES[id].includes(leadMachine.category);
+      }
+      return leadMachine.crossSellAddons?.some((a) => a.id === id) ?? false;
+    }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [leadMachine?.id, leadMachine?.category]);
   // Rijplaten is quantity-based — the customer types how many plates they need.
   // Default 4 (one under each wheel); clamped/validated again on the server.
   const [rijplatenQty, setRijplatenQty] = useState<number>(4);
@@ -422,15 +446,24 @@ export default function BookingSection({
       }, 0);
       const weekendDays = (leadCartStart && leadCartEnd) ? countWeekendDays(leadCartStart, leadCartEnd) : 0;
 
-      // Addon calculation
+      // Addon calculation — global add-ons are billed per machine order (the
+      // server's computeAddonsTotal prices each order off its own rentalDays,
+      // not a pooled cart total, and handleCreateBooking submits it that way
+      // too), so mirror that here per cart item rather than pricing it once
+      // over totalDays — pooling understated what a multi-machine cart
+      // actually gets charged.
       let addonCost = 0;
       const addonDetails: { id: string; name: string; price: number }[] = [];
 
       for (const id of GLOBAL_ADDON_IDS) {
         if (!selectedAddons.includes(id)) continue;
-        const line = globalAddonLine(id, totalDays, id === "rijplaten" ? rijplatenQty : 1);
-        addonCost += line.price;
-        addonDetails.push(line);
+        for (const item of cartItems) {
+          if (!item.startDate || !item.endDate) continue;
+          const itemDays = calculateRentalDays(item.startDate, item.endDate);
+          const line = globalAddonLine(id, itemDays, id === "rijplaten" ? rijplatenQty : 1);
+          addonCost += line.price;
+          addonDetails.push(cartItems.length > 1 ? { ...line, name: `${line.name} — ${item.machine.name}` } : line);
+        }
       }
       // Product-specific cross-sell extras (billed per started week, same week count as the machine)
       for (const item of cartItems) {
@@ -1091,7 +1124,6 @@ export default function BookingSection({
               setStep={setStep}
               setSuccessOrder={setSuccessOrder}
               setActiveTab={setActiveTab}
-              currentUser={currentUser}
               whatsappUrl={whatsappUrl}
               bookingError={bookingError}
             />

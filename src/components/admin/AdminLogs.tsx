@@ -96,6 +96,10 @@ export default function AdminLogs({ adminLanguage }: AdminLogsProps) {
   const [page, setPage] = useState(1);
   const [group, setGroup] = useState<LogGroup>("");
   const [query, setQuery] = useState("");
+  // Only updated on submit (button/Enter) — group-switch, refresh and
+  // "Meer laden" must all filter on this, never on unsubmitted keystrokes
+  // still sitting in the search box.
+  const [appliedQuery, setAppliedQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -123,10 +127,10 @@ export default function AdminLogs({ adminLanguage }: AdminLogsProps) {
   }, [token, adminLanguage]);
 
   useEffect(() => {
-    fetchLogs(1, group, query, false);
+    fetchLogs(1, group, appliedQuery, false);
     // query wordt via de zoekknop/Enter toegepast, niet per toetsaanslag
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [group, token]);
+  }, [group, token, appliedQuery]);
 
   const groups: { id: LogGroup; label: string }[] = [
     { id: "", label: t("Alles", "All", "Tümü") },
@@ -159,7 +163,7 @@ export default function AdminLogs({ adminLanguage }: AdminLogsProps) {
             </span>
           </div>
           <button
-            onClick={() => fetchLogs(1, group, query, false)}
+            onClick={() => fetchLogs(1, group, appliedQuery, false)}
             disabled={loading}
             className="text-[10px] font-extrabold text-slate-600 hover:text-indigo-600 flex items-center space-x-1 border border-slate-200 bg-slate-50 hover:bg-indigo-50 py-1.5 px-2.5 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
           >
@@ -184,7 +188,7 @@ export default function AdminLogs({ adminLanguage }: AdminLogsProps) {
             </button>
           ))}
           <form
-            onSubmit={(e) => { e.preventDefault(); fetchLogs(1, group, query, false); }}
+            onSubmit={(e) => { e.preventDefault(); setAppliedQuery(query); }}
             className="flex items-center gap-1.5 ml-auto"
           >
             <div className="relative">
@@ -237,7 +241,7 @@ export default function AdminLogs({ adminLanguage }: AdminLogsProps) {
           )}
           {hasMore && !error && (
             <button
-              onClick={() => fetchLogs(page + 1, group, query, true)}
+              onClick={() => fetchLogs(page + 1, group, appliedQuery, true)}
               disabled={loading}
               className="w-full py-2 text-[10px] font-bold text-slate-300 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-colors cursor-pointer disabled:opacity-50"
             >

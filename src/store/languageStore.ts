@@ -161,6 +161,7 @@ const dictionary: TranslationDictionary = {
   successOrdersBtn: { nl: "Mijn Bestellingen", en: "My Orders", tr: "Siparişlerim" },
   successWAStep1: { nl: "Klik hieronder om uw aanvraag te bevestigen via WhatsApp.", en: "Click below to confirm your request via WhatsApp.", tr: "WhatsApp üzerinden talebinizi onaylamak için aşağıya tıklayın." },
   successWAStep2: { nl: "U ontvangt binnen 2 uur een beveiligde iDEAL-betaallink.", en: "You will receive a secure iDEAL payment link within 2 hours.", tr: "2 saat içinde güvenli bir iDEAL ödeme bağlantısı alacaksınız." },
+  successWAStep2OnLocation: { nl: "Wij bevestigen uw reservering; u betaalt bij ophalen/levering.", en: "We confirm your reservation; you pay at pickup/delivery.", tr: "Rezervasyonunuzu onaylıyoruz; teslim alma/teslimatta ödeme yaparsınız." },
   successWAStep3: { nl: "Na betaling is uw boeking definitief bevestigd.", en: "After payment your booking is definitively confirmed.", tr: "Ödeme sonrasında rezervasyonunuz kesin olarak onaylanır." },
   specRenter: { nl: "Huurder", en: "Renter", tr: "Kiracı" },
   specMachine: { nl: "Hoogwerker", en: "Machine", tr: "Makine" },

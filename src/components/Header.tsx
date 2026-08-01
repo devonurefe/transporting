@@ -365,7 +365,7 @@ export default function Header({
 
                           <div className="max-h-60 overflow-y-auto space-y-2 pr-1">
                             {notifications.length === 0 ? (
-                              <div className="py-6 text-center text-xs text-slate-400">
+                              <div className="py-6 text-center text-xs text-slate-500">
                                 Geen nieuwe meldingen beschikbaar.
                               </div>
                             ) : (
@@ -388,7 +388,7 @@ export default function Header({
                                     <p className="text-xs text-slate-500 leading-snug mt-0.5">
                                       {n.message}
                                     </p>
-                                    <span className="text-[10px] text-slate-400 mt-1 block">
+                                    <span className="text-[10px] text-slate-500 mt-1 block">
                                       {new Date(n.timestamp).toLocaleTimeString("nl-NL", {
                                         hour: "2-digit",
                                         minute: "2-digit",

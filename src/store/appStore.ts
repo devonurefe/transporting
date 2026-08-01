@@ -404,7 +404,10 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   fetchBlockedDates: async () => {
     try {
-      const res = await fetch("/api/blocked-dates");
+      // Shared by the public booking calendar (anonymous) and the admin
+      // calendar/planning panels — the admin-only `id`/`reason` fields are
+      // only included by the server when an admin Bearer token is sent.
+      const res = await fetch("/api/blocked-dates", { headers: getAuthHeaders() });
       if (res.ok) {
         set({ blockedDates: await res.json(), error: null });
       } else {

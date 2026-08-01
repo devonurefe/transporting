@@ -307,7 +307,7 @@ export default function App() {
         setCurrentUser(null);
         setIsAdminMode(true);
         // Only redirect to /admin if trying to access the customer portal
-        if (location.pathname === "/orders" || location.pathname === "/login") {
+        if (location.pathname === "/orders") {
           navigate("/admin");
         }
       } else {

@@ -353,6 +353,10 @@ export default function AdminCustomers({ adminLanguage, onViewOrder }: AdminCust
   };
 
   const marketingCount = customers.filter((c) => c.marketingConsent).length;
+  // Backend ANDs customerIds with marketingConsent (server/routes/auth.ts campaigns/email),
+  // so when both a selection and "alleen marketing-opt-ins" are active, the real
+  // recipient count is their intersection — not the sitewide marketing count.
+  const selectedMarketingCount = customers.filter((c) => selectedIds.has(c.id) && c.marketingConsent).length;
 
   if (loading) {
     return (
@@ -740,11 +744,13 @@ export default function AdminCustomers({ adminLanguage, onViewOrder }: AdminCust
                     </label>
                   </div>
                   <p className="text-[10px] text-slate-400">
-                    {sendOnlyMarketing
+                    {sendOnlyMarketing && selectedIds.size > 0
+                      ? t(`${selectedMarketingCount} ontvangers`, `${selectedMarketingCount} recipients`, `${selectedMarketingCount} alıcı`)
+                      : sendOnlyMarketing
                       ? t(`${marketingCount} ontvangers`, `${marketingCount} recipients`, `${marketingCount} alıcı`)
                       : t(`${selectedIds.size > 0 ? selectedIds.size : customers.length} ontvangers`, `${selectedIds.size > 0 ? selectedIds.size : customers.length} recipients`, `${selectedIds.size > 0 ? selectedIds.size : customers.length} alıcı`)
                     }
-                    {selectedIds.size > 0 && !sendOnlyMarketing && ` ${t("(gefilterd op selectie)", "(filtered by selection)", "(seçime göre filtrelendi)")}`}
+                    {selectedIds.size > 0 && ` ${t("(gefilterd op selectie)", "(filtered by selection)", "(seçime göre filtrelendi)")}`}
                   </p>
                 </div>
 

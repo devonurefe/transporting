@@ -10,7 +10,7 @@ import { X, Sparkles, ChevronLeft, ChevronRight, MessageCircle, RotateCcw } from
 import { useAppStore } from "../store/appStore";
 import { useModalA11y } from "../hooks/useModalA11y";
 import { BrandedText } from "./Header";
-import { euroCompact } from "../utils/format";
+import { euroCompact, withVat } from "../utils/format";
 import {
   resolveFlow,
   questionsFor,
@@ -35,6 +35,7 @@ export default function AdviesModal({ open, onClose }: AdviesModalProps) {
   const navigate = useNavigate();
   const machines = useAppStore((s) => s.machines);
   const advisorConfig = useAppStore((s) => (s.siteConfig as { advisorConfig?: { enabled?: boolean } }).advisorConfig);
+  const vatDisplay = useAppStore((s) => s.vatDisplay);
 
   const flow = useMemo(() => resolveFlow(advisorConfig as never), [advisorConfig]);
 
@@ -187,7 +188,10 @@ export default function AdviesModal({ open, onClose }: AdviesModalProps) {
                         </span>
                         <span className="text-right shrink-0">
                           <span className="block text-sm font-bold text-orange-600">
-                            {euroCompact(x.machine.pricePerDay)}/dag
+                            {euroCompact(withVat(x.machine.pricePerDay, vatDisplay))}/dag
+                          </span>
+                          <span className="block text-[9px] text-slate-400">
+                            {vatDisplay === "incl" ? "incl. btw" : "excl. btw"}
                           </span>
                           {i === 0 && (
                             <span className="inline-block mt-0.5 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">

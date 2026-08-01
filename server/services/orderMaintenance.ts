@@ -103,8 +103,13 @@ export async function releaseUnpaidOrders(): Promise<{ released: number }> {
   const stale = await prisma.order.findMany({ where: buildUnpaidReleaseWhere(now) });
   if (stale.length === 0) return { released: 0 };
 
+  // Re-apply the same selection predicate here, not just the id list — an
+  // admin can concurrently mark one of these orders "paid" (PUT /:id/payment,
+  // a manual bank-transfer/on-location confirmation) between the findMany
+  // above and this update. Without repeating status/paymentStatus, that
+  // order would still get silently cancelled even though it's now paid.
   await prisma.order.updateMany({
-    where: { id: { in: stale.map(o => o.id) } },
+    where: { id: { in: stale.map(o => o.id) }, ...buildUnpaidReleaseWhere(now) },
     data: { status: "Geannuleerd" }
   });
 

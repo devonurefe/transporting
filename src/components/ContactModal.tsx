@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { X, MessageSquare, Phone, Mail, CheckCircle } from "lucide-react";
 import { useAppStore } from "../store/appStore";
 import { useLanguageStore } from "../store/languageStore";
-import { getWhatsAppNumber } from "../utils/whatsapp";
+import { buildWhatsAppGeneralUrl } from "../utils/whatsapp";
 import { useModalA11y } from "../hooks/useModalA11y";
 
 interface ContactModalProps {
@@ -87,7 +87,7 @@ export default function ContactModal({ isOpen, onClose, onShowToast, onAddSystem
                 <div className="space-y-2.5">
                   {/* WhatsApp link */}
                   <a
-                    href={`https://wa.me/${getWhatsAppNumber()}`}
+                    href={buildWhatsAppGeneralUrl()}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="w-full flex items-center p-3 rounded-xl bg-[#25D366] text-white hover:bg-[#1da851] transition-all text-xs cursor-pointer gap-3 shadow-sm hover:shadow group text-decoration-none"

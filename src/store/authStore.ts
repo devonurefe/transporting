@@ -296,6 +296,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       const data = await res.json();
       if (!res.ok) {
+        // A revoked token (password changed/reset elsewhere, admin block) 401s
+        // here same as anywhere else, but this action never checked for it —
+        // the UI kept showing "logged in" with a dead token in localStorage
+        // until the next full page load happened to re-run checkAuth().
+        if (res.status === 401) {
+          get().logout();
+          throw new Error("Uw sessie is verlopen. Meld u opnieuw aan.");
+        }
         throw new Error(data.error || "Profiel bijwerken mislukt");
       }
 
@@ -324,6 +332,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         },
         body: JSON.stringify({ emailOptIn })
       });
+      if (res.status === 401) { get().logout(); return false; }
       if (!res.ok) throw new Error();
       return true;
     } catch {

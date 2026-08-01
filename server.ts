@@ -905,12 +905,19 @@ async function startServer() {
 
 // Flags rentals still "Onderweg" (out with the customer) past their endDate —
 // the audit's overdue-detection gap (docs/admin-platform-audit-2026-07.md §3).
-// Sends one admin alert per order (Order.overdueAlertSentAt idempotency marker,
-// same pattern as the payment-reminder flow in server/routes/orders.ts) so a
-// still-overdue order doesn't re-alert every day.
+// Sends an admin alert per order (Order.overdueAlertSentAt marks the last time
+// this fired) so a still-overdue order doesn't re-alert every single day, but
+// re-escalates weekly instead of firing exactly once and then staying silent
+// forever — a machine stuck "Onderweg" for a month deserves more than one
+// email on day 1.
 async function checkOverdueRentals() {
+  const rearmCutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
   const overdue = await prisma.order.findMany({
-    where: { status: "Onderweg", endDate: { lt: new Date() }, overdueAlertSentAt: null }
+    where: {
+      status: "Onderweg",
+      endDate: { lt: new Date() },
+      OR: [{ overdueAlertSentAt: null }, { overdueAlertSentAt: { lt: rearmCutoff } }]
+    }
   });
   for (const order of overdue) {
     const ok = await emailService.sendOverdueAlert({
@@ -1014,7 +1021,13 @@ function scheduleDailyReminders() {
     }
   };
 
-  const fireReminders = async () => {
+  // The full daily pipeline (reminder emails + everything piggybacked on it).
+  // Both the scheduled run and the missed-run catch-up below must call this —
+  // not sendBatch() alone — otherwise a restart after 07:00 Amsterdam (e.g. any
+  // deploy, which auto-runs on every merge to main) silently skips payment
+  // reminders, unpaid-order release, audit-log pruning and the overdue-rental
+  // check for that entire day, with no error logged anywhere to notice it.
+  const runDailyJobs = async () => {
     await sendBatch();
     // Betaalherinnering (24u) en het vrijgeven van onbetaalde aanvragen (72u).
     // Beide bestonden alleen in POST /api/orders/send-reminders, dat
@@ -1029,6 +1042,10 @@ function scheduleDailyReminders() {
     pruneAuditLogs().catch(() => {});
     // Piggyback: flag rentals still "Onderweg" past their endDate (docs/admin-platform-audit-2026-07.md §3/§14)
     checkOverdueRentals().catch(err => console.error("[Overdue] Failed to check overdue rentals:", err));
+  };
+
+  const fireReminders = async () => {
+    await runDailyJobs();
     // Schedule next run at the next 07:00 Amsterdam time
     setTimeout(fireReminders, msUntilAmsterdam7am() + 60_000); // +60s buffer past the hour
   };
@@ -1042,7 +1059,7 @@ function scheduleDailyReminders() {
     prisma.invoiceCounter.findUnique({ where: { id: REMINDER_MARKER } }).then(marker => {
       if (marker?.lastNumber !== todayStamp()) {
         console.log("[Reminders] Missed 07:00 run detected — sending catch-up batch...");
-        sendBatch();
+        runDailyJobs();
       }
     }).catch(() => {});
   }

@@ -233,7 +233,11 @@ export default function MyOrdersSection({
       "success",
       false
     );
-    printInvoice(order, currentUser?.companyName, true, siteConfig);
+    // Matches the admin call sites exactly: only a not-yet-approved order gets
+    // the "PRO-FORMA" title — an approved/completed order already has a real
+    // sequential invoiceNumber and must show the official title, not read as
+    // a non-binding quote.
+    printInvoice(order, currentUser?.companyName, order.status === "In behandeling", siteConfig);
   };
 
   const handleResendVerification = async () => {

@@ -94,6 +94,7 @@ export default function AdminOrderFormModal({ mode, order, onClose, onSaved, adm
     if (!customerName.trim() || !customerEmail.trim()) { setError(t("Naam en e-mail zijn verplicht.", "Name and email are required.", "Ad ve e-posta zorunludur.")); return; }
     if (pickupOnly && deliveryType !== "self_pickup") { setError(t("Voor dit product is alleen afhalen mogelijk.", "This product is pickup-only.", "Bu ürün yalnızca teslim alınabilir.")); return; }
     if (trailerRentalExcluded && deliveryType === "trailer_rental") { setError(t("Aanhanger huren is niet beschikbaar voor dit product.", "Trailer rental is not available for this product.", "Bu ürün için römork kiralama mevcut değil.")); return; }
+    if (deliveryType === "delivery_by_us" && !deliveryAddress.trim()) { setError(t("Bezorgadres is verplicht bij bezorging door ons.", "Delivery address is required for delivery.", "Teslimat için adres zorunludur.")); return; }
 
     setSaving(true);
     if (mode === "create") {

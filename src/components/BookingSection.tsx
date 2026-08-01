@@ -861,13 +861,18 @@ export default function BookingSection({
         if (placedOrders.length > 0) {
           // Partial success: at least one item was placed before the failure.
           // Surface the placed orders so the customer can see confirmation and
-          // reach WhatsApp, then explain the remaining item(s) failed.
+          // reach WhatsApp, then explain the remaining item(s) failed — naming
+          // them, since the cart is cleared right after and "some machines
+          // failed" with no names gives the customer nothing to reference when
+          // they contact support.
+          const failedItems = cartItems.slice(placedOrders.length);
+          const failedNames = failedItems.map(it => it.machine.name).join(", ");
           setSuccessOrders(placedOrders);
           setSuccessOrder(placedOrders[0]);
           onClearCart();
           setBookingError(
             `Let op: ${placedOrders.length} machine(s) zijn geboekt (${placedOrders.map(o => o.id).join(", ")}), ` +
-            `maar ${cartItems.length - placedOrders.length} machine(s) konden niet worden verwerkt. ` +
+            `maar ${failedItems.length} machine(s) konden niet worden verwerkt: ${failedNames}. ` +
             `Neem contact op via WhatsApp zodat wij dit kunnen oplossen.`
           );
           setStep(STEP_SUCCESS);

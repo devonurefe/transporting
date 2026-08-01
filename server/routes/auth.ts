@@ -954,8 +954,16 @@ authRouter.patch("/customers/:id", authenticateToken, requireAdmin, async (req: 
       const v = String(body.email).trim().toLowerCase();
       if (v.length > 254 || !/^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/.test(v)) return res.status(400).json({ error: "Ongeldig e-mailadres." });
       if (v !== existing.email) {
-        const clash = await prisma.customer.findFirst({ where: { email: { equals: v, mode: "insensitive" }, id: { not: id } }, select: { id: true } });
-        if (clash) return res.status(409).json({ error: "Er bestaat al een klant met dit e-mailadres." });
+        // Check both tables, same as /register — login always resolves Admin
+        // first and never falls through to Customer, so an unchecked clash here
+        // would permanently lock this customer out (their password never
+        // matches the admin's hash) and feed their failed attempts into the
+        // real admin's failedLoginCount, risking a false lockout of that admin.
+        const [customerClash, adminClash] = await Promise.all([
+          prisma.customer.findFirst({ where: { email: { equals: v, mode: "insensitive" }, id: { not: id } }, select: { id: true } }),
+          prisma.admin.findFirst({ where: { email: { equals: v, mode: "insensitive" } }, select: { id: true } })
+        ]);
+        if (customerClash || adminClash) return res.status(409).json({ error: "Er bestaat al een account met dit e-mailadres." });
       }
       data.email = v; changed.push("email");
     }
@@ -1004,6 +1012,11 @@ authRouter.post("/customers/:id/block", authenticateToken, requireAdmin, async (
         ? { lockedUntil: new Date("2999-12-31T00:00:00Z"), tokenVersion: { increment: 1 } }
         : { lockedUntil: null, failedLoginCount: 0 }
     });
+    // Every other tokenVersion-bumping mutation in this file (change-password,
+    // reset-password, 2fa/disable) calls this so revocation is immediate
+    // in-process rather than waiting up to 60s for the cache TTL — a "block
+    // this customer now" action needs the same guarantee.
+    invalidateAuthCache(id);
     audit(req, block ? "customer.blocked" : "customer.unblocked", { entity: "Customer", entityId: id });
     return res.json({ success: true, blocked: block });
   } catch (error) {

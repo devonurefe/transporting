@@ -114,9 +114,6 @@ export default function BookingStep1({
   const [attempted, setAttempted] = useState(false);
 
   const timeSlotBlocked = deliveryType === "delivery_by_us" && !deliveryTimeSlot;
-  // Aanhanger geselecteerd maar nog geen (geldig) aantal dagen gekozen → blokkeer
-  // het doorgaan, net als de verplichte bezorgtijdslot-keuze hierboven.
-  const trailerBlocked = deliveryType === "trailer_rental" && trailerDays < 1;
   // Bovengrens = de huurperiode van het EERSTE cart-item (de aanhanger wordt alleen
   // op item 0 berekend, en de server clampt op dat item z'n rentalDays). Niet
   // sums.days gebruiken — dat is de som over álle cart-items en zou bij meerdere
@@ -129,6 +126,25 @@ export default function BookingStep1({
   // ceiling — showing "Maximaal 365 dagen" to a customer who hasn't even
   // chosen a rental period yet was the actual bug being fixed here.
   const maxTrailerDays = Math.max(1, leadTrailerDays);
+  // Aanhanger geselecteerd maar nog geen (geldig) aantal dagen gekozen, of een
+  // aantal boven de huidige huurperiode — kan voorkomen tussen het inkorten van
+  // de huurdatums in dit scherm en de clamp-effect hieronder die bijstuurt op
+  // de volgende render. Blokkeer het doorgaan net als de verplichte
+  // bezorgtijdslot-keuze hierboven, in plaats van een generieke servermelding.
+  const trailerBlocked = deliveryType === "trailer_rental" && (trailerDays < 1 || trailerDays > maxTrailerDays);
+
+  // Keep trailerDays valid if the lead item's rental period shrinks after it
+  // was set (e.g. picking 7 days, choosing a 7-day trailer, then editing the
+  // dates down to 3) — without this it silently stays over the new max until
+  // final submit rejects it server-side with a generic "Ongeldig aantal
+  // aanhangerdagen", far from where the mismatch actually happened.
+  useEffect(() => {
+    if (trailerDays > maxTrailerDays) {
+      setTrailerDays(maxTrailerDays);
+      setTrailerDaysText(String(maxTrailerDays));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [maxTrailerDays]);
 
   // Admin-instelbare tarieven (SiteConfig → AdminContent); defaults = de oude literals
   const siteConfig = useAppStore((state) => state.siteConfig);

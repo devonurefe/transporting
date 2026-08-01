@@ -476,6 +476,12 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
   if (orderData.deliveryAddress && String(orderData.deliveryAddress).length > 500) {
     return res.status(400).json({ error: "Bezorgadres is te lang (max 500 tekens)" });
   }
+  // Required for delivery_by_us — BookingSection.tsx enforces this client-side,
+  // but a crafted request could skip straight past it and produce a confirmed
+  // delivery order with nowhere to actually deliver to.
+  if (orderData.deliveryType === "delivery_by_us" && !String(orderData.deliveryAddress ?? "").trim()) {
+    return res.status(400).json({ error: "Bezorgadres is verplicht bij bezorging door ons" });
+  }
 
   // deliveryTimeSlot enum validation
   const VALID_TIME_SLOTS = ["morning", "afternoon"];
@@ -728,6 +734,9 @@ ordersRouter.post("/admin", requireAdmin as any, async (req: AuthenticatedReques
     if (endDate < startDate) return res.status(400).json({ error: "Einddatum moet na de startdatum liggen" });
     if (!ORDER_VALID_DELIVERY_TYPES.includes(body.deliveryType)) return res.status(400).json({ error: "Ongeldig bezorgtype" });
     if (body.deliveryAddress && String(body.deliveryAddress).length > 500) return res.status(400).json({ error: "Bezorgadres is te lang (max 500 tekens)" });
+    if (body.deliveryType === "delivery_by_us" && !String(body.deliveryAddress ?? "").trim()) {
+      return res.status(400).json({ error: "Bezorgadres is verplicht bij bezorging door ons" });
+    }
     if (body.deliveryTimeSlot && !ORDER_VALID_TIME_SLOTS.includes(String(body.deliveryTimeSlot))) return res.status(400).json({ error: "Ongeldig bezorgmoment" });
     if (body.customerPhone) {
       const clean = String(body.customerPhone).replace(/[\s\-().+]/g, "");
@@ -892,6 +901,13 @@ ordersRouter.patch("/:id", requireAdmin as any, async (req: AuthenticatedRequest
     if (body.deliveryAddress !== undefined) {
       if (String(body.deliveryAddress).length > 500) return res.status(400).json({ error: "Bezorgadres is te lang (max 500 tekens)" });
       deliveryAddress = String(body.deliveryAddress || ""); changed.push("deliveryAddress");
+    }
+    // Checked against the FINAL resolved deliveryType/deliveryAddress (either
+    // may have come from this same request or stayed at its existing value) —
+    // catches both "switched to delivery_by_us without an address" and
+    // "cleared the address on an order that's already delivery_by_us".
+    if (deliveryType === "delivery_by_us" && !String(deliveryAddress ?? "").trim()) {
+      return res.status(400).json({ error: "Bezorgadres is verplicht bij bezorging door ons" });
     }
     let deliveryTimeSlot = existing.deliveryTimeSlot;
     if (body.deliveryTimeSlot !== undefined) {
@@ -1305,11 +1321,19 @@ ordersRouter.get("/export", requireAdmin as any, async (req: AuthenticatedReques
       });
     }
 
+    // Dutch-locale Excel/Windows treats "," as the decimal symbol, so it uses
+    // ";" as the list separator instead — a comma-delimited file with dot-
+    // decimal amounts (the previous format) lands entirely in column A when
+    // double-clicked, despite the UI claiming "direct te openen in Excel".
+    const CSV_DELIMITER = ";";
     const escape = (v: any) => {
       const s = String(v ?? "");
-      return s.includes(",") || s.includes('"') || s.includes("\n")
+      return s.includes(CSV_DELIMITER) || s.includes('"') || s.includes("\n")
         ? `"${s.replace(/"/g, '""')}"` : s;
     };
+    // Comma-decimal so amount columns are read as numbers (not text) once the
+    // delimiter is ";" — same reasoning as above.
+    const nlAmount = (n: number) => n.toFixed(2).replace(".", ",");
 
     const headers = [
       "Order ID","Naam","E-mail","Telefoon","Profiel",
@@ -1325,24 +1349,24 @@ ordersRouter.get("/export", requireAdmin as any, async (req: AuthenticatedReques
       o.customerPhone ?? "",
       o.customerProfile ?? "",
       o.machineName,
-      o.machinePrice.toFixed(2),
+      nlAmount(o.machinePrice),
       o.startDate.toISOString().split("T")[0],
       o.endDate.toISOString().split("T")[0],
       o.rentalDays,
       o.deliveryType ?? "",
       o.deliveryAddress ?? "",
-      o.subtotal.toFixed(2),
-      o.transportCost.toFixed(2),
-      o.driverCost.toFixed(2),
-      o.vatAmount.toFixed(2),
-      o.totalAmount.toFixed(2),
+      nlAmount(o.subtotal),
+      nlAmount(o.transportCost),
+      nlAmount(o.driverCost),
+      nlAmount(o.vatAmount),
+      nlAmount(o.totalAmount),
       o.status,
       o.paymentStatus ?? "",
       (o as any).paymentMethod === "on_location" ? "Op locatie" : (o as any).paymentMethod === "link" ? "Betaallink" : "",
       o.createdAt.toISOString().split("T")[0]
-    ].map(escape).join(","));
+    ].map(escape).join(CSV_DELIMITER));
 
-    const csv = [headers.join(","), ...rows].join("\r\n");
+    const csv = [headers.join(CSV_DELIMITER), ...rows].join("\r\n");
     const filename = `huurgo-orders-${new Date().toISOString().split("T")[0]}.csv`;
 
     res.setHeader("Content-Type", "text/csv; charset=utf-8");

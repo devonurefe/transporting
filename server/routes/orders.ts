@@ -1556,7 +1556,7 @@ ordersRouter.post("/:id/report-damage", requireAdmin as any, async (req: Authent
   }
   const photos = sanitizeDamagePhotos(req.body?.photos);
   if (photos === null) {
-    return res.status(400).json({ error: "Ongeldige foto's (max 10, elk te groot bestand)" });
+    return res.status(400).json({ error: "Ongeldige foto's (max 6, elk te groot bestand)" });
   }
   let repairCost: number | null = null;
   if (req.body?.repairCost !== undefined && req.body?.repairCost !== null && req.body?.repairCost !== "") {

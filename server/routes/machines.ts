@@ -6,6 +6,7 @@ import { AuthenticatedRequest } from "../middleware/auth.js";
 import { publicReadLimiter, softOriginGuard } from "../middleware/publicGuard.js";
 import { audit } from "../utils/audit.js";
 import { getOperationallyBlockedMachineIds } from "../utils/machineStatus.js";
+import { sanitizeImageDataUrl } from "../utils/sanitizeImage.js";
 
 export const machinesRouter = Router();
 
@@ -28,11 +29,17 @@ function sanitizeSuitableFor(raw: unknown): string[] {
   return items.length > 0 ? items : defaults;
 }
 
+// Re-verifies POST /api/upload's SVG-exclusion/magic-byte checks (server/routes/
+// api.ts) — necessary because an admin can set imageUrl/additionalImages
+// directly via POST/PUT /api/machines, bypassing the upload endpoint entirely.
+// Same reasoning already applied to datasheetUrl below.
+const MAX_IMAGE_DATA_URL_BYTES = 3 * 1024 * 1024; // keep in sync with MAX_UPLOAD_SIZE_BYTES in api.ts
+
 function sanitizeImageUrl(url: unknown): string {
   if (typeof url !== "string") return "";
   if (!url) return "";
   if (url.startsWith("/")) return url;            // local static paths
-  if (url.startsWith("data:image/")) return url;  // uploaded base64 images
+  if (url.startsWith("data:image/")) return sanitizeImageDataUrl(url, MAX_IMAGE_DATA_URL_BYTES);
   try {
     const u = new URL(url);
     if (u.protocol === "https:" || u.protocol === "http:") return url;

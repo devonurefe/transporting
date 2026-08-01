@@ -55,9 +55,10 @@ damageReportsRouter.post("/", requireAdmin as any, async (req: AuthenticatedRequ
   }
 });
 
-// PATCH /api/damage-reports/:id — edit description/repairCost/photos while still
-// open. Once resolvedAt is set the record is a closed historical entry — log a
-// new damage report instead of rewriting the old one.
+// PATCH /api/damage-reports/:id — edit description/repairCost while still open
+// (photos are set only at creation, via POST /:id/report-damage on the order —
+// there's no photo-edit UI or field here). Once resolvedAt is set the record is
+// a closed historical entry — log a new damage report instead of rewriting the old one.
 damageReportsRouter.patch("/:id", requireAdmin as any, async (req: AuthenticatedRequest, res: Response) => {
   const { id } = req.params;
   try {

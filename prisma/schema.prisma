@@ -228,6 +228,11 @@ model DamageReport {
   resolvedAt  DateTime?
 
   @@index([machineId])
+  // getOperationallyBlockedMachineIds() (server/utils/machineStatus.ts) filters
+  // on resolvedAt alone (no machineId) on every GET /api/machines call — the
+  // public catalog's highest-traffic endpoint — so this needs its own index,
+  // not just the machineId one above.
+  @@index([resolvedAt])
 }
 
 // Structured maintenance record, replacing the free-text BlockedDate.reason
@@ -244,6 +249,9 @@ model MaintenanceEvent {
   completedDate DateTime?
 
   @@index([machineId])
+  // Same reasoning as DamageReport.resolvedAt above — getOperationallyBlockedMachineIds()
+  // filters on completedDate alone on every public catalog request.
+  @@index([completedDate])
 }
 
 // Kenniscentrum content: SEO blog articles ("artikel") and shareable product

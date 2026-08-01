@@ -49,7 +49,15 @@ interface CleanInput {
 // Validate + clamp a create/update payload. Returns an error string on failure.
 function validate(body: any): { error?: string; data?: CleanInput } {
   const title = typeof body.title === "string" ? body.title.trim() : "";
-  const content = typeof body.content === "string" ? body.content.trim() : "";
+  // Blog content is plain markdown-ish text (MarkdownBody has no image/HTML
+  // output path at all, so this isn't an XSS vector) but sanitizeLegalContent
+  // strips data:image URLs for the same reason this field should: a base64
+  // image pasted into a text field is pure payload bloat, not content. Legal
+  // pages (siteConfig.privacyPolicy/termsConditions) already get this via
+  // sanitizeLegalContent — blog posts skipped it, so a stray base64 blob could
+  // sit in a post's content indefinitely.
+  const rawContent = typeof body.content === "string" ? body.content.trim() : "";
+  const content = rawContent.includes("data:image") ? rawContent.replace(/data:image[^)\s"']*/g, "") : rawContent;
   if (!title) return { error: "Titel is verplicht." };
   if (!content) return { error: "Inhoud is verplicht." };
   if (title.length > 200) return { error: "Titel mag maximaal 200 tekens zijn." };

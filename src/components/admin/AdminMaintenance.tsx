@@ -65,6 +65,19 @@ export default function AdminMaintenance({ adminLanguage }: AdminMaintenanceProp
       showAdminToast(t("Machine en omschrijving zijn verplicht.", "Machine and description are required.", "Makine ve açıklama zorunludur."), "error");
       return;
     }
+    // The cost <input min={0}> below never actually validates anything — there's
+    // no <form>/type="submit" wiring it up, so the native min-attribute check
+    // silently never fires (same class of gap already found/fixed for machine
+    // pricing). Mirror the server's own bound (maintenance.ts/damageReports.ts:
+    // v < 0 || v > 1_000_000) here so a bad value is caught with a clear message
+    // instead of a raw "Ongeldig bedrag" server rejection.
+    if (formCost) {
+      const n = Number(formCost);
+      if (isNaN(n) || n < 0 || n > 1_000_000) {
+        showAdminToast(t("Ongeldig bedrag (0 – 1.000.000).", "Invalid amount (0 – 1,000,000).", "Geçersiz tutar (0 – 1.000.000)."), "error");
+        return;
+      }
+    }
     setSaving(true);
     const cost = formCost ? Number(formCost) : undefined;
     const ok = tab === "maintenance"
@@ -367,6 +380,16 @@ function AdminMaintenanceDetailModal({
     if (!description.trim()) {
       showAdminToast(t("Omschrijving is verplicht.", "Description is required.", "Açıklama zorunludur."), "error");
       return;
+    }
+    // Same reasoning as the create form's submitForm — the cost <input min={0}>
+    // here has no <form>/type="submit" behind it either, so it never actually
+    // validates anything on its own.
+    if (cost) {
+      const n = Number(cost);
+      if (isNaN(n) || n < 0 || n > 1_000_000) {
+        showAdminToast(t("Ongeldig bedrag (0 – 1.000.000).", "Invalid amount (0 – 1,000,000).", "Geçersiz tutar (0 – 1.000.000)."), "error");
+        return;
+      }
     }
     setSaving(true);
     const costValue = cost ? Number(cost) : undefined;

@@ -12,6 +12,7 @@ import {
   sanitizeGlobalAddons,
   sanitizeLegalContent
 } from "../utils/sanitizeContent.js";
+import { sanitizeImageDataUrl } from "../utils/sanitizeImage.js";
 
 export const siteConfigRouter = Router();
 
@@ -106,7 +107,10 @@ const JSON_CONTENT_FIELD_LABELS: Record<string, string> = {
   uspItems: "USP's",
   openingHours: "Openingstijden",
   transportFees: "Transportkosten",
-  globalAddons: "Add-ontarieven"
+  globalAddons: "Add-ontarieven",
+  heroImageUrl: "Hero-afbeelding",
+  coffeeCornerImageUrl: "Coffee Corner-afbeelding",
+  galleryImages: "Fotogalerij"
 };
 
 function pickSiteConfigFields(body: any): { data: Record<string, string | number | boolean | null | unknown[]>; invalidFields: string[] } {
@@ -115,7 +119,8 @@ function pickSiteConfigFields(body: any): { data: Record<string, string | number
   for (const field of SITE_CONFIG_FIELDS) {
     // heroImageUrl/coffeeCornerImageUrl store a base64 data URL — allow up to 5 MB;
     // all other fields max 1 KB (coffeeCornerDescription/galleryDescription get a bit more room).
-    const maxLen = field === "heroImageUrl" || field === "coffeeCornerImageUrl"
+    const isImageUrlField = field === "heroImageUrl" || field === "coffeeCornerImageUrl";
+    const maxLen = isImageUrlField
       ? 5_000_000
       : field === "coffeeCornerDescription" || field === "galleryDescription" ? 2000 : 1000;
     // Never persist the binary-proxy placeholder: the public feed returns
@@ -124,7 +129,17 @@ function pickSiteConfigFields(body: any): { data: Record<string, string | number
     // real stored base64 image with the path.
     if (field === "heroImageUrl" && body?.[field] === "/site-hero-image") continue;
     if (field === "coffeeCornerImageUrl" && body?.[field] === "/site-coffee-image") continue;
-    if (typeof body?.[field] === "string" && body[field].length <= maxLen) {
+    if (typeof body?.[field] !== "string" || body[field].length > maxLen) continue;
+    if (isImageUrlField && body[field] !== "") {
+      // Previously accepted ANY string up to 5MB here — no data:image/ prefix
+      // check, no SVG exclusion, no magic-byte verification, weaker than even
+      // machines.ts's imageUrl (which at least required the data:image/
+      // prefix). Re-verify the same way POST /api/upload does, since an admin
+      // can PUT this field directly, bypassing the upload endpoint entirely.
+      const cleaned = sanitizeImageDataUrl(body[field], maxLen);
+      if (!cleaned) { invalidFields.push(field); continue; }
+      data[field] = cleaned;
+    } else {
       data[field] = body[field];
     }
   }
@@ -160,10 +175,16 @@ function pickSiteConfigFields(body: any): { data: Record<string, string | number
     if (raw === null || raw === "") {
       data.galleryImages = [];
     } else if (Array.isArray(raw)) {
+      // Same gap as heroImageUrl above, one level deeper: only length-checked,
+      // no data:image/ prefix requirement, no SVG exclusion, no magic bytes.
+      // sanitizeImageDataUrl re-verifies each item the way POST /api/upload
+      // does; a rejected item is dropped rather than failing the whole save,
+      // matching this field's existing filter-based (not reject-all) design.
       data.galleryImages = raw
         .slice(0, 10)
-        .filter((img: unknown): img is string =>
-          typeof img === "string" && img.length <= 5_000_000 && !img.startsWith("/site-gallery-image/"));
+        .filter((img: unknown): img is string => typeof img === "string" && !img.startsWith("/site-gallery-image/"))
+        .map((img) => sanitizeImageDataUrl(img, 5_000_000))
+        .filter((img): img is string => img.length > 0);
     }
   }
 

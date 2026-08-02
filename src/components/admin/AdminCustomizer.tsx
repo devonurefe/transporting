@@ -6,7 +6,7 @@
 import React, { useState } from "react";
 import { Settings, Check, Trash2, Plus, ChevronDown, Upload, Coffee, Camera, Sparkles, Building2, LayoutGrid } from "lucide-react";
 import { resizeImage } from "../../utils/image";
-import { motion, AnimatePresence } from "motion/react";
+import { motion } from "motion/react";
 import { useAppStore, type GoogleReview } from "../../store/appStore";
 import { useAuthStore } from "../../store/authStore";
 import AdminConfirmDialog from "./AdminConfirmDialog";
@@ -182,8 +182,16 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
     if (!files || files.length === 0) return;
 
     setIsUploadingGallery(true);
+    // galleryImages itself is a render-time snapshot that never changes across
+    // this loop's iterations — a multi-file select that pushed the count from
+    // e.g. 9 to over 10 never tripped this guard for any of the extra files
+    // (only the setGalleryImages functional updater below saw the true,
+    // growing count), so uploads happened for files that then got silently
+    // dropped by the `prev.length < 10` check with no toast at all. Track a
+    // local running count instead.
+    let count = galleryImages.length;
     for (let i = 0; i < files.length; i++) {
-      if (galleryImages.length + 1 > 10) {
+      if (count + 1 > 10) {
         showAdminToast(t("Maximaal 10 foto's toegestaan.", "Maximum 10 photos allowed.", "En fazla 10 fotoğraf yüklenebilir."), "error");
         break;
       }
@@ -201,6 +209,7 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
         if (res.ok) {
           const data = await res.json();
           setGalleryImages((prev) => (prev.length < 10 ? [...prev, data.url] : prev));
+          count++;
         } else {
           showAdminToast(t("Uploaden mislukt voor: ", "Upload failed for: ", "Yükleme başarısız: ") + file.name, "error");
         }
@@ -253,7 +262,10 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
       setSaveConfigMsg({ ok: true, text: t("Instellingen succesvol opgeslagen!", "Settings saved successfully!", "Ayarlar başarıyla kaydedildi!") });
       setTimeout(() => setSaveConfigMsg(null), 4000);
     } else {
-      setSaveConfigMsg({ ok: false, text: t("Fout bij opslaan van instellingen.", "Error saving settings.", "Ayarlar kaydedilirken hata oluştu.") });
+      // Specific server error (e.g. "Ongeldige waarde voor: Hero-afbeelding")
+      // — a generic fallback here would hide exactly which field was
+      // rejected. Same pattern as AdminContent.tsx's save().
+      setSaveConfigMsg({ ok: false, text: useAppStore.getState().error || t("Fout bij opslaan van instellingen.", "Error saving settings.", "Ayarlar kaydedilirken hata oluştu.") });
     }
   };
 
@@ -306,7 +318,7 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
       setEditingBasicCatId(null);
       onAddSystemLog("system", adminUser?.name ?? "Admin", t(`Categorienaam bijgewerkt: ${catId}`, `Category name updated: ${catId}`, `Kategori adı güncellendi: ${catId}`));
     } else {
-      showAdminToast(t("Fout bij opslaan van categorie.", "Error saving category.", "Kategori kaydedilirken hata oluştu."), "error");
+      showAdminToast(useAppStore.getState().error || t("Fout bij opslaan van categorie.", "Error saving category.", "Kategori kaydedilirken hata oluştu."), "error");
     }
   };
 
@@ -335,7 +347,7 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
       setEditingInfoCatId(null);
       onAddSystemLog("system", adminUser?.name ?? "Admin", t(`Info-inhoud opgeslagen voor categorie: ${catId}`, `Info content saved for category: ${catId}`, `Kategori bilgi içeriği kaydedildi: ${catId}`));
     } else {
-      showAdminToast(t("Fout bij opslaan van info-inhoud.", "Error saving info content.", "Bilgi içeriği kaydedilirken hata oluştu."), "error");
+      showAdminToast(useAppStore.getState().error || t("Fout bij opslaan van info-inhoud.", "Error saving info content.", "Bilgi içeriği kaydedilirken hata oluştu."), "error");
     }
   };
 
@@ -352,7 +364,7 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
     if (success) {
       onAddSystemLog("system", adminUser?.name ?? "Admin", t("Categorie verwijderd: ", "Category deleted: ", "Kategori silindi: ") + `${label} (${id}).`);
     } else {
-      showAdminToast(t("Fout bij verwijderen van categorie.", "Error deleting category.", "Kategori silinirken hata oluştu."), "error");
+      showAdminToast(useAppStore.getState().error || t("Fout bij verwijderen van categorie.", "Error deleting category.", "Kategori silinirken hata oluştu."), "error");
     }
     setPendingDeleteCategory(null);
   };
@@ -633,13 +645,15 @@ export default function AdminCustomizer({ onAddSystemLog, adminLanguage }: Admin
                       </div>
                     ))}
 
-                    <button
-                      type="button"
-                      onClick={addReview}
-                      className="flex items-center gap-1.5 text-xs font-bold text-amber-700 hover:text-amber-900 cursor-pointer bg-transparent border-none"
-                    >
-                      <Plus className="h-3.5 w-3.5" /> {t("Review toevoegen", "Add review", "Yorum ekle")}
-                    </button>
+                    {googleReviews.length < 20 && (
+                      <button
+                        type="button"
+                        onClick={addReview}
+                        className="flex items-center gap-1.5 text-xs font-bold text-amber-700 hover:text-amber-900 cursor-pointer bg-transparent border-none"
+                      >
+                        <Plus className="h-3.5 w-3.5" /> {t("Review toevoegen", "Add review", "Yorum ekle")}
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
@@ -1138,7 +1152,7 @@ function AddCategoryForm({ onAddSystemLog, adminLanguage }: AddCategoryFormProps
       setHeights("");
       setPrice("");
     } else {
-      showAdminToast(t("Fout bij opslaan van categorie.", "Error saving category.", "Kategori kaydedilirken hata oluştu."), "error");
+      showAdminToast(useAppStore.getState().error || t("Fout bij opslaan van categorie.", "Error saving category.", "Kategori kaydedilirken hata oluştu."), "error");
     }
   };
 

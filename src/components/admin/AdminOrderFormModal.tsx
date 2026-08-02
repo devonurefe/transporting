@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { X, Loader2, Save, PlusCircle } from "lucide-react";
 import { useAppStore } from "../../store/appStore";
@@ -85,6 +85,21 @@ export default function AdminOrderFormModal({ mode, order, onClose, onSaved, adm
   // behind a vehicle — renting an additional trailer makes no sense. Mirrors
   // BookingStep1.tsx / server/routes/orders.ts TRAILER_RENTAL_EXCLUDED_CATEGORIES.
   const trailerRentalExcluded = !!selectedMachine && ["aanhanger", "ladderlift"].includes(selectedMachine.category);
+
+  // Unlike BookingSection.tsx (the customer flow), which already resets
+  // deliveryType when the selected machine no longer supports it, this modal
+  // had no such sync — switching to a pickupOnly machine disabled the
+  // delivery-type select (line below) while leaving a now-invalid value in
+  // state, permanently blocking submit with no way to fix it from the UI
+  // short of switching machines back and forth. Only corrects the value when
+  // it's actually no longer valid for the newly selected machine.
+  useEffect(() => {
+    if (pickupOnly && deliveryType !== "self_pickup") {
+      setDeliveryType("self_pickup");
+    } else if (trailerRentalExcluded && deliveryType === "trailer_rental") {
+      setDeliveryType("delivery_by_us");
+    }
+  }, [pickupOnly, trailerRentalExcluded]);
 
   const handleSubmit = async () => {
     setError(null);

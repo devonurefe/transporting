@@ -670,6 +670,11 @@ export const useAppStore = create<AppState>((set, get) => ({
       if (res.ok) {
         await get().fetchCategories();
         return true;
+      } else {
+        // e.g. "Maximaal 50 categorieën toegestaan" — surface the specific
+        // reason instead of a generic failure, mirroring updateSiteConfig above.
+        const data = await res.json().catch(() => ({}));
+        set({ error: data.error || "Fout bij opslaan categorieën." });
       }
     } catch (e) {
       console.error(e);

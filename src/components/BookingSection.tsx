@@ -74,7 +74,9 @@ interface BookingSectionProps {
   // De ene machine die geboekt wordt, of null als er nog niets gekozen is.
   cartItem?: CartItem | null;
   onClearSelection?: () => void;
-  onUpdateSelectedDates?: (start: string, end: string) => void;
+  // De derde parameter is de fysieke unit die de kalender heeft gekozen — zie
+  // findAvailableUnit. Kan een ander exemplaar van hetzelfde model zijn.
+  onUpdateSelectedDates?: (start: string, end: string, unitId?: string) => void;
 }
 
 export default function BookingSection({
@@ -149,24 +151,44 @@ export default function BookingSection({
       .catch(() => {});
   }, []);
 
-  const lastMachineIdRef = React.useRef<string>("");
+  // Alle fysieke units van het gekozen model (zelfde basisnaam, "(Unit N)" eraf) —
+  // dezelfde afleiding als in DateRangeCalendar. De kalender kan de klant naar een
+  // ander exemplaar sturen, dus de bezetting van álle units moet hier bekend zijn;
+  // met alleen die van de aangeklikte unit zou de beschikbaarheidscheck na zo'n
+  // wissel over een lege ordersverzameling oordelen.
+  const unitIds = useMemo(() => {
+    const machine = cartItem?.machine ?? selectedMachine;
+    if (!machine) return [] as string[];
+    const baseName = (n: string) => n.replace(/\s*\(Unit\s+\d+\)\s*$/i, "").trim();
+    const base = baseName(machine.name);
+    const matched = machines.filter(m => m.isActive !== false && baseName(m.name) === base).map(m => m.id);
+    return matched.length ? matched : [machine.id];
+  }, [machines, cartItem, selectedMachine]);
+  const unitKey = unitIds.join(",");
+
+  const lastUnitKeyRef = React.useRef<string>("");
 
   useEffect(() => {
     const machine = cartItem?.machine ?? selectedMachine;
-    if (!machine) return;
-    if (machine.id === lastMachineIdRef.current) return;
+    if (!machine || !unitKey) return;
+    if (unitKey === lastUnitKeyRef.current) return;
 
-    lastMachineIdRef.current = machine.id;
+    lastUnitKeyRef.current = unitKey;
     if (machine.pickupOnly || machine.category === "aanhanger" || machine.category === "ecolift") {
       setDeliveryType("self_pickup");
     } else {
       setDeliveryType("delivery_by_us");
     }
-    fetch(`/api/orders/availability?machineId=${encodeURIComponent(machine.id)}`)
-      .then(res => (res.ok ? res.json() : []))
-      .then(setAllOrders)
-      .catch(() => setAllOrders([]));
-  }, [selectedMachine, cartItem]);
+    Promise.all(
+      unitIds.map(id =>
+        fetch(`/api/orders/availability?machineId=${encodeURIComponent(id)}`)
+          .then(res => (res.ok ? res.json() : []))
+          .then(data => (Array.isArray(data) ? data : []))
+          .catch(() => [])
+      )
+    ).then(results => setAllOrders(results.flat()));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [unitKey]);
 
   // Addon / Shopping Cart Options state
   const [selectedAddons, setSelectedAddons] = useState<string[]>([]);

@@ -620,12 +620,23 @@ export default function App() {
     );
   };
 
-  const handleUpdateSelectedDates = (start: string, end: string) => {
-    updateSelectedDates(start, end);
+  // De kalender rekent op modelniveau en geeft terug wélke fysieke unit de
+  // gekozen periode kan draaien. Is dat een ander exemplaar dan waar de
+  // cataloguskaart naar wees, dan wisselt de selectie daarheen: identieke
+  // machine, ander serienummer. Zonder die wissel zou de klant een datum kiezen
+  // die de kalender groen toont en er direct onder "niet beschikbaar" op krijgen.
+  const handleUpdateSelectedDates = (start: string, end: string, unitId?: string) => {
+    const current = selectedCartItem?.machine;
+    const swapTo = unitId && unitId !== current?.id
+      ? machines.find((m) => m.id === unitId)
+      : undefined;
+    updateSelectedDates(start, end, swapTo);
+    if (swapTo) setSelectedMachine(swapTo);
     handleAddSystemLog(
       "booking",
       currentUser ? currentUser.name : "Gast",
-      `Wijzigt huurperiode voor "${selectedCartItem?.machine.name ?? "hoogwerker"}": ${start} t/m ${end}`
+      `Wijzigt huurperiode voor "${(swapTo ?? current)?.name ?? "hoogwerker"}": ${start} t/m ${end}` +
+        (swapTo ? ` (toegewezen aan ${swapTo.name})` : "")
     );
   };
 

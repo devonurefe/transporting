@@ -185,7 +185,9 @@ interface AppState {
 
   // Selectie-acties (vervangen de oude winkelwagenacties)
   selectMachine: (machine: Machine, startDate: string, endDate: string) => void;
-  updateSelectedDates: (startDate: string, endDate: string) => void;
+  // `machine` wisselt de selectie naar een andere fysieke unit van hetzelfde
+  // model (zie findAvailableUnit) — identieke machine, ander exemplaar.
+  updateSelectedDates: (startDate: string, endDate: string, machine?: Machine) => void;
   clearSelection: () => void;
   clearError: () => void;
 
@@ -944,10 +946,15 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({ selectedCartItem: item });
   },
 
-  updateSelectedDates: (startDate, endDate) => {
+  updateSelectedDates: (startDate, endDate, machine) => {
     set(state => {
       if (!state.selectedCartItem) return {};
-      const updated = { ...state.selectedCartItem, startDate, endDate };
+      const updated = {
+        ...state.selectedCartItem,
+        startDate,
+        endDate,
+        ...(machine ? { machine } : {})
+      };
       try { localStorage.setItem("hwh_cart", JSON.stringify(updated)); } catch { /* ignore */ }
       return { selectedCartItem: updated };
     });

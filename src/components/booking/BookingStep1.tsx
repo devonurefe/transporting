@@ -37,7 +37,7 @@ interface BookingStep1Props {
   cartItem: CartItem | null;
   getItemAvailability: (machineId: string, start: string, end: string) => { available: boolean; reason: string };
   onClearSelection: () => void;
-  onUpdateSelectedDates: (start: string, end: string) => void;
+  onUpdateSelectedDates: (start: string, end: string, unitId: string) => void;
   deliveryType: DeliveryType;
   setDeliveryType: (type: DeliveryType) => void;
   setDeliveryAddress: (address: string) => void;

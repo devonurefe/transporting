@@ -62,6 +62,26 @@ export function getGlobalAddons(siteConfig: FeeSource): {
   };
 }
 
+// 21% btw + eindtotaal uit de losse componenten, op hele centen.
+//
+// Dit is de CLIENT-kant van computeVatAndTotal in server/utils/orderPricing.ts en
+// moet er exact gelijk aan blijven. Er stonden hier eerder drie varianten naast
+// elkaar: het prijsoverzicht rekende `totalExcl * 0.21` zónder afronding, terwijl
+// het verzendpad en de server `Math.round(x * 21) / 100` gebruikten. Bij een
+// bedrag als €100,50 leverde dat €21,10 op het scherm op en €21,11 op de factuur —
+// een cent verschil, maar precies het soort verschil waar een klant over belt.
+// Alle drie de plekken lopen nu via deze functie.
+export function computeVatAndTotal(
+  subtotal: number,
+  transport: number,
+  driver: number,
+  addonsTotal: number
+): { vat: number; total: number } {
+  const vat = Math.round((subtotal + transport + driver + addonsTotal) * 21) / 100;
+  const total = Math.round((subtotal + transport + driver + addonsTotal + vat) * 100) / 100;
+  return { vat, total };
+}
+
 // Inclusive rental days: 10th–12th = 3 days. The server recomputes this with
 // the same formula in server/routes/orders.ts — keep them identical.
 export function calculateRentalDays(startDate: string | Date, endDate: string | Date): number {

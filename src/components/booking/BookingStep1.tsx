@@ -34,10 +34,10 @@ const GLOBAL_ADDON_EXCLUDED_CATEGORIES: Record<"safety" | "rijplaten", string[]>
 const TRAILER_RENTAL_EXCLUDED_CATEGORIES = ["aanhanger", "ladderlift"];
 
 interface BookingStep1Props {
-  cartItems: CartItem[];
+  cartItem: CartItem | null;
   getItemAvailability: (machineId: string, start: string, end: string) => { available: boolean; reason: string };
-  onRemoveCartItem: (id: string) => void;
-  onUpdateCartItemDates: (id: string, start: string, end: string) => void;
+  onClearSelection: () => void;
+  onUpdateSelectedDates: (start: string, end: string) => void;
   deliveryType: DeliveryType;
   setDeliveryType: (type: DeliveryType) => void;
   setDeliveryAddress: (address: string) => void;
@@ -70,10 +70,10 @@ interface BookingStep1Props {
 }
 
 export default function BookingStep1({
-  cartItems,
+  cartItem,
   getItemAvailability,
-  onRemoveCartItem,
-  onUpdateCartItemDates,
+  onClearSelection,
+  onUpdateSelectedDates,
   deliveryType,
   setDeliveryType,
   setDeliveryAddress,
@@ -117,14 +117,12 @@ export default function BookingStep1({
   // Aanhanger geselecteerd maar nog geen (geldig) aantal dagen gekozen → blokkeer
   // het doorgaan, net als de verplichte bezorgtijdslot-keuze hierboven.
   const trailerBlocked = deliveryType === "trailer_rental" && trailerDays < 1;
-  // Bovengrens = de huurperiode van het EERSTE cart-item (de aanhanger wordt alleen
-  // op item 0 berekend, en de server clampt op dat item z'n rentalDays). Niet
-  // sums.days gebruiken — dat is de som over álle cart-items en zou bij meerdere
-  // machines te hoog zijn, waardoor de server-validatie de order zou weigeren.
-  const leadTrailerDays = (cartItems[0]?.startDate && cartItems[0]?.endDate)
-    ? calculateRentalDays(cartItems[0].startDate, cartItems[0].endDate)
+  // Bovengrens = de huurperiode van de gekozen machine; de server clampt de
+  // aanhangerdagen op precies dat aantal.
+  const leadTrailerDays = (cartItem?.startDate && cartItem?.endDate)
+    ? calculateRentalDays(cartItem.startDate, cartItem.endDate)
     : 0;
-  // No "|| 365" fallback here: before the lead item has dates, leadTrailerDays
+  // No "|| 365" fallback here: before the selection has dates, leadTrailerDays
   // is legitimately 0 and the cap should reflect that (1), not a made-up
   // ceiling — showing "Maximaal 365 dagen" to a customer who hasn't even
   // chosen a rental period yet was the actual bug being fixed here.
@@ -141,14 +139,7 @@ export default function BookingStep1({
   useEffect(() => {
     if (validationError) setValidationError(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [deliveryTimeSlot, deliveryType, cartItems.length, deliveryDistanceKm, trailerDays]);
-
-  // Reservation period for the price summary — neutral copy when the cart
-  // mixes machines booked for different periods.
-  const leadItem = cartItems[0];
-  const mixedPeriods = cartItems.length > 1 && cartItems.some(
-    (i) => i.startDate !== leadItem?.startDate || i.endDate !== leadItem?.endDate
-  );
+  }, [deliveryTimeSlot, deliveryType, cartItem, deliveryDistanceKm, trailerDays]);
 
   return (
     <div className="bg-white border border-slate-200 shadow-sm p-6 rounded-2xl space-y-6">
@@ -170,7 +161,7 @@ export default function BookingStep1({
         <p className="text-xs text-slate-500 mt-1">{t("step1Subtitle")}</p>
       </div>
 
-      {cartItems.length === 0 ? (
+      {!cartItem ? (
         <div className="text-center py-10 space-y-4">
           <div className="mx-auto h-12 w-12 bg-slate-100 text-slate-500 flex items-center justify-center rounded-full shadow-sm">
             <Building2 className="h-6 w-6" />
@@ -190,17 +181,18 @@ export default function BookingStep1({
         </div>
       ) : (
         <div className="space-y-4">
-          {cartItems.map((item) => {
+          {(() => {
+            const item = cartItem;
             const availability = getItemAvailability(item.machine.id, item.startDate || "", item.endDate || "");
             return (
-              <div key={item.id} className="relative p-4 rounded-2xl bg-slate-50/50 border border-slate-200 space-y-5 shadow-sm">
+              <div className="relative p-4 rounded-2xl bg-slate-50/50 border border-slate-200 space-y-5 shadow-sm">
                 {/* X — absolute top-right, never overlaps the name */}
                 <button
                   type="button"
-                  onClick={() => onRemoveCartItem(item.id)}
+                  onClick={onClearSelection}
                   className="absolute top-3 right-3 h-8 w-8 inline-flex items-center justify-center rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-500 transition-colors border-none cursor-pointer"
-                  title="Verwijderen"
-                  aria-label="Verwijderen uit winkelwagen"
+                  title="Selectie wissen"
+                  aria-label="Machineselectie wissen"
                 >
                   <X className="h-3.5 w-3.5" />
                 </button>
@@ -242,7 +234,7 @@ export default function BookingStep1({
                     startDate={item.startDate}
                     endDate={item.endDate}
                     profile={customerProfile}
-                    onConfirm={(s, e) => onUpdateCartItemDates(item.id, s, e)}
+                    onConfirm={onUpdateSelectedDates}
                   />
                 </div>
 
@@ -273,7 +265,7 @@ export default function BookingStep1({
                 )}
               </div>
             );
-          })}
+          })()}
         </div>
       )}
 
@@ -433,7 +425,7 @@ export default function BookingStep1({
             </div>
           </div>
           <a
-            href={buildWhatsAppTransportInquiryUrl(cartItems, deliveryAddress ?? '', deliveryDistanceKm)}
+            href={buildWhatsAppTransportInquiryUrl(cartItem ? [cartItem] : [], deliveryAddress ?? '', deliveryDistanceKm)}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center justify-center gap-2 w-full py-2.5 bg-[#25D366] hover:bg-[#1da851] text-white text-sm font-bold rounded-xl transition-colors"
@@ -822,7 +814,7 @@ export default function BookingStep1({
       {/* Mobile price summary — shows after all selections, before Doorgaan */}
       {sums && (
         <div className="lg:hidden pt-2">
-          <BookingPriceSummary selectedMachine={selectedMachine ?? null} machineCount={cartItems.length || 1} startDate={leadItem?.startDate} endDate={leadItem?.endDate} multiplePeriods={mixedPeriods} sums={sums} />
+          <BookingPriceSummary selectedMachine={selectedMachine ?? null} startDate={cartItem?.startDate} endDate={cartItem?.endDate} sums={sums} />
         </div>
       )}
 

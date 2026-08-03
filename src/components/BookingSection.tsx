@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { Machine, Order, DeliveryType, UserProfile, CartItem } from "../types";
 import { useAppStore } from "../store/appStore";
 import { checkAvailability } from "../utils/availability";
-import { calculateItemSubtotal, isStrictWeekend, countWeekendDays, hasSundayBlock, calculateRentalDays, addonPriceForRental, billableWeeks, buildTierDisplay, WeeklyBreakdown, getTransportFees, getGlobalAddons } from "../utils/pricing";
+import { calculateItemSubtotal, isStrictWeekend, countWeekendDays, hasSundayBlock, calculateRentalDays, addonPriceForRental, billableWeeks, buildTierDisplay, computeVatAndTotal, getTransportFees, getGlobalAddons } from "../utils/pricing";
 
 // Global add-ons available on every machine (unless excluded by category — see
 // GLOBAL_ADDON_EXCLUDED_CATEGORIES in BookingStep1.tsx / server/routes/orders.ts,
@@ -19,10 +19,23 @@ import { calculateItemSubtotal, isStrictWeekend, countWeekendDays, hasSundayBloc
 const GLOBAL_ADDON_IDS = ["safety", "rijplaten"] as const;
 // qty is the customer-chosen amount (currently only Rijplaten is quantity-based —
 // the customer types how many plates they need). Every other global add-on uses qty 1.
-function globalAddonLine(id: string, days: number, qty = 1): { id: string; name: string; price: number } {
+//
+// `machine` levert minRentalDays aan, en dat is niet optioneel: computeAddonsTotal
+// op de server rekent het aantal weken met `max(rentalDays, minRentalDays)`. Zolang
+// hier `billableWeeks(days)` stond (die terugvalt op een minimum van 7), gaven beide
+// kanten alleen hetzelfde antwoord zolang elke machine een minRentalDays ≤ 7 had.
+// Zodra een beheerder er in het machineformulier een hogere waarde invult, wijkt de
+// clientprijs af en weigert de server élke boeking van die machine met een globale
+// add-on ("Totaalbedrag klopt niet") — zonder dat iemand doorheeft waarom.
+function globalAddonLine(
+  id: string,
+  days: number,
+  machine: { minRentalDays?: number },
+  qty = 1
+): { id: string; name: string; price: number } {
   const addons = getGlobalAddons(useAppStore.getState().siteConfig);
   const def = addons[id as keyof typeof addons];
-  const weeks = billableWeeks(days);
+  const weeks = billableWeeks(days, machine.minRentalDays);
   const price = def.pricePerWeek * weeks * qty;
   const weekSuffix = weeks > 1 ? ` (${weeks}× €${def.pricePerWeek})` : "";
   const name = id === "rijplaten"
@@ -58,10 +71,10 @@ interface BookingSectionProps {
   machines: Machine[];
   onSelectMachine: (machine: Machine | null) => void;
   currentUser: UserProfile | null;
-  cartItems?: CartItem[];
-  onRemoveCartItem?: (id: string) => void;
-  onUpdateCartItemDates?: (id: string, start: string, end: string) => void;
-  onClearCart?: () => void;
+  // De ene machine die geboekt wordt, of null als er nog niets gekozen is.
+  cartItem?: CartItem | null;
+  onClearSelection?: () => void;
+  onUpdateSelectedDates?: (start: string, end: string) => void;
 }
 
 export default function BookingSection({
@@ -71,10 +84,9 @@ export default function BookingSection({
   machines,
   onSelectMachine,
   currentUser,
-  cartItems = [],
-  onRemoveCartItem = () => {},
-  onUpdateCartItemDates = () => {},
-  onClearCart = () => {}
+  cartItem = null,
+  onClearSelection = () => {},
+  onUpdateSelectedDates = () => {}
 }: BookingSectionProps) {
   // Booking Stepper state. Twee echte stappen (1: Logistiek, 2: Gegevens); na
   // het plaatsen komt de succespagina. Voorheen was succes de "magische" stap 4
@@ -88,7 +100,6 @@ export default function BookingSection({
   const [bookingError, setBookingError] = useState<string | null>(null);
 
   const [successOrder, setSuccessOrder] = useState<Order | null>(null);
-  const [successOrders, setSuccessOrders] = useState<Order[]>([]);
   const [whatsappUrl, setWhatsappUrl] = useState<string>("");
 
   // Address lookup & Inline validation states
@@ -138,35 +149,24 @@ export default function BookingSection({
       .catch(() => {});
   }, []);
 
-  const lastMachineIdsRef = React.useRef<string>("");
+  const lastMachineIdRef = React.useRef<string>("");
 
   useEffect(() => {
-    const allMachines = cartItems.length > 0
-      ? cartItems.map(item => item.machine)
-      : (selectedMachine ? [selectedMachine] : []);
+    const machine = cartItem?.machine ?? selectedMachine;
+    if (!machine) return;
+    if (machine.id === lastMachineIdRef.current) return;
 
-    if (allMachines.length === 0) return;
-
-    const leadMachine = allMachines[0];
-    const machineIdsKey = allMachines.map(m => m.id).sort().join(",");
-
-    if (machineIdsKey !== lastMachineIdsRef.current) {
-      lastMachineIdsRef.current = machineIdsKey;
-      if (leadMachine.pickupOnly || leadMachine.category === "aanhanger" || leadMachine.category === "ecolift") {
-        setDeliveryType("self_pickup");
-      } else {
-        setDeliveryType("delivery_by_us");
-      }
-      // Fetch availability for ALL machines in cart to correctly guard multi-machine bookings
-      Promise.all(
-        allMachines.map(m =>
-          fetch(`/api/orders/availability?machineId=${encodeURIComponent(m.id)}`)
-            .then(res => res.ok ? res.json() : [])
-            .catch(() => [])
-        )
-      ).then(results => setAllOrders(results.flat()));
+    lastMachineIdRef.current = machine.id;
+    if (machine.pickupOnly || machine.category === "aanhanger" || machine.category === "ecolift") {
+      setDeliveryType("self_pickup");
+    } else {
+      setDeliveryType("delivery_by_us");
     }
-  }, [selectedMachine, cartItems]);
+    fetch(`/api/orders/availability?machineId=${encodeURIComponent(machine.id)}`)
+      .then(res => (res.ok ? res.json() : []))
+      .then(setAllOrders)
+      .catch(() => setAllOrders([]));
+  }, [selectedMachine, cartItem]);
 
   // Addon / Shopping Cart Options state
   const [selectedAddons, setSelectedAddons] = useState<string[]>([]);
@@ -324,7 +324,7 @@ export default function BookingSection({
   };
 
   const getItemAvailability = (machineId: string, start: string, end: string) => {
-    const machine = cartItems.find(item => item.machine.id === machineId)?.machine;
+    const machine = cartItem?.machine.id === machineId ? cartItem.machine : undefined;
     return checkAvailability(machineId, start, end, allOrders, blockedDaysList, undefined, machine?.bufferDays ?? 0, machine?.stockQuantity ?? 1, machine?.operationallyBlocked ?? false);
   };
 
@@ -335,235 +335,112 @@ export default function BookingSection({
     }
   }, [selectedMachine, startDate, endDate, allOrders, blockedDaysList]);
 
-  // Synchronize local startDate and endDate with cart items to trigger availability updates
+  // Synchronize local startDate and endDate with the selection to trigger availability updates
   useEffect(() => {
-    if (cartItems.length > 0) {
-      const firstItem = cartItems[0];
-      if (firstItem.startDate && firstItem.startDate !== startDate) {
-        setStartDate(firstItem.startDate);
-      }
-      if (firstItem.endDate && firstItem.endDate !== endDate) {
-        setEndDate(firstItem.endDate);
-      }
+    if (!cartItem) return;
+    if (cartItem.startDate && cartItem.startDate !== startDate) {
+      setStartDate(cartItem.startDate);
     }
-  }, [cartItems, startDate, endDate]);
+    if (cartItem.endDate && cartItem.endDate !== endDate) {
+      setEndDate(cartItem.endDate);
+    }
+  }, [cartItem, startDate, endDate]);
 
-  // Recalculate invoice specifics with weekly, monthly & campaign discounts
+  // Recalculate invoice specifics with weekly, monthly & campaign discounts.
+  //
+  // Eén machine per aanvraag: er is precies één (of geen) selectie, dus dit is
+  // één rechttoe rechtaan berekening. Hiervoor stonden hier twee paden naast
+  // elkaar — een winkelwagenlus over meerdere machines en een "legacy fallback"
+  // op selectedMachine — waarvan er in de praktijk maar één bereikbaar was. Die
+  // lus rekende de globale add-ons één keer over de opgetelde dagen van alle
+  // machines, terwijl het verzendpad ze per machine opnieuw rekende: bij twee
+  // machines zag de klant €15 en werd er €30 afgeschreven. Door hier één pad
+  // over te houden kán dat verschil niet meer ontstaan.
   const calculationSummary = () => {
-    // If we have cartItems list, use the multi-product calculation!
-    if (cartItems) {
-      if (cartItems.length === 0) {
-        return {
-          days: 0,
-          rawSubtotal: 0,
-          discountAmount: 0,
-          discountLabel: "",
-          subtotal: 0,
-          transport: 0,
-          driver: 0,
-          addonCost: 0,
-          addonDetails: [],
-          vat: 0,
-          total: 0,
-          deliveryType
-        };
-      }
-      // Lead item dates pre-computed for transport/trailer cost (only item[0] pays these)
-      const leadCartStart = cartItems[0]?.startDate;
-      const leadCartEnd = cartItems[0]?.endDate;
-      const leadCartDays = (leadCartStart && leadCartEnd) ? calculateRentalDays(leadCartStart, leadCartEnd) : 1;
+    const machine = cartItem?.machine ?? null;
+    const itemStart = cartItem?.startDate ?? "";
+    const itemEnd = cartItem?.endDate ?? "";
 
-      let totalDays = 0;
-      let rawSubtotal = 0;
-      let discountAmount = 0;
-      let subtotal = 0;
-      let campaignSavings = 0;
-
-      for (const item of cartItems) {
-        // No period picked yet for this item — it contributes nothing to the
-        // price until the customer actually selects dates in the calendar.
-        if (!item.startDate || !item.endDate) continue;
-        const itemStart = item.startDate;
-        const itemEnd = item.endDate;
-        const start = new Date(itemStart);
-        const end = new Date(itemEnd);
-        const timeDiff = end.getTime() - start.getTime();
-        const days = Math.max(1, Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1);
-        totalDays += days;
-
-        const itemSub = calculateItemSubtotal(item.machine, days, customerProfile, campaignRules, itemStart);
-        // Weekly-only products bill per week, not per day — the day-rate "raw" total is
-        // meaningless and would surface as a phantom discount, so anchor raw to the subtotal.
-        const itemRaw = item.machine.weeklyOnly ? itemSub : item.machine.pricePerDay * days;
-        const itemSubNoCampaign = calculateItemSubtotal(
-          { ...item.machine, campaignDiscountPercent: undefined, campaignDiscountAmount: undefined } as any,
-          days, customerProfile, [], itemStart
-        );
-        const itemDisc = Math.max(0, itemRaw - itemSub);
-        rawSubtotal += itemRaw;
-        discountAmount += itemDisc;
-        subtotal += itemSub;
-        campaignSavings += Math.max(0, itemSubNoCampaign - itemSub);
-      }
-
-      const cartFees = getTransportFees(useAppStore.getState().siteConfig);
-      const transport = deliveryType === "delivery_by_us" ? cartFees.deliveryFee : 0;
-      // Trailer billed per klant-gekozen aantal dagen (niet de huurperiode).
-      const trailerCost = deliveryType === "trailer_rental" ? cartFees.trailerPerDay * trailerDays : 0;
-      const driver = 0;
-
-      // Forced Sunday block total: when a rental's last work day is Saturday the
-      // machine is held over the closed Sunday (return Monday 08:00) — sum the flat
-      // sundayBlockFee across cart items so the price summary can surface it.
-      const sundayBlockTotal = cartItems.reduce((sum, item) => {
-        if (!item.startDate || !item.endDate) return sum;
-        const d = calculateRentalDays(item.startDate, item.endDate);
-        return hasSundayBlock(item.machine, item.startDate, d) ? sum + (item.machine.sundayBlockFee ?? 0) : sum;
-      }, 0);
-      const weekendDays = (leadCartStart && leadCartEnd) ? countWeekendDays(leadCartStart, leadCartEnd) : 0;
-
-      // Addon calculation
-      let addonCost = 0;
-      const addonDetails: { id: string; name: string; price: number }[] = [];
-
-      for (const id of GLOBAL_ADDON_IDS) {
-        if (!selectedAddons.includes(id)) continue;
-        const line = globalAddonLine(id, totalDays, id === "rijplaten" ? rijplatenQty : 1);
-        addonCost += line.price;
-        addonDetails.push(line);
-      }
-      // Product-specific cross-sell extras (billed per started week, same week count as the machine)
-      for (const item of cartItems) {
-        const cs = item.machine.crossSellAddons;
-        if (!cs?.length) continue;
-        const itemDays = (item.startDate && item.endDate) ? calculateRentalDays(item.startDate, item.endDate) : 1;
-        for (const a of cs) {
-          if (selectedAddons.includes(a.id)) {
-            const price = addonPriceForRental(a, itemDays, item.machine);
-            addonCost += price;
-            addonDetails.push({ id: a.id, name: a.name, price });
-          }
-        }
-      }
-
-      const totalExcl = subtotal + transport + trailerCost + driver + addonCost;
-      const vat = totalExcl * 0.21;
-      const total = totalExcl + vat;
-
-      let discountLabel = "Korting";
-      const leadItem = cartItems[0]?.machine;
-      const leadStart = leadCartStart;
-      if (leadItem) {
-        if (totalDays >= 28) discountLabel = "Maandkorting";
-        else if (totalDays >= 5) discountLabel = "Weekkorting";
-        else if (isStrictWeekend(leadStart, leadCartDays) && leadItem.weekendPrice) discountLabel = "Weekendprijs";
-        else if (totalDays === 2 && leadItem.twoDayPrice) discountLabel = "2-Dag Prijs";
-        else if (totalDays === 1 && leadItem.oneDayPrice && leadItem.oneDayPrice < leadItem.pricePerDay) discountLabel = "1-Dag Actie";
-      }
-
-      const effectiveDailyRate = (!leadItem?.weeklyOnly && totalDays >= 6 && totalDays < 28 && leadItem?.weeklyPrice)
-        ? leadItem.weeklyPrice / 5
-        : null;
-
-      // Tier label for flat-rate price display (single-item cart only) — shared
-      // with the legacy path and unit-tested against calculateItemSubtotal in
-      // pricing-display.test.ts so the breakdown can never drift from the real charge.
-      let tierLabel: string | null = null;
-      let isFlatRate = false;
-      let weeklyBreakdown: WeeklyBreakdown | null = null;
-      if (cartItems.length === 1 && leadItem) {
-        const display = buildTierDisplay(leadItem, totalDays, leadStart);
-        tierLabel = display.tierLabel;
-        isFlatRate = display.isFlatRate;
-        weeklyBreakdown = display.weeklyBreakdown;
-      }
-
+    // Niets gekozen, of nog geen periode geprikt: dan valt er niets te rekenen.
+    // De prijssamenvatting toont in dat geval een neutrale placeholder in plaats
+    // van een misleidende "€0,00 · 0 dagen".
+    if (!machine || !itemStart || !itemEnd) {
       return {
-        days: totalDays,
-        rawSubtotal,
-        discountAmount,
-        discountLabel,
-        subtotal,
-        transport: transport + trailerCost,
-        driver,
-        addonCost,
-        addonDetails,
-        vat,
-        total,
-        deliveryType,
-        trailerDays: deliveryType === "trailer_rental" ? trailerDays : undefined,
-        weekendDays,
-        sundayBlockTotal,
-        effectiveDailyRate,
-        tierLabel,
-        isFlatRate,
-        weeklyBreakdown,
-        campaignSavings
+        days: 0,
+        rawSubtotal: 0,
+        discountAmount: 0,
+        discountLabel: "",
+        subtotal: 0,
+        transport: 0,
+        driver: 0,
+        addonCost: 0,
+        addonDetails: [] as { id: string; name: string; price: number }[],
+        vat: 0,
+        total: 0,
+        deliveryType
       };
     }
 
-    // Legacy fallback
-    if (!selectedMachine) {
-      return { days: 0, rawSubtotal: 0, discountAmount: 0, discountLabel: "", subtotal: 0, transport: 0, driver: 0, addonCost: 0, addonDetails: [], vat: 0, total: 0, deliveryType };
-    }
+    const days = calculateRentalDays(itemStart, itemEnd);
 
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    const timeDiff = end.getTime() - start.getTime();
-    const days = Math.max(1, Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1);
-
-    const rawSubtotal = selectedMachine.pricePerDay * days;
-    const itemSub = calculateItemSubtotal(selectedMachine, days, customerProfile, campaignRules, startDate);
-    const itemSubNoCampaign = calculateItemSubtotal(
-      { ...selectedMachine, campaignDiscountPercent: undefined, campaignDiscountAmount: undefined } as any,
-      days, customerProfile, [], startDate
+    const subtotal = calculateItemSubtotal(machine, days, customerProfile, campaignRules, itemStart);
+    // Weekly-only products bill per week, not per day — the day-rate "raw" total is
+    // meaningless and would surface as a phantom discount, so anchor raw to the subtotal.
+    const rawSubtotal = machine.weeklyOnly ? subtotal : machine.pricePerDay * days;
+    const subtotalNoCampaign = calculateItemSubtotal(
+      { ...machine, campaignDiscountPercent: undefined, campaignDiscountAmount: undefined } as any,
+      days, customerProfile, [], itemStart
     );
-    const discountAmount = Math.max(0, rawSubtotal - itemSub);
-    const campaignSavings = Math.max(0, itemSubNoCampaign - itemSub);
+    const discountAmount = Math.max(0, rawSubtotal - subtotal);
+    const campaignSavings = Math.max(0, subtotalNoCampaign - subtotal);
 
-    let discountLabel = "Korting";
-    if (days >= 28) {
-      discountLabel = "Maandkorting";
-    } else if (days >= 5) {
-      discountLabel = "Weekkorting";
-    } else if (isStrictWeekend(startDate, days) && selectedMachine.weekendPrice) {
-      discountLabel = "Weekendprijs";
-    } else if (days === 2 && selectedMachine.twoDayPrice) {
-      discountLabel = "2-Dag Prijs";
-    } else if (days === 1 && selectedMachine.oneDayPrice && selectedMachine.oneDayPrice < selectedMachine.pricePerDay) {
-      discountLabel = "1-Dag Actie";
-    }
-
-    const subtotal = itemSub;
-    const singleFees = getTransportFees(useAppStore.getState().siteConfig);
-    const transport = deliveryType === "delivery_by_us" ? singleFees.deliveryFee : 0;
-    const trailerCost = deliveryType === "trailer_rental" ? singleFees.trailerPerDay * trailerDays : 0;
+    const fees = getTransportFees(useAppStore.getState().siteConfig);
+    const transport = deliveryType === "delivery_by_us" ? fees.deliveryFee : 0;
+    // Trailer billed per klant-gekozen aantal dagen (niet de huurperiode).
+    const trailerCost = deliveryType === "trailer_rental" ? fees.trailerPerDay * trailerDays : 0;
     const driver = 0;
 
+    // Forced Sunday block: when a rental's last work day is Saturday the machine
+    // is held over the closed Sunday (return Monday 08:00). Het zit al in het
+    // subtotaal; hier apart zodat de samenvatting het als eigen regel kan tonen.
+    const sundayBlockTotal = hasSundayBlock(machine, itemStart, days) ? (machine.sundayBlockFee ?? 0) : 0;
+    const weekendDays = countWeekendDays(itemStart, itemEnd);
+
+    // Addon calculation
     let addonCost = 0;
     const addonDetails: { id: string; name: string; price: number }[] = [];
 
     for (const id of GLOBAL_ADDON_IDS) {
       if (!selectedAddons.includes(id)) continue;
-      const line = globalAddonLine(id, days, id === "rijplaten" ? rijplatenQty : 1);
+      const line = globalAddonLine(id, days, machine, id === "rijplaten" ? rijplatenQty : 1);
       addonCost += line.price;
       addonDetails.push(line);
     }
+    // Product-specific cross-sell extras (billed per started week, same week count as the machine)
+    for (const a of machine.crossSellAddons ?? []) {
+      if (!selectedAddons.includes(a.id)) continue;
+      const price = addonPriceForRental(a, days, machine);
+      addonCost += price;
+      addonDetails.push({ id: a.id, name: a.name, price });
+    }
 
-    const totalExcl = subtotal + transport + trailerCost + driver + addonCost;
-    const vat = totalExcl * 0.21;
-    const total = totalExcl + vat;
+    const { vat, total } = computeVatAndTotal(subtotal, transport + trailerCost, driver, addonCost);
 
-    const weekendDays = countWeekendDays(startDate, endDate);
-    const sundayBlockTotal = hasSundayBlock(selectedMachine, startDate, days) ? (selectedMachine.sundayBlockFee ?? 0) : 0;
-    const effectiveDailyRate = (days >= 6 && days < 28 && selectedMachine.weeklyPrice)
-      ? selectedMachine.weeklyPrice / 5
+    let discountLabel = "Korting";
+    if (days >= 28) discountLabel = "Maandkorting";
+    else if (days >= 5) discountLabel = "Weekkorting";
+    else if (isStrictWeekend(itemStart, days) && machine.weekendPrice) discountLabel = "Weekendprijs";
+    else if (days === 2 && machine.twoDayPrice) discountLabel = "2-Dag Prijs";
+    else if (days === 1 && machine.oneDayPrice && machine.oneDayPrice < machine.pricePerDay) discountLabel = "1-Dag Actie";
+
+    const effectiveDailyRate = (!machine.weeklyOnly && days >= 6 && days < 28 && machine.weeklyPrice)
+      ? machine.weeklyPrice / 5
       : null;
 
-    const legacyDisplay = buildTierDisplay(selectedMachine, days, startDate);
-    const tierLabel: string | null = legacyDisplay.tierLabel;
-    const isFlatRate = legacyDisplay.isFlatRate;
-    const weeklyBreakdown: WeeklyBreakdown | null = legacyDisplay.weeklyBreakdown;
+    // Tier label for flat-rate price display — unit-tested against
+    // calculateItemSubtotal in pricing-display.test.ts so the breakdown can never
+    // drift from the real charge.
+    const display = buildTierDisplay(machine, days, itemStart);
 
     return {
       days,
@@ -582,9 +459,9 @@ export default function BookingSection({
       weekendDays,
       sundayBlockTotal,
       effectiveDailyRate,
-      tierLabel,
-      isFlatRate,
-      weeklyBreakdown,
+      tierLabel: display.tierLabel,
+      isFlatRate: display.isFlatRate,
+      weeklyBreakdown: display.weeklyBreakdown,
       campaignSavings
     };
   };
@@ -686,17 +563,13 @@ export default function BookingSection({
   const handleNextStep = () => {
     setValidationError(null);
     if (step === 1) {
-      if (cartItems.length === 0) {
-        setValidationError("Selecteer minstens één machine om door te gaan.");
+      if (!cartItem) {
+        setValidationError("Selecteer een machine om door te gaan.");
         return;
       }
-      // Check that all items in cart are available
-      const anyUnavailable = cartItems.some((item) => {
-        const av = getItemAvailability(item.machine.id, item.startDate || "", item.endDate || "");
-        return !av.available;
-      });
-      if (anyUnavailable) {
-        setValidationError("Eén of meer machines in uw winkelwagen zijn niet beschikbaar voor de gekozen datums.");
+      const av = getItemAvailability(cartItem.machine.id, cartItem.startDate || "", cartItem.endDate || "");
+      if (!av.available) {
+        setValidationError("De gekozen machine is niet beschikbaar voor deze datums.");
         return;
       }
       if (deliveryType === "delivery_by_us" && !deliveryTimeSlot) {
@@ -741,167 +614,124 @@ export default function BookingSection({
 
   const handleCreateBooking = async () => {
     if (isSubmittingRef.current) return;
+    if (!cartItem) {
+      setBookingError("Selecteer eerst een machine.");
+      return;
+    }
     isSubmittingRef.current = true;
     setIsSubmitting(true);
     setBookingError(null);
     window.scrollTo({ top: 0, behavior: "smooth" });
-    let firstSuccessfulOrder: Order | null = null;
-    const placedOrders: Order[] = [];
     try {
-        
-        if (cartItems && cartItems.length > 0) {
-          for (let i = 0; i < cartItems.length; i++) {
-            const item = cartItems[i];
-            const start = new Date(item.startDate);
-            const end = new Date(item.endDate);
-            const timeDiff = end.getTime() - start.getTime();
-            const days = Math.max(1, Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1);
+      const machine = cartItem.machine;
+      const days = calculateRentalDays(cartItem.startDate, cartItem.endDate);
 
-            const itemSubtotal = calculateItemSubtotal(item.machine, days, customerProfile, campaignRules, item.startDate);
-            const submitFees = getTransportFees(useAppStore.getState().siteConfig);
-            const transport = (deliveryType === "delivery_by_us" && i === 0) ? submitFees.deliveryFee : 0;
-            const trailerCost = (deliveryType === "trailer_rental" && i === 0) ? submitFees.trailerPerDay * trailerDays : 0;
-            const driver = 0;
+      const subtotal = calculateItemSubtotal(machine, days, customerProfile, campaignRules, cartItem.startDate);
+      const fees = getTransportFees(useAppStore.getState().siteConfig);
+      const transport = deliveryType === "delivery_by_us" ? fees.deliveryFee : 0;
+      const trailerCost = deliveryType === "trailer_rental" ? fees.trailerPerDay * trailerDays : 0;
+      const driver = 0;
 
-            let addonCost = 0;
-            const addonsList: { id: string; name: string; price: number; billing: "daily" | "flat" | "weekly"; quantity?: number }[] = [];
-            for (const id of GLOBAL_ADDON_IDS) {
-              if (!selectedAddons.includes(id)) continue;
-              const qty = id === "rijplaten" ? rijplatenQty : 1;
-              const line = globalAddonLine(id, days, qty);
-              addonCost += line.price;
-              addonsList.push({ ...line, billing: "weekly", quantity: qty });
-            }
-            // Product-specific cross-sell extras (per started week, server recomputes authoritatively)
-            for (const a of (item.machine.crossSellAddons ?? [])) {
-              if (selectedAddons.includes(a.id)) {
-                const price = addonPriceForRental(a, days, item.machine);
-                const billing: "daily" | "flat" | "weekly" =
-                  !item.machine.weeklyOnly && days === 1 && a.pricePerDay != null && a.pricePerDay > 0 ? "daily"
-                  : !item.machine.weeklyOnly && days === 2 && a.pricePerTwoDay != null && a.pricePerTwoDay > 0 ? "flat"
-                  : "weekly";
-                addonCost += price;
-                addonsList.push({ id: a.id, name: a.name, price, billing });
-              }
-            }
-
-            const itemVat = Math.round((itemSubtotal + transport + trailerCost + driver + addonCost) * 21) / 100;
-            const itemTotal = itemSubtotal + transport + trailerCost + driver + addonCost + itemVat;
-
-            const orderObj: Partial<Order> = {
-              machineId: item.machine.id,
-              machineName: item.machine.name,
-              machinePrice: item.machine.pricePerDay,
-              startDate: item.startDate,
-              endDate: item.endDate,
-              rentalDays: days,
-              deliveryType,
-              deliveryAddress: deliveryType === "self_pickup" ? undefined : deliveryAddress,
-              deliveryTimeSlot: deliveryType === "delivery_by_us" ? deliveryTimeSlot || undefined : undefined,
-              // Aantal aanhangerdagen alleen op item 0 en alleen bij trailer_rental
-              // (mirror van de trailerCost-toewijzing hierboven).
-              trailerDays: (deliveryType === "trailer_rental" && i === 0) ? trailerDays : undefined,
-              customerName,
-              customerEmail,
-              customerPhone,
-              customerProfile,
-              poNumber: poNumber.trim() || undefined,
-              paymentMethod,
-              subtotal: itemSubtotal,
-              transportCost: transport + trailerCost,
-              driverCost: parseFloat(driver.toFixed(2)),
-              vatAmount: parseFloat(itemVat.toFixed(2)),
-              totalAmount: parseFloat(itemTotal.toFixed(2)),
-              addons: addonsList
-            };
-
-            const result = await onCreateReservation(orderObj);
-            if (result) {
-              placedOrders.push(result);
-              if (!firstSuccessfulOrder) {
-                firstSuccessfulOrder = result;
-              }
-            }
-          }
-
-          if (firstSuccessfulOrder) {
-            setSuccessOrders(placedOrders);
-            if (paymentGateway === "whatsapp") {
-              const checkoutItems: CartItem[] = cartItems.length > 0 ? cartItems : (selectedMachine ? [{
-                id: selectedMachine.id,
-                machine: selectedMachine,
-                startDate: startDate,
-                endDate: endDate
-              }] : []);
-              const orderTotals = {
-                days: placedOrders.reduce((s, o) => s + o.rentalDays, 0),
-                subtotal: placedOrders.reduce((s, o) => s + o.subtotal, 0),
-                transport: placedOrders.reduce((s, o) => s + o.transportCost, 0),
-                vat: placedOrders.reduce((s, o) => s + o.vatAmount, 0),
-                total: placedOrders.reduce((s, o) => s + o.totalAmount, 0)
-              };
-              const waUrl = buildWhatsAppUrl(checkoutItems, deliveryType, customerName, customerEmail, customerPhone || undefined, orderTotals, paymentMethod);
-              setWhatsappUrl(waUrl);
-            } else {
-              setWhatsappUrl("");
-            }
-            setSuccessOrder(firstSuccessfulOrder);
-            onClearCart();
-            setStep(STEP_SUCCESS);
-          } else {
-            setBookingError("Er is een fout opgetreden bij het verwerken van uw boeking. Controleer uw gegevens en probeer het opnieuw.");
-          }
-        }
-        isSubmittingRef.current = false;
-        setIsSubmitting(false);
-        } catch (err: any) {
-        isSubmittingRef.current = false;
-        setIsSubmitting(false);
-
-        if (placedOrders.length > 0) {
-          // Partial success: at least one item was placed before the failure.
-          // Surface the placed orders so the customer can see confirmation and
-          // reach WhatsApp, then explain the remaining item(s) failed.
-          setSuccessOrders(placedOrders);
-          setSuccessOrder(placedOrders[0]);
-          onClearCart();
-          setBookingError(
-            `Let op: ${placedOrders.length} machine(s) zijn geboekt (${placedOrders.map(o => o.id).join(", ")}), ` +
-            `maar ${cartItems.length - placedOrders.length} machine(s) konden niet worden verwerkt. ` +
-            `Neem contact op via WhatsApp zodat wij dit kunnen oplossen.`
-          );
-          setStep(STEP_SUCCESS);
-          return;
-        }
-
-        const msg: string = err?.message || "";
-        if (msg.includes("409") || msg.toLowerCase().includes("conflict") || msg.toLowerCase().includes("gereserveerd")) {
-          setBookingError("Deze machine is helaas niet meer beschikbaar op de geselecteerde datums. Kies andere datums.");
-        } else if (msg.toLowerCase().includes("geblokkeerde") || msg.toLowerCase().includes("blokkeer")) {
-          setBookingError("De geselecteerde periode bevat een geblokkeerde datum. Kies andere datums.");
-        } else if (msg) {
-          setBookingError(msg);
-        } else {
-          setBookingError("Er is een technische fout opgetreden. Probeer het over een paar momenten opnieuw.");
-        }
+      let addonCost = 0;
+      const addonsList: { id: string; name: string; price: number; billing: "daily" | "flat" | "weekly"; quantity?: number }[] = [];
+      for (const id of GLOBAL_ADDON_IDS) {
+        if (!selectedAddons.includes(id)) continue;
+        const qty = id === "rijplaten" ? rijplatenQty : 1;
+        const line = globalAddonLine(id, days, machine, qty);
+        addonCost += line.price;
+        addonsList.push({ ...line, billing: "weekly", quantity: qty });
       }
+      // Product-specific cross-sell extras (per started week, server recomputes authoritatively)
+      for (const a of machine.crossSellAddons ?? []) {
+        if (!selectedAddons.includes(a.id)) continue;
+        const price = addonPriceForRental(a, days, machine);
+        const billing: "daily" | "flat" | "weekly" =
+          !machine.weeklyOnly && days === 1 && a.pricePerDay != null && a.pricePerDay > 0 ? "daily"
+          : !machine.weeklyOnly && days === 2 && a.pricePerTwoDay != null && a.pricePerTwoDay > 0 ? "flat"
+          : "weekly";
+        addonCost += price;
+        addonsList.push({ id: a.id, name: a.name, price, billing });
+      }
+
+      // Zelfde functie als het prijsoverzicht gebruikt, zodat wat de klant ziet
+      // exact is wat er verstuurd wordt — en wat de server onafhankelijk narekent.
+      const { vat, total } = computeVatAndTotal(subtotal, transport + trailerCost, driver, addonCost);
+
+      const orderObj: Partial<Order> = {
+        machineId: machine.id,
+        machineName: machine.name,
+        machinePrice: machine.pricePerDay,
+        startDate: cartItem.startDate,
+        endDate: cartItem.endDate,
+        rentalDays: days,
+        deliveryType,
+        deliveryAddress: deliveryType === "self_pickup" ? undefined : deliveryAddress,
+        deliveryTimeSlot: deliveryType === "delivery_by_us" ? deliveryTimeSlot || undefined : undefined,
+        trailerDays: deliveryType === "trailer_rental" ? trailerDays : undefined,
+        customerName,
+        customerEmail,
+        customerPhone,
+        customerProfile,
+        poNumber: poNumber.trim() || undefined,
+        paymentMethod,
+        subtotal,
+        transportCost: transport + trailerCost,
+        driverCost: driver,
+        vatAmount: vat,
+        totalAmount: total,
+        addons: addonsList
+      };
+
+      const placedOrder = await onCreateReservation(orderObj);
+      if (!placedOrder) {
+        setBookingError("Er is een fout opgetreden bij het verwerken van uw boeking. Controleer uw gegevens en probeer het opnieuw.");
+        return;
+      }
+
+      if (paymentGateway === "whatsapp") {
+        const orderTotals = {
+          days: placedOrder.rentalDays,
+          subtotal: placedOrder.subtotal,
+          transport: placedOrder.transportCost,
+          vat: placedOrder.vatAmount,
+          total: placedOrder.totalAmount
+        };
+        setWhatsappUrl(
+          buildWhatsAppUrl([cartItem], deliveryType, customerName, customerEmail, customerPhone || undefined, orderTotals, paymentMethod)
+        );
+      } else {
+        setWhatsappUrl("");
+      }
+      setSuccessOrder(placedOrder);
+      onClearSelection();
+      setStep(STEP_SUCCESS);
+    } catch (err: any) {
+      const msg: string = err?.message || "";
+      if (msg.includes("409") || msg.toLowerCase().includes("conflict") || msg.toLowerCase().includes("gereserveerd")) {
+        setBookingError("Deze machine is helaas niet meer beschikbaar op de geselecteerde datums. Kies andere datums.");
+      } else if (msg.toLowerCase().includes("geblokkeerde") || msg.toLowerCase().includes("blokkeer")) {
+        setBookingError("De geselecteerde periode bevat een geblokkeerde datum. Kies andere datums.");
+      } else if (msg) {
+        setBookingError(msg);
+      } else {
+        setBookingError("Er is een technische fout opgetreden. Probeer het over een paar momenten opnieuw.");
+      }
+    } finally {
+      isSubmittingRef.current = false;
+      setIsSubmitting(false);
+    }
   };
 
   const sums = useMemo(
     () => calculationSummary(),
     // calculationSummary closes over these values — re-run only when they change
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [cartItems, selectedAddons, rijplatenQty, trailerDays, deliveryType, customerProfile, campaignRules, startDate, endDate]
+    [cartItem, selectedAddons, rijplatenQty, trailerDays, deliveryType, customerProfile, campaignRules, startDate, endDate]
   );
 
-  // Reservation period for the price summary box — neutral copy when the cart
-  // mixes machines booked for different periods.
-  const leadCartItem = cartItems[0];
-  const mixedCartPeriods = cartItems.length > 1 && cartItems.some(
-    (i) => i.startDate !== leadCartItem?.startDate || i.endDate !== leadCartItem?.endDate
-  );
-  const summaryStartDate = leadCartItem?.startDate ?? startDate;
-  const summaryEndDate = leadCartItem?.endDate ?? endDate;
+  // Reservation period for the price summary box.
+  const summaryStartDate = cartItem?.startDate || startDate;
+  const summaryEndDate = cartItem?.endDate || endDate;
 
   return (
     <div className="relative min-h-[calc(100vh-4.5rem)] py-10 px-5 sm:px-6 lg:px-8">
@@ -985,10 +815,10 @@ export default function BookingSection({
                     transition={{ duration: 0.18, ease: "easeOut" }}
                   >
                   <BookingStep1
-                    cartItems={cartItems}
+                    cartItem={cartItem}
                     getItemAvailability={getItemAvailability}
-                    onRemoveCartItem={onRemoveCartItem}
-                    onUpdateCartItemDates={onUpdateCartItemDates}
+                    onClearSelection={onClearSelection}
+                    onUpdateSelectedDates={onUpdateSelectedDates}
                     deliveryType={deliveryType}
                     setDeliveryType={setDeliveryType}
                     setDeliveryAddress={setDeliveryAddress}
@@ -1000,15 +830,12 @@ export default function BookingSection({
                     setTrailerDays={setTrailerDays}
                     validationError={validationError}
                     setValidationError={setValidationError}
-                    isAvailable={cartItems.length > 0 && cartItems.every(item => {
-                      const av = getItemAvailability(item.machine.id, item.startDate || "", item.endDate || "");
-                      return av.available;
-                    })}
+                    isAvailable={!!cartItem && getItemAvailability(cartItem.machine.id, cartItem.startDate || "", cartItem.endDate || "").available}
                     handleNextStep={handleNextStep}
                     setActiveTab={setActiveTab}
                     customerProfile={customerProfile}
                     sums={sums}
-                    selectedMachine={cartItems.length > 0 ? cartItems[0].machine : null}
+                    selectedMachine={cartItem?.machine ?? null}
                     deliveryDistanceKm={deliveryDistanceKm}
                     deliveryTimeSlot={deliveryTimeSlot}
                     setDeliveryTimeSlot={setDeliveryTimeSlot}
@@ -1058,10 +885,9 @@ export default function BookingSection({
                     handleNextStep={handleNextStep}
                     setActiveTab={setActiveTab}
                     sums={sums}
-                    selectedMachine={cartItems.length > 0 ? cartItems[0].machine : null}
+                    selectedMachine={cartItem?.machine ?? null}
                     startDate={summaryStartDate}
                     endDate={summaryEndDate}
-                    multiplePeriods={mixedCartPeriods}
                     deliveryDistanceKm={deliveryDistanceKm}
                     isSubmitting={isSubmitting}
                     bookingError={bookingError}
@@ -1074,14 +900,13 @@ export default function BookingSection({
 
               {/* Price summary — desktop only, sticky right column */}
               <div className="hidden lg:block lg:col-span-4 lg:sticky lg:top-24 space-y-4">
-                <BookingPriceSummary selectedMachine={cartItems && cartItems.length > 0 ? cartItems[0].machine : null} machineCount={cartItems.length || 1} startDate={summaryStartDate} endDate={summaryEndDate} multiplePeriods={mixedCartPeriods} sums={sums} />
+                <BookingPriceSummary selectedMachine={cartItem?.machine ?? null} startDate={summaryStartDate} endDate={summaryEndDate} sums={sums} />
               </div>
 
             </motion.div>
           ) : (
             <BookingSuccess
               successOrder={successOrder}
-              successOrders={successOrders}
               paymentGateway={paymentGateway}
               setStep={setStep}
               setSuccessOrder={setSuccessOrder}

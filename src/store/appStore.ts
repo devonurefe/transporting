@@ -130,7 +130,12 @@ interface AppState {
   blogPosts: BlogPost[];
   damageReports: DamageReport[];
   maintenanceEvents: MaintenanceEvent[];
-  cartItems: CartItem[];
+  // De machine die de klant op dit moment boekt, of null wanneer er niets
+  // gekozen is. Bewust géén array: een huurder neemt één machine per aanvraag,
+  // en de catalogus biedt ook alleen "vervangen" aan als er al iets gekozen is.
+  // Het model hoort dat af te dwingen in plaats van een tweede item toe te laten
+  // dat de rest van de prijsberekening nooit correct heeft afgehandeld.
+  selectedCartItem: CartItem | null;
   isLoading: boolean;
   error: string | null;
 
@@ -178,11 +183,10 @@ interface AppState {
   updateMaintenanceEvent: (id: string, data: { description: string; cost?: number }) => Promise<boolean>;
   resolveMaintenanceEvent: (id: string, cost?: number) => Promise<boolean>;
 
-  // Cart actions
-  addToCart: (machine: Machine, startDate: string, endDate: string) => void;
-  removeFromCart: (itemId: string) => void;
-  updateCartItemDates: (itemId: string, startDate: string, endDate: string) => void;
-  clearCart: () => void;
+  // Selectie-acties (vervangen de oude winkelwagenacties)
+  selectMachine: (machine: Machine, startDate: string, endDate: string) => void;
+  updateSelectedDates: (startDate: string, endDate: string) => void;
+  clearSelection: () => void;
   clearError: () => void;
 
   campaignRules: CampaignRule[];
@@ -264,12 +268,19 @@ export const useAppStore = create<AppState>((set, get) => ({
   blogPosts: [],
   damageReports: [],
   maintenanceEvents: [],
-  cartItems: (() => {
+  // Eén machine per boeking — zie de toelichting bij selectedCartItem in de
+  // store-interface. Oude sessies hebben hier nog een array staan (het vorige
+  // winkelwagenmodel); daarvan nemen we het eerste item over zodat een klant
+  // die middenin een boeking zat niet plots een lege selectie ziet.
+  selectedCartItem: (() => {
     try {
       const stored = localStorage.getItem("hwh_cart");
-      if (stored) return JSON.parse(stored);
+      if (!stored) return null;
+      const parsed = JSON.parse(stored);
+      if (Array.isArray(parsed)) return parsed.length > 0 ? (parsed[0] as CartItem) : null;
+      return (parsed as CartItem) ?? null;
     } catch { /* ignore */ }
-    return [];
+    return null;
   })(),
   campaignRules: (() => {
     try {
@@ -921,46 +932,30 @@ export const useAppStore = create<AppState>((set, get) => ({
     return false;
   },
 
-  // Cart actions implementation
-  addToCart: (machine, startDate, endDate) => {
+  // Selectie-acties. De selectie vervángt altijd, want er is er maar één.
+  selectMachine: (machine, startDate, endDate) => {
+    const item: CartItem = {
+      id: `cart-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      machine,
+      startDate,
+      endDate
+    };
+    try { localStorage.setItem("hwh_cart", JSON.stringify(item)); } catch { /* ignore */ }
+    set({ selectedCartItem: item });
+  },
+
+  updateSelectedDates: (startDate, endDate) => {
     set(state => {
-      // Avoid duplicate machines in cart
-      const exists = state.cartItems.some(item => item.machine.id === machine.id);
-      if (exists) return {};
-      
-      const newItem: CartItem = {
-        id: `cart-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
-        machine,
-        startDate,
-        endDate
-      };
-      const updated = [...state.cartItems, newItem];
+      if (!state.selectedCartItem) return {};
+      const updated = { ...state.selectedCartItem, startDate, endDate };
       try { localStorage.setItem("hwh_cart", JSON.stringify(updated)); } catch { /* ignore */ }
-      return { cartItems: updated };
+      return { selectedCartItem: updated };
     });
   },
 
-  removeFromCart: (itemId) => {
-    set(state => {
-      const updated = state.cartItems.filter(item => item.id !== itemId);
-      try { localStorage.setItem("hwh_cart", JSON.stringify(updated)); } catch { /* ignore */ }
-      return { cartItems: updated };
-    });
-  },
-
-  updateCartItemDates: (itemId, startDate, endDate) => {
-    set(state => {
-      const updated = state.cartItems.map(item =>
-        item.id === itemId ? { ...item, startDate, endDate } : item
-      );
-      try { localStorage.setItem("hwh_cart", JSON.stringify(updated)); } catch { /* ignore */ }
-      return { cartItems: updated };
-    });
-  },
-
-  clearCart: () => {
+  clearSelection: () => {
     try { localStorage.removeItem("hwh_cart"); } catch { /* ignore */ }
-    set({ cartItems: [] });
+    set({ selectedCartItem: null });
   },
 
   clearError: () => set({ error: null }),

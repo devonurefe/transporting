@@ -25,7 +25,7 @@ import {
 import { motion, AnimatePresence } from "motion/react";
 import { useLanguageStore } from "../store/languageStore";
 import { useAppStore } from "../store/appStore";
-import { AppNotification, UserProfile, CartItem } from "../types";
+import { AppNotification, UserProfile } from "../types";
 
 export function HuurGoLogo({ className = "h-8", dark = false }: { className?: string; dark?: boolean }) {
   return (
@@ -140,7 +140,9 @@ interface HeaderProps {
   onCustomerLogout: () => void;
   isAdminMode: boolean;
   setIsAdminMode: (adminMode: boolean) => void;
-  cartItems?: CartItem[];
+  // Er is altijd hooguit één gekozen machine, dus een aantal zeggen heeft geen
+  // zin — een stip volstaat om te tonen dat er een boeking klaarstaat.
+  hasSelection?: boolean;
   siteConfig?: {
     siteName: string;
     heroTagline: string;
@@ -162,7 +164,7 @@ export default function Header({
   onCustomerLogout,
   isAdminMode,
   setIsAdminMode,
-  cartItems = []
+  hasSelection = false
 }: HeaderProps) {
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
   const unreadCount = useMemo(() => notifications.filter((n) => !n.read).length, [notifications]);
@@ -266,10 +268,11 @@ export default function Header({
                     </span>
                   )}
 
-                  {tab.id === "booking" && cartItems.length > 0 && (
-                    <span className="flex h-4.5 min-w-[18px] items-center justify-center rounded-full bg-emerald-500 px-1 text-[9px] font-black text-slate-950 shadow-[0_0_12px_rgba(16,185,129,0.5)] animate-pulse">
-                      {cartItems.length}
-                    </span>
+                  {tab.id === "booking" && hasSelection && (
+                    <span
+                      aria-label="Er staat een machine klaar om te boeken"
+                      className="flex h-2.5 w-2.5 rounded-full bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.5)] animate-pulse"
+                    />
                   )}
                   
                   {isActive && !isBookingCta && (
@@ -481,10 +484,11 @@ export default function Header({
                   <Icon className={`h-4.5 w-4.5 ${isActive ? "text-slate-900" : "text-slate-400"}`} />
                   <span className="text-[10px] mt-0.5 font-medium leading-none">{tab.label}</span>
 
-                  {tab.id === "booking" && cartItems.length > 0 && (
-                    <span className="absolute top-1.5 right-1/2 translate-x-5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-emerald-500 px-1 text-[8px] font-black text-slate-950 shadow-[0_0_8px_rgba(16,185,129,0.4)]">
-                      {cartItems.length}
-                    </span>
+                  {tab.id === "booking" && hasSelection && (
+                    <span
+                      aria-label="Er staat een machine klaar om te boeken"
+                      className="absolute top-1.5 right-1/2 translate-x-5 flex h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]"
+                    />
                   )}
                 </button>
               );

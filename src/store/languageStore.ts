@@ -74,8 +74,6 @@ const dictionary: TranslationDictionary = {
   priceSummaryChooseMachineHint: { nl: "Selecteer een hoogwerker uit het assortiment om uw prijs te zien.", en: "Select an aerial lift from the assortment to see your price.", tr: "Fiyatınızı görmek için ürün gamından bir platform seçin." },
   priceSummaryChooseDates: { nl: "Kies uw huurperiode", en: "Choose your rental period", tr: "Kiralama döneminizi seçin" },
   priceSummaryChooseDatesHint: { nl: "Selecteer een begin- en einddatum in de kalender om de prijs te zien.", en: "Select a start and end date in the calendar to see the price.", tr: "Fiyatı görmek için takvimde bir başlangıç ve bitiş tarihi seçin." },
-  priceSummaryMultiplePeriods: { nl: "Meerdere periodes", en: "Multiple periods", tr: "Birden fazla dönem" },
-  priceSummaryMachinesReserved: { nl: "machines gereserveerd", en: "machines reserved", tr: "makine rezerve edildi" },
   priceSummaryDayRental: { nl: "dag huur", en: "day rental", tr: "gün kiralama" },
   priceSummaryDaysRental: { nl: "dagen huur", en: "days rental", tr: "gün kiralama" },
   priceSummaryRentPeriod: { nl: "Huurperiode", en: "Rental period", tr: "Kiralama dönemi" },

@@ -12,10 +12,8 @@ import { withImageWidth } from "../../utils/image";
 
 interface BookingPriceSummaryProps {
   selectedMachine: Machine | null;
-  machineCount?: number;
   startDate?: string;
   endDate?: string;
-  multiplePeriods?: boolean;
   sums: {
     days: number;
     rawSubtotal: number;
@@ -115,18 +113,15 @@ function formatShortDate(iso: string): string {
   return `${d.getDate()} ${months[d.getMonth()]}`;
 }
 
-export default function BookingPriceSummary({ selectedMachine, machineCount = 1, startDate, endDate, multiplePeriods, sums }: BookingPriceSummaryProps) {
+export default function BookingPriceSummary({ selectedMachine, startDate, endDate, sums }: BookingPriceSummaryProps) {
   const t = useLanguageStore((state) => state.t);
   // Open by default — customers (and staff relaying prices over the phone)
   // should see what's in the total immediately, not have to find the toggle.
   const [breakdownOpen, setBreakdownOpen] = React.useState(true);
 
   // Reservation period label: confirm WHICH dates the customer booked (the
-  // calendar is no longer visible in steps 2-3). Falls back to neutral copy
-  // when the cart mixes machines with different periods.
-  const periodLabel = multiplePeriods
-    ? t("priceSummaryMultiplePeriods")
-    : startDate && endDate
+  // calendar is no longer visible in step 2).
+  const periodLabel = startDate && endDate
     ? `${formatShortDate(startDate)} – ${formatShortDate(endDate)}`
     : null;
 
@@ -148,7 +143,7 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
 
   // No period picked yet (sums.days === 0, nothing priced) — show a neutral
   // placeholder instead of a misleading "€0,00 · 0 dagen" total.
-  if (!multiplePeriods && sums.days === 0) {
+  if (sums.days === 0) {
     return (
       <div className="bg-white border border-slate-200 shadow-sm p-6 rounded-2xl text-center space-y-3">
         <div className="mx-auto h-10 w-10 bg-slate-50 text-slate-400 flex items-center justify-center rounded-full border border-slate-100">
@@ -230,9 +225,9 @@ export default function BookingPriceSummary({ selectedMachine, machineCount = 1,
         <div className="min-w-0 flex-1">
           <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wide leading-none mb-1.5">{t("priceSummaryReservation")}</p>
           <h4 className="text-sm font-extrabold text-slate-900 leading-tight mb-1">
-            {machineCount > 1 ? `${machineCount} ${t("priceSummaryMachinesReserved")}` : selectedMachine.name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "")}
+            {selectedMachine.name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "")}
           </h4>
-          {machineCount === 1 && (
+          {(
             selectedMachine.weeklyOnly && selectedMachine.weeklyPrice ? (
               <span className="text-sm font-black text-slate-800 font-mono">
                 {euroCompact(selectedMachine.weeklyPrice)}{t("priceSummaryPerWeek")}

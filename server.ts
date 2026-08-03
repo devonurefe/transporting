@@ -981,12 +981,12 @@ function scheduleDailyReminders() {
         // scheduler dezelfde semantiek hanteert als elke andere mailflow (zie
         // server/utils/emailOptIn.ts).
         const optIns = await batchCustomerEmailOptIns(orders.map(o => o.customerId));
-        const wantsEmail = (customerId: string | null) => wantsEmailFromBatch(optIns, customerId);
+        const wantsEmail = (order: { customerId: string | null; emailOptOut?: boolean | null }) => wantsEmailFromBatch(optIns, order);
 
         let sent = 0;
         let skipped = 0;
         for (const order of orders) {
-          if (!wantsEmail(order.customerId)) { skipped++; continue; }
+          if (!wantsEmail(order)) { skipped++; continue; }
           const ok = await emailService.sendRentalReminder({
             ...order,
             startDate: order.startDate.toISOString().split("T")[0],

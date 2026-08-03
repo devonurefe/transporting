@@ -200,6 +200,18 @@ model Order {
   // (status "Onderweg" past its endDate) — prevents re-sending the same
   // alert on every daily cron run. Cleared implicitly once status moves on.
   overdueAlertSentAt DateTime?
+  // De e-mailvoorkeur van de klant, vastgelegd óp de order voor het geval het
+  // Customer-record verdwijnt.
+  //
+  // Waarom dit nodig is: bij het verwijderen van een klant blijven de orders
+  // bestaan (wettelijke bewaarplicht voor facturen) maar wordt customerId op
+  // null gezet, terwijl customerEmail gewoon op de orderregel blijft staan. De
+  // opt-in-check leest normaal het Customer-record, en een ontbrekende klant
+  // telt bewust als "wil mail" — dat klopt voor gasten, die nooit een voorkeur
+  // hebben kunnen instellen. Voor een verwijderde klant is het precies verkeerd
+  // om: wie "geen mail" had aangevinkt kreeg na verwijdering weer post. Bij het
+  // verwijderen wordt die voorkeur daarom hierheen gekopieerd.
+  emailOptOut     Boolean   @default(false)
 
   customer        Customer? @relation(fields: [customerId], references: [id])
 

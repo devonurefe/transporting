@@ -116,7 +116,7 @@ export async function releaseUnpaidOrders(): Promise<{ released: number }> {
   const notifiable = stale.filter(o => o.startDate >= todayStart);
   const optIns = await batchCustomerEmailOptIns(notifiable.map(o => o.customerId));
   for (const order of notifiable) {
-    if (!wantsEmailFromBatch(optIns, order.customerId)) continue;
+    if (!wantsEmailFromBatch(optIns, order)) continue;
     await emailService
       .sendStatusUpdate(toEmailOrder({ ...order, status: "Geannuleerd" }), { expiredUnpaid: true })
       .catch(err => console.error(`[Release] Vervalmail mislukt voor ${order.id}:`, err));
@@ -157,7 +157,7 @@ export async function sendPaymentReminders(): Promise<{ sent: number; total: num
   const optIns = await batchCustomerEmailOptIns(unpaid.map(o => o.customerId));
   let sent = 0;
   for (const order of unpaid) {
-    if (!wantsEmailFromBatch(optIns, order.customerId)) continue;
+    if (!wantsEmailFromBatch(optIns, order)) continue;
     const ok = await emailService.sendPaymentReminder(toEmailOrder(order));
     if (ok) {
       sent++;

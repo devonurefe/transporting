@@ -11,7 +11,7 @@ import { audit } from "../utils/audit.js";
 import { resolveFees } from "../utils/fees.js";
 import { computeOrderSubtotal, computeTransport, computeAddonsTotal, computeVatAndTotal, buildStoredAddons, computeRentalDays, clampTrailerDays, normalizeRentalDate, CampaignRuleLike } from "../utils/orderPricing.js";
 import { buildUblInvoiceXml } from "../utils/ublInvoice.js";
-import { customerWantsEmail, batchCustomerEmailOptIns, wantsEmailFromBatch } from "../utils/emailOptIn.js";
+import { orderWantsEmail, batchCustomerEmailOptIns, wantsEmailFromBatch } from "../utils/emailOptIn.js";
 import { releaseUnpaidOrders, sendPaymentReminders, UNPAID_RELEASE_HOURS } from "../services/orderMaintenance.js";
 
 export const ordersRouter = Router();
@@ -1094,7 +1094,7 @@ ordersRouter.put("/:id/cancel", requireAuth as any, async (req: AuthenticatedReq
       endDate: updatedOrder.endDate.toISOString().split("T")[0],
       customerPhone: updatedOrder.customerPhone || ""
     };
-    if (await customerWantsEmail(updatedOrder.customerId)) {
+    if (await orderWantsEmail(updatedOrder)) {
       emailService.sendStatusUpdate(emailData).catch(err => console.error("Cancel email error:", err));
     }
     emailService.sendAdminCancelAlert(emailData).catch(err => console.error("Admin cancel alert error:", err));
@@ -1471,7 +1471,7 @@ ordersRouter.put("/:id/status", requireAdmin as any, async (req: AuthenticatedRe
     audit(req, "order.status", { entity: "Order", entityId: id, meta: { from: order.status, to: status } });
 
     // Trigger status update email asynchronously — respects the customer's live-update preference
-    if (await customerWantsEmail(updatedOrder.customerId)) {
+    if (await orderWantsEmail(updatedOrder)) {
       const emailData = {
         ...updatedOrder,
         startDate: updatedOrder.startDate.toISOString().split("T")[0],
@@ -1562,7 +1562,7 @@ ordersRouter.post("/:id/report-damage", requireAdmin as any, async (req: Authent
       meta: { machineId: order.machineId, damageReportId: damageReport.id, hasPhotos: photos.length > 0 }
     });
 
-    if (await customerWantsEmail(updatedOrder.customerId)) {
+    if (await orderWantsEmail(updatedOrder)) {
       const emailData = {
         ...updatedOrder,
         startDate: updatedOrder.startDate.toISOString().split("T")[0],
@@ -1630,7 +1630,7 @@ ordersRouter.post("/send-reminders", async (req: AuthenticatedRequest, res: Resp
     const reminderOptIns = await batchCustomerEmailOptIns(orders.map(o => o.customerId));
     let sent = 0;
     for (const order of orders) {
-      if (!wantsEmailFromBatch(reminderOptIns, order.customerId)) continue;
+      if (!wantsEmailFromBatch(reminderOptIns, order)) continue;
       const emailData = {
         ...order,
         startDate: order.startDate.toISOString().split("T")[0],

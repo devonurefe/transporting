@@ -13,6 +13,7 @@ import { computeOrderSubtotal, computeTransport, computeAddonsTotal, computeVatA
 import { buildUblInvoiceXml } from "../utils/ublInvoice.js";
 import { orderWantsEmail, batchCustomerEmailOptIns, wantsEmailFromBatch } from "../utils/emailOptIn.js";
 import { releaseUnpaidOrders, sendPaymentReminders, UNPAID_RELEASE_HOURS } from "../services/orderMaintenance.js";
+import { csvCell } from "../../src/utils/csv.js";
 
 export const ordersRouter = Router();
 
@@ -1305,12 +1306,6 @@ ordersRouter.get("/export", requireAdmin as any, async (req: AuthenticatedReques
       });
     }
 
-    const escape = (v: any) => {
-      const s = String(v ?? "");
-      return s.includes(",") || s.includes('"') || s.includes("\n")
-        ? `"${s.replace(/"/g, '""')}"` : s;
-    };
-
     const headers = [
       "Order ID","Naam","E-mail","Telefoon","Profiel",
       "Machine","Dagtarief","Startdatum","Einddatum","Dagen",
@@ -1340,7 +1335,7 @@ ordersRouter.get("/export", requireAdmin as any, async (req: AuthenticatedReques
       o.paymentStatus ?? "",
       (o as any).paymentMethod === "on_location" ? "Op locatie" : (o as any).paymentMethod === "link" ? "Betaallink" : "",
       o.createdAt.toISOString().split("T")[0]
-    ].map(escape).join(","));
+    ].map(csvCell).join(","));
 
     const csv = [headers.join(","), ...rows].join("\r\n");
     const filename = `huurgo-orders-${new Date().toISOString().split("T")[0]}.csv`;

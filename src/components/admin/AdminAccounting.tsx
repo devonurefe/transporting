@@ -32,6 +32,8 @@ interface ExportSummaryOrder {
   status: string;
   paymentStatus: string | null;
   totalAmount: number;
+  // Null bij een nooit-betaalde order, of bij een order van vóór dit veld.
+  paidAmount: number | null;
 }
 
 export default function AdminAccounting({ adminLanguage }: AdminAccountingProps) {
@@ -104,9 +106,13 @@ export default function AdminAccounting({ adminLanguage }: AdminAccountingProps)
     .filter((o) => o.status !== "Geannuleerd")
     .reduce((sum, o) => sum + o.totalAmount, 0);
 
+  // Het werkelijk betaalde bedrag, niet totalAmount: die twee wijken uiteen
+  // zodra een order ná betaling is bewerkt (zie Order.paidAmount). Legacy-orders
+  // van vóór dat veld (paidAmount null) tellen mee met hun totalAmount, zoals
+  // voorheen.
   const paidRevenue = summaryOrders
     .filter((o) => o.paymentStatus === "paid" && o.status !== "Geannuleerd")
-    .reduce((sum, o) => sum + o.totalAmount, 0);
+    .reduce((sum, o) => sum + (o.paidAmount ?? o.totalAmount), 0);
 
   const handleDownload = async () => {
     setIsDownloading(true);

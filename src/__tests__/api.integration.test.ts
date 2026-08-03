@@ -32,6 +32,8 @@ const TEST_MACHINE_ID = "itest-machine";
 const PRICE_PER_DAY = 100;
 const BLOCKED_EMAIL = "itest.geblokkeerd@example.com";
 const LOCKED_OUT_EMAIL = "itest.tijdelijk-vergrendeld@example.com";
+const TEST_ADMIN_ID = "itest-admin";
+const TEST_ADMIN_EMAIL = "itest.admin@example.com";
 
 // Basispayload voor een geldige order (1 dag, self_pickup, geen add-ons).
 // serverTotal = 100 (subtotaal) + 0 (transport) + 21 (21% btw) = 121.
@@ -53,10 +55,19 @@ const validOrder = () => ({
 describe.skipIf(!HAS_DB)("API integration", () => {
   let app: Express;
   let prisma: any;
+  let adminAuthHeader: string;
 
   beforeAll(async () => {
     ({ prisma } = await import("../../prisma/client.js"));
     ({ app } = await import("../../server.ts"));
+    const { generateToken } = await import("../../server/utils/auth.js");
+
+    await prisma.admin.upsert({
+      where: { id: TEST_ADMIN_ID },
+      update: {},
+      create: { id: TEST_ADMIN_ID, email: TEST_ADMIN_EMAIL, passwordHash: "unused-in-this-test", name: "Integration Test Admin" }
+    });
+    adminAuthHeader = `Bearer ${generateToken({ id: TEST_ADMIN_ID, email: TEST_ADMIN_EMAIL, role: "admin", v: 0 })}`;
 
     // Seed één machine waartegen de prijsspiegel kan valideren.
     await prisma.machine.upsert({
@@ -86,6 +97,7 @@ describe.skipIf(!HAS_DB)("API integration", () => {
     await prisma.order.deleteMany({ where: { machineId: TEST_MACHINE_ID } }).catch(() => {});
     await prisma.machine.deleteMany({ where: { id: TEST_MACHINE_ID } }).catch(() => {});
     await prisma.customer.deleteMany({ where: { email: { in: [BLOCKED_EMAIL, LOCKED_OUT_EMAIL] } } }).catch(() => {});
+    await prisma.admin.deleteMany({ where: { id: TEST_ADMIN_ID } }).catch(() => {});
     await prisma.$disconnect().catch(() => {});
   });
 
@@ -310,5 +322,54 @@ describe.skipIf(!HAS_DB)("API integration", () => {
       .send({ ...validOrder(), startDate: day, endDate: day, customerEmail: LOCKED_OUT_EMAIL });
 
     expect(res.status).toBe(201);
+  });
+
+  // GET /api/orders/stats' paidRevenue somde vroeger totalAmount voor elke
+  // "paid"-order. Wordt een order ná betaling bewerkt (Order.paidAmount) dan
+  // wijkt dat af — deze order (totaal €200, maar €150 daadwerkelijk ontvangen)
+  // moet als €150 meetellen, niet €200.
+  it("GET /api/orders/stats → paidRevenue telt paidAmount, niet totalAmount, voor een na betaling bewerkte order", async () => {
+    const created = await prisma.order.create({
+      data: {
+        id: `HWH-ITEST${Date.now().toString(36).slice(-4).toUpperCase()}`,
+        machineId: TEST_MACHINE_ID,
+        machineName: "Integration Test Lift",
+        machinePrice: PRICE_PER_DAY,
+        startDate: new Date(isoDay(30)),
+        endDate: new Date(isoDay(30)),
+        rentalDays: 1,
+        deliveryType: "self_pickup",
+        customerName: "Betaald En Nadien Bewerkt",
+        customerEmail: "itest.paidamount@example.com",
+        subtotal: 165.29, transportCost: 0, driverCost: 0, vatAmount: 34.71,
+        totalAmount: 200, // huidig verschuldigd na een latere verlenging
+        paidAmount: 150,  // wat er destijds daadwerkelijk is afgerekend
+        status: "Voltooid",
+        paymentStatus: "paid",
+        addons: "[]"
+      }
+    });
+
+    try {
+      // Onafhankelijk berekend, zodat deze test niet breekt op andere paid
+      // orders die elders in de suite ontstaan — puur "klopt de API-uitkomst
+      // met wat de COALESCE-som werkelijk oplevert, en niet met de naïeve som".
+      const [coalesced, naive] = await Promise.all([
+        prisma.$queryRaw<Array<{ sum: number | null }>>`
+          SELECT SUM(COALESCE("paidAmount", "totalAmount")) AS sum FROM "Order"
+          WHERE "status" != 'Geannuleerd' AND "paymentStatus" = 'paid'
+        `,
+        prisma.order.aggregate({ _sum: { totalAmount: true }, where: { status: { not: "Geannuleerd" }, paymentStatus: "paid" } })
+      ]);
+      const expectedPaidRevenue = Number(coalesced[0]?.sum ?? 0);
+      // Bewijst dat deze testorder het verschil daadwerkelijk veroorzaakt.
+      expect(expectedPaidRevenue).toBeLessThan(naive._sum.totalAmount ?? 0);
+
+      const res = await request(app).get("/api/orders/stats").set("Authorization", adminAuthHeader);
+      expect(res.status).toBe(200);
+      expect(res.body.paidRevenue).toBeCloseTo(expectedPaidRevenue, 2);
+    } finally {
+      await prisma.order.delete({ where: { id: created.id } }).catch(() => {});
+    }
   });
 });

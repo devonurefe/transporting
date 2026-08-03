@@ -30,6 +30,8 @@ const isoDay = (offsetDays: number) => {
 
 const TEST_MACHINE_ID = "itest-machine";
 const PRICE_PER_DAY = 100;
+const BLOCKED_EMAIL = "itest.geblokkeerd@example.com";
+const LOCKED_OUT_EMAIL = "itest.tijdelijk-vergrendeld@example.com";
 
 // Basispayload voor een geldige order (1 dag, self_pickup, geen add-ons).
 // serverTotal = 100 (subtotaal) + 0 (transport) + 21 (21% btw) = 121.
@@ -83,6 +85,7 @@ describe.skipIf(!HAS_DB)("API integration", () => {
     // Ruim testorders + de testmachine op zodat herhaalde runs schoon blijven.
     await prisma.order.deleteMany({ where: { machineId: TEST_MACHINE_ID } }).catch(() => {});
     await prisma.machine.deleteMany({ where: { id: TEST_MACHINE_ID } }).catch(() => {});
+    await prisma.customer.deleteMany({ where: { email: { in: [BLOCKED_EMAIL, LOCKED_OUT_EMAIL] } } }).catch(() => {});
     await prisma.$disconnect().catch(() => {});
   });
 
@@ -261,5 +264,51 @@ describe.skipIf(!HAS_DB)("API integration", () => {
     const loser = resA.status === 201 ? resB : resA;
     expect(winner.body?.id).toBeTruthy();
     expect(loser.body?.error).toMatch(/al gereserveerd/i);
+  });
+
+  // De "Blokkeer"-knop in AdminCustomers.tsx zet Customer.lockedUntil op jaar
+  // 2999, wat tot nu toe alleen /api/auth/login raakte — deze publieke,
+  // ongeauthenticeerde route checkte het e-mailadres nergens tegen die tabel.
+  // Een geblokkeerde klant kon dus gewoon als gast met hetzelfde adres
+  // doorboeken; de rode "Geblokkeerd"-badge in het adminpaneel deed niets.
+  it("POST /api/orders met e-mailadres van een geblokkeerde klant → 403", async () => {
+    await prisma.customer.create({
+      data: {
+        email: BLOCKED_EMAIL,
+        passwordHash: "unused-in-this-test",
+        name: "Geblokkeerde Klant",
+        lockedUntil: new Date("2999-12-31T00:00:00.000Z")
+      }
+    });
+
+    const day = isoDay(21);
+    const res = await request(app)
+      .post("/api/orders")
+      .send({ ...validOrder(), startDate: day, endDate: day, customerEmail: BLOCKED_EMAIL });
+
+    expect(res.status).toBe(403);
+    // De melding bevestigt niet expliciet dat het om een blokkade gaat.
+    expect(res.body?.error).not.toMatch(/blok|block/i);
+  });
+
+  // Onderscheidt een echte admin-blokkade (2999) van een tijdelijke
+  // mislukte-inlogpoging-lockout (hooguit 15 minuten): die laatste mag een
+  // gastboeking nooit tegenhouden.
+  it("POST /api/orders met e-mailadres van een kortstondig vergrendeld account → gewoon 201", async () => {
+    await prisma.customer.create({
+      data: {
+        email: LOCKED_OUT_EMAIL,
+        passwordHash: "unused-in-this-test",
+        name: "Even Vergrendeld",
+        lockedUntil: new Date(Date.now() + 10 * 60 * 1000) // 10 min, ruim onder de drempel
+      }
+    });
+
+    const day = isoDay(22);
+    const res = await request(app)
+      .post("/api/orders")
+      .send({ ...validOrder(), startDate: day, endDate: day, customerEmail: LOCKED_OUT_EMAIL });
+
+    expect(res.status).toBe(201);
   });
 });

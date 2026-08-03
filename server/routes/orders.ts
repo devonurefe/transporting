@@ -14,6 +14,7 @@ import { buildUblInvoiceXml } from "../utils/ublInvoice.js";
 import { orderWantsEmail, batchCustomerEmailOptIns, wantsEmailFromBatch } from "../utils/emailOptIn.js";
 import { releaseUnpaidOrders, sendPaymentReminders, UNPAID_RELEASE_HOURS } from "../services/orderMaintenance.js";
 import { csvCell } from "../../src/utils/csv.js";
+import { isEmailBlocked } from "../utils/security.js";
 
 export const ordersRouter = Router();
 
@@ -438,6 +439,15 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
   const emailRegex = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/;
   if (!emailRegex.test(orderData.customerEmail)) {
     return res.status(400).json({ error: "Ongeldig e-mailadres" });
+  }
+
+  // Een door de admin geblokkeerde klant kon tot nu toe gewoon als gast
+  // doorboeken met hetzelfde e-mailadres — "Blokkeer" in AdminCustomers.tsx
+  // dwingt alleen /api/auth/login af, en deze publieke route vraagt geen
+  // account. Vage melding: geen bevestiging naar de aanvrager dat het account
+  // specifiek geblokkeerd is (dat blijft intern, zichtbaar voor de admin).
+  if (await isEmailBlocked(String(orderData.customerEmail))) {
+    return res.status(403).json({ error: "Deze aanvraag kan niet worden verwerkt. Neem contact op via WhatsApp of e-mail." });
   }
 
   // customerProfile whitelist (prevents XSS/injection via stored profile)

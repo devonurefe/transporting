@@ -366,12 +366,22 @@ ordersRouter.get("/", requireAuth as any, async (req: AuthenticatedRequest, res:
 // correct at any volume. Cancelled orders are excluded from revenue.
 ordersRouter.get("/stats", requireAdmin as any, async (_req: AuthenticatedRequest, res: Response) => {
   try {
-    const [statusGroups, revenueAgg, paidAgg, overdueCount] = await Promise.all([
+    const [statusGroups, revenueAgg, paidSumRows, overdueCount] = await Promise.all([
       prisma.order.groupBy({ by: ["status"], _count: { _all: true } }),
       prisma.order.aggregate({ _sum: { totalAmount: true }, where: { status: { not: "Geannuleerd" } } }),
-      prisma.order.aggregate({ _sum: { totalAmount: true }, where: { status: { not: "Geannuleerd" }, paymentStatus: "paid" } }),
+      // Som van het WERKELIJK betaalde bedrag, niet van totalAmount. Voor een
+      // order die na betaling is bewerkt (zie Order.paidAmount) wijken die
+      // uiteen; totalAmount tellen zou hier meer omzet tonen dan er is
+      // binnengekomen. Legacy-orders van vóór paidAmount (COALESCE naar
+      // totalAmount) blijven meetellen zoals voorheen.
+      prisma.$queryRaw<Array<{ sum: number | null }>>`
+        SELECT SUM(COALESCE("paidAmount", "totalAmount")) AS sum
+        FROM "Order"
+        WHERE "status" != 'Geannuleerd' AND "paymentStatus" = 'paid'
+      `,
       prisma.order.count({ where: { status: "Onderweg", endDate: { lt: new Date() } } })
     ]);
+    const paidRevenue = Number(paidSumRows[0]?.sum ?? 0);
     const byStatus: Record<string, number> = {};
     let totalOrders = 0;
     for (const g of statusGroups) {
@@ -382,7 +392,7 @@ ordersRouter.get("/stats", requireAdmin as any, async (_req: AuthenticatedReques
     return res.json({
       totalOrders,
       totalRevenue: revenueAgg._sum.totalAmount ?? 0,
-      paidRevenue: paidAgg._sum.totalAmount ?? 0,
+      paidRevenue,
       activeRentals: (byStatus["Goedgekeurd"] ?? 0) + (byStatus["Onderweg"] ?? 0),
       pending: byStatus["In behandeling"] ?? 0,
       // "Retour" = physically back, not yet inspected — distinct from active
@@ -1311,7 +1321,8 @@ ordersRouter.get("/export", requireAdmin as any, async (req: AuthenticatedReques
           id: o.id,
           status: o.status,
           paymentStatus: o.paymentStatus,
-          totalAmount: o.totalAmount
+          totalAmount: o.totalAmount,
+          paidAmount: o.paidAmount
         }))
       });
     }

@@ -18,6 +18,7 @@ import { batchCustomerEmailOptIns, wantsEmailFromBatch } from "./server/utils/em
 import { authenticateToken } from "./server/middleware/auth.js";
 import { pruneAuditLogs } from "./server/utils/audit.js";
 import { getSecurityStatus } from "./server/utils/security.js";
+import { hasMarker, getMarkerValue, setMarker, migrateLegacyMarkers } from "./server/utils/appMarker.js";
 import { requestLogger } from "./server/middleware/logger.js";
 import { errorHandler } from "./server/middleware/errorHandler.js";
 import { validateEnvironment } from "./server/utils/env.js";
@@ -961,8 +962,8 @@ function scheduleDailyReminders() {
     reminderRunning = true;
     try {
       const stamp = todayStamp();
-      const marker = await prisma.invoiceCounter.findUnique({ where: { id: REMINDER_MARKER } });
-      if (marker?.lastNumber === stamp) {
+      const lastRun = await getMarkerValue(REMINDER_MARKER);
+      if (lastRun === stamp) {
         console.log("[Reminders] Already sent today — skipping.");
       } else {
         const tomorrow = new Date();
@@ -998,11 +999,7 @@ function scheduleDailyReminders() {
         }
         if (skipped > 0) console.log(`[Reminders] Skipped ${skipped} order(s) — customer opted out of email.`);
 
-        await prisma.invoiceCounter.upsert({
-          where: { id: REMINDER_MARKER },
-          create: { id: REMINDER_MARKER, lastNumber: stamp },
-          update: { lastNumber: stamp }
-        });
+        await setMarker(REMINDER_MARKER, stamp);
 
         if (orders.length > 0) {
           console.log(`[Reminders] Sent ${sent}/${orders.length} reminders for ${tomorrowStr}`);
@@ -1040,8 +1037,8 @@ function scheduleDailyReminders() {
 
   // Catch-up: if the server (re)started after 07:00 Amsterdam and today's batch wasn't sent yet
   if (amsterdamHour() >= 7) {
-    prisma.invoiceCounter.findUnique({ where: { id: REMINDER_MARKER } }).then(marker => {
-      if (marker?.lastNumber !== todayStamp()) {
+    getMarkerValue(REMINDER_MARKER).then(lastRun => {
+      if (lastRun !== todayStamp()) {
         console.log("[Reminders] Missed 07:00 run detected — sending catch-up batch...");
         sendBatch();
       }
@@ -1065,6 +1062,12 @@ async function autoSeedIfEmpty() {
 
 async function applyDataMigrations() {
   try {
+    // Eerst: markers uit hun oude plek (InvoiceCounter, de factuurreeks) naar
+    // AppMarker halen. Moet vóór elke marker-gated migratie hieronder, en is
+    // veilig als het misgaat — hasMarker leest ook nog de oude locatie, dus een
+    // mislukte verhuizing laat een migratie nooit opnieuw draaien.
+    await migrateLegacyMarkers();
+
     const ecoliftMachine = await prisma.machine.findUnique({ where: { id: "ecolift" } });
     if (ecoliftMachine && ecoliftMachine.name === "JLG Ecolift Low-Level Access") {
       await prisma.machine.update({
@@ -1108,7 +1111,7 @@ async function applyDataMigrations() {
     // One-time: assign official fleet photos to all machines (marker row in
     // InvoiceCounter so admin image changes are never overwritten afterwards)
     const FLEET_PHOTOS_MIGRATION = "migration-fleet-photos-2026-06";
-    const photosDone = await prisma.invoiceCounter.findUnique({ where: { id: FLEET_PHOTOS_MIGRATION } });
+    const photosDone = await hasMarker(FLEET_PHOTOS_MIGRATION);
     if (!photosDone) {
       const fleetMachineIds = [
         "nifty-120-1", "nifty-120-2", "nifty-120-3", "nifty-170",
@@ -1124,22 +1127,22 @@ async function applyDataMigrations() {
           data: { imageUrl: `/images/machines/${machineId}.webp` }
         });
       }
-      await prisma.invoiceCounter.create({ data: { id: FLEET_PHOTOS_MIGRATION, lastNumber: 1 } });
+      await setMarker(FLEET_PHOTOS_MIGRATION, 1);
       console.log("[Migration] Official fleet photos assigned to all machines.");
     }
 
     // Seed the reminder marker on first deploy of the idempotent scheduler so the
     // catch-up logic doesn't re-send a batch the old code already sent at 07:00
-    const reminderMarker = await prisma.invoiceCounter.findUnique({ where: { id: "daily-reminders-last" } });
+    const reminderMarker = await hasMarker("daily-reminders-last");
     if (!reminderMarker) {
       const stamp = Number(new Date().toISOString().split("T")[0].replace(/-/g, ""));
-      await prisma.invoiceCounter.create({ data: { id: "daily-reminders-last", lastNumber: stamp } });
+      await setMarker("daily-reminders-last", stamp);
     }
 
     // Restore missing fleet photos: only update machines whose imageUrl is empty
     // (admin-set non-empty imageUrls are never touched)
     const FLEET_RESTORE = "migration-fleet-photos-restore-2026-06";
-    const restoreDone = await prisma.invoiceCounter.findUnique({ where: { id: FLEET_RESTORE } });
+    const restoreDone = await hasMarker(FLEET_RESTORE);
     if (!restoreDone) {
       const knownImages: Record<string, string> = {
         "nifty-120-1": "/images/machines/nifty-120-1.webp",
@@ -1170,7 +1173,7 @@ async function applyDataMigrations() {
         const r = await prisma.machine.updateMany({ where: { id, imageUrl: "" }, data: { imageUrl: url } });
         restored += r.count;
       }
-      await prisma.invoiceCounter.create({ data: { id: FLEET_RESTORE, lastNumber: restored } });
+      await setMarker(FLEET_RESTORE, restored);
       if (restored > 0) console.log(`[Migration] Restored ${restored} empty machine image URLs.`);
     }
 
@@ -1254,7 +1257,7 @@ async function applyDataMigrations() {
     // de volledige, correcte eindwaarden; een latere admin-wijziging aan deze
     // machines wordt nooit overschreven omdat de marker het daarna overslaat.
     const NIFTY_HINOWA_PRICE_MIGRATION = "migration-nifty-hinowa-prices-2026-07";
-    const niftyHinowaDone = await prisma.invoiceCounter.findUnique({ where: { id: NIFTY_HINOWA_PRICE_MIGRATION } });
+    const niftyHinowaDone = await hasMarker(NIFTY_HINOWA_PRICE_MIGRATION);
     if (!niftyHinowaDone) {
       await prisma.machine.updateMany({
         where: { id: { in: ["nifty-120-1", "nifty-120-2", "nifty-120-3"] } },
@@ -1286,31 +1289,31 @@ async function applyDataMigrations() {
           extraDayPrice: 170, weekendPrice: 425, monthlyPrice: 1950, sundayBlockFee: 150, weekendRulesEnabled: true,
         },
       });
-      await prisma.invoiceCounter.create({ data: { id: NIFTY_HINOWA_PRICE_MIGRATION, lastNumber: 1 } });
+      await setMarker(NIFTY_HINOWA_PRICE_MIGRATION, 1);
       console.log("[Migration] Nifty 120/170 + Hinowa 15.70/17.75 prijsupdate + weekendregels toegepast.");
     }
 
     // One-time: set showInWeeklyOffers — only the 3 featured machines get true,
     // all others get false. Admin can override per machine afterwards.
     const WEEKLY_OFFERS_MIGRATION = "migration-weekly-offers-2026-06";
-    const weeklyOffersDone = await prisma.invoiceCounter.findUnique({ where: { id: WEEKLY_OFFERS_MIGRATION } });
+    const weeklyOffersDone = await hasMarker(WEEKLY_OFFERS_MIGRATION);
     if (!weeklyOffersDone) {
       const featuredIds = ["nifty-170", "nifty-120-1", "nifty-120-2", "nifty-120-3", "compact-10n-1", "compact-10n-2"];
       await prisma.machine.updateMany({ where: { id: { in: featuredIds } }, data: { showInWeeklyOffers: true } });
       await prisma.machine.updateMany({ where: { id: { notIn: featuredIds } }, data: { showInWeeklyOffers: false } });
-      await prisma.invoiceCounter.create({ data: { id: WEEKLY_OFFERS_MIGRATION, lastNumber: 1 } });
+      await setMarker(WEEKLY_OFFERS_MIGRATION, 1);
       console.log("[Migration] Weekaanbiedingen: 3 featured machines set, rest cleared.");
     }
 
     // Corrective: v1 migration set 6 machines (all unit variants); reduce to exactly
     // 1 Nifty 170, 1 Nifty 120 (unit 1), and 1 Compact 10N (unit 1).
     const WEEKLY_OFFERS_V2 = "migration-weekly-offers-v2-2026-07";
-    const v2Done = await prisma.invoiceCounter.findUnique({ where: { id: WEEKLY_OFFERS_V2 } });
+    const v2Done = await hasMarker(WEEKLY_OFFERS_V2);
     if (!v2Done) {
       const exactThree = ["nifty-170", "nifty-120-1", "compact-10n-1"];
       await prisma.machine.updateMany({ where: { id: { in: exactThree } }, data: { showInWeeklyOffers: true } });
       await prisma.machine.updateMany({ where: { id: { notIn: exactThree } }, data: { showInWeeklyOffers: false } });
-      await prisma.invoiceCounter.create({ data: { id: WEEKLY_OFFERS_V2, lastNumber: 1 } });
+      await setMarker(WEEKLY_OFFERS_V2, 1);
       console.log("[Migration] Weekaanbiedingen v2: exactly 3 machines set (nifty-170, nifty-120-1, compact-10n-1).");
     }
 
@@ -1318,7 +1321,7 @@ async function applyDataMigrations() {
     // aangeleverd) éénmalig in de bestaande SiteConfig — alleen als er nog geen
     // reviews staan, zodat een latere admin-bewerking nooit wordt overschreven.
     const GOOGLE_REVIEWS_SEED = "migration-google-reviews-2026-07";
-    const grDone = await prisma.invoiceCounter.findUnique({ where: { id: GOOGLE_REVIEWS_SEED } });
+    const grDone = await hasMarker(GOOGLE_REVIEWS_SEED);
     if (!grDone) {
       const REAL_GOOGLE_REVIEWS = [
         { author: "Márton 'Martin' Nagy", rating: 5, text: "De enige plek in Nederland waar je hoogwerkers kunt huren voor een redelijke prijs zonder al te veel gedoe.", date: "3 weken geleden" },
@@ -1348,7 +1351,7 @@ async function applyDataMigrations() {
         });
         console.log("[Migration] Seeded 9 echte Google-reviews in SiteConfig.");
       }
-      await prisma.invoiceCounter.create({ data: { id: GOOGLE_REVIEWS_SEED, lastNumber: 1 } });
+      await setMarker(GOOGLE_REVIEWS_SEED, 1);
     }
 
     // Add Skyjack SJ12 to an already-seeded production DB — prisma/seed.ts's

@@ -128,9 +128,27 @@ model Admin {
   twoFactorEnabled    Boolean   @default(false)
 }
 
+// De wettelijk verplichte, doorlopende factuurreeks. Eén rij: id "default".
+//
+// Deze tabel deed er lang een tweede baan bij: elke eenmalige datamigratie zette
+// er zijn "al gedraaid"-vlag in, en de dagelijkse herinneringscron bewaarde er de
+// laatst verzonden datum (als getal, in lastNumber — dezelfde kolom die hier
+// "laatste factuurnummer" betekent). Dat werkte omdat alles op id opzoekt, maar
+// het zette de gevoeligste tabel van de applicatie open als kladblok: één
+// deleteMany, findFirst zonder where of max(lastNumber) had de factuurreeks
+// kunnen laten springen of resetten. Die rijen wonen nu in AppMarker.
 model InvoiceCounter {
   id         String @id @default("default")
   lastNumber Int    @default(0)
+}
+
+// Interne vlaggen en tellers van de applicatie zelf: markers van eenmalige
+// datamigraties en de laatst gedraaide dagelijkse cron. Bewust een eigen tabel,
+// gescheiden van InvoiceCounter — zie de toelichting hierboven.
+model AppMarker {
+  id        String   @id
+  value     Int      @default(0)
+  updatedAt DateTime @updatedAt
 }
 
 model Order {

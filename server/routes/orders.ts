@@ -1002,11 +1002,19 @@ ordersRouter.put("/:id/payment", requireAdmin as any, async (req: AuthenticatedR
     const existing = await prisma.order.findUnique({ where: { id } });
     if (!existing) return res.status(404).json({ error: "Bestelling niet gevonden" });
 
+    // Bij "paid" leggen we vast wélk bedrag er is afgerekend, niet alleen dát er
+    // is afgerekend. Wordt de order daarna bewerkt en stijgt het totaal, dan is
+    // het verschil daardoor zichtbaar als openstaand restbedrag in plaats van
+    // stilzwijgend te verdwijnen achter een "Betaald"-vlag. "awaiting"/"refunded"
+    // wissen het bedrag weer: er staat dan niets (meer) betaald.
     const updatedOrder = await prisma.order.update({
       where: { id },
-      data: { paymentStatus }
+      data: {
+        paymentStatus,
+        paidAmount: paymentStatus === "paid" ? existing.totalAmount : null
+      }
     });
-    audit(req, "order.payment", { entity: "Order", entityId: id, meta: { to: paymentStatus } });
+    audit(req, "order.payment", { entity: "Order", entityId: id, meta: { to: paymentStatus, amount: paymentStatus === "paid" ? existing.totalAmount : null } });
     res.json({
       ...updatedOrder,
       startDate: updatedOrder.startDate.toISOString().split("T")[0],

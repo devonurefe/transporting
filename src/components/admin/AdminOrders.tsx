@@ -37,6 +37,7 @@ import { printInvoice } from "../../utils/invoice";
 import { euro, formatDateNL } from "../../utils/format";
 import AdminConfirmDialog from "./AdminConfirmDialog";
 import AdminOrderFormModal from "./AdminOrderFormModal";
+import { isPartiallyPaid, overpaidAmount, outstandingBalance, paymentBadgeLabel } from "../../utils/orderPayment";
 import AdminStatusBadge from "./AdminStatusBadge";
 import { OrderStatus } from "../../types";
 import { getAdminAuthHeaders } from "../../utils/authHeaders";
@@ -1459,13 +1460,29 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
                           <div className="flex items-center justify-between">
                             <span className="text-[11px] text-slate-600">Betaalstatus:</span>
                             <span className={`text-[9px] font-mono px-2 py-0.5 rounded-full font-bold uppercase ${
-                              selectedDetailOrder.paymentStatus === "paid" ? "bg-emerald-100 text-emerald-700"
+                              isPartiallyPaid(selectedDetailOrder) || overpaidAmount(selectedDetailOrder) > 0 ? "bg-orange-100 text-orange-700"
+                              : selectedDetailOrder.paymentStatus === "paid" ? "bg-emerald-100 text-emerald-700"
                               : selectedDetailOrder.paymentStatus === "refunded" ? "bg-slate-100 text-slate-500"
                               : "bg-amber-100 text-amber-700"
                             }`}>
-                              {selectedDetailOrder.paymentStatus === "paid" ? "Betaald" : selectedDetailOrder.paymentStatus === "refunded" ? "Teruggestort" : "In Afwachting"}
+                              {paymentBadgeLabel(selectedDetailOrder)}
                             </span>
                           </div>
+                          {/* Na een bewerking ná de betaling klopt het betaalde bedrag niet
+                              meer met het totaal. Er gaat geen nieuwe betaallink uit, dus dit
+                              is de enige plek waar het verschil zichtbaar wordt. */}
+                          {outstandingBalance(selectedDetailOrder) > 0 && (
+                            <div className="flex items-center justify-between">
+                              <span className="text-[11px] font-bold text-orange-700">Nog te ontvangen:</span>
+                              <span className="font-mono text-orange-700 font-black text-xs">{euro(outstandingBalance(selectedDetailOrder))}</span>
+                            </div>
+                          )}
+                          {overpaidAmount(selectedDetailOrder) > 0 && (
+                            <div className="flex items-center justify-between">
+                              <span className="text-[11px] font-bold text-orange-700">Te veel ontvangen:</span>
+                              <span className="font-mono text-orange-700 font-black text-xs">{euro(overpaidAmount(selectedDetailOrder))}</span>
+                            </div>
+                          )}
                           {/* Door de klant gekozen betaalwijze — bepaalt of de admin een
                               betaallink stuurt (link) of op locatie int (op locatie). */}
                           <div className="flex items-center justify-between">

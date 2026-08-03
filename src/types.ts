@@ -91,6 +91,11 @@ export interface Order {
   weekendWork?: "ja" | "nee" | null;
   invoiceNumber?: string;
   paymentStatus?: string;
+  // Het bedrag dat werkelijk is afgerekend, vastgelegd toen de betaling binnenkwam.
+  // Null wanneer er nooit is betaald, en op orders van vóór dit veld. Wijkt het af
+  // van totalAmount, dan is de order ná de betaling bewerkt — zie
+  // src/utils/orderPayment.ts, dat er de openstaande/te veel betaalde rest uit afleidt.
+  paidAmount?: number | null;
   // Door de klant gekozen betaalwijze bij het afrekenen: "link" = online iDEAL/
   // Tikkie-betaallink (admin stuurt een link), "on_location" = betalen bij ophalen/
   // levering. Null/leeg voor legacy-orders van vóór deze keuze (behandeld als "link").

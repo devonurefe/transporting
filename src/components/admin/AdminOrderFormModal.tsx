@@ -151,6 +151,37 @@ export default function AdminOrderFormModal({ mode, order, onClose, onSaved, adm
           </div>
 
           <div className="p-5 space-y-3.5">
+            {/* Bewerken van een order die al betaald en/of gefactureerd is, is
+                niet geblokkeerd — een klant die belt om te verlengen moet gewoon
+                geholpen kunnen worden — maar het heeft gevolgen die je aan het
+                formulier niet ziet. Daarom hier expliciet, vóór de velden. */}
+            {mode === "edit" && (order?.paymentStatus === "paid" || order?.invoiceNumber) && (
+              <div className="rounded-xl border border-amber-300 bg-amber-50 p-3 space-y-1.5">
+                <p className="text-[11px] font-black text-amber-900">
+                  {t("Let op — deze bestelling is al vastgelegd", "Careful — this order is already settled", "Dikkat — bu sipariş zaten kesinleşti")}
+                </p>
+                <ul className="text-[10px] text-amber-800 leading-relaxed list-disc pl-4 space-y-0.5">
+                  {order?.paymentStatus === "paid" && (
+                    <li>
+                      {t(
+                        `Er is al ${euro(order.paidAmount ?? order.totalAmount)} betaald. Wordt het totaal hoger, dan blijft dat verschil openstaan — er gaat géén nieuwe betaallink uit. Vraag het restbedrag zelf na.`,
+                        `${euro(order.paidAmount ?? order.totalAmount)} has already been paid. If the total goes up, the difference stays outstanding — no new payment link is sent. Collect the remainder yourself.`,
+                        `Zaten ${euro(order.paidAmount ?? order.totalAmount)} ödendi. Toplam artarsa fark açık kalır — yeni ödeme linki gitmez. Kalanı kendiniz tahsil edin.`
+                      )}
+                    </li>
+                  )}
+                  {order?.invoiceNumber && (
+                    <li>
+                      {t(
+                        `Factuur ${order.invoiceNumber} is al uitgegeven. Een bedragwijziging verandert een reeds verstuurde factuur; boekhoudkundig hoort dat via een creditnota te lopen.`,
+                        `Invoice ${order.invoiceNumber} has already been issued. Changing the amount alters an invoice that is already out; bookkeeping-wise that belongs in a credit note.`,
+                        `${order.invoiceNumber} faturası zaten kesildi. Tutarı değiştirmek gönderilmiş bir faturayı değiştirir; muhasebe açısından bunun kredi notasıyla yapılması gerekir.`
+                      )}
+                    </li>
+                  )}
+                </ul>
+              </div>
+            )}
             {mode === "create" && (
               <div>
                 <label className={labelCls}>{t("Machine", "Machine", "Makine")}</label>

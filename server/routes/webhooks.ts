@@ -52,7 +52,13 @@ webhooksRouter.post("/mollie", mollieBodyParser, async (req: AuthenticatedReques
         where: { molliePaymentId: linkId, paymentStatus: { not: "paid" } }
       });
       if (order) {
-        await prisma.order.update({ where: { id: order.id }, data: { paymentStatus: "paid" } });
+        // Het betaalde bedrag vastleggen, niet alleen de vlag: de betaallink is
+        // aangemaakt op dit totaal, dus dit is wat er binnenkwam. Wordt de order
+        // later bewerkt en stijgt het totaal, dan blijft het verschil zichtbaar.
+        await prisma.order.update({
+          where: { id: order.id },
+          data: { paymentStatus: "paid", paidAmount: order.totalAmount }
+        });
         audit(req, "order.payment", {
           entity: "Order",
           entityId: order.id,

@@ -20,7 +20,92 @@ interface BusinessInfo {
   btwNumber?: string;
 }
 
-export function printInvoice(orderOrOrders: Order | Order[], clientCompanyName?: string, isProforma?: boolean, businessInfo?: BusinessInfo) {
+/** Wat een factuurdocument over zichzelf en over de betaling zegt. */
+export interface InvoiceDocumentState {
+  proforma: boolean;
+  documentTitle: string;
+  paymentStatusLabel: string;
+  paymentStatusColor: string;
+  paymentFooterLine: string;
+}
+
+/**
+ * Bepaalt titel, statuslabel en betalingsregel van een factuurdocument.
+ *
+ * Apart en puur gehouden omdat juist hier twee fouten zaten die je in een
+ * HTML-string niet ziet: de voettekst meldde onvoorwaardelijk "Voldaan via iDEAL
+ * / Tikkie betaallink", terwijl (a) een order die op locatie betaald wordt
+ * ongoedgekeurd-onbetaald al "Goedgekeurd" mag zijn — server/routes/orders.ts
+ * laat dat expliciet toe — zodat de voettekst het statusvak bovenaan dezelfde
+ * pagina tegensprak, waar netjes "OPENSTAAND" stond, en (b) het kanaal ook bij
+ * een wél betaalde order niet klopte als er op locatie was afgerekend.
+ * Uitgetest in src/__tests__/invoiceDocument.test.ts.
+ */
+export function invoiceDocumentState(order: Pick<Order, "invoiceNumber" | "id" | "status" | "paymentStatus" | "paymentMethod">): InvoiceDocumentState {
+  // Het factuurnummer is doorslaggevend voor "offerte of factuur" — het wordt
+  // uitsluitend bij goedkeuring toegekend (assignInvoiceNumberInTx).
+  const proforma = !order.invoiceNumber;
+  const invoiceRef = order.invoiceNumber || order.id;
+  const onLocation = order.paymentMethod === "on_location";
+
+  let documentTitle: string;
+  let paymentStatusLabel: string;
+  let paymentStatusColor: string;
+  if (proforma) {
+    documentTitle = "PRO-FORMA FACTUUR / OFFERTE";
+    paymentStatusLabel = "AANGEVRAAGD";
+    paymentStatusColor = "#b45309"; // amber
+  } else if (order.status === "Geannuleerd") {
+    documentTitle = "GEANNULEERDE HUUROVEREENKOMST";
+    paymentStatusLabel = "GEANNULEERD";
+    paymentStatusColor = "#dc2626";
+  } else {
+    documentTitle = "OFFICIËLE HUUROVEREENKOMST & FACTUUR";
+    if (order.paymentStatus === "paid") {
+      paymentStatusLabel = "BETAALD";
+      paymentStatusColor = "#059669";
+    } else if (order.paymentStatus === "refunded") {
+      paymentStatusLabel = "TERUGBETAALD";
+      paymentStatusColor = "#7c3aed";
+    } else {
+      paymentStatusLabel = "OPENSTAAND";
+      paymentStatusColor = "#d97706";
+    }
+  }
+
+  let paymentFooterLine: string;
+  if (proforma) {
+    paymentFooterLine = onLocation
+      ? "Betaling op locatie bij ophalen of aflevering. Na bevestiging ontvangt u de officiële factuur."
+      : "Betaling via de toegestuurde Tikkie of Mollie iDEAL-betaallink. Na betaling is uw boeking definitief bevestigd.";
+  } else if (order.paymentStatus === "paid") {
+    paymentFooterLine = onLocation
+      ? `Betalingswijze: Voldaan op locatie. Factuurkenmerk: ${invoiceRef}`
+      : `Betalingswijze: Voldaan via iDEAL / Tikkie betaallink. Factuurkenmerk: ${invoiceRef}`;
+  } else if (order.paymentStatus === "refunded") {
+    paymentFooterLine = `Betalingswijze: Terugbetaald. Factuurkenmerk: ${invoiceRef}`;
+  } else {
+    paymentFooterLine = onLocation
+      ? `Nog te voldoen op locatie bij ophalen of aflevering. Factuurkenmerk: ${invoiceRef}`
+      : `Nog te voldoen via de toegestuurde iDEAL / Tikkie betaallink. Factuurkenmerk: ${invoiceRef}`;
+  }
+
+  return { proforma, documentTitle, paymentStatusLabel, paymentStatusColor, paymentFooterLine };
+}
+
+/**
+ * Of dit een offerte/pro-forma is of een officiële factuur, volgt uit het enige
+ * signaal dat er echt over gaat: is er een factuurnummer toegekend? Dat gebeurt
+ * uitsluitend bij goedkeuring (assignInvoiceNumberInTx in server/routes/orders.ts),
+ * dus "nog geen nummer" betekent per definitie "nog geen factuur".
+ *
+ * Dit was eerder een parameter die elke aanroeper zelf invulde: het adminpaneel
+ * leidde het af uit `status === "In behandeling"` (klopte toevallig) en het
+ * klantscherm gaf altijd `true` mee, waardoor een klant zelfs bij een afgeronde,
+ * betaalde huur nooit iets anders dan "PRO-FORMA / OFFERTE" kon downloaden — voor
+ * een ZZP'er die de btw wil terugvragen onbruikbaar. Eén regel, hier, voor iedereen.
+ */
+export function printInvoice(orderOrOrders: Order | Order[], clientCompanyName?: string, businessInfo?: BusinessInfo) {
   const escapeHtml = (str: string): string => {
     if (!str) return "";
     return str
@@ -71,31 +156,8 @@ export function printInvoice(orderOrOrders: Order | Order[], clientCompanyName?:
 
   const subtotalExclVat = totalSubtotal + totalTransport + totalDriver + totalAddonCost;
   
-  // Custom document title based on context and booking status
-  let documentTitle: string;
-  let paymentStatusLabel: string;
-  let paymentStatusColor: string;
-  if (isProforma) {
-    documentTitle = "PRO-FORMA FACTUUR / OFFERTE";
-    paymentStatusLabel = "AANGEVRAAGD";
-    paymentStatusColor = "#b45309"; // amber
-  } else if (primaryOrder.status === "Geannuleerd") {
-    documentTitle = "GEANNULEERDE HUUROVEREENKOMST";
-    paymentStatusLabel = "GEANNULEERD";
-    paymentStatusColor = "#dc2626";
-  } else {
-    documentTitle = "OFFICIËLE HUUROVEREENKOMST & FACTUUR";
-    if (primaryOrder.paymentStatus === "paid") {
-      paymentStatusLabel = "BETAALD";
-      paymentStatusColor = "#059669";
-    } else if (primaryOrder.paymentStatus === "refunded") {
-      paymentStatusLabel = "TERUGBETAALD";
-      paymentStatusColor = "#7c3aed";
-    } else {
-      paymentStatusLabel = "OPENSTAAND";
-      paymentStatusColor = "#d97706";
-    }
-  }
+  const { proforma, documentTitle, paymentStatusLabel, paymentStatusColor, paymentFooterLine } =
+    invoiceDocumentState(primaryOrder);
 
   // Bedrijfsnaam voor de lopende tekst — volgt de admin-instelbare companyLegalName
   // (SiteConfig), met de historische operationele naam als fallback. Het issuer-blok
@@ -654,21 +716,20 @@ export function printInvoice(orderOrOrders: Order | Order[], clientCompanyName?:
           </div>
         </div>
         
-        ${isProforma ? `
+        ${proforma ? `
         <!-- Proforma notice -->
         <div style="background: #fffbeb; border: 1px dashed #fbbf24; border-radius: 12px; padding: 16px 20px; margin-bottom: 35px; font-size: 11px; color: #92400e; line-height: 1.6;">
           <strong style="display: block; margin-bottom: 4px; font-size: 12px;">⚠️ Dit is een pro-forma offerte — geen officiële factuur</strong>
-          Betaling vindt plaats na ontvangst van een iDEAL-betaallink via WhatsApp. Zodra de betaling is ontvangen, maakt ${escapeHtml(companyName)} een officiële factuur op en stuurt deze per e-mail toe.
+          ${primaryOrder.paymentMethod === "on_location"
+            ? `U betaalt bij het ophalen of afleveren van de machine. Zodra de aanvraag is bevestigd, maakt ${escapeHtml(companyName)} een officiële factuur op.`
+            : `Betaling vindt plaats na ontvangst van een iDEAL-betaallink. Zodra de betaling is ontvangen, maakt ${escapeHtml(companyName)} een officiële factuur op en stuurt deze per e-mail toe.`}
         </div>
         ` : ''}
 
         <!-- Footer Terms -->
         <footer class="footer-terms">
           <p>Op alle huurovereenkomsten zijn de algemene <span class="footer-highlight">BMWT-verhuurvoorwaarden 2026</span> van toepassing.</p>
-          ${isProforma
-            ? `<p>Betaling via WhatsApp — u ontvangt een Tikkie of Mollie iDEAL-betaallink. Na betaling is uw boeking definitief bevestigd.</p>`
-            : `<p>Betalingswijze: Voldaan via iDEAL / Tikkie betaallink. Factuurkenmerk: ${primaryOrder.invoiceNumber || primaryOrder.id}</p>`
-          }
+          <p>${paymentFooterLine}</p>
           <p style="margin-top: 8px;">Dank u voor uw vertrouwen in de hoogste en veiligste kwaliteit van <strong>Huurgo</strong>, onderdeel van MB Hoogwerkers.</p>
         </footer>
         

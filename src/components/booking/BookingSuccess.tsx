@@ -200,7 +200,7 @@ export default function BookingSuccess({
       {/* Bottom actions — secondary, kept visually subdued so they don't compete with the WhatsApp CTA */}
       <div className="px-6 py-4 border-t border-slate-100 flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
         <button
-          onClick={() => printInvoice(successOrder, undefined, true, siteConfig)}
+          onClick={() => printInvoice(successOrder, undefined, siteConfig)}
           className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-600 font-medium transition-colors duration-150 cursor-pointer whitespace-nowrap"
         >
           <Download className="h-3.5 w-3.5 shrink-0" />

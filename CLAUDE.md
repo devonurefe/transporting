@@ -59,10 +59,10 @@ Single-package full-stack monorepo — one `package.json` for both React fronten
 
 ### Frontend (`src/`)
 
-- **State**: Three Zustand stores — `appStore` (machines, orders, cart, blocked dates), `authStore` (JWT + user), `languageStore` (i18n NL/EN/TR strings).
+- **State**: Three Zustand stores — `appStore` (machines, orders, current selection, blocked dates), `authStore` (JWT + user), `languageStore` (i18n NL/EN/TR strings).
 - **Code splitting**: All main sections + all admin panels are `React.lazy()` + Suspense.
 - **Availability** (`src/utils/availability.ts`): runs client-side using orders + blocked dates from API. Uses `Map<string,string>` for O(1) blocked-date lookup. Supports 1000-day window.
-- **Booking flow**: `BookingSection.tsx` → step components `BookingStep1/2/3.tsx` → `BookingSuccess.tsx`. Cart supports multiple machines.
+- **Booking flow**: `BookingSection.tsx` → step components `BookingStep1/2/3.tsx` → `BookingSuccess.tsx`. **One machine per booking** — `appStore.selectedCartItem` is a single `CartItem | null`, not an array, and choosing another machine from the catalog offers "Vervangen" (replace), never "add". Do not reintroduce a multi-machine cart without also making order creation atomic across items: the previous array-based version placed one `POST /api/orders` per machine (non-atomic, one Mollie link and one confirmation email each) and double-charged the global add-ons, because the price summary billed them once across the summed days while the submit path re-billed them per machine.
 - **Invoice/print**: `src/utils/invoice.ts` — `printInvoice(order)` opens a new window with full HTML invoice and calls `printWindow.print()` after 900 ms (never use opacity:0 trick — causes blank prints).
 - **WhatsApp utils**: `src/utils/whatsapp.ts` — all WA message builders. Use 🦾 not 🙏 in sign-offs.
 
@@ -389,8 +389,8 @@ protect these invariants:
 
 ## Booking Flow
 
-1. Customer selects machine from catalog → adds to cart
-2. `BookingStep1.tsx` — cart review, date selection, availability check
+1. Customer selects a machine from the catalog (replaces any earlier selection)
+2. `BookingStep1.tsx` — selection review, date selection, availability check
    - If unavailable: warning + WhatsApp button for alternative dates
 3. `BookingStep2.tsx` — delivery type (self pickup / trailer / delivery), addons
 4. `BookingStep3.tsx` — customer details, address lookup, order submit

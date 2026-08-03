@@ -124,6 +124,35 @@ export interface UnitAvailabilityInput {
 }
 
 /**
+ * De EERSTE unit van dit model die de hele periode nog aankan, of null wanneer
+ * elke unit vol of geblokkeerd is.
+ *
+ * De catalogus toont één kaart per model — de losse exemplaren heten "… (Unit 2)"
+ * en zijn per definitie identiek (zie de waarschuwing in AdminMachines) — dus de
+ * klant kiest een model, geen serienummer. Welke unit hij krijgt, bepaalt dit.
+ *
+ * Dit moet een unit teruggeven en niet alleen een ja/nee. De kalender rekende al
+ * op modelniveau (dag groen zodra één unit vrij is), maar de boeking bleef hangen
+ * aan de unit waar de cataloguskaart toevallig naar wees. Stond die ene vol en de
+ * andere twee leeg, dan zag de klant een groene, aanklikbare datum en kreeg hij er
+ * direct onder "niet beschikbaar" op — terwijl de machine er wél stond. Van de 11
+ * fysieke units waren er zo maar 5 online te boeken.
+ */
+export function findAvailableUnit(
+  units: UnitAvailabilityInput[],
+  start: string,
+  end: string,
+  orders: SimpleOrder[],
+  blockedDates: SimpleBlockedDate[],
+  todayStr?: string,
+  bufferDays: number = 0
+): UnitAvailabilityInput | null {
+  return units.find(
+    (u) => checkAvailability(u.id, start, end, orders, blockedDates, todayStr, bufferDays, u.stockQuantity ?? 1, u.operationallyBlocked ?? false).available
+  ) ?? null;
+}
+
+/**
  * Model-level availability across multiple physical units of the same model.
  * Returns true when AT LEAST ONE unit still has remaining capacity for the
  * entire requested range — a day/period is only "vol" when every unit is at
@@ -139,7 +168,5 @@ export function someUnitAvailable(
   todayStr?: string,
   bufferDays: number = 0
 ): boolean {
-  return units.some(
-    (u) => checkAvailability(u.id, start, end, orders, blockedDates, todayStr, bufferDays, u.stockQuantity ?? 1, u.operationallyBlocked ?? false).available
-  );
+  return findAvailableUnit(units, start, end, orders, blockedDates, todayStr, bufferDays) !== null;
 }

@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { Machine } from "../../types";
 import { useAppStore } from "../../store/appStore";
 import { useLanguageStore } from "../../store/languageStore";
-import { someUnitAvailable, SimpleOrder } from "../../utils/availability";
+import { someUnitAvailable, findAvailableUnit, SimpleOrder } from "../../utils/availability";
 import { calculateRentalDays, calculateItemSubtotal, displayRentalDays, isWeekendPackage, hasSundayBlock } from "../../utils/pricing";
 import { euro, withVat } from "../../utils/format";
 
@@ -18,7 +18,11 @@ interface DateRangeCalendarProps {
   startDate: string;          // committed selection "YYYY-MM-DD" or ""
   endDate: string;            // committed selection "YYYY-MM-DD" or ""
   profile: string;            // customerProfile, for the live price preview
-  onConfirm: (start: string, end: string) => void;
+  // De derde parameter is de unit die de periode daadwerkelijk kan draaien. De
+  // kalender rekent op modelniveau, dus dat hoeft niet de unit te zijn waar de
+  // cataloguskaart naar wees; zonder dit zou de klant een groene datum kiezen en
+  // er vervolgens "niet beschikbaar" op krijgen.
+  onConfirm: (start: string, end: string, unitId: string) => void;
   todayStr?: string;          // injectable for tests
 }
 
@@ -277,7 +281,14 @@ export default function DateRangeCalendar({ machine, startDate, endDate, profile
   const startsWeekendClosed = validRange && !!machine.weekendRulesEnabled && (draftStartDow === 6 || draftStartDow === 0);
   const showPickupFridayNote = fridayIntoWeekend || startsWeekendClosed;
 
-  const confirm = () => { if (!validRange) return; onConfirm(draftStart, effectiveEnd); close(); };
+  const confirm = () => {
+    if (!validRange) return;
+    // rangeAvail was al waar, dus er ís een vrije unit; machine.id als laatste
+    // redmiddel zodat we nooit zonder id bevestigen.
+    const unit = findAvailableUnit(units, draftStart, effectiveEnd, orders, blockedDates, today, machine.bufferDays ?? 0);
+    onConfirm(draftStart, effectiveEnd, unit?.id ?? machine.id);
+    close();
+  };
   const reset = () => { setDraftStart(""); setDraftEnd(""); };
 
   const committedDays = startDate && endDate ? displayRentalDays(machine, startDate, calculateRentalDays(startDate, endDate)) : 0;

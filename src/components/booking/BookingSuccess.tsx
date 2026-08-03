@@ -15,7 +15,6 @@ import { euro } from "../../utils/format";
 
 interface BookingSuccessProps {
   successOrder: Order | null;
-  successOrders: Order[];
   paymentGateway: string;
   setStep: (step: number) => void;
   setSuccessOrder: (order: Order | null) => void;
@@ -27,7 +26,6 @@ interface BookingSuccessProps {
 
 export default function BookingSuccess({
   successOrder,
-  successOrders,
   paymentGateway,
   setStep,
   setSuccessOrder,
@@ -79,23 +77,13 @@ export default function BookingSuccess({
     }
   };
 
-  const allOrders = successOrders.length > 0 ? successOrders : [successOrder];
-  const combinedTotal = allOrders.reduce((sum, o) => sum + o.totalAmount, 0);
-  const isMulti = allOrders.length > 1;
-
-  const machineEntries = isMulti
-    ? allOrders.map((o, i) => ({
-        label: `Machine ${i + 1}`,
-        value: `${o.machineName.replace(/\s*\(Unit\s+\d+\)\s*$/i, "")} — ${o.startDate} t/m ${o.endDate}`,
-        highlight: true,
-      }))
-    : [
-        { label: t("specMachine"), value: successOrder.machineName, highlight: true },
-        {
-          label: t("specPeriod"),
-          value: `${successOrder.startDate} t/m ${successOrder.endDate} (${successOrder.rentalDays} ${successOrder.rentalDays === 1 ? "dag" : "dagen"})`,
-        },
-      ];
+  const machineEntries = [
+    { label: t("specMachine"), value: successOrder.machineName, highlight: true },
+    {
+      label: t("specPeriod"),
+      value: `${successOrder.startDate} t/m ${successOrder.endDate} (${successOrder.rentalDays} ${successOrder.rentalDays === 1 ? "dag" : "dagen"})`,
+    },
+  ];
 
   const specs = [
     { label: t("specRenter"), value: successOrder.customerName },
@@ -114,7 +102,7 @@ export default function BookingSuccess({
     ),
     ...(successOrder.deliveryAddress ? [{ label: t("specAddress"), value: successOrder.deliveryAddress }] : []),
     { label: "Betaalwijze", value: successOrder.paymentMethod === "on_location" ? "Op locatie (bij ophalen/levering)" : "Via betaallink" },
-    { label: t("specTotal"), value: euro(combinedTotal), price: true },
+    { label: t("specTotal"), value: euro(successOrder.totalAmount), price: true },
   ];
 
   return (
@@ -212,7 +200,7 @@ export default function BookingSuccess({
       {/* Bottom actions — secondary, kept visually subdued so they don't compete with the WhatsApp CTA */}
       <div className="px-6 py-4 border-t border-slate-100 flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
         <button
-          onClick={() => printInvoice((successOrders ?? []).length > 0 ? successOrders : successOrder, undefined, true, siteConfig)}
+          onClick={() => printInvoice(successOrder, undefined, true, siteConfig)}
           className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-600 font-medium transition-colors duration-150 cursor-pointer whitespace-nowrap"
         >
           <Download className="h-3.5 w-3.5 shrink-0" />

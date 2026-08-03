@@ -219,10 +219,25 @@ async function assertMachineAvailableInTx(
   }
 }
 
+// Boekingslimiet per IP. Bewust ruim: het IP is géén betrouwbare identiteit voor
+// deze doelgroep. Bouwvakkers op één bouwadres delen de wifi/router, een
+// installatiebedrijf zit achter één kantoor-NAT, en mobiel verkeer loopt bij
+// KPN/Vodafone via CGNAT — allemaal gevallen waarin verschillende klanten
+// hetzelfde IP tonen. Met de oude 6/uur liep de tweede of derde échte klant van
+// datzelfde adres tegen een blokkade aan, wat rechtstreeks omzet kost.
+//
+// skipFailedRequests: alleen een geslaagde boeking telt mee. Een afgekeurd
+// verzoek (verlopen prijs, datumconflict, validatiefout) is meestal juist een
+// klant die het nóg een keer goed probeert te doen; die mag zijn eigen quotum
+// niet opeten.
+//
+// Het IP blijft de sleutel — e-mail meenemen zou de limiet juist waardeloos
+// maken, want die is vrij invulbaar en dus per poging te wisselen.
 const orderCreationLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
-  max: 6,
-  message: { error: "Te veel boekingspogingen van dit IP. Probeer het over een uur opnieuw." },
+  max: 20,
+  skipFailedRequests: true,
+  message: { error: "Te veel boekingen vanaf dit netwerk. Probeer het over een uur opnieuw of neem contact op via WhatsApp." },
   standardHeaders: true,
   legacyHeaders: false,
 });

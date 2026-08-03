@@ -57,7 +57,6 @@ interface BookingStep2Props {
   selectedMachine?: Machine | null;
   startDate?: string;
   endDate?: string;
-  multiplePeriods?: boolean;
 }
 
 const PROFESSIONS = [
@@ -108,7 +107,6 @@ export default function BookingStep2({
   selectedMachine,
   startDate,
   endDate,
-  multiplePeriods,
   deliveryDistanceKm,
   isSubmitting,
   bookingError
@@ -197,7 +195,7 @@ export default function BookingStep2({
 
         {sums && (
           <div className="lg:hidden">
-            <BookingPriceSummary selectedMachine={selectedMachine ?? null} startDate={startDate} endDate={endDate} multiplePeriods={multiplePeriods} sums={sums} />
+            <BookingPriceSummary selectedMachine={selectedMachine ?? null} startDate={startDate} endDate={endDate} sums={sums} />
           </div>
         )}
 
@@ -471,7 +469,7 @@ export default function BookingStep2({
 
       {sums && (
         <div className="lg:hidden">
-          <BookingPriceSummary selectedMachine={selectedMachine ?? null} startDate={startDate} endDate={endDate} multiplePeriods={multiplePeriods} sums={sums} />
+          <BookingPriceSummary selectedMachine={selectedMachine ?? null} startDate={startDate} endDate={endDate} sums={sums} />
         </div>
       )}
 

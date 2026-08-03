@@ -272,8 +272,8 @@ export default function App() {
     if (!authChecked) return;
     const uid = storeUser?.id ?? null;
     if (uid && !prevUserIdRef.current && storeUser?.role !== "admin") {
-      const items = useAppStore.getState().cartItems;
-      if (items.length > 0) {
+      const selected = useAppStore.getState().selectedCartItem;
+      if (selected) {
         // Use a short timeout so triggerNotification is available after render
         setTimeout(() => {
           triggerNotification(
@@ -465,7 +465,7 @@ export default function App() {
   const orders = useAppStore((state) => state.orders);
   const customCategories = useAppStore((state) => state.customCategories);
   const siteConfig = useAppStore((state) => state.siteConfig);
-  const cartItems = useAppStore((state) => state.cartItems);
+  const selectedCartItem = useAppStore((state) => state.selectedCartItem);
 
   // Real review aggregate for SEO structured data — never hard-code ratings (Google
   // treats unverifiable aggregateRating as spam). Only emitted when count > 0.
@@ -477,10 +477,9 @@ export default function App() {
       .catch(() => {});
   }, []);
 
-  const addToCart = useAppStore((state) => state.addToCart);
-  const removeFromCart = useAppStore((state) => state.removeFromCart);
-  const updateCartItemDates = useAppStore((state) => state.updateCartItemDates);
-  const clearCart = useAppStore((state) => state.clearCart);
+  const selectMachine = useAppStore((state) => state.selectMachine);
+  const updateSelectedDates = useAppStore((state) => state.updateSelectedDates);
+  const clearSelection = useAppStore((state) => state.clearSelection);
 
   const addMachine = useAppStore((state) => state.addMachine);
   const updateOrderStatus = useAppStore((state) => state.updateOrderStatus);
@@ -581,14 +580,13 @@ export default function App() {
     navigate(search ? `/catalog?${search}` : "/catalog");
   };
 
-  // Replaces the cart with the chosen machine and moves to the booking flow.
+  // Zet de chosen machine als de actieve selectie en gaat naar de boekingsflow.
   const proceedWithBooking = (machine: Machine) => {
     setSelectedMachine(machine);
-    clearCart();
     // No default date range — the calendar starts empty so the customer picks
     // their own period instead of seeing a pre-filled price for dates they
     // never chose.
-    addToCart(machine, "", "");
+    selectMachine(machine, "", "");
     fetchBlockedDates();
     setActiveTab("booking");
 
@@ -596,46 +594,39 @@ export default function App() {
     handleAddSystemLog(
       "booking",
       currentUser ? currentUser.name : "Gast",
-      `Voegt machine toe aan winkelwagen: "${machine.name}" (Tarief: €${machine.pricePerDay}/dag)`
+      `Kiest machine: "${machine.name}" (Tarief: €${machine.pricePerDay}/dag)`
     );
   };
 
-  // Action: Select machine for booking & support cart. When the cart already
-  // holds a machine we ask for confirmation via a Dutch in-app modal (native
-  // confirm() shows OS-localized buttons, which broke the Dutch-only UI).
+  // Action: Select machine for booking. When another machine is already selected
+  // we ask for confirmation via a Dutch in-app modal (native confirm() shows
+  // OS-localized buttons, which broke the Dutch-only UI). Er is bewust geen
+  // "toevoegen"-optie: één machine per aanvraag.
   const handleSelectMachineForBooking = (machine: Machine) => {
-    if (cartItems.length > 0) {
+    if (selectedCartItem) {
       setReplaceCartMachine(machine);
       return;
     }
     proceedWithBooking(machine);
   };
 
-  const handleRemoveCartItem = (id: string) => {
-    const item = cartItems.find(c => c.id === id);
-    removeFromCart(id);
-    
-    // Live visitor logging
+  const handleClearSelection = () => {
+    const name = selectedCartItem?.machine.name;
+    clearSelection();
     handleAddSystemLog(
       "booking",
       currentUser ? currentUser.name : "Gast",
-      `Verwijdert machine uit winkelwagen: "${item ? item.machine.name : 'Hoogwerker'}"`
+      `Verwijdert machineselectie${name ? `: "${name}"` : ""}.`
     );
   };
 
-  const handleUpdateCartItemDates = (id: string, start: string, end: string) => {
-    updateCartItemDates(id, start, end);
-    const item = cartItems.find(c => c.id === id);
+  const handleUpdateSelectedDates = (start: string, end: string) => {
+    updateSelectedDates(start, end);
     handleAddSystemLog(
       "booking",
       currentUser ? currentUser.name : "Gast",
-      `Wijzigt huurperiode voor "${item ? item.machine.name : 'hoogwerker'}": ${start} t/m ${end}`
+      `Wijzigt huurperiode voor "${selectedCartItem?.machine.name ?? "hoogwerker"}": ${start} t/m ${end}`
     );
-  };
-
-  const handleClearCart = () => {
-    clearCart();
-    handleAddSystemLog("booking", currentUser ? currentUser.name : "Gast", "Winkelwagen volledig leeggemaakt.");
   };
 
   // Action: Submit reservation checkout
@@ -801,7 +792,7 @@ export default function App() {
         isAdminMode={isAdminMode && location.pathname === "/admin"}
         setIsAdminMode={setIsAdminMode}
         siteConfig={siteConfig}
-        cartItems={cartItems}
+        hasSelection={!!selectedCartItem}
       />
 
 
@@ -866,10 +857,9 @@ export default function App() {
                 machines={machines}
                 onSelectMachine={setSelectedMachine}
                 currentUser={currentUser}
-                cartItems={cartItems}
-                onRemoveCartItem={handleRemoveCartItem}
-                onUpdateCartItemDates={handleUpdateCartItemDates}
-                onClearCart={handleClearCart}
+                cartItem={selectedCartItem}
+                onClearSelection={handleClearSelection}
+                onUpdateSelectedDates={handleUpdateSelectedDates}
               />
             } />
 

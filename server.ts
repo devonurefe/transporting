@@ -17,6 +17,7 @@ import { releaseUnpaidOrders, sendPaymentReminders } from "./server/services/ord
 import { batchCustomerEmailOptIns, wantsEmailFromBatch } from "./server/utils/emailOptIn.js";
 import { authenticateToken } from "./server/middleware/auth.js";
 import { pruneAuditLogs } from "./server/utils/audit.js";
+import { getSecurityStatus } from "./server/utils/security.js";
 import { requestLogger } from "./server/middleware/logger.js";
 import { errorHandler } from "./server/middleware/errorHandler.js";
 import { validateEnvironment } from "./server/utils/env.js";
@@ -1408,14 +1409,20 @@ async function applyDataMigrations() {
       console.log("[Migration] Pecolift pricing matched to the 4m Altrex kamersteiger.");
     }
 
-    // Loud warning if the admin account still uses the old seeded default password
-    const seededAdmin = await prisma.admin.findUnique({ where: { email: "admin@huurgo.nl" } });
-    if (seededAdmin) {
-      const bcrypt = (await import("bcryptjs")).default;
-      if (await bcrypt.compare("admin123", seededAdmin.passwordHash)) {
-        console.error("🚨 [SECURITY] Admin account admin@huurgo.nl still uses the default password 'admin123'!");
-        console.error("🚨 [SECURITY] Change it immediately via the admin panel (Wachtwoord wijzigen).");
-      }
+    // Het admin-account staat mogelijk nog open met het wachtwoord uit de seed —
+    // dat staat in de repo en is dus publiek. Deze controle bestond al, maar
+    // schreef alleen naar de console: op een onbemande VPS leest niemand dat, dus
+    // de ernstigste vondst die het systeem over zichzelf kan doen verdween in
+    // stdout. Nu gaat er ook een mail uit naar ADMIN_EMAIL, en toont het
+    // adminpaneel een banner via GET /api/admin/security-status (beide lezen
+    // dezelfde getSecurityStatus, zodat ze niet uit elkaar kunnen lopen).
+    const security = await getSecurityStatus();
+    if (security.defaultAdminPassword) {
+      console.error(`🚨 [SECURITY] Admin account ${security.defaultAdminEmail} still uses the default password from the seed!`);
+      console.error("🚨 [SECURITY] Change it immediately via the admin panel (Wachtwoord wijzigen).");
+      emailService
+        .sendDefaultPasswordAlert(security.defaultAdminEmail ?? "")
+        .catch(err => console.error("[Security] Kon de wachtwoordwaarschuwing niet mailen:", err));
     }
   } catch (err) {
     console.warn("[Migration] Could not apply data migrations:", err instanceof Error ? err.message : err);

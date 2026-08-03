@@ -1009,6 +1009,23 @@ export const emailService = {
     });
   },
 
+  // Het geseede admin-account gebruikt nog het wachtwoord dat in de repo staat.
+  // Gaat naar ADMIN_EMAIL omdat de vondst anders alleen in de containerlog belandt,
+  // waar op een onbemande VPS niemand hem ziet.
+  sendDefaultPasswordAlert: async (adminEmail: string): Promise<boolean> => {
+    if (!ADMIN_ALERT_EMAIL) return false;
+    if (!resend) {
+      console.log(`[EmailService] [MOCK] Default-password alert for ${adminEmail}`);
+      return true;
+    }
+    return sendWithRetry({
+      from: SENDER_EMAIL,
+      to: ADMIN_ALERT_EMAIL,
+      subject: "🚨 [HuurGo] Adminaccount gebruikt nog het standaardwachtwoord",
+      html: `<p>Het adminaccount <strong>${adminEmail}</strong> gebruikt nog het wachtwoord waarmee het is aangemaakt.<br><br>Dat wachtwoord staat in de broncode en is dus bij iedereen bekend die de repository kan inzien — iemand anders kan er op dit moment mee inloggen.<br><br><strong>Wijzig het direct</strong> via het adminpaneel → Beheerders → Wachtwoord wijzigen.</p>`,
+    });
+  },
+
   sendEmailFailureAlert: async (orderId: string, customerEmail: string, errorMsg: string): Promise<boolean> => {
     if (!ADMIN_ALERT_EMAIL) return false;
     if (!resend) {

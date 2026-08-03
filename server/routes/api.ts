@@ -14,6 +14,7 @@ import { webhooksRouter } from "./webhooks.js";
 import { prisma } from "../../prisma/client.js";
 import { requireAdmin, AuthenticatedRequest } from "../middleware/auth.js";
 import { emailService, getEmailDiagnostics } from "../services/emailService.js";
+import { getSecurityStatus } from "../utils/security.js";
 
 const uploadBodyParser = expressJson({ limit: "10mb" });
 
@@ -48,6 +49,15 @@ apiRouter.get("/health", async (req, res) => {
 // Booleans/safe fields only — never the API key itself.
 apiRouter.get("/admin/email-status", requireAdmin as any, (req, res) => {
   res.json(getEmailDiagnostics());
+});
+
+// GET /api/admin/security-status — admin-only: controleert of het geseede
+// admin-account nog het wachtwoord uit de repo gebruikt. Deze check draaide al
+// bij het opstarten, maar schreef alleen een console.error; op een onbemande VPS
+// leest niemand die. Hier kan het adminpaneel er een banner van maken. Levert
+// alleen booleans — nooit hashes of wachtwoorden.
+apiRouter.get("/admin/security-status", requireAdmin as any, async (_req, res) => {
+  res.json(await getSecurityStatus());
 });
 
 // POST /api/admin/test-email — sends a real email through the exact same

@@ -126,12 +126,22 @@ export default function AdminDiagnostics({ systemLogs, adminLanguage }: AdminDia
   // admin hier een adres invullen dat ze nu meteen kunnen checken (bv. Gmail).
   const [testEmailTo, setTestEmailTo] = useState("");
 
+  // Beveiligingsstatus: op dit moment alleen de vraag of het geseede
+  // adminaccount nog het wachtwoord uit de repo gebruikt. Die controle draaide al
+  // bij het opstarten maar schreef enkel een console.error — op een onbemande VPS
+  // leest niemand dat, dus hier moet het zichtbaar zijn.
+  const [securityStatus, setSecurityStatus] = useState<{ defaultAdminPassword: boolean; defaultAdminEmail: string | null } | null>(null);
+
   useEffect(() => {
     let active = true;
     fetch("/api/admin/email-status", { headers: getAdminAuthHeaders() })
       .then((res) => (res.ok ? res.json() : Promise.reject()))
       .then((data) => { if (active) setEmailDiag(data); })
       .catch(() => { if (active) setEmailDiagError(true); });
+    fetch("/api/admin/security-status", { headers: getAdminAuthHeaders() })
+      .then((res) => (res.ok ? res.json() : Promise.reject()))
+      .then((data) => { if (active) setSecurityStatus(data); })
+      .catch(() => { /* stil: een mislukte check mag het paneel niet blokkeren */ });
     return () => { active = false; };
   }, []);
 
@@ -199,6 +209,28 @@ export default function AdminDiagnostics({ systemLogs, adminLanguage }: AdminDia
       exit={{ opacity: 0, y: -10 }}
       className="space-y-6 animate-fade-in text-slate-800"
     >
+      {/* Standaardwachtwoord — bovenaan en niet weg te klikken: zolang dit
+          waar is kan iedereen die de broncode kent inloggen als beheerder. */}
+      {securityStatus?.defaultAdminPassword && (
+        <div className="rounded-2xl border-2 border-red-300 bg-red-50 p-4 flex items-start gap-3">
+          <ShieldAlert className="h-5 w-5 text-red-600 shrink-0 mt-0.5" />
+          <div className="min-w-0">
+            <p className="text-sm font-black text-red-900">
+              {t("Adminaccount gebruikt nog het standaardwachtwoord",
+                 "Admin account still uses the default password",
+                 "Yönetici hesabı hâlâ varsayılan şifreyi kullanıyor")}
+            </p>
+            <p className="text-xs text-red-800 mt-1 leading-relaxed">
+              {t(
+                `Het account ${securityStatus.defaultAdminEmail} gebruikt nog het wachtwoord waarmee het is aangemaakt. Dat staat in de broncode, dus iedereen die die kan inzien kan nu inloggen. Wijzig het direct via Beheerders → Wachtwoord wijzigen.`,
+                `The account ${securityStatus.defaultAdminEmail} still uses the password it was created with. That password is in the source code, so anyone who can read it can log in right now. Change it via Beheerders → Wachtwoord wijzigen.`,
+                `${securityStatus.defaultAdminEmail} hesabı hâlâ oluşturulduğu şifreyi kullanıyor. O şifre kaynak kodda, yani kodu görebilen herkes şu anda giriş yapabilir. Beheerders → Wachtwoord wijzigen üzerinden hemen değiştirin.`
+              )}
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Top row — 3 live operational cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 

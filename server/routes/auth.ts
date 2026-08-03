@@ -1020,7 +1020,16 @@ authRouter.delete("/customers/:id", authenticateToken, requireAdmin, async (req:
   try {
     const existing = await prisma.customer.findUnique({ where: { id } });
     if (!existing) return res.status(404).json({ error: "Klant niet gevonden." });
+    // De orders blijven bestaan (bewaarplicht voor facturen) maar raken hun
+    // klantkoppeling kwijt. Hun e-mailadres staat nog wél op de orderregel, dus
+    // zonder de eerste update zou een klant die "geen e-mail" had aangevinkt na
+    // verwijdering weer post krijgen: de opt-in-check leest het Customer-record,
+    // en een order zónder customerId telt bewust als gast — en gasten krijgen mail.
+    // De voorkeur verhuist daarom naar de order voordat de klant verdwijnt.
     await prisma.$transaction([
+      ...(existing.emailOptIn === false
+        ? [prisma.order.updateMany({ where: { customerId: id }, data: { emailOptOut: true } })]
+        : []),
       prisma.order.updateMany({ where: { customerId: id }, data: { customerId: null } }),
       prisma.customer.delete({ where: { id } })
     ]);

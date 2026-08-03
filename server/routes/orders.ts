@@ -13,6 +13,8 @@ import { computeOrderSubtotal, computeTransport, computeAddonsTotal, computeVatA
 import { buildUblInvoiceXml } from "../utils/ublInvoice.js";
 import { orderWantsEmail, batchCustomerEmailOptIns, wantsEmailFromBatch } from "../utils/emailOptIn.js";
 import { releaseUnpaidOrders, sendPaymentReminders, UNPAID_RELEASE_HOURS } from "../services/orderMaintenance.js";
+import { csvCell } from "../../src/utils/csv.js";
+import { isEmailBlocked } from "../utils/security.js";
 
 export const ordersRouter = Router();
 
@@ -437,6 +439,15 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
   const emailRegex = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/;
   if (!emailRegex.test(orderData.customerEmail)) {
     return res.status(400).json({ error: "Ongeldig e-mailadres" });
+  }
+
+  // Een door de admin geblokkeerde klant kon tot nu toe gewoon als gast
+  // doorboeken met hetzelfde e-mailadres — "Blokkeer" in AdminCustomers.tsx
+  // dwingt alleen /api/auth/login af, en deze publieke route vraagt geen
+  // account. Vage melding: geen bevestiging naar de aanvrager dat het account
+  // specifiek geblokkeerd is (dat blijft intern, zichtbaar voor de admin).
+  if (await isEmailBlocked(String(orderData.customerEmail))) {
+    return res.status(403).json({ error: "Deze aanvraag kan niet worden verwerkt. Neem contact op via WhatsApp of e-mail." });
   }
 
   // customerProfile whitelist (prevents XSS/injection via stored profile)
@@ -1305,12 +1316,6 @@ ordersRouter.get("/export", requireAdmin as any, async (req: AuthenticatedReques
       });
     }
 
-    const escape = (v: any) => {
-      const s = String(v ?? "");
-      return s.includes(",") || s.includes('"') || s.includes("\n")
-        ? `"${s.replace(/"/g, '""')}"` : s;
-    };
-
     const headers = [
       "Order ID","Naam","E-mail","Telefoon","Profiel",
       "Machine","Dagtarief","Startdatum","Einddatum","Dagen",
@@ -1340,7 +1345,7 @@ ordersRouter.get("/export", requireAdmin as any, async (req: AuthenticatedReques
       o.paymentStatus ?? "",
       (o as any).paymentMethod === "on_location" ? "Op locatie" : (o as any).paymentMethod === "link" ? "Betaallink" : "",
       o.createdAt.toISOString().split("T")[0]
-    ].map(escape).join(","));
+    ].map(csvCell).join(","));
 
     const csv = [headers.join(","), ...rows].join("\r\n");
     const filename = `huurgo-orders-${new Date().toISOString().split("T")[0]}.csv`;

@@ -23,6 +23,43 @@ export interface SecurityStatus {
   defaultAdminEmail: string | null;
 }
 
+// Een admin-blokkade zet lockedUntil op jaar 2999 (zie POST /customers/:id/block
+// in server/routes/auth.ts). Een mislukte-inlogpoging-lockout duurt hooguit
+// LOGIN_LOCK_MS (15 minuten, server/routes/auth.ts). Deze drempel — ruim boven
+// elke denkbare tijdelijke lockout — onderscheidt de twee zonder de exacte
+// 2999-waarde hard te coderen: verandert die datum ooit, dan blijft dit werken.
+const BLOCK_THRESHOLD_MS = 24 * 60 * 60 * 1000; // 1 dag
+
+/**
+ * Hoort een boeking van dit e-mailadres geweigerd te worden omdat de klant
+ * geblokkeerd is?
+ *
+ * Bestaat omdat de "Blokkeer"-knop in AdminCustomers.tsx eerder niets deed
+ * tegen het echte probleem: die knop zet lockedUntil, wat alleen /api/auth/login
+ * afdwingt. Boeken zelf (POST /api/orders) vraagt geen account — een geblokkeerde
+ * klant kon gewoon met hetzelfde e-mailadres als gast doorboeken. Een admin die
+ * "Blokkeer" klikt na fraude of wanbetaling zag een rode badge verschijnen
+ * terwijl er niets veranderde aan wat die klant kon doen.
+ *
+ * Alleen voor de publieke checkout — de handmatige/back-office ordercreatie
+ * blijft een bewuste keuze van de admin, die de "Geblokkeerd"-badge toch al ziet
+ * als hij die klant intikt.
+ */
+export async function isEmailBlocked(email: string): Promise<boolean> {
+  try {
+    const customer = await prisma.customer.findFirst({
+      where: { email: { equals: email.trim(), mode: "insensitive" } },
+      select: { lockedUntil: true }
+    });
+    if (!customer?.lockedUntil) return false;
+    return customer.lockedUntil.getTime() - Date.now() > BLOCK_THRESHOLD_MS;
+  } catch (err) {
+    // Een DB-storing mag een legitieme boeking nooit blokkeren.
+    console.warn("[Security] Kon blokkadestatus niet controleren:", err instanceof Error ? err.message : err);
+    return false;
+  }
+}
+
 /**
  * Eén bcrypt-vergelijking tegen het geseede account. Bewust niet élk
  * admin-account: bcrypt op 12 rondes kost ~200 ms per vergelijking, en het

@@ -25,6 +25,7 @@ import { useLanguageStore } from "../../store/languageStore";
 import { showAdminToast } from "./AdminToast";
 import AdminConfirmDialog from "./AdminConfirmDialog";
 import { euro } from "../../utils/format";
+import { toCsv } from "../../utils/csv";
 
 interface Customer {
   id: string;
@@ -301,7 +302,7 @@ export default function AdminCustomers({ adminLanguage, onViewOrder }: AdminCust
         new Date(c.createdAt).toLocaleDateString("nl-NL"),
       ]),
     ];
-    const csv = rows.map((r) => r.map((v) => `"${v.replace(/"/g, '""')}"`).join(",")).join("\n");
+    const csv = toCsv(rows);
     const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");

@@ -98,14 +98,6 @@ const limiter = rateLimit({
 });
 app.use("/api/", limiter);
 
-// Stricter rate limit for Auth endpoints (10 requests per 15 minutes to protect against brute-force)
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 10,
-  message: { error: "Te veel inlogpogingen. Probeer het over 15 minuten opnieuw." }
-});
-app.use("/api/auth", authLimiter);
-
 // The iCal feed leaks customer PII (name/phone/address) to anyone holding the
 // token, so it gets a tighter limit than the general /api/ allowance.
 const calendarLimiter = rateLimit({

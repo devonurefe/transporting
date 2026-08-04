@@ -417,7 +417,14 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   fetchBlockedDates: async () => {
     try {
-      const res = await fetch("/api/blocked-dates");
+      // Zonder auth-header ziet de server nooit een ingelogde admin (geen
+      // Authorization-header → req.user is altijd undefined), waardoor
+      // GET /api/blocked-dates altijd de publieke vorm teruggeeft en `reason`
+      // + `id` stilzwijgend ontbreken — het adminpaneel toont dan voor elke
+      // geblokkeerde datum "Geen opgegeven reden", ook als er wél een reden
+      // is opgeslagen. Onschadelijk voor niet-ingelogde bezoekers (blockDate/
+      // unblockDate hierboven sturen deze header al wel mee).
+      const res = await fetch("/api/blocked-dates", { headers: getAuthHeaders() });
       if (res.ok) {
         set({ blockedDates: await res.json(), error: null });
       } else {

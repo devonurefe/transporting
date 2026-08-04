@@ -1,4 +1,5 @@
 import { Router, Request, Response } from "express";
+import rateLimit from "express-rate-limit";
 import { z } from "zod";
 import crypto from "crypto";
 import { prisma } from "../../prisma/client.js";
@@ -21,6 +22,25 @@ function totpVerify(secret: string, code: string): boolean {
 }
 
 export const authRouter = Router();
+
+// Strict brute-force guard — ONLY for unauthenticated, credential-guessable
+// endpoints (login, 2FA code, registration, password reset/verification
+// requests). Previously this limiter was mounted on the whole `/api/auth`
+// prefix in server.ts, which meant it also throttled every already-
+// authenticated admin action nested under this router — GET /customers,
+// its pagination/"Meer laden", the per-customer order-history drill-down,
+// editing/blocking a customer, /me, /profile — none of which are a
+// brute-force surface (they all require a valid JWT via requireAuth/
+// requireAdmin already). A shop owner doing perfectly normal customer
+// management (a page of customers + a couple of drill-downs + one edit)
+// could exceed 10 requests in 15 minutes and get 429'd out of their own
+// admin panel. Scoping the limiter to just the routes below fixes that
+// without weakening the actual brute-force protection.
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { error: "Te veel inlogpogingen. Probeer het over 15 minuten opnieuw." }
+});
 
 // Addons zijn een JSON-string-kolom — spiegelt safeParseAddons in orders.ts
 // (apart gehouden i.p.v. geïmporteerd om de twee routers ontkoppeld te houden).
@@ -116,7 +136,7 @@ const loginSchema = z.object({
 });
 
 // REGISTER Customer
-authRouter.post("/register", async (req: AuthenticatedRequest, res: Response) => {
+authRouter.post("/register", authLimiter, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const validated = registerSchema.parse(req.body);
     
@@ -190,7 +210,7 @@ authRouter.post("/register", async (req: AuthenticatedRequest, res: Response) =>
 });
 
 // LOGIN (Admin or Customer)
-authRouter.post("/login", async (req: AuthenticatedRequest, res: Response) => {
+authRouter.post("/login", authLimiter, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const validated = loginSchema.parse(req.body);
     const emailKey = validated.email.toLowerCase();
@@ -329,7 +349,7 @@ authRouter.post("/login", async (req: AuthenticatedRequest, res: Response) => {
 });
 
 // POST /api/auth/login/2fa — tweede stap van de adminlogin (TOTP-code)
-authRouter.post("/login/2fa", async (req: AuthenticatedRequest, res: Response) => {
+authRouter.post("/login/2fa", authLimiter, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { preAuthToken, code } = req.body;
     if (!preAuthToken || typeof preAuthToken !== "string" || !code || typeof code !== "string") {
@@ -679,7 +699,7 @@ authRouter.get("/verify", async (req: Request, res: Response) => {
 });
 
 // POST /api/auth/forgot-password
-authRouter.post("/forgot-password", async (req: Request, res: Response) => {
+authRouter.post("/forgot-password", authLimiter, async (req: Request, res: Response) => {
   const { email } = req.body;
   if (!email || typeof email !== "string") {
     return res.status(400).json({ error: "E-mailadres is verplicht." });
@@ -726,7 +746,7 @@ authRouter.post("/forgot-password", async (req: Request, res: Response) => {
 });
 
 // POST /api/auth/reset-password
-authRouter.post("/reset-password", async (req: Request, res: Response) => {
+authRouter.post("/reset-password", authLimiter, async (req: Request, res: Response) => {
   const { token, newPassword } = req.body;
   if (!token || !newPassword || typeof token !== "string" || typeof newPassword !== "string") {
     return res.status(400).json({ error: "Token en nieuw wachtwoord zijn verplicht." });
@@ -832,7 +852,7 @@ authRouter.post("/change-password", authenticateToken, requireAuth, async (req: 
 });
 
 // POST /api/auth/resend-verification
-authRouter.post("/resend-verification", async (req: Request, res: Response) => {
+authRouter.post("/resend-verification", authLimiter, async (req: Request, res: Response) => {
   const { email } = req.body;
 
   if (!email || typeof email !== "string") {

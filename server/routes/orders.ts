@@ -12,7 +12,7 @@ import { resolveFees } from "../utils/fees.js";
 import { computeOrderSubtotal, computeTransport, computeAddonsTotal, computeVatAndTotal, buildStoredAddons, computeRentalDays, clampTrailerDays, normalizeRentalDate, CampaignRuleLike } from "../utils/orderPricing.js";
 import { buildUblInvoiceXml } from "../utils/ublInvoice.js";
 import { orderWantsEmail, batchCustomerEmailOptIns, wantsEmailFromBatch } from "../utils/emailOptIn.js";
-import { releaseUnpaidOrders, sendPaymentReminders, UNPAID_RELEASE_HOURS } from "../services/orderMaintenance.js";
+import { releaseUnpaidOrders, sendPaymentReminders, UNPAID_RELEASE_HOURS, startOfUtcDay } from "../services/orderMaintenance.js";
 import { csvCell } from "../../src/utils/csv.js";
 import { isEmailBlocked } from "../utils/security.js";
 
@@ -379,7 +379,11 @@ ordersRouter.get("/stats", requireAdmin as any, async (_req: AuthenticatedReques
         FROM "Order"
         WHERE "status" != 'Geannuleerd' AND "paymentStatus" = 'paid'
       `,
-      prisma.order.count({ where: { status: "Onderweg", endDate: { lt: new Date() } } })
+      // endDate is stored as UTC midnight — compare against today's UTC midnight
+      // (not the current instant) so an order isn't flagged overdue from 00:00 UTC
+      // on its own end date, hours before the rental day is actually over. Mirrors
+      // the client-side fallback in AdminDashboard.tsx (`endDate < todayISO`).
+      prisma.order.count({ where: { status: "Onderweg", endDate: { lt: startOfUtcDay(new Date()) } } })
     ]);
     const paidRevenue = Number(paidSumRows[0]?.sum ?? 0);
     const byStatus: Record<string, number> = {};
@@ -566,6 +570,14 @@ ordersRouter.post("/", orderCreationLimiter, async (req: AuthenticatedRequest, r
     }
     if (rentalDays > 365) {
       return res.status(400).json({ error: "Maximale huurperiode is 365 dagen. Neem contact op voor langere periodes." });
+    }
+    // Admin-set minimum rental length (e.g. Altrex Kamersteiger: 2 days). The
+    // calendar (DateRangeCalendar.tsx) and BookingStep1.tsx already prevent
+    // selecting a shorter range, but a crafted request could bypass that — and
+    // the price computation itself doesn't reject a too-short stay for a
+    // non-weeklyOnly machine, so this must be enforced explicitly here.
+    if ((machine as any).minRentalDays && rentalDays < (machine as any).minRentalDays) {
+      return res.status(400).json({ error: `Minimale huurperiode voor dit product is ${(machine as any).minRentalDays} dagen.` });
     }
     // Compute authoritative transport cost server-side — never trust the client value
     const dt = orderData.deliveryType as string;
@@ -1117,6 +1129,15 @@ ordersRouter.put("/:id/cancel", requireAuth as any, async (req: AuthenticatedReq
       data: { status: "Geannuleerd" }
     });
 
+    // Zie de toelichting bij PUT /:id/status — zonder dit blijft de betaallink
+    // van een zelf-geannuleerde order betaalbaar en kan de webhook hem alsnog
+    // als "paid" markeren.
+    if (updatedOrder.molliePaymentId) {
+      void mollieService.archivePaymentLink(updatedOrder.molliePaymentId).then(archived => {
+        if (!archived) console.warn("[Mollie] Betaallink", updatedOrder.molliePaymentId, "niet gearchiveerd na annulering van order", id, "— die blijft mogelijk betaalbaar.");
+      });
+    }
+
     const emailData = {
       ...updatedOrder,
       startDate: updatedOrder.startDate.toISOString().split("T")[0],
@@ -1494,6 +1515,17 @@ ordersRouter.put("/:id/status", requireAdmin as any, async (req: AuthenticatedRe
     }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }));
     audit(req, "order.status", { entity: "Order", entityId: id, meta: { from: order.status, to: status } });
 
+    // De Mollie-betaallink van een geannuleerde order blijft anders gewoon
+    // betaalbaar: de klant kan hem later alsnog afrekenen, waarna de webhook —
+    // die alleen op molliePaymentId + paymentStatus matcht, niet op orderstatus
+    // — deze geannuleerde order weer als "paid" markeert. Best-effort, blokkeert
+    // de respons niet.
+    if (status === "Geannuleerd" && order.molliePaymentId) {
+      void mollieService.archivePaymentLink(order.molliePaymentId).then(archived => {
+        if (!archived) console.warn("[Mollie] Betaallink", order.molliePaymentId, "niet gearchiveerd na annulering van order", id, "— die blijft mogelijk betaalbaar.");
+      });
+    }
+
     // Trigger status update email asynchronously — respects the customer's live-update preference
     if (await orderWantsEmail(updatedOrder)) {
       const emailData = {
@@ -1548,7 +1580,7 @@ ordersRouter.post("/:id/report-damage", requireAdmin as any, async (req: Authent
   }
   const photos = sanitizeDamagePhotos(req.body?.photos);
   if (photos === null) {
-    return res.status(400).json({ error: "Ongeldige foto's (max 10, elk te groot bestand)" });
+    return res.status(400).json({ error: "Ongeldige foto's (max 6, elk te groot bestand)" });
   }
   let repairCost: number | null = null;
   if (req.body?.repairCost !== undefined && req.body?.repairCost !== null && req.body?.repairCost !== "") {

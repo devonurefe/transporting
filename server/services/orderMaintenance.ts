@@ -18,6 +18,7 @@
 
 import { prisma } from "../../prisma/client.js";
 import { emailService } from "./emailService.js";
+import { mollieService } from "./mollieService.js";
 import { batchCustomerEmailOptIns, wantsEmailFromBatch } from "../utils/emailOptIn.js";
 
 // Herinnering na 24 uur, vrijgeven na 72 uur. De 72 uur is bewust ruimer dan de
@@ -107,6 +108,19 @@ export async function releaseUnpaidOrders(): Promise<{ released: number }> {
     where: { id: { in: stale.map(o => o.id) } },
     data: { status: "Geannuleerd" }
   });
+
+  // De Mollie-betaallink blijft anders gewoon betaalbaar na deze automatische
+  // annulering: de klant kan hem later alsnog afrekenen (de oude WhatsApp-link
+  // werkt nog), waarna de webhook — die alleen op molliePaymentId + paymentStatus
+  // matcht, niet op orderstatus — deze inmiddels geannuleerde order weer als
+  // "paid" markeert, mogelijk over datums die intussen aan iemand anders
+  // verkocht zijn. Best-effort, blokkeert de rest van deze functie niet.
+  for (const order of stale) {
+    if (!order.molliePaymentId) continue;
+    mollieService.archivePaymentLink(order.molliePaymentId).then(archived => {
+      if (!archived) console.warn(`[Release] Betaallink ${order.molliePaymentId} niet gearchiveerd voor ${order.id} — die blijft mogelijk betaalbaar.`);
+    }).catch(() => {});
+  }
 
   // Alleen mailen over een huurperiode die nog moet komen. Bij de eerste run na
   // het inschakelen hiervan zit er mogelijk een stapel oude, allang verlopen

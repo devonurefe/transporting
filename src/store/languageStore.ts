@@ -212,6 +212,16 @@ const dictionary: TranslationDictionary = {
   // tijd dat dit paneel een client-side demo-bezoekersfeed was en suggereerde
   // ten onrechte website-analytics.
   adminTabLogs: { nl: "Auditlog", en: "Audit Log", tr: "Denetim Kaydı" },
+  // Header.tsx's admin-mode brand bar (sticky top nav, wraps every admin panel) —
+  // these were hardcoded NL/EN literals regardless of the selected adminLanguage,
+  // so a TR-selected session (the operator's default) still showed "Beheerder
+  // Actief" / "Console Sluiten (Uitloggen)" mixed in with the otherwise fully
+  // Turkish panel chrome underneath it.
+  adminBrandLabel: { nl: "HubAdmin Portal", en: "HubAdmin Portal", tr: "HubAdmin Portalı" },
+  adminActiveStatus: { nl: "Beheerder Actief", en: "Admin Active", tr: "Yönetici Aktif" },
+  adminNavPill: { nl: "Systeembeheer & Vlootdashboard", en: "System Management & Fleet Dashboard", tr: "Sistem Yönetimi ve Filo Paneli" },
+  adminLogoutFull: { nl: "Console Sluiten (Uitloggen)", en: "Close Console (Logout)", tr: "Konsolu Kapat (Çıkış Yap)" },
+  adminLogoutShort: { nl: "Uitloggen", en: "Logout", tr: "Çıkış Yap" },
   cookieText: {
     nl: "Wij gebruiken functionele cookies en — met uw toestemming — analytische cookies om de site te verbeteren.",
     en: "We use functional cookies and — with your consent — analytics cookies to improve the site.",

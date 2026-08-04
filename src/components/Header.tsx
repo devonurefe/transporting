@@ -172,6 +172,14 @@ export default function Header({
   const language = useLanguageStore((state) => state.language);
   const toggleLanguage = useLanguageStore((state) => state.toggleLanguage);
   const t = useLanguageStore((state) => state.t);
+  const tAdmin = useLanguageStore((state) => state.tAdmin);
+  // `tAdmin` itself is a stable function reference (defined once in the store),
+  // so subscribing to it alone never triggers a re-render when adminLanguage
+  // changes — the nl/en/tr toggle in AdminSection.tsx would silently do nothing
+  // here. Subscribing to the primitive too (even though only tAdmin is read
+  // below) is what makes this component re-render on a language switch;
+  // AdminSection.tsx subscribes to both for the same reason.
+  useLanguageStore((state) => state.adminLanguage);
 
   // Close dropdown when user logs out so it doesn't reopen on next login
   React.useEffect(() => {
@@ -202,12 +210,12 @@ export default function Header({
               </div>
               <div>
                 <span className="inline-block font-display text-sm sm:text-lg lg:text-xl font-extrabold tracking-tight bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 bg-clip-text text-transparent">
-                  HubAdmin Portal
+                  {tAdmin("adminBrandLabel")}
                 </span>
                 <div className="hidden sm:flex items-center space-x-1">
                   <span className="text-amber-500 text-xs font-semibold flex items-center gap-1.5">
                     <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-ping inline-block" />
-                    Beheerder Actief
+                    {tAdmin("adminActiveStatus")}
                   </span>
                 </div>
               </div>
@@ -221,7 +229,7 @@ export default function Header({
             // Admin Mode Navigation Indicator (Simple, informative)
             <div className="flex items-center space-x-2 bg-amber-500/10 border border-amber-500/20 px-3.5 py-1.5 rounded-xl text-xs text-amber-900 font-semibold my-0.5">
               <ShieldAlert className="h-4 w-4 text-amber-600 shrink-0" />
-              <span>Systeembeheer & Vloot Dashboard</span>
+              <span>{tAdmin("adminNavPill")}</span>
             </div>
           ) : (
             // Clean Visitor Navigation Links
@@ -301,8 +309,8 @@ export default function Header({
               className="inline-flex items-center space-x-1.5 bg-rose-600 hover:bg-rose-700 px-3 py-2 sm:px-4 rounded-xl text-xs font-bold text-white transition-all hover:scale-[1.03] active:scale-95 hover:shadow-md cursor-pointer shrink-0"
             >
               <LogOut className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Console Sluiten (Uitloggen)</span>
-              <span className="inline sm:hidden">Uitloggen</span>
+              <span className="hidden sm:inline">{tAdmin("adminLogoutFull")}</span>
+              <span className="inline sm:hidden">{tAdmin("adminLogoutShort")}</span>
             </button>
           ) : (
             // Public Visitors Utilities

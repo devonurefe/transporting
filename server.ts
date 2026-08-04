@@ -13,7 +13,7 @@ import { apiRouter } from "./server/routes/api.js";
 import { authRouter } from "./server/routes/auth.js";
 import { prisma } from "./prisma/client.js";
 import { emailService } from "./server/services/emailService.js";
-import { releaseUnpaidOrders, sendPaymentReminders } from "./server/services/orderMaintenance.js";
+import { releaseUnpaidOrders, sendPaymentReminders, startOfUtcDay } from "./server/services/orderMaintenance.js";
 import { batchCustomerEmailOptIns, wantsEmailFromBatch } from "./server/utils/emailOptIn.js";
 import { authenticateToken } from "./server/middleware/auth.js";
 import { pruneAuditLogs } from "./server/utils/audit.js";
@@ -911,8 +911,15 @@ async function startServer() {
 // same pattern as the payment-reminder flow in server/routes/orders.ts) so a
 // still-overdue order doesn't re-alert every day.
 async function checkOverdueRentals() {
+  // endDate is stored as UTC midnight (the calendar day the machine is due back),
+  // so comparing it against the current instant (new Date()) flags an order as
+  // overdue from 00:00 UTC on its own end date — hours before the customer's day
+  // is actually over, and before the depot could plausibly call it late. Compare
+  // against today's UTC midnight instead: an order is only overdue once its whole
+  // end-date day has passed, matching the `endDate < todayISO` string comparison
+  // AdminDashboard.tsx uses for the same KPI.
   const overdue = await prisma.order.findMany({
-    where: { status: "Onderweg", endDate: { lt: new Date() }, overdueAlertSentAt: null }
+    where: { status: "Onderweg", endDate: { lt: startOfUtcDay(new Date()) }, overdueAlertSentAt: null }
   });
   for (const order of overdue) {
     const ok = await emailService.sendOverdueAlert({

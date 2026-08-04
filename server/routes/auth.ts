@@ -53,7 +53,7 @@ function emailLinkOrigin(req: Request): string {
 const MAX_LOGIN_ATTEMPTS = 5;
 const LOGIN_LOCK_MS = 15 * 60 * 1000; // 15 minutes
 
-const unknownEmailAttempts = new Map<string, { count: number; lockedUntil: number }>();
+const unknownEmailAttempts = new Map<string, { count: number; lockedUntil: number; lastAttempt: number }>();
 
 function checkUnknownEmailThrottle(email: string): boolean {
   const entry = unknownEmailAttempts.get(email);
@@ -66,11 +66,26 @@ function checkUnknownEmailThrottle(email: string): boolean {
 }
 
 function recordUnknownEmailAttempt(email: string): void {
-  const entry = unknownEmailAttempts.get(email) ?? { count: 0, lockedUntil: 0 };
+  const entry = unknownEmailAttempts.get(email) ?? { count: 0, lockedUntil: 0, lastAttempt: 0 };
   entry.count += 1;
+  entry.lastAttempt = Date.now();
   if (entry.count >= MAX_LOGIN_ATTEMPTS) entry.lockedUntil = Date.now() + LOGIN_LOCK_MS;
   unknownEmailAttempts.set(email, entry);
 }
+
+// checkUnknownEmailThrottle only evicts an entry once it actually got locked out
+// and that lock expired — an attacker who tries a fresh random e-mail on every
+// request (count never reaches MAX_LOGIN_ATTEMPTS) leaves a permanent entry
+// behind, growing this map without bound for as long as the process runs. Sweep
+// anything idle for longer than the lockout window: by then its throttle history
+// is stale anyway, so dropping it changes no observable behaviour. Same pattern
+// as the idempotency-key cache in server/routes/orders.ts.
+setInterval(() => {
+  const cutoff = Date.now() - LOGIN_LOCK_MS;
+  for (const [email, entry] of unknownEmailAttempts) {
+    if (entry.lastAttempt < cutoff) unknownEmailAttempts.delete(email);
+  }
+}, 10 * 60 * 1000);
 
 const LOCKED_MSG = (lockedUntil: Date) => {
   const minutes = Math.max(1, Math.ceil((lockedUntil.getTime() - Date.now()) / 60000));

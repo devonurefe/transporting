@@ -8,7 +8,7 @@
 // with index.html at status 200, and the handler below stored it under that .js
 // URL — a permanently white screen for that client. The server now 404s those,
 // but already-poisoned clients only recover when the cache name changes.
-const CACHE_NAME = "huurgo-cache-v6";
+const CACHE_NAME = "huurgo-cache-v7";
 const OFFLINE_URL = "/offline.html";
 
 const ASSETS_TO_CACHE = [
@@ -60,7 +60,12 @@ self.addEventListener("fetch", (event) => {
       fetch(event.request)
         .catch(() => {
           // Offline API behavior can return custom JSON or offline mock data if needed
+          // Must be a non-2xx status: the stores treat res.ok as "body is the
+          // requested data", so a 200 here put this error object into
+          // `machines`/`orders` and crashed the app on `.filter` whenever a
+          // phone briefly lost signal.
           return new Response(JSON.stringify({ error: "Offline mode. Systeemverbinding onderbroken." }), {
+            status: 503,
             headers: { "Content-Type": "application/json" }
           });
         })

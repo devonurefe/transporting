@@ -2,6 +2,7 @@ import React, { useState, useMemo } from "react";
 import { CalendarSearch, CheckCircle2, XCircle, MinusCircle } from "lucide-react";
 import { useAppStore } from "../../store/appStore";
 import { checkAvailability } from "../../utils/availability";
+import { localDateStr } from "../../utils/localDate";
 
 export default function AdminAvailabilityWidget() {
   const [startDate, setStartDate] = useState("");
@@ -11,7 +12,7 @@ export default function AdminAvailabilityWidget() {
   const orders = useAppStore((s) => s.orders);
   const blockedDates = useAppStore((s) => s.blockedDates);
 
-  const todayStr = new Date().toISOString().split("T")[0];
+  const todayStr = localDateStr();
 
   const getBaseName = (name: string) => name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "").trim();
 

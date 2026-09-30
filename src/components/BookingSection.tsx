@@ -147,7 +147,7 @@ export default function BookingSection({
   useEffect(() => {
     fetch("/api/blocked-dates")
       .then((res) => (res.ok ? res.json() : []))
-      .then((data) => setBlockedDaysList(data))
+      .then((data) => setBlockedDaysList(Array.isArray(data) ? data : []))
       .catch(() => {});
   }, []);
 

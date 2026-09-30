@@ -24,6 +24,7 @@ import { motion } from "motion/react";
 import { useAppStore } from "../../store/appStore";
 import { getAdminAuthHeaders } from "../../utils/authHeaders";
 import { showAdminToast } from "./AdminToast";
+import { localDateStr } from "../../utils/localDate";
 
 interface AdminDiagnosticsProps {
   systemLogs: any[];
@@ -72,11 +73,9 @@ export default function AdminDiagnostics({ systemLogs, adminLanguage }: AdminDia
         }, 0) / completed.length).toFixed(1)
       : null;
 
-    const todayStr = new Date().toISOString().split("T")[0];
-    const todayOrders = orders.filter(o => {
-      const created = o.createdAt ? o.createdAt.split("T")[0] : null;
-      return created === todayStr;
-    }).length;
+    // createdAt is a UTC timestamp — compare on the local (NL) calendar day.
+    const todayStr = localDateStr();
+    const todayOrders = orders.filter(o => o.createdAt && localDateStr(new Date(o.createdAt)) === todayStr).length;
 
     return { conversionRate, cancellationRate, avgDays, completed: completed.length, cancelled: cancelled.length, todayOrders };
   }, [orders]);

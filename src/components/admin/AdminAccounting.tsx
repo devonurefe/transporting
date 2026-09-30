@@ -8,6 +8,7 @@ import { Download, FileSpreadsheet, Filter, CheckCircle2 } from "lucide-react";
 import { motion } from "motion/react";
 import { euro } from "../../utils/format";
 import { getAdminAuthHeaders } from "../../utils/authHeaders";
+import { localDateStr, previousMonthRange } from "../../utils/localDate";
 
 interface AdminAccountingProps {
   adminLanguage?: string;
@@ -37,7 +38,7 @@ interface ExportSummaryOrder {
 }
 
 export default function AdminAccounting({ adminLanguage }: AdminAccountingProps) {
-  const todayISO = new Date().toISOString().split("T")[0];
+  const todayISO = localDateStr();
   const firstOfMonthISO = todayISO.slice(0, 7) + "-01";
 
   const [fromDate, setFromDate] = useState(firstOfMonthISO);
@@ -234,8 +235,7 @@ export default function AdminAccounting({ adminLanguage }: AdminAccountingProps)
                 { label: t("Deze maand", "This month", "Bu ay"), from: firstOfMonthISO, to: todayISO },
                 {
                   label: t("Vorige maand", "Last month", "Geçen ay"),
-                  from: (() => { const d = new Date(); d.setMonth(d.getMonth() - 1); return d.toISOString().slice(0, 7) + "-01"; })(),
-                  to: (() => { const d = new Date(); d.setDate(0); return d.toISOString().split("T")[0]; })()
+                  ...previousMonthRange()
                 },
                 {
                   label: t("Dit jaar", "This year", "Bu yıl"),

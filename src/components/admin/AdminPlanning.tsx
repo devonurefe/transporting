@@ -9,6 +9,7 @@ import { CalendarDays, Truck, RotateCcw, Lock, ChevronLeft, ChevronRight, X, Pho
 import { useAppStore } from "../../store/appStore";
 import { euro } from "../../utils/format";
 import { getTodaysLogistics, splitByTransport, transportSide } from "../../utils/logistics";
+import { localTodayAsDate } from "../../utils/localDate";
 import AdminStatusBadge from "./AdminStatusBadge";
 
 type AnyOrder = any;
@@ -478,9 +479,8 @@ export default function AdminPlanning({ adminLanguage }: AdminPlanningProps) {
   const locale = makeLocale(adminLanguage);
 
   const today = useMemo(() => {
-    const d = new Date();
-    d.setHours(0, 0, 0, 0);
-    return d;
+    // NL (Europe/Amsterdam) calendar day, even when viewed from abroad.
+    return localTodayAsDate();
   }, []);
   const todayStr = useMemo(() => fmtLocalDate(today), [today]);
 

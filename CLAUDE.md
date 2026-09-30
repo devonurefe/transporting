@@ -181,7 +181,7 @@ Thirteen lazy-loaded panels inside `src/components/admin/`:
 | Machines | `AdminMachines.tsx` | Edit existing machines — prices, images, flat rates, gallery (mobile card view + desktop table) |
 | Add Machine | `AdminAddMachine.tsx` | Add new machine — includes Weekend/Werkweek/4W price inputs |
 | Calendar | `AdminCalendar.tsx` | Block/unblock dates per machine with reason dropdown |
-| Planning | `AdminPlanning.tsx` | Daily logistics timeline (departures/returns, addresses) |
+| Planning | `AdminPlanning.tsx` | Daily logistics ("Günlük Sevkiyat"), split by who transports: **Wij rijden** (`delivery_by_us`, with address) vs **Klant zelf** (`self_pickup` + `trailer_rental`) via `transportSide()`/`splitByTransport()` in `src/utils/logistics.ts`; filter applies to the week view too |
 | Customers | `AdminCustomers.tsx` | Paginated customer list (50/page, "Meer laden"), order history, lifetime value |
 | Logs | `AdminLogs.tsx` | Real audit trail viewer (`GET /api/admin/audit-logs`) — filterable, paginated |
 | Diagnostics | `AdminDiagnostics.tsx` | System health (KPIs + live DB latency probe, 15s interval) |
@@ -419,6 +419,7 @@ All builders in `src/utils/whatsapp.ts`. Sign-off emoji: **🦾** (never 🙏).
 ## Key Conventions
 
 - **Language**: entire UI is Dutch. Server errors also in Dutch ("Te veel verzoeken" etc.).
+- **Admin dates**: use `localDateStr()` / `localDateStrOffset()` (`src/utils/localDate.ts`) for "today" in admin panels — never `toISOString().split("T")[0]` (UTC = yesterday in NL between 00:00–02:00). The customer booking flow intentionally stays on UTC "today" to mirror the server's past-date check.
 - **TypeScript**: strict mode, ES2022 target, path alias `@/*` → `src/*`.
 - **No ESLint** — `npm run lint` = `tsc --noEmit` only.
 - **No `vitest.config.ts`** — Vitest defaults, tests in `src/__tests__/`.

@@ -419,7 +419,7 @@ All builders in `src/utils/whatsapp.ts`. Sign-off emoji: **🦾** (never 🙏).
 ## Key Conventions
 
 - **Language**: entire UI is Dutch. Server errors also in Dutch ("Te veel verzoeken" etc.).
-- **Admin dates**: use `localDateStr()` / `localDateStrOffset()` (`src/utils/localDate.ts`) for "today" in admin panels — never `toISOString().split("T")[0]` (UTC = yesterday in NL between 00:00–02:00). The customer booking flow intentionally stays on UTC "today" to mirror the server's past-date check.
+- **Admin dates**: use `localDateStr()` / `localDateStrOffset()` / `localDayOfWeek()` / `localTodayAsDate()` (`src/utils/localDate.ts`, pinned to **Europe/Amsterdam** — not the viewer's browser timezone, so an admin abroad still sees NL's day) for "today" in admin panels — never `toISOString().split("T")[0]` (UTC = yesterday in NL between 00:00–02:00). The customer booking flow intentionally stays on UTC "today" to mirror the server's past-date check.
 - **TypeScript**: strict mode, ES2022 target, path alias `@/*` → `src/*`.
 - **No ESLint** — `npm run lint` = `tsc --noEmit` only.
 - **No `vitest.config.ts`** — Vitest defaults, tests in `src/__tests__/`.

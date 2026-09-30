@@ -42,7 +42,7 @@ import AdminStatusBadge from "./AdminStatusBadge";
 import { OrderStatus } from "../../types";
 import { getAdminAuthHeaders } from "../../utils/authHeaders";
 import { showAdminToast } from "./AdminToast";
-import { localDateStr, localDateStrOffset } from "../../utils/localDate";
+import { localDateStr, localDateStrOffset, localDayOfWeek } from "../../utils/localDate";
 
 interface AdminOrdersProps {
   onAddSystemLog: (type: "login" | "logout" | "signup" | "booking" | "fleet" | "status" | "system", user: string, description: string) => void;
@@ -107,8 +107,8 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
   // See docs/admin-platform-audit-2026-07.md §3/§14 (overdue detection).
   const isOverdue = (o: any) => o.status === "Onderweg" && o.endDate < todayISO;
   const tomorrowISO = localDateStrOffset(1);
-  const weekStartISO = (() => { const dow = new Date().getDay(); return localDateStrOffset(-(dow === 0 ? 6 : dow - 1)); })();
-  const weekEndISO = (() => { const dow = new Date().getDay(); return localDateStrOffset(dow === 0 ? 0 : 7 - dow); })();
+  const weekStartISO = (() => { const dow = localDayOfWeek(); return localDateStrOffset(-(dow === 0 ? 6 : dow - 1)); })();
+  const weekEndISO = (() => { const dow = localDayOfWeek(); return localDateStrOffset(dow === 0 ? 0 : 7 - dow); })();
 
   // Filters draaien client-side over de geladen orders, dus laden we
   // automatisch ALLE pagina's — anders zijn orders buiten de eerste pagina

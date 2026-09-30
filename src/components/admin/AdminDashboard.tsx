@@ -11,6 +11,7 @@ import { useAuthStore } from "../../store/authStore";
 import { euro } from "../../utils/format";
 import { getTodaysLogistics, transportSide } from "../../utils/logistics";
 import type { AdminSubTab } from "../AdminSection";
+import { localDateStr } from "../../utils/localDate";
 
 interface AdminDashboardProps {
   setSubTab: (tab: AdminSubTab) => void;
@@ -119,7 +120,7 @@ export default function AdminDashboard({ setSubTab, setOrdersFilter, adminLangua
   const kpiActive = orderStats?.activeRentals ?? activeRentals;
   const kpiPending = orderStats?.pending ?? pendingRegistrations;
   const kpiAwaitingInspection = orderStats?.awaitingInspection ?? awaitingInspection;
-  const kpiOverdue = orderStats?.overdueCount ?? orders.filter(o => o.status === "Onderweg" && o.endDate < new Date().toISOString().split("T")[0]).length;
+  const kpiOverdue = orderStats?.overdueCount ?? orders.filter(o => o.status === "Onderweg" && o.endDate < localDateStr()).length;
   const openMaintenanceCount = maintenanceEvents.filter(e => !e.completedDate).length;
   const openDamageCount = damageReports.filter(d => !d.resolvedAt).length;
 
@@ -127,10 +128,7 @@ export default function AdminDashboard({ setSubTab, setOrdersFilter, adminLangua
   // (src/utils/logistics.ts), so the two never disagree on what "today" means.
   // Local calendar day (not toISOString/UTC, which is still "yesterday"
   // between 00:00 and 02:00 in NL) — same convention as AdminPlanning.
-  const todayStr = useMemo(() => {
-    const d = new Date();
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-  }, []);
+  const todayStr = useMemo(() => localDateStr(), []);
   const todaysLogistics = useMemo(() => getTodaysLogistics(orders, todayStr), [orders, todayStr]);
   const todaysOurTrips = useMemo(
     () => todaysLogistics.departing.concat(todaysLogistics.returning).filter((o) => transportSide(o) === "ours").length,

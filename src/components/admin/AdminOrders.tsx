@@ -42,6 +42,7 @@ import AdminStatusBadge from "./AdminStatusBadge";
 import { OrderStatus } from "../../types";
 import { getAdminAuthHeaders } from "../../utils/authHeaders";
 import { showAdminToast } from "./AdminToast";
+import { localDateStr, localDateStrOffset } from "../../utils/localDate";
 
 interface AdminOrdersProps {
   onAddSystemLog: (type: "login" | "logout" | "signup" | "booking" | "fleet" | "status" | "system", user: string, description: string) => void;
@@ -101,19 +102,13 @@ export default function AdminOrders({ onAddSystemLog, adminLanguage, statusFilte
 
   const getBaseName = (name: string) => name.replace(/\s*\(Unit\s+\d+\)\s*$/i, "").trim();
 
-  const todayISO = new Date().toISOString().split("T")[0];
+  const todayISO = localDateStr();
   // "Onderweg" past its endDate — still with the customer, expected back already.
   // See docs/admin-platform-audit-2026-07.md §3/§14 (overdue detection).
   const isOverdue = (o: any) => o.status === "Onderweg" && o.endDate < todayISO;
-  const tomorrowISO = (() => { const d = new Date(); d.setDate(d.getDate() + 1); return d.toISOString().split("T")[0]; })();
-  const weekStartISO = (() => {
-    const d = new Date(); const dow = d.getDay(); d.setDate(d.getDate() - (dow === 0 ? 6 : dow - 1));
-    return d.toISOString().split("T")[0];
-  })();
-  const weekEndISO = (() => {
-    const d = new Date(); const dow = d.getDay(); d.setDate(d.getDate() + (dow === 0 ? 0 : 7 - dow));
-    return d.toISOString().split("T")[0];
-  })();
+  const tomorrowISO = localDateStrOffset(1);
+  const weekStartISO = (() => { const dow = new Date().getDay(); return localDateStrOffset(-(dow === 0 ? 6 : dow - 1)); })();
+  const weekEndISO = (() => { const dow = new Date().getDay(); return localDateStrOffset(dow === 0 ? 0 : 7 - dow); })();
 
   // Filters draaien client-side over de geladen orders, dus laden we
   // automatisch ALLE pagina's — anders zijn orders buiten de eerste pagina

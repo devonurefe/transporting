@@ -9,7 +9,7 @@ import { motion } from "motion/react";
 import { useAppStore } from "../../store/appStore";
 import { useAuthStore } from "../../store/authStore";
 import { euro } from "../../utils/format";
-import { getTodaysLogistics } from "../../utils/logistics";
+import { getTodaysLogistics, transportSide } from "../../utils/logistics";
 import type { AdminSubTab } from "../AdminSection";
 
 interface AdminDashboardProps {
@@ -125,8 +125,17 @@ export default function AdminDashboard({ setSubTab, setOrdersFilter, adminLangua
 
   // Today's departures/returns — same grouping AdminPlanning's day view uses
   // (src/utils/logistics.ts), so the two never disagree on what "today" means.
-  const todayStr = useMemo(() => new Date().toISOString().split("T")[0], []);
+  // Local calendar day (not toISOString/UTC, which is still "yesterday"
+  // between 00:00 and 02:00 in NL) — same convention as AdminPlanning.
+  const todayStr = useMemo(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  }, []);
   const todaysLogistics = useMemo(() => getTodaysLogistics(orders, todayStr), [orders, todayStr]);
+  const todaysOurTrips = useMemo(
+    () => todaysLogistics.departing.concat(todaysLogistics.returning).filter((o) => transportSide(o) === "ours").length,
+    [todaysLogistics]
+  );
 
   // Cancellation rate — cheap ratio over orders already loaded via loadAllOrders().
   const cancellationRate = useMemo(() => {
@@ -321,7 +330,7 @@ export default function AdminDashboard({ setSubTab, setOrdersFilter, adminLangua
       {/* Operational snapshot — today's logistics, overdue, open maintenance/damage,
           cancellation rate. Deliberately not "vanity" — every tile links to the
           panel that acts on it. See docs/admin-platform-audit-2026-07.md §12. */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-7 gap-3">
         <div onClick={() => setSubTab("planning")} className="p-3.5 rounded-xl bg-white border border-slate-200 shadow-sm cursor-pointer hover:shadow-md transition-all">
           <span className="text-[9px] uppercase font-bold text-slate-500 font-mono tracking-wider block">{t("Vertrek vandaag", "Departing today", "Bugün çıkış")}</span>
           <span className="text-lg font-display font-extrabold text-slate-900 block mt-1">{todaysLogistics.departing.length}</span>
@@ -329,6 +338,10 @@ export default function AdminDashboard({ setSubTab, setOrdersFilter, adminLangua
         <div onClick={() => setSubTab("planning")} className="p-3.5 rounded-xl bg-white border border-slate-200 shadow-sm cursor-pointer hover:shadow-md transition-all">
           <span className="text-[9px] uppercase font-bold text-slate-500 font-mono tracking-wider block">{t("Retour vandaag", "Returning today", "Bugün iade")}</span>
           <span className="text-lg font-display font-extrabold text-slate-900 block mt-1">{todaysLogistics.returning.length}</span>
+        </div>
+        <div onClick={() => setSubTab("planning")} className={`p-3.5 rounded-xl border shadow-sm cursor-pointer hover:shadow-md transition-all ${todaysOurTrips > 0 ? "bg-indigo-50 border-indigo-200" : "bg-white border-slate-200"}`}>
+          <span className={`text-[9px] uppercase font-bold font-mono tracking-wider block ${todaysOurTrips > 0 ? "text-indigo-600" : "text-slate-500"}`}>{t("Ritten wij vandaag", "Our trips today", "Bugün bizim sevkiyat")}</span>
+          <span className={`text-lg font-display font-extrabold block mt-1 ${todaysOurTrips > 0 ? "text-indigo-800" : "text-slate-900"}`}>{todaysOurTrips}</span>
         </div>
         <div
           onClick={() => { setSubTab("orders"); setOrdersFilter?.(["Onderweg"]); }}

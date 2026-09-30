@@ -5,13 +5,14 @@
 
 import React, { useState, useMemo, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { CalendarDays, Truck, RotateCcw, Lock, ChevronLeft, ChevronRight, X, Phone, Mail, MapPin, Package } from "lucide-react";
+import { CalendarDays, Truck, RotateCcw, Lock, ChevronLeft, ChevronRight, X, Phone, Mail, MapPin, Package, Warehouse } from "lucide-react";
 import { useAppStore } from "../../store/appStore";
 import { euro } from "../../utils/format";
-import { getTodaysLogistics } from "../../utils/logistics";
+import { getTodaysLogistics, splitByTransport, transportSide } from "../../utils/logistics";
 import AdminStatusBadge from "./AdminStatusBadge";
 
 type AnyOrder = any;
+type TransportFilter = "all" | "ours" | "customer";
 
 function makeAl(adminLanguage: string) {
   return (nl: string, en: string, tr: string) => {
@@ -31,6 +32,71 @@ function fmtLocalDate(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
+// ── OrderList — one direction (out/back) of one transport group ──
+interface OrderListProps {
+  title: string;
+  orders: AnyOrder[];
+  direction: "out" | "back";
+  emptyText: string;
+  adminLanguage: string;
+  showAddress: boolean;
+  onSelectOrder: (o: AnyOrder) => void;
+}
+
+function OrderList({ title, orders, direction, emptyText, adminLanguage, showAddress, onSelectOrder }: OrderListProps) {
+  const al = makeAl(adminLanguage);
+  const out = direction === "out";
+  const Icon = out ? Truck : RotateCcw;
+  return (
+    <div className="space-y-2">
+      <h4 className="text-[11px] font-black text-slate-600 flex items-center gap-1.5">
+        <Icon className={`h-3.5 w-3.5 ${out ? "text-indigo-500" : "text-teal-500"}`} />
+        {title}
+        <span className={`ml-auto text-[10px] font-mono px-2 py-0.5 rounded-full ${out ? "bg-indigo-100 text-indigo-700" : "bg-teal-100 text-teal-700"}`}>{orders.length}</span>
+      </h4>
+      {orders.length === 0 ? (
+        <p className="text-[11px] text-slate-500 text-center py-3">{emptyText}</p>
+      ) : (
+        orders.map((o) => (
+          <button
+            key={o.id}
+            type="button"
+            onClick={() => onSelectOrder(o)}
+            className={`w-full text-left flex items-start gap-2.5 p-2.5 rounded-xl border transition-colors cursor-pointer ${
+              out ? "bg-indigo-50 border-indigo-100 hover:bg-indigo-100 hover:border-indigo-200" : "bg-teal-50 border-teal-100 hover:bg-teal-100 hover:border-teal-200"
+            }`}
+          >
+            <div className={`h-6 w-6 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${out ? "bg-indigo-500" : "bg-teal-500"}`}>
+              <Icon className="h-3.5 w-3.5 text-white" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-bold text-slate-800 truncate">{o.machineName}</p>
+              <p className="text-[10px] text-slate-500">{o.customerName}</p>
+              {showAddress && o.deliveryAddress && (
+                <p className="text-[10px] text-slate-600 flex items-start gap-1 mt-0.5">
+                  <MapPin className="h-3 w-3 shrink-0 mt-px" />
+                  <span className="break-words">{o.deliveryAddress}</span>
+                </p>
+              )}
+              {o.deliveryType === "trailer_rental" && (
+                <p className="text-[10px] font-semibold text-amber-700 mt-0.5">
+                  {out
+                    ? al("Aanhanger klaarzetten", "Prepare trailer", "Römorku hazırla")
+                    : al("Aanhanger komt terug", "Trailer returns", "Römork geri geliyor")}
+                </p>
+              )}
+              <p className={`text-[10px] font-semibold ${out ? "text-indigo-600" : "text-teal-600"}`}>
+                {o.rentalDays} {al("dag", "day", "gün")}{o.rentalDays !== 1 ? (adminLanguage === "nl" ? "en" : adminLanguage === "en" ? "s" : "") : ""} · #{o.id}
+              </p>
+            </div>
+            <AdminStatusBadge status={o.status} adminLanguage={adminLanguage} className="shrink-0" />
+          </button>
+        ))
+      )}
+    </div>
+  );
+}
+
 // ── DayPanel — defined OUTSIDE AdminPlanning so React doesn't remount it ──
 interface DayPanelProps {
   targetStr: string;
@@ -40,105 +106,90 @@ interface DayPanelProps {
   blocked: { machineId: string; machineName: string; reason?: string }[];
   dateLabel: string;
   adminLanguage: string;
+  transportFilter: TransportFilter;
   onSelectOrder: (o: AnyOrder) => void;
 }
 
 const DayPanel = React.memo(function DayPanel({
-  targetStr, todayStr, departing, returning, blocked, dateLabel, adminLanguage, onSelectOrder,
+  targetStr, todayStr, departing, returning, blocked, dateLabel, adminLanguage, transportFilter, onSelectOrder,
 }: DayPanelProps) {
   const al = makeAl(adminLanguage);
   const isTargetToday = targetStr === todayStr;
 
-  const deliveryLabel = (type: string) => {
-    if (type === "delivery_by_us") return al("Bezorging", "Delivery", "Teslimat");
-    if (type === "trailer_rental") return al("Aanhanger", "Trailer", "Treyler");
-    return al("Ophalen", "Pickup", "Teslim Al");
-  };
+  // Split by who moves the machine: our own driver (delivery_by_us) vs the
+  // customer at the depot (self pickup / trailer). The two are different jobs
+  // — a route for the driver vs. machines to have ready at the yard.
+  const dep = useMemo(() => splitByTransport(departing), [departing]);
+  const ret = useMemo(() => splitByTransport(returning), [returning]);
+
+  const showOurs = transportFilter !== "customer";
+  const showCustomer = transportFilter !== "ours";
 
   return (
     <div className="space-y-4">
       <div className="text-center py-2.5 bg-amber-50 border border-amber-200 rounded-xl">
         <p className="text-xs font-black text-amber-800">{dateLabel}</p>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {/* Departing */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-4 space-y-3 shadow-sm">
-          <h3 className="text-xs font-black text-slate-700 flex items-center gap-2">
-            <Truck className="h-4 w-4 text-indigo-500" />
-            {isTargetToday
-              ? al("Vertrek vandaag", "Departing today", "Bugün hareket ediyor")
-              : al("Vertrek morgen", "Departing tomorrow", "Yarın hareket ediyor")}
-            <span className="ml-auto bg-indigo-100 text-indigo-700 text-[10px] font-mono px-2 py-0.5 rounded-full">{departing.length}</span>
-          </h3>
-          {departing.length === 0 ? (
-            <p className="text-xs text-slate-400 text-center py-6">
-              {al("Geen machines vertrekken", "No machines departing", "Hareket eden makine yok")}
-            </p>
-          ) : (
-            <div className="space-y-2">
-              {departing.map((o) => (
-                <button
-                  key={o.id}
-                  type="button"
-                  onClick={() => onSelectOrder(o)}
-                  className="w-full text-left flex items-start gap-2.5 p-2.5 bg-indigo-50 rounded-xl border border-indigo-100 hover:bg-indigo-100 hover:border-indigo-200 transition-colors cursor-pointer"
-                >
-                  <div className="h-6 w-6 rounded-lg bg-indigo-500 flex items-center justify-center shrink-0 mt-0.5">
-                    <Truck className="h-3.5 w-3.5 text-white" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs font-bold text-slate-800 truncate">{o.machineName}</p>
-                    <p className="text-[10px] text-slate-500">{o.customerName}</p>
-                    <p className="text-[10px] text-indigo-600 font-semibold">
-                      {deliveryLabel(o.deliveryType)} · {o.rentalDays} {al("dag", "day", "gün")}{o.rentalDays !== 1 ? (adminLanguage === "nl" ? "en" : adminLanguage === "en" ? "s" : "") : ""}
-                    </p>
-                  </div>
-                  <AdminStatusBadge status={o.status} adminLanguage={adminLanguage} className="shrink-0" />
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
 
-        {/* Returning */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-4 space-y-3 shadow-sm">
-          <h3 className="text-xs font-black text-slate-700 flex items-center gap-2">
-            <RotateCcw className="h-4 w-4 text-teal-500" />
-            {isTargetToday
-              ? al("Retour vandaag", "Returning today", "Bugün geri dönüyor")
-              : al("Retour morgen", "Returning tomorrow", "Yarın geri dönüyor")}
-            <span className="ml-auto bg-teal-100 text-teal-700 text-[10px] font-mono px-2 py-0.5 rounded-full">{returning.length}</span>
+      {showOurs && (
+        <div className="bg-white border border-indigo-200 rounded-2xl p-4 space-y-3 shadow-sm">
+          <h3 className="text-xs font-black text-slate-800 flex items-center gap-2">
+            <Truck className="h-4 w-4 text-indigo-600" />
+            {al("Wij rijden — bezorgen & ophalen bij klant", "We drive — deliver & collect at customer", "Biz götürüyoruz — teslimat & geri alma")}
+            <span className="ml-auto bg-indigo-600 text-white text-[10px] font-mono px-2 py-0.5 rounded-full">{dep.ours.length + ret.ours.length}</span>
           </h3>
-          {returning.length === 0 ? (
-            <p className="text-xs text-slate-400 text-center py-6">
-              {al("Geen machines keren terug", "No machines returning", "Geri dönen makine yok")}
-            </p>
-          ) : (
-            <div className="space-y-2">
-              {returning.map((o) => (
-                <button
-                  key={o.id}
-                  type="button"
-                  onClick={() => onSelectOrder(o)}
-                  className="w-full text-left flex items-start gap-2.5 p-2.5 bg-teal-50 rounded-xl border border-teal-100 hover:bg-teal-100 hover:border-teal-200 transition-colors cursor-pointer"
-                >
-                  <div className="h-6 w-6 rounded-lg bg-teal-500 flex items-center justify-center shrink-0 mt-0.5">
-                    <RotateCcw className="h-3.5 w-3.5 text-white" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs font-bold text-slate-800 truncate">{o.machineName}</p>
-                    <p className="text-[10px] text-slate-500">{o.customerName}</p>
-                    <p className="text-[10px] text-teal-600 font-semibold">
-                      {deliveryLabel(o.deliveryType)} · #{o.id}
-                    </p>
-                  </div>
-                  <AdminStatusBadge status={o.status} adminLanguage={adminLanguage} className="shrink-0" />
-                </button>
-              ))}
-            </div>
-          )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <OrderList
+              title={isTargetToday ? al("Bezorgen vandaag", "Deliver today", "Bugün teslim et") : al("Bezorgen morgen", "Deliver tomorrow", "Yarın teslim et")}
+              orders={dep.ours}
+              direction="out"
+              emptyText={al("Geen bezorgingen", "No deliveries", "Teslimat yok")}
+              adminLanguage={adminLanguage}
+              showAddress
+              onSelectOrder={onSelectOrder}
+            />
+            <OrderList
+              title={isTargetToday ? al("Ophalen bij klant vandaag", "Collect from customer today", "Bugün müşteriden al") : al("Ophalen bij klant morgen", "Collect from customer tomorrow", "Yarın müşteriden al")}
+              orders={ret.ours}
+              direction="back"
+              emptyText={al("Niets op te halen", "Nothing to collect", "Alınacak makine yok")}
+              adminLanguage={adminLanguage}
+              showAddress
+              onSelectOrder={onSelectOrder}
+            />
+          </div>
         </div>
-      </div>
+      )}
+
+      {showCustomer && (
+        <div className="bg-white border border-slate-200 rounded-2xl p-4 space-y-3 shadow-sm">
+          <h3 className="text-xs font-black text-slate-800 flex items-center gap-2">
+            <Warehouse className="h-4 w-4 text-slate-600" />
+            {al("Klant zelf — afhalen & terugbrengen depot", "Customer — pickup & return at depot", "Müşteri kendisi — depodan alma & iade")}
+            <span className="ml-auto bg-slate-700 text-white text-[10px] font-mono px-2 py-0.5 rounded-full">{dep.customer.length + ret.customer.length}</span>
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <OrderList
+              title={isTargetToday ? al("Afhalen vandaag", "Picked up today", "Bugün alınacak") : al("Afhalen morgen", "Picked up tomorrow", "Yarın alınacak")}
+              orders={dep.customer}
+              direction="out"
+              emptyText={al("Geen afhalingen", "No pickups", "Alım yok")}
+              adminLanguage={adminLanguage}
+              showAddress={false}
+              onSelectOrder={onSelectOrder}
+            />
+            <OrderList
+              title={isTargetToday ? al("Terugbrengen vandaag", "Returned today", "Bugün iade") : al("Terugbrengen morgen", "Returned tomorrow", "Yarın iade")}
+              orders={ret.customer}
+              direction="back"
+              emptyText={al("Geen retouren", "No returns", "İade yok")}
+              adminLanguage={adminLanguage}
+              showAddress={false}
+              onSelectOrder={onSelectOrder}
+            />
+          </div>
+        </div>
+      )}
 
       {blocked.length > 0 && (
         <div className="bg-white border border-red-100 rounded-2xl p-4 space-y-3 shadow-sm">
@@ -156,12 +207,6 @@ const DayPanel = React.memo(function DayPanel({
               </div>
             ))}
           </div>
-        </div>
-      )}
-
-      {departing.length === 0 && returning.length === 0 && blocked.length === 0 && (
-        <div className="text-center py-16 text-slate-400 text-sm">
-          {al("Geen activiteit gepland.", "No activity planned.", "Planlanan aktivite yok.")}
         </div>
       )}
     </div>
@@ -241,13 +286,13 @@ const WeekGrid = React.memo(function WeekGrid({
               <button
                 key={`d-${o.id}`}
                 type="button"
-                title={`${o.machineName} → ${o.customerName}`}
+                title={`${o.machineName} → ${o.customerName} (${transportSide(o) === "ours" ? al("wij bezorgen", "we deliver", "biz teslim") : al("klant haalt af", "customer picks up", "müşteri alır")})`}
                 onClick={() => onSelectOrder(o)}
                 onTouchEnd={(e) => { e.preventDefault(); onSelectOrder(o); }}
                 className="bg-indigo-100 text-indigo-800 rounded-md px-1.5 py-1 text-[10px] font-semibold truncate flex items-center gap-1 hover:bg-indigo-200 transition-colors cursor-pointer border-none w-full text-left min-h-[32px]"
                 style={{ touchAction: "manipulation" }}
               >
-                <Truck className="h-3 w-3 shrink-0" />
+                {transportSide(o) === "ours" ? <Truck className="h-3 w-3 shrink-0" /> : <Warehouse className="h-3 w-3 shrink-0" />}
                 <span className="truncate">{o.machineName.split(" ")[0]}</span>
               </button>
             ))}
@@ -256,13 +301,13 @@ const WeekGrid = React.memo(function WeekGrid({
               <button
                 key={`r-${o.id}`}
                 type="button"
-                title={`${o.machineName} ← ${o.customerName}`}
+                title={`${o.machineName} ← ${o.customerName} (${transportSide(o) === "ours" ? al("wij halen op", "we collect", "biz alırız") : al("klant brengt terug", "customer returns", "müşteri getirir")})`}
                 onClick={() => onSelectOrder(o)}
                 onTouchEnd={(e) => { e.preventDefault(); onSelectOrder(o); }}
                 className="bg-teal-100 text-teal-800 rounded-md px-1.5 py-1 text-[10px] font-semibold truncate flex items-center gap-1 hover:bg-teal-200 transition-colors cursor-pointer border-none w-full text-left min-h-[32px]"
                 style={{ touchAction: "manipulation" }}
               >
-                <RotateCcw className="h-3 w-3 shrink-0" />
+                {transportSide(o) === "ours" ? <Truck className="h-3 w-3 shrink-0 -scale-x-100" /> : <Warehouse className="h-3 w-3 shrink-0" />}
                 <span className="truncate">{o.machineName.split(" ")[0]}</span>
               </button>
             ))}
@@ -361,10 +406,12 @@ const WeekDayList = React.memo(function WeekDayList({
                     onClick={() => onSelectOrder(o)}
                     className="w-full flex items-center gap-2 px-2.5 py-2 bg-indigo-50 rounded-lg border border-indigo-100 hover:bg-indigo-100 transition-colors cursor-pointer text-left min-h-[40px]"
                   >
-                    <Truck className="h-3.5 w-3.5 text-indigo-500 shrink-0" />
+                    {transportSide(o) === "ours" ? <Truck className="h-3.5 w-3.5 text-indigo-500 shrink-0" /> : <Warehouse className="h-3.5 w-3.5 text-indigo-500 shrink-0" />}
                     <div className="min-w-0 flex-1">
                       <p className="text-[11px] font-bold text-slate-800 truncate">{o.machineName}</p>
-                      <p className="text-[10px] text-slate-500 truncate">{o.customerName}</p>
+                      <p className="text-[10px] text-slate-500 truncate">
+                        {o.customerName} · {transportSide(o) === "ours" ? al("wij bezorgen", "we deliver", "biz teslim") : al("klant haalt af", "customer picks up", "müşteri alır")}
+                      </p>
                     </div>
                     <AdminStatusBadge status={o.status} adminLanguage={adminLanguage} className="shrink-0" />
                   </button>
@@ -376,10 +423,12 @@ const WeekDayList = React.memo(function WeekDayList({
                     onClick={() => onSelectOrder(o)}
                     className="w-full flex items-center gap-2 px-2.5 py-2 bg-teal-50 rounded-lg border border-teal-100 hover:bg-teal-100 transition-colors cursor-pointer text-left min-h-[40px]"
                   >
-                    <RotateCcw className="h-3.5 w-3.5 text-teal-500 shrink-0" />
+                    {transportSide(o) === "ours" ? <Truck className="h-3.5 w-3.5 text-teal-500 shrink-0 -scale-x-100" /> : <Warehouse className="h-3.5 w-3.5 text-teal-500 shrink-0" />}
                     <div className="min-w-0 flex-1">
                       <p className="text-[11px] font-bold text-slate-800 truncate">{o.machineName}</p>
-                      <p className="text-[10px] text-slate-500 truncate">{o.customerName}</p>
+                      <p className="text-[10px] text-slate-500 truncate">
+                        {o.customerName} · {transportSide(o) === "ours" ? al("wij halen op", "we collect", "biz alırız") : al("klant brengt terug", "customer returns", "müşteri getirir")}
+                      </p>
                     </div>
                     <AdminStatusBadge status={o.status} adminLanguage={adminLanguage} className="shrink-0" />
                   </button>
@@ -423,6 +472,7 @@ export default function AdminPlanning({ adminLanguage }: AdminPlanningProps) {
   const [view, setView] = useState<"today" | "tomorrow" | "week">("today");
   const [weekOffset, setWeekOffset] = useState(0);
   const [selectedOrder, setSelectedOrder] = useState<AnyOrder | null>(null);
+  const [transportFilter, setTransportFilter] = useState<TransportFilter>("all");
 
   const al = makeAl(adminLanguage);
   const locale = makeLocale(adminLanguage);
@@ -470,8 +520,11 @@ export default function AdminPlanning({ adminLanguage }: AdminPlanningProps) {
   const machineMap = useMemo(() => new Map(machines.map((m) => [m.id, m.name])), [machines]);
 
   const activeOrders = useMemo(
-    () => orders.filter((o) => ["In behandeling", "Goedgekeurd", "Onderweg"].includes(o.status)),
-    [orders]
+    () => orders.filter((o) =>
+      ["In behandeling", "Goedgekeurd", "Onderweg"].includes(o.status) &&
+      (transportFilter === "all" || transportSide(o) === transportFilter)
+    ),
+    [orders, transportFilter]
   );
 
   // Still "Onderweg" past its endDate — invisible to the day-grouped panels
@@ -503,9 +556,9 @@ export default function AdminPlanning({ adminLanguage }: AdminPlanningProps) {
   };
 
   const deliveryLabel = (type: string) => {
-    if (type === "delivery_by_us") return al("Bezorging", "Delivery", "Teslimat");
-    if (type === "trailer_rental") return al("Aanhanger", "Trailer", "Treyler");
-    return al("Ophalen", "Pickup", "Teslim Al");
+    if (type === "delivery_by_us") return al("Bezorging door ons", "Delivered by us", "Biz teslim ediyoruz");
+    if (type === "trailer_rental") return al("Aanhanger (klant rijdt)", "Trailer (customer drives)", "Römork (müşteri taşır)");
+    return al("Klant haalt zelf af", "Customer picks up", "Müşteri depodan alır");
   };
 
   return (
@@ -552,6 +605,28 @@ export default function AdminPlanning({ adminLanguage }: AdminPlanningProps) {
         </div>
       </div>
 
+      {/* Transport filter — our own trips vs. customer handles transport */}
+      <div className="flex flex-wrap items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 self-start w-fit">
+        {([
+          ["all",      al("Alles", "All", "Hepsi"), null],
+          ["ours",     al("Wij rijden", "We drive", "Biz götürüyoruz"), Truck],
+          ["customer", al("Klant zelf", "Customer", "Müşteri kendisi"), Warehouse],
+        ] as const).map(([v, label, Icon]) => (
+          <button
+            key={v}
+            type="button"
+            onClick={() => setTransportFilter(v)}
+            aria-pressed={transportFilter === v}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer border-none ${
+              transportFilter === v ? "bg-slate-900 text-white shadow-sm" : "text-slate-600 hover:text-slate-900 hover:bg-white"
+            }`}
+          >
+            {Icon && <Icon className="h-3.5 w-3.5" />}
+            {label}
+          </button>
+        ))}
+      </div>
+
       {/* Overdue banner — still "Onderweg" past endDate, needs admin follow-up */}
       {overdueOrders.length > 0 && (
         <div className="bg-rose-50 border border-rose-200 rounded-2xl p-4 space-y-2">
@@ -588,6 +663,7 @@ export default function AdminPlanning({ adminLanguage }: AdminPlanningProps) {
           blocked={blockedToday}
           dateLabel={todayLabel}
           adminLanguage={adminLanguage}
+          transportFilter={transportFilter}
           onSelectOrder={handleSelectOrder}
         />
       )}
@@ -602,6 +678,7 @@ export default function AdminPlanning({ adminLanguage }: AdminPlanningProps) {
           blocked={blockedTomorrow}
           dateLabel={tomorrowLabel}
           adminLanguage={adminLanguage}
+          transportFilter={transportFilter}
           onSelectOrder={handleSelectOrder}
         />
       )}
@@ -665,7 +742,7 @@ export default function AdminPlanning({ adminLanguage }: AdminPlanningProps) {
             />
           </div>
 
-          <div className="flex items-center gap-5 text-[10px] text-slate-500 pt-1">
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-[10px] text-slate-500 pt-1">
             <div className="flex items-center gap-1.5">
               <span className="h-2.5 w-2.5 rounded-sm bg-indigo-200 inline-block" />
               {al("Vertrek", "Departure", "Hareket")}
@@ -677,6 +754,14 @@ export default function AdminPlanning({ adminLanguage }: AdminPlanningProps) {
             <div className="flex items-center gap-1.5">
               <span className="h-2.5 w-2.5 rounded-sm bg-red-200 inline-block" />
               {al("Geblokkeerd", "Blocked", "Bloke")}
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Truck className="h-3 w-3" />
+              {al("Wij rijden", "We drive", "Biz götürüyoruz")}
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Warehouse className="h-3 w-3" />
+              {al("Klant zelf", "Customer", "Müşteri kendisi")}
             </div>
           </div>
         </div>

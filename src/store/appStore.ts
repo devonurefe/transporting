@@ -225,6 +225,15 @@ const getAuthHeaders = (): Record<string, string> => {
 // naar de sectorterm "Assortiment" behandelen we dat oude default als
 // "niet ingesteld", zodat de vertaling uit languageStore wint. Een bewust
 // afwijkend admin-label (Customizer) blijft gewoon staan.
+// List endpoints must yield an array. A non-array 2xx body (e.g. an error
+// object from a proxy or an old service worker's offline fallback) would
+// otherwise land in the store and crash every `.filter`/`.map` consumer.
+// Falls back to the current store value so a bad response never wipes data
+// that already loaded fine.
+function asArray<T = any>(data: unknown, fallback: T[] = []): T[] {
+  return Array.isArray(data) ? (data as T[]) : fallback;
+}
+
 function normalizeSiteConfig<T extends { menuCatalogLabel?: string }>(config: T): T {
   if (config && (config.menuCatalogLabel === "Catalogus" || config.menuCatalogLabel === "Catalog")) {
     return { ...config, menuCatalogLabel: "" };
@@ -312,7 +321,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       const url = isAdminMode ? "/api/machines?full=1" : "/api/machines";
       const res = await fetch(url, { headers: getAuthHeaders() });
       if (res.ok) {
-        set({ machines: await res.json(), error: null });
+        set({ machines: asArray(await res.json(), get().machines), error: null });
       } else {
         const data = await res.json().catch(() => ({}));
         set({ error: data.error || "Fout bij ophalen machines." });
@@ -339,7 +348,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       if (res.ok) {
         const totalPages = Number(res.headers.get("X-Total-Pages") || "1");
         const totalCount = Number(res.headers.get("X-Total-Count") || "0");
-        set({ orders: await res.json(), ordersPage: 1, ordersTotalPages: totalPages, ordersTotalCount: totalCount, error: null });
+        set({ orders: asArray(await res.json(), get().orders), ordersPage: 1, ordersTotalPages: totalPages, ordersTotalCount: totalCount, error: null });
       } else if (res.status === 401 || res.status === 403) {
         set({ orders: [], ordersPage: 1, ordersTotalPages: 1, ordersTotalCount: 0, error: null });
       } else {
@@ -359,7 +368,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     try {
       const res = await fetch(`/api/orders?limit=100&page=${nextPage}`, { headers: getAuthHeaders() });
       if (res.ok) {
-        const newOrders = await res.json();
+        const newOrders = asArray<Order>(await res.json());
         set(state => ({ orders: [...state.orders, ...newOrders], ordersPage: nextPage }));
       }
     } catch (e: any) {
@@ -383,7 +392,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     try {
       const res = await fetch("/api/categories");
       if (res.ok) {
-        set({ customCategories: await res.json(), error: null });
+        set({ customCategories: asArray(await res.json(), get().customCategories), error: null });
       } else {
         const data = await res.json().catch(() => ({}));
         set({ error: data.error || "Fout bij ophalen categorieën." });
@@ -402,7 +411,12 @@ export const useAppStore = create<AppState>((set, get) => ({
       const url = isAdminMode ? "/api/site-config?full=1" : "/api/site-config";
       const res = await fetch(url, { headers: getAuthHeaders() });
       if (res.ok) {
-        const data = normalizeSiteConfig(await res.json());
+        const raw = await res.json();
+        if (!raw || typeof raw !== "object" || Array.isArray(raw) || "error" in raw) {
+          set({ error: (raw && raw.error) || "Fout bij ophalen site configuratie." });
+          return;
+        }
+        const data = normalizeSiteConfig(raw);
         set({ siteConfig: data, siteConfigLoaded: true, error: null });
         try { sessionStorage.setItem("hwh_site_config", JSON.stringify(data)); } catch { /* quota exceeded — ignore */ }
       } else {
@@ -419,7 +433,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     try {
       const res = await fetch("/api/blocked-dates");
       if (res.ok) {
-        set({ blockedDates: await res.json(), error: null });
+        set({ blockedDates: asArray(await res.json(), get().blockedDates), error: null });
       } else {
         const data = await res.json().catch(() => ({}));
         set({ error: data.error || "Fout bij ophalen geblokkeerde datums." });
@@ -715,7 +729,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       const url = isAdminMode ? "/api/blog-posts?all=1" : "/api/blog-posts";
       const res = await fetch(url, { headers: getAuthHeaders() });
       if (res.ok) {
-        set({ blogPosts: await res.json(), error: null });
+        set({ blogPosts: asArray(await res.json(), get().blogPosts), error: null });
       } else {
         const data = await res.json().catch(() => ({}));
         set({ error: data.error || "Fout bij ophalen artikelen." });
@@ -801,7 +815,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   fetchDamageReports: async () => {
     try {
       const res = await fetch("/api/damage-reports", { headers: getAuthHeaders() });
-      if (res.ok) set({ damageReports: await res.json(), error: null });
+      if (res.ok) set({ damageReports: asArray(await res.json(), get().damageReports), error: null });
     } catch (e) {
       devWarn("Damage reports fetch failed.");
     }
@@ -869,7 +883,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   fetchMaintenanceEvents: async () => {
     try {
       const res = await fetch("/api/maintenance", { headers: getAuthHeaders() });
-      if (res.ok) set({ maintenanceEvents: await res.json(), error: null });
+      if (res.ok) set({ maintenanceEvents: asArray(await res.json(), get().maintenanceEvents), error: null });
     } catch (e) {
       devWarn("Maintenance events fetch failed.");
     }
